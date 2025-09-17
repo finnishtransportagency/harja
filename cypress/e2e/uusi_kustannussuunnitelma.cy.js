@@ -195,7 +195,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
                     .contains('Yhteensä').next().next().next().next().contains('12 000,00');
                 cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().next().next().next().contains('−12 000,00');
+                    .contains('Kirjaamatta').should('not.exist');
 
             });
 
@@ -282,7 +282,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#erillishankinnat-elementti table.grid tbody')
                     .contains('Yhteensä').next().contains('4 500,00');
                 cy.get('#erillishankinnat-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().contains('−4 500,00');
+                    .contains('Kirjaamatta').should('not.exist');
 
             });
 
@@ -363,7 +363,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
                     .contains('Yhteensä').next().next().next().next().contains('66 000,00');
                 cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().next().next().next().contains('−66 000,00');
+                    .contains('Kirjaamatta').should('not.exist');
 
             });
 
@@ -423,7 +423,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
                     .contains('Yhteensä').next().next().contains('7 000,00');
                 cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().next().contains('−7 000,00');
+                    .contains('Kirjaamatta').should('not.exist');
 
             });
 
@@ -493,7 +493,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
 
     });
 
-    describe('Testaa Hoidonjohtopalkkiot', function () {
+    describe('Testaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
             avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
@@ -517,7 +517,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             tarkistaHoidonjotopalkkioLuvut('Joulukuu 2024', '0,00', '-');
         });
 
-        it('Muokkaa Hoidonjohtopalkkiot', function () {
+        it('Muokkaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
             cy.get('#hoidonjohtopalkkio-elementti table.grid').gridOtsikot().then(() => {
 
                 let valitseInput = function (rivi) {
@@ -531,6 +531,67 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get(valitseInput(2)).eq(0).clear().type('1500');
 
                 // Muokataan Joulukuu 2024
+                cy.get(valitseInput(3)).eq(0).clear().type('2000');
+
+                // Yhteensä teksti ja summat täsmää
+                cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
+                    .contains('Yhteensä').next().contains('4 500,00');
+                cy.get('#hoidonjohtopalkkio-elementti table.grid tbody').
+                contains('Kirjaamatta').should('not.exist')
+
+            });
+
+            // Tallennetaan muutokset
+            cy.get('#hoidonjohtopalkkio-elementti').contains('Tallenna tiedot').click();
+            cy.wait('@tallenna-hoidonjohtopalkkiot')
+                .its('response.statusCode')
+                .should('equal', 200);
+
+            // Viesti onnistumisesta pitäisi näkyä
+            cy.contains('Hoidonjohtopalkkiot tallennettiin.', {timeout: 4000}).should('be.visible');
+
+        });
+
+    });
+
+    describe('Testaa Hoidonjohtopalkkiot 2025 vuoden urakalle', function () {
+        beforeEach(function () {
+            cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
+        });
+
+        it('Taulukon arvot alussa oikein', function () {
+
+            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Kalenterikuukausi');
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Suunniteltu kustannus (€)');
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Indeksikorjattu (€)');
+
+            // Varmistetaan, että taulukosta löytyy toimenpiteitä
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Lokakuu 2025');
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Marraskuu 2025');
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Joulukuu 2025');
+
+            // Löytyyhän lukuja
+            tarkistaHoidonjotopalkkioLuvut('Lokakuu 2025', '0,00', '-');
+            tarkistaHoidonjotopalkkioLuvut('Marraskuu 2025', '0,00', '-');
+            tarkistaHoidonjotopalkkioLuvut('Joulukuu 2025', '0,00', '-');
+        });
+
+        it('Muokkaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
+            cy.get('#hoidonjohtopalkkio-elementti table.grid').gridOtsikot().then(() => {
+
+                let valitseInput = function (rivi) {
+                    return `#hoidonjohtopalkkio-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
+                };
+
+                // Muokataan Lokakuu 2025
+                cy.get(valitseInput(1)).eq(0).clear().type('1000');
+
+                // Muokataan Marraskuu 2025
+                cy.get(valitseInput(2)).eq(0).clear().type('1500');
+
+                // Muokataan Joulukuu 2025
                 cy.get(valitseInput(3)).eq(0).clear().type('2000');
 
                 // Yhteensä ja Kirjaamatta teksti ja summat täsmää

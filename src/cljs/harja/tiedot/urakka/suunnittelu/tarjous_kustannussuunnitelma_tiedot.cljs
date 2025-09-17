@@ -249,15 +249,17 @@
   (process-event [{:keys [vastaus]} app]
     (let [tarjous-tiedot (:tarjous vastaus)
           taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
-      (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :urakka-id (:urakka-id vastaus))
-        (assoc :kattohintakerroin (:kattohintakerroin vastaus))
-        (assoc :tarjous tarjous-tiedot)
-        (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
-        (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
-        (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
-        (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot)))))
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
+      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
+      (assoc :kattohintakerroin (:kattohintakerroin vastaus))
+      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
+      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
+      (assoc :urakka-id (:urakka-id vastaus)))))
 
   HaeTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]

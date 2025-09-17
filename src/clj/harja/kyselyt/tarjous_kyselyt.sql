@@ -90,3 +90,15 @@ WHERE id = :id;
 DELETE FROM tarjous_johto_ja_hallintokorvaus
  WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
    AND urakka_id = :urakkaid;
+
+-- name: hae-tarjouksen-viimeisin-muokkaaja
+SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,
+       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+           END AS viimeisin_muokkaaja
+  FROM tarjous t
+         LEFT JOIN kayttaja k ON COALESCE(t.muokkaaja, t.luoja) = k.id
+         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
+ WHERE t.urakka_id = :urakkaid
+ ORDER BY viimeisin_muokkaus DESC
+ LIMIT 1;

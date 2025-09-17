@@ -201,26 +201,6 @@
       (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
       :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
-(defn paattele-toimenkuvan-jarjestys
-  "Pakotetaan toimenkuvat oikeaan järjestykseen kovakoodauksen avulla."
-  [toimenkuva-nimike]
-  (case (str/lower-case toimenkuva-nimike)
-    "valmistelukausi ennen urakka-ajan alkua" 0
-    "sopimusvastaava" 1
-    "vastuunalainen työnjohtaja" 2
-    "2. työnjohtaja" 3
-    "3. työnjohtaja" 4
-    "päätoiminen apulainen" 5
-    "päätoiminen apulainen (talvikausi)" 6
-    "päätoiminen apulainen (kesäkausi)" 7
-    "apulainen/työnjohtaja" 8
-    "apulainen/työnjohtaja (talvikausi)" 9
-    "apulainen/työnjohtaja (kesäkausi)" 10
-    "viherhoidosta vastaava henkilö" 11
-    "hankintavastaava" 12
-    "harjoittelija" 13
-    99)) ;; Muu toimenkuva, joka ei ole listassa
-
 (defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)

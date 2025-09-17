@@ -19,18 +19,22 @@
 (def nimi-leveys 20)
 (def yhteensa-leveys 20)
 
-(defn- tallennus-painikkeet [e! {:keys [tallennus-kesken?] :as app}]
+(defn- tallennus-painikkeet [e! {:keys [tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja] :as app}]
   [:div.painikkeet.text-right
-   [napit/yleinen-toissijainen "Tyhjennä"
-    #(do
-       (reset! tallenna-painettu false)
-       (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
-    {:disabled (or tallennus-kesken? false)}]
-   [napit/yleinen-ensisijainen "Tallenna muutokset"
-    #(do
-       (reset! tallenna-painettu false)
-       (e! (tarjous-tiedot/->TallennaTarjouksenTiedot (:hankinnat app) (:toimenkuvat app))))
-    {:disabled (or tallennus-kesken? false)}]])
+   (if viimeisin-muokkaus
+     (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
+     "Ei tallennettuja muutoksia")
+   [:span {:style {:margin-left "1rem"}}
+    [napit/yleinen-toissijainen "Tyhjennä"
+     #(do
+        (reset! tallenna-painettu false)
+        (e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot)))
+     {:disabled (or tallennus-kesken? false)}]
+    [napit/yleinen-ensisijainen "Tallenna muutokset"
+     #(do
+        (reset! tallenna-painettu false)
+        (e! (tarjous-tiedot/->TallennaTarjouksenTiedot (:hankinnat app) (:toimenkuvat app))))
+     {:disabled (or tallennus-kesken? false)}]]])
 
 (defn- lopullinen-yhteenvetorivi [otsikko rivi]
   (flatten (conj [{:teksti otsikko
