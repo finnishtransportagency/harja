@@ -12,10 +12,13 @@
   "A tabbed panel. Takes a map of configuration parameters and alternating tab titles and tab components.
 The following keys are supported in the configuration:
 
-  :active    An atom containing the selected tab number. Defaults to (atom 0).
-  :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
+  :active     An atom containing the selected tab number. Defaults to (atom 0).
+  :style      Tab style, either :pills or :tabs. Defaults to :tabs.
+  :on-change  Optional callback function called when tab is changed. If provided,
+              it will be called with the new tab keyword instead of directly
+              resetting the :active atom. "
 
-  [{:keys [active style classes]} & alternating-title-and-component]
+  [{:keys [active style classes on-change]} & alternating-title-and-component]
   (let [tarkista-aktiivinen-tabi (fn [active alternating-title-and-component]
                                    (let [tab-nimet (keep #(when (not (nil? (nth % 2)))
                                                            (nth % 1))
@@ -25,9 +28,9 @@ The following keys are supported in the configuration:
                                          (reset! active eka-tabi)))))]
     (tarkista-aktiivinen-tabi active alternating-title-and-component)
     (komp/luo
-     (komp/kun-muuttuu (fn [{:keys [active style classes]} & alternating-title-and-component]
+     (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
                          (tarkista-aktiivinen-tabi active alternating-title-and-component)))
-     (fn [{:keys [active style classes]} & alternating-title-and-component]
+     (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
        (let [style-class (case (or style :tabs)
                            :pills "nav-pills"
                            :tabs (str "nav-tabs " classes))
@@ -38,7 +41,9 @@ The following keys are supported in the configuration:
                  (first tabs))
              vaihda-aktiivinen-tabi (fn [keyword event]
                                       (.preventDefault event)
-                                      (reset! active keyword))]
+                                      (if on-change
+                                        (on-change keyword)
+                                        (reset! active keyword)))]
          (if (empty? tabs)
            [:span "Ei käyttöoikeutta."]
            [:span

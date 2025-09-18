@@ -1,5 +1,6 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.string :as str]
+            [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.domain.mhu :as mhu]
@@ -12,7 +13,8 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
             [harja.kyselyt.kiinteahintaiset-tyot :as kiint-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]))
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]))
 
 (defqueries "harja/kyselyt/uusi_kustannussuunnitelma_kyselyt.sql"
   {:positional? true})
@@ -25,12 +27,15 @@
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
   hae-viimeisin-muokkaaja-erillishankinnoille
   hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
-  hae-rahavaraus-vuodelta
+  hae-rahavaraus-vuodelta paivita-rahavaraus<! lisaa-rahavaraus<!
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
   hae-johto-ja-hallintokorvaukset-2019-mhu
   hae-kuukauden-johto-ja-hallintokorvaus hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
-  hae-urakan-toimenkuvat hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+  hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
+  hae-muut-kulut-toimenkuviin-kuukausittain hae-muut-kulut-kuukaudelle
+  lisaa-kuukauden-muu-kulu<! paivita-kuukauden-muu-kulu<!
+  hae-tehtava-tunnisteella
   paivita-kuukauden-johto-ja-hallintokorvaus<!
   lisaa-kuukauden-johto-ja-hallintokorvaus<! hae-viimeisin-muokkaaja-jjh
   vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
@@ -38,7 +43,14 @@
   vahvista-tai-kumoa-indeksikorjaukset-jh-korvauksille!
   vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
   indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
-  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot)
+  lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
+  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio)
+
+(defn- laske-indeksikorjattu-summa
+  "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
+  [summa urakan-indeksit hoitovuosi-nro]
+  (when summa
+    (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitovuosi-nro) summa)))
 
 (defn hae-kiinteat-kustannukset [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
   (let [;; Haetaan urakan toimenpiteet
@@ -100,16 +112,19 @@
                     :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
                     :pysyvat-muutokset "Ei muutoksia"
+                    :toimenpideinstanssi-id 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
-        kiinteat (conj kiinteat yhteenveto)]
+        kiinteat (vec (sort-by :toimenpideinstanssi-id (conj kiinteat yhteenveto)))]
     kiinteat))
 
 (defn hae-rahavaraukset
   "Haetaan rahavaraukset tietokannsta kustannussuunnitelmaan.
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
-  [db sopimus-id hoitovuoden-alkuvuosi]
-  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:sopimus-id sopimus-id :vuosi hoitovuoden-alkuvuosi})]
+  [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
+  (let [rahavaraukset (hae-rahavaraus-vuodelta db {:urakkaid urakka-id
+                                                   :sopimusid sopimus-id
+                                                   :vuosi hoitovuoden-alkuvuosi})]
     rahavaraukset))
 
 (defn hae-hoidonjohtopalkkiot [db sopimus-id urakka-id hoitovuoden-alkuvuosi]
@@ -159,39 +174,41 @@
 (defn paattele-toimenkuvan-kuukaudet [urakan-alkuvuosi toimenkuva]
   (let [toimenkuva-nimi (:toimenkuva toimenkuva)
         toimenkuva-nimike (:nimike toimenkuva)]
-   (cond
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (talvikausi)")) [5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (kesäkausi)")) [10 11 12 1 2 3 4]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (talvikausi)")) [5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (kesäkausi)")) [10 11 12 1 2 3 4]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
+    (cond
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "sopimusvastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (talvikausi)")) [5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Päätoiminen apulainen (kesäkausi)")) [10 11 12 1 2 3 4]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (talvikausi)")) [5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimike "Apulainen/työnjohtaja (kesäkausi)")) [10 11 12 1 2 3 4]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [4 5 6 7 8]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (<= urakan-alkuvuosi 2021) (= toimenkuva-nimi "harjoittelija")) [5 6 7 8]
 
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [10] ;; Tämä pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "päätoiminen apulainen")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "apulainen/työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "hankintavastaava")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024)) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
 
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
-     :else [10 11 12 1 2 3 4 5 6 7 8 9])))
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "valmistelukausi ennen urakka-ajan alkua")) [8] ;; Tämäkin pitäisi olla ennen sopimuskautta. Mutta laitetaan sinne yksi kuukausi
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "vastuunalainen työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "2. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "3. työnjohtaja")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "viherhoidosta vastaava henkilö")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      (and (= urakan-alkuvuosi 2024) (= toimenkuva-nimi "harjoittelija")) [10 11 12 1 2 3 4 5 6 7 8 9]
+      :else [10 11 12 1 2 3 4 5 6 7 8 9])))
 
-(defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
-  (let [viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
+(defn hae-johto-ja-hallintokorvaukset-2019-2024 [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-jjh
                                     db {:urakka-id urakka-id
                                         :vuosi hoitovuoden-alkuvuosi}))
         ;; Haetaan ensin urakkakohtaiset toimenkuvat
-        toimenkuvat (hae-urakan-toimenkuvat db {:urakka-id urakka-id
+        toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
                                                 :urakan-alkuvuosi urakan-alkuvuosi})
         ;; 2019 - 2021 alkavien urakoiden toimenkuvat eivät löydy tietokantahaulla, koska ne on kovakoodattu fronttiin. Niille on kuitenkin annettu
         ;; joissain tapauksissa kaksi nimeä, mutta sama id. Joten joudumme taaksepäin yhteensopivuuden vuoksi tekemään muunnoksen
@@ -220,6 +237,18 @@
                                     (conj uudet-toimenkuvat uusi-toimenkuva toimenkuva)
                                     (conj uudet-toimenkuvat toimenkuva))))
                         [] toimenkuvat)
+                      toimenkuvat)
+
+        ;; Urakan toimenkuviin kuuluu -2021 jälkeen aina 'valmistelukausi ennen urakka-ajan alkua'
+        ;; Mutta tuota toimenkuvaa ei voida näyttää, mikäli ei ole menossa ensimmäinen hoitovuosi.
+        ;; Poistetaan se tarpeen mukaan
+        toimenkuvat (if (> hoitovuosi-nro 1)
+                      (remove #(= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva %)) toimenkuvat)
+                      toimenkuvat)
+
+        ;; Järjestetään toimenkuvat järkevään järjestykseen
+        toimenkuvat (map (fn [toimenkuva]
+                           (assoc toimenkuva :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva toimenkuva))))
                       toimenkuvat)
 
         ;; Haetaan raskaalla prosessilla toimenkuvakohtaisesti suunnitellut johto-ja-hallintokorvaukset
@@ -289,6 +318,7 @@
                                                                :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                                                                :viimeisin-muokkaaja (:viimeisin-muokkaaja viimeisin-muokkaus)}))))
                                                 [] toimenkuvan-kuukaudet)
+                                    kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                     toimenkuva (assoc toimenkuva :kuukaudet kuukaudet
                                                  :kkv (count toimenkuvan-kuukaudet))
                                     summa (apply + (map
@@ -304,7 +334,7 @@
                                                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                                                  :tuntipalkka (:tuntipalkka (first kuukaudet))
                                                  :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
-                                                           nil) ;; Aseta arvo buk, jos tunnit eivät ole samat kaikissa kuukausissa
+                                                           nil) ;; Aseta arvo nil, jos tunnit eivät ole samat kaikissa kuukausissa
                                                  :yhteensa-kk (* (or (:tuntipalkka (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :yhteensa-indeksikorjattu-kk (* (or (:tuntipalkka-indeksikorjattu (first kuukaudet)) 0) (or (:tunnit (first kuukaudet)) 0))
                                                  :summa summa
@@ -312,13 +342,69 @@
                                 (conj kuvat toimenkuva)))
                       [] toimenkuvat)
 
-        ;; Lisää vielä järjestysnumero toimenkuville
-        toimenkuvat (map-indexed (fn [i toimenkuva]
-                                  (assoc toimenkuva :jarjestys (inc i)))
-                                toimenkuvat)]
+        ;; Muut kulut - kuten toimisto, ict yms on käyttöliittymässä lisätty toimenkuva -taulukkoon. Haetaan nekin
+        ;; Hoindonjohto toimenpide.koodi = 23151
+        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        muut-kulut-kuukaudet (hae-muut-kulut-toimenkuviin-kuukausittain db {:sopimus-id sopimus-id
+                                                                            :vuosi hoitovuoden-alkuvuosi
+                                                                            :toimenpideinstanssi-id hoidonjohto-tpi-id})
+        ;; Jos muut-kulut-kuukaudet on nil, niin luodaan lista default arvoilla.
+        muut-kulut-kuukaudet (if (seq muut-kulut-kuukaudet)
+                               (map (fn [rivi]
+                                      (merge rivi
+                                        {:yhteensa-kk (if (:tuntipalkka rivi) (:tuntipalkka rivi) 0)
+                                         :yhteensa-indeksikorjattu-kk (if (:tuntipalkka-indeksikorjattu rivi) (:tuntipalkka-indeksikorjattu rivi) 0)
+                                         :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                              (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                         :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                         :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+                                 muut-kulut-kuukaudet)
+                               (mapv (fn [kk]
+                                       (let [vuosi (if (>= kk 10) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi))]
+                                         {:toimenkuva "Muut kulut"
+                                          :nimike "Muut kulut"
+                                          :urakka-id urakka-id
+                                          :kuukausi kk
+                                          :yhteensa-kk 0
+                                          :yhteensa-indeksikorjattu-kk nil
+                                          :vuosi vuosi
+                                          :tuntipalkka 0
+                                          :tuntipalkka-indeksikorjattu nil
+                                          :kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi (pvm/->pvm (str "01." kk "." vuosi)) true)
+                                          :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                          :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+                                 [10 11 12 1 2 3 4 5 6 7 8 9]))
+        muut-kulut-kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) muut-kulut-kuukaudet))
+
+        ;; Muut kulut -rivi simuloi toimenkuvariviä.
+        muu-kulu {:toimenkuva "Muut kulut"
+                  :nimike "Muut kulut"
+                  :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
+                  :tuntipalkka nil
+                  :tunnit nil ;; muilla kuluilla ei koskaan ole oikeasti tunteja.
+                  :yhteensa-kk (:yhteensa-kk (first muut-kulut-kuukaudet))
+                  :yhteensa-indeksikorjattu-kk (:yhteensa-indeksikorjattu-kk (first muut-kulut-kuukaudet))
+                  :summa (apply + (map (fn [rivi]
+                                         (if (:yhteensa-kk rivi) (:yhteensa-kk rivi) 0))
+                                    muut-kulut-kuukaudet))
+                  :summa-indeksikorjattu (apply + (map (fn [rivi]
+                                                         (if (:yhteensa-indeksikorjattu-kk rivi) (:yhteensa-indeksikorjattu-kk rivi) 0))
+                                                    muut-kulut-kuukaudet))
+                  :kuukaudet muut-kulut-kuukaudet
+                  :jarjestys 99                             ;; Varmistetaan, että on viimeisenä ui:lla listassa
+                  }
+
+        toimenkuvat (conj toimenkuvat muu-kulu)
+        toimenkuvat (vec (sort-by :jarjestys toimenkuvat))]
     toimenkuvat))
 
-(defn hae-johto-ja-hallintokorvaukset [db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta]
+(defn hae-johto-ja-hallintokorvaukset-2025
+  "Käytetään haettaessa johto-ja-hallintokorvauksia 2025 ja myöhemmin alkaville urakoille.
+   -25 vuodesta eteenpäin toimenkuvat on kustannussuunnitelmassa könttäsummana kuukausittain. Ei yksittäisinä toimenkuvina."
+  [db urakka-id hoitovuoden-alkuvuosi]
   (let [johto-ja-hallintokorvaukset (hae-johto-ja-hallintokorvaukset-kuukausittain db
                                       {:urakka-id urakka-id
                                        :vuosi hoitovuoden-alkuvuosi})
@@ -328,12 +414,12 @@
 
         johto-ja-hallintokorvaukset (if (seq johto-ja-hallintokorvaukset)
                                       ;; Jos on tallennettu jo johto-ja-hallintokorvauksia, niin lisätään niihin kalenterikuukausi
-                                      (map (fn [rivi]
-                                             (merge rivi
-                                               {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
-                                                                     (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
-                                                :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
-                                                :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+                                      (mapv (fn [rivi]
+                                              (merge rivi
+                                                {:kalenterikuukausi (pvm/koko-kuukausi-ja-vuosi
+                                                                      (pvm/->pvm (str "01." (:kuukausi rivi) "." (:vuosi rivi))) true)
+                                                 :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+                                                 :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
                                         johto-ja-hallintokorvaukset)
                                       ;; Jos ei ole tallennettu hoidonjohtopalkkioita, niin luodaan nolla arvot
                                       (mapv (fn [kk]
@@ -409,14 +495,14 @@
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
 
-        rahavaraukset (hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
-        rahavaraukset-yht (apply + (map (fn [rivi] (:summa rivi 0)) rahavaraukset))
+        rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-yht (apply + (map (fn [rivi] (:summa rivi 0)) erillishankinnat))
+        erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (:summa rivi 0)) hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
         ;; TODO: kun muutokset on valmiita, niin hae tiedot
         pysyvat-muutokset-maara 0
 
@@ -446,7 +532,7 @@
     tiedot))
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
-                                                  toimenpideinstanssi-id kayttaja-id]
+                                                  toimenpideinstanssi-id kayttaja-id urakan-indeksit hoitovuosi-nro]
   (let [_ (doseq [kk kk-jakso]
             (let [summa (cond
                           (and alkujakso? (= kk 12)) viimeinen-summa
@@ -463,7 +549,7 @@
                          :vuosi hoitovuoden-alkuvuosi
                          :kuukausi kk
                          :summa summa
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosi-nro)
                          :toimenpideinstanssi-id toimenpideinstanssi-id
                          :tehtavaryhma nil
                          :tehtava nil
@@ -475,7 +561,7 @@
                          :vuosi hoitovuoden-alkuvuosi
                          :kuukausi kk
                          :summa summa
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosi-nro)
                          :tehtavaryhma nil
                          :tehtava nil
                          :luoja kayttaja-id}))]))]))
@@ -484,6 +570,9 @@
   [db kayttaja urakka-id hoitovuoden-alkuvuosi kilpailutettavat-hankinnat]
   ;; Lisätään transktiot, jottei yhden epäonnistuminen päästä muita läpi
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "01.11." hoitovuoden-alkuvuosi)))
         ; Splittaa alkukauden summat kuukausittain
         _ (doseq [{:keys [alkukausi loppukausi toimenpideinstanssi-id]} kilpailutettavat-hankinnat]
             (let [alkukausi (bigdec alkukausi)
@@ -495,16 +584,19 @@
                   loppukausi-viimeinen-kuukausi (- loppukausi (* 8 loppukausi-kuukausisumma))
                   ;; Tallenna alkujakso
                   _ (tallenna-hankintojen-kuukausittainen-summa db (range 10 13) true alkukausi-viimeinen-kuukausi alkukausi-kuukausisumma
-                      hoitovuoden-alkuvuosi sopimus-id toimenpideinstanssi-id (:id kayttaja))
+                      hoitovuoden-alkuvuosi sopimus-id toimenpideinstanssi-id (:id kayttaja) urakan-indeksit hoitovuosi-nro)
                   ;; Tallenna loppujakso
                   _ (tallenna-hankintojen-kuukausittainen-summa db (range 1 10) false loppukausi-viimeinen-kuukausi loppukausi-kuukausisumma
-                      (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja))]))]))
+                      (inc hoitovuoden-alkuvuosi) sopimus-id toimenpideinstanssi-id (:id kayttaja) urakan-indeksit hoitovuosi-nro)]))]))
 
 (defn tallenna-erillishankinnat
-  [db kayttaja urakka-id erillishankinnat]
-  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+  [db kayttaja urakka-id erillishankinnat hoitovuoden-alkuvuosi]
+  (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "01.11." hoitovuoden-alkuvuosi)))
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
-        ;; Hoindonjohto toimenpide.koodi = 23151
+        ;; Hoidonjohto toimenpide.koodi = 23151
         hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
                                          {:urakka urakka-id
                                           :koodi "23151"})))
@@ -517,7 +609,7 @@
                       (paivita-kuukauden-erillishankinta<! db
                         {:id (:id dbrivi)
                          :summa (:summa rivi)
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                          :muokkaaja (:id kayttaja)})
                       ;; Lisää uusi
                       (tallenna-kuukauden-erillishankinta<! db
@@ -526,11 +618,38 @@
                          :vuosi (:vuosi rivi)
                          :kuukausi (:kuukausi rivi)
                          :summa (:summa rivi)
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                          :tehtavaryhma-id (:id tehtavaryhma)
                          :luoja (:id kayttaja)}))]))]))
 
-(defn tallenna-kuukausittaiset-toimenkuvat [db kuukaudet urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id]
+(defn tallenna-kuukausittaiset-muut-kulut [db kuukaudet urakan-indeksit urakan-tiedot kayttaja sopimus-id
+                                           toimenpideinstanssi-id hoitovuosi-nro]
+  (let [tehtava (hae-tehtava-tunnisteella db {:tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388"})
+        tehtava-id (:id (first tehtava))] ;; Muut kulut tehtävä
+    (doseq [{:keys [vuosi kuukausi yhteensa-kk summa] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
+      (let [;; Haetaan muut-kulut kuukaudelle
+            db-kuukausi (first (hae-muut-kulut-kuukaudelle db {:sopimus-id sopimus-id
+                                                               :toimenpideinstanssi-id toimenpideinstanssi-id
+                                                               :vuosi vuosi
+                                                               :kuukausi kuukausi}))
+            t (if-not db-kuukausi
+                (lisaa-kuukauden-muu-kulu<! db
+                  {:summa yhteensa-kk
+                   :summa_indeksikorjattu (laske-indeksikorjattu-summa yhteensa-kk urakan-indeksit hoitovuosi-nro)
+                   :vuosi vuosi
+                   :kuukausi kuukausi
+                   :toimenpideinstanssi-id toimenpideinstanssi-id
+                   :tehtava-id tehtava-id
+                   :sopimus-id sopimus-id
+                   :luoja (:id kayttaja)})
+                (paivita-kuukauden-muu-kulu<! db
+                  {:id (:id db-kuukausi)
+                   :summa yhteensa-kk
+                   :summa_indeksikorjattu (laske-indeksikorjattu-summa yhteensa-kk urakan-indeksit hoitovuosi-nro)
+                   :muokkaaja (:id kayttaja)}))]))))
+
+(defn tallenna-kuukausittaiset-toimenkuvat [db kuukaudet urakan-indeksit urakan-tiedot kayttaja urakka-id
+                                            toimenkuva-id hoitovuosi-nro]
   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))]
     (doseq [{:keys [vuosi kuukausi tunnit tuntipalkka] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
       (let [;; Haetaan toimenkuvan kuukauden johto-ja-hallintokorvaus
@@ -550,26 +669,16 @@
                    :kuukausi kuukausi
                    :tunnit tunnit
                    :tuntipalkka tuntipalkka
-                   :tuntipalkka_indeksikorjattu (when tuntipalkka
-                                                  (indeksi-kyselyt/indeksikorjaa
-                                                    (indeksi-kyselyt/indeksikerroin urakan-indeksit
-                                                      (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                        (:alkupvm urakan-tiedot) (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
-                                                    tuntipalkka))
+                   :tuntipalkka_indeksikorjattu (laske-indeksikorjattu-summa tuntipalkka urakan-indeksit hoitovuosi-nro)
                    :luoja (:id kayttaja)})
                 (paivita-kuukauden-johto-ja-hallintokorvaus<! db
                   {:id (:id db-kuukausi)
                    :tuntipalkka tuntipalkka
                    :tunnit tunnit
-                   :tuntipalkka_indeksikorjattu (when tuntipalkka
-                                                  (indeksi-kyselyt/indeksikorjaa
-                                                    (indeksi-kyselyt/indeksikerroin urakan-indeksit
-                                                      (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                        (:alkupvm urakan-tiedot) (pvm/luo-pvm-dec-kk vuosi kuukausi 1)))
-                                                    tuntipalkka))
+                   :tuntipalkka_indeksikorjattu (laske-indeksikorjattu-summa tuntipalkka urakan-indeksit hoitovuosi-nro)
                    :muokkaaja (:id kayttaja)}))]))))
 
-(defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id]
+(defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit kayttaja urakka-id toimenkuva-id hoitovuosi-nro]
   (let [dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
         _ (if (:id dbrivi)
 
@@ -577,12 +686,7 @@
               {:id (:id dbrivi)
                :tuntipalkka (:summa rivi)
                :tunnit 1
-               :tuntipalkka_indeksikorjattu (when (:summa rivi)
-                                              (indeksi-kyselyt/indeksikorjaa
-                                                (indeksi-kyselyt/indeksikerroin urakan-indeksit
-                                                  (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                    (:alkupvm urakan-tiedot) (pvm/luo-pvm-dec-kk (:vuosi rivi) (:kuukausi rivi) 1)))
-                                                (:summa rivi)))
+               :tuntipalkka_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                :muokkaaja (:id kayttaja)})
             ;; Lisää uusi
             (lisaa-kuukauden-johto-ja-hallintokorvaus<! db
@@ -592,14 +696,21 @@
                :kuukausi (:kuukausi rivi)
                :tunnit 1
                :tuntipalkka (:summa rivi)
-               :tuntipalkka_indeksikorjattu nil
+               :tuntipalkka_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                :luoja (:id kayttaja)}))]))
 
 (defn tallenna-johto-ja-hallintokorvaukset
-  [db kayttaja urakka-id johto-ja-hallintokorvaukset]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  [db kayttaja urakka-id johto-ja-hallintokorvaukset hoitovuoden-alkuvuosi]
+  (let [;; Johto-ja hallintakorvausten mukana tulee -19 - 24 alkavilla urakoilla myös "Muut kulut" rivi
+        ;; Poistetaan se tarvittaessa listasta ja tallennetaan erikseen
+        vain-jjh (filter (fn [rivi] (not= "Muut kulut" (:toimenkuva rivi))) johto-ja-hallintokorvaukset)
+        muut-kulut (first (filter (fn [rivi] (= "Muut kulut" (:toimenkuva rivi))) johto-ja-hallintokorvaukset))
+
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "01.11." hoitovuoden-alkuvuosi)))
 
         toimenpideinstanssi-id (:id (first
                                       (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
@@ -607,28 +718,36 @@
                                          :koodi (mhu/toimenpide-avain->toimenpide :mhu-johto)})))
 
         ; Tallenna kuukausittaiset summat
-        _ (doseq [toimenkuva johto-ja-hallintokorvaukset]
+        _ (doseq [toimenkuva vain-jjh]
             (let [;; rivi voi sisältää joko kuukausisumman kaikille toimenkuville (silloin id 1) tai
                   ;; toimenkuvan, jolla on kuukausittaiset arvot, tunnit ja tuntipalkat.
-                  kuukaudet (when (<= urakan-alkuvuosi 2024)
-                              (:kuukaudet toimenkuva))
+                  kuukaudet (when (<= urakan-alkuvuosi 2024) (:kuukaudet toimenkuva))
 
                   ;; Toimenkuva on tietokannassa pakollinen.
                   ;; Asetetaan jokin toimenkuva myös 2025-> urakoille, koska oikeaa toimenkuvaa ei voida uudessa kustannusten suunnittelussa asettaa.
                   ;; Kuukausittaiset yhteenvetorivit eivät ole riippuvaisia toimenkuvasta, joten voidaan käyttää mitä tahansa.
-                  toimenkuva-id (if (>= urakan-alkuvuosi 2025)
-                                  1
-                                  (:id toimenkuva))
+                  toimenkuva-id (if (>= urakan-alkuvuosi 2025) 1 (:id toimenkuva))
 
                   _ (if (<= urakan-alkuvuosi 2024)
-                      (tallenna-kuukausittaiset-toimenkuvat db kuukaudet urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id)
-                      (tallenna-vuosittaiset-toimenkuvat db toimenkuva urakan-indeksit urakan-tiedot kayttaja urakka-id toimenkuva-id))]))
+                      (tallenna-kuukausittaiset-toimenkuvat db kuukaudet urakan-indeksit urakan-tiedot kayttaja
+                        urakka-id toimenkuva-id hoitovuosi-nro)
+                      (tallenna-vuosittaiset-toimenkuvat db toimenkuva urakan-indeksit kayttaja urakka-id
+                        toimenkuva-id hoitovuosi-nro))]))
+
+        ;; Tallennetaan mahdolliset muut kulut
+        _ (when muut-kulut
+            (tallenna-kuukausittaiset-muut-kulut db (:kuukaudet muut-kulut) urakan-indeksit urakan-tiedot kayttaja
+              sopimus-id toimenpideinstanssi-id hoitovuosi-nro))
+
         _ (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
         _ (kiint-kyselyt/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})]))
 
 (defn tallenna-hoidonjohtopalkkiot
-  [db kayttaja urakka-id hoidonjohtopalkkiot]
-  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+  [db kayttaja urakka-id hoidonjohtopalkkiot hoitovuoden-alkuvuosi]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "01.11." hoitovuoden-alkuvuosi)))
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         ;; Hae hoidonjohto toimenpideinstannssi
         ;; Hoindonjohto toimenpide.koodi = 23151
         hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
@@ -642,7 +761,7 @@
                       (paivita-kuukauden-hoidonjohtopalkkio<! db
                         {:id (:id dbrivi)
                          :summa (:summa rivi)
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                          :muokkaaja (:id kayttaja)})
                       ;; Lisää uusi
                       (tallenna-kuukauden-hoidonjohtopalkkio<! db
@@ -651,43 +770,81 @@
                          :vuosi (:vuosi rivi)
                          :kuukausi (:kuukausi rivi)
                          :summa (:summa rivi)
-                         :summa_indeksikorjattu nil
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                          :tehtava-id (:id tehtava)
                          :luoja (:id kayttaja)}))]))]))
 
-(defn voidaanko-vahvistaa-tavoitehintaa?
+(defn puuttuvat-suunnitelmat
   "Jotta urakan tavoitehinta voidaan vahvistaa, Kustannusten Suunnittelussa pitää olla täydennettynä kaikki tiedot."
   [db urakka-id hoitovuoden-alkuvuosi]
-  (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
-
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        puuttuvat []
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hankinnat-ok? (and (boolean (seq kilpailutettavat-hankinnat))
-                        (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
+        puuttuvat (if-not (and (boolean (seq kilpailutettavat-hankinnat))
+                            (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
+                    (conj puuttuvat "Kilpailutettavat hankinnat") puuttuvat)
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        erillishankinnat-ok? (and (boolean (seq erillishankinnat))
-                               (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
+        puuttuvat (if-not (and (boolean (seq erillishankinnat))
+                            (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
+                    (conj puuttuvat "Erillishankinnat") puuttuvat)
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-ok? (and (boolean (seq hoidonjohtopalkkiot))
-                                  (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
+        puuttuvat (if-not (and (boolean (seq hoidonjohtopalkkiot))
+                            (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
+                    (conj puuttuvat "Hoidonjohtopalkkiot") puuttuvat)
 
-        johto-ja-hallintokorvaukset (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        johto-ja-hallintokorvaukset-ok? (and (boolean (seq johto-ja-hallintokorvaukset))
-                                          (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
-        voidaan-vahvistaa? (every? true? [hankinnat-ok? erillishankinnat-ok? hoidonjohtopalkkiot-ok?
-                                          johto-ja-hallintokorvaukset-ok?])]
-    voidaan-vahvistaa?))
+        johto-ja-hallintokorvaukset (cond
+                                      (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
+                                      (hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi nil)
+                                      (>= urakan-alkuvuosi 2025)
+                                      (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
+                                      :else (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
+
+        puuttuvat (if-not (and (boolean (seq johto-ja-hallintokorvaukset))
+                            (cond
+                              (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
+                              (some (fn [x] (not= (:yhteensa-kk x) 0M)) (flatten (map :kuukaudet johto-ja-hallintokorvaukset)))
+                              (>= urakan-alkuvuosi 2025)
+                              (some (fn [x] (not= (:yhteensa-kk x) 0)) johto-ja-hallintokorvaukset)
+                              :else (some (fn [x] (not= (:tuntipalkka x) 0)) johto-ja-hallintokorvaukset)))
+                    (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)]
+    puuttuvat))
+
+(defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]
+  (let [osio-olemassa (first (filter #(= (name osio) (:osio %)) vahvistetut-osiot))]
+    (if-not osio-olemassa
+      (lisaa-kustannussuunnitelma-osio db {:urakkaid urakka-id
+                                           :hoitovuosi hoitovuoden-nro
+                                           :osio osio
+                                           :luoja kayttaja-id
+                                           :vahvistaja (if vahvista? kayttaja-id nil)
+                                           :vahvistettu vahvista?
+                                           :vahvistus_pvm (if vahvista? (pvm/nyt) nil)})
+      (paivita-kustannussuunnitelma-osio db {:id (:id osio-olemassa)
+                                             :urakkaid urakka-id
+                                             :hoitovuosinro hoitovuoden-nro
+                                             :osio osio
+                                             :muokkaaja kayttaja-id
+                                             :vahvistettu vahvista?
+                                             :vahvistaja (if vahvista? kayttaja-id nil)
+                                             :vahvistus_pvm (if vahvista? (pvm/nyt) nil)}))))
 
 (defn vahvista-tavoite-ja-kattohinta [db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi]
   (let [sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+        hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         vahvistus-pvm (pvm/nyt)
         hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
+        vahvistetut-osiot (hae-kustannussuunnitelman-osiot db {:urakkaid urakka-id :hoitovuosinro hoitovuosinro})
+
+        ;; Vahvista kiinteähintaiset työt.
         _ (vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille! db
             {:urakka-id urakka-id
              :alkupvm hoitokauden-alkupvm
@@ -695,12 +852,17 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää hankintakustannusosiotieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hankintakustannukset" (:id kayttaja))
+        ;; Lisää erillishankinnat tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "erillishankinnat" (:id kayttaja))
+        ;; Lisää hoidonjohtopalkkio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "hoidonjohtopalkkio" (:id kayttaja))
 
         ;; Rahavaraukset on näytetty tähän asti tarjouksen tiedoista. Kopioidaan ne nyt kustannusarvoitu_tyo tauluun
         ;; Hae ensin tarjouksen tiedot
         tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
         rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
-
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
@@ -722,25 +884,34 @@
                                                  :let [_ (swap! kk inc)
                                                        kuukausimaara (count kt-rahavaraus-kuukaudet)
                                                        kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
-                                                       viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))]]
+                                                       viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))
+                                                       summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
                                            ;; Rahavarauksesta ei voi muuttua, kuin summa
-                                           (ka-q/paivita-rahavaraus<! db {:summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)
-                                                                          :muokattu (pvm/nyt)
-                                                                          :muokkaaja (:id kayttaja)
-                                                                          :id (:id r)})))
+                                           (paivita-rahavaraus<! db {:summa summa
+                                                                     :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
+                                                                     :muokattu (pvm/nyt)
+                                                                     :muokkaaja (:id kayttaja)
+                                                                     :id (:id r)})))
                                        (doseq [kk (range 1 13)
                                                :let [kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa 12)))
-                                                     viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))]]
-                                         (ka-q/lisaa-rahavaraus<! db {:vuosi (if (< kk 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
-                                                                      :kuukausi kk
-                                                                      :sopimus_id sopimus-id
-                                                                      :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
-                                                                      :tehtava_id nil
-                                                                      :rahavaraus_id rahavaraus-id
-                                                                      :summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)
-                                                                      :luoja (:id kayttaja)})))]
+                                                     viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))
+                                                     vuosi (if (< kk 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                                                     summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)]]
+                                         (lisaa-rahavaraus<! db {:vuosi vuosi
+                                                                 :kuukausi kk
+                                                                 :sopimus_id sopimus-id
+                                                                 :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                 :tehtava_id nil
+                                                                 :rahavaraus_id rahavaraus-id
+                                                                 :summa summa
+                                                                 :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosinro)
+                                                                 :luoja (:id kayttaja)})))]
                     dbrahavaraus))
             rahavaraukset)
+
+        ;; Lisää rahavarausosio tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tilaajan-rahavaraukset" (:id kayttaja))
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoitehintaiset-rahavaraukset" (:id kayttaja))
 
         _ (vahvista-tai-kumoa-indeksikorjaukset-kustannusarvioiduille-toille! db
             {:urakka-id urakka-id
@@ -756,10 +927,14 @@
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää johto-ja-hallintokorvaus tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "johto-ja-hallintokorvaus" (:id kayttaja))
         _ (vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
             {:urakka-id urakka-id
              :vuosi hoitovuoden-alkuvuosi
-             :hoitovuosi-nro hoitokausinumero
+             :hoitovuosi-nro hoitovuosinro
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
-             :vahvistus-pvm vahvistus-pvm})]))
+             :vahvistus-pvm vahvistus-pvm})
+        ;; Lisää tavoite-ja-kattohinta tieto kantaan
+        _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoite-ja-kattohinta" (:id kayttaja))]))
