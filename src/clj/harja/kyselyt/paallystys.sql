@@ -1126,7 +1126,7 @@ SELECT pi.id                           AS paallystysilmoitus,
        alusta_lisaaine.id              AS massa_lisaaine_id,
        alusta_lisaainetyyppi.nimi      AS massa_lisaaine_tyyppi,
        alusta_lisaaine.pitoisuus       AS massa_lisaaine_pitoisuus,
-       (SELECT pot2_alusta_rc_prosentti(alusta.id)) AS "rc-prosentti",
+       (SELECT pot2_alusta_rc_prosentti(alusta.id)) AS "rc%",
 
        mursketyyppi.nimi               AS murske_tyyppi,
        murske.rakeisuus                AS murske_rakeisuus,

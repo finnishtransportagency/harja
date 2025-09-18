@@ -313,6 +313,7 @@
            nil]]
          [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        nil
         [:murske
          [:mursketyyppi 1]
          [:rakeisuus "0/40"]
@@ -360,6 +361,7 @@
            nil]]
          [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        nil
         [:murske
          [:mursketyyppi 1]
          [:rakeisuus "0/40"]
@@ -467,7 +469,7 @@
         xml (kohteen-lahetyssanoma/muodosta urakka kohteet)
         luotu-xml-parsittu (xml/lue xml)]
     (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
-    (is (= 10.0M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
+    (is (= 10M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
 
