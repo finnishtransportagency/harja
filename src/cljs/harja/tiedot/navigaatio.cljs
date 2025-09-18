@@ -34,11 +34,129 @@
 
 (def valittu-valilehti reitit/valittu-valilehti)
 (def valittu-valilehti-atom reitit/valittu-valilehti-atom)
-(def aseta-valittu-valilehti! reitit/aseta-valittu-valilehti!)
 
 (def valittu-sivu (reaction (get @reitit/url-navigaatio :sivu)))
 
-(declare kasittele-url! paivita-url valitse-urakka!)
+(declare kasittele-url! paivita-url valitse-urakka! aseta-valittu-valilehti-varmistuksella!)
+
+
+;; Tallentamattomien muutosten hallinta navigoinnin yhteydessä
+;; atomeja joita tarkistetaan ennen navigointia
+(defonce tallentamattomia-muutoksia-atomit (atom {}))
+
+(defn rekisteroi-tallentamattomia-muutoksia-atomi!
+  "Rekisteröi atomi jota tarkistetaan sekä navigoinnin että beforeunload yhteydessä"
+  [atomi-avain atomi & {:keys [beforeunload-viesti]}]
+  (let [beforeunload-viesti (or beforeunload-viesti "Sinulla on tallentamattomia muutoksia!")]
+    (swap! tallentamattomia-muutoksia-atomit
+      assoc atomi-avain
+      {:atomi atomi
+       :beforeunload-viesti beforeunload-viesti
+       :beforeunload-handler nil})))
+
+(defn poista-tallentamattomia-muutoksia-atomi!
+  "Poista atomi rekisteristä ja puhdista beforeunload-kuuntelija"
+  [atomi-avain]
+  (let [{:keys [beforeunload-handler]} (get @tallentamattomia-muutoksia-atomit atomi-avain)]
+    (when beforeunload-handler
+      (.removeEventListener js/window "beforeunload" beforeunload-handler))
+    (swap! tallentamattomia-muutoksia-atomit dissoc atomi-avain)))
+
+(defn- luo-beforeunload-handler [atomi viesti]
+  (fn [event]
+    (when @atomi
+      (set! (.-returnValue event) viesti)
+      viesti)))
+
+(defn- paivita-beforeunload-kuuntelijat! []
+  (doseq [[atomi-avain entry] @tallentamattomia-muutoksia-atomit]
+    (let [{:keys [atomi beforeunload-viesti beforeunload-handler]} entry]
+      (when-not beforeunload-handler
+        (let [handler (luo-beforeunload-handler atomi beforeunload-viesti)]
+          (.addEventListener js/window "beforeunload" handler)
+          (swap! tallentamattomia-muutoksia-atomit
+            assoc-in [atomi-avain :beforeunload-handler] handler))))))
+
+(defn luo-muutosten-hallinta
+  "Luo yhtenäinen muutosten hallinta joka hoitaa sekä sisäisen navigoinnin varmistuksen 
+   että beforeunload-varoituksen selaimen sulkemisen/uudelleenlatauksen yhteydessä.
+   
+   Palauttaa mapin jossa on :sisaan ja :ulos funktiot komponenttien elinkaaren hallintaan.
+   
+   Parametrit:
+   - atomi-avain: Uniikki avain tälle komponentille (keyword, esim. :tarjous-nakyma/muutokset)
+   - atomi: Reagent-atomi joka seuraa onko tallentamattomia muutoksia (true = muutoksia)
+   - :beforeunload-viesti: Valinnainen viesti beforeunload-tapahtumalle
+   
+   Käyttöesimerkki lomake-komponentissa:
+   
+ 
+   (defn lomake-nakyma [e! _app]
+     (let [muutokset-atom (atom false)  ; Seuraa lomakkeen muutoksia
+           {:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
+                                   :lomake/muutokset          ; Uniikki avain
+                                   muutokset-atom             ; Muutosten seuranta-atomi
+                                   :beforeunload-viesti \"Lomakkeessa on tallentamattomia muutoksia!\")]
+       (komp/luo
+         (komp/sisaan sisaan)   ; Rekisteröi muutosten seuranta
+         (komp/ulos ulos)       ; Puhdista rekisteröinti
+         (fn [e! app]
+           [:div
+            [grid/grid {:muutos #(reset! muutokset-atom true)} data]
+            [napit/tallenna #(do 
+                               (tallenna-data!)
+                               (reset! muutokset-atom false))]]))))"
+  [atomi-avain atomi & {:keys [beforeunload-viesti]}]
+  {:sisaan (fn []
+             (rekisteroi-tallentamattomia-muutoksia-atomi!
+               atomi-avain atomi
+               :beforeunload-viesti beforeunload-viesti)
+             (paivita-beforeunload-kuuntelijat!))
+   :ulos (fn []
+           (poista-tallentamattomia-muutoksia-atomi! atomi-avain))})
+
+;; Navigaation varmistukset jos tallentamattomia muutoksia
+
+(defn tarkista-tallentamattomat-muutokset
+  "Tarkistaa onko jossain rekisteröidyssä atomissa tallentamattomia muutoksia"
+  []
+  (some (fn [[avain entry]]
+          (let [atomi (:atomi entry)]
+            (when @atomi
+              {:avain avain :atomi atomi})))
+    @tallentamattomia-muutoksia-atomit))
+
+(defn hae-kaikki-tallentamattomat-muutokset
+  "Hakee kaikki rekisteröidyt atomit joissa on tallentamattomia muutoksia"
+  []
+  (keep (fn [[avain entry]]
+          (let [atomi (:atomi entry)]
+            (when @atomi
+              {:avain avain :atomi atomi})))
+    @tallentamattomia-muutoksia-atomit))
+
+(defn varmista-navigointi-fn
+  "Varmistaa että käyttäjä haluaa navigoida jos on tallentamattomia muutoksia.
+   Nollaa muutokset jos käyttäjä vahvistaa navigoinnin."
+  [_uusi-sivu]
+  (if (tarkista-tallentamattomat-muutokset)
+    (when (js/confirm "Sinulla on tallentamattomia muutoksia! Haluatko varmasti poistua? Muutokset menetetään.")
+      ;; Käyttäjä vahvisti - nollataan kaikki tallentamattomat muutokset
+      (doseq [{:keys [atomi]} (hae-kaikki-tallentamattomat-muutokset)]
+        (reset! atomi false))
+      true)
+    true))
+
+(defn aseta-valittu-valilehti-varmistuksella! 
+  "Asettaa välilehden varmistuksen kanssa"
+  [taso arvo]
+  (when (varmista-navigointi-fn arvo)
+    (reitit/aseta-valittu-valilehti! taso arvo)))
+
+;; Käytetään varmistuksella toimivaa versiota oletuksena
+;; Suora versio saatavilla erikseen tarvittaessa
+(def aseta-valittu-valilehti-suoraan! reitit/aseta-valittu-valilehti!)
+(def aseta-valittu-valilehti! aseta-valittu-valilehti-varmistuksella!)
 
 (defonce murupolku-nakyvissa? (reaction (and
                                           (not @raportit/raportit-nakymassa?)
@@ -303,6 +421,12 @@
   (go (<! (vaihda-urakkatyyppi! (urakkatyyppi-urakalle ur)))
     (valitse-urakka! ur)))
 
+(defn aseta-hallintayksikko-ja-urakka-varmistuksella!
+  "Asettaa hallintayksikön ja urakan varmistuksen kanssa"
+  [hy-id urakka]
+  (when (varmista-navigointi-fn :urakka)
+    (aseta-hallintayksikko-ja-urakka hy-id urakka)))
+
 (defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
   (log/info "ASETA HY: " hy-id ", UR: " ur-id)
   (reset! valittu-hallintayksikko-id hy-id)
@@ -338,6 +462,30 @@
   (t/kuuntele! :urakka-klikattu
     (fn [urakka]
       (valitse-urakka! urakka))))
+
+(defn valitse-hallintayksikko-varmistuksella! [yks]
+  (when (varmista-navigointi-fn :hallintayksikko)
+    (valitse-hallintayksikko! yks)))
+
+(defn valitse-urakka-varmistuksella! [ur]
+  (when (varmista-navigointi-fn :urakka)
+    (valitse-urakka! ur)))
+
+(defn valitse-urakoitsija-varmistuksella! [u]
+  (when (varmista-navigointi-fn :urakoitsija)
+    (valitse-urakoitsija! u)))
+
+(defn siirry-sivulle-ja-nollaa-parametrit!
+  "Siirtyy annetulle sivulle ja nollaa käyttäjäparametrit"
+  [sivu valilehti]
+  (when (varmista-navigointi-fn sivu)
+    (reset! valittu-hallintayksikko-id nil)
+    (reset! valittu-urakka-id nil)
+    (reset! valittu-ilmoitus-id nil)
+    (reitit/aseta-valittu-valilehti! :sivu sivu)
+    (when valilehti
+      (reitit/aseta-valittu-valilehti! sivu valilehti))
+    (paivita-url)))
 
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
@@ -377,10 +525,11 @@
   (paivita-url))
 
 (defn vaihda-sivu!
-  "Vaihda nykyinen sivu haluttuun."
+  "Vaihda nykyinen sivu haluttuun. Tarkistaa tallentamattomat muutokset."
   [uusi-sivu]
   (when-not (= (valittu-valilehti :sivu) uusi-sivu)
-    (reitit/aseta-valittu-valilehti! :sivu uusi-sivu)))
+    (when (varmista-navigointi-fn uusi-sivu)
+      (reitit/aseta-valittu-valilehti! :sivu uusi-sivu))))
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
