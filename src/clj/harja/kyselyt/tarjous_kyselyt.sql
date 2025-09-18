@@ -91,6 +91,23 @@ DELETE FROM tarjous_johto_ja_hallintokorvaus
  WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
    AND urakka_id = :urakkaid;
 
+-- name: hae-urakan-tarjous-tavoitehinnat
+SELECT id, hoitokausi as hoitovuosinro, urakka, tarjous_tavoitehinta
+FROM urakka_tavoite
+WHERE urakka = :urakkaid
+ORDER BY hoitokausi;
+
+-- name: lisaa-urakan-tavoite-tarjous<!
+INSERT INTO urakka_tavoite (hoitokausi, urakka, tarjous_tavoitehinta, luoja, luotu)
+VALUES (:hoitovuosinro, :urakkaid, :tarjous_tavoitehinta, :luoja, NOW());
+
+-- name: paivita-urakan-tavoite-tarjous<!
+UPDATE urakka_tavoite
+SET tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id = :id;
+
 -- name: hae-tarjouksen-viimeisin-muokkaaja
 SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,
        CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
