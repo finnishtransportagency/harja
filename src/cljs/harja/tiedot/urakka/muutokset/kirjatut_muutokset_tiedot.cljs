@@ -17,7 +17,6 @@
 (defrecord PaivitaToimenpiteenTehtavamaarat [taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [rivi tpi hk-alkuvuosi])
 (defrecord KopioiPysyvaMuutosTulevilleHoitovuosille [hoitovuosi rivit])
-(defrecord PaivitaPysyvanMuutoksenLomakkeenVetolaatikot [vetolaatikot-auki])
 ;; -- Pysyvät muutokset -- LOPPUU
 
 
@@ -28,7 +27,17 @@
   (process-event [{taulukon-rivit :taulukon-rivit} app]
     (log/debug "PaivitaToimenpiteenTehtavamaarat taulukon-rivit: " taulukon-rivit)
     (-> app
-      (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] taulukon-rivit)))
+      (update-in [:muokattava-muutos :tehtavat_ja_maarat]
+        (fn [vanhat-arvot]
+          ;; Uudet rivit tulevat aina yksittäisen vetolaatikon tiedoista
+          ;; -> [{:tehtava 1 :maara 10...} {:tehtava 2 :maara 20...} ...]
+          ;; Kaikkien vetolaatikkojen tiedot yhdistetään ja kootaan samaan app-tilaan yhdeksi vektoriksi
+          ;; Uuden rivin tieto korvaa vanhan saman tehtävän tiedon, mikäli app-tilasta löytyy jo rivi samalla
+          ;; tehtävä-id:llä
+          (let [uudet-tehtavat (into {} (map (fn [rivi] [(:tehtava rivi) rivi]) taulukon-rivit))
+                vanhat-tehtavat (into {} (map (fn [rivi] [(:tehtava rivi) rivi]) vanhat-arvot))
+                yhdistetyt-tehtavat (merge vanhat-tehtavat uudet-tehtavat)]
+            (vec (vals yhdistetyt-tehtavat)))))))
 
   PaivitaToimenpiteenTavoitehinnanMuutos
   (process-event [{rivi :rivi
@@ -37,12 +46,6 @@
     (log/debug "PaivitaToimenpiteenTavoitehinnanMuutos " rivi " tpi " tpi "hk-alkuvuosi " hk-alkuvuosi)
     ;; TODO: päivitä oikeaan kohtaan dataa tavoitehinnan muutos mahdollista tallennusta varten
     app)
-
-  PaivitaPysyvanMuutoksenLomakkeenVetolaatikot
-  (process-event [{vetolaatikot-auki :vetolaatikot-auki} app]
-    (log/debug "PaivitaPysyvanMuutoksenLomakkeenVetolaatikot taulukon-rivit: " vetolaatikot-auki)
-    (-> app
-      (assoc-in [:muokattava-muutos :vetolaatikot-auki] vetolaatikot-auki)))
 
   ;; TODO: Jätetään myöhemmäksi, aluksi tallennus muokkaus ja muut tärkeämmät ominaisuudet.
   KopioiPysyvaMuutosTulevilleHoitovuosille
