@@ -148,7 +148,7 @@
           (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
           (update :kohdistukset (fn [kohdistukset]
                                   (mapv (fn [kohdistus]
-                                          (let [kohdistus-muutostyo-id (:muutos kohdistus)
+                                          (let [kohdistus-muutostyo-id (:muutos-id kohdistus)
                                                 muutostyot (:urakan-muutostyot app)
                                                 valittu-muutostyo (filter #(= (:id %) kohdistus-muutostyo-id) muutostyot)
                                                 valittu-muutostyo (first valittu-muutostyo)
@@ -398,7 +398,7 @@
                 (assoc-in [:lomake :kohdistukset nro :toimenpide] toimenpide)
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi toimenpide)))]
       app))
-  
+
   ValitseMuutostyoKohdistukselle
   (process-event [{:keys [muutostyo nro]} app]
     (assoc-in app [:lomake :kohdistukset nro :valittu-muutostyo] muutostyo))
@@ -568,8 +568,16 @@
         (assoc :tehtavaryhmat tehtavaryhmat))))
 
   KutsuEpaonnistui
-  (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit} app]
-    (when viesti (viesti/nayta! viesti :danger))
+  (process-event [{{:keys [ei-async-laskuria viesti]} :parametrit :as tulos} app]
+    (cond
+      ;; Jos backend heitti throw+, näytä käyttäjille selkeästi mikä virhe tapahtui
+      (some? (get-in tulos [:tulos :response :virhe]))
+      ;; Voi olla pitkä viesti, anna käyttäjälle aikaa lukea 
+      (viesti/nayta-toast! (str (get-in tulos [:tulos :response :virhe])) :varoitus viesti/viestin-nayttoaika-aareton)
+
+      viesti
+      (viesti/nayta! viesti :danger))
+
     (-> app
       (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] (if ei-async-laskuria identity dec))))
@@ -748,7 +756,7 @@
             :koontilaskun-kuukausi koontilaskun-kuukausi}}
           {:onnistui ->TallennusOnnistui
            :epaonnistui ->KutsuEpaonnistui
-           :epaonnistui-parametrit [{:viesti "Kulun tallentaminen epäonnistui"}]})
+           :paasta-virhe-lapi? true})
         (js/console.error "Lomaketta ei tallennettu, koska lomake ei ole validi." (pr-str validi?)))
 
       (cond-> app

@@ -31,15 +31,8 @@ ALTER TABLE mhu_muutos_kustannusvaikutus
 ALTER TABLE mhu_muutos_tehtava_ja_maaraluettelo
     ADD CONSTRAINT uniikki_muutos_tehtava_ja_maara UNIQUE (muutos, tehtava, hoitokauden_alkuvuosi);
 
-
 -- Yhteen pysyvään muutokseen voidaan tallentaa useita kustannusvaikutuksia useille hoitovuosille, joissa vaihtelevat kustannuslajit ja toimenpideinstanssit
--- Muutostöillä tpi:tä ei ole, koska kuluja ei kirjata suoraan 
-CREATE UNIQUE INDEX uniikki_muutos_kustannusvaikutus ON mhu_muutos_kustannusvaikutus (
-    muutos, kustannuslaji, hoitokauden_alkuvuosi,
-    COALESCE(toimenpideinstanssi, -1)
-);
-
-
+ALTER TABLE mhu_muutos_kustannusvaikutus ADD CONSTRAINT uniikki_muutos_kustannusvaikutus UNIQUE (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi);
 DROP INDEX IF EXISTS mhu_muutos_kustannusvaikutus_idx;
 CREATE INDEX mhu_muutos_kustannusvaikutus_mvt_idx ON mhu_muutos_kustannusvaikutus (muutos, versio, toimenpideinstanssi);
 
