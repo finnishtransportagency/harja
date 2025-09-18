@@ -42,6 +42,7 @@
     (into [] (reduce (fn [rivit tarjous-rivi]
                        (let [vuosiarvot (reduce (fn [uusi rivi]
                                                   (-> uusi
+                                                    (assoc :jarjestys (:jarjestys tarjous-rivi))
                                                     (assoc :maksukausi (:maksukausi tarjous-rivi))
                                                     (assoc :poistettu (:poistettu tarjous-rivi))
                                                     (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
@@ -319,6 +320,7 @@
 
   TallennaTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (kasittele-tarjouksen-vastaus vastaus app))
 
   TallennaTarjouksenTiedotEpaonnistui
@@ -666,7 +668,7 @@
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
-    (assoc app :hankinnat hankinnat))
+    (assoc app :hankinnat (sort-by :jarjestys hankinnat)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]

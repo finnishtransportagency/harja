@@ -67,7 +67,16 @@
     v))
 
 (defn johto-ja-hallintokorvaukset [e! kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys app]
-  (let [;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
+  (let [vuositaulukon-otsikot (map-indexed (fn [index rivi]
+                                      (merge rivi
+                                       {:muokattava? (fn [rivi] (cond
+                                                                  (and (= 0 index) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) true
+                                                                  (and (< 0 index) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) false
+                                                                  (not= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") true
+                                                                  :else true))}))
+                                vuositaulukon-otsikot)
+
+        ;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
         joha-tiedot (:toimenkuvat app)
         toimenkuvat (remove #(true? (:poistettu %)) joha-tiedot)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
@@ -197,6 +206,7 @@
     :voi-kumota? false
     :piilota-toiminnot? false
     :tunniste :nimi
+    :jarjesta :jarjestys
     :muutos #(do
                (reset! tallenna-painettu false)
                (e! (tarjous-tiedot/->PaivitaHankinnatGrid (vals (grid/hae-muokkaustila %))))
@@ -343,10 +353,7 @@
        [tavoitehinta-rivi kattohinta-rivi])]))
 
 (defn tarjous-nakyma [e! app]
-  (let [kaikki-tiedot (concat (:hankinnat app) (:erillishankinnat app)
-                        (:hoidonjohtopalkkiot app) (:toimenkuvat app))
-        ensimmainen-rivi-jossa-hoitovuodet (first (filter #(seq (:hoitovuosittaiset-arvot %)) kaikki-tiedot))
-
+  (let [ensimmainen-rivi-jossa-hoitovuodet (first (:tarjous app))
         ;; Jos ei ole dataa, käytetään oletusarvoja 5 vuodelle
         hoitovuosittaiset-arvot (or (:hoitovuosittaiset-arvot ensimmainen-rivi-jossa-hoitovuodet)
                                   [{:vuosi 2021} {:vuosi 2022} {:vuosi 2023} {:vuosi 2024} {:vuosi 2025}])
