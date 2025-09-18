@@ -139,7 +139,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus (
     versio,
     muutos,
     kustannuslaji,
-    toimenpideinstanssi
+    toimenpideinstanssi,
     hoitokauden_alkuvuosi,
     summa
   ) VALUES (
