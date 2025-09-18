@@ -374,15 +374,16 @@
         hankinta-osiot #{"hankintakustannukset", "erillishankinnat", "hoidonjohtopalkkio", "tavoitehintaiset-rahavaraukset"}
         hoidonjohtopalkkio-tietomallista (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous tietomallitarjous))
         hankinnat-tietomallista (filter #(contains? hankinta-osiot (:osio %)) (:tarjous tietomallitarjous))
-        toimenkuvat-tietomallista (map #(dissoc % :id) ;; Id ei aina testeissä oikein täsmää
+        toimenkuvat-tietomallista (map #(dissoc % :id :jarjestys) ;; Id ei aina testeissä oikein täsmää
                                     (filter (fn [rivi]
                                               (= (:osio rivi) "johto-ja-hallintokorvaus"))
                                       (:tarjous tietomallitarjous)))
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tietomallitarjous)
-        hoidonjohtopalkkio-vastauksesta (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous vastaus))
-        hankinnat-vastauksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous vastaus))
-        toimenkuvat-vastauksesta (map #(dissoc % :id) ;; Id ei aina testeissä oikein täsmää
+        ;; Id ja järjestys ei aina testeissä oikein täsmää
+        hoidonjohtopalkkio-vastauksesta (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous vastaus)))
+        hankinnat-vastauksesta (map #(dissoc % :id :jarjestys) (filter #(contains? hankinta-osiot (:osio %)) (:tarjous vastaus)))
+        toimenkuvat-vastauksesta (map #(dissoc % :id :jarjestys)
                                    (filter (fn [rivi]
                                              (= (:osio rivi) "johto-ja-hallintokorvaus"))
                                      (:tarjous vastaus)))]
@@ -408,8 +409,8 @@
         toimenkuvat-tietomallista (ota-toimenkuvat-ja-poista-id tietomallitarjous)
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tietomallitarjous)
-        hoidonjohtopalkkio-vastauksesta (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous vastaus))
-        hankinnat-vastauksesta (filter #(contains? hankinta-osiot (:osio %)) (:tarjous vastaus))
+        hoidonjohtopalkkio-vastauksesta (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "hoidonjohtopalkkio") (:tarjous vastaus)))
+        hankinnat-vastauksesta (map #(dissoc % :id :jarjestys) (filter #(contains? hankinta-osiot (:osio %)) (:tarjous vastaus)))
         toimenkuvat-vastauksesta (ota-toimenkuvat-ja-poista-id vastaus)]
 
     (is (= hoidonjohtopalkkio-tietomallista hoidonjohtopalkkio-vastauksesta))
@@ -436,7 +437,7 @@
         ;; Tallennetaan tarjous ensin
         ensivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)
         ensivastaus-kustannus (first (:tarjous ensivastaus))
-        ensivastaus-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus))
+        ensivastaus-rahavaraukset (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus)))
         ensivastaus-toimenkuvat (ota-toimenkuvat-ja-poista-id ensivastaus)
 
         ;; Muokataan tarjousta
@@ -470,7 +471,7 @@
         ;; Tallennetaan tarjous ensin
         ensivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)
         ensivastaus-kustannus (first (:tarjous ensivastaus))
-        ensivastaus-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus))
+        ensivastaus-rahavaraukset (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus)))
         ensivastaus-toimenkuvat (ota-toimenkuvat-ja-poista-id ensivastaus)
 
         ;; Muokataan tarjousta
