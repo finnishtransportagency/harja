@@ -359,7 +359,10 @@
                                       :vayla-tyyli? true
                                       :muokattu? true
                                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :valittu-muutostyo)
-                                      :valitse-fn #(e! (tiedot/->ValitseMuutostyoKohdistukselle % nro))}
+                                      :valitse-fn #(do
+                                                     ;; Erillisrahoitetut muutostyöt ovat tavoitehintaisia 
+                                                     (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
+                                                     (e! (tiedot/->ValitseMuutostyoKohdistukselle % nro)))}
          (vec urakan-muutostyot)]]
 
        [:div.label-ja-alasveto {:style {:width "320px"}}
