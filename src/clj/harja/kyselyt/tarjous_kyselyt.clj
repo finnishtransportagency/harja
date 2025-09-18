@@ -385,6 +385,8 @@
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi (:vuosi vuosi) :summa 0.00M}) vuodet)
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         tarjous-rivit (hae-tarjouksen-tiedot db {:urakka_id urakka-id})
         ;; Tarjouksen viimeisin muokkaaja
         viimeisin-muokkaus (first (hae-tarjouksen-viimeisin-muokkaaja db {:urakkaid urakka-id}))
@@ -393,10 +395,12 @@
                         (fn [tarjous]
                           (-> tarjous
                             (assoc :kustannukset
-                              (mapv
-                                (fn [k]
-                                  (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
-                                (konversio/pgarray->vector (:kustannukset tarjous))))
+                              (if (:kustannukset tarjous)
+                                (mapv
+                                  (fn [k]
+                                    (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
+                                  (konversio/pgarray->vector (:kustannukset tarjous)))
+                                []))
                             (assoc :toimenkuvat
                               (mapv
                                 (fn [k]
@@ -446,6 +450,7 @@
 
         tarjous {:urakka-id urakka-id
                  :kaikki-toimenkuvat kaikki-toimenkuvat
+                 :kattohintakerroin kattohintakerroin
                  :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                  :tarjous tarjousrivit}
@@ -453,6 +458,7 @@
         tarjous (if (not= "Kilpailutettavat hankinnat" (:nimi (first (:tarjous tarjous))))
                   {:urakka-id urakka-id
                    :kaikki-toimenkuvat kaikki-toimenkuvat
+                   :kattohintakerroin kattohintakerroin
                    :tarjous (luo-default-tarjous db urakka-id)}
                   tarjous)
 
