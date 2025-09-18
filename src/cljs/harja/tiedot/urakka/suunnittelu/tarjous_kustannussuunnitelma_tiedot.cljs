@@ -12,6 +12,24 @@
 (defonce nakymassa? (atom false))
 (defonce grid-toimenkuvat-atom (atom [{}]))
 
+;; Muutosten seuranta
+(defonce tallentamattomia-muutoksia (atom false))
+
+(defn merkitse-muutos!
+  "Merkitsee että muutoksia on tehty"
+  []
+  (reset! tallentamattomia-muutoksia true))
+
+(defn nollaa-muutokset!
+  "Nollaa muutosten seurannan"
+  []
+  (reset! tallentamattomia-muutoksia false))
+
+(defn onko-muutoksia?
+  "Tarkistaa onko tallentamattomia muutoksia"
+  []
+  @tallentamattomia-muutoksia)
+
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
         vuosikohtaiset-kustannukset (map #(get rivi % 0) vuosikohtaiset-avaimet)
@@ -188,6 +206,7 @@
 (defrecord PaivitaErillishankinnatGrid [erillishankinnat])
 (defrecord PaivitaToimenkuvatGrid [toimenkuvat])
 (defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
+(defrecord NollaaMuutokset [])
 
 (defrecord ToggleVetolaatikonMuokkaus [tila])
 
@@ -276,6 +295,7 @@
   HaeTyhjatTarjouksenTiedot
   (process-event
     [_ app]
+    (nollaa-muutokset!)
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
       {:urakka-id (-> @tila/yleiset :urakka :id)}
       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
@@ -304,6 +324,7 @@
   TallennaTarjouksenTiedot
   (process-event
     [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
+    (nollaa-muutokset!)
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
           kaikki-toimenkuvat (:toimenkuvat app)
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
@@ -668,19 +689,28 @@
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
+    (merkitse-muutos!)
     (assoc app :hankinnat (sort-by :jarjestys hankinnat)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
+    (merkitse-muutos!)
     (assoc app :erillishankinnat erillishankinnat))
 
   PaivitaToimenkuvatGrid
   (process-event [{:keys [toimenkuvat]} app]
+    (merkitse-muutos!)
     (assoc app :toimenkuvat toimenkuvat))
 
   PaivitaHoidonjohtopalkkioGrid
   (process-event [{:keys [hoidonjohtopalkkiot]} app]
+    (merkitse-muutos!)
     (assoc app :hoidonjohtopalkkiot hoidonjohtopalkkiot))
+
+  NollaaMuutokset
+  (process-event [_ app]
+    (nollaa-muutokset!)
+    app)
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]

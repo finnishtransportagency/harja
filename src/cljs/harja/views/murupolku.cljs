@@ -27,7 +27,7 @@
                                   :color "#323232"})
                         :on-click #(do
                                     (.preventDefault %)
-                                    (nav/valitse-hallintayksikko! nil))}
+                                    (nav/valitse-hallintayksikko-varmistuksella! nil))}
     "Koko maa"]])
 
 (defn kasittele-toggle-napin-toiminnot [event {:keys [id valinta-auki valikon-tieto]}]
@@ -106,7 +106,7 @@
           [:a.murupolkuteksti {:href "#"
                                :on-click #(do
                                             (.preventDefault %)
-                                            (nav/valitse-hallintayksikko! valittu))}
+                                            (nav/valitse-hallintayksikko-varmistuksella! valittu))}
            (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
 
           [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
@@ -141,11 +141,11 @@
                                 (.preventDefault event)
                                 (.stopPropagation event)
                                 (reset! valinta-auki nil)
-                                (nav/valitse-hallintayksikko! muu-yksikko)
+                                (nav/valitse-hallintayksikko-varmistuksella! muu-yksikko)
                                 (r/after-render (fn [] (.focus alasvedon-nappi)))))))}
           [linkki (hal/elynumero-ja-nimi muu-yksikko)
            #(do (reset! valinta-auki nil)
-              (nav/valitse-hallintayksikko! muu-yksikko))]])]]]))
+              (nav/valitse-hallintayksikko-varmistuksella! muu-yksikko))]])]]]))
 
 (def urakka-rivi (atom nil))
 
@@ -197,9 +197,9 @@
                                    (.stopPropagation %)
                                    (reset! valinta-auki nil)
                                    (reset! urakka-rivi nil)
-                                   (nav/valitse-urakka! urakka)
+                                   (nav/valitse-urakka-varmistuksella! urakka)
                                    (.focus (.querySelector (.getElementById js/document "alasveto-urakka") "button"))))}
-                [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]]])))
+                [linkki (:nimi urakka) #(nav/valitse-urakka-varmistuksella! urakka)]])))]]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija
@@ -207,7 +207,7 @@
    [livi-pudotusvalikko {:elementin-id "alasveto-urakoitsija"
                          :valinta @nav/valittu-urakoitsija
                          :format-fn #(if % (:nimi %) "Kaikki")
-                         :valitse-fn nav/valitse-urakoitsija!
+                         :valitse-fn nav/valitse-urakoitsija-varmistuksella!
                          :class (str "alasveto-urakoitsija"
                                      (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled (or (some? @nav/valittu-urakka)
