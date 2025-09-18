@@ -390,10 +390,32 @@
                                     :maksukausi :string :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
                                 (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
-        ;; Muutetaan ui:lle välitettävään muotoon
-        ;; Kustannusrivit tulevat tietokannasta oikeassa järjestyksessä. Merkitään tämä järjestys talteen
-        kustannus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys indeksi)) (:kustannukset (first tarjous-rivit)))
+
+        kustannus-rivit (:kustannukset (first tarjous-rivit))
+        ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
+        kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        puuttuvat-rahavaraukset (filter
+                                (fn [r]
+                                  (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
+                                  kaikki-urakan-rahavaraukset)
+        puuttuvat-rahavaraukset (reduce (fn [lopulliset rahavaraus]
+                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
+                                                             :summa 0
+                                                             :osio "tavoitehintaiset-rahavaraukset"
+                                                             :tehtava_id nil
+                                                             :tehtavaryhma_id nil
+                                                             :rahavaraus_id (:id rahavaraus)}])))
+                           [] puuttuvat-rahavaraukset)
+        kustannus-rivit (sort-by :rahavaraus_id (vec (concat kustannus-rivit puuttuvat-rahavaraukset)))
+        kustannus-rivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) kustannus-rivit)
+        kustannus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys indeksi)) kustannus-rivit)
         kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) kustannus-rivit)
+        ;; Uusille rahavarauksille ei synny hoitovuosittaisia arvoja, joten lisätään ne nyt
+        kustannus-rivit (mapv (fn [rivi]
+                                (if-not (seq (:hoitovuosittaiset-arvot rivi))
+                                  (assoc rivi :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)
+                                  rivi))
+                          kustannus-rivit)
         toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) (:toimenkuvat (first tarjous-rivit)))
         toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) toimenkuva-rivit)
 

@@ -242,7 +242,7 @@
    (:hankinnat app)])
 
 (defn erillishankinnat-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
-  ([vuositaulukon-otsikot (map #(merge  %{:muokattava? (constantly false)}) vuositaulukon-otsikot)]
+  (let [vuositaulukon-otsikot (map #(merge  %{:muokattava? (constantly false)}) vuositaulukon-otsikot)]
    [grid/grid
     {:otsikko ""
      :data-cy "tarjous-erillishankinnat-grid"
