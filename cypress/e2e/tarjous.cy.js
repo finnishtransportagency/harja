@@ -389,7 +389,6 @@ describe('Tarjous-näkymä', function () {
             asetaToimenkuvalleArvo('Vastuunalainen työnjohtaja', 1000, 2000, 3000, 4000, 5000);
             asetaToimenkuvalleArvo('2. työnjohtaja', 1000, 2000, 3000, 4000, 5000);
             asetaToimenkuvalleArvo('3. työnjohtaja', 1000, 2000, 3000, 4000, 5000);
-            asetaToimenkuvalleArvo('Apulainen/työnjohtaja', 1000, 2000, 3000, 4000, 5000);
             asetaToimenkuvalleArvo('Viherhoidosta vastaava henkilö', 1000, 2000, 3000, 4000, 5000);
             asetaToimenkuvalleArvo('Hankintavastaava', 1000, 2000, 3000, 4000, 5000);
             asetaToimenkuvalleArvo('Harjoittelija', 1000, 2000, 3000, 4000, 5000);
@@ -408,12 +407,12 @@ describe('Tarjous-näkymä', function () {
 
             // Varmista että tallennettu arvo säilyy
 
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().contains('7 000,00');
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().contains('14 000,00');
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().contains('21 000,00');
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().contains('28 000,00');
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().next().contains('35 000,00');
-            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().next().next().contains('105 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().contains('6 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().contains('12 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().contains('18 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().contains('24 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().next().contains('30 000,00');
+            cy.get('[data-cy=tarjous-toimenkuvat-grid] table.grid tbody').contains('Johto- ja hallintokorvaus yhteensä').next().next().next().next().next().next().next().contains('90 000,00');
 
             tarkistaTarjousRivinInputArvo('tarjous-toimenkuvat-grid', 'Vastuunalainen työnjohtaja', 0, '1 000,00');
             tarkistaTarjousRivinInputArvo('tarjous-toimenkuvat-grid', 'Vastuunalainen työnjohtaja', 1, '2 000,00');
@@ -465,7 +464,7 @@ describe('Tarjous-näkymä', function () {
             muokkaaTarjousRiviaArvo('tarjous-hoidonjohtopalkkio-grid', 'Hoidonjohtopalkkio', 0, hoidonjohtopalkkio);
 
             var toimenkuvat = '21000.00';
-            var kaikkiToimenkuvatYhteensa = '27000.00'; // Vanhoista testeistä -25 urakalla on jo summia ensimmäiselle hoitokaudelle tallennettuna
+            var kaikkiToimenkuvatYhteensa = '26000.00'; // Vanhoista testeistä -25 urakalla on jo summia ensimmäiselle hoitokaudelle tallennettuna
             asetaToimenkuvalleArvo('Sopimusvastaava', toimenkuvat, toimenkuvat, toimenkuvat, toimenkuvat, toimenkuvat);
 
             // Tallenna muutokset
