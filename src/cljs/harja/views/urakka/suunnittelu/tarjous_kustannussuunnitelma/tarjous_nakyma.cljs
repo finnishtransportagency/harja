@@ -104,6 +104,7 @@
         vuosi-map (zipmap vuosiavaimet (repeat 0))]
     [grid/grid
      {:otsikko ""
+      :data-cy "tarjous-toimenkuvat-grid"
       :muokkaa-aina true
       :voi-muokata? true
       :muokattava? (constantly true)
