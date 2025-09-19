@@ -37,7 +37,7 @@
                                              (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
                                     (:toimenpiteiden-tehtavat muokattava-muutos))]
 
-        (prn "###" (get-in muokattava-muutos [:tehtavat_ja_maarat]))
+        (prn "###" valittu-hoitovuoden-alkuvuosi)
 
         [:span
          [:h3 "Vaikutus tehtävämääriin"]
@@ -46,6 +46,8 @@
                  urakan-hoitokaudet
                  "Hoitovuosi"))]
 
+         ;; Pakota uudelleenrenderöinti, jotta hoitovuoden vaihto valuu :muutos-callbackiin
+         ^{:key valittu-hoitovuoden-alkuvuosi}
          [grid/grid
           {:luokat ["vaikutus-tehtaviin-grid"]
            :tunniste :tehtava
@@ -64,7 +66,10 @@
                      (let [rivit (map #(merge (val %)
                                          {:hoitokauden_alkuvuosi valittu-hoitovuoden-alkuvuosi})
                                    (grid/hae-muokkaustila grid))]
-                       (e! (t-kirjatut/->PaivitaToimenpiteenTehtavamaarat toimenpideinstanssi rivit))))}
+                       (e! (t-kirjatut/->PaivitaToimenpiteenTehtavamaarat
+                             (:toimenpideinstanssi rivi)
+                             valittu-hoitovuoden-alkuvuosi
+                             rivit))))}
 
           ;; Taulukon kentät
           [{:otsikko "Tehtävä"
@@ -129,9 +134,11 @@
                              :pakollinen? true :input-luokka "tavoitehinnan-muutos-input"
                              :placeholder "Syötä hintavaikutus"}
           (r/wrap muutos-valittuna-hoitovuonna
-            #(e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos %
-                   (:toimenpideinstanssi rivi)
-                   (:hoitovuosi muokattava-muutos))))]]))))
+            (fn [summa]
+              (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
+                    (:toimenpideinstanssi rivi)
+                    (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                    summa))))]]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
   [vetolaatikkorivit hoitovuosi toimenpiteiden-tiedot]
