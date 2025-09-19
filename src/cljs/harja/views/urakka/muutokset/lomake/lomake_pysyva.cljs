@@ -37,8 +37,6 @@
                                              (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
                                     (:toimenpiteiden-tehtavat muokattava-muutos))]
 
-        (prn "###" valittu-hoitovuoden-alkuvuosi)
-
         [:span
          [:h3 "Vaikutus tehtävämääriin"]
          [:p (str (:toimenpide rivi) ", "

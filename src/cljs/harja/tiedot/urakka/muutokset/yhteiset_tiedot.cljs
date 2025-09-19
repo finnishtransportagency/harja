@@ -142,6 +142,14 @@
         liitteet))))
 
 
+(defn- muutos-ilman-ui-tietoja [muutos]
+  (dissoc muutos
+    ;; Valittu hoitovuosi UI:ssa
+    :hoitovuosi
+    :mahdolliset-hoitovuodet-lomakkeella
+    ;; Pysyvien muutosten aputietoja
+    :toimenpiteiden-tehtavat))
+
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [_ app]
@@ -254,7 +262,9 @@
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
                                         (lomake/puuttuvat-pakolliset-kentat muutos))
-          muutos (lomake/ilman-lomaketietoja muutos)
+          muutos (-> muutos
+                   (lomake/ilman-lomaketietoja)
+                   (muutos-ilman-ui-tietoja))
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
                   (filter #(and
