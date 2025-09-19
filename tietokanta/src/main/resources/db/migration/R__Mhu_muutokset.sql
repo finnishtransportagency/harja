@@ -20,7 +20,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER mhu_muutos_historia_trigger
+DROP TRIGGER IF EXISTS mhu_muutos_historia_trigger ON mhu_muutos;
+CREATE TRIGGER mhu_muutos_historia_trigger
     -- mhu_muutos-taulun sisällöstä ei koskaan poisteta rivejä
     BEFORE UPDATE ON mhu_muutos
     FOR EACH ROW
@@ -49,7 +50,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER mhu_muutos_liite_historia_trigger
+DROP TRIGGER IF EXISTS mhu_muutos_liite_historia_trigger ON mhu_muutos_liite;
+CREATE TRIGGER mhu_muutos_liite_historia_trigger
     BEFORE UPDATE OR DELETE
     ON mhu_muutos_liite
     FOR EACH ROW
@@ -77,7 +79,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER paivita_mhu_muutos_kustannusvaikutus_historia_trigger
+DROP TRIGGER IF EXISTS paivita_mhu_muutos_kustannusvaikutus_historia_trigger ON mhu_muutos_kustannusvaikutus;
+CREATE TRIGGER paivita_mhu_muutos_kustannusvaikutus_historia_trigger
     BEFORE UPDATE OR DELETE
     ON mhu_muutos_kustannusvaikutus
     FOR EACH ROW
@@ -105,7 +108,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER mhu_muutos_tehtava_ja_maaraluettelo_historia_trigger
+DROP TRIGGER IF EXISTS mhu_muutos_tehtava_ja_maaraluettelo_historia_trigger ON mhu_muutos_tehtava_ja_maaraluettelo;
+CREATE TRIGGER mhu_muutos_tehtava_ja_maaraluettelo_historia_trigger
     BEFORE UPDATE OR DELETE
     ON mhu_muutos_tehtava_ja_maaraluettelo
     FOR EACH ROW
