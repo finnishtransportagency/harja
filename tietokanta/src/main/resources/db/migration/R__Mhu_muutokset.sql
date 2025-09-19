@@ -22,8 +22,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER mhu_muutos_historia_trigger
     -- mhu_muutos-taulun sisällöstä ei koskaan poisteta rivejä
-    BEFORE UPDATE
-    ON mhu_muutos
+    BEFORE UPDATE ON mhu_muutos
     FOR EACH ROW
 EXECUTE FUNCTION paivita_mhu_muutos_historia();
 
