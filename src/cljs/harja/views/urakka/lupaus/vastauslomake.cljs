@@ -241,7 +241,8 @@
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         kustannusennuste (if (:kustannusennuste lahetetty-vastaus)
                           (:kustannusennuste lahetetty-vastaus)
-                          kuukauden-kustannusennuste)
+                          kuukauden-kustannusennuste) 
+        pisteet-laskettu? (get-in app [:yhteenveto :kustannusennuste-pisteet-laskettu :kaikki-laskettu])
         ;; Tarkista onko tallentaminen käynnissä
         tallentaa-kustannusennustetta? (and 
                                         (= (get-in app [:lupausta-lahetataan :tyyppi]) :kustannusennuste)
@@ -253,32 +254,35 @@
      [:div.row
       [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
        [:h5 "Kustannusennusteen tiedot"]]
-      [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
-       [:h5 "Hoitovuoden lopun tilanne"]]
+      (when pisteet-laskettu? 
+        [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
+       [:h5 "Hoitovuoden lopun tilanne"]])]
+     [:div.row
       [:div.col-xs-12.col-md-6
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Tavoitehinta € *"
          :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :arvo-atom (r/wrap (:tavoitehinta kustannusennuste)
-                      #(e! (lupaus-tiedot/->AsetaKustannusennusteTavoitehinta %)))
+                      #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
+                         (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :tavoitehinta %))))
          :kentta-params {:tyyppi :numero
                          :vayla-tyyli? true
                          :disabled? disabled?
                          :kokonaisosan-maara 10
                          :desimaalien-maara 2
                          :placeholder "0,00"}}]]
-      [:div.col-xs-12.col-md-6
-       [kentat/nayta-otsikollinen-kentta
-        {:otsikko "Lopun Tavoitehinta €"
-         :vayla-tyyli? true
-         :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-tavoitehinta]))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? disabled?
-                         :kokonaisosan-maara 10
-                         :desimaalien-maara 2
-                         :placeholder "0,00"}}]]]
+      (when pisteet-laskettu? [:div.col-xs-12.col-md-6
+                               [kentat/nayta-otsikollinen-kentta
+                                {:otsikko "Lopun Tavoitehinta €"
+                                 :vayla-tyyli? true
+                                 :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-tavoitehinta]))
+                                 :kentta-params {:tyyppi :numero
+                                                 :vayla-tyyli? true
+                                                 :disabled? disabled?
+                                                 :kokonaisosan-maara 10
+                                                 :desimaalien-maara 2
+                                                 :placeholder "0,00"}}]])]
 
      ;; Toinen rivi - Toteutunut ja Poikkeama
      [:div.row
@@ -288,51 +292,25 @@
          :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :arvo-atom (r/wrap (:toteutuneet-kustannukset kustannusennuste)
-                      #(e! (lupaus-tiedot/->AsetaKustannusennusteToteutuneet %)))
+                      #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
+                         (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :toteutuneet-kustannukset %))))
          :kentta-params {:tyyppi :numero
                          :vayla-tyyli? true
                          :disabled? disabled?
                          :kokonaisosan-maara 10
                          :desimaalien-maara 2
                          :placeholder "0,00"}}]]
-      [:div.col-xs-12.col-md-6
-       [kentat/nayta-otsikollinen-kentta
-        {:otsikko "Lopun Toteutuneet kustannukset €"
-         :vayla-tyyli? true
-         :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-toteutuneet-kustannukset]))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? disabled?
-                         :kokonaisosan-maara 10
-                         :desimaalien-maara 2
-                         :placeholder "0,00"}}]]]
-
-     ;; Kolmas rivi - Pisteet
-     [:div.row
-      [:div.col-xs-12.col-md-6
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Pisteet"
-         :luokka "poista-label-top-margin"
-         :vayla-tyyli? true
-         :arvo-atom (r/atom (:pisteet kustannusennuste))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? true ;; Laskettu automaattisesti
-                         :kokonaisosan-maara 2
-                         :desimaalien-maara 0
-                         :placeholder "0"}}]]
-      [:div.col-xs-12.col-md-6
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Poikkeama %"
-         :luokka "poista-label-top-margin"
-         :vayla-tyyli? true
-         :arvo-atom (r/atom (:poikkeama-prosentti kustannusennuste))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? true ;; Laskettu automaattisesti
-                         :kokonaisosan-maara 3
-                         :desimaalien-maara 1
-                         :placeholder "0,0"}}]]]
+      (when pisteet-laskettu? [:div.col-xs-12.col-md-6
+                               [kentat/nayta-otsikollinen-kentta
+                                {:otsikko "Lopun Toteutuneet kustannukset €"
+                                 :vayla-tyyli? true
+                                 :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-toteutuneet-kustannukset]))
+                                 :kentta-params {:tyyppi :numero
+                                                 :vayla-tyyli? true
+                                                 :disabled? disabled?
+                                                 :kokonaisosan-maara 10
+                                                 :desimaalien-maara 2
+                                                 :placeholder "0,00"}}]])]
      [:div.row
       [:div.col-xs-12
        [:div.margin-top-16.text-left
