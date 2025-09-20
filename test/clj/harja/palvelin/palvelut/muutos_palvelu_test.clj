@@ -390,8 +390,9 @@
                               :versio 1}]
     (is (= vastaus odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
-(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-ii-pysyva-muutos
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+;; Suomussalmi on urakka, jossa pysyviä muutoksia saadaan useammalle hoitovuodelle 2025-2029
+(deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-suomussalmi-pysyva-muutos
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';")),
                 :versio 1, :tyyppi "pysyva" :liite-idt #{}}
         tpi-id-talvihoito (ffirst (q (format "SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23104') AND %s = urakka;" urakka-id))) ; -- Talvihoito
@@ -441,11 +442,19 @@
                                                        :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                                     :kustannuslaji "hankintakustannukset"
                                                                                     :summa 1000
-                                                                                    :toimenpideinstanssi tpi-id-paallpaikk}
+                                                                                    :toimenpideinstanssi 132}
                                                                                {:hoitokauden_alkuvuosi 2026
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :summa 1000
-                                                                                :toimenpideinstanssi tpi-id-paallpaikk})
+                                                                                :toimenpideinstanssi 132}
+                                                                               {:hoitokauden_alkuvuosi 2027
+                                                                                :kustannuslaji "hankintakustannukset"
+                                                                                :summa 1000
+                                                                                :toimenpideinstanssi 132}
+                                                                               {:hoitokauden_alkuvuosi 2028
+                                                                                :kustannuslaji "hankintakustannukset"
+                                                                                :summa 1000
+                                                                                :toimenpideinstanssi 132})
                                                        :tehtavat_ja_maarat (list {:edellinen_maara 1000
                                                                                   :hoitokauden_alkuvuosi 2025
                                                                                   :maaramuutos 100
@@ -453,6 +462,16 @@
                                                                                   :uusi_maara 1100}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2026
+                                                                              :maaramuutos 100
+                                                                              :tehtava 3117
+                                                                              :uusi_maara 1100}
+                                                                             {:edellinen_maara 1000
+                                                                              :hoitokauden_alkuvuosi 2027
+                                                                              :maaramuutos 100
+                                                                              :tehtava 3117
+                                                                              :uusi_maara 1100}
+                                                                             {:edellinen_maara 1000
+                                                                              :hoitokauden_alkuvuosi 2028
                                                                               :maaramuutos 100
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100})
@@ -477,7 +496,7 @@
                               :versio 1}]
     ;; toimenpiteiden tehtävät on pitkälistaus, tässä kohti ei ole ainakaan mielekästi dumpata odotettua tulosta
     ;; käytämme niiden hakemiseen valmista palvelua johon on jo omat testinsä.
-(is (= (dissoc vastaus :toimenpiteiden-tehtavat) odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
+    (is (= (dissoc vastaus :toimenpiteiden-tehtavat) odotettu-muutostieto) "muutoksen tiedot löytyvät onnistuneesti")))
 
 (deftest johto-ja-hallintokorvausmuutoksen-kulu-2025-ja-jalkeen-oltava-negatiivinen
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -498,12 +517,12 @@
 (defn- muutospayload-liitteilla [muutos-id urakka-id liitteet]
   {:kulu_kohdistus nil,
    :kustannusvaikutukset (list
-                           {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset"}),
+                           {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset" :hoitokauden_alkuvuosi 2025}),
    :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00",
    :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
    :tehtavat_ja_maarat (list
-                         {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40}
-                         {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30})
+                         {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :hoitokauden_alkuvuosi 2025}
+                         {:tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30 :hoitokauden_alkuvuosi 2025})
    :urakka urakka-id,
    :nimi "Tämän hoitovuoden määräpoikkeamamuutos",
    :id muutos-id,
