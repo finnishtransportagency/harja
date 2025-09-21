@@ -529,7 +529,7 @@
    :kustannuslaji kustannuslaji
    :summa summa})
 
-(defn- tallenna-muutoksen-kustannusvaikutukset
+(defn tallenna-muutoksen-kustannusvaikutukset
   [db aiti-muutos-id-ja-versio kustannusvaikutukset]
   (log/debug "Tallenna muutoksen kustannusvaikutukset: " kustannusvaikutukset)
 
@@ -550,7 +550,7 @@
    :uusi_maara uusi_maara
    :edellinen_maara edellinen_maara})
 
-(defn tallenna-tehtavan-maaramuutokset
+(defn tallenna-muutoksen-tehtavien-maaramuutokset
   "Poikkeaminen tehtävä- ja määräluettelon määristä"
   [db aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
@@ -611,7 +611,7 @@
 
         ;; Tallenna määrämuutokset
         (when (pos? (count maaramuutokset))
-          (tallenna-tehtavan-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset))
+          (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset))
 
         ;; Tallenna kulut
         (case
