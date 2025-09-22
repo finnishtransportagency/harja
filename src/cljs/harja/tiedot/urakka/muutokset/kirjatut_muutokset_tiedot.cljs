@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot
   "Urakan muutosten tiedot - kirjatut muutokset."
-  (:require [taoensso.timbre :as log]
+  (:require [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
             [tuck.core :as tuck]))
 
 ;; Muutostyypit:
@@ -17,7 +18,7 @@
 (defrecord PaivitaToimenpiteenTehtavamaarat [toimenpideinstanssi hk-alkuvuosi taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
 (defrecord MerkitseTehtavanMaaramuutosPoistetuksi [toimenpideinstanssi tehtava-id hk-alkuvuosi poistettu?])
-(defrecord KopioiPysyvaMuutosTulevilleHoitovuosille [hoitovuosi rivit])
+(defrecord KopioiHoitovuodenMuutoksetTulevilleHoitovuosille [hk-alkuvuosi urakan-hoitovuodet])
 
 (defn muokkaa-toimenpiteen-rivit-pysyva-muutos
   "Palauttaa app-tilan, jossa yhden toimenpideinstanssin vetolaatikon rivejä on muokattu muokkaus-fn avulla."
@@ -56,6 +57,69 @@
     (->> (map :kustannusvaikutukset (get-in app [:muokattava-muutos :toimenpiteiden-tiedot]))
       (flatten)
       (vec))))
+
+;; Apureita tehtävien määrämuutosten ja kustannusvaikutusten kopiointiin hoitovuodelle
+(defn- muunna-tehtava-ja-maara-rivit-kohdevuodelle
+  "Tekee muunnoksia tehtävät-ja-määrät riveihin, jotta ne sopivat kopioitavaksi toiselle hoitovuodelle."
+  [lahderivit kohdevuosi]
+  (mapv (fn [rivi]
+          (-> rivi
+            (assoc :hoitokauden_alkuvuosi kohdevuosi)))
+    lahderivit))
+
+(defn- merkitse-rivit-poistetuksi
+  "Merkitse rivit poistetuksi."
+  [lahderivit]
+  (mapv #(assoc % :poistettu true) lahderivit))
+
+(defn- korvaa-vuosien-tehtavat-ja-maara-rivit
+  "Korvaa kohdevuosien tehtävä- ja määrärivit kopiolla lähdevuoden riveistä.
+   Järjestää rivit hoitovuoden mukaan."
+  [tehtavat-ja-maarat lahdevuosi vuodet]
+  (let [tjm-per-vuosi-map (group-by :hoitokauden_alkuvuosi tehtavat-ja-maarat)
+        lahderivit (get tjm-per-vuosi-map lahdevuosi)]
+    (if (or (empty? lahderivit) (empty? vuodet))
+      tehtavat-ja-maarat
+      (->> (reduce (fn [m vuosi]
+                     ;; Korvaa vuoden tehtävä- ja määrärivit lähderiveillä, aseta uusi alkuvuosi
+                     (assoc m vuosi (concat
+                                      ;; Merkitse vanhat rivit poistetuksi ennen korvaavien rivien lisäämistä
+                                      (merkitse-rivit-poistetuksi (get m vuosi))
+                                      (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit vuosi))))
+             tjm-per-vuosi-map
+             vuodet)
+        (sort-by first)
+        (mapcat (comp vec second))
+        (vec)))))
+
+(defn- korvaa-vuosien-kustannusvaikutukset
+  "Korvaa kohdevuosien kustannusvaikutukset kopiolla lähdevuoden riveistä (jos löytyy).
+   Järjestää tuloksen hoitovuoden mukaan."
+  [kustannusvaikutukset lahdevuosi vuodet]
+  (let [kvt-per-vuosi-map (group-by :hoitokauden_alkuvuosi kustannusvaikutukset)
+        lahde-rivi (some-> (get kvt-per-vuosi-map lahdevuosi) first)]
+    (if (or (nil? lahde-rivi) (empty? vuodet))
+      kustannusvaikutukset
+      (->> (reduce (fn [m vuosi]
+                     ;; Korvaa vuoden kustannusvaikutus lähderivin tiedolla, aseta uusi alkuvuosi
+                     (assoc m vuosi [(assoc lahde-rivi :hoitokauden_alkuvuosi vuosi)]))
+             kvt-per-vuosi-map
+             vuodet)
+        (sort-by first)
+        (mapcat second)
+        (vec)))))
+
+(defn kopioi-hoitovuoden-muutokset-toimenpiteen-riville
+  "Kopioi yhden toimenpiteen vetolaatikko-riville lähdevuoden muutosrivit kaikille tuleville vuosille."
+  [rivi lahdevuosi urakan-hoitovuodet]
+  ;; Haetaan urakan vuosista tulevat vuodet, eli lähtövuotta suuremmat vuodet
+  (let [tulevat-vuodet (filter #(> % lahdevuosi) urakan-hoitovuodet)]
+    (if (empty? tulevat-vuodet)
+      rivi
+      (-> rivi
+        (update :tehtavat_ja_maarat #(korvaa-vuosien-tehtavat-ja-maara-rivit % lahdevuosi tulevat-vuodet))
+        (update :kustannusvaikutukset #(korvaa-vuosien-kustannusvaikutukset % lahdevuosi tulevat-vuodet))))))
+
 
 ;; -- Pysyvät muutokset -- LOPPUU
 
@@ -148,11 +212,27 @@
       (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))
 
   ;; TODO: Jätetään myöhemmäksi, aluksi tallennus muokkaus ja muut tärkeämmät ominaisuudet.
-  KopioiPysyvaMuutosTulevilleHoitovuosille
-  (process-event [{hoitovuosi :hoitovuosi rivit :rivit} app]
-    (log/debug "Tämä on vielä tekemättä")
-    ;; TODO: tässä hanskattava muutosten kopiointi tuleville hoitovuosille...
-    app))
+  KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
+  (process-event [{hk-alkuvuosi :hk-alkuvuosi urakan-hoitovuodet :urakan-hoitovuodet} app]
+    (log/debug "KopioiHoitovuodenMuutoksetTulevilleHoitovuosille, hoitovuosi: " hk-alkuvuosi)
+    ;; TODO: Tässä on tarkoituksena on kopioida valitun hoitokauden muutokset urakan kaikille tuleville hoitovuosille
+    ;;       Eli, valitun hoitovuoden tiedot ensin etsitään [:muokattava-muutos :toimenpiteiden-tiedot] polusta
+    ;;       Sieltä otetaan talteen :tehtavat_ja_maarat ja :kustannusvaikutukset
+    ;;       Sitten etsitään urakan kaikki hoitokaudet, jotka ovat saatilla :toimenpiteiden-tiedot polusta
+    ;;       Ja käydään ne läpi, ja päivitetään kunkin hoitokauden :tehtavat_ja_maarat ja :kustannusvaikutukset
+    ;;       Jokaisen hoitokauden päivityksessä tulee huomioida, että vanhat rivit korvataan kopioiduilla riveillä
+    ;;       ja jokaisen rivin kohdalle päivitetään :hoitokauden_alkuvuosi vastaamaan kunkin hoitokauden alkuvuotta
+    ;;       Lopuksi päivitetään app-tila kutsumalla koosta-tehtavat-ja-maarat-pysyvaan-muutokseen ja koosta-kustannusvaikutukset-pysyvaan-muutokseen
+
+    (let [urakan-hoitovuodet (map #(-> % first pvm/vuosi) urakan-hoitovuodet)]
+      (-> app
+        (update-in [:muokattava-muutos :toimenpiteiden-tiedot]
+          (fn [rivit]
+            (mapv #(kopioi-hoitovuoden-muutokset-toimenpiteen-riville % hk-alkuvuosi urakan-hoitovuodet) rivit)))
+
+        ;; Yhdistä tehtavat ja määrät, sekä kustannusvaikutukset kaikista vetolaatikoista tallennusta varten
+        (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)
+        (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))))
 
 ;; -- Pysyvät muutokset -- LOPPUU
 

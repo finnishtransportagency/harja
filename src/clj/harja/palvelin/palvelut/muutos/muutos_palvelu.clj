@@ -555,6 +555,7 @@
   [db aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
 
+  ;; TODO: Tarkista tarviiko tehdäkin kaksi eri sekvenssiä järjestyksessä: poistettavat ja lisättävät/päivitettävät
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)]
     (doseq [maaramuutos maaramuutokset]

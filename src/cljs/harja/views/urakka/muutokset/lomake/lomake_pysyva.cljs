@@ -103,7 +103,7 @@
            {:otsikko "Yksikkö"
             :nimi :yksikko
             :tyyppi :string
-            :leveys 5
+            :leveys 6
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    ;; Haetaan tieto tehtävän määräyksiköstä toimenpiteiden tehtävistä
@@ -262,12 +262,12 @@
       [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
-       #(e! (t-kirjatut/->KopioiPysyvaMuutosTulevilleHoitovuosille
-              (:hoitovuosi muokattava-muutos)
-              (:toimenpiteiden-tiedot muokattava-muutos)))
+       #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
+              (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+              (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
         ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
-        :disabled true
+        :disabled false
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
