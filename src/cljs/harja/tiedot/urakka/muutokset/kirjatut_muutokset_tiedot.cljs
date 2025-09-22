@@ -99,17 +99,22 @@
       (muokkaa-toimenpiteen-rivit-pysyva-muutos toimenpideinstanssi
         (fn [rivi]
           ;; Päivitetään vain valitun toimenpideinstanssin tehtävät ja määrät, ja ainoastaan valitun hoitokauden osalta
-
           (update rivi :tehtavat_ja_maarat
             (fn [tehtavat-ja-maarat]
-              (mapv (fn [rivi]
-                      (if (and (= tehtava-id (:tehtava rivi))
+              (into []
+                (keep (fn [rivi]
+                        (cond
+                          (and
+                            (= tehtava-id (:tehtava rivi))
                             (= hk-alkuvuosi (:hoitokauden_alkuvuosi rivi)))
-                        ;; Kun rivi merkitään poistetuksi tällä avaimella, grid ymmärtää piilottaa sen
-                        ;; Tallentaessa backend-logiikka osaa suorittaa tarvittavat toimenpiteet poistetuille riveille
-                        (assoc rivi :poistettu poistettu?)
-                        rivi))
-                tehtavat-ja-maarat)))))
+                          ;; Uusia vain UI:ssa olemassaolevia rivejä ei merkitä poistetuksi, ne poistetaan kokonaan UI:sta
+                          ;; Tässä uudet rivit asetetaan nil:ksi ja poistetaan lopputuloksesta
+                          (when (not (:uusi? rivi))
+                            ;; Tallentaessa backend-logiikka suorittaa tarvittavat toimenpiteet poistetuille riveille
+                            (assoc rivi :poistettu poistettu?))
+
+                          :else rivi))
+                  tehtavat-ja-maarat))))))
 
       ;; Yhdistä tehtavat ja määrät kaikista vetolaatikoista tallennusta varten
       (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)))
