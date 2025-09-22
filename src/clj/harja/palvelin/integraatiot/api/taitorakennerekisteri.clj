@@ -60,8 +60,7 @@
 (defn muodosta-urakka-tiedot [tarkastus]
   {:harja-id (:urakka_id tarkastus)
    :tunnus (:urakka_tunnus tarkastus)
-   :nimi (:urakka_nimi tarkastus)
-   :hallintayksikko (:urakka_hallintayksikko tarkastus)})
+   :nimi (:urakka_nimi tarkastus)})
 
 (defn muodosta-silta-tiedot [tarkastus]
   {:harja-id (:silta_id tarkastus)
