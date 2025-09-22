@@ -143,7 +143,7 @@ RETURNING id, versio;
 
 
 -- name: luo-tai-paivita-muutos-kustannusvaikutus<!
-INSERT INTO mhu_muutos_kustannusvaikutus (
+INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     versio,
     muutos,
     kustannuslaji,
@@ -162,7 +162,9 @@ DO UPDATE SET
   versio               = EXCLUDED.versio,
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
-  summa                = EXCLUDED.summa;
+  summa                = EXCLUDED.summa
+-- Päivitetään vain jos tulee uusi määrämuutos
+WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
 -- name: luo-muutos-kulu-linkitys<!

@@ -413,8 +413,8 @@
                                      {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
                                      {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
                                      ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
-                                     ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on jollakin alijoukolla
-                                     ;; rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
+                                     ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on voimassa jollakin joukolla
+                                     ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
                                      {:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
@@ -454,14 +454,18 @@
         kustannusvaikutus-payload [{:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1111, :hoitokauden_alkuvuosi 2025}
                                    {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 2222, :hoitokauden_alkuvuosi 2026}
                                    {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 3333, :hoitokauden_alkuvuosi 2027}
-                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025}
+                                   {:summa 555, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025}
                                    {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026}
-                                   {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027}]
+                                   {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027}
+                                   ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
+                                   ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on voimassa jollakin joukolla
+                                   ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
+                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1111, :hoitokauden_alkuvuosi 2025 :versio 2}
                            {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 2222, :hoitokauden_alkuvuosi 2026 :versio 2}
                            {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 3333, :hoitokauden_alkuvuosi 2027 :versio 2}
-                           {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025 :versio 2}
+                           {:summa 555, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025 :versio 2}
                            {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026 :versio 2}
                            {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027 :versio 2}
                            ;; Tämän rivin pitäisi jäädä ennalleen alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
