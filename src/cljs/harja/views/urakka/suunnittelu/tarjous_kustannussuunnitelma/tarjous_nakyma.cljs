@@ -113,7 +113,7 @@
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
-      :jarjesta :toimenkuva-id
+      :jarjesta :jarjestys
       :muutos #(do
                  (let [toimenkuvat (vals (grid/hae-muokkaustila %))
                        ;; Jos muutos on ollut uuden rivin lisäys, niin asetetaan valittu toimenkuva
@@ -131,7 +131,7 @@
                                                 vuosi-map))
                                             toimenkuva))
                                      toimenkuvat)
-                       toimenkuvat (sort-by :toimenkuva-id toimenkuvat)]
+                       toimenkuvat (sort-by :jarjestys toimenkuvat)]
                    (e! (tarjous-tiedot/->PaivitaToimenkuvatGrid toimenkuvat))
                    (reset! virheet-atom (grid/hae-virheet %))))
       :rivi-jalkeen-fn (fn [rivit]
