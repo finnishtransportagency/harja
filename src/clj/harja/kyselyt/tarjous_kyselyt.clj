@@ -335,7 +335,7 @@
                                                  (let [r-rivit (keep #(when (= nimi (:nimi %))
                                                                         (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
                                                                           :id :nimi :maksukausi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
-                                                                          :johto_ja_hallintokorvaus_toimenkuva_id))
+                                                                          :johto_ja_hallintokorvaus_toimenkuva_id :r_jarjestys))
                                                                  (avain rivi))]
                                                    (vec (concat r r-rivit))))
                                          [] tarjous-rivit)))]
