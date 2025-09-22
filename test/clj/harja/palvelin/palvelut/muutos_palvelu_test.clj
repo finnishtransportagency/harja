@@ -409,6 +409,10 @@
         tehtava-maaramuutos-payload [{:tehtava 2988, :uusi? true, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
                                      {:tehtava 2989, :uusi? true, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
                                      {:tehtava 2991, :uusi? true, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
+                                     ;; Tehtävät, joilla on negatiivinen ID kuuluu ignorata. Käyttäjä ei ole valinnut
+                                     ;; tehtävää käyttöliittymässä.
+                                     {:tehtava -1, :uusi? true, :maaramuutos 666, :hoitokauden_alkuvuosi 2027}
+                                     {:tehtava -2, :uusi? true, :maaramuutos 666, :hoitokauden_alkuvuosi 2027}
                                      poistettava-rivi
                                      {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
                                      {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
@@ -561,6 +565,17 @@
 
         ;; sitten päivitetään samaa muutosta, jolloin tulee rivi historiatietoon...
         muutos-syy-update-1 "Esko teki 100 km lisää tietä, pitääpä justeerata määriä uudestaan"
+        muutos-update-payload-1 (assoc muutos-payload
+                                  :id (inc max-id-ennen-tallennusta)
+                                  :syy muutos-syy-update-1
+                                  ;; Päivitetään paria valittua riviä, jotta nähdään että update toimii
+                                  ;; Ja, että muiden rivien versiot eivät muutu
+                                  :kustannusvaikutukset
+                                  (list
+                                    {:summa 2, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025})
+                                  :tehtavat_ja_maarat
+                                  (list
+                                    {:tehtava 2988, :maaramuutos 2, :hoitokauden_alkuvuosi 2025}))
         vastaus-updaten-jalkeen (filter
                                   #(= muutos-syy-update-1 (:syy %))
                                   (:kirjatut-muutokset
@@ -569,38 +584,36 @@
                                       +kayttaja-jvh+
                                       {:urakka-id urakka-id
                                        :valittu-hoitokausi valittu-hoitokausi
-                                       :muutos (assoc muutos-payload
-                                                 :id (inc max-id-ennen-tallennusta)
-                                                 :syy muutos-syy-update-1)})))
+                                       :muutos muutos-update-payload-1})))
         odotetut-updaten-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa nil
                                         :kulu_kohdistus nil
                                         :kustannusvaikutukset (list
                                                                 {:hoitokauden_alkuvuosi 2025
-                                                                :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
-                                                                :toimenpideinstanssi 129
-                                                                :versio 2}
-                                                               {:hoitokauden_alkuvuosi 2025
-                                                                :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
+                                                                 :kustannuslaji "hankintakustannukset"
+                                                                 :summa 1111
+                                                                 :toimenpideinstanssi 129
+                                                                 :versio 1}
+                                                                {:hoitokauden_alkuvuosi 2025
+                                                                 :kustannuslaji "hankintakustannukset"
+                                                                :summa 2
                                                                 :toimenpideinstanssi 132
                                                                 :versio 2})
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi "Eskon muutos"
                                         :syy "Esko teki 100 km lisää tietä, pitääpä justeerata määriä uudestaan"
-                                        :tavoitehinnan-muutos 2222
+                                        :tavoitehinnan-muutos 1113
                                         :tehtavat_ja_maarat (list
                                                               {:edellinen_maara 0
                                                               :hoitokauden_alkuvuosi 2025
                                                               :maaramuutos 10
                                                               :tehtava 1448
                                                               :uusi_maara 0
-                                                              :versio 2}
+                                                              :versio 1}
                                                              {:edellinen_maara 0
                                                               :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 111
+                                                              :maaramuutos 2
                                                               :tehtava 2988
                                                               :uusi_maara 0
                                                               :versio 2}
@@ -609,7 +622,7 @@
                                                               :maaramuutos 111
                                                               :tehtava 3117
                                                               :uusi_maara 0
-                                                              :versio 2})
+                                                              :versio 1})
                                         :tyyppi "pysyva"
                                         :urakka 45
                                         :versio 2
@@ -640,6 +653,11 @@
         muutosrivi-validi-aikana-loppu-rivi (first (q-map (format "SELECT * FROM ONLY mhu_muutos WHERE validi_aikana @> '2035-07-01 00:00:00.000+00'::timestamp with time zone AND id = %s;" (inc max-id-ennen-tallennusta))))
 
         muutos-syy-update-2 "Esko on kova työmies ja teki taas 50 km lisää tietä, eiköhän tämä ala jo riittää"
+        muutos-update-payload-2 (assoc muutos-update-payload-1
+                                  ;; Tässä updatessa ei päivitetä muuta kuin syytä-
+                                  ;; Lapsitauluihin ei tule muutoksia ja versionostoja
+                                  :id (inc max-id-ennen-tallennusta)
+                                  :syy muutos-syy-update-2)
         vastaus-toisen-updaten-jalkeen (filter
                                          #(= muutos-syy-update-2 (:syy %))
                                          (:kirjatut-muutokset
@@ -648,9 +666,7 @@
                                              +kayttaja-jvh+
                                              {:urakka-id urakka-id
                                               :valittu-hoitokausi valittu-hoitokausi
-                                              :muutos (assoc muutos-payload
-                                                        :id (inc max-id-ennen-tallennusta)
-                                                        :syy muutos-syy-update-2)})))
+                                              :muutos muutos-update-payload-2})))
         historirivit-toisen-updaten-jalkeen (q-map (format "SELECT id, versio FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta)))]
 
     (is (instance? java.util.Date historiarivi-validi-aikana-alku) "onhan pvm")
@@ -669,11 +685,16 @@
     (is (= odotettu-historiarivi historiassa-rivi-updaten-jalkeen) "Historiatietoa syntyi, koska UPDATE tehtiin")
 
     (is (= vastaus-toisen-updaten-jalkeen
-          (list
-            (walk/postwalk
-              #(if (map? %) (assoc % :versio 3) %)
-              (assoc (first odotetut-updaten-jalkeen)
-                :syy muutos-syy-update-2))))
+          ;; Muutos on sama kuin ensimmäisen updaten jälkeen lapsitaulujen rivien osalta
+          ;; Vain syy päivittyy.
+          ;; Äitimuutokset mhu_muutos versio nousee kuitenkin versioon 3, kun lapsitaulujen rivit jäävät versioon 2
+          ;; TODO: Jos tulee joskus tarve, että pelkkä äitimuutoksen päivitys pitäisi johtaa myös kaikkien lapsitaulujen rivien versioiden nousemiseen,
+          ;;       niin vanha logiikka pitää palauttaa ennalleen (SQL upsert-kyselyistä poistetaan DISTINCT FROM)
+          ;;       Selvitään myöhemmin voiko tämä aiheuttaa ongelmia historiakyselyissä.
+          (into (list)
+            (-> (vec odotetut-updaten-jalkeen)
+              (assoc-in [0 :syy] muutos-syy-update-2)
+              (assoc-in [0 :versio] 3))))
       "Pysyvä muutos toisen updaten jälkeen")
     (is (= [{:id (inc max-id-ennen-tallennusta)
              :versio 1}

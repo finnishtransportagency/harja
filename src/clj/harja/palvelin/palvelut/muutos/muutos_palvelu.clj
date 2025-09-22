@@ -564,12 +564,15 @@
                                                          :tehtava (:tehtava maaramuutos)
                                                          :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})
         ;; Luo tai päivitä rivi
-        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
-                            (assoc maaramuutos
-                              ;; TODO: Nämä pitäisi laskea
-                              :uusi_maara 0
-                              :edellinen_maara 0))]
-          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
+        ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
+        ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
+        (when (pos? (:tehtava maaramuutos))
+          (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
+                              (assoc maaramuutos
+                                ;; TODO: Nämä pitäisi laskea
+                                :uusi_maara 0
+                                :edellinen_maara 0))]
+            (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos)))))))
 
 
 

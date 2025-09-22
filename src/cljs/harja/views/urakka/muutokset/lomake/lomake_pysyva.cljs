@@ -45,7 +45,7 @@
                  "Hoitovuosi"))]
 
          ;; Pakota uudelleenrenderöinti, jotta hoitovuoden vaihto valuu :muutos-callbackiin
-         ^{:key valittu-hoitovuoden-alkuvuosi}
+         ^{:key (str valittu-hoitovuoden-alkuvuosi "_" (hash (:tehtavat_ja_maarat rivi)))}
          [grid/grid
           {:luokat ["vaikutus-tehtaviin-grid"]
            :tunniste :tehtava
@@ -58,10 +58,14 @@
            :voi-poistaa? (constantly false)
            :ohjaus g
            :uusi-rivi (fn [rivi]
-                        (assoc rivi :uusi? true))
+                        ;; Mahdollista useamman uuden rivin luonti kerralla tekemällä lisää :tehtava-id:itä jokaista
+                        ;; uutta riviä kohden.
+                        ;; Käytättäjän valitua tehtävän, korvataan negatiivinen tehtävä-id oikealla tehtävän id:llä.
+                        (let [min-id (apply min (conj (map :tehtava tehtavat-ja-maarat-valittuna-hoitovuonna) -1))]
+                          (assoc rivi :uusi? true :tehtava (dec min-id))))
            :muutos (fn [grid]
-                     ;; Jokaisesta muutoksesta taulukkoon tulee eventti tähän, ja se pitää esim. Tuck-eventillä käsitellä app-stateen
-                     ;; uudet rivit taulukossa saavat tiedon "uusi? true", siitä tiedetään että pitää tehdä kantaan INSERT
+                     ;; Jokaisesta muutoksesta taulukkoon tulee eventti tähän, joka käsitellään tuck-eventissä.
+                     ;; Muutoksista tehdään kooste-kokoelma tallennusta varten lomakkeen tilaan.
                      (let [rivit (map #(merge (val %)
                                          {:hoitokauden_alkuvuosi valittu-hoitovuoden-alkuvuosi})
                                    (grid/hae-muokkaustila grid))]
