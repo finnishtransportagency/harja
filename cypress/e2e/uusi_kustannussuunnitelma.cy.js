@@ -80,7 +80,6 @@ function tarkistaHoidonjotopalkkioLuvut(kuukausi, luku1, luku2) {
 }
 
 function tarkistaToimenkuva2019Luvut(toimenkuva, tarjouksenmaara, tunnit, tuntipalkka, yhteensa, kkv) {
-    console.log('tarkistaToimenkuva2019Luvut', toimenkuva, tarjouksenmaara, tunnit, tuntipalkka, yhteensa, kkv);
     if(tarjouksenmaara === '') {
         cy.get('#johto-ja-hallintokorvaus-elementti table.grid').contains('td', toimenkuva).closest('tr')
             .find('td').eq(2)
