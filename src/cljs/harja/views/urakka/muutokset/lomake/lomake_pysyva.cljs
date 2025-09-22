@@ -81,11 +81,13 @@
            {:otsikko "Yksikkö"
             :nimi :yksikko
             :tyyppi :string
-            :leveys 3
+            :leveys 4
             :muokattava? (constantly false)
             :hae (fn [rivi]
-                   (some #(= (:toimenpidekoodi %)
-                            (:toimenpidekoodi rivi))
+                   ;; Haetaan tieto tehtävän määräyksiköstä toimenpiteiden tehtävistä
+                   (some #(when (= (:tehtava-id %)
+                                  (:tehtava rivi))
+                            (:yksikko %))
                      (:toimenpiteiden-tehtavat muokattava-muutos)))}
 
            {:otsikko "Hoitovuosi"
