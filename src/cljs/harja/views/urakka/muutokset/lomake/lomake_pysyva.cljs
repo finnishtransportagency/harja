@@ -54,6 +54,7 @@
            :voi-lisata? true
            :voi-kumota? false
            :voi-muokata? true
+           ;; Otetaan gridin oma poisto-toiminto käytöstä, koska tehdään se erikseen kustomoidulla napilla
            :voi-poistaa? (constantly false)
            :ohjaus g
            :uusi-rivi (fn [rivi]
@@ -114,13 +115,18 @@
             :muokattava? (constantly false)
             :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
 
+           ;; Kustomoitu poisto-nappi, joka korvaa gridin oman poisto-toiminnon
            {:otsikko ""
             :nimi :toiminnot
             :tyyppi :komponentti
             :leveys 9
-            :komponentti (fn [rivi]
+            :komponentti (fn [poistettu-rivi]
                            [napit/nappi "Poista rivi"
-                            #(prn "Poisto eventti tähän riville: " rivi)
+                            #(e! (t-kirjatut/->MerkitseTehtavanMaaramuutosPoistetuksi
+                                   (:toimenpideinstanssi rivi)
+                                   (:tehtava poistettu-rivi)
+                                   valittu-hoitovuoden-alkuvuosi
+                                   true))
                             {:ikoni (ikonit/livicon-trash)
                              :luokka "nappi-toissijainen"}])}]
           tehtavat-ja-maarat-valittuna-hoitovuonna]
