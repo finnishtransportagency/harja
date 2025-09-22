@@ -13,12 +13,28 @@ CREATE TABLE lupaus_kustannusennuste (
     syotetty_pvm TIMESTAMP,
     lasketut_pisteet INTEGER, -- Tämän ennusteen saamat pisteet
     tarkkuus_prosentti DECIMAL(5,2),
+    laskentakaava_versio VARCHAR(10),
+    laskentakaava_teksti TEXT,
+    laskentakaava_parametrit JSONB,
+    laskentakaava_vaiheet JSONB,
     luoja INTEGER NOT NULL REFERENCES kayttaja (id),
     luotu TIMESTAMP NOT NULL DEFAULT NOW(),
     muokkaaja INTEGER REFERENCES kayttaja (id),
     muokattu TIMESTAMP,
     CONSTRAINT lupaus_kustannusennuste_unique UNIQUE ("lupaus-id", "urakka-id", maarapaiva)
 );
+
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_versio 
+IS 'Käytetyn laskentakaavan versionumero, esim. v1.0';
+
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_teksti 
+IS 'Laskentakaava ihmisluettavassa muodossa';
+
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_parametrit 
+IS 'Laskennassa käytetyt syöttöarvot JSON-muodossa';
+
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_vaiheet 
+IS 'Laskentavaiheet ja väliarvot JSON-muodossa auditointia varten';
 
 -- Lisää taulu pisterajojen tallentamiselle
 CREATE TABLE lupaus_kustannusennuste_pisteraja (

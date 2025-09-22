@@ -645,44 +645,62 @@
        :cljs (/ a b))))
 
 (defn laske-kustannusennusteen-tarkkuus
-  "Laskee kustannusennusteen tarkkuuden kaavan mukaan.
-   
-   Kaava: x = [(Te - Tt)/Th × 0,05 + (Ke - Kt)/Th × 0,05 + [(Ke - Te) - (Kt - Tt)]/Th × 0,9]
-   
-   Parametrit mapissa:
-   - ennustettu-tavoitehinta (Te): Ennustettu tavoitehinta
-   - toteutunut-tavoitehinta (Tt): Toteutunut tavoitehinta  
-   - ennustettu-kustannus (Ke): Ennustettu kustannus
-   - toteutunut-kustannus (Kt): Toteutunut kustannus
-   - hoitovuoden-tavoitehinta (Th): Hoitovuoden alun tavoitehinta
-   
-   Palauttaa: {:tarkkuus-prosentti x} tai {:virhe 'virheviesti'}"
+  "Laskee kustannusennusteen tarkkuuden ja palauttaa tietokantaan tallennettavan muodon."
   [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta
            ennustettu-kustannus toteutunut-kustannus
            hoitovuoden-alun-tavoitehinta] :as syotteet}]
   (let [validointi (validoi-kustannusennuste-syotteet syotteet)]
     (if (:virhe validointi)
       validointi
-      (let [te (double ennustettu-tavoitehinta)           ;; Muunnetaan doubleiksi
+      (let [te (double ennustettu-tavoitehinta)
             tt (double toteutunut-tavoitehinta)
             ke (double ennustettu-kustannus)
             kt (double toteutunut-kustannus)
             th (double hoitovuoden-alun-tavoitehinta)
 
-            ;; Kaavan osat turvallisella jaolla
+            ;; Laskentavaiheet
             tavoitehinta-ero (turvallinen-jako (- te tt) th)
             kustannus-ero (turvallinen-jako (- ke kt) th)
             riski-ero (turvallinen-jako (- (- ke te) (- kt tt)) th)
 
-            ;; Lopullinen kaava
+            ;; Lopputulos
             tarkkuus (+ (* tavoitehinta-ero 0.05)
                         (* kustannus-ero 0.05)
                         (* riski-ero 0.9))
+            tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)
 
-            ;; Muutetaan prosenteiksi ja pyöristetään yhteen desimaaliin
-            tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)]
+            ;; Tallennettava data
+            kaava-versio "v1.0"
+            kaava-teksti "x = [(Te - Tt)/Th × 0.05 + (Ke - Kt)/Th × 0.05 + [(Ke - Te) - (Kt - Tt)]/Th × 0.9]"
 
-        {:tarkkuus-prosentti tarkkuus-prosentti}))))
+            parametrit {:Te te :Tt tt :Ke ke :Kt kt :Th th
+                        :kertoimet {:tavoitehinta-kerroin 0.05
+                                    :kustannus-kerroin 0.05
+                                    :riski-kerroin 0.9}}
+
+            vaiheet {:vaihe-1 {:kuvaus "Tavoitehinnan ero"
+                               :kaava "(Te - Tt) / Th"
+                               :laskenta (str "(" te " - " tt ") / " th)
+                               :tulos tavoitehinta-ero}
+                     :vaihe-2 {:kuvaus "Kustannuksen ero"
+                               :kaava "(Ke - Kt) / Th"
+                               :laskenta (str "(" ke " - " kt ") / " th)
+                               :tulos kustannus-ero}
+                     :vaihe-3 {:kuvaus "Riskin ero"
+                               :kaava "[(Ke - Te) - (Kt - Tt)] / Th"
+                               :laskenta (str "[(" ke " - " te ") - (" kt " - " tt ")] / " th)
+                               :tulos riski-ero}
+                     :vaihe-4 {:kuvaus "Lopputulos"
+                               :kaava "vaihe-1 × 0.05 + vaihe-2 × 0.05 + vaihe-3 × 0.9"
+                               :laskenta (str tavoitehinta-ero " × 0.05 + " kustannus-ero " × 0.05 + " riski-ero " × 0.9")
+                               :tulos tarkkuus}
+                     :lopputulos-prosentti tarkkuus-prosentti}]
+
+        {:tarkkuus-prosentti tarkkuus-prosentti
+         :laskentakaava-versio kaava-versio
+         :laskentakaava-teksti kaava-teksti
+         :laskentakaava-parametrit parametrit
+         :laskentakaava-vaiheet vaiheet}))))
 
 (defn maarita-kustannusennuste-pisteet
   "Määrittää pisteet tarkkuuden ja kuukauden perusteella.

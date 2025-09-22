@@ -439,8 +439,29 @@ WHERE "urakka-id" = :urakka-id
 -- name: paivita-kustannusennuste-lopulliset-pisteet!
 -- Päivittää kustannusennusteen lopulliset pisteet
 UPDATE lupaus_kustannusennuste
-SET lasketut_pisteet = :lopulliset-pisteet,
+SET ennustettu_tavoitehinta = :ennustettu-tavoitehinta,
+    ennustetut_kustannukset = :ennustetut-kustannukset,
+    lasketut_pisteet = :lasketut-pisteet,
     tarkkuus_prosentti = :tarkkuus-prosentti,
+    laskentakaava_versio = :laskentakaava-versio,
+    laskentakaava_teksti = :laskentakaava-teksti,
+    laskentakaava_parametrit = :laskentakaava-parametrit::jsonb,
+    laskentakaava_vaiheet = :laskentakaava-vaiheet::jsonb,
     muokkaaja = :muokkaaja,
     muokattu = NOW()
 WHERE id = :kustannusennuste-id;
+
+-- name: onko-kustannusennuste-pisteet-laskettu
+SELECT 
+  COUNT(*) as yhteensa,
+  COUNT(ke.lasketut_pisteet) as laskettu_pisteet,
+  CASE 
+    WHEN COUNT(*) = 0 THEN false
+    WHEN COUNT(ke.lasketut_pisteet) = COUNT(*) THEN true 
+    ELSE false 
+  END as kaikki_laskettu
+FROM lupaus_kustannusennuste ke
+INNER JOIN lupaus l ON l.id = ke."lupaus-id"  
+WHERE ke."urakka-id" = :urakka-id
+  AND ke.hoitovuosi_alkuvuosi = :hoitokauden-alkuvuosi
+  AND l.lupaustyyppi = 'kustannusennuste';
