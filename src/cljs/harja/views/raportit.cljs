@@ -489,7 +489,9 @@
    "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
    "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto
-   "Toimenpiteiden ajoittuminen" :toimenpideajat})
+   "Toimenpiteiden ajoittuminen" :toimenpideajat
+   "Tehtävämäärät" :tehtavamaarat
+   "Välitavoitteet" :valitavoiteraportti})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
   (let [avaimet [(:nimi @valittu-raporttityyppi)
@@ -498,9 +500,10 @@
                              update-in avaimet not)
                       (reset! arvo
                               {(or (tyomaakokousraportit (:nimi p))
-                                   (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])}))]
+                                   (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])}))
+        teksti (str (:nimi p) (when (:oletusarvo p) " (oletus)"))]
     [:div
-     [kentat/raksiboksi {:teksti (:nimi p)
+     [kentat/raksiboksi {:teksti teksti
                           :toiminto paivita!}
       (get-in @muistetut-parametrit avaimet)]]))
 
@@ -551,9 +554,10 @@
 
 (defn- parametrin-sort-avain
   "Parametrin sort avain."
-  [{nimi :nimi}]
+  [{:keys [tyyppi oletusarvo nimi]}]
   (cond
     (= nimi "Aikaväli") "1"
+    (and (= tyyppi "checkbox") oletusarvo) (str "2" nimi) ; oletus-checkboxit ensin
     (= nimi "Toimenpide") "3"
     :default nimi))
 
@@ -627,8 +631,27 @@
             (when-not (= :raportoinnissa-ruuhkaa raportti)
               (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))))
 
+(defn aseta-checkbox-oletusarvot
+  "Asettaa checkbox-parametrien oletusarvot käyttäjälle vain jos polussa ei ole vielä arvoa. Käyttää :oletusarvo parametria"
+  [raporttityyppi muistetut]
+  (let [raportin-nimi (:nimi raporttityyppi)]
+    (reduce
+      (fn [kertyneet parametri]
+        (let [on-checkbox? (= "checkbox" (:tyyppi parametri))
+              oletus? (:oletusarvo parametri)
+              avain (if (= raportin-nimi :tyomaakokous) 
+                      (tyomaakokousraportit (:nimi parametri))
+                      (:nimi parametri))
+              polku [raportin-nimi avain]]
+          (if (and on-checkbox? oletus? (nil? (get-in kertyneet polku)))
+            (assoc-in kertyneet polku true)
+            kertyneet)))
+      muistetut
+      (:parametrit raporttityyppi))))
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametrit (sort-by parametrin-sort-avain
+  (let [_ (swap! muistetut-parametrit #(aseta-checkbox-oletusarvot raporttityyppi %))
+        parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
                                       (or (nil? k)
                                           (= k konteksti)))
