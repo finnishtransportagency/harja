@@ -73,7 +73,7 @@
         sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
                                                 (not= "Pyhäjoen silta" (:siltanimi %))) kaikki-sillat)]
     (is (= (count kaikki-sillat) 7))
-    (is (= (count sillat-2007) 2))
+    (is (= (count sillat-2007) 1))
     (is (= (count sillat-ilman-tarkastuksia) 4))
     (is (every? #(some? (:tarkastusaika %)) (remove #(= (:siltanimi %) "Tekaistu kuntasilta") sillat-ilman-tarkastuksia)))))
 
