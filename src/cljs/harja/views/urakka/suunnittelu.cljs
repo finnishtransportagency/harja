@@ -38,7 +38,9 @@
             :kiintiot (= tyyppi :vesivayla-hoito)
             :kokonaishintaiset (not= tyyppi  :teiden-hoito )
             :yksikkohintaiset (not= tyyppi  :teiden-hoito )
-            :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
+            :kustannussuunnitelma (= tyyppi  :teiden-hoito )
+            :uusi-kustannussuunnitelma (= tyyppi  :teiden-hoito )
+            :tarjous (= tyyppi  :teiden-hoito )))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -47,20 +49,23 @@
 
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :suunnittelu)}
+                   :active (nav/valittu-valilehti-atom :suunnittelu)
+                   :on-change #(nav/aseta-valittu-valilehti! :suunnittelu %)}
 
           "Tarjouksen tiedot"
           :tarjous
           (when (and
-                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
-                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (valilehti-mahdollinen? :tarjous ur)
+                  (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
           "Uusi Kustannussuunnitelma"
           :uusi-kustannussuunnitelma
           (when (and
-                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
-                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (valilehti-mahdollinen? :uusi-kustannussuunnitelma ur)
+                  (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [kustannussuunitelma-nakyma/kustannussuunitelma])
 
           "Kustannussuunnitelma"

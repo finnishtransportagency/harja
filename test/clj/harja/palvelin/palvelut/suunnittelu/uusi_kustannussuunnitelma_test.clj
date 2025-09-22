@@ -536,7 +536,7 @@
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
         ;; Vuodet tietomallista
-        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
+        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
             (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
@@ -601,7 +601,7 @@
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
         ;; Vuodet tietomallista
-        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli)
+        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
             (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
