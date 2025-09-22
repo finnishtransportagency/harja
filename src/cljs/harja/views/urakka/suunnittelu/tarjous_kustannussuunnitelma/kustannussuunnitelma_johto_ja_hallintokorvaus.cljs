@@ -131,11 +131,11 @@
                               muut-kulut (assoc muut-kulut-toimenkuva
                                            :tunnit nil
                                            :tuntipalkka nil
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
-                              uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa muut-kulut))
+                              uudet-toimenkuvat (sort-by :jarjestys (conj toimenkuvat-ilman-muutettavaa muut-kulut))
                               _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom uudet-toimenkuvat)
                               _ (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset uudet-toimenkuvat))]))
         :voi-kumota? false}
@@ -200,11 +200,11 @@
                               toimenkuva (assoc toimenkuva
                                            :tunnit (if (kust-domain/onko-tunnit-samat? kuukaudet) (:tunnit (first kuukaudet))
                                                      nil) ;; Aseta arvo nil, jos tunnit eivät ole samat kaikissa kuukausissa
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
-                              uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa toimenkuva))
+                              uudet-toimenkuvat (sort-by :jarjestys (conj toimenkuvat-ilman-muutettavaa toimenkuva))
                               _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom uudet-toimenkuvat)
                               _ (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset uudet-toimenkuvat))]))
         :voi-kumota? false}
@@ -225,14 +225,15 @@
         toimenkuvat-atom (r/atom muokkaus-toimenkuvat)
 
         voiko-muokata? (fn [rivi voi-muokata? on-muu-kulu-kolumni?]
-                         (cond
-                           (and (= "Muut kulut" (:toimenkuva rivi)) voi-muokata? on-muu-kulu-kolumni?)
-                           true
-                           (and (= "Muut kulut" (:toimenkuva rivi)) (false? voi-muokata?))
-                           false
-                           (not= "Muut kulut" (:toimenkuva rivi))
-                           voi-muokata?
-                           :else false))]
+                         (let [tulos (cond
+                                       (and (= "Muut kulut" (:toimenkuva rivi)) voi-muokata? on-muu-kulu-kolumni?)
+                                       true
+                                       (and (= "Muut kulut" (:toimenkuva rivi)) (false? voi-muokata?))
+                                       false
+                                       (and (not= "Muut kulut" (:toimenkuva rivi)) (not on-muu-kulu-kolumni?))
+                                       voi-muokata?
+                                       :else false)]
+                           tulos))]
     [grid/muokkaus-grid
      {:otsikko ""
       :id "toimenkuvat-taulukko"
@@ -241,16 +242,16 @@
       :voi-kumota? false
       :on-rivi-blur (fn [rivi]
                       (let [muokattu-toimenkuva (first (filter
-                                                         #(= (:id rivi) (:id %))
+                                                         #(= (:nimike rivi) (:nimike %))
                                                          @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
                             muokattu-toimenkuva (assoc muokattu-toimenkuva
                                                   :tunnit (if (and (not= (:toimenkuva rivi) "Muut kulut") (= nil (:tunnit rivi))) 0 (:tunnit rivi)) ;; nil arvoa käytetään, jos tunnit eivät ole samat kaikissa kuukausissa
                                                   :tuntipalkka (if (and (not= (:toimenkuva rivi) "Muut kulut") (= nil (:tuntipalkka rivi))) 0 (:tuntipalkka rivi))
                                                   :summa (:summa rivi))
                             toimenkuvat-ilman-muutettavaa (remove
-                                                            #(= (:id rivi) (:id %))
+                                                            #(= (:nimike rivi) (:nimike %))
                                                             @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
-                            uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa muokattu-toimenkuva))
+                            uudet-toimenkuvat (sort-by :jarjestys (conj toimenkuvat-ilman-muutettavaa muokattu-toimenkuva))
                             toimenkuvat (reduce (fn [uudet-toimenkuvat toimenkuva]
                                                   (let [;; Laske toimenkuvan kokonaissumma kuudaudelle
                                                         summa (cond
@@ -280,12 +281,12 @@
                                                                                     :yhteensa-indeksikorjattu-kk nil}))
                                                                     (:kuukaudet toimenkuva))
                                                         yht-kk (apply + (map :yhteensa-kk kuukaudet))
-                                                        kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                                        kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                                         toimenkuva (assoc toimenkuva :kuukaudet kuukaudet
                                                                      :summa yht-kk)]
                                                     (conj uudet-toimenkuvat toimenkuva)))
                                           [] uudet-toimenkuvat)
-                            toimenkuvat (sort-by :jarjesta toimenkuvat)]
+                            toimenkuvat (sort-by :jarjestys toimenkuvat)]
 
                         (reset! yhteiset/tallenna-painettu false)
                         (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom toimenkuvat)
@@ -343,6 +344,7 @@
         :voi-lisata? false
         :piilota-toiminnot? true
         :muokkauspaneeli? false
+        :jarjesta (juxt :vuosi :kuukausi)
         :voi-muokata? (not vahvistettu?)
         :on-rivi-blur (fn [rivi]
                         (let [toimenkuva (first (filter
@@ -374,11 +376,11 @@
                               suunniteltu-yht (apply + (map #(if (and (:tuntipalkka %) (:tunnit %)) (* (:tunnit %) (:tuntipalkka %)) 0) kuukaudet))
                               toimenkuva (assoc toimenkuva
                                            :tunnit (apply + (map (fn [rivi] (or (:tunnit rivi) 0)) kuukaudet))
-                                           :kuukaudet (sort-by (juxt :vuosi :kuukausi) kuukaudet)
+                                           :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet))
                                            :summa suunniteltu-yht
                                            :summa-indeksikorjattu nil) ;; indeksikorjaus lasketaan bäckendissä
                               _ (reset! yhteiset/tallenna-painettu false)
-                              uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa toimenkuva))
+                              uudet-toimenkuvat (sort-by :jarjestys (conj toimenkuvat-ilman-muutettavaa toimenkuva))
                               _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom uudet-toimenkuvat)
                               _ (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset uudet-toimenkuvat))]))
         :voi-kumota? false}
@@ -412,7 +414,7 @@
                                   toimenkuvat-ilman-muutettavaa (remove
                                                                   #(= (:id rivi) (:id %))
                                                                   @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
-                                  uudet-toimenkuvat (sort-by :id (conj toimenkuvat-ilman-muutettavaa muokattu-toimenkuva))
+                                  uudet-toimenkuvat (sort-by :jarjestys (conj toimenkuvat-ilman-muutettavaa muokattu-toimenkuva))
                                   toimenkuvat (reduce (fn [uudet-toimenkuvat toimenkuva]
                                                         (let [;; Laske toimenkuvan kokonaissumma kuudaudelle
                                                               summa (:summa toimenkuva)
@@ -427,10 +429,10 @@
                                                                                          (when (= "Muut kulut" (:toimenkuva toimenkuva))
                                                                                            {:yhteensa-kk (if (= indeksi 11) viimeneinen-summa kk-summa)})))
                                                                           (:kuukaudet toimenkuva))
-                                                              toimenkuva (assoc toimenkuva :kuukaudet kuukaudet)]
+                                                              toimenkuva (assoc toimenkuva :kuukaudet (vec (sort-by (juxt :vuosi :kuukausi) kuukaudet)))]
                                                           (conj uudet-toimenkuvat toimenkuva)))
                                                 [] uudet-toimenkuvat)
-                                  toimenkuvat (sort-by :id toimenkuvat)]
+                                  toimenkuvat (sort-by :jarjestys toimenkuvat)]
                               (reset! yhteiset/tallenna-painettu false)
                               (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom toimenkuvat)
                               (e! (kust-tiedot/->PaivitaJohtoJaHallintokorvaukset toimenkuvat))))
@@ -498,7 +500,7 @@
                             {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                             {:teksti "" :luokka kirjaamatta-luokka}])
         yhteenveto-rivi (cond
-                          (and (<= urakan-alkuvuosi 2021) (not vahvistettu?))
+                          (<= urakan-alkuvuosi 2021)
                           [^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
@@ -510,7 +512,7 @@
                                       "-")
                             :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                            {:teksti "" :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
-                          (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024) (not vahvistettu?))
+                          (and (>= urakan-alkuvuosi 2022) (<= urakan-alkuvuosi 2024))
                           [^{:luokka "kustannukset-yhteenveto"}
                            {:teksti "" :luokka "yhteensa"}
                            {:teksti "Yhteensä" :luokka "yhteensa"}
@@ -527,10 +529,10 @@
                                       (fmt/euro-opt false yht-indeksikorjattu)
                                       "-")
                             :luokka "yhteensa" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
-        yhteenveto-rivit [yhteenveto-rivi kirjaamatta-rivi]
+        yhteenveto-rivit [yhteenveto-rivi (when (>= urakan-alkuvuosi yhteiset/rajavuosi) kirjaamatta-rivi)]
         _ (reset! yhteiset/grid-johto-ja-hallintokorvaukset-atom johto-ja-hallintokorvaukset)]
     [:div#johto-ja-hallintokorvaus-elementti.row.kustannussuunnitelma-osio.osio-976
-     [yhteiset/otsikkotiedot e! app "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
+     [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Johto- ja hallintokorvaus" tarjouksen-maara pysyvamuutos-maara yht yht-indeksikorjattu
       {:div1 true :div2 false :div3 (if (< valittu-vuosi yhteiset/rajavuosi) true false) :div4 true} valittu-vuosi]
 
      [:div.row [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
