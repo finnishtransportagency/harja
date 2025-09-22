@@ -375,6 +375,12 @@ VALUES (:versio,
                       maaramuutos     = EXCLUDED.maaramuutos,
                       uusi_maara      = EXCLUDED.uusi_maara;
 
+-- name: poista-tehtavan-maaramuutos!
+-- Poistaa määrämuutosrivin, tästä tallentuu historiarivi mhu_muutos_tehtava_ja_maaraluettelo_historia tauluun
+DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo
+ WHERE muutos = :muutos-id
+   AND tehtava = :tehtava
+   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
 
 -- name: hae-tehtava-maaramuutokset

@@ -404,19 +404,28 @@
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
                 :versio 2 :tyyppi "pysyva" :liite-idt #{}}
+        poistettava-rivi {:tehtava 3117, :poistettu true :hoitokauden_alkuvuosi 2025}
         ;; Payload muodossa mikä tulisi UI-lomakkeelta osana muuta muutosdataa
         tehtava-maaramuutos-payload [{:tehtava 2988, :uusi? true, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
                                      {:tehtava 2989, :uusi? true, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
                                      {:tehtava 2991, :uusi? true, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
-                                     {:tehtava 3117, :uusi_maara 1100, :maaramuutos 111, :edellinen_maara 1000, :hoitokauden_alkuvuosi 2025}
-                                     {:tehtava 3117, :uusi_maara 1100, :maaramuutos 222, :edellinen_maara 1000, :hoitokauden_alkuvuosi 2026}
-                                     {:tehtava 3117, :uusi_maara 1100, :maaramuutos 333, :edellinen_maara 1000, :hoitokauden_alkuvuosi 2027}]
+                                     poistettava-rivi
+                                     {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
+                                     {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
+                                     ;; TODO: En haluaisi, että vanhaa riviä päivitetään, jos se jätetään lomakkeella koskematta
+                                     ;;       Samalla koskemattomasta rivistä luodaan uusi versio turhaan, on ihan ok että eri riveillä
+                                     ;;       on eri versioita. MHU_MUUTOS taulsssa on tiedossa korkein versio.
+                                     ;;       Palataan asiaan.
+                                     ;;      Eli, jos tämä rivi otetaan mukaan payloadiin ei tuolla alempana saisi muuttumattoman rivin
+                                     ;;      versioksi nousta 2, vaan rivin pitäisi pysyä ennallaan.
+                                     #_{:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 2988 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 2989 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 2991 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 3117 :uusi_maara 0 :versio 2}
+                           ;; Tämä rivi on poistettu, joten sitä ei pitäisi enää löytyä muualta kuin historiasta versiolla 1
+                           #_{:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 3117 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 3117 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 3117 :uusi_maara 0 :versio 2}
                            ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
@@ -427,9 +436,15 @@
                   :hae-muutoksen-tiedot
                   +kayttaja-jvh+
                   {:urakka-id urakka-id
-                   :muutos muutos})]
+                   :muutos muutos})
+        poistettu-rivi-historiassa-versio (ffirst (q "SELECT versio FROM mhu_muutos_tehtava_ja_maaraluettelo_historia WHERE muutos = " (:id muutos)
+                                                    " AND tehtava = " (:tehtava poistettava-rivi)
+                                                    " AND hoitokauden_alkuvuosi = " (:hoitokauden_alkuvuosi poistettava-rivi)
+                                                    " ORDER BY hoitokauden_alkuvuosi, tehtava;"))]
 
-    (is (= odotettu-vastaus (flatten (concat (map :tehtavat_ja_maarat (:toimenpiteiden-tiedot vastaus))))))))
+    (is (= odotettu-vastaus (flatten (concat (map :tehtavat_ja_maarat (:toimenpiteiden-tiedot vastaus))))))
+    ;; Varmistetaan että poistettu rivi löytyy historiasta versiolla 1
+    (is (= poistettu-rivi-historiassa-versio 1))))
 
 ;; Isoloidumpi testitapaus, josta kustannusvaikutusten tallennuksen ja haun toimivuuden näkee selvemmin
 (deftest kustannusvaikutusten-tallennus
