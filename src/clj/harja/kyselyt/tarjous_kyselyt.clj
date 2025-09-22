@@ -1,5 +1,7 @@
 (ns harja.kyselyt.tarjous-kyselyt
   (:require [clojure.string :as str]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
@@ -15,7 +17,8 @@
   tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-tiedot hae-tarjous-vuodella
   hae-kustannus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
-  hae-tarjouksen-viimeisin-muokkaaja)
+  hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tarjous-tavoitehinnat paivita-urakan-tavoite-tarjous<!
+  lisaa-urakan-tavoite-tarjous<!)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -102,12 +105,14 @@
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+        tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
+        tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
+        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
-                 {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                 {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                 {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                 {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id (:id tehtava) :tehtavaryhma-id nil :rahavaraus-id nil
                   :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}]
         ; haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -115,6 +120,9 @@
                                    (vec (concat lopulliset [{:nimi (:nimi rahavaraus), :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id (:id rahavaraus)
                                                              :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}])))
                            [] rahavaraukset)
+        ;; Järjestetään rahavaraukset kilpailutettavien hankintojen jälkeen
+        rahavaraus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys (+ 1 (inc indeksi)))) rahavaraus-rivit)
+        ;; Yhdistetään tarjous ja rahavaraukset
         tarjous (vec (concat tarjous rahavaraus-rivit))
         toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
         tarjous (vec (concat tarjous toimenkuvat))
@@ -149,6 +157,9 @@
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot))))
+
+        ;; Haetaan urakan mahdolliset aiemmat tarjoushinnat urakka_tavoite -taulusta
+        urakan-tavoitteet-tietokannasta (hae-urakan-tarjous-tavoitehinnat db {:urakkaid urakka-id})
 
         ;; Muokkaa tietomallin vuosittaiset summat tarjous- ja kattohinnaksi
         vuosittaiset-tarjoushinnat (mapv
@@ -231,7 +242,8 @@
         ;; Tallennetaan tarjous- ja kattohinnat tarjouksen päätauluun, johon muut tiedot linkitetään
         tallennukset (mapv
                        (fn [rivi]
-                         (let [;; Etsi vuodelle ja urakalle tarjousta
+                         (let [kuluva-hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (:hoitokauden_alkuvuosi rivi))
+                               ;; Etsi vuodelle ja urakalle tarjousta
                                tarjousdb (first (hae-tarjous-vuodella db {:vuosi (:hoitokauden_alkuvuosi rivi)
                                                                           :urakka_id urakka-id}))
                                tietokantatarjous (if tarjousdb
@@ -239,6 +251,19 @@
                                                                            :muokkaaja kayttaja-id
                                                                            :id (:id tarjousdb)))
                                                    (tallenna-tarjous<! db rivi))
+                               ;; Päivitetään tarjouksen tiedot myös urakka_tavoite -tauluun, jota muut Harjan osa-alueet käyttävät
+                               urakka-tavoite-db (first (filter #(= kuluva-hoitovuosi-nro (:hoitovuosinro %)) urakan-tavoitteet-tietokannasta))
+                               _ (if urakka-tavoite-db
+                                   (paivita-urakan-tavoite-tarjous<! db (assoc urakka-tavoite-db
+                                                                          :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
+                                                                          :muokkaaja kayttaja-id))
+                                   ;; Ei lisätä 0 arvoja ollenkaan.
+                                   (when-not (zero? (:tarjous_tavoitehinta rivi))
+                                     (lisaa-urakan-tavoite-tarjous<! db {:urakkaid urakka-id
+                                                                         :hoitovuosinro kuluva-hoitovuosi-nro
+                                                                         :tarjous_tavoitehinta (:tarjous_tavoitehinta rivi)
+                                                                         :luoja kayttaja-id})))
+
                                ;; Tallennetaan tarjouksen kustannukset ja toimenkuvat tietokantaan
                                vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
                                _ (mapv (fn [kustannus]
@@ -326,6 +351,7 @@
        :toimenkuva-id (:johto_ja_hallintokorvaus_toimenkuva_id r)
        :tehtava-id (:tehtava_id r)
        :tehtavaryhma-id (:tehtavaryhma_id r)
+       :jarjestys (:jarjestys r)
        :rahavaraus-id (:rahavaraus_id r)
        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot
        :yhteensa (apply + (mapv :summa hoitovuosittaiset-arvot))}))
@@ -386,12 +412,38 @@
                                     :maksukausi :string :osio :string :johto_ja_hallintokorvaus_toimenkuva_id :long))
                                 (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
-        ;; Muutetaan ui:lle välitettävään muotoon
-        kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) (:kustannukset (first tarjous-rivit)))
-        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) (:toimenkuvat (first tarjous-rivit)))
+
+        kustannus-rivit (:kustannukset (first tarjous-rivit))
+        ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
+        kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        puuttuvat-rahavaraukset (filter
+                                (fn [r]
+                                  (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
+                                  kaikki-urakan-rahavaraukset)
+        puuttuvat-rahavaraukset (reduce (fn [lopulliset rahavaraus]
+                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
+                                                             :summa 0
+                                                             :osio "tavoitehintaiset-rahavaraukset"
+                                                             :tehtava_id nil
+                                                             :tehtavaryhma_id nil
+                                                             :rahavaraus_id (:id rahavaraus)}])))
+                           [] puuttuvat-rahavaraukset)
+        kustannus-rivit (sort-by :rahavaraus_id (vec (concat kustannus-rivit puuttuvat-rahavaraukset)))
+        kustannus-rivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) kustannus-rivit)
+        kustannus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys indeksi)) kustannus-rivit)
+        kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) kustannus-rivit)
+        ;; Uusille rahavarauksille ei synny hoitovuosittaisia arvoja, joten lisätään ne nyt
+        kustannus-rivit (mapv (fn [rivi]
+                                (if-not (seq (:hoitovuosittaiset-arvot rivi))
+                                  (assoc rivi :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)
+                                  rivi))
+                          kustannus-rivit)
+        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) (:toimenkuvat (first tarjous-rivit)))
+        toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) toimenkuva-rivit)
+
         ;; Päivitä mahdolliset toimenkuvan nimet, jos kesä ja talvikausi on vaikuttamassa tilanteeseen
         toimenkuva-rivit (mapv (fn [rivi]
-                                 (let [toimenkuva (str/lower-case (:nimi rivi))
+                                 (let [toimenkuva (:toimenkuva rivi)
                                        nimi (cond
                                               (and (= "päätoiminen apulainen" toimenkuva) (= "talvi" (:maksukausi rivi)))
                                               "Päätoiminen apulainen (talvikausi)"
@@ -408,14 +460,11 @@
         ;; Tarjouksen mukana ei välttämättä tule kaikkia toimenkuvia, jos niitä on tarjouksen tallentamisen jälkeen lisätty urakkalle hallintapaneelista.
         ;; Varmistetaan siis, että kaikki urakan toimenkuvat ovat mukana, kun ne renderöidään frontilla
         kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        ;kaikki-urakan-toimenkuvat (jasenna-toimenkuvat-maksukausittain kaikki-urakan-toimenkuvat urakan-alkuvuosi)
-
         ;; Vertaillaan toimenkuvat-rivit ja kaikki-urakan-toimenkuvat ja lisätään puuttuvat toimenkuvat nollasummilla
         puuttuvat-toimenkuvat (filter
                                 (fn [kt]
                                   (not (some #(= (:toimenkuva-id kt) (:toimenkuva-id %)) toimenkuva-rivit)))
                                 kaikki-urakan-toimenkuvat)
-
         toimenkuva-rivit (vec (concat toimenkuva-rivit puuttuvat-toimenkuvat))
         toimenkuva-rivit (sort-by :jarjestys (map
                                                #(assoc % :jarjestys (toimenkuva-kyselyt/paattele-toimenkuvan-jarjestys (:toimenkuva %)))

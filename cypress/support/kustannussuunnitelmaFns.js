@@ -400,7 +400,22 @@ export function alustaKanta(urakkaNimi) {
             .then((tulos) => {
                 console.log("Poista kulut - tulos:", tulos)});
 
-        // TODO: Kuhan tarjouspuoli valmistuu, niin poista myös tarjouksen tiedot
+        // Poista tarjoukset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM tarjous_kustannukset " +
+            `WHERE urakka_id = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista tarjouksen kustannukset - tulos:", tulos)});
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM tarjous_johto_ja_hallintokorvaus " +
+            `WHERE urakka_id = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista tarjouksen toimenkuvat - tulos:", tulos)});
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM tarjous " +
+            `WHERE urakka_id = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista tarjous - tulos:", tulos)});
 
     });
 }
@@ -461,6 +476,30 @@ export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
     // Avaa Uusi Kustannussuunnitelma
     cy.get('[data-cy="tabs-taso2-Uusi Kustannussuunnitelma"]').click();
+
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+}
+
+/**
+ * @param urakkaNimi Avattavan urakan nimi
+ * @param alue Alue, jotta löydetään urakka käyttöliittymältä
+ * @param indeksiArray Array, johon indeksit pusketaan.
+ */
+export function avaaTarjous(urakkaNimi, alue) {
+    cy.visit("/");
+
+    // Varmista, että pääsivu on ladattu ennen testien aloitusta
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+
+    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+    cy.contains('Näytä päättyneet').click();
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    // Mene suunnittelu välilehdelle
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+    // Avaa Uusi Kustannussuunnitelma
+    cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').click();
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }

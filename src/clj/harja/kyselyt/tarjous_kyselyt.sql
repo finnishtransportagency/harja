@@ -15,7 +15,7 @@ VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :osio::suunnitt
 
 -- name: tallenna-tarjouksen-johto-ja-hallintokorvaus<!
 INSERT INTO tarjous_johto_ja_hallintokorvaus (tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, maksukausi, osio, johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu)
-VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :maksukausi,:osio::suunnittelu_osio, :johto_ja_hallintokorvaus_toimenkuva_id, :luoja, NOW());
+VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :maksukausi, :osio::suunnittelu_osio, :johto_ja_hallintokorvaus_toimenkuva_id, :luoja, NOW());
 
 -- name: hae-tarjouksen-tiedot
 SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
@@ -90,6 +90,23 @@ WHERE id = :id;
 DELETE FROM tarjous_johto_ja_hallintokorvaus
  WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
    AND urakka_id = :urakkaid;
+
+-- name: hae-urakan-tarjous-tavoitehinnat
+SELECT id, hoitokausi as hoitovuosinro, urakka, tarjous_tavoitehinta
+FROM urakka_tavoite
+WHERE urakka = :urakkaid
+ORDER BY hoitokausi;
+
+-- name: lisaa-urakan-tavoite-tarjous<!
+INSERT INTO urakka_tavoite (hoitokausi, urakka, tarjous_tavoitehinta, luoja, luotu)
+VALUES (:hoitovuosinro, :urakkaid, :tarjous_tavoitehinta, :luoja, NOW());
+
+-- name: paivita-urakan-tavoite-tarjous<!
+UPDATE urakka_tavoite
+SET tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id = :id;
 
 -- name: hae-tarjouksen-viimeisin-muokkaaja
 SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,

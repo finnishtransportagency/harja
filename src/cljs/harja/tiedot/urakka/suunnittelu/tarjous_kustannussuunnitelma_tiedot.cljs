@@ -60,6 +60,8 @@
     (into [] (reduce (fn [rivit tarjous-rivi]
                        (let [vuosiarvot (reduce (fn [uusi rivi]
                                                   (-> uusi
+                                                    (assoc :jarjestys (:jarjestys tarjous-rivi))
+                                                    (assoc :maksukausi (:maksukausi tarjous-rivi))
                                                     (assoc :poistettu (:poistettu tarjous-rivi))
                                                     (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
                                                     (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
@@ -251,6 +253,23 @@
         rivin-nimi (:kalenterikuukausi johto-ja-hallintokorvaus)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
+(defn kasittele-tarjouksen-vastaus [vastaus app]
+  (let [tarjous-tiedot (:tarjous vastaus)
+        taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tallennus-kesken? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
+      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
+      (assoc :kattohintakerroin (:kattohintakerroin vastaus))
+      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
+      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
+      (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
+      (assoc :urakka-id (:urakka-id vastaus)))))
+
 (extend-protocol tuck/Event
 
   HaeTarjouksenTiedot
@@ -266,19 +285,7 @@
 
   HaeTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [tarjous-tiedot (:tarjous vastaus)
-          taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tarjous (:tarjous vastaus))
-      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
-      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
-      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
-      (assoc :kattohintakerroin (:kattohintakerroin vastaus))
-      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
-      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
-      (assoc :urakka-id (:urakka-id vastaus)))))
+    (kasittele-tarjouksen-vastaus vastaus app))
 
   HaeTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -334,9 +341,8 @@
 
   TallennaTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (-> app
-      (assoc :tallennus-kesken? false)
-      (assoc :tarjous (:tarjous vastaus))))
+    (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
+    (kasittele-tarjouksen-vastaus vastaus app))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -684,7 +690,7 @@
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
     (merkitse-muutos!)
-    (assoc app :hankinnat hankinnat))
+    (assoc app :hankinnat (sort-by :jarjestys hankinnat)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
