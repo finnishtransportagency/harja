@@ -49,12 +49,12 @@
             ;; Päivitetään vain valitun toimenpideinstanssin tehtävät ja määrät, ja ainoastaan valitun hoitokauden osalta
             (update-in [toimenpideinstanssi :tehtavat_ja_maarat]
               (fn [tehtavat-ja-maarat]
-                ;; Mapataan uudet ja vanhat rivit hoitokauden mukaan, ja mergetään ne samalla päivittäen arvot
-                (let [vanhat (into {} (map (juxt :hoitokauden_alkuvuosi identity) tehtavat-ja-maarat))
-                      uudet (into {} (map (juxt :hoitokauden_alkuvuosi identity) taulukon-rivit))]
-                  (-> (merge vanhat uudet)
-                    (vals)
-                    (vec)))))
+                (let [;; Suodatetaan vanhat rivit pois valitulta hoitokaudelta
+                      tehtavat-ja-maarat (filterv #(not= hk-alkuvuosi (:hoitokauden_alkuvuosi %)) tehtavat-ja-maarat)
+                      ;; Lisätään tilalle uudet rivit valitulta hoitokaudelta (tuplavarmistus filtteröinnillä, että mukana tulee vain valitun hoitokauden rivit)
+                      tehtavat-ja-maarat (into tehtavat-ja-maarat (filterv #(= hk-alkuvuosi (:hoitokauden_alkuvuosi %)) taulukon-rivit))]
+                  ;; Palautetaan päivitetyt tehtävät ja määrät
+                  tehtavat-ja-maarat)))
 
             ;; Palautetaan jälleen vektorina gridille
             (vals)
