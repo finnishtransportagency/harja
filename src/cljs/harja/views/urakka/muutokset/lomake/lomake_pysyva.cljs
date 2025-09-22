@@ -14,6 +14,10 @@
             [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
             [harja.ui.yleiset :as yleiset]))
 
+(defn- uusi-tehtava-id [tehtavat-ja-maarat-valittuna-hoitovuonna]
+  (dec (apply min
+         (conj (map :tehtava tehtavat-ja-maarat-valittuna-hoitovuonna) -1))))
+
 (defn- pysyvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
@@ -44,8 +48,11 @@
                  urakan-hoitokaudet
                  "Hoitovuosi"))]
 
-         ;; Pakota uudelleenrenderöinti, jotta hoitovuoden vaihto valuu :muutos-callbackiin
-         ^{:key (str valittu-hoitovuoden-alkuvuosi "_" (hash (:tehtavat_ja_maarat rivi)))}
+         ;; Pakota uudelleenrenderöinti, jotta uudet tiedot valuvat :muutos-callbackiin ja :valinnat-fn:iin
+         ^{:key (str valittu-hoitovuoden-alkuvuosi "_"
+                  ;; Älä seuraa koko vektorin sisältöä, vaan counttia, jotta ei jatkuvasti renderöidä uudelleen
+                  ;; input-kenttien muuttuessa
+                  (count tehtavat-ja-maarat-valittuna-hoitovuonna))}
          [grid/grid
           {:luokat ["vaikutus-tehtaviin-grid"]
            :tunniste :tehtava
@@ -61,8 +68,8 @@
                         ;; Mahdollista useamman uuden rivin luonti kerralla tekemällä lisää :tehtava-id:itä jokaista
                         ;; uutta riviä kohden.
                         ;; Käytättäjän valitua tehtävän, korvataan negatiivinen tehtävä-id oikealla tehtävän id:llä.
-                        (let [min-id (apply min (conj (map :tehtava tehtavat-ja-maarat-valittuna-hoitovuonna) -1))]
-                          (assoc rivi :uusi? true :tehtava (dec min-id))))
+                        (let [uusi-id (uusi-tehtava-id tehtavat-ja-maarat-valittuna-hoitovuonna)]
+                          (assoc rivi :uusi? true :tehtava uusi-id)))
            :muutos (fn [grid]
                      ;; Jokaisesta muutoksesta taulukkoon tulee eventti tähän, joka käsitellään tuck-eventissä.
                      ;; Muutoksista tehdään kooste-kokoelma tallennusta varten lomakkeen tilaan.
@@ -78,7 +85,17 @@
           [{:otsikko "Tehtävä"
             :nimi :tehtava
             :tyyppi :valinta
-            :valinnat toimenpiteen-tehtavat
+            ;; Varmistetaan, että useammalle riville ei voi valita samaa tehtävää
+            :valinnat-fn (fn [rivi]
+                           (let [valittu-tehtava (:tehtava rivi)
+                                 ;; Valitut tehtävät kaikilla muilla riveillä
+                                 valitut-tehtavat (into #{} (map :tehtava tehtavat-ja-maarat-valittuna-hoitovuonna))]
+                             (filter (fn [{:keys [tehtava-id]}]
+                                       ;; Sallitaan valita tehtävä jos se on jo valittu omalle riville tai
+                                       ;; tai on vielä valitsematta muilla riveillä
+                                       (or (= tehtava-id valittu-tehtava)
+                                         (not (contains? valitut-tehtavat tehtava-id))))
+                               toimenpiteen-tehtavat)))
             :leveys 20
             :valinta-arvo :tehtava-id
             :valinta-nayta :tehtava}
@@ -86,7 +103,7 @@
            {:otsikko "Yksikkö"
             :nimi :yksikko
             :tyyppi :string
-            :leveys 4
+            :leveys 5
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    ;; Haetaan tieto tehtävän määräyksiköstä toimenpiteiden tehtävistä
