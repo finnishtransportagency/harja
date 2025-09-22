@@ -524,27 +524,57 @@
                                                       :liite liite-id
                                                       :versio uusi-muutos-versio})))))
 
-(defn- tallenna-muutoksen-kustannusvaikutukset [db aiti-muutos-id-ja-versio hoitokauden_alkuvuosi kustannusvaikutukset]
+(defn luo-kustannusvaikutus
+  [aiti-muutos-id versio {:keys [hoitokauden_alkuvuosi toimenpideinstanssi kustannuslaji summa] :as sql-opts}]
+  {:muutos_id aiti-muutos-id
+   :versio versio
+   :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+   :toimenpideinstanssi toimenpideinstanssi
+   :kustannuslaji kustannuslaji
+   :summa summa})
+
+(defn tallenna-muutoksen-kustannusvaikutukset
+  [db aiti-muutos-id-ja-versio kustannusvaikutukset]
+  (log/debug "Tallenna muutoksen kustannusvaikutukset: " kustannusvaikutukset)
+
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)]
     (doseq [kustannusvaikutus kustannusvaikutukset]
-      (let [kustannusvaikutus (assoc kustannusvaikutus
-                                :muutos-id muutos-id
-                                :versio (or muutos-versio 1)
-                                :hoitokauden_alkuvuosi hoitokauden_alkuvuosi)]
+      (let [kustannusvaikutus (luo-kustannusvaikutus muutos-id (or muutos-versio 1) kustannusvaikutus)]
         (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus)))))
 
-(defn tallenna-tehtavan-maaramuutokset
+
+(defn luo-tehtava-ja-maaramuutos
+  [aiti-muutos-id versio {:keys [tehtava maaramuutos uusi_maara edellinen_maara hoitokauden_alkuvuosi] :as sql-opts}]
+  {:muutos-id aiti-muutos-id
+   :versio versio
+   :tehtava tehtava
+   :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+   :maaramuutos maaramuutos
+   :uusi_maara uusi_maara
+   :edellinen_maara edellinen_maara})
+
+(defn tallenna-muutoksen-tehtavien-maaramuutokset
   "Poikkeaminen tehtävä- ja määräluettelon määristä"
-  [db aiti-muutos-id-ja-versio hoitokauden_alkuvuosi maaramuutokset]
+  [db aiti-muutos-id-ja-versio maaramuutokset]
+  (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
+
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)]
     (doseq [maaramuutos maaramuutokset]
-      (let [maaramuutos (assoc maaramuutos
-                           :muutos-id muutos-id
-                           :versio (or muutos-versio 1)
-                           :hoitokauden_alkuvuosi hoitokauden_alkuvuosi)]
-        (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos)))))
+      ;; Poista rivi, jos se on merkitty poistettavaksi
+      (if (:poistettu maaramuutos)
+        (muutos-kyselyt/poista-tehtavan-maaramuutos! db {:muutos-id muutos-id
+                                                         :tehtava (:tehtava maaramuutos)
+                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})
+        ;; Luo tai päivitä rivi
+        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
+                            (assoc maaramuutos
+                              ;; TODO: Nämä pitäisi laskea
+                              :uusi_maara 0
+                              :edellinen_maara 0))]
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
+
 
 
 
@@ -555,6 +585,10 @@
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
         hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        ;; Pysyvien muutosten kustannusvaikutukset per toimenpideinstanssi
+        kustannusvaikutukset (:kustannusvaikutukset muutos)
+        ;; Tehtävien määrämuutokset (per tehtävä)
+        maaramuutokset (:tehtavat_ja_maarat muutos)
         tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
         tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
         tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
@@ -603,11 +637,11 @@
 
         ;; Tallenna kustannusvaikutukset
         (when (pos? (count kustannusvaikutukset))
-          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio (pvm/vuosi (first valittu-hoitokausi)) kustannusvaikutukset))
+          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio kustannusvaikutukset))
 
         ;; Tallenna määrämuutokset
         (when (pos? (count maaramuutokset))
-          (tallenna-tehtavan-maaramuutokset conn aiti-muutos-id-ja-versio (pvm/vuosi (first valittu-hoitokausi)) maaramuutokset))
+          (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset))
 
         ;; Tallenna kulut
         (case

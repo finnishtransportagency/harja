@@ -463,7 +463,7 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sohjo-ojien teko'),0,'2025-08-18 08:10:24.611',v_kayttaja_id,p_hoitovuosi);
 END $$;
 
-
+-- Iin MHU 2021-2026
 SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2023);
 SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2024);
 SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2025);
@@ -472,3 +472,13 @@ SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2026);
 INSERT INTO sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) VALUES 
 ((SELECT id FROM urakka WHERE nimi LIKE 'Iin MHU 2021-%'), true);
 
+
+-- Suomussalmen MHU 2024-2029
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2024);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2025);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2026);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2027);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2028);
+
+INSERT INTO harja.public.sopimuksen_tehtavamaarat_tallennettu(urakka, tallennettu)
+VALUES ((SELECT id FROM urakka WHERE nimi LIKE 'POP MHU Suomussalmi 2024-%'), TRUE);

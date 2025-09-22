@@ -73,7 +73,9 @@
    {:id "info"
     :href "#"
     :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
-    :on-click #(nav/vaihda-sivu! :info)}
+    :on-click #(do
+                 (.preventDefault %)
+                 (nav/vaihda-sivu! :info))}
 
    [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
@@ -86,7 +88,9 @@
    [:span
     [:img#harja-brand-icon {:alt "HARJA"
                             :src "images/harja_logo_soft.svg"
-                            :on-click #(.reload js/window.location)}]
+                            :on-click #(do
+                                         (.preventDefault %)
+                                         (nav/siirry-sivulle-ja-nollaa-parametrit! :urakat :yleiset))}]
     (when (k/kehitysymparistossa?)
       [:span#testiharja "TESTI"])]
    [haku/haku]

@@ -9,58 +9,66 @@ SELECT m.id,
        m.kulu_kohdistus,
        m.luonnos,
        -- johto- ja hallintakorvausmuutosten kokonaissumma
-       (SELECT sum(kokonaissumma) FROM kulu k
-                                  JOIN mhu_muutos_kulu mmk ON (k.id = mmk.kulu AND m.id = mmk.muutos AND m.versio = mmk.versio)
-                                  JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
-                                  WHERE k.poistettu IS FALSE AND kk.poistettu IS FALSE
-                                    AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                                      (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
+       (SELECT SUM(kokonaissumma)
+          FROM kulu k
+                   JOIN mhu_muutos_kulu mmk ON (k.id = mmk.kulu AND m.id = mmk.muutos AND m.versio = mmk.versio)
+                   JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
+         WHERE k.poistettu IS FALSE
+           AND kk.poistettu IS FALSE
+           AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+                 (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
 
-       CASE
-           WHEN COUNT(kust.*) = 0 THEN NULL
-           ELSE json_agg(DISTINCT jsonb_build_object(
-               'kustannuslaji', kust.kustannuslaji,
-               'toimenpideinstanssi', kust.toimenpideinstanssi,
-               'summa', kust.summa)) END AS kustannusvaikutukset,
+       -- Haetaan ja järjestellään kustannusvaikutukset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
+       -- järjestely ole hankalaa
+       COALESCE(
+           (SELECT JSON_AGG(
+                       JSONB_BUILD_OBJECT(
+                           'kustannuslaji', kust.kustannuslaji,
+                           'toimenpideinstanssi', kust.toimenpideinstanssi,
+                           'summa', kust.summa,
+                           'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi,
+                           'versio', kust.versio
+                       )
+                       ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi
+                   )
+              FROM ONLY mhu_muutos_kustannusvaikutus kust
+             WHERE kust.muutos = m.id
+               AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
+           '[]'::json) AS kustannusvaikutukset,
 
-       CASE
-           WHEN COUNT(tjm.*) = 0 THEN NULL
-                ELSE json_agg(DISTINCT jsonb_build_object(
-                    'tehtava', tjm.tehtava,
-                    'edellinen_maara', tjm.edellinen_maara,
-                    'maaramuutos', tjm.maaramuutos,
-                    'uusi_maara', tjm.uusi_maara)) END AS tehtavat_ja_maarat,
-
+       -- Haetaan ja järjestellään tehtavan määrämuutokset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
+       -- järjestely ole hankalaa
+       COALESCE(
+           (SELECT JSON_AGG(
+                       JSONB_BUILD_OBJECT(
+                           'tehtava', tjm.tehtava,
+                           'edellinen_maara', tjm.edellinen_maara,
+                           'maaramuutos', tjm.maaramuutos,
+                           'uusi_maara', tjm.uusi_maara,
+                           'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
+                           'versio', tjm.versio)
+                       ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
+                   )
+              FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+             WHERE tjm.muutos = m.id
+               AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
+           '[]'::json) AS tehtavat_ja_maarat,
        CASE
            WHEN COUNT(lii.*) = 0 THEN NULL
-           ELSE json_agg(DISTINCT jsonb_build_object(
+           ELSE JSON_AGG(DISTINCT JSONB_BUILD_OBJECT(
                'muutos', lii.muutos,
-               'id', lii.liite)) END  AS liitteet
+               'id', lii.liite)) END AS liitteet
 -- ONLY tarvitaan, jottei kysellä historiatauluista
   FROM ONLY mhu_muutos m
-           LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
-                                                          -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-                                                          --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
-                                                          --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
-                                                          --       mhu_muutos taulun versio voisi edustaa ylintä versionnumeroa
-                                                          --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
-                                                          --       silti löydettävissä äiti muutos id:n avulla.
-                                                           --m.versio = kust.versio AND
-                                                           kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
-           LEFT JOIN ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
-                                                                  -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-                                                                  --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
-                                                                 --m.versio = tjm.versio AND
-                                                                 tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi)
            LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos
-                                                  -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-                                                  --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
-                                                  -- AND m.versio = lii.versio
-                                                  )
+      -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
+      --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
+      -- AND m.versio = lii.versio
+      )
  WHERE m.urakka = :urakka
-       -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
-       -- niiden käsittely puuttuu vielä tästä kyselystä
-   AND  m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
+   -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
+   -- niiden käsittely puuttuu vielä tästä kyselystä
+   AND m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
 -- name: rahavarausten-toteumat
@@ -144,9 +152,9 @@ INSERT INTO mhu_muutos_kustannusvaikutus (
     summa
   ) VALUES (
     :versio,
-    :muutos-id,
-    :kustannuslaji::suunnittelu_osio,
-    :tpi,
+    :muutos_id,
+    :kustannuslaji::SUUNNITTELU_OSIO,
+    :toimenpideinstanssi,
     :hoitokauden_alkuvuosi,
     :summa
 ) ON CONFLICT (
@@ -300,23 +308,42 @@ SELECT
     tk.nimi AS toimenpide,
     tk.koodi AS toimenpidekoodi,
     tpi.id as toimenpideinstanssi,
-    CASE
-        WHEN COUNT(tjm.*) = 0 THEN '[]'::JSON
-        ELSE json_agg(DISTINCT jsonb_build_object(
-            'tehtava', tjm.tehtava,
-            'edellinen_maara', tjm.edellinen_maara,
-            'maaramuutos', tjm.maaramuutos,
-            'uusi_maara', tjm.uusi_maara,
-            'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi))
-    END AS tehtavat_ja_maarat,
-    CASE
-        WHEN COUNT(kust.*) = 0 THEN '[]'::JSON
-        ELSE json_agg(DISTINCT jsonb_build_object(
-            'kustannuslaji', kust.kustannuslaji,
-            'toimenpideinstanssi', kust.toimenpideinstanssi,
-            'summa', kust.summa,
-            'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi))
-    END AS kustannusvaikutukset,
+    -- Haetaan ja järjestellään tehtavan määrämuutokset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
+    -- järjestely ole hankalaa
+    COALESCE(
+        (SELECT JSON_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'tehtava', tjm.tehtava,
+                        'edellinen_maara', tjm.edellinen_maara,
+                        'maaramuutos', tjm.maaramuutos,
+                        'uusi_maara', tjm.uusi_maara,
+                        'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
+                        'versio', tjm.versio)
+                    ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
+                )
+           FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+          WHERE tjm.muutos = m.id
+            AND tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id)),
+        '[]'::json) AS tehtavat_ja_maarat,
+
+    -- Haetaan ja järjestellään kustannusvaikutukset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
+    -- järjestely ole hankalaa
+    COALESCE(
+        (SELECT JSON_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'kustannuslaji', kust.kustannuslaji,
+                        'toimenpideinstanssi', kust.toimenpideinstanssi,
+                        'summa', kust.summa,
+                        'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi,
+                        'versio', kust.versio
+                    )
+                    ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi
+                )
+           FROM ONLY mhu_muutos_kustannusvaikutus kust
+          WHERE kust.muutos = m.id
+            AND kust.toimenpideinstanssi = tpi.id),
+        '[]'::json)
+        AS kustannusvaikutukset,
     CASE
         WHEN COUNT(st.*) = 0 THEN NULL
         ELSE json_agg(DISTINCT jsonb_build_object(
@@ -335,18 +362,8 @@ FROM toimenpiteet tk
                                     --       silti löydettävissä äiti muutos id:n avulla.
                                     --m.versio = :versio AND
                                     m.poistettu IS FALSE)
-    LEFT JOIN ONLY mhu_muutos_kustannusvaikutus kust ON (m.id = kust.muutos AND
-                                                         -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-                                                         --       liittyy yhteen muutokseen. ... sama teksti kuin yllä
-                                                         --m.versio = kust.versio AND
-                                                         kust.toimenpideinstanssi = tpi.id)
-    LEFT JOIN ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm ON (m.id = tjm.muutos AND
-                                                                -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-                                                                --       liittyy yhteen muutokseen. ... sama teksti kuin yllä
-                                                               --m.versio = tjm.versio AND
-                                                               tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id))
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
-GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tk.koodi, tp.jarjestys
+GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tp.id, tp.jarjestys
 ORDER BY tp.jarjestys;
 
 
@@ -358,15 +375,21 @@ VALUES (:versio,
         :muutos-id,
         :tehtava,
         :hoitokauden_alkuvuosi,
-        :edellinen-maara,
+        :edellinen_maara,
         :maaramuutos,
-        :uusi-maara)
+        :uusi_maara)
     ON CONFLICT (muutos, tehtava, hoitokauden_alkuvuosi)
         DO UPDATE SET versio          = EXCLUDED.versio,
                       edellinen_maara = EXCLUDED.edellinen_maara,
                       maaramuutos     = EXCLUDED.maaramuutos,
                       uusi_maara      = EXCLUDED.uusi_maara;
 
+-- name: poista-tehtavan-maaramuutos!
+-- Poistaa määrämuutosrivin, tästä tallentuu historiarivi mhu_muutos_tehtava_ja_maaraluettelo_historia tauluun
+DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo
+ WHERE muutos = :muutos-id
+   AND tehtava = :tehtava
+   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
 
 -- name: hae-tehtava-maaramuutokset

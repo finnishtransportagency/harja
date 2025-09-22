@@ -12,7 +12,7 @@
 
 
 (defn lomake-muutostyo
-  [e! {:keys [_valittu-hoitokausi] :as app}]
+  [e! {:keys [_valittu-hoitokausi urakan-hoitokaudet] :as app}]
 
   [(lomake/ryhma {:otsikko "Perustiedot"}
      (lomake/rivi
@@ -41,7 +41,7 @@
         ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ app)
+     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
      (yhteiset/+rivi-muutos-tavoitehinta+)
 
      (first (yhteiset/liite-kentta e! app)))])

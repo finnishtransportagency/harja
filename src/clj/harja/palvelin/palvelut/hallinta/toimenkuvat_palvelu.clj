@@ -51,7 +51,7 @@
         uusi-rivi (and (not (nil? id)) (= -1 id))
         ;; Haetaan urakan toimenkuva
         urakan-toimenkuva (first (toimenkuvat-kyselyt/hae-urakan-toimenkuva db {:urakkaid urakka
-                                                                                :nimi nimi}))
+                                                                                :toimenkuva nimi}))
         ;; Käyttöliittymän yksinkertaistamiseksi logiikkamuutos tänne bäackendiin.
         ;; Jos käyttäjä lisää urakkakohtainen-nimi arvon, niin se on päätös ottaa toimenkuva käyttöön.
         valittu? (cond

@@ -5,6 +5,7 @@
             [reagent.core :as r]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader-pieni]]
             [harja.ui.grid :as grid]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.hallinta.tarjoushinnat :as tiedot]))
@@ -33,7 +34,7 @@
 (defn tarjoushinnat* [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeTarjoushinnat)))
-    (fn [e! {:keys [tarjoushinnat haettava-urakka vain-puutteelliset?] :as app}]
+    (fn [e! {:keys [tarjoushinnat haettava-urakka vain-puutteelliset? haku-kaynnissa?] :as app}]
       (let [urakka-haku-id (gensym "urakkahaku")
             tarjoushinnat (->> tarjoushinnat
                             ;; Suodatetaan valintojen perusteella
@@ -77,21 +78,23 @@
            (r/wrap vain-puutteelliset?
              #(do
                 (e! (tiedot/->AsetaVainPuutteelliset %))))]]
-         [grid/grid
-          {:otsikko "MH-urakoiden tarjoushinnat"
-           :tunniste :urakka
-           :vetolaatikot (into {}
-                           (map (fn [{:keys [urakka tarjoushinnat]}]
-                                  [urakka [urakan-tarjoushinnat e! tarjoushinnat]])
-                             tarjoushinnat))}
-          [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-           {:otsikko "Urakka" :nimi :urakka-nimi :leveys 10}
-           {:nimi :puutteellisia? :leveys 5
-            :tyyppi :komponentti
-            :komponentti (fn [rivi]
-                           (when (:puutteellisia? rivi)
-                             [:span.tarjoushintoja-puuttuu [ikonit/harja-icon-status-error] "Tarjoushintoja puuttuu"]))}]
-          tarjoushinnat]]))))
+         (if haku-kaynnissa?
+           [ajax-loader-pieni "Haku käynnissä..."]
+           [grid/grid
+            {:otsikko "MH-urakoiden tarjoushinnat"
+             :tunniste :urakka
+             :vetolaatikot (into {}
+                             (map (fn [{:keys [urakka tarjoushinnat]}]
+                                    [urakka [urakan-tarjoushinnat e! tarjoushinnat]])
+                               tarjoushinnat))}
+            [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+             {:otsikko "Urakka" :nimi :urakka-nimi :leveys 10}
+             {:nimi :puutteellisia? :leveys 5
+              :tyyppi :komponentti
+              :komponentti (fn [rivi]
+                             (when (:puutteellisia? rivi)
+                               [:span.tarjoushintoja-puuttuu [ikonit/harja-icon-status-error] "Tarjoushintoja puuttuu"]))}]
+            tarjoushinnat])]))))
 
 (defn tarjoushinnat []
   [tuck tiedot/tila tarjoushinnat*])

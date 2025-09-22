@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
@@ -17,12 +18,10 @@
   palauttaa tyhjät tiedot, jotka voidaan täyttää uudelleen."
   [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user (:urakka-id tiedot))
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka-id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        tarjous {:urakka-id (:urakka-id tiedot)
-                 :kaikki-toimenkuvat (if (>= urakan-alkuvuosi 2025)
-                                       (toimenkuva-kyselyt/hae-toimenkuvat db)
-                                       nil)
+  (let [tarjous {:urakka-id (:urakka-id tiedot)
+                 :kaikki-toimenkuvat (map #(assoc %
+                                             :toimenkuva (:nimi %)
+                                             :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
                  :tarjous (tarjous-kyselyt/luo-default-tarjous db (:urakka-id tiedot))}]
     tarjous))
 

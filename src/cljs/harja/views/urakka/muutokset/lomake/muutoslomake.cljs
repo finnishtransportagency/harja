@@ -84,7 +84,7 @@
 
     (fn [e! {:keys [muokattava-muutos] :as app}]
       [:span.muutoslomake
-       
+
        [lomake/lomake
         {:otsikko (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
          :tarkkaile-ulkopuolisia-muutoksia? true
