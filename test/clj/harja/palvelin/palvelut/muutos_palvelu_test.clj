@@ -412,13 +412,10 @@
                                      poistettava-rivi
                                      {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
                                      {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
-                                     ;; TODO: En haluaisi, että vanhaa riviä päivitetään, jos se jätetään lomakkeella koskematta
-                                     ;;       Samalla koskemattomasta rivistä luodaan uusi versio turhaan, on ihan ok että eri riveillä
-                                     ;;       on eri versioita. MHU_MUUTOS taulsssa on tiedossa korkein versio.
-                                     ;;       Palataan asiaan.
-                                     ;;      Eli, jos tämä rivi otetaan mukaan payloadiin ei tuolla alempana saisi muuttumattoman rivin
-                                     ;;      versioksi nousta 2, vaan rivin pitäisi pysyä ennallaan.
-                                     #_{:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
+                                     ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
+                                     ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on jollakin alijoukolla
+                                     ;; rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
+                                     {:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 2988 :uusi_maara 0 :versio 2}
@@ -428,7 +425,7 @@
                            #_{:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 3117 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 3117 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 3117 :uusi_maara 0 :versio 2}
-                           ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
+                           ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella ennalleen
                            {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3117 :uusi_maara 1100 :versio 1})
         _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) muutos tehtava-maaramuutos-payload)
 
