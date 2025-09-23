@@ -1,6 +1,9 @@
 (ns harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot
   "Urakan muutosten tiedot - kirjatut muutokset."
   (:require [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.viesti :as viesti]
             [taoensso.timbre :as log]
             [tuck.core :as tuck]))
 
@@ -15,6 +18,9 @@
 ;; --- Tuck-eventit ja käsittelijät ---
 
 ;; -- Pysyvät muutokset -- ALKAA
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelle [])
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui [vastaus])
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui [virhe])
 (defrecord PaivitaToimenpiteenTehtavamaarat [toimenpideinstanssi hk-alkuvuosi taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
 (defrecord MerkitseTehtavanMaaramuutosPoistetuksi [toimenpideinstanssi tehtava-id hk-alkuvuosi poistettu?])
@@ -134,6 +140,39 @@
 
 (extend-protocol tuck/Event
   ;; -- Pysyvät muutokset -- ALKAA
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelle
+  (process-event [_ app]
+    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelle")
+
+    (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+      (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
+        {:urakka-id @nav/valittu-urakka-id
+         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+         :muutos {:id nil
+                  :versio nil
+                  :tyyppi "pysyva"}}
+        {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+         :onnistui-parametrit [valittu-hoitokausi]
+         :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
+    app)
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+  (process-event [{vastaus :vastaus
+                   valittu-hoitokausi :valittu-hoitokausi} app]
+    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui, vastaus: " vastaus)
+
+    (-> app
+      (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
+      (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
+      (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] (:urakan-hoitokaudet app))
+      (assoc-in [:muokattava-muutos :liitteet] [])
+      (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi)))
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Pysyvän muutoksen taustatietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
 
   PaivitaToimenpiteenTehtavamaarat
   (process-event [{toimenpideinstanssi :toimenpideinstanssi

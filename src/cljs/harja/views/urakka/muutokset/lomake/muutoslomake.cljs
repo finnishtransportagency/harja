@@ -2,6 +2,7 @@
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require [clojure.string :as str]
 
+            [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
@@ -16,7 +17,8 @@
             ;; Lomake tyypit, näitä voi lisäillä tarvittaessa 
             [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
             [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
-            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
+            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]
+            [reagent.core :as r]))
 
 
 (defn- lomakkeen-footer [muutos tyyppi
@@ -75,6 +77,12 @@
           :uusi-rivi? true
           ::lomake/col-luokka "perustiedot col-sm-6"}]))))
 
+;; TODO: Hae pysyvän muutoksen pohjatiedot uudelle muutokselle
+(defn hae-lomakkeen-pohjatiedot [e! muutostyyppi]
+  (prn "### hae-lomakkeen-pohjatiedot" muutostyyppi)
+  (case muutostyyppi
+    "pysyva" (e! (t-kirjatut/->HaePysyvanMuutoksenPohjatiedotLomakkeelle))
+    nil))
 
 (defn muutoslomake [e! {:keys [muokattava-muutos] :as _app}]
   (komp/luo

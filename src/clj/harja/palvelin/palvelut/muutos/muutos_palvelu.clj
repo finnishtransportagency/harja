@@ -360,6 +360,7 @@
   "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
   (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
         toimenpiteiden-tiedot (mapv
                                 (fn [rivi]
@@ -674,6 +675,10 @@
         :hae-muutoksen-tiedot
         (fn [kayttaja tiedot]
           (hae-muutoksen-tiedot (:db this) kayttaja tiedot))
+
+        :hae-pysyvan-muutoksen-pohjatiedot
+        (fn [kayttaja tiedot]
+          (hae-pysyvan-muutoksen-pohjatiedot (:db this) kayttaja tiedot))
 
         :hae-tehtava-maaramuutokset
         (fn [kayttaja tiedot]
