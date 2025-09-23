@@ -277,6 +277,7 @@
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
+
   [{:tyyppi :komponentti
     :uusi-rivi? true
     :komponentti (fn [_rivi]
@@ -294,7 +295,7 @@
       ::lomake/col-luokka "perustiedot col-sm-6"}
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet))
+     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet true))
 
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
@@ -312,11 +313,18 @@
       :valinta-arvo identity}
 
      ;; Taulukko jossa vaikutuksia voidaan syöttää
-     {:otsikko ""
-      :uusi-rivi? true
-      :nimi :taulukko-pysyvan-muutoksen-vaikutukset
-      :tyyppi :komponentti
-      :komponentti (fn [rivi]
-                     [taulukko-pysyvan-muutoksen-vaikutukset e! app])})
+     (if (:hoitovuosi muokattava-muutos)
+       {:otsikko ""
+        :uusi-rivi? true
+        :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+       {:tyyppi :komponentti
+        :uusi-rivi? true
+        :komponentti (fn [_rivi]
+                       [:div.perustiedot
+                        [yleiset/info-laatikko :neutraali
+                         "Valitse hoitokausi, jotta voit tehdä pysyvän muutoksen."]])}))
 
    (first (yhteiset/liite-kentta e! app))])
