@@ -365,6 +365,7 @@
       (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
       (assoc :valittu-hoitokausi (:valittu-hoitokausi vastaus))
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui

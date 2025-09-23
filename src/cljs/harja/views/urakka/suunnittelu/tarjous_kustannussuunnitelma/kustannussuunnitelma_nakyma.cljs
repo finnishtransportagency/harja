@@ -16,7 +16,7 @@
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
 
-(defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
+(defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma tulevaisuudessa-arvoja?] :as app}]
   (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [kilpailutettavat-hankinnat vahvistettu?
@@ -75,7 +75,8 @@
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom false))
            nil
-           #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true))))
+           #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true))
+           tulevaisuudessa-arvoja?))
 
        [:div.row
         [:div.col-xs-12
@@ -114,7 +115,8 @@
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
             #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom false))
             nil
-            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))])])))
+            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true))
+            tulevaisuudessa-arvoja?)])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
   (if (nil? (:rahavaraukset kustannussuunnitelma))
@@ -178,7 +180,7 @@
               :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :otsikkorivi-luokka "korkea"}])
           rahavaraukset]]]])))
 
-(defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+(defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma tulevaisuudessa-arvoja?] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :erillishankinnat]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [erillishankinnat vahvistettu?]} kustannussuunnitelma
@@ -225,7 +227,8 @@
             #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom false))
             (when (and tarjouksen-maara (> tarjouksen-maara 0))
               #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
-            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))])
+            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true))
+            tulevaisuudessa-arvoja?)])
 
        [:div.row
         [:div.col-xs-12
@@ -254,9 +257,10 @@
            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom false))
            (when (and tarjouksen-maara (> tarjouksen-maara 0))
              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
-           #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true))))])))
+           #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true))
+           tulevaisuudessa-arvoja?))])))
 
-(defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
+(defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma tulevaisuudessa-arvoja?] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [hoidonjohtopalkkiot vahvistettu?]} kustannussuunnitelma
@@ -303,7 +307,8 @@
             #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom false))
             (when (and tarjouksen-maara (> tarjouksen-maara 0))
               #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
-            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))])
+            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true))
+            tulevaisuudessa-arvoja?)])
 
        [:div.row
         [:div.col-xs-12
@@ -332,7 +337,8 @@
            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom false))
            (when (and tarjouksen-maara (> tarjouksen-maara 0))
             #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
-           #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true))))])))
+           #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true))
+           tulevaisuudessa-arvoja?))])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta

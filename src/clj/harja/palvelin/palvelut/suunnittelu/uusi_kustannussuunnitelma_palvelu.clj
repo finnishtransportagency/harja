@@ -119,10 +119,15 @@
                                             (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
           hoitovuoden-alun-indeksikorjattu-kattohinta (or (when (and indeksikerroin hoitovuoden-alun-kattohinta)
                                                             (* indeksikerroin hoitovuoden-alun-kattohinta)) 0)
+
+          ;; Haetaan tieto, että onko tulevilla hoitovuosilla mitään arvoja tallennettuna.
+          tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi)
+
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
+             :tulevaisuudessa-arvoja? tulevaisuudessa-arvoja
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
                                     :erillishankinnat erillishankinnat
