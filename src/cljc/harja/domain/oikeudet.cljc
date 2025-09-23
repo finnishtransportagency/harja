@@ -34,7 +34,8 @@
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
   hallinta-indeksit
   urakat-yleiset
-  hallinta-tarjoushinnat)
+  hallinta-tarjoushinnat
+  hallinta-rahavaraukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
