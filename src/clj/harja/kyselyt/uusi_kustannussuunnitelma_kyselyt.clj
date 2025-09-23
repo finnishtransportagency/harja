@@ -43,7 +43,8 @@
   vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
   indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
   lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
-  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio)
+  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio
+  tulevilla-hoitovuosilla-arvoja?)
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -942,3 +943,21 @@
              :vahvistus-pvm vahvistus-pvm})
         ;; Lisää tavoite-ja-kattohinta tieto kantaan
         _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoite-ja-kattohinta" (:id kayttaja))]))
+
+(defn onko-tulevilla-hoitovuosilla-arvoja? [db urakka-id sopimus-id hoitovuoden-alkuvuosi]
+  (let [hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        erillishankinnat-tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
+
+        ;; hankintatoimenpideinstanssit
+        hankinnan-toimenpiteet (flatten (map (juxt :toimenpideinstanssi-id) (hae-urakan-toimenpiteet db {:urakkaid urakka-id})))
+
+        tulevaisuudessa-arvoja (tulevilla-hoitovuosilla-arvoja? db
+                                 {:urakka-id urakka-id
+                                  :sopimus-id sopimus-id
+                                  :hoidon-johdon-tpi-id hoidonjohto-tpi-id
+                                  :hankinnan-toimenpideinstanssit hankinnan-toimenpiteet
+                                  :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)
+                                 :vuosi hoitovuoden-alkuvuosi})]
+    (boolean (some #(true? (:arvoja-tulevilla-hoitovuosilla? %)) tulevaisuudessa-arvoja))))
