@@ -356,6 +356,28 @@
                                                                        (inc (pvm/vuosi loppupvm)))}))
 
 
+(defn hae-pysyvan-muutoksen-pohjatiedot
+  "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
+  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
+        toimenpiteiden-tiedot (mapv
+                                (fn [rivi]
+                                  (-> rivi
+                                    (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
+                                    (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                    (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
+                                                                                          :versio muutos-versio
+                                                                                          :urakka urakka-id
+                                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        toimenpiteiden-tehtavat (map
+                                  #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
+                                  (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm))]
+    {:toimenpiteiden-tiedot toimenpiteiden-tiedot
+     :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+
 ;; TODO: Refaktoroi koodia. Tässä on paljon tyypin perusteella iffittelyä, joka menee helposti hankalalukuiseksi
 ;;       Mieti uudestaan miten muutostyypin perusteella kannattaa lomakkeen perustietoja hakea
 ;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
@@ -367,27 +389,7 @@
   ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
   ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
   ;;       Tutki kyselyä uuden muutoksen luonnin näkökulmasta
-  (let [toimenpiteiden-tiedot (when (= (:tyyppi muutos) "pysyva")
-                                (mapv
-                                  (fn [rivi]
-                                    (-> rivi
-                                      (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
-                                      (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                      (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
-                                  ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
-                                  (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
-                                                                                            :versio (:versio muutos)
-                                                                                            :urakka urakka-id
-                                                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-        {:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
-
-        ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
-        ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
-        toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
-                                  (map
-                                    #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
-                                    (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)))
-        tyyppikohtaiset-tiedot (case (:tyyppi muutos)
+  (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (when (:id muutos)
                                    (mapv
@@ -412,8 +414,10 @@
         vastaus (assoc (merge muutos
                          (first tyyppikohtaiset-tiedot)
                          (when (= (:tyyppi muutos) "pysyva")
-                           {:toimenpiteiden-tiedot toimenpiteiden-tiedot
-                            :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+                           (hae-pysyvan-muutoksen-pohjatiedot db kayttaja {:urakka-id urakka-id
+                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                           :muutos-id (:id muutos)
+                                                                           :muutos-versio (:versio muutos)})))
                   :liitteet liitteet)]
     vastaus))
 

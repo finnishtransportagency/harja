@@ -182,7 +182,6 @@
     (assoc app :muokattava-muutos lomake))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
-  ;; TODO: Tuntuu liian geneeriseltä toteutukselta
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
     (log/debug "HaeMuutoksenTiedot")
