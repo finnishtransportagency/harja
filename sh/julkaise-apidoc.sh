@@ -13,7 +13,7 @@ case $ke in
       cp -r ../apidoc/documentation apidoc
       cp -r ../apidoc/examples apidoc
       cp -r ../apidoc/schemas apidoc
-      git commit -m 'Päivitä Harja API dokumentaatio'
+      git commit -a -m 'Päivitä Harja API dokumentaatio'
       git push
   else
       echo "Aja tämä skripti gh-pages-haarassa. Nykyinen git-haara: $githaara_nykyinen"
