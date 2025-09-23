@@ -356,13 +356,21 @@
                                                                        (inc (pvm/vuosi loppupvm)))}))
 
 
+(defn hae-toimenpiteiden-tehtavat
+  "Hakee toimenpiteiden tehtävät. Näitä tarvitaan pysyvissä muutoksissa, mutta voidaan tarvita myös muissa muutostyypeissä."
+  [db urakka-id]
+  (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
+        toimenpiteiden-tehtavat (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)]
+
+    (->> toimenpiteiden-tehtavat
+      (map #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})))))
+
 (defn hae-pysyvan-muutoksen-pohjatiedot
   "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
-  (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
-        toimenpiteiden-tiedot (mapv
+  (let [toimenpiteiden-tiedot (mapv
                                 (fn [rivi]
                                   (-> rivi
                                     (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
@@ -373,9 +381,7 @@
                                                                                           :versio muutos-versio
                                                                                           :urakka urakka-id
                                                                                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
-        toimenpiteiden-tehtavat (map
-                                  #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
-                                  (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm))]
+        toimenpiteiden-tehtavat (hae-toimenpiteiden-tehtavat db urakka-id)]
     {:toimenpiteiden-tiedot toimenpiteiden-tiedot
      :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
 

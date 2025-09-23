@@ -148,6 +148,11 @@
     (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
       {:urakka-id @nav/valittu-urakka-id
        :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+       ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
+       ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
+       ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
+       ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
+       ;;       vain pelkät pohjatiedot.
        :muutos {:id nil
                 :versio nil
                 :tyyppi "pysyva"}}
@@ -167,6 +172,8 @@
         (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
         (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
         (assoc-in [:muokattava-muutos :liitteet] [])
+        (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] [])
+        (assoc-in [:muokattava-muutos :kustannusvaikutukset] [])
         ;; Valitaan ensimmäinen mahdollinen hoitovuosi, jos ei ole valittuna
         (assoc-in [:muokattava-muutos :hoitovuosi] (first mahdolliset-hoitovuodet)))))
 
