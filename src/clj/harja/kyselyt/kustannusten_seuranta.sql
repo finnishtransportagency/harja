@@ -58,7 +58,6 @@ WHERE s.urakka = :urakka
     )
 GROUP BY paaryhma, toimenpide, toimenpideryhma, maksutyyppi, tehtava_nimi, tk.koodi,
          tk_tehtava.jarjestys, tr.nimi, kt.indeksikorjaus_vahvistettu
-
  UNION ALL
 -- Haetaan budjetoidut rahavaraukset erikseen, koska niillä ei ole toimenpideinstanssia
 SELECT COALESCE(SUM(kt.summa), 0)                     AS budjetoitu_summa,
@@ -256,8 +255,15 @@ SELECT CASE
               mmk.summa 
            ELSE 0
            END                    AS budjetoitu_summa,
-       0                          AS budjetoitu_summa_indeksikorjattu,
-       coalesce(SUM(lk.summa), 0) AS toteutunut_summa,
+       -- TODO, voidaanko indeksikorjata tässä? 
+       -- Ruukattu vahvistaa kustannussuunnitelmassa vanhassa versiossa 
+       indeksikorjaa(
+           mmk.summa, 
+           EXTRACT(YEAR FROM l.erapaiva)::INT, 
+           EXTRACT(MONTH FROM l.erapaiva)::INT, 
+           l.urakka
+       )                          AS budjetoitu_summa_indeksikorjattu,
+       COALESCE(SUM(lk.summa), 0) AS toteutunut_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
            WHEN lk.tyyppi::TEXT = 'hankintakulu' THEN 'hankinta'
@@ -312,7 +318,7 @@ WHERE l.urakka = :urakka
   AND (tk.koodi = '23104' OR tk.koodi = '23116'
     OR tk.koodi = '23124' OR tk.koodi = '20107' OR tk.koodi = '20191' OR
        tk.koodi = '14301')
-GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.nimi, mmk.summa, lk.maksueratyyppi, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
+GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.nimi, mmk.summa, lk.maksueratyyppi, l.erapaiva, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
          lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi), lk.tavoitehintainen
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
