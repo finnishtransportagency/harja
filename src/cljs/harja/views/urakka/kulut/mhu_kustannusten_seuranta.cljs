@@ -91,7 +91,7 @@
               neg? (big/gt (big/->big toteutunut-summa) (big/->big budjetoitu-summa-indeksikorjattu))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
-             (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (nimi-avain rivi)]
+             (lisaa-taulukkoon-tehtava-rivi [:span.livi-reunaviiva {:style {:padding-left "16px"}} (nimi-avain rivi)]
                (fmt->big (big/->big budjetoitu-summa) false)
                (fmt->big budjetoitu-summa-indeksikorjattu false)
                true ;; Kaikki kolmannen portaan tehtävät merkitään "vahvistetuksi" koska niille ei näytetä summaa
