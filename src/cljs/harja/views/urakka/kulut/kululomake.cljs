@@ -1,12 +1,14 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [harja.fmt :as fmt]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [goog.string.format]
+            [goog.string :as gstring]
+            [clojure.string :as str] 
+
+            [harja.fmt :as fmt]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
@@ -14,9 +16,7 @@
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as str] 
             [harja.pvm :as pvm]
-            [goog.string :as gstring]
             [harja.asiakas.kommunikaatio :as k]))
 
 (def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
@@ -438,26 +438,33 @@
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
        :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
        :erillisrahoitettu-muutos [erillisrahoitettu-muutostyo-kohdistus e! lomake urakan-muutostyot kohdistus toimenpiteet nro]
+       :jjh-muutos nil
 
-       [:<> "Sisältöä ei löytynyt."])
+       ;; Default
+       (do
+         ;; Ei blokkaa mitään, mutta halutaan tästä jokin punainen valo heittää
+         (js/console.error (str
+                             "Kohdistustyyppiä " kohdistustyyppi " "
+                             "ei ole käsitelty kululomakkeella."))
+         nil))
 
      ;; Kohdistuksen summa
      [:div.row
       [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
        [:div
         [kentat/tee-otsikollinen-kentta
-           {:otsikko "Määrä € *"
-            :otsikon-tag "span"
-            :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-            :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
-                            :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
-                            :tyyppi :euro
-                            :tyylit {:width "110px" :height "34px"}
-                            :vaadi-negatiivinen? urakoitsija-maksaa?
-                            :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
-                            ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                            :input-luokka "maara-input"
-                            :vayla-tyyli? true}}]]]]]))
+         {:otsikko "Määrä € *"
+          :otsikon-tag "span"
+          :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
+          :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
+                          :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
+                          :tyyppi :euro
+                          :tyylit {:width "110px" :height "34px"}
+                          :vaadi-negatiivinen? urakoitsija-maksaa?
+                          :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
+                          ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
+                          :input-luokka "maara-input"
+                          :vayla-tyyli? true}}]]]]]))
 
 (defn testausvalinnat [e! app]
   (when (k/kehitysymparistossa?)
