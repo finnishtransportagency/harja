@@ -555,27 +555,29 @@
   [db aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
 
-  ;; TODO: Tarkista tarviiko tehdäkin kaksi eri sekvenssiä järjestyksessä: poistettavat ja lisättävät/päivitettävät
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
-        muutos-versio (:versio aiti-muutos-id-ja-versio)]
-    (doseq [maaramuutos maaramuutokset]
-      ;; Poista rivi, jos se on merkitty poistettavaksi
-      (if (:poistettu maaramuutos)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)
+        poistettavat (filter :poistettu maaramuutokset)
+        lisattavat-ja-paivitettavat (remove :poistettu maaramuutokset)]
+
+    ;; Poista rivi, jos se on merkitty poistettavaksi
+    (doseq [maaramuutos poistettavat]
+      (when (and (:tehtava maaramuutos) (:hoitokauden_alkuvuosi maaramuutos))
         (muutos-kyselyt/poista-tehtavan-maaramuutos! db {:muutos-id muutos-id
                                                          :tehtava (:tehtava maaramuutos)
-                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})
-        ;; Luo tai päivitä rivi
-        ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
-        ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
-        (when (pos? (:tehtava maaramuutos))
-          (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
-                              (assoc maaramuutos
-                                ;; TODO: Nämä pitäisi laskea
-                                :uusi_maara 0
-                                :edellinen_maara 0))]
-            (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos)))))))
+                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})))
 
-
+    ;; Luo tai päivitä rivi
+    (doseq [maaramuutos lisattavat-ja-paivitettavat]
+      ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
+      ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
+      (when (pos? (:tehtava maaramuutos))
+        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
+                            (assoc maaramuutos
+                              ;; TODO: Nämä pitäisi laskea
+                              :uusi_maara 0
+                              :edellinen_maara 0))]
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
