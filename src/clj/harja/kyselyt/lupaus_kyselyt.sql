@@ -366,15 +366,14 @@ WHERE ke."lupaus-id" = :lupaus-id
   AND ke.hoitovuosi_alkuvuosi = :hoitokauden-alkuvuosi
 ORDER BY ke.maarapaiva;
 
--- name: hae-kustannusennusteen-pisterajat
-SELECT pr.id,
-       pr."lupaus-id",
-       pr.maarapaiva_kk,
-       pr.tarkkuus_prosentti,
-       pr.pisteet
-FROM lupaus_kustannusennuste_pisteraja pr  
-WHERE pr."lupaus-id" = :lupaus-id
-ORDER BY pr.maarapaiva_kk, pr.tarkkuus_prosentti;
+-- name: hae-kustannusennuste-kuukausi-pisterajat  
+-- single?: true
+-- Hakee kuukauden pisterajat JSON-muodossa uudesta taulusta
+SELECT kp.pisterajat
+FROM lupaus_kustannusennuste_kuukausi_pisteet kp
+WHERE kp."urakan-alkuvuosi" = :urakan-alkuvuosi
+  AND kp.kuukausi = :kuukausi  
+ORDER BY kp.paiva;
 
 -- name: hae-valikatselmuksen-vahvistetut-kustannusennusteet
 SELECT pty.tavoitehinta AS "vahvistettu-tavoitehinta",

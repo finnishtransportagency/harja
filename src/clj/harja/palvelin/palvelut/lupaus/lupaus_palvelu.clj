@@ -140,10 +140,12 @@
                                                         valittu-hoitokausi] :as tiedot}]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
+        kustannusennuste-pisteet-tila (onko-kustannusennuste-pisteet-laskettu?
+                                        db urakka-id hoitokauden-alkuvuosi)
         vastaus (into []
-                      (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
-                                                                   :alkupvm hk-alkupvm
-                                                                   :loppupvm hk-loppupvm}))
+                  (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
+                                                              :alkupvm hk-alkupvm
+                                                              :loppupvm hk-loppupvm}))
         ;; Selvitä hoitovuosi-nro suhteessa urakan alkuvuoteen erikoisarvoja varten
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (some-> (:alkupvm urakan-tiedot) pvm/vuosi)
@@ -163,31 +165,34 @@
         vastaus (mapv (fn [r]
                         (if-let [erikoisarvo (first (get erikoisarvot (:lupaus-id r)))]
                           (-> r
-                              (assoc :hoitovuosi-nro hoitovuosi-nro)
-                              (assoc :hoitovuoden-erikoisarvot erikoisarvo)
-                              (assoc :kirjaus-kkt (:kirjaus-kkt erikoisarvo))
-                              (cond-> (not (nil? (:paatos-kk erikoisarvo))) (assoc :paatos-kk (:paatos-kk erikoisarvo)))
-                              (cond-> (not (nil? (:joustovara-kkta erikoisarvo))) (assoc :joustovara-kkta (:joustovara-kkta erikoisarvo))))
+                            (assoc :hoitovuosi-nro hoitovuosi-nro)
+                            (assoc :hoitovuoden-erikoisarvot erikoisarvo)
+                            (assoc :kirjaus-kkt (:kirjaus-kkt erikoisarvo))
+                            (cond-> (not (nil? (:paatos-kk erikoisarvo))) (assoc :paatos-kk (:paatos-kk erikoisarvo)))
+                            (cond-> (not (nil? (:joustovara-kkta erikoisarvo))) (assoc :joustovara-kkta (:joustovara-kkta erikoisarvo))))
                           r))
-                      vastaus)
+                  vastaus)
         vastaus (->> vastaus
-                     (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
-                     (mapv #(update % :vastaukset
-                                    (fn [rivit]
-                                      (let [tulos (keep
-                                                    (fn [r]
+                  (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
+                  (mapv #(update % :vastaukset
+                           (fn [rivit]
+                             (let [tulos (keep
+                                           (fn [r]
                                                       ;; Haku käyttää hakemisessa left joinia, joten on mahdollista, että taulusta
                                                       ;; löytyy nil id
-                                                      (when (not (nil? (:f1 r)))
-                                                        (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)))
-                                                    rivit)]
-                                        tulos))))
-                     (mapv lupaus-domain/liita-ennuste-tai-toteuma)
-                     (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
-                     (mapv #(let [kustannusennusteet (when (= "kustannusennuste" (:lupaustyyppi %))
-                                                       (hae-lupauksen-kustannusennusteet db (:lupaus-id %) urakka-id hoitokauden-alkuvuosi))]
-                              (lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %)) kustannusennusteet)))
-                     (mapv #(liita-lupaus-vaihtoehdot db %)))
+                                             (when (not (nil? (:f1 r)))
+                                               (clojure.set/rename-keys r db-vastaus->speqcl-avaimet)))
+                                           rivit)]
+                               tulos))))
+                  (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
+                  (mapv #(let [kustannusennusteet (when (= "kustannusennuste" (:lupaustyyppi %))
+                                                    (hae-lupauksen-kustannusennusteet db (:lupaus-id %) urakka-id hoitokauden-alkuvuosi))]
+                           (lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %)) kustannusennusteet)))
+                  (mapv #(liita-lupaus-vaihtoehdot db %))
+                  (mapv #(if (= "kustannusennuste" (:lupaustyyppi %))
+                           (assoc % :hoitovuosi-paattynyt? (:kaikki-laskettu kustannusennuste-pisteet-tila))
+                           %))
+                  (mapv lupaus-domain/liita-ennuste-tai-toteuma))
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         piste-maksimi (lupaus-domain/rivit->maksimipisteet lupausryhmat)
@@ -197,13 +202,11 @@
         merkitsevat-odottaa-kannanottoa (lupaus-domain/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         odottaa-urakoitsijan-kannanottoa? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)
         tavoitehinta (when hk-alkupvm (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm))
-        ;; Hae oikaistu tavoitehinta välikatselmuksesta vertailua varten
-        kustannusennuste-pisteet-tila (onko-kustannusennuste-pisteet-laskettu?
-                                        db urakka-id hoitokauden-alkuvuosi)
+        ;; Hae oikaistu tavoitehinta välikatselmuksesta vertailua varten 
         oikaistu-tavoitehinta-data (try
                                      (when hk-alkupvm
-                                       (valikatselmus-q/hae-oikaistu-tavoitehinta 
-                                         db {:urakka-id urakka-id 
+                                       (valikatselmus-q/hae-oikaistu-tavoitehinta
+                                         db {:urakka-id urakka-id
                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
                                      (catch Exception e
                                        (log/warn "Oikaistun tavoitehinnan haku epäonnistui:" (.getMessage e))
@@ -230,19 +233,19 @@
                                :tavoitehinta tavoitehinta}))
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
-                                  bonus-tai-sanktio)
+                               bonus-tai-sanktio)
         hoitovuosi-valmis? (boolean piste-toteuma)
         ennusteen-tila (cond tallennettu-bonus-tai-sanktio
-                             :katselmoitu-toteuma
+                         :katselmoitu-toteuma
 
-                             hoitovuosi-valmis?
-                             :alustava-toteuma
+                         hoitovuosi-valmis?
+                         :alustava-toteuma
 
-                             ennusteen-voi-tehda?
-                             :ennuste
+                         ennusteen-voi-tehda?
+                         :ennuste
 
-                             :else
-                             :ei-viela-ennustetta)]
+                         :else
+                         :ei-viela-ennustetta)]
     {:lupaus-sitoutuminen (if tallennettu-paatos
                             ;; Näytetään päätökseen tallennetut pisteet, jos saatavilla
                             {:pisteet (:luvatut_pisteet tallennettu-paatos)}
@@ -646,6 +649,42 @@
                    :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?
                    :vahvistetut-kustannusennusteet vahvistetut-kustannusennusteet}})))
 
+(defn- hae-kustannusennuste-pisterajat
+  "Hakee kustannusennusteen pisterajat tietokannasta ja konvertoi JSONB:n Clojure-dataksi"
+  [db urakan-alkuvuosi kuukausi]
+  (let [tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
+                db
+                {:urakan-alkuvuosi urakan-alkuvuosi
+                 :kuukausi kuukausi})]
+    (when tulos
+      (konversio/jsonb->clojuremap tulos))))
+
+(defn maarita-kustannusennuste-pisteet
+  "Määrittää pisteet tarkkuuden ja kuukauden perusteella tietokannasta haettujen pisterajojen mukaan.
+   Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
+  ([db tarkkuus-prosentti kuukausi urakan-alkuvuosi]
+   (maarita-kustannusennuste-pisteet db tarkkuus-prosentti kuukausi urakan-alkuvuosi nil))
+  ([db tarkkuus-prosentti kuukausi urakan-alkuvuosi pisterajat-data]
+   {:pre [(number? tarkkuus-prosentti) (number? kuukausi) (number? urakan-alkuvuosi)]}
+   (let [tarkkuus-abs (Math/abs tarkkuus-prosentti)
+         pisterajat-result (when-not pisterajat-data
+                             (hae-kustannusennuste-pisterajat db urakan-alkuvuosi kuukausi))
+  
+         ;; Käy läpi pisterajat järjestyksessä ja etsi sopiva
+         tulos (some (fn [raja]
+                       (let [operaattori (:operaattori raja)
+                             raja-arvo (:raja raja)
+                             pisteet (:pisteet raja)]
+                         (cond
+                           (and (= operaattori "≤") (<= tarkkuus-abs raja-arvo))
+                           pisteet
+
+                           (and (= operaattori ">") (> tarkkuus-abs raja-arvo))
+                           pisteet
+
+                           :else nil)))
+                 pisterajat-result)]
+     (or tulos 0))))
 (defn laske-lopullinen-kustannusennuste!
   "Laskee lopulliset pisteet kustannusennusteille kun välikatselmus on saatavilla.
    Kutsutaan välikatselmuksen päätöksestä."
@@ -698,9 +737,11 @@
                                             :toteutunut-tavoitehinta toteutunut-tavoitehinta
                                             :toteutunut-kustannus toteutunut-kustannus
                                             :hoitovuoden-alun-tavoitehinta hoitovuoden-alun-tavoitehinta})
-                          lopulliset-pisteet (lupaus-domain/maarita-kustannusennuste-pisteet
+                          lopulliset-pisteet (maarita-kustannusennuste-pisteet
+                                               db
                                                (:tarkkuus-prosentti tarkkuus-tulos)
-                                               (pvm/kuukausi maarapaiva))]
+                                               (pvm/kuukausi maarapaiva)
+                                               2021)]
                     
                       ;; Päivitä lopulliset pisteet tietokantaan
                       (lupaus-kyselyt/paivita-kustannusennuste-lopulliset-pisteet!
@@ -826,3 +867,116 @@
     {:urakka 36
      :alkupvm #inst "2023-09-30T21:00:00.000-00:00"
      :loppupvm #inst "2024-09-30T20:59:59.000-00:00"}))
+
+(comment
+  (def j harja.palvelin.main/harja-jarjestelma)
+
+  ;; Testaa maarita-kustannusennuste-pisteet funktio
+  (defn testaa-kustannusennuste-pisteet []
+    (let [db (:db j)]
+      (println "=== Testaa maarita-kustannusennuste-pisteet ===")
+
+      ;; Testaa eri tarkkuuksia lokakuulle (kuukausi 10)
+      (println "\n--- Lokakuu (kuukausi 10) testit ---")
+      (doseq [tarkkuus [1.0 3.0 5.0 8.0 15.0 25.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 10 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa eri tarkkuuksia tammikuulle (kuukausi 1)  
+      (println "\n--- Tammikuu (kuukausi 1) testit ---")
+      (doseq [tarkkuus [1.0 3.0 5.0 8.0 15.0 25.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 1 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa eri tarkkuuksia huhtikuulle (kuukausi 4)
+      (println "\n--- Huhtikuu (kuukausi 4) testit ---")
+      (doseq [tarkkuus [1.0 3.0 5.0 8.0 15.0 25.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 4 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa eri tarkkuuksia kesäkuulle (kuukausi 6)
+      (println "\n--- Kesäkuu (kuukausi 6) testit ---")
+      (doseq [tarkkuus [1.0 3.0 5.0 8.0 15.0 25.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 6 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa eri tarkkuuksia elokuulle (kuukausi 8)
+      (println "\n--- Elokuu (kuukausi 8) testit ---")
+      (doseq [tarkkuus [1.0 3.0 5.0 8.0 15.0 25.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 8 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa eri urakan alkuvuosia
+      (println "\n--- Eri urakan alkuvuodet (lokakuu) ---")
+      (doseq [alkuvuosi [2019 2020 2021 2022 2023]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db 5.0 10 alkuvuosi)]
+          (println (format "Alkuvuosi %d, tarkkuus 5.0%% -> %d pistettä" alkuvuosi pisteet))))
+
+      ;; Testaa negatiivisia tarkkuuksia (absoluuttiarvo otetaan)
+      (println "\n--- Negatiiviset tarkkuudet (lokakuu 2021) ---")
+      (doseq [tarkkuus [-1.0 -3.0 -5.0 -8.0 -15.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet db tarkkuus 10 2021)]
+          (println (format "Tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))
+
+      ;; Testaa tietokannasta haettua pisterajat JSONia
+      (println "\n--- Tietokannasta haetut pisterajat ---")
+      (let [pisterajat (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
+                         db {:urakan-alkuvuosi 2021 :kuukausi 10 :paiva 15})]
+        (println "Lokakuu 2021, päivä 15:")
+        (clojure.pprint/pprint pisterajat)
+
+      (let [pisterajat (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
+                         db {:urakan-alkuvuosi 2021 :kuukausi 4 :paiva 30})]
+        (println "\nHuhtikuu 2021, päivä 30:")
+        (clojure.pprint/pprint (:pisterajat pisterajat)))
+
+      ;; Testaa vanhoja kyselyitä
+      (println "\n--- Vanhan kyselyn testit ---")
+      (lupaus-kyselyt/hae-urakan-lupaustiedot
+        db
+        {:urakka 36
+         :alkupvm #inst "2023-09-30T21:00:00.000-00:00"
+         :loppupvm #inst "2024-09-30T20:59:59.000-00:00"}))))
+
+  ;; Kutsu testiä
+   (testaa-kustannusennuste-pisteet)
+
+   (defn testaa-jsonb-suoraan []
+     (let [raaka-tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
+                         (:db j) {:urakan-alkuvuosi 2021 :kuukausi 10 :paiva 15})
+           pisterajat-pgobject raaka-tulos]
+       (println "Raaka PGobject:")
+       (println (type pisterajat-pgobject))
+       (println pisterajat-pgobject)
+       (println "\nPGobject getValue:")
+       (println (.getValue pisterajat-pgobject))
+       (println "\nKonvertoitu cheshire/decode:")
+       (clojure.pprint/pprint (cheshire/decode (.getValue pisterajat-pgobject) true))
+       (println "\nKonvertoitu jsonb->clojuremap:")
+       (clojure.pprint/pprint (konversio/jsonb->clojuremap pisterajat-pgobject))))
+   
+   (testaa-jsonb-suoraan)
+
+
+  ;; Yksittäiset nopeat testit
+  ;; (maarita-kustannusennuste-pisteet (:db j) 5.0 10 2021)
+  ;; (maarita-kustannusennuste-pisteet (:db j) 2.0 1 2021) 
+  ;; (maarita-kustannusennuste-pisteet (:db j) 10.0 4 2021)
+
+  ;; Hae pisterajat suoraan tietokannasta
+  ;; (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat 
+  ;;   (:db j) {:urakan-alkuvuosi 2021 :kuukausi 10 :paiva 15})
+
+  ;; Testaa myös testidatalla ilman tietokantakutsua
+  (defn testaa-pisterajat-testidatalla []
+    (let [testidata [{:operaattori "≤" :raja 2 :pisteet 10}
+                     {:operaattori "≤" :raja 5 :pisteet 8}
+                     {:operaattori "≤" :raja 10 :pisteet 6}
+                     {:operaattori ">" :raja 10 :pisteet 0}]]
+      (println "\n=== Testaa testidatalla ===")
+      (doseq [tarkkuus [1.0 2.0 3.0 5.0 8.0 10.0 15.0]]
+        (let [pisteet (maarita-kustannusennuste-pisteet (:db j) tarkkuus 10 2021 testidata)]
+          (println (format "Testidatalla tarkkuus %.1f%% -> %d pistettä" tarkkuus pisteet))))))
+
+  ;; (testaa-pisterajat-testidatalla)
+  )
