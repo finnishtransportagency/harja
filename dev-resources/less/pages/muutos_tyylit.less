@@ -29,11 +29,38 @@
   }
   .muutoslomake {
     .form-group {
-      max-width: 640px;
+      width: 100%;
     }
+
+    .lomake-footer {
+      margin-top: 0;
+    }
+
+    .tallenna-ja-peruuta {
+      padding-top: @valistys-24;
+    }
+
+    .perustiedot {
+      max-width: 640px;
+
+      .aputeksti {
+        padding-top: 10px;
+      }
+
+      &.tyyppi {
+        max-width: 320px;
+      }
+
+      &.col-xs-6 {
+        max-width: 198px;
+      }
+    }
+
     .info-laatikko {
       margin-bottom: @valistys-16;
+      max-width: 610px;
     }
+
     .johto-ja-hallintokorvaus-muutokset-info {
       margin-top: @valistys-24;
     }
@@ -43,6 +70,39 @@
     }
     .muutostyyppivalinta {
       margin-bottom: @valistys-16;
+    }
+    .hoitovuosi-valinta {
+      width: @hoitovuosi-valinnan-leveys;
+    }
+    .pysyva-muutos-vihje {
+      .vihjeen-sisalto {
+        margin: 0;
+        padding: 0;
+      }
+    }
+    .pysyvan-muutoksen-grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .pysyvan-muutoksen-kopiointinappi {
+        img {
+          width: @valistys-12;
+          height: @valistys-12;
+        }
+      }
+    }
+    .pysyvan-muutoksen-grid {
+      
+      .tavoitehinnan-muutos-sarake {
+        background: @blue-lighter;
+      }
+      .tavoitehinta-label {
+        display: block;
+      }
+      .tavoitehinnan-muutos-input {
+        width: 200px;
+      }
     }
   }
     .otsikko-ja-hoitokausi {

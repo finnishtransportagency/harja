@@ -1,6 +1,5 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
-  (:require [clojure.string :as str]
-            [harja.pvm :as pvm]
+  (:require [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.domain.mhu :as mhu]
@@ -44,7 +43,8 @@
   vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
   indeksikorjaukset-vahvistettu? paivita-tavoite-ja-kattohinta<!
   lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
-  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio)
+  hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio
+  tulevilla-hoitovuosilla-arvoja?)
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -605,6 +605,7 @@
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi erillishankinnat]
             (let [dbrivi (first (hae-kuukauden-erillishankinta db {:id (:id rivi)}))
+                  vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
                   _ (if (:id dbrivi)
                       (paivita-kuukauden-erillishankinta<! db
                         {:id (:id dbrivi)
@@ -615,19 +616,20 @@
                       (tallenna-kuukauden-erillishankinta<! db
                         {:sopimus-id sopimus-id
                          :toimenpideinstanssi-id hoidonjohto-tpi-id
-                         :vuosi (:vuosi rivi)
+                         :vuosi vuosi
                          :kuukausi (:kuukausi rivi)
                          :summa (:summa rivi)
                          :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
                          :tehtavaryhma-id (:id tehtavaryhma)
                          :luoja (:id kayttaja)}))]))]))
 
-(defn tallenna-kuukausittaiset-muut-kulut [db kuukaudet urakan-indeksit urakan-tiedot kayttaja sopimus-id
-                                           toimenpideinstanssi-id hoitovuosi-nro]
+(defn tallenna-kuukausittaiset-muut-kulut [db kuukaudet urakan-indeksit kayttaja sopimus-id
+                                           toimenpideinstanssi-id hoitovuosi-nro hoitovuoden-alkuvuosi]
   (let [tehtava (hae-tehtava-tunnisteella db {:tunniste "8376d9c4-3daf-4815-973d-cd95ca3bb388"})
         tehtava-id (:id (first tehtava))] ;; Muut kulut tehtävä
-    (doseq [{:keys [vuosi kuukausi yhteensa-kk summa] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
-      (let [;; Haetaan muut-kulut kuukaudelle
+    (doseq [{:keys [kuukausi yhteensa-kk ] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
+      (let [vuosi (if (< kuukausi 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+            ;; Haetaan muut-kulut kuukaudelle
             db-kuukausi (first (hae-muut-kulut-kuukaudelle db {:sopimus-id sopimus-id
                                                                :toimenpideinstanssi-id toimenpideinstanssi-id
                                                                :vuosi vuosi
@@ -649,10 +651,11 @@
                    :muokkaaja (:id kayttaja)}))]))))
 
 (defn tallenna-kuukausittaiset-toimenkuvat [db kuukaudet urakan-indeksit urakan-tiedot kayttaja urakka-id
-                                            toimenkuva-id hoitovuosi-nro]
+                                            toimenkuva-id hoitovuosi-nro hoitovuoden-alkuvuosi]
   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))]
-    (doseq [{:keys [vuosi kuukausi tunnit tuntipalkka] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
-      (let [;; Haetaan toimenkuvan kuukauden johto-ja-hallintokorvaus
+    (doseq [{:keys [kuukausi tunnit tuntipalkka] :as rivi} (sort-by (juxt :vuosi :kuukausi) kuukaudet)]
+      (let [vuosi (if (< kuukausi 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+            ;; Haetaan toimenkuvan kuukauden johto-ja-hallintokorvaus
             db-kuukausi (first (hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus db {:urakka-id urakka-id
                                                                                        :toimenkuva-id toimenkuva-id
                                                                                        :vuosi vuosi
@@ -678,8 +681,9 @@
                    :tuntipalkka_indeksikorjattu (laske-indeksikorjattu-summa tuntipalkka urakan-indeksit hoitovuosi-nro)
                    :muokkaaja (:id kayttaja)}))]))))
 
-(defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit kayttaja urakka-id toimenkuva-id hoitovuosi-nro]
-  (let [dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
+(defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit kayttaja urakka-id toimenkuva-id hoitovuosi-nro hoitovuoden-alkuvuosi]
+  (let [vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+        dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
         _ (if (:id dbrivi)
 
             (paivita-kuukauden-johto-ja-hallintokorvaus<! db
@@ -692,7 +696,7 @@
             (lisaa-kuukauden-johto-ja-hallintokorvaus<! db
               {:urakka-id urakka-id
                :toimenkuva-id toimenkuva-id
-               :vuosi (:vuosi rivi)
+               :vuosi vuosi
                :kuukausi (:kuukausi rivi)
                :tunnit 1
                :tuntipalkka (:summa rivi)
@@ -730,14 +734,14 @@
 
                   _ (if (<= urakan-alkuvuosi 2024)
                       (tallenna-kuukausittaiset-toimenkuvat db kuukaudet urakan-indeksit urakan-tiedot kayttaja
-                        urakka-id toimenkuva-id hoitovuosi-nro)
+                        urakka-id toimenkuva-id hoitovuosi-nro hoitovuoden-alkuvuosi)
                       (tallenna-vuosittaiset-toimenkuvat db toimenkuva urakan-indeksit kayttaja urakka-id
-                        toimenkuva-id hoitovuosi-nro))]))
+                        toimenkuva-id hoitovuosi-nro hoitovuoden-alkuvuosi))]))
 
         ;; Tallennetaan mahdolliset muut kulut
         _ (when muut-kulut
-            (tallenna-kuukausittaiset-muut-kulut db (:kuukaudet muut-kulut) urakan-indeksit urakan-tiedot kayttaja
-              sopimus-id toimenpideinstanssi-id hoitovuosi-nro))
+            (tallenna-kuukausittaiset-muut-kulut db (:kuukaudet muut-kulut) urakan-indeksit kayttaja
+              sopimus-id toimenpideinstanssi-id hoitovuosi-nro hoitovuoden-alkuvuosi))
 
         _ (ka-q/merkitse-kustannussuunnitelmat-likaisiksi! db {:toimenpideinstanssi toimenpideinstanssi-id})
         _ (kiint-kyselyt/merkitse-maksuerat-likaisiksi-hoidonjohdossa! db {:toimenpideinstanssi toimenpideinstanssi-id})]))
@@ -756,7 +760,8 @@
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi hoidonjohtopalkkiot]
-            (let [dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
+            (let [vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                  dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
                   _ (if (:id dbrivi)
                       (paivita-kuukauden-hoidonjohtopalkkio<! db
                         {:id (:id dbrivi)
@@ -767,7 +772,7 @@
                       (tallenna-kuukauden-hoidonjohtopalkkio<! db
                         {:sopimus-id sopimus-id
                          :toimenpideinstanssi-id hoidonjohto-tpi-id
-                         :vuosi (:vuosi rivi)
+                         :vuosi vuosi
                          :kuukausi (:kuukausi rivi)
                          :summa (:summa rivi)
                          :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
@@ -938,3 +943,21 @@
              :vahvistus-pvm vahvistus-pvm})
         ;; Lisää tavoite-ja-kattohinta tieto kantaan
         _ (paivita-kustannussuunnitelman-tila db vahvistetut-osiot vahvista? hoitovuosinro urakka-id "tavoite-ja-kattohinta" (:id kayttaja))]))
+
+(defn onko-tulevilla-hoitovuosilla-arvoja? [db urakka-id sopimus-id hoitovuoden-alkuvuosi]
+  (let [hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
+                                         {:urakka urakka-id
+                                          :koodi "23151"})))
+        erillishankinnat-tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
+
+        ;; hankintatoimenpideinstanssit
+        hankinnan-toimenpiteet (flatten (map (juxt :toimenpideinstanssi-id) (hae-urakan-toimenpiteet db {:urakkaid urakka-id})))
+
+        tulevaisuudessa-arvoja (tulevilla-hoitovuosilla-arvoja? db
+                                 {:urakka-id urakka-id
+                                  :sopimus-id sopimus-id
+                                  :hoidon-johdon-tpi-id hoidonjohto-tpi-id
+                                  :hankinnan-toimenpideinstanssit hankinnan-toimenpiteet
+                                  :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)
+                                 :vuosi hoitovuoden-alkuvuosi})]
+    (boolean (some #(true? (:arvoja-tulevilla-hoitovuosilla? %)) tulevaisuudessa-arvoja))))
