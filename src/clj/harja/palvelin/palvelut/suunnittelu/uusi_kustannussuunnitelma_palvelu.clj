@@ -172,7 +172,6 @@
   (jdbc/with-db-transaction [db db]
     (let [vuodet (jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
-        (println "tallenna-erillishankinnat :: vuosi: " vuosi)
         (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
         (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
