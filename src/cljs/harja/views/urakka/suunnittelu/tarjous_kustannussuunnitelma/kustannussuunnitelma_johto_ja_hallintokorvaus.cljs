@@ -456,7 +456,8 @@
            toimenkuvat-atom]]))
 
 (defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous
-                                           kustannussuunnitelma urakan-alkuvuosi tulevaisuudessa-arvoja?] :as app}]
+                                           kustannussuunnitelma urakan-alkuvuosi tulevaisuudessa-arvoja?
+                                           viimeinen-hoitovuosi?] :as app}]
   (let [johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset kustannussuunnitelma)
         viimeisin-muokkaus (:viimeisin-muokkaus (first johto-ja-hallintokorvaukset))
         viimeisin-muokkaaja (:viimeisin-muokkaaja (first johto-ja-hallintokorvaukset))
@@ -554,7 +555,8 @@
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi false))
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
-          #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true))
+          (when-not viimeinen-hoitovuosi?
+            #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
           tulevaisuudessa-arvoja?)])
 
      [:div.row
@@ -608,5 +610,6 @@
         (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
           #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi false))
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
-          #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true))
+          (when-not viimeinen-hoitovuosi?
+            #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
           tulevaisuudessa-arvoja?)])]))

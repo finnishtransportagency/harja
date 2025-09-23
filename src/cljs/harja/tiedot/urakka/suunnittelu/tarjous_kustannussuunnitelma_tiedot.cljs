@@ -366,6 +366,7 @@
       (assoc :valittu-hoitokausi (:valittu-hoitokausi vastaus))
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
+      (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui

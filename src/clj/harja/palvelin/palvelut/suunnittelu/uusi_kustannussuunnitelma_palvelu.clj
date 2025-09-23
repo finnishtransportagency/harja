@@ -50,6 +50,7 @@
                                   (< hoitovuoden-alkuvuosi urakan-alkuvuosi) urakan-alkuvuosi
                                   (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) (dec urakan-loppuvuosi)
                                   :else hoitovuoden-alkuvuosi)
+          viimeinen-hoitovuosi? (boolean (= hoitovuoden-alkuvuosi (dec urakan-loppuvuosi)))
 
           vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
                          {:urakka-id urakka-id
@@ -128,6 +129,7 @@
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
              :tulevaisuudessa-arvoja? tulevaisuudessa-arvoja
+             :viimeinen-hoitovuosi? viimeinen-hoitovuosi?
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
                                     :erillishankinnat erillishankinnat
