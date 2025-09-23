@@ -45,8 +45,6 @@
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
                                           {:nimi "MHU Korvausinvestointi", :osio "hankintakustannukset" :toimenpideinstanssi-id 95 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "MHU ja HJU Hoidon johto", :osio "hankintakustannukset" :toimenpideinstanssi-id 96 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
                                           {:nimi "Yhteensä", :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 700 :alkukausi-indeksikorjattu 777 :loppukausi 2100 :loppukausi-indeksikorjattu 2331 :yhteensa 2800 :yhteensa-indeksikorjattu 3108}]})
 
@@ -107,10 +105,24 @@
 (defn poista-yhteenvetorivi [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
 
+(defn urakkakohtaiset-toimenpideinstanssit-toimenpiteille
+  "Tietomallissa toimenpideinstanssi on kovakoodattu. Aseta toimenpideinstanssi-id urakkakohtaisista toimenpiteistä."
+  [hankinnat-tietomalli urakkakohtaiset-toimenpiteet]
+  (assoc hankinnat-tietomalli :toimenpiteet
+    (map (fn [toimenpide]
+           (let [tpi (first (filter #(= (:nimi %) (:nimi toimenpide)) urakkakohtaiset-toimenpiteet))]
+             (if tpi
+               (assoc toimenpide :toimenpideinstanssi-id (:toimenpideinstanssi-id tpi))
+               toimenpide)))
+      (:toimenpiteet hankinnat-tietomalli))))
+
 (deftest hae-kilpailutettavat-hankinnat-tietokannasta-onnistuneesti
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         hoitovuoden-alkuvuosi 2024
+        ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
+        hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
         ;; Poista yhteenvetorivi ennen tallennusta
         hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
@@ -120,7 +132,8 @@
 
     (is (= (count (:toimenpiteet hankinnat)) 7))
     (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
-    (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))))
+    (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
+    (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
 
 (deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
@@ -148,20 +161,64 @@
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-kilpailutettavat-hankinnat kysely ei ole validi.")))))
 
 (deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+        ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
+        hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
         ;; Poista yhteenvetorivi ennen tallennusta
         hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge
                       {:urakka-id urakka-id
-                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
+                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                       :kopioi-tuleville-vuosille? false}
                       hankinnat-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
-                    {:error (.getMessage e)}))]
-    (is (true? (nil? (:error vastaus))))))
+                    {:error (.getMessage e)}))
+
+        toimenkuvat (butlast (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))
+        alkukausi-summa-vastauksesta (apply + (map :alkukausi toimenkuvat))
+
+        alkukausi-tietokannasta (q-map (format "SELECT * FROM kiinteahintainen_tyo
+                                                  WHERE sopimus = %s
+                                                    AND vuosi = %s AND kuukausi IN (10,11,12)"
+                                         sopimus-id hoitovuoden-alkuvuosi))]
+    (is (true? (nil? (:error vastaus))))
+    (is (= (bigdec alkukausi-summa-vastauksesta) (bigdec (apply + (map :summa alkukausi-tietokannasta)))))))
+
+(deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-tuleville-vuosille-toimii
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        hoitovuoden-alkuvuosi 2021
+        ;; Poista yhteenvetorivi ennen tallennusta
+        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
+                    (merge
+                      {:urakka-id urakka-id
+                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                       :kopioi-tuleville-vuosille? true}
+                      hankinnat-tietomalli))
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+        toimenkuvat (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
+        alkukausi-vastauksesta (apply + (map :alkukausi toimenkuvat))
+
+        ;; Vastauksesta saatiin kilpailutettavat hankinnat vuodelle 2021
+        ;; Haetaan kilpailutettavat hankinnat myös tuleville vuosille ja tarkistetaan, että ne on kopioitu oikein
+        alkukausi-tietokannasta (q-map (format "SELECT SUM(summa) as summa FROM kiinteahintainen_tyo
+                                                  WHERE sopimus = %s
+                                                    AND vuosi = %s AND kuukausi IN (10,11,12)"
+                                         sopimus-id (inc hoitovuoden-alkuvuosi)))
+        tietokantasumma (bigdec (:summa (first alkukausi-tietokannasta)))]
+    (is (= (bigdec alkukausi-vastauksesta) tietokantasumma))))
 
 ;; Erillishankinnat
 (deftest tallenna-erillishankinnat-tietokantaan-onnistuneesti
