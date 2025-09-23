@@ -143,7 +143,7 @@ RETURNING id, versio;
 
 
 -- name: luo-tai-paivita-muutos-kustannusvaikutus<!
-INSERT INTO mhu_muutos_kustannusvaikutus (
+INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     versio,
     muutos,
     kustannuslaji,
@@ -166,7 +166,9 @@ INSERT INTO mhu_muutos_kustannusvaikutus (
   versio               = EXCLUDED.versio,
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
-  summa                = EXCLUDED.summa;
+  summa                = EXCLUDED.summa
+-- Päivitetään vain jos tulee uusi määrämuutos
+WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
 -- name: luo-muutos-kulu-linkitys<!
@@ -369,8 +371,8 @@ ORDER BY tp.jarjestys;
 
 -- name: luo-tai-paivita-tehtavan-maaramuutos<!
 -- Poikkeaminen tehtävä- ja määräluettelon määrästä
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                 maaramuutos, uusi_maara)
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo AS tjm (versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
+                                                        maaramuutos, uusi_maara)
 VALUES (:versio,
         :muutos-id,
         :tehtava,
@@ -382,7 +384,9 @@ VALUES (:versio,
         DO UPDATE SET versio          = EXCLUDED.versio,
                       edellinen_maara = EXCLUDED.edellinen_maara,
                       maaramuutos     = EXCLUDED.maaramuutos,
-                      uusi_maara      = EXCLUDED.uusi_maara;
+                      uusi_maara      = EXCLUDED.uusi_maara
+-- Päivitetään vain jos tulee uusi määrämuutos
+ WHERE (tjm.maaramuutos) IS DISTINCT FROM (excluded.maaramuutos);
 
 -- name: poista-tehtavan-maaramuutos!
 -- Poistaa määrämuutosrivin, tästä tallentuu historiarivi mhu_muutos_tehtava_ja_maaraluettelo_historia tauluun
