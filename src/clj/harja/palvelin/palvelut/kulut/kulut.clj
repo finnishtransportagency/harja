@@ -396,7 +396,7 @@
                                           erapaiva
                                           (:id muutostyo)
                                           (:voimassa_alkaen muutostyo))
-                                      (pvm/ennen? (:voimassa_alkaen muutostyo) erapaiva)
+                                      (pvm/sama-tai-ennen? (:voimassa_alkaen muutostyo) erapaiva)
                                       ;; Jos muutostyötä ei ole valittu -> palauta vaan true 
                                       true))]
 
