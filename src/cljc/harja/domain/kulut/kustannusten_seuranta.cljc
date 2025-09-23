@@ -49,6 +49,9 @@
                                  (= toimenpide-nimi "erillisrahoitettu-muutos")
                                  "Muutostyöt (erillisrahoitetut)"
 
+                                 (= toimenpide-nimi "jjh-muutos")
+                                 "Johto- ja hallintokorvauksen muutokset"
+
                                  :else
                                  toimenpide-nimi)
               ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät

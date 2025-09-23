@@ -117,6 +117,7 @@
        (let [paaryhma (:paaryhma toimenpide)
              toimenpide-nimi (:toimenpide toimenpide)
              rivi-avain (keyword (str paaryhma "-" toimenpide-nimi))
+             muutokset-jjh (filter #(= "jjh-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              muutokset-erillisrahoitettu (filter #(= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
              rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
@@ -132,7 +133,8 @@
                                         (tehtavatason-rivitys toimenpide palkka-tehtavat false :tehtava_nimi)
                                         (tehtavatason-rivitys toimenpide hankinta-tehtavat false :tehtava_nimi)
                                         (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true :tehtava_nimi))
-                                      (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu false :muutostyo_nimi)))
+                                      (tehtavatason-rivitys toimenpide muutokset-jjh false :muutostyo_syy)
+                                      (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu false :muutostyo_syy)))
              vahvistettu? (or (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu"))))
                             (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu")))))]
          (doall (concat [^{:key (str "otsikko-" (hash toimenpide) "-" (hash toimenpiteet))}
