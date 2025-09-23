@@ -117,10 +117,18 @@
         ; haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
-                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus), :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id (:id rahavaraus)
-                                                             :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}])))
+                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
+                                                             :osio "tavoitehintaiset-rahavaraukset"
+                                                             :jarjestys (:jarjestys rahavaraus)
+                                                             :toimenkuva-id nil
+                                                             :tehtava-id nil
+                                                             :tehtavaryhma-id nil
+                                                             :rahavaraus-id (:id rahavaraus)
+                                                             :hoitovuosittaiset-arvot hoitovuosittaiset-arvot
+                                                             :yhteensa 0.00}])))
                            [] rahavaraukset)
         ;; Järjestetään rahavaraukset kilpailutettavien hankintojen jälkeen
+        rahavaraus-rivit (sort-by :jarjestys rahavaraus-rivit)
         rahavaraus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys (+ 1 (inc indeksi)))) rahavaraus-rivit)
         ;; Yhdistetään tarjous ja rahavaraukset
         tarjous (vec (concat tarjous rahavaraus-rivit))
@@ -327,7 +335,7 @@
                                                  (let [r-rivit (keep #(when (= nimi (:nimi %))
                                                                         (dissoc (merge % {:vuosi (:hoitokauden_alkuvuosi rivi)})
                                                                           :id :nimi :maksukausi :osio :tehtava_id :tehtavaryhma_id :rahavaraus_id
-                                                                          :johto_ja_hallintokorvaus_toimenkuva_id))
+                                                                          :johto_ja_hallintokorvaus_toimenkuva_id :r_jarjestys))
                                                                  (avain rivi))]
                                                    (vec (concat r r-rivit))))
                                          [] tarjous-rivit)))]
@@ -402,7 +410,7 @@
                               (if (:kustannukset tarjous)
                                 (mapv
                                   (fn [k]
-                                    (konversio/pgobject->map k :id :long :nimi :string :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
+                                    (konversio/pgobject->map k :id :long :nimi :string :r_jarjestys :long :summa :double :osio :string :tehtava_id :long :tehtavaryhma_id :long :rahavaraus_id :long))
                                   (konversio/pgarray->vector (:kustannukset tarjous)))
                                 []))
                             (assoc :toimenkuvat
@@ -413,7 +421,14 @@
                                 (konversio/pgarray->vector (:toimenkuvat tarjous))))))
                         tarjous-rivit)
 
-        kustannus-rivit (:kustannukset (first tarjous-rivit))
+        kustannus-rivit (sort-by :r_jarjestys (:kustannukset (first tarjous-rivit)))
+        kustannus-rivit (mapv (fn [rivi]
+                                (if (= "tavoitehintaiset-rahavaraukset" (:osio rivi))
+                                  (-> rivi
+                                    (assoc :jarjestys (:r_jarjestys rivi))
+                                    (dissoc :r_jarjestys))
+                                  (dissoc rivi :r_jarjestys)))
+                          kustannus-rivit)
         ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
         kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         puuttuvat-rahavaraukset (filter
@@ -428,7 +443,7 @@
                                                              :tehtavaryhma_id nil
                                                              :rahavaraus_id (:id rahavaraus)}])))
                            [] puuttuvat-rahavaraukset)
-        kustannus-rivit (sort-by :rahavaraus_id (vec (concat kustannus-rivit puuttuvat-rahavaraukset)))
+        kustannus-rivit (vec (concat kustannus-rivit puuttuvat-rahavaraukset))
         kustannus-rivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) kustannus-rivit)
         kustannus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys indeksi)) kustannus-rivit)
         kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) kustannus-rivit)
