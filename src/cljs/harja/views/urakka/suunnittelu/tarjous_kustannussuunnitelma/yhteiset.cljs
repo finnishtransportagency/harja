@@ -4,6 +4,7 @@
    Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit."
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
@@ -81,11 +82,21 @@
            [:div.body-text
             (str "(" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
-(defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn]
+(defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn kopioi-tuleville-hoitovuosille-fn]
   [:div.row.rivi-container
    [:div.col-xs-12.text-right (if viimeisin-muokkaus
                                 (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
                                 "Ei tallennettuja muutoksia")
+    (when kopioi-tuleville-hoitovuosille-fn
+      [:span {:style {:margin-left "1rem"}}
+       [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
+        #(do
+           (reset! tallenna-painettu false)
+           (kopioi-tuleville-hoitovuosille-fn))
+        {:disabled tallennus-kesken?
+         :luokka "ikoni-16"
+         :ikoni (ikonit/action-copy)}]])
+
     (when jaa-tasan-fn
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"

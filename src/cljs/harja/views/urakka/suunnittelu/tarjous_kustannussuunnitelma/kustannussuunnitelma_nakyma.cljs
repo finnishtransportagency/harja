@@ -73,7 +73,9 @@
 
        (when-not vahvistettu?
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-           #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom)) nil))
+           #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom false))
+           nil
+           #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true))))
 
        [:div.row
         [:div.col-xs-12
@@ -110,7 +112,9 @@
              [:div.col-xs-12
               [yleiset/info-laatikko :varoitus kilpailutettavat-hankinnat-virheet nil nil {:sulje-nappi-id (gensym)}]]])
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom)) nil)])])))
+            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom false))
+            nil
+            #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
   (if (nil? (:rahavaraukset kustannussuunnitelma))
@@ -218,9 +222,10 @@
           [:div.row
            [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom))
+            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom false))
             (when (and tarjouksen-maara (> tarjouksen-maara 0))
-              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti"))))])
+              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
+            #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))])
 
        [:div.row
         [:div.col-xs-12
@@ -246,9 +251,10 @@
 
        (when-not vahvistettu?
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-           #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom))
+           #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom false))
            (when (and tarjouksen-maara (> tarjouksen-maara 0))
-             #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))))])))
+             #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
+           #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true))))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))
@@ -294,9 +300,10 @@
           [:div.row
            [:div.col-xs-12.body-text "Harja luo kulut kuukausille, kun tallennat tiedot."]]
           (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom))
+            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom false))
             (when (and tarjouksen-maara (> tarjouksen-maara 0))
-              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti"))))])
+              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
+            #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))])
 
        [:div.row
         [:div.col-xs-12
@@ -322,9 +329,10 @@
 
        (when-not vahvistettu?
          (yhteiset/tallenna-painike-rivi viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
-           #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom))
+           #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom false))
            (when (and tarjouksen-maara (> tarjouksen-maara 0))
-            #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))))])))
+            #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
+           #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true))))])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta

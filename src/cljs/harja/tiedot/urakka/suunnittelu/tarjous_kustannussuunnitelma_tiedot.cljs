@@ -169,20 +169,20 @@
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
 
 ;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
-(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
+(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat kopioi-tuleville-vuosille?])
 (defrecord PaivitaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
 (defrecord TallennaKilpailutettavatHankinnatOnnistui [vastaus])
 (defrecord TallennaKilpailutettavatHankinnatEpaonnistui [vastaus])
 
 ;; Tallenna erillishankinnat
-(defrecord TallennaErillishankinnat [erillishankinnat])
+(defrecord TallennaErillishankinnat [erillishankinnat kopioi-tuleville-vuosille?])
 (defrecord PaivitaErillishankinnat [erillishankinnat])
 (defrecord TallennaErillishankinnatOnnistui [vastaus])
 (defrecord TallennaErillishankinnatEpaonnistui [vastaus])
 (defrecord JaaErillishankinnatTasan [summa elementti])
 
 ;; Johto-ja-hallintokorvaus-käsittelyt
-(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset urakan-alkuvuosi])
+(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset urakan-alkuvuosi kopioi-tuleville-vuosille?])
 (defrecord PaivitaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
 (defrecord PaivitaJohtoJaHallintokorvaukset2019 [johto-ja-hallintokorvaukset toimenkuva])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
@@ -190,7 +190,7 @@
 (defrecord JaaJohtoJaHallintokorvauksetTasan [summa johto-ja-hallintokorvaukset-elementti])
 
 ;; Hoidonjohtopalkkio-käsittelyt
-(defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
+(defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot kopioi-tuleville-vuosille?])
 (defrecord PaivitaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
 (defrecord TallennaHoidonjohtopalkkiotOnnistui [vastaus])
 (defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
@@ -405,12 +405,14 @@
 
   TallennaKilpailutettavatHankinnat
   (process-event
-    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
+    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat
+      kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi app)))]
       (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi vuosi
-         :toimenpiteet kilpailutettavat-hankinnat}
+         :toimenpiteet kilpailutettavat-hankinnat
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
          :paasta-virhe-lapi? true})
@@ -448,11 +450,12 @@
 
   TallennaErillishankinnat
   (process-event
-    [{erillishankinnat :erillishankinnat} app]
+    [{erillishankinnat :erillishankinnat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-erillishankinnat
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :erillishankinnat erillishankinnat}
+       :erillishankinnat erillishankinnat
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
@@ -503,11 +506,12 @@
 
   TallennaHoidonjohtopalkkiot
   (process-event
-    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot} app]
+    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-hoidonjohtopalkkiot
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :hoidonjohtopalkkiot hoidonjohtopalkkiot}
+       :hoidonjohtopalkkiot hoidonjohtopalkkiot
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
        :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
        :paasta-virhe-lapi? true})
@@ -568,7 +572,7 @@
 
   TallennaJohtoJaHallintokorvaukset
   (process-event
-    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset urakan-alkuvuosi :urakan-alkuvuosi} app]
+    [{:keys [johto-ja-hallintokorvaukset urakan-alkuvuosi kopioi-tuleville-vuosille?]} app]
     (let [endpoint (if (<= urakan-alkuvuosi 2024)
                      :tallenna-johto-ja-hallintokorvaukset-2019
                      :tallenna-johto-ja-hallintokorvaukset-2025)
@@ -578,7 +582,8 @@
       (tuck-apurit/post! endpoint
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-         avain johto-ja-hallintokorvaukset}
+         avain johto-ja-hallintokorvaukset
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
          :paasta-virhe-lapi? true})
