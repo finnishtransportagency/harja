@@ -88,6 +88,10 @@
                             "type": "string",
                             "description": "Kulukohdstukseen tyyppi. Tyypitys on uudistuksen kohteena 2024, sen takia string, ei enumia."
                           },
+                          "tavoitehintainen": {
+                            "type": "boolean",
+                            "description": "True, jos kulukohdistus lasketaan mukaan tavoitehintaan. False, jos kulukohdistus jätetään tavoitehintatarkastelun ulkopuolelle. Arvon tulisi olla aina true, jos kulukohdistuksen tyyppi on hankintakustannus tai rahavaraus. Arvon tulisi olla aina false, jos kulukohdistuksen tyyppi on lisatyo tai paatos. Muukulu-tyyppinen kulukohdistus voi liittyä tavoitehintaisiin kuluihin tai olla tavoitehintatarkastelun ulkopuolella."
+                          },
                           "lisatieto": {
                             "type": "string",
                             "description": "Kulukohdstukseen kirjattu lisätieto."
@@ -293,7 +297,7 @@
                 "muutoskategoria": {
                   "type": "string",
                   "required": true,
-                  "description": "Tavoitehinnan muutoksen luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Tiestömuutos, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
+                  "description": "Tavoitehinnan muutoksen luokittelu. Arvot 28.1.2024 (muutoksiin on syytä varautua): Alleviivatun fontin vaikutus tavoitehintaan, Bonukset ja sanktiot, Hoitoluokkamuutokset, Liikennejärjestelyt, Materiaalit, Muut, Tehtävämuutokset, Tiestömuutokset, Työmäärämuutokset, Yleiset Liikennejärjestelyt."
                 },
                 "muutoksen-selite": {
                   "type": "string",

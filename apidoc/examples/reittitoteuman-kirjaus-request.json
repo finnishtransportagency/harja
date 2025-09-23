@@ -49,8 +49,8 @@
         {
           "materiaali": "Talvisuolaliuos NaCl",
           "maara": {
-            "yksikko": "kg",
-            "maara": 4.62
+            "yksikko": "t",
+            "maara": 0.15
           }
         }
       ]
@@ -79,8 +79,8 @@
             {
               "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
-                "yksikko": "kg",
-                "maara": 1.32
+                "yksikko": "t",
+                "maara": 0.05
               }
             }
           ]
@@ -109,8 +109,8 @@
             {
               "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
-                "yksikko": "kg",
-                "maara": 0.9
+                "yksikko": "t",
+                "maara": 0.05
               }
             }
           ]
@@ -139,8 +139,8 @@
             {
               "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
-                "yksikko": "kg",
-                "maara": 2.4
+                "yksikko": "t",
+                "maara": 0.05
               }
             }
           ]
@@ -193,8 +193,8 @@
             {
               "materiaali": "Talvisuolaliuos NaCl",
               "maara": {
-                "yksikko": "kg",
-                "maara": 4.62
+                "yksikko": "t",
+                "maara": 0.15
               }
             }
           ]
@@ -223,8 +223,8 @@
                 {
                   "materiaali": "Talvisuolaliuos NaCl",
                   "maara": {
-                    "yksikko": "kg",
-                    "maara": 1.32
+                    "yksikko": "t",
+                    "maara": 0.05
                   }
                 }
               ]
@@ -253,8 +253,8 @@
                 {
                   "materiaali": "Talvisuolaliuos NaCl",
                   "maara": {
-                    "yksikko": "kg",
-                    "maara": 0.9
+                    "yksikko": "t",
+                    "maara": 0.05
                   }
                 }
               ]
@@ -283,8 +283,8 @@
                 {
                   "materiaali": "Talvisuolaliuos NaCl",
                   "maara": {
-                    "yksikko": "kg",
-                    "maara": 2.4
+                    "yksikko": "t",
+                    "maara": 0.05
                   }
                 }
               ]

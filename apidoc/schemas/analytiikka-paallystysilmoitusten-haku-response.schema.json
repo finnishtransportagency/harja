@@ -145,6 +145,11 @@
                     "Tasausjyrsintä",
                     "Laatikkojyrsintä",
                     "Reunajyrsintä",
+                    "PAB-B",
+                    "PAB-V",
+                    "UREM-TAS",
+                    "Muu stabilointi",
+                    "Muu RP",
                     "ei tietoa"
                   ]
                 },
@@ -296,7 +301,6 @@
         "AN14",
         "AN19",
         "AN30",
-        "AN22",
         "Ei kuulamyllyä"
       ]
     },
@@ -337,6 +341,7 @@
             "PAB-B, Pehmeät asfalttibetonit",
             "PAB-V, Pehmeät asfalttibetonit",
             "PAB-O, Pehmeät asfalttibetonit",
+            "Sirotepintaus",
             "Ei tietoa",
             "EAB, Asfalttibetoni",
             "ABtiivis",
@@ -456,8 +461,8 @@
         "Bitumiemulsiot, BE-SOP",
         "Bitumiemulsiot, BE-AB",
         "Bitumiemulsiot, BE-PAB",
-        "KF, Kalkkifilleri",
-        "Muu, erikoisbitumi"
+        "Muu erikoisbitumi",
+        "Bitumia korvaava uusiomateriaali"
       ]
     },
     "lisaainetyyppi": {
