@@ -209,6 +209,11 @@
 (defrecord NollaaMuutokset [])
 
 (defrecord ToggleVetolaatikonMuokkaus [tila])
+(defrecord NollaKustannussuunnitelmanMuutokset [])
+(defrecord AsetaHankinnatMuutos [])
+(defrecord AsetaErillishankinnatMuutos [])
+(defrecord AsetaJJHMuutos [])
+(defrecord AsetaHoidonjohtopalkkioMuutos [])
 
 (defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
 (defrecord PoistaToimenkuva [rivi])
@@ -422,6 +427,7 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-hankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
@@ -464,6 +470,7 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
@@ -519,6 +526,7 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
@@ -590,6 +598,7 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
@@ -663,7 +672,7 @@
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
+  (process-event [_ app]
     (viesti/nayta-toast!
       "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
       :varoitus
@@ -715,4 +724,32 @@
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
     (-> app
-      (assoc :vetolaatikon-muokkaus tila))))
+      (assoc :vetolaatikon-muokkaus tila)))
+
+  NollaKustannussuunnitelmanMuutokset
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)))
+
+  AsetaHankinnatMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hankinnat-muutoksia? true)))
+
+  AsetaErillishankinnatMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-erillishankinnat-muutoksia? true)))
+
+  AsetaJJHMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-jjh-muutoksia? true)))
+
+  AsetaHoidonjohtopalkkioMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? true))))

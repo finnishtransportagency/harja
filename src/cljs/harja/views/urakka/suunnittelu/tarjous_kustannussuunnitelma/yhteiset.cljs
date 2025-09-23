@@ -8,7 +8,8 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as k-tiedot]))
 
 
 (defonce tallenna-painettu (atom false))
@@ -81,11 +82,9 @@
            [:div.body-text
             (str "(" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
-(defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn]
-  [:div.row.rivi-container
-   [:div.col-xs-12.text-right (if viimeisin-muokkaus
-                                (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")
-                                "Ei tallennettuja muutoksia")
+(defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken? tallenna-fn jaa-tasan-fn onko-muutoksia?]
+  [:div {:style {:padding-top "1rem" :padding-right "1rem"}}
+   [:div.painikkeet.text-right
     (when jaa-tasan-fn
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-toissijainen "Jaa tasan joka kuukaudelle"
@@ -93,12 +92,36 @@
            (reset! tallenna-painettu false)
            (jaa-tasan-fn))
         {:disabled tallennus-kesken?}]])
+
     [:span {:style {:margin-left "1rem"}}
      [napit/yleinen-ensisijainen "Tallenna tiedot"
       #(do
          (reset! tallenna-painettu false)
          (tallenna-fn))
-      {:disabled tallennus-kesken?}]]]])
+      {:disabled tallennus-kesken?}]]]
+
+   [:div.painikkeet.text-right {:style {:margin-top "0.5rem"}}
+    ;; Viimeisin muokkaaja
+    [:div.grid-status-viestit
+     (cond
+       (and onko-muutoksia? viimeisin-muokkaus)
+       [:<>
+        [:div.status-viesti.tallennettu
+         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+        [:div.status-viesti.tallentamatta
+         "Tallentamattomia muutoksia"]]
+
+       onko-muutoksia?
+       [:div.status-viesti.tallentamatta
+        "Tallentamattomia muutoksia"]
+
+       viimeisin-muokkaus
+       [:div.status-viesti.tallennettu
+        (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+
+       :else
+       [:div.status-viesti.ei-muutoksia
+        "Ei tallennettuja muutoksia"])]]])
 
 (defn grid-perusasetukset [voi-muokata? tunniste]
   {:tyhja "Ei tietoja."
