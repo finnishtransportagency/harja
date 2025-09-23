@@ -393,9 +393,6 @@
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
-  ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
-  ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
-  ;;       Tutki kyselyä uuden muutoksen luonnin näkökulmasta
   (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (when (:id muutos)
