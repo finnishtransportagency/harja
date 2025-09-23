@@ -70,7 +70,11 @@
 (defn- merkitse-rivit-poistetuksi
   "Merkitse rivit poistetuksi."
   [lahderivit]
-  (mapv #(assoc % :poistettu true) lahderivit))
+  (mapv (fn [rivi]
+          ;; Jos rivi on uusi (eli vain UI:ssa olemassaoleva), niin ei merkitä poistetuksi, vaan poistetaan kokonaan UI:sta
+          (when (not (:uusi? rivi))
+            (assoc rivi :poistettu true)))
+    lahderivit))
 
 (defn- korvaa-vuosien-tehtavat-ja-maara-rivit
   "Korvaa kohdevuosien tehtävä- ja määrärivit kopiolla lähdevuoden riveistä.
@@ -88,7 +92,7 @@
                                       ;;       joilla on sama tunniste (eli tässä tapauksessa :tehtävä id)
                                       ;;       Eli, jos kopioidaan toiselle hoitovuodelle rivi, jolla on sama tehtävä id kuin lähderivillä,
                                       ;;       poistamisen sijaan pitäisi korvatakin kyseisen rivin tiedot lähderivin tiedoilla.
-                                      (merkitse-rivit-poistetuksi (get m vuosi))
+                                      (remove nil? (merkitse-rivit-poistetuksi (get m vuosi)))
                                       (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit vuosi))))
              tjm-per-vuosi-map
              vuodet)
