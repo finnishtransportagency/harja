@@ -475,7 +475,7 @@ export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
     // Avaa Uusi Kustannussuunnitelma
-    cy.get('[data-cy="tabs-taso2-Uusi Kustannussuunnitelma"]').click();
+    cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }
@@ -498,7 +498,7 @@ export function avaaTarjous(urakkaNimi, alue) {
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
-    // Avaa Uusi Kustannussuunnitelma
+    // Avaa Tarjous
     cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').click();
 
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
