@@ -384,23 +384,36 @@
       (doseq [kohdistusrivi kohdistukset]
         (let [muutostyo (:valittu-muutostyo kohdistusrivi)
               muutostyo (assoc muutostyo :muutos (:muutos kohdistusrivi))
+              muutostyo-voimassa-alkaen (:voimassa_alkaen muutostyo)
               yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
                              (first (q/tarkista-kohdistuksen-yhteensopivuus db
                                       {:tehtava-id nil
                                        :tehtavaryhma-id (:tehtavaryhma kohdistusrivi)
                                        :toimenpideinstanssi-id (:toimenpideinstanssi kohdistusrivi)})))
-              
+
               ;; Tarkista onko muutostyön voimassa_alkaen validi kulun päivämäärään 
               muutostyo-voimassa? (boolean
                                     (if (and
                                           erapaiva
                                           (:id muutostyo)
-                                          (:voimassa_alkaen muutostyo))
-                                      (pvm/sama-tai-ennen? (:voimassa_alkaen muutostyo) erapaiva)
+                                          muutostyo-voimassa-alkaen)
+                                      (pvm/sama-tai-ennen? muutostyo-voimassa-alkaen erapaiva)
                                       ;; Jos muutostyötä ei ole valittu -> palauta vaan true 
-                                      true))]
+                                      true))
 
-          (if (and muutostyo-voimassa? yhteensopiva?)
+              muutostyo-hk (when muutostyo-voimassa-alkaen
+                             (pvm/paivamaaran-hoitokausi muutostyo-voimassa-alkaen))
+
+              ;; Vaadi myös, että lasku osuu muutostyön validille hoitokaudelle
+              muutostyo-erapaiva-validi? (if muutostyo-hk
+                                           (pvm/valissa?
+                                             erapaiva
+                                             (first muutostyo-hk)
+                                             (second muutostyo-hk))
+                                           ;; Jos muutostyötä ei ole valittu -> palauta vaan true 
+                                           true)]
+
+          (if (and muutostyo-voimassa? muutostyo-erapaiva-validi? yhteensopiva?)
             (as-> kohdistusrivi r
               (update r :summa big/unwrap)
               (assoc r :kulu (:id kuludb))
@@ -424,6 +437,17 @@
                                             "Tallennus epäonnistui. "
                                             "Muutostyö ei ole voimassa laskun päivämääränä. "
                                             "Muutostyö on voimassa alkaen " (pvm/pvm (:voimassa_alkaen muutostyo)) ". ")}]})
+
+              (not muutostyo-erapaiva-validi?)
+              (throw+ {:type virheet/+viallinen-kutsu+
+                       :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                                  :viesti (str
+                                            "Tallennus epäonnistui. "
+                                            "Muutostyö ei ole voimassa laskun päivämääränä. "
+                                            "Muutostyö on voimassa "
+                                            (pvm/pvm (:voimassa_alkaen muutostyo)) " - "
+                                            (pvm/pvm (second muutostyo-hk))
+                                            ".")}]})
 
               :else
               (throw+ {:type virheet/+viallinen-kutsu+
