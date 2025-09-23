@@ -1,6 +1,29 @@
 -- Lisää kustannusennuste tyyppi
 ALTER TYPE lupaustyyppi ADD VALUE 'kustannusennuste';
 
+-- Lisää taulu pisterajojen tallentamiselle urakan-alkuvuosi kohtaisena
+CREATE TABLE lupaus_kustannusennuste_kuukausi_pisteet (
+    id SERIAL PRIMARY KEY,
+    "urakan-alkuvuosi" INTEGER NOT NULL,
+    kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+    paiva INTEGER NOT NULL,
+    kuvaus VARCHAR(100) NOT NULL,
+    pisterajat JSONB NOT NULL,
+    luotu TIMESTAMP DEFAULT NOW(),
+    luoja INTEGER REFERENCES kayttaja(id),
+    UNIQUE ("urakan-alkuvuosi", kuukausi, paiva)
+);
+
+-- Indeksit nopeuttamaan hakuja
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_alkuvuosi 
+ON lupaus_kustannusennuste_kuukausi_pisteet ("urakan-alkuvuosi");
+
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_kuukausi_paiva 
+ON lupaus_kustannusennuste_kuukausi_pisteet (kuukausi, paiva);
+
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_jsonb 
+ON lupaus_kustannusennuste_kuukausi_pisteet USING gin (pisterajat);
+
 -- Lisää lupaus_kustannusennuste taulu
 CREATE TABLE lupaus_kustannusennuste (
     id SERIAL PRIMARY KEY,
@@ -35,16 +58,6 @@ IS 'Laskennassa käytetyt syöttöarvot JSON-muodossa';
 
 COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_vaiheet 
 IS 'Laskentavaiheet ja väliarvot JSON-muodossa auditointia varten';
-
--- Lisää taulu pisterajojen tallentamiselle
-CREATE TABLE lupaus_kustannusennuste_pisteraja (
-    id SERIAL PRIMARY KEY,
-    "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
-    maarapaiva_kk INTEGER NOT NULL, -- 10, 1, 4, 6
-    maarapaiva_pv INTEGER NOT NULL, -- 15, 15, 30, 30
-    tarkkuus_prosentti DECIMAL(5,2) NOT NULL,
-    pisteet INTEGER NOT NULL
-);
 
 CREATE TABLE lupaus_hoitovuosi_lopputilanne (
     id SERIAL PRIMARY KEY,
