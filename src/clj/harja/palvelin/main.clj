@@ -755,8 +755,7 @@
       
       :api-taitorakennerekisteri (component/using
                                    (taitorakennerekisteri/->Taitorakennerekisteri 
-                                    (:domain-nimi asetukset)
-                                    (:kehitysmoodi asetukset))
+                                     (:harja-url asetukset))
                                    [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using

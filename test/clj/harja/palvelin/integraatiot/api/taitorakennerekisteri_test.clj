@@ -14,7 +14,7 @@
   (laajenna-integraatiojarjestelmafixturea kayttaja
     :api-taitorakennerekisteri
     (component/using
-      (api-taitorakennerekisteri/->Taitorakennerekisteri "harja.testi" false)
+      (api-taitorakennerekisteri/->Taitorakennerekisteri "harja.testi")
       [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -127,7 +127,7 @@
               silta-id (get-in ensimmainen-tarkastus [:siltatarkastus :silta :harja-id])
               tarkastus-id (get-in ensimmainen-tarkastus [:siltatarkastus :harja-id])]
           (is (not (nil? harja-url)) "Harja-URL ei saa olla nil")
-          (is (.contains harja-url "https://harja.testi") "URL sisältää base URL:n")
+          (is (.contains harja-url "harja.testi") "URL sisältää base URL:n")
           (is (.contains harja-url "#urakat/laadunseuranta/siltatarkastukset") "URL sisältää oikean polun")
           (is (.contains harja-url (str "hy=" hallintayksikko-id)) "URL sisältää hallintayksikko-parametrin")
           (is (.contains harja-url (str "u=" urakka-id)) "URL sisältää urakka-parametrin")
