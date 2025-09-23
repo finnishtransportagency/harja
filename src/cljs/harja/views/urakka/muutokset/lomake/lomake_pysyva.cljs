@@ -290,7 +290,7 @@
       :tyyppi :string
       :uusi-rivi? true
       :pakollinen? true
-      :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
+      :validoi [#(when (nil? (seq %)) "Syötä nimi")]
       ::lomake/col-luokka "perustiedot col-sm-6"}
 
      (yhteiset/+rivi-muutoksen-syy+)

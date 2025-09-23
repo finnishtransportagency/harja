@@ -36,7 +36,7 @@
         :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :validoi [#(when (nil? (seq %)) "Kirjoita muutostyön nimi")]
+        :validoi [#(when (nil? (seq %)) "Syötä muutostyön nimi")]
         :aputeksti "Anna muutokselle tunnistettava nimi. Nimeä käytetään kulujen kohdistamiseen."
         ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 

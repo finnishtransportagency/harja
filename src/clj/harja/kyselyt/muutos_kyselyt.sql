@@ -68,7 +68,7 @@ SELECT m.id,
  WHERE m.urakka = :urakka
    -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
    -- niiden käsittely puuttuu vielä tästä kyselystä
-   AND m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
+   AND m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-10-01', 'YYYY-MM-DD'))
  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
 -- name: rahavarausten-toteumat

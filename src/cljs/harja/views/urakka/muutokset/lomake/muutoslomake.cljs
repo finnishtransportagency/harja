@@ -19,16 +19,15 @@
             [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
 
-(defn- lomakkeen-footer [muutos tyyppi
-                         e! {:keys [tallennus-kesken? muokattava-muutos] :as _app}]
+(defn- lomakkeen-footer [muutos tyyppi e!
+                         {:keys [tallennus-kesken? voi-tallentaa? 
+                                 tallenna-painettu? lomake-virheet] :as _app}]
   [:div
    [:hr]
-   (when-not (empty? (:puuttuvat-pakolliset-kentat muokattava-muutos))
-     [yleiset/info-laatikko :varoitus
-      (str
-        "Lomakkeelta puuttuu pakollisia kenttiä: "
-        (str/join ", " (:puuttuvat-pakolliset-kentat muokattava-muutos))
-        ". Korjaa ne ja yritä uudelleen.")])
+   (when (and 
+           tallenna-painettu? 
+           (seq lomake-virheet))
+     [yleiset/nayta-virheet :varoitus lomake-virheet])
 
    ;; Muutostyö lomakkeeseen design mukaan infolaatikko
    (when (= tyyppi "muutostyo")
@@ -41,8 +40,9 @@
     #(do
        (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
        (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
-    ;; Älä anna tallentaa, jos tietoja syöttämättä
-    {:disabled (or (lomake/virheita? muutos) tallennus-kesken?)}]
+    ;; Saavutettavuusmielessä, halutaan näyttää virheet vasta, kun tallenna nappia painettu 
+    ;; Tallenna nappi on myös disabled alkutilassa, kun lomaketta ei ole muokattu 
+    {:disabled (boolean (and tallenna-painettu? (not voi-tallentaa?)))}]
 
    [napit/peruuta "Peruuta"
     #(do
@@ -88,7 +88,7 @@
        [lomake/lomake
         {:otsikko (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
          :tarkkaile-ulkopuolisia-muutoksia? true
-         :muokkaa! #(e! (t-yhteiset/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
+         :muokkaa! #(e! (t-yhteiset/->PaivitaLomake %))
          :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))}
 
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat

@@ -75,7 +75,7 @@
    :pituus-max 1000
    :uusi-rivi? true
    :pakollinen? true
-   :validoi [#(when (nil? (seq %)) "Kirjoita muutoksen syy")]
+   :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]
    ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
 
@@ -91,12 +91,14 @@
                                                   valittu-pvm
                                                   (first valittu-hoitokausi)
                                                   (second valittu-hoitokausi))))]
-                 (when-not pvm-hk-valissa?
+                 (when (and 
+                         valittu-hoitokausi
+                         (not pvm-hk-valissa?))
                    (str
                      "Voimassa alkaen täytyy kohdistua valittuun hoitokauteen "
                      "("
-                     (pvm/pvm-aika (first valittu-hoitokausi)) " - "
-                     (pvm/pvm-aika (second valittu-hoitokausi))
+                     (pvm/pvm (first valittu-hoitokausi)) " - "
+                     (pvm/pvm (second valittu-hoitokausi))
                      ")."))))]
    ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
    ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
