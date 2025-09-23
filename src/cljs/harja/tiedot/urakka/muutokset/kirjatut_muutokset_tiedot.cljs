@@ -145,29 +145,30 @@
   (process-event [_ app]
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelle")
 
-    (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-      (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
-        {:urakka-id @nav/valittu-urakka-id
-         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-         :muutos {:id nil
-                  :versio nil
-                  :tyyppi "pysyva"}}
-        {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
-         :onnistui-parametrit [valittu-hoitokausi]
-         :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
+    (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
+      {:urakka-id @nav/valittu-urakka-id
+       :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+       :muutos {:id nil
+                :versio nil
+                :tyyppi "pysyva"}}
+      {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+       :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui})
     app)
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
-  (process-event [{vastaus :vastaus
-                   valittu-hoitokausi :valittu-hoitokausi} app]
-    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui, vastaus: " vastaus)
+  (process-event [{vastaus :vastaus} app]
+    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
 
-    (-> app
-      (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
-      (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
-      (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] (:urakan-hoitokaudet app))
-      (assoc-in [:muokattava-muutos :liitteet] [])
-      (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi)))
+    ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
+    (let [mahdolliset-hoitovuodet (->> (:urakan-hoitokaudet app)
+                                    (filter #(>= (-> % first pvm/vuosi) 2025)))]
+      (-> app
+        (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
+        (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
+        (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
+        (assoc-in [:muokattava-muutos :liitteet] [])
+        ;; Valitaan ensimmäinen mahdollinen hoitovuosi, jos ei ole valittuna
+        (assoc-in [:muokattava-muutos :hoitovuosi] (first mahdolliset-hoitovuodet)))))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
   (process-event [_ app]
