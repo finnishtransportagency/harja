@@ -458,7 +458,8 @@
                                      :vayla-tyyli? true
                                      :disabled tallennus-kesken?
                                      :data-cy "hoitokausi-valinta"
-                                     :valitse-fn #(e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan %))
+                                     :valitse-fn #(when (nav/varmista-navigointi-fn :hoitovuoden-vaihto)
+                                                    (e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan %)))
                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         hoitokaudet]]]

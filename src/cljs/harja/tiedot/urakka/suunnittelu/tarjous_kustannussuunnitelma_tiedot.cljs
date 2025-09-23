@@ -423,11 +423,13 @@
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
          :paasta-virhe-lapi? true})
-      (assoc app :tallennus-kesken? true)))
+      (-> app
+        (assoc :tallennus-kesken? true))))
 
   TallennaKilpailutettavatHankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Kilpailutettavat hankinnat tallennettiin.")
+    (nollaa-muutokset!)
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -467,7 +469,10 @@
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
+    (nollaa-muutokset!)
+    (-> app
+      (assoc :tallennus-kesken? true)
+      (assoc :onko-erillishankinnat-muutoksia? false)))
 
   TallennaErillishankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -602,6 +607,7 @@
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Johto- ja Hallintokorvaukset tallennettiin.")
+    (nollaa-muutokset!)
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
@@ -647,7 +653,13 @@
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
       (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
-      (assoc app :haku-kaynnissa? true)))
+      (nollaa-muutokset!)
+      (-> app
+        (assoc :onko-hankinnat-muutoksia? false)
+        (assoc :onko-jjh-muutoksia? false)
+        (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+        (assoc :onko-erillishankinnat-muutoksia? false)
+        (assoc :haku-kaynnissa? true))))
 
   VahvistaTaiPeruutaTavoiteJaKattohinta
   (process-event
@@ -659,7 +671,12 @@
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})
+    (nollaa-muutokset!)
     (-> app
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? true)))
 
@@ -735,6 +752,7 @@
 
   NollaKustannussuunnitelmanMuutokset
   (process-event [_ app]
+    (nollaa-muutokset!)
     (-> app
       (assoc :onko-hankinnat-muutoksia? false)
       (assoc :onko-jjh-muutoksia? false)
@@ -743,20 +761,24 @@
 
   AsetaHankinnatMuutos
   (process-event [_ app]
+    (merkitse-muutos!)
     (-> app
       (assoc :onko-hankinnat-muutoksia? true)))
 
   AsetaErillishankinnatMuutos
   (process-event [_ app]
+    (merkitse-muutos!)
     (-> app
       (assoc :onko-erillishankinnat-muutoksia? true)))
 
   AsetaJJHMuutos
   (process-event [_ app]
+    (merkitse-muutos!)
     (-> app
       (assoc :onko-jjh-muutoksia? true)))
 
   AsetaHoidonjohtopalkkioMuutos
   (process-event [_ app]
+    (merkitse-muutos!)
     (-> app
       (assoc :onko-hoidonjohtopalkkio-muutoksia? true))))
