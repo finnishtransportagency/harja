@@ -64,7 +64,8 @@
                ;;       Vaatisi refaktorointia, jotta logiikka lomakkeen alustamiselle olisi yhtenäisempi
                "johto-ja-hallintokorvaus" (assoc rivi
                                             :johto-ja-hallintokorvaukset
-                                            (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi [])))]
+                                            (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+               rivi)]
     rivi))
 
 (defn- lomakkeen-tyyppivalinta
