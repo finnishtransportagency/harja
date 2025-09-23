@@ -93,31 +93,31 @@
                                                   :sopimus sopimus-id
                                                   :alkupvm (pvm/->pvm "1.10.2014")
                                                   :loppupvm (pvm/->pvm "30.9.2015")
-                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}
                                                   :maara 666}
                                                  {:id 1
                                                   :sopimus sopimus-id
                                                   :alkupvm (pvm/->pvm "1.10.2015")
                                                   :loppupvm (pvm/->pvm "30.9.2016")
-                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}
                                                   :maara 666}
                                                  {:id 1
                                                   :sopimus sopimus-id
                                                   :alkupvm (pvm/->pvm "1.10.2016")
                                                   :loppupvm (pvm/->pvm "30.9.2017")
-                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}
                                                   :maara 666}
                                                  {:id 1
                                                   :sopimus sopimus-id
                                                   :alkupvm (pvm/->pvm "1.10.2017")
                                                   :loppupvm (pvm/->pvm "30.9.2018")
-                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}
                                                   :maara 666}
                                                  {:id 1
                                                   :sopimus sopimus-id
                                                   :alkupvm (pvm/->pvm "1.10.2018")
                                                   :loppupvm (pvm/->pvm "30.9.2019")
-                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka" :yksikko "t"}
+                                                  :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}
                                                   :maara 666}]})
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-materiaalit
@@ -478,7 +478,7 @@
 
 (deftest hae-suolatoteumien-tarkat-tiedot-test
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        materiaali-id (ffirst (q "SELECT id FROM materiaalikoodi where nimi = 'Hiekoitushiekka';"))
+        materiaali-id (ffirst (q "SELECT id FROM materiaalikoodi where yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5';")) ;; Hiekoitushiekka, liukkaudentorjunta
         testidatasta (kutsu-palvelua
                        (:http-palvelin jarjestelma)
                        :hae-suolatoteumien-tarkat-tiedot

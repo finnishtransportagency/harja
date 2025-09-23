@@ -22,9 +22,9 @@
     "Kesäsuola sorateiden pölynsidonta" 14
     "Kesäsuola päällystettyjen teiden pölynsidonta" 15
     "Kesäsuola yhteensä (t)" 16
-    "Hiekoitushiekka, liukkaudentorjunta" 17
-    "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen" 18
-    "Hiekoitushiekka yhteensä (t)" 16
+    "Hiekoitushiekka, liukkaudentorjunta" 17.1
+    "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen" 17.2
+    "Hiekoitushiekka yhteensä (t)" 17.3
     "Murskeet" 19
     "Sorastusmurske" 20
     "Kelirikkomurske" 21

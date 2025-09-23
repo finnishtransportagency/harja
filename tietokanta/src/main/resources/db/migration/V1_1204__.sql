@@ -2,8 +2,8 @@
 
 -- Päivitetään ensin materiaalikoodeille yksilöivät tunnisteet
 -- Siirrytään käyttämään yksilöiviä tunnisteita, kun koodissa täytyy hakea tietty materiaalikoodi, niin nimen muuttaminen ei vaadi jatkossa yhtä paljon koodimuutoksia.
--- Nimen muuttaminen vaikuttaa koodissa jatkossakin
--- Uuden materiaalin lisääminen on huomoioitava
+-- Nimen muuttaminen voi silti aiheuttaa koodimuutostarpeita jatkossakin esimerkiksi käyttöliittymässä käyttäjille esitettäviin teksteihin.
+-- Uuden materiaalin lisääminen aiheuttaa myös tarpeita koodin päivittämiseen.
 UPDATE materiaalikoodi SET yksiloiva_tunniste = '8d753e69-c074-4f22-9bbe-2a737133496e' WHERE nimi = 'Talvisuola, rakeinen NaCl';
 UPDATE materiaalikoodi SET yksiloiva_tunniste = '002266c5-d26d-4986-a8a2-f80d1d04fa68' WHERE nimi = 'Talvisuolaliuos CaCl2';
 UPDATE materiaalikoodi SET yksiloiva_tunniste = 'd665f6cb-4df2-44e9-b3aa-ffd8c9bb3333' WHERE nimi = 'Talvisuolaliuos NaCl';
@@ -25,19 +25,28 @@ UPDATE materiaalikoodi SET yksiloiva_tunniste = '0c991ac5-4221-42e5-8a88-bacddb7
 UPDATE materiaalikoodi SET yksiloiva_tunniste = '6bbe4261-1e22-43ec-a4c4-ae63ecc46b5d' WHERE nimi = 'Kelirikkomurske';
 
 
--- Uusi materiaali ennalta arvaamattomia kuljetuksia varten.
+-- UUSI MATERIAALI: Hiekoitushiekka - ennalta arvaamattomien kuljetusten avustaminen.
+-- VANHAN MATERIAALIN NIMIMUUTOS: Hiekoitushiekka - liukkaudentorjunta
+
 -- Tehdään järjestykseen tilaa uudelle materiaalille.
 UPDATE materiaalikoodi
 SET jarjestys = (jarjestys + 1)
-WHERE jarjestys > 17;
+WHERE jarjestys > 16;
+
 -- Lisätään uusi materiaali
 INSERT INTO materiaalikoodi (nimi, yksikko, kohdistettava, materiaalityyppi, urakkatyyppi, jarjestys,
-                             materiaaliluokka_id)
-VALUES ('Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen', 't', false, 'hiekoitushiekka', 'hoito', 18,
-        (select id from materiaaliluokka where nimi = 'Hiekoitushiekka'));
+                             materiaaliluokka_id, yksiloiva_tunniste)
+VALUES ('Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen', 't', false, 'hiekoitushiekka', 'hoito', 17,
+        (select id from materiaaliluokka where nimi = 'Hiekoitushiekka'), '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe');
 
 -- Vanha hiekoitushiekka varataan vain liukkaudentorjunta-tehtävän käyttöön. Vaihdetaan nimeä.
 UPDATE materiaalikoodi SET nimi = 'Hiekoitushiekka, liukkaudentorjunta' WHERE nimi = 'Hiekoitushiekka' and yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5';
 
 -- Muutos ei vaadi vanhojen kirjausten päivittäistä, koska kaikki käytetty hiekka on tähän saakka
--- kirjattu liukkaudentorjuntatehtävälle (ennalta arvaamattomien kuljetusten hiekan tunnistaminen ei ole mahdollista).
+-- kirjattu liukkaudentorjuntatehtävälle, eikä ennalta arvaamattomien kuljetusten avustamisessa käytetyn
+-- hiekan tunnistaminen ei ole mahdollista.
+
+-- Linkitä Ennalta arvaamattomaan kuljetukseen liittyvät tehtävät linkitetään uuteen materiaaliin.
+-- Lisätään samalla tehtäviltä puuttuvat yksilöivät tunnisteet.
+
+-- TODO: Tämä on kesken!!
