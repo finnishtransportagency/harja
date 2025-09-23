@@ -79,13 +79,25 @@
    ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
 
-(defn +rivi-muutos-voimassa+ [urakan-hoitokaudet]
+(defn +rivi-muutos-voimassa+ [urakan-hoitokaudet valittu-hoitokausi]
   {:otsikko "Voimassa alkaen"
-   :nimi :voimassa_alkaen 
-   :tyyppi :pvm 
-   :uusi-rivi? true
+   :nimi :voimassa_alkaen
+   :tyyppi :pvm
    :pakollinen? true
-   :validoi [#(when (nil? %) "Anna muutoksen voimassaolo alkupvm")]
+   ;; Rajoita valinta hoitokaudelle 
+   :validoi [(fn [valittu-pvm]
+               (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
+                                                (pvm/valissa?
+                                                  valittu-pvm
+                                                  (first valittu-hoitokausi)
+                                                  (second valittu-hoitokausi))))]
+                 (when-not pvm-hk-valissa?
+                   (str
+                     "Voimassa alkaen täytyy kohdistua valittuun hoitokauteen "
+                     "("
+                     (pvm/pvm-aika (first valittu-hoitokausi)) " - "
+                     (pvm/pvm-aika (second valittu-hoitokausi))
+                     ")."))))]
    ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
    ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
    :aseta (fn [rivi arvo]
@@ -108,10 +120,11 @@
    ::lomake/col-luokka "perustiedot col-xs-6"})
 
 
-(defn lomake-yhteinen [e! app]
+(defn lomake-yhteinen [e! 
+                       {:keys [urakan-hoitokaudet valittu-hoitokausi] :as app}]
   (concat
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (+rivi-muutoksen-syy+)
-       (+rivi-muutos-voimassa+ (get-in app [:urakan-hoitokaudet]))
+       (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
        (+rivi-muutos-tavoitehinta+))]
     (liite-kentta e! app)))

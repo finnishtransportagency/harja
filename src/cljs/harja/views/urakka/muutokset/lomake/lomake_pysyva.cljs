@@ -255,7 +255,7 @@
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos valittu-hoitokausi] :as app}]
   [{:tyyppi :komponentti
     :uusi-rivi? true
     :komponentti (fn [_rivi]
@@ -273,7 +273,7 @@
       ::lomake/col-luokka "perustiedot col-sm-6"}
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet))
+     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi))
 
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
