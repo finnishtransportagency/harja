@@ -84,6 +84,10 @@
                      ;; Korvaa vuoden tehtävä- ja määrärivit lähderiveillä, aseta uusi alkuvuosi
                      (assoc m vuosi (concat
                                       ;; Merkitse vanhat rivit poistetuksi ennen korvaavien rivien lisäämistä
+                                      ;; FIXME: Grid-komponentissa on ongelmia säilöä samanaikaisesti poistettu- ja ei-poistettuja rivejä
+                                      ;;       joilla on sama tunniste (eli tässä tapauksessa :tehtävä id)
+                                      ;;       Eli, jos kopioidaan toiselle hoitovuodelle rivi, jolla on sama tehtävä id kuin lähderivillä,
+                                      ;;       poistamisen sijaan pitäisi korvatakin kyseisen rivin tiedot lähderivin tiedoilla.
                                       (merkitse-rivit-poistetuksi (get m vuosi))
                                       (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit vuosi))))
              tjm-per-vuosi-map
