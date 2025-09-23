@@ -115,25 +115,24 @@
 
 (defn kustannusennuste->toteuma
   "Laskee kustannusennusteen toteuman kun se on mahdollista.
-   Toteuma = keskiarvo kaikista 4 ennustekuukaudesta (10,1,4,6).
-   Puuttuvat ennusteet = 0 pistettä keskiarvossa.
+   Toteuma = keskiarvo kaikista kustannusennustekuukausista joissa on pisteitä.
+   Jos ei ole pisteitä ollenkaan, palauttaa 0.
    
    HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
    Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
-  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt?]}]
-  (when hoitovuosi-paattynyt?
-    ;; Vaaditut ennustekuukaudet (lokakuu, tammikuu, huhtikuu, kesäkuu)
-    (let [vaaditut-kuukaudet #{10 1 4 6}
-          ;; Hae pisteet kaikille vaadituille kuukausille
-          kuukauden-pisteet (reduce (fn [pisteet kk]
-                                      (let [kuukausi-data (first (filter #(= (:kuukausi %) kk) lupaus-kuukaudet))
-                                            pisteet-kuukaudelle (get-in kuukausi-data [:kustannusennuste :pisteet] 0)]
-                                        (conj pisteet pisteet-kuukaudelle)))
-                                    []
-                                    vaaditut-kuukaudet)
-          ;; Laske keskiarvo (puuttuvat = 0 pistettä)
-          keskiarvo (/ (reduce + kuukauden-pisteet) (count kuukauden-pisteet))]
-      (Math/round keskiarvo))))
+  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt?]}] 
+    (when hoitovuosi-paattynyt?
+      ;; Hae kaikki kuukaudet joissa on kustannusennusteita ja pisteitä
+      (let [kuukaudet-pisteilla (->> lupaus-kuukaudet
+                                  (filter #(get-in % [:kustannusennuste :pisteet]))
+                                  (map #(get-in % [:kustannusennuste :pisteet])))]
+        (if (seq kuukaudet-pisteilla)
+          ;; Laske keskiarvo vain niistä kuukausista joissa on pisteitä
+          (let [keskiarvo (/ (reduce + kuukaudet-pisteilla) (count kuukaudet-pisteilla))]
+            #?(:clj (Math/round (double keskiarvo))
+               :cljs (js/Math.round keskiarvo)))
+          ;; Jos ei ole pisteitä ollenkaan, palauta 0
+          0))))
 
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
@@ -702,58 +701,45 @@
          :laskentakaava-parametrit parametrit
          :laskentakaava-vaiheet vaiheet}))))
 
-(defn maarita-kustannusennuste-pisteet
+(defn maarita-kustannusennuste-pisteet-kovakoodattu
   "Määrittää pisteet tarkkuuden ja kuukauden perusteella.
    Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
   [tarkkuus-prosentti kuukausi]
   {:pre [(number? tarkkuus-prosentti) (number? kuukausi)]}
   (let [tarkkuus-itseisarvo (Math/abs tarkkuus-prosentti)]
-    (cond
-      ;; Lokakuu - tammikuu (ensimmäiset 4 kuukautta)
-      (#{10 11 12 1} kuukausi)
-      (cond
-        (<= tarkkuus-itseisarvo 15.0) 5
-        (<= tarkkuus-itseisarvo 25.0) 3
-        (<= tarkkuus-itseisarvo 35.0) 1
-        :else 0)
+    (case kuukausi
+      ;; Lokakuu: ≤ 7,0% = 8p, ≤ 9,0% = 4p, > 9,0% = 1p
+      10 (cond
+           (<= tarkkuus-itseisarvo 7.0) 8
+           (<= tarkkuus-itseisarvo 9.0) 4
+           :else 1)
 
-      ;; Helmikuu - huhtikuu (kuukaudet 5-7)
-      (#{2 3 4} kuukausi)
-      (cond
-        (<= tarkkuus-itseisarvo 10.0) 5
-        (<= tarkkuus-itseisarvo 20.0) 3
-        (<= tarkkuus-itseisarvo 30.0) 1
-        :else 0)
+      ;; Tammikuu: ≤ 4,0% = 8p, ≤ 6,0% = 4p, > 6,0% = 1p
+      1 (cond
+          (<= tarkkuus-itseisarvo 4.0) 8
+          (<= tarkkuus-itseisarvo 6.0) 4
+          :else 1)
 
-      ;; Toukokuu - heinäkuu (kuukaudet 8-10)
-      (#{5 6 7} kuukausi)
-      (cond
-        (<= tarkkuus-itseisarvo 7.5) 5
-        (<= tarkkuus-itseisarvo 15.0) 3
-        (<= tarkkuus-itseisarvo 22.5) 1
-        :else 0)
+      ;; Huhtikuu: ≤ 2,0% = 8p, ≤ 3,0% = 4p, > 3,0% = 1p
+      4 (cond
+          (<= tarkkuus-itseisarvo 2.0) 8
+          (<= tarkkuus-itseisarvo 3.0) 4
+          :else 1)
 
-      ;; Elokuu - syyskuu (kuukaudet 11-12)
-      (#{8 9} kuukausi)
-      (cond
-        (<= tarkkuus-itseisarvo 5.0) 5
-        (<= tarkkuus-itseisarvo 10.0) 3
-        (<= tarkkuus-itseisarvo 15.0) 1
-        :else 0)
+      ;; Kesäkuu: ≤ 1,0% = 8p, ≤ 2,0% = 4p, > 2,0% = 1p
+      6 (cond
+          (<= tarkkuus-itseisarvo 1.0) 8
+          (<= tarkkuus-itseisarvo 2.0) 4
+          :else 1)
 
-      :else 0)))
+      ;; Elokuu: samat arvot kuin lokakuu
+      8 (cond
+          (<= tarkkuus-itseisarvo 7.0) 8
+          (<= tarkkuus-itseisarvo 9.0) 4
+          :else 1)
 
-(defn laske-kustannusennuste-tulos
-  "Laskee kustannusennusteen kokonaistulon (tarkkuus + pisteet).
-   Yhdistää tarkkuuslaskennan ja pisteiden määrityksen."
-  [syotteet kuukausi]
-  {:pre [(map? syotteet) (number? kuukausi)]}
-  (let [tarkkuus-tulos (laske-kustannusennusteen-tarkkuus syotteet)]
-    (if (:virhe tarkkuus-tulos)
-      tarkkuus-tulos
-      (let [tarkkuus (:tarkkuus-prosentti tarkkuus-tulos)
-            pisteet (maarita-kustannusennuste-pisteet tarkkuus kuukausi)]
-        (assoc tarkkuus-tulos :pisteet pisteet)))))
+      ;; Muut kuukaudet - oletusarvo
+      0)))
 
 (defn odottaa-urakoitsijan-kannanottoa?
   "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
@@ -771,29 +757,3 @@
         (filter :odottaa-vastausta?)
         first
         boolean))))
-
-(comment
-  (laske-kustannusennuste-tulos
-    {:ennustettu-tavoitehinta 1000000
-     :ennustettu-kustannus 800000
-     :toteutunut-tavoitehinta 950000
-     :toteutunut-kustannus 780000
-     :hoitovuoden-alun-tavoitehinta 1200000}
-    3)
-  
-  ;; Testaa kustannusennuste-integrointi
-  (let [kustannusennuste-lupaus {:lupaustyyppi "kustannusennuste"
-                                 :hoitovuosi-paattynyt? true
-                                 :lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:pisteet 5}}
-                                                   {:kuukausi 1 :kustannusennuste {:pisteet 3}}
-                                                   {:kuukausi 4 :kustannusennuste {:pisteet 4}}
-                                                   ;; Kesäkuu puuttuu = 0 pistettä
-                                                   {:kuukausi 6}]}]
-    ;; Ennuste: 4 (viimeisin annettu)
-    (kustannusennuste->ennuste kustannusennuste-lupaus)
-    ;; Toteuma: (5+3+4+0)/4 = 3 (keskiarvo, puuttuva kesäkuu = 0)
-    (kustannusennuste->toteuma kustannusennuste-lupaus)
-    ;; Integrointi:
-    (lupaus->ennuste kustannusennuste-lupaus)
-    (lupaus->toteuma kustannusennuste-lupaus))
-  )
