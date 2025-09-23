@@ -174,8 +174,9 @@
         (assoc-in [:muokattava-muutos :liitteet] [])
         (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] [])
         (assoc-in [:muokattava-muutos :kustannusvaikutukset] [])
-        ;; Valitaan ensimmäinen mahdollinen hoitovuosi, jos ei ole valittuna
-        (assoc-in [:muokattava-muutos :hoitovuosi] (first mahdolliset-hoitovuodet)))))
+        ;; Ei valita mitään hoitovuotta ennakkoon, vaan ensin valitaan voimassa alkaen pvm, jotta mahdolliset hoitovuodet
+        ;; tulevat hoitovuosi-valintaan saataville oikein
+        (assoc-in [:muokattava-muutos :hoitovuosi] nil))))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
   (process-event [_ app]
