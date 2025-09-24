@@ -17,7 +17,7 @@
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma
-                                             tulevaisuudessa-arvoja? viimeinen-hoitovuosi?] :as app}]
+                                             tulevaisuudessa-arvoja? viimeinen-hoitovuosi? onko-hankinnat-muutoksia?] :as app}]
   (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [kilpailutettavat-hankinnat vahvistettu?
@@ -78,7 +78,8 @@
            nil
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-           tulevaisuudessa-arvoja?))
+           tulevaisuudessa-arvoja?
+           onko-hankinnat-muutoksia?))
 
        [:div.row
         [:div.col-xs-12
@@ -89,7 +90,8 @@
                                   (reset! yhteiset/tallenna-painettu false)
                                   (reset! yhteiset/grid-hankinnat-atom (vals (grid/hae-muokkaustila %)))
                                   (e! (kust-tiedot/->PaivitaKilpailutettavatHankinnat (vals (grid/hae-muokkaustila %))))
-                                  (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
+                                  (reset! yhteiset/virheet-atom (grid/hae-virheet %))
+                                  (e! (kust-tiedot/->AsetaHankinnatMuutos)))
                        ;; Lisätään 2 riviä gridin päätteeksi
                        :rivi-jalkeen-fn (fn [rivit]
                                           ^{:luokka "yhteenveto"}
@@ -119,7 +121,8 @@
             nil
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-            tulevaisuudessa-arvoja?)])])))
+            tulevaisuudessa-arvoja?
+            onko-hankinnat-muutoksia?)])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
   (if (nil? (:rahavaraukset kustannussuunnitelma))
@@ -184,7 +187,7 @@
           rahavaraukset]]]])))
 
 (defn erillishankinnat [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                   tulevaisuudessa-arvoja? viimeinen-hoitovuosi?] :as app}]
+                                   tulevaisuudessa-arvoja? viimeinen-hoitovuosi? onko-erillishankinnat-muutoksia?] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :erillishankinnat]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [erillishankinnat vahvistettu?]} kustannussuunnitelma
@@ -233,7 +236,8 @@
               #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-            tulevaisuudessa-arvoja?)])
+            tulevaisuudessa-arvoja?
+            onko-erillishankinnat-muutoksia?)])
 
        [:div.row
         [:div.col-xs-12
@@ -243,7 +247,8 @@
                                  (reset! yhteiset/tallenna-painettu false)
                                  (reset! yhteiset/grid-erillishankinnat-atom (vals (grid/hae-muokkaustila %)))
                                  (e! (kust-tiedot/->PaivitaErillishankinnat (vals (grid/hae-muokkaustila %))))
-                                 (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
+                                 (reset! yhteiset/virheet-atom (grid/hae-virheet %))
+                                 (e! (kust-tiedot/->AsetaErillishankinnatMuutos)))
                       ;; Lisätään yhteenveto rivi gridin päätteeksi
                       :rivi-jalkeen-fn (fn [rivit]
                                          ^{:luokka "yhteenveto"}
@@ -264,10 +269,11 @@
              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-           tulevaisuudessa-arvoja?))])))
+           tulevaisuudessa-arvoja?
+           onko-erillishankinnat-muutoksia?))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                      tulevaisuudessa-arvoja? viimeinen-hoitovuosi?] :as app}]
+                                      tulevaisuudessa-arvoja? viimeinen-hoitovuosi? onko-hoidonjohtopalkkio-muutoksia?] :as app}]
   (if (nil? (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [hoidonjohtopalkkiot vahvistettu?]} kustannussuunnitelma
@@ -316,7 +322,8 @@
               #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-            tulevaisuudessa-arvoja?)])
+            tulevaisuudessa-arvoja?
+            onko-hoidonjohtopalkkio-muutoksia?)])
 
        [:div.row
         [:div.col-xs-12
@@ -326,7 +333,8 @@
                                  (reset! yhteiset/tallenna-painettu false)
                                  (reset! yhteiset/grid-hoidonjohtopalkkiot-atom (vals (grid/hae-muokkaustila %)))
                                  (e! (kust-tiedot/->PaivitaHoidonjohtopalkkiot (vals (grid/hae-muokkaustila %))))
-                                 (reset! yhteiset/virheet-atom (grid/hae-virheet %)))
+                                 (reset! yhteiset/virheet-atom (grid/hae-virheet %))
+                                 (e! (kust-tiedot/->AsetaHoidonjohtopalkkioMuutos)))
                       ;; Lisätään yhteenveto rivi gridin päätteeksi
                       :rivi-jalkeen-fn (fn [rivit]
                                          ^{:luokka "yhteenveto"}
@@ -347,7 +355,8 @@
             #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-           tulevaisuudessa-arvoja?))])))
+           tulevaisuudessa-arvoja?
+           onko-hoidonjohtopalkkio-muutoksia?))])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
@@ -449,7 +458,8 @@
                                      :vayla-tyyli? true
                                      :disabled tallennus-kesken?
                                      :data-cy "hoitokausi-valinta"
-                                     :valitse-fn #(e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan %))
+                                     :valitse-fn #(when (nav/varmista-navigointi-fn :hoitovuoden-vaihto)
+                                                    (e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan %)))
                                      :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
                                      :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         hoitokaudet]]]
@@ -463,13 +473,23 @@
      [debug/debug app]]))
 
 (defn nakyma* [e! _app]
-  (komp/luo
-    (komp/lippu kust-tiedot/nakymassa?)
-    (komp/sisaan #(e! (kust-tiedot/->HaeKustannussuunnitelmanTiedot)))
-    (fn [e! app]
-      (if (:haku-kaynnissa? app)
-        [yleiset/ajax-loader-pieni "Haku käynnissä..."]
-        [kustannussuunnitelma e! app]))))
+  (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
+                                :uusi-kustannusuunnitelma-nakyma/muutokset
+                                kust-tiedot/tallentamattomia-muutoksia
+                                :beforeunload-viesti "Hoitovuoden alun tavoitehinta näkymässä on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+    (komp/luo
+      (komp/lippu kust-tiedot/nakymassa?)
+      (komp/sisaan #(do
+                      (e! (kust-tiedot/->HaeKustannussuunnitelmanTiedot))
+                      (sisaan)))
+      (komp/ulos
+        #(do
+           (e! (kust-tiedot/->NollaKustannussuunnitelmanMuutokset))
+           (ulos)))
+      (fn [e! app]
+        (if (:haku-kaynnissa? app)
+          [yleiset/ajax-loader-pieni "Haku käynnissä..."]
+          [kustannussuunnitelma e! app])))))
 
 (defn kustannussuunitelma []
   (tuck/tuck tila/tarjous-kustannussuunnitelma nakyma*))

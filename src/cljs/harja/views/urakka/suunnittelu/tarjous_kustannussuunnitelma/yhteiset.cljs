@@ -10,7 +10,8 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as k-tiedot]))
 
 
 (defonce tallenna-painettu (atom false))
@@ -85,7 +86,7 @@
 
 (defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
                              tallenna-fn jaa-tasan-fn kopioi-tuleville-hoitovuosille-fn
-                             tulevaisuudessa-arvoja?]
+                             tulevaisuudessa-arvoja? onko-muutoksia?]
   [:div {:style {:padding-top "1rem" :padding-right "1rem"}}
    [:div.painikkeet.text-right
     ;; Kopioi tuleville hoitovuosille.
@@ -112,22 +113,36 @@
            (reset! tallenna-painettu false)
            (jaa-tasan-fn))
         {:disabled tallennus-kesken?}]])
+
     [:span {:style {:margin-left "1rem"}}
      [napit/yleinen-ensisijainen "Tallenna tiedot"
       #(do
          (reset! tallenna-painettu false)
          (tallenna-fn))
       {:disabled tallennus-kesken?}]]]
+
    [:div.painikkeet.text-right {:style {:margin-top "0.5rem"}}
     ;; Viimeisin muokkaaja
     [:div.grid-status-viestit
-     (if viimeisin-muokkaus
+     (cond
+       (and onko-muutoksia? viimeisin-muokkaus)
        [:<>
         [:div.status-viesti.tallennettu
-         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]]
-       [:<>
+         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
         [:div.status-viesti.tallentamatta
-         "Ei tallennettuja muutoksia"]])]]])
+         "Tallentamattomia muutoksia"]]
+
+       onko-muutoksia?
+       [:div.status-viesti.tallentamatta
+        "Tallentamattomia muutoksia"]
+
+       viimeisin-muokkaus
+       [:div.status-viesti.tallennettu
+        (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+
+       :else
+       [:div.status-viesti.ei-muutoksia
+        "Ei tallennettuja muutoksia"])]]])
 
 (defn grid-perusasetukset [voi-muokata? tunniste]
   {:tyhja "Ei tietoja."
