@@ -483,3 +483,47 @@ SELECT id, nimi, yksikko, suunnitteluyksikko, tehtavaryhma, luoja, luotu, muokka
  WHERE yksiloiva_tunniste = :tunniste::UUID
    AND piilota IS NOT TRUE
    AND poistettu IS NOT TRUE;
+
+-- name: tulevilla-hoitovuosilla-arvoja?
+-- Käyttöliittymässä on mahdollista kopioida nykyisen hoitovuoden arvot tuleville hoitovuosille.
+-- Tämä kysely tarkistaa, onko tulevilla hoitovuosilla jo arvoja, jotta käyttäjää osataan varoittaa arvojen menettämisestä.
+-- Ensin toimenkuvat
+SELECT COUNT(jjh.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
+FROM johto_ja_hallintokorvaus jjh
+WHERE jjh."urakka-id" = :urakka-id
+  AND ((jjh.vuosi > :vuosi AND jjh.kuukausi IN (10, 11, 12))
+    OR (jjh.vuosi > :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
+UNION ALL
+-- Erillishankinnat
+SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
+FROM kustannusarvioitu_tyo kt
+WHERE kt.sopimus = :sopimus-id
+  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
+    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
+  AND kt.tehtavaryhma = :erillishankinnat-tehtavaryhma-id
+UNION ALL
+-- Muut kulut
+SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
+FROM kustannusarvioitu_tyo kt
+         JOIN tehtava t ON kt.tehtava = t.id AND t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Muut kulut
+WHERE kt.sopimus = :sopimus-id
+  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
+    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
+UNION ALL
+-- Rahavaraukset
+SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
+FROM kustannusarvioitu_tyo kt
+    WHERE kt.rahavaraus_id IS NOT NULL
+    AND kt.sopimus = :sopimus-id
+    AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
+        OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+-- Hankinnat
+UNION ALL
+SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
+FROM kiinteahintainen_tyo kt
+WHERE ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
+    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND toimenpideinstanssi IN (:hankinnan-toimenpideinstanssit)
+  AND sopimus = :sopimus-id;
