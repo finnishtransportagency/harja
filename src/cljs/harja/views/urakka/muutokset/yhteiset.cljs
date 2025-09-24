@@ -14,10 +14,10 @@
 (defn liite-kentta
   "Lomakkeen liitekenttä, joka näyttää liitteiden listauksen ja mahdollistaa uusien liitteiden lisäämisen."
   [e! {:keys [uusi-liite muokattava-muutos] :as _app}]
-  [{:otsikko "Liite" 
-    :nimi :liitteet 
+  [{:otsikko "Liite"
+    :nimi :liitteet
     :kaariva-luokka "muutosliite"
-    :tyyppi :komponentti 
+    :tyyppi :komponentti
     ::lomake/col-luokka "col-xs-12"
     :uusi-rivi? true
     :komponentti (fn [_]
@@ -36,12 +36,12 @@
                        :poista-tallennettu-liite-fn #(e! (t-yhteiset/->PoistaTallennettuLiite %))}]))}])
 
 
-(defn kehystetty-avattava-grid 
+(defn kehystetty-avattava-grid
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi.
    summan saa piiloon antamalla sille arvon :ei-summaa"
   [e! app {:keys [taulukon-avain taulukon-nakyvyys-event
                   otsikko summa toiminnot taulukko] :as _tiedot}]
-  
+
   (let [sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])]
     [:div.collapsoitava-osio
      [:div.otsikkorivi.klikattava {:on-click taulukon-nakyvyys-event}
@@ -50,11 +50,11 @@
                                       :down
                                       :right)]
        [:h2 otsikko]]
-      
+
       (when-not (= summa :ei-summaa)
         [:div.summa {:aria-label (str otsikko " yhteensä " summa " euroa")}
          (fmt/euro-opt summa)])]
-     
+
      (when sisalto-nakyvissa?
        [:span
         [:div.toiminnot

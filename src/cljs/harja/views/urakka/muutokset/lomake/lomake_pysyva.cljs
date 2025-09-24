@@ -312,11 +312,18 @@
       :valinta-arvo identity}
 
      ;; Taulukko jossa vaikutuksia voidaan syöttää
-     {:otsikko ""
-      :uusi-rivi? true
-      :nimi :taulukko-pysyvan-muutoksen-vaikutukset
-      :tyyppi :komponentti
-      :komponentti (fn [rivi]
-                     [taulukko-pysyvan-muutoksen-vaikutukset e! app])})
+     (if (:hoitovuosi muokattava-muutos)
+       {:otsikko ""
+        :uusi-rivi? true
+        :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+       {:tyyppi :komponentti
+        :uusi-rivi? true
+        :komponentti (fn [_rivi]
+                       [:div.perustiedot
+                        [yleiset/info-laatikko :neutraali
+                         "Valitse hoitokausi, jotta voit tehdä pysyvän muutoksen."]])}))
 
    (first (yhteiset/liite-kentta e! app))])

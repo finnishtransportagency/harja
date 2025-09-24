@@ -256,9 +256,7 @@
                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
 
 (defn- rahavaraus-kohdistus [e! lomake kohdistus rahavaraukset nro]
-  (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))
-        _ (when (= 1 (count tehtavaryhmat))
-            (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle (first tehtavaryhmat) nro)))]
+  (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))]
    [:div.row
     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
      [:div.label-ja-alasveto {:style {:width "320px"}}

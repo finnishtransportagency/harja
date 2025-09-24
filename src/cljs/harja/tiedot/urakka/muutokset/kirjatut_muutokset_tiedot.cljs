@@ -1,6 +1,9 @@
 (ns harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot
   "Urakan muutosten tiedot - kirjatut muutokset."
   (:require [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.viesti :as viesti]
             [taoensso.timbre :as log]
             [tuck.core :as tuck]))
 
@@ -15,6 +18,9 @@
 ;; --- Tuck-eventit ja käsittelijät ---
 
 ;; -- Pysyvät muutokset -- ALKAA
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelle [])
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui [vastaus])
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui [virhe])
 (defrecord PaivitaToimenpiteenTehtavamaarat [toimenpideinstanssi hk-alkuvuosi taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
 (defrecord MerkitseTehtavanMaaramuutosPoistetuksi [toimenpideinstanssi tehtava-id hk-alkuvuosi poistettu?])
@@ -70,7 +76,11 @@
 (defn- merkitse-rivit-poistetuksi
   "Merkitse rivit poistetuksi."
   [lahderivit]
-  (mapv #(assoc % :poistettu true) lahderivit))
+  (mapv (fn [rivi]
+          ;; Jos rivi on uusi (eli vain UI:ssa olemassaoleva), niin ei merkitä poistetuksi, vaan poistetaan kokonaan UI:sta
+          (when (not (:uusi? rivi))
+            (assoc rivi :poistettu true)))
+    lahderivit))
 
 (defn- korvaa-vuosien-tehtavat-ja-maara-rivit
   "Korvaa kohdevuosien tehtävä- ja määrärivit kopiolla lähdevuoden riveistä.
@@ -84,7 +94,11 @@
                      ;; Korvaa vuoden tehtävä- ja määrärivit lähderiveillä, aseta uusi alkuvuosi
                      (assoc m vuosi (concat
                                       ;; Merkitse vanhat rivit poistetuksi ennen korvaavien rivien lisäämistä
-                                      (merkitse-rivit-poistetuksi (get m vuosi))
+                                      ;; FIXME: Grid-komponentissa on ongelmia säilöä samanaikaisesti poistettu- ja ei-poistettuja rivejä
+                                      ;;       joilla on sama tunniste (eli tässä tapauksessa :tehtävä id)
+                                      ;;       Eli, jos kopioidaan toiselle hoitovuodelle rivi, jolla on sama tehtävä id kuin lähderivillä,
+                                      ;;       poistamisen sijaan pitäisi korvatakin kyseisen rivin tiedot lähderivin tiedoilla.
+                                      (remove nil? (merkitse-rivit-poistetuksi (get m vuosi)))
                                       (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit vuosi))))
              tjm-per-vuosi-map
              vuodet)
@@ -126,6 +140,48 @@
 
 (extend-protocol tuck/Event
   ;; -- Pysyvät muutokset -- ALKAA
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelle
+  (process-event [_ app]
+    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelle")
+
+    (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
+      {:urakka-id @nav/valittu-urakka-id
+       :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+       ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
+       ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
+       ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
+       ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
+       ;;       vain pelkät pohjatiedot.
+       :muutos {:id nil
+                :versio nil
+                :tyyppi "pysyva"}}
+      {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+       :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui})
+    app)
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
+
+    ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
+    (let [mahdolliset-hoitovuodet (->> (:urakan-hoitokaudet app)
+                                    (filter #(>= (-> % first pvm/vuosi) 2025)))]
+      (-> app
+        (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
+        (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
+        (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
+        (assoc-in [:muokattava-muutos :liitteet] [])
+        (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] [])
+        (assoc-in [:muokattava-muutos :kustannusvaikutukset] [])
+        ;; Ei valita mitään hoitovuotta ennakkoon, vaan ensin valitaan voimassa alkaen pvm, jotta mahdolliset hoitovuodet
+        ;; tulevat hoitovuosi-valintaan saataville oikein
+        (assoc-in [:muokattava-muutos :hoitovuosi] nil))))
+
+  HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Pysyvän muutoksen taustatietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
 
   PaivitaToimenpiteenTehtavamaarat
   (process-event [{toimenpideinstanssi :toimenpideinstanssi

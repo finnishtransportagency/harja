@@ -179,7 +179,6 @@
       (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
-  ;; TODO: Tuntuu liian geneeriseltä toteutukselta
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
     (when (:id muutos)
@@ -206,16 +205,21 @@
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
           toimenpiteiden-tehtavat (:toimenpiteiden-tehtavat vastaus)
           ;; lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
-          ;; halutaan defaulttina näyttää aikaisin hoitovuosi, jossa on kirjauksia. Jos kirjauksia ei ole millekään hoitovuodelle,
-          ;; asetetaan oletuksena edelliseltä sivulta ja app statesta "valittu-hoitovuosi"
+          ;; halutaan defaulttina näyttää aikaisin hoitovuosi, jossa on kirjauksia.
+          ;; Jos aikaisin kirjauksia sisältävä hoitovuosi ei ole mahdollisten hoitovuosien listassa,
+          ;; valitaan ensimmäinen mahdollisista hoitovuosista.
           ;; jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
           aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
           ;; vain ne hoitovuodet mahdollisia, jotka ovat voimassa alkaen pvm:n jälkeen eli alkupvm on sen jälkeen
           mahdolliset-hoitovuodet-lomakkeella (filter #(pvm/jalkeen? (first %) (get-in app [:muokattava-muutos :voimassa_alkaen]))
                                                 (:urakan-hoitokaudet app))
-          hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
+          hoitovuosi-lomakkeelle (or (when (and aikaisin-hoitovuosi-jossa-kirjauksia
+                                             ;; Varmista, että hoitovuosi on mahdollisissa hoitovuosissa
+                                             ;; :budjetoidut_summat voi sisältää arvoja, mutta sellaista hoitovuotta ei
+                                             ;; saa kuitenkaan valita, jos se ei ole mahdollisten hoitovuosien joukossa.
+                                             (contains? (vec mahdolliset-hoitovuodet-lomakkeella) aikaisin-hoitovuosi-jossa-kirjauksia))
                                        (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
-                                   valittu-hoitokausi)
+                                   (first mahdolliset-hoitovuodet-lomakkeella))
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
                 ;; Disabloi tallennus, enabloituu itsestään jos lomaketta muutetaan

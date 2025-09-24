@@ -362,6 +362,35 @@
                                                                        (inc (pvm/vuosi loppupvm)))}))
 
 
+(defn hae-toimenpiteiden-tehtavat
+  "Hakee toimenpiteiden tehtävät. Näitä tarvitaan pysyvissä muutoksissa, mutta voidaan tarvita myös muissa muutostyypeissä."
+  [db urakka-id]
+  (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
+        toimenpiteiden-tehtavat (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)]
+
+    (->> toimenpiteiden-tehtavat
+      (map #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})))))
+
+(defn hae-pysyvan-muutoksen-pohjatiedot
+  "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
+  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  (let [toimenpiteiden-tiedot (mapv
+                                (fn [rivi]
+                                  (-> rivi
+                                    (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
+                                    (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                    (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
+                                                                                          :versio muutos-versio
+                                                                                          :urakka urakka-id
+                                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        toimenpiteiden-tehtavat (hae-toimenpiteiden-tehtavat db urakka-id)]
+    {:toimenpiteiden-tiedot toimenpiteiden-tiedot
+     :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+
 ;; TODO: Refaktoroi koodia. Tässä on paljon tyypin perusteella iffittelyä, joka menee helposti hankalalukuiseksi
 ;;       Mieti uudestaan miten muutostyypin perusteella kannattaa lomakkeen perustietoja hakea
 ;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
@@ -370,30 +399,7 @@
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
-  ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
-  ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
-  ;;       Tutki kyselyä uuden muutoksen luonnin näkökulmasta
-  (let [toimenpiteiden-tiedot (when (= (:tyyppi muutos) "pysyva")
-                                (mapv
-                                  (fn [rivi]
-                                    (-> rivi
-                                      (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
-                                      (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                      (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
-                                  ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
-                                  (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id (:id muutos)
-                                                                                            :versio (:versio muutos)
-                                                                                            :urakka urakka-id
-                                                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-        {:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
-
-        ;; TODO: Tätä tietoa tarvitaan aina pysyvän muutoksen lomakkeella tehtiinpä uutta muutosta tai muokattiinpa vanhaa
-        ;;       Tieto generoi taulukon rivit pysyvän muutoksen lomakkeelle
-        toimenpiteiden-tehtavat (when (= (:tyyppi muutos) "pysyva")
-                                  (map
-                                    #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})
-                                    (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)))
-        tyyppikohtaiset-tiedot (case (:tyyppi muutos)
+  (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
                                  "johto-ja-hallintokorvaus"
                                  (when (:id muutos)
                                    (mapv
@@ -418,8 +424,10 @@
         vastaus (assoc (merge muutos
                          (first tyyppikohtaiset-tiedot)
                          (when (= (:tyyppi muutos) "pysyva")
-                           {:toimenpiteiden-tiedot toimenpiteiden-tiedot
-                            :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+                           (hae-pysyvan-muutoksen-pohjatiedot db kayttaja {:urakka-id urakka-id
+                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                           :muutos-id (:id muutos)
+                                                                           :muutos-versio (:versio muutos)})))
                   :liitteet liitteet)]
     vastaus))
 
@@ -559,27 +567,29 @@
   [db aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
 
-  ;; TODO: Tarkista tarviiko tehdäkin kaksi eri sekvenssiä järjestyksessä: poistettavat ja lisättävät/päivitettävät
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
-        muutos-versio (:versio aiti-muutos-id-ja-versio)]
-    (doseq [maaramuutos maaramuutokset]
-      ;; Poista rivi, jos se on merkitty poistettavaksi
-      (if (:poistettu maaramuutos)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)
+        poistettavat (filter :poistettu maaramuutokset)
+        lisattavat-ja-paivitettavat (remove :poistettu maaramuutokset)]
+
+    ;; Poista rivi, jos se on merkitty poistettavaksi
+    (doseq [maaramuutos poistettavat]
+      (when (and (:tehtava maaramuutos) (:hoitokauden_alkuvuosi maaramuutos))
         (muutos-kyselyt/poista-tehtavan-maaramuutos! db {:muutos-id muutos-id
                                                          :tehtava (:tehtava maaramuutos)
-                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})
-        ;; Luo tai päivitä rivi
-        ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
-        ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
-        (when (pos? (:tehtava maaramuutos))
-          (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
-                              (assoc maaramuutos
-                                ;; TODO: Nämä pitäisi laskea
-                                :uusi_maara 0
-                                :edellinen_maara 0))]
-            (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos)))))))
+                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})))
 
-
+    ;; Luo tai päivitä rivi
+    (doseq [maaramuutos lisattavat-ja-paivitettavat]
+      ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
+      ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
+      (when (pos? (:tehtava maaramuutos))
+        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
+                            (assoc maaramuutos
+                              ;; TODO: Nämä pitäisi laskea
+                              :uusi_maara 0
+                              :edellinen_maara 0))]
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
@@ -704,6 +714,10 @@
         :hae-muutoksen-tiedot
         (fn [kayttaja tiedot]
           (hae-muutoksen-tiedot (:db this) kayttaja tiedot))
+
+        :hae-pysyvan-muutoksen-pohjatiedot
+        (fn [kayttaja tiedot]
+          (hae-pysyvan-muutoksen-pohjatiedot (:db this) kayttaja tiedot))
 
         :hae-tehtava-maaramuutokset
         (fn [kayttaja tiedot]

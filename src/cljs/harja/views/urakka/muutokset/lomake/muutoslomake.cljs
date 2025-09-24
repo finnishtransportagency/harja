@@ -2,6 +2,8 @@
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require [clojure.string :as str]
 
+            [taoensso.timbre :as log]
+            [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
@@ -13,10 +15,11 @@
             [harja.ui.yleiset :as yleiset]
 
 
-            ;; Lomake tyypit, näitä voi lisäillä tarvittaessa 
+    ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
             [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
             [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
-            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
+            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]
+            [reagent.core :as r]))
 
 
 (defn- lomakkeen-footer [muutos tyyppi e!
@@ -50,6 +53,20 @@
        (e! (t-yhteiset/->MuokkaaMuutosta nil)))
     {:disabled tallennus-kesken?}]])
 
+(defn- alusta-lomakkeen-pohjatiedot [e! muutostyyppi valittu-hoitokausi rivi]
+  (log/debug "Haetaan lomakkeen pohjatiedot muutostyypille:" muutostyyppi)
+
+  (let [rivi (case muutostyyppi
+               "pysyva" (do
+                          (e! (t-kirjatut/->HaePysyvanMuutoksenPohjatiedotLomakkeelle))
+                          rivi)
+               ;; TODO: Tämä on jäänne muutosten ensimmäisen version ajalta, ja poikkeaa muusta logiikasta
+               ;;       Vaatisi refaktorointia, jotta logiikka lomakkeen alustamiselle olisi yhtenäisempi
+               "johto-ja-hallintokorvaus" (assoc rivi
+                                            :johto-ja-hallintokorvaukset
+                                            (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+               rivi)]
+    rivi))
 
 (defn- lomakkeen-tyyppivalinta
   [e! {:keys [valittu-hoitokausi] :as _app}]
@@ -60,9 +77,11 @@
           :nimi :tyyppi
           :pakollinen? true
           :aseta (fn [rivi arvo]
-                   (assoc rivi
-                     :tyyppi arvo
-                     :johto-ja-hallintokorvaukset (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi [])))
+                   (->>
+                     ;; Aseta valittu tyyppi
+                     (assoc rivi :tyyppi arvo)
+                     ;; Haetaan pohjatietoja tietyille lomaketyypeille, kun uutta muutosta luodaan
+                     (alusta-lomakkeen-pohjatiedot e! arvo valittu-hoitokausi)))
           ;; Sallitaan muokkaus vain uudelle muutokselle
           :muokattava? #(nil? (:id %))
           :kaariva-luokka "muutostyyppivalinta"
@@ -104,7 +123,7 @@
               "toteutuneet-maarat" (yhteiset/lomake-yhteinen e! app)
               "muutostyo" (muutostyo/lomake-muutostyo e! app)
 
-              nil  [(lomake/ryhma {:otsikko "Valitse tyyppi"})]
+              nil [(lomake/ryhma {:otsikko "Valitse tyyppi"})]
 
               ;; Default - jos mikään ylläolevista ei osu
               [(lomake/ryhma {:otsikko "Sisältöä ei saatavilla."})])))
