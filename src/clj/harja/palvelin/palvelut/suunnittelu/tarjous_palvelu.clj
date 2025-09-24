@@ -8,26 +8,17 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.domain.oikeudet :as oikeudet]
+            [clojure.pprint :as pprint]
             [harja.pvm :as pvm]))
 
 (defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
-  (let [olemassa-olevat-osiot (set (map :osio (:tarjous tarjous)))
-        puuttuvat-osiot (clj-set/difference
-                          #{"erillishankinnat" "hoidonjohtopalkkio"}
-                          olemassa-olevat-osiot)
-        hoitovuosittaiset-arvot (mapcat :hoitovuosittaiset-arvot (:tarjous tarjous))
-        nollatut-hoitovuosittaiset-arvot (mapv #(assoc % :summa (or (:summa %) 0)) hoitovuosittaiset-arvot)]
-
-    (into (array-map) (concat
-                        tarjous
-                        (map (fn [osio]
-                               {:nimi (case osio
-                                        "erillishankinnat" "Erillishankinnat"
-                                        "hoidonjohtopalkkio" "Hoidonjohtopalkkio")
-                                :osio osio
-                                :hoitovuosittaiset-arvot nollatut-hoitovuosittaiset-arvot
-                                :yhteensa 0})
-                          puuttuvat-osiot)))))
+  (let [tarjous-tiedot (:tarjous tarjous)
+        nollatut-arvot (mapv (fn [osio]
+                               (update osio :hoitovuosittaiset-arvot
+                                 (fn [arvot]
+                                   (mapv #(update % :summa (fn [a] (if (nil? a) 0.00M a))) arvot))))
+                         tarjous-tiedot)]
+    (assoc tarjous :tarjous nollatut-arvot)))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)

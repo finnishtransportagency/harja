@@ -1,6 +1,5 @@
 {:linters
- {:unresolved-namespace {:level :off}
-  :refer-all            {:exclude [clojure.test]}
+ {{:refer-all {:exclude [clojure.test]}
   :unresolved-symbol
   {:exclude [(cljs.core.async.macros/go [<! >! alts!])
              (cljs.core.async.macros/go-loop [<! >! alts!])
