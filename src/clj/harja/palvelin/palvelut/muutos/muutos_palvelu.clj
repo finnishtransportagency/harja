@@ -1,9 +1,11 @@
 (ns harja.palvelin.palvelut.muutos.muutos-palvelu
-  (:require [taoensso.timbre :as log]
+  (:require [clojure.set :as set]
+            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
 
             [harja.pvm :as pvm]
+            [harja.kokoelmat :as kokoelmat]
             [harja.domain.mhu :as mhu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -16,6 +18,7 @@
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
@@ -345,32 +348,81 @@
                                                              ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
                                                               muutosten-vaikutus-yhteensa))}}))
 
+
+
+(defn hae-mhu-suunniteltavat-tehtavat [db urakka-id alkupvm loppupvm]
+  (tehtavamaarat-kyselyt/mhu-suunniteltavat-tehtavat db {:urakka urakka-id
+                                                         :hoitokausi (range (pvm/vuosi alkupvm)
+                                                                       (inc (pvm/vuosi loppupvm)))}))
+
+
+(defn hae-toimenpiteiden-tehtavat
+  "Hakee toimenpiteiden tehtävät. Näitä tarvitaan pysyvissä muutoksissa, mutta voidaan tarvita myös muissa muutostyypeissä."
+  [db urakka-id]
+  (let [{:keys [alkupvm loppupvm]} (first (q-urakat/hae-urakka db {:id urakka-id}))
+        toimenpiteiden-tehtavat (hae-mhu-suunniteltavat-tehtavat db urakka-id alkupvm loppupvm)]
+
+    (->> toimenpiteiden-tehtavat
+      (map #(select-keys % #{:jarjestys :tehtava-id :suunniteltu-maara :toimenpidekoodi :tehtava :yksikko :hoitokauden-alkuvuosi})))))
+
+(defn hae-pysyvan-muutoksen-pohjatiedot
+  "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
+  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  (let [toimenpiteiden-tiedot (mapv
+                                (fn [rivi]
+                                  (-> rivi
+                                    (update :budjetoidut_summat #(konv/jsonb->clojuremap %))
+                                    (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                    (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
+                                ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
+                                                                                          :versio muutos-versio
+                                                                                          :urakka urakka-id
+                                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        toimenpiteiden-tehtavat (hae-toimenpiteiden-tehtavat db urakka-id)]
+    {:toimenpiteiden-tiedot toimenpiteiden-tiedot
+     :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
+
+;; TODO: Refaktoroi koodia. Tässä on paljon tyypin perusteella iffittelyä, joka menee helposti hankalalukuiseksi
+;;       Mieti uudestaan miten muutostyypin perusteella kannattaa lomakkeen perustietoja hakea
+;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db kayttaja {:keys [urakka-id muutos] :as tiedot}]
+  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (let [tyypikohtaiset-tiedot (case (:tyyppi muutos)
-                                "johto-ja-hallintokorvaus"
-                                (mapv
-                                  (fn [rivi]
-                                    (-> rivi
-                                      (update :kulut #(mapv (fn [kulu]
-                                                              (update kulu :pvm pvm/dateksi))
-                                                        (konv/jsonb->clojuremap %)))))
-                                  (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
-                                                                                                   :versio (:versio muutos)
-                                                                                                   :urakka urakka-id}))
 
-                                ;; tähän puuttuvien muutostyyppien lomakehaut...
-                                [{}])
-        _ (when (> (count tyypikohtaiset-tiedot)  1)
-            (do
-              (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
-              (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on ongelmatilanne. Ota yhteys Harja-palautteeseen."))))
+  (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
+                                 "johto-ja-hallintokorvaus"
+                                 (when (:id muutos)
+                                   (mapv
+                                     (fn [rivi]
+                                       (-> rivi
+                                         (update :kulut #(mapv (fn [kulu]
+                                                                 (update kulu :pvm pvm/dateksi))
+                                                           (konv/jsonb->clojuremap %)))))
+                                     (muutos-kyselyt/hae-johto-ja-hallintokorvausmuutoksen-tiedot db {:id (:id muutos)
+                                                                                                      :versio (:versio muutos)
+                                                                                                      :urakka urakka-id})))
+
+                                 ;; tähän puuttuvien muutostyyppien lomakehaut...
+                                 [{}])
+
+        _ (when (> (count tyyppikohtaiset-tiedot)  1)
+            (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
+            (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on luultavasti ongelmatilanne. Ota yhteys Harja-palautteeseen.")))
         liitteet (when-not (empty? (:liite-idt muutos))
                    (liite-kyselyt/hae-liitteiden-tiedot db {:idt (:liite-idt muutos)
                                                             :urakka urakka-id}))
-        vastaus (assoc (first tyypikohtaiset-tiedot) :liitteet liitteet)]
+        vastaus (assoc (merge muutos
+                         (first tyyppikohtaiset-tiedot)
+                         (when (= (:tyyppi muutos) "pysyva")
+                           (hae-pysyvan-muutoksen-pohjatiedot db kayttaja {:urakka-id urakka-id
+                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                           :muutos-id (:id muutos)
+                                                                           :muutos-versio (:versio muutos)})))
+                  :liitteet liitteet)]
     vastaus))
 
 
@@ -378,6 +430,7 @@
   "Asettaa poistetuksi vanhat kulutiedot, jotta ne eivät näy käyttöliittymässä tai raporteissa."
   ;; halutaan saada historiatieto talteen, tämä on siihen käytännöllinen tapa tekemättä valtavaa refaktorointia kulu tauluun (ja sille omaa historiataulua ja triggereitä)
   [db kayttaja rivi]
+  ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
   (let [kulu-id (:kulu-id rivi)]
     (when kulu-id
       (log/info "Poistetaan vanha kulu id:llä " kulu-id)
@@ -420,9 +473,17 @@
                                        :kayttaja (:id kayttaja)
                                        :tyyppi "jjh-muutos"})]]
 
-      (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
-                                                     :muutos (:id muutos-id-ja-versio)
-                                                     :kulu kulu-id-db})
+      ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
+      ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
+      ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
+      (if (:kulu-id rivi)
+        (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
+                                                          :muutos (:id muutos-id-ja-versio)
+                                                          :vanha-kulu (:kulu-id rivi)
+                                                          :uusi-kulu kulu-id-db})
+        (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                       :muutos (:id muutos-id-ja-versio)
+                                                       :kulu kulu-id-db}))
       (poista-vanhat-kulutiedot! db kayttaja rivi))))
 
 
@@ -436,23 +497,111 @@
                                        :versio (:versio muutos)
                                        :kayttaja (:id kayttaja)})))
 
-(defn- tallenna-muutoksen-liitteet [db muutoksen-paluurivi liitteet]
-  (doseq [liite liitteet]
-    (let [liite-id (:id liite)
-          muutos-id (:id muutoksen-paluurivi)
-          muutos-versio (:versio muutoksen-paluurivi)]
-      (when (and liite-id muutos-id muutos-versio)
+(defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
+  (let [{muutos-id :id uusi-muutos-versio :versio} aiti-muutos-id-ja-versio
+        vanhat-liite-idt (set (map :liite
+                                (muutos-kyselyt/hae-muutoksen-liite-idt db {:muutos muutos-id})))
+        uudet-liite-idt (set (map :id liitteet))
+        poistettavat-liite-idt (set/difference vanhat-liite-idt uudet-liite-idt)
+        lisattavat-liite-idt (set/difference uudet-liite-idt vanhat-liite-idt)]
+
+    (log/debug " Vanhojen liitteiden idt: " vanhat-liite-idt
+               " Uusien liitteiden idt: " uudet-liite-idt
+               " Poistettavat liite-idt: " poistettavat-liite-idt
+               " Lisättävät liite-idt: " lisattavat-liite-idt)
+
+    ;; Poistetaan vanhat liitteiden linkitykset
+    (doseq [liite-id poistettavat-liite-idt]
+      (when (and liite-id muutos-id)
+        (log/debug "### Poistetaan liite linkitys: " {:muutos muutos-id
+                                                      :liite liite-id})
+        (muutos-kyselyt/poista-muutos-liite-linkitys! db {:muutos muutos-id
+                                                          :liite liite-id})))
+
+    ;; Lisätään uudet liitteet
+    (doseq [liite-id lisattavat-liite-idt]
+      (when (and liite-id muutos-id uusi-muutos-versio)
+        (log/debug "### Lisätään liite linkitys: " {:muutos muutos-id
+                                                    :liite liite-id
+                                                    :versio uusi-muutos-versio})
         (muutos-kyselyt/linkita-muutos-ja-liite<! db {:muutos muutos-id
                                                       :liite liite-id
-                                                      :versio muutos-versio})))))
+                                                      :versio uusi-muutos-versio})))))
+
+(defn luo-kustannusvaikutus
+  [aiti-muutos-id versio {:keys [hoitokauden_alkuvuosi toimenpideinstanssi kustannuslaji summa] :as sql-opts}]
+  {:muutos_id aiti-muutos-id
+   :versio versio
+   :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+   :toimenpideinstanssi toimenpideinstanssi
+   :kustannuslaji kustannuslaji
+   :summa summa})
+
+(defn tallenna-muutoksen-kustannusvaikutukset
+  [db aiti-muutos-id-ja-versio kustannusvaikutukset]
+  (log/debug "Tallenna muutoksen kustannusvaikutukset: " kustannusvaikutukset)
+
+  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)]
+    (doseq [kustannusvaikutus kustannusvaikutukset]
+      (let [kustannusvaikutus (luo-kustannusvaikutus muutos-id (or muutos-versio 1) kustannusvaikutus)]
+        (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus)))))
+
+
+(defn luo-tehtava-ja-maaramuutos
+  [aiti-muutos-id versio {:keys [tehtava maaramuutos uusi_maara edellinen_maara hoitokauden_alkuvuosi] :as sql-opts}]
+  {:muutos-id aiti-muutos-id
+   :versio versio
+   :tehtava tehtava
+   :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+   :maaramuutos maaramuutos
+   :uusi_maara uusi_maara
+   :edellinen_maara edellinen_maara})
+
+(defn tallenna-muutoksen-tehtavien-maaramuutokset
+  "Poikkeaminen tehtävä- ja määräluettelon määristä"
+  [db aiti-muutos-id-ja-versio maaramuutokset]
+  (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
+
+  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+        muutos-versio (:versio aiti-muutos-id-ja-versio)
+        poistettavat (filter :poistettu maaramuutokset)
+        lisattavat-ja-paivitettavat (remove :poistettu maaramuutokset)]
+
+    ;; Poista rivi, jos se on merkitty poistettavaksi
+    (doseq [maaramuutos poistettavat]
+      (when (and (:tehtava maaramuutos) (:hoitokauden_alkuvuosi maaramuutos))
+        (muutos-kyselyt/poista-tehtavan-maaramuutos! db {:muutos-id muutos-id
+                                                         :tehtava (:tehtava maaramuutos)
+                                                         :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi maaramuutos)})))
+
+    ;; Luo tai päivitä rivi
+    (doseq [maaramuutos lisattavat-ja-paivitettavat]
+      ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
+      ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
+      (when (pos? (:tehtava maaramuutos))
+        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
+                            (assoc maaramuutos
+                              ;; TODO: Nämä pitäisi laskea
+                              :uusi_maara 0
+                              :edellinen_maara 0))]
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
-  (log/debug "tallenna-muutos: " tiedot)
+  (log/debug "tallenna-muutos: " (kokoelmat/dissoc-in tiedot [:muutos :toimenpiteiden-tehtavat]))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
+        ;; Pysyvien muutosten kustannusvaikutukset per toimenpideinstanssi
+        kustannusvaikutukset (:kustannusvaikutukset muutos)
+        ;; Tehtävien määrämuutokset (per tehtävä)
+        maaramuutokset (:tehtavat_ja_maarat muutos)
+        tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
+        alityyppi (when (= (:tyyppi muutos) "muutostyo")
+                    (-> muutos :alityyppi name))
         muutos {:id (:id muutos)
                 :versio (:versio muutos)
                 :urakka urakka-id
@@ -463,21 +612,40 @@
                 :luonnos (:luonnos muutos)
                 :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
                 :tyyppi (:tyyppi muutos)
-                :kayttaja (:id kayttaja)}]
+                :kayttaja (:id kayttaja)
+                :alityyppi alityyppi}]
+
     (jdbc/with-db-transaction [conn db]
-      (let [muutos-paluurivi (if (:id muutos)
-                               (muutos-kyselyt/paivita-muutos<! conn muutos)
-                               (muutos-kyselyt/luo-muutos<! conn muutos))]
-        (tallenna-muutoksen-liitteet conn muutos-paluurivi liitteet)
-        ;; hox: voi tehdä case:lla, kun myöhemmin tulee lisää tyyppejä
-        (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-          (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka muutos-paluurivi kulut)))
+      ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
+      ;; Nämä tiedot saadaan muutos-paluurivistä
+      (let [aiti-muutos-id-ja-versio (if (:id muutos)
+                                       (muutos-kyselyt/paivita-muutos<! conn muutos)
+                                       (muutos-kyselyt/luo-muutos<! conn muutos))]
+
+        ;; Tallenna liitteet
+        (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
+
+        ;; Tallenna kustannusvaikutukset
+        (when (pos? (count kustannusvaikutukset))
+          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio kustannusvaikutukset))
+
+        ;; Tallenna määrämuutokset
+        (when (pos? (count maaramuutokset))
+          (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset))
+
+        ;; Tallenna kulut
+        (case
+          (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+          (tallenna-johto-ja-hallintokorvauksen-muutokset conn kayttaja urakka aiti-muutos-id-ja-versio kulut)))
+
+      ;; Palauta päivitetty listaus
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi}))))
 
 
 (defn tallenna-rahavarausmuutosten-syyt
+  "Rahavarausmuutosten syiden tallennus on irtallaan mhu_muutos logiikasta, eikä syiden historiaa tallenneta _historia tauluun."
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit]}]
   (log/debug "Tallenna rahavarausmuutosten syyt" urakka-id valittu-hoitokausi rivit)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -510,6 +678,10 @@
         :hae-muutoksen-tiedot
         (fn [kayttaja tiedot]
           (hae-muutoksen-tiedot (:db this) kayttaja tiedot))
+
+        :hae-pysyvan-muutoksen-pohjatiedot
+        (fn [kayttaja tiedot]
+          (hae-pysyvan-muutoksen-pohjatiedot (:db this) kayttaja tiedot))
 
         :hae-tehtava-maaramuutokset
         (fn [kayttaja tiedot]
