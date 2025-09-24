@@ -19,6 +19,11 @@
   (dec (apply min
          (conj (map :tehtava tehtavat-ja-maarat-valittuna-hoitovuonna) -1))))
 
+(defn- hae-elementti-hoitokauden-alkuvuodella
+  [hoitovuosi sekvenssi]
+  (let [alkuvuosi (when hoitovuosi (pvm/vuosi (first hoitovuosi)))]
+    (some #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) sekvenssi)))
+
 (defn- pysyvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
@@ -182,7 +187,22 @@
       :voi-lisata? false
       :voi-kumota? false
       :voi-poistaa? (constantly false)
-      :voi-muokata? true}
+      :voi-muokata? true
+      :rivi-jalkeen-fn (fn [rivit]
+                         (prn rivit)
+                         (let [tavoitehinnan-muutokset (map (fn [rivi]
+                                                              (or (some->
+                                                                    (hae-elementti-hoitokauden-alkuvuodella
+                                                                      hoitovuosi
+                                                                      (get rivi :kustannusvaikutukset))
+                                                                    :summa) 0))
+                                                         rivit)
+                               tavoitehinnan-muutokset-yhteensa (apply + tavoitehinnan-muutokset)]
+                           [{:teksti "" :luokka "yhteensa" :leveys 5 :sarakkeita 1}
+                            {:teksti "Yhteensä" :luokka "yhteensa" :leveys 15 :sarakkeita 1}
+                            {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                            {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                            {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
      [{:tyyppi :vetolaatikon-tila :leveys 2}
       {:otsikko "Toimenpide"
@@ -200,24 +220,18 @@
        :tasaa :oikea
        :leveys 8
        :hae (fn [rivi]
-              (:budjetoitu_summa (first (filter #(when hoitovuosi
-                                                   (= (pvm/vuosi (first hoitovuosi))
-                                                     (:hoitokauden_alkuvuosi %)))
-                                          (get rivi :budjetoidut_summat)))))}
+              (:budjetoitu_summa (hae-elementti-hoitokauden-alkuvuodella hoitovuosi (get rivi :budjetoidut_summat))))}
 
       {:otsikko "Tavoitehinnan muutos (€)"
        :muokattava? (constantly false)
        :nimi :tavoitehinnan-muutos
        :tyyppi :numero
-       :fmt fmt/euro-opt
+       :fmt (partial fmt/euro-opt false true)
        :tasaa :oikea
        :leveys 8
        :solun-luokka #(str "tavoitehinnan-muutos-sarake")
        :hae (fn [rivi]
-              (:summa (first (filter #(when hoitovuosi
-                                        (= (pvm/vuosi (first hoitovuosi))
-                                          (:hoitokauden_alkuvuosi %)))
-                               (get rivi :kustannusvaikutukset)))))}
+              (:summa (hae-elementti-hoitokauden-alkuvuodella hoitovuosi (get rivi :kustannusvaikutukset))))}
 
       {:otsikko "Muuttunut kustannus (€)"
        :muokattava? (constantly false)
@@ -228,14 +242,8 @@
        :tasaa :oikea
        :leveys 8
        :hae (fn [rivi]
-              (let [budjetoitu (:budjetoitu_summa (first (filter #(when hoitovuosi
-                                                                    (= (pvm/vuosi (first hoitovuosi))
-                                                                      (:hoitokauden_alkuvuosi %)))
-                                                           (get rivi :budjetoidut_summat))))
-                    muutos (:summa (first (filter #(when hoitovuosi
-                                                     (= (pvm/vuosi (first hoitovuosi))
-                                                       (:hoitokauden_alkuvuosi %)))
-                                            (get rivi :kustannusvaikutukset))))]
+              (let [budjetoitu (:budjetoitu_summa (hae-elementti-hoitokauden-alkuvuodella hoitovuosi (get rivi :budjetoidut_summat)))
+                    muutos (:summa (hae-elementti-hoitokauden-alkuvuodella hoitovuosi (get rivi :kustannusvaikutukset)))]
                 (when (and budjetoitu (number? budjetoitu) muutos (number? muutos))
                   (+ budjetoitu muutos))))}]
      toimenpiteiden-tiedot]))
