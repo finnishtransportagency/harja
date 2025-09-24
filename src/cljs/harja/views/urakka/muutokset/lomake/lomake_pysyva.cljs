@@ -24,6 +24,17 @@
   (let [alkuvuosi (when hoitovuosi (pvm/vuosi (first hoitovuosi)))]
     (some #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) sekvenssi)))
 
+(defn- hae-tehtavan-suunniteltu-maara
+  [muokattava-muutos rivi]
+  ;; Suunniteltu määrä haetaan riville suoraan tietokantakyselyllä olemassa olevalle pysyvälle muutokselle
+  ;; = Nopeampi
+  (or (:suunniteltu_maara rivi)
+    ;; Kun tehdään uutta pysyvää muutosta, etsitään suunniteltu määrä toimenpiteiden tehtävien joukosta
+    (some #(when (= (:tehtava-id %)
+                   (:tehtava rivi))
+             (:suunniteltu-maara %))
+      (:toimenpiteiden-tehtavat muokattava-muutos))))
+
 (defn- pysyvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
@@ -128,7 +139,9 @@
             :nimi :suunniteltu_maara
             :tyyppi :positiivinen-numero
             :leveys 10
-            :muokattava? (constantly false)}
+            :muokattava? (constantly false)
+            :hae (fn [rivi]
+                   (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi))}
 
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
@@ -140,7 +153,8 @@
             :tyyppi :numero
             :leveys 20
             :muokattava? (constantly false)
-            :hae (fn [rivi] (+ (or (:suunniteltu_maara rivi) 0) (:maaramuutos rivi)))}
+            :hae (fn [rivi]
+                   (+ (or (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi) 0) (:maaramuutos rivi)))}
 
            ;; Kustomoitu poisto-nappi, joka korvaa gridin oman poisto-toiminnon
            {:otsikko ""
