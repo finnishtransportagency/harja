@@ -189,7 +189,6 @@
       :voi-poistaa? (constantly false)
       :voi-muokata? true
       :rivi-jalkeen-fn (fn [rivit]
-                         (prn rivit)
                          (let [tavoitehinnan-muutokset (map (fn [rivi]
                                                               (or (some->
                                                                     (hae-elementti-hoitokauden-alkuvuodella
