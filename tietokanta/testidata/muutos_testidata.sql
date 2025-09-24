@@ -166,10 +166,10 @@ $$ language plpgsql;
 
 
 SELECT * FROM luo_mhu_muutoksia((SELECT id FROM harja.public.urakka WHERE nimi = 'Iin MHU 2021-2026'),
-              '2025-05-07');
+              '2025-10-01');
 
 SELECT * FROM luo_mhu_muutoksia((SELECT id FROM harja.public.urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029'),
-                                '2025-05-07');
+                                '2025-10-01');
 
 
 

@@ -53,15 +53,15 @@
         vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                          :valittu-hoitokausi valittu-hoitokausi})
         odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 90 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
                                       :tehtavat_ja_maarat (list {:hoitokauden_alkuvuosi 2025 :tehtava 3117, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000 :versio 1}),
                                       :urakka urakka-id, :nimi "Päällysteen paikkausmuutos", :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 3000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 89 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
                                       :tehtavat_ja_maarat (list),
                                       :urakka urakka-id, :nimi "Erillisrahoitettu sorastusmuutos", :id 2, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 3000, :tyyppi "erillisrahoitettu"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 91 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
                                       :tehtavat_ja_maarat (list
                                                             {:hoitokauden_alkuvuosi 2025 :tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :versio 1}
                                                             {:hoitokauden_alkuvuosi 2025 :tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30 :versio 1}),
@@ -842,7 +842,7 @@
   {:kulu_kohdistus nil,
    :kustannusvaikutukset (list
                            {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset" :hoitokauden_alkuvuosi 2025}),
-   :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00",
+   :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00",
    :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
    :tehtavat_ja_maarat (list
                          {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :hoitokauden_alkuvuosi 2025}
