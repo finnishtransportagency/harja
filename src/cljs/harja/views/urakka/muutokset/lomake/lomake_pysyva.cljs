@@ -306,29 +306,20 @@
                        "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
 
      (lomake/ryhma {:otsikko "Perustiedot"}
-       {:nimi :nimi
-        :otsikko "Nimi"
-        :tyyppi :string
-        :uusi-rivi? true
-        :pakollinen? true
-        :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
-        ::lomake/col-luokka "perustiedot col-sm-6"}
+       ;; TODO: Tarkista täytyykö nimi olla pakollinen pysyvälle muutokselle.
+       ;;       Speksissä muutokselle on vain syy ja voimassa alkaen.
+       #_{:nimi :nimi
+          :otsikko "Nimi"
+          :tyyppi :string
+          :uusi-rivi? true
+          :pakollinen? true
+          :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
+          ::lomake/col-luokka "perustiedot col-sm-6"}
 
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet))
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
 
-     (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
-
-       {:otsikko "Hoitovuosi"
-        :nimi :hoitovuosi
-        :kaariva-luokka "hoitovuosi-valinta"
-        :tyyppi :valinta
-        :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
-        :valinta-nayta #(if %
-                          (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
-                          "Valitse")
-        :valinta-arvo identity}
-
+       ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
          {:tyyppi :komponentti
           :uusi-rivi? true
@@ -341,6 +332,32 @@
                             [:ul
                              [:li "Ensimmäisen hoitovuoden tavoitehinnan muutos lisätään hoitovuoden lopun tavoitehintaan ilman indeksikorjausta."]
                              [:li "Seuraavien hoitovuosien osalta tavoitehinnan muutokset siirtyvät automaattisesti Hoitovuoden alun tavoitehinta -välilehdelle indeksikorjattavaksi."]]]]])})
+
+
+       ;; -- Liitekenttä --
+       (first (yhteiset/liite-kentta e! app)))
+
+     ;; --
+
+     ;; Jakaja
+     {:tyyppi :komponentti
+      :uusi-rivi? true
+      :komponentti (fn [_rivi]
+                     [:hr])}
+
+     ;; --
+
+     ;; -- Vaikutukset tavoitehintaan ja suunniteltuihin tehtäviin --
+     (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
+       {:otsikko "Hoitovuosi"
+        :nimi :hoitovuosi
+        :kaariva-luokka "hoitovuosi-valinta"
+        :tyyppi :valinta
+        :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
+        :valinta-nayta #(if %
+                          (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
+                          "Valitse")
+        :valinta-arvo identity}
 
        ;; Taulukko jossa vaikutuksia voidaan syöttää
        (if hoitovuosi
@@ -355,6 +372,4 @@
           :komponentti (fn [_rivi]
                          [:div.perustiedot
                           [yleiset/info-laatikko :neutraali
-                           "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])}))
-
-     (first (yhteiset/liite-kentta e! app))]))
+                           "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])}))]))
