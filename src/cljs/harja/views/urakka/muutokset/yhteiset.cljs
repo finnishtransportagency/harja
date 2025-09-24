@@ -97,9 +97,7 @@
                                             %)]
                (-> rivi
                  (assoc :voimassa_alkaen arvo)
-                 (assoc :mahdolliset-hoitovuodet-lomakkeella
-                   (filter #(pvm/jalkeen? (first %) arvo)
-                     urakan-hoitokaudet))
+                 (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
                  (resetoi-hoitovuosi-fn))))}))
 
 

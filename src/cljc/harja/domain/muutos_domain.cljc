@@ -52,3 +52,8 @@
   (if (pvm/ennen? urakan-alkupvm (pvm/->pvm "5.10.2024"))
     :muutos
     :vahennys))
+
+(defn muutos-voimassa-kesken-hoitokauden?
+  "Muutoksen voimassaolo alkaa kesken hoitovuoden?"
+  [voimassa-alkaen hoitovuosi]
+  (pvm/valissa? voimassa-alkaen (first hoitovuosi) (second hoitovuosi)))

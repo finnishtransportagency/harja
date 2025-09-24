@@ -217,8 +217,7 @@
           ;; jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
           aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
           ;; vain ne hoitovuodet mahdollisia, jotka ovat voimassa alkaen pvm:n jälkeen eli alkupvm on sen jälkeen
-          mahdolliset-hoitovuodet-lomakkeella (filter #(pvm/jalkeen? (first %) (get-in app [:muokattava-muutos :voimassa_alkaen]))
-                                                (:urakan-hoitokaudet app))
+          mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
           hoitovuosi-lomakkeelle (or (when (and aikaisin-hoitovuosi-jossa-kirjauksia
                                              ;; Varmista, että hoitovuosi on mahdollisissa hoitovuosissa
                                              ;; :budjetoidut_summat voi sisältää arvoja, mutta sellaista hoitovuotta ei

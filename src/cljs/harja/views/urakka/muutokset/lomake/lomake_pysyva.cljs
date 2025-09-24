@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-pysyva
   "Muutokset välilehden lomakkeet - Pysyvä muutos"
-  (:require [reagent.core :as r]
+  (:require [harja.domain.muutos-domain :as muutos-domain]
+            [reagent.core :as r]
 
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -21,10 +22,10 @@
 (defn- pysyvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
   [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
-   {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos}]
+   {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos} voi-muokata?]
   (let [g (grid/grid-ohjaus)]
     (fn [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
-         {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos}]
+         {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos} voi-muokata?]
       (let [valittu-hoitovuoden-alkuvuosi (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
             tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi
                                                                 (:hoitokauden_alkuvuosi %))
@@ -58,9 +59,9 @@
            :tunniste :tehtava
            :tyhja "Ei tietoja"
            :muokkaa-aina true
-           :voi-lisata? true
+           :voi-lisata? voi-muokata?
            :voi-kumota? false
-           :voi-muokata? true
+           :voi-muokata? voi-muokata?
            ;; Otetaan gridin oma poisto-toiminto käytöstä, koska tehdään se erikseen kustomoidulla napilla
            :voi-poistaa? (constantly false)
            :ohjaus g
@@ -158,7 +159,9 @@
           "Tavoitehinnan muutos euroina (+/-)"]
          [kentat/tee-kentta {:elementin-id (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
                              :tyyppi :numero :fmt fmt/euro-opt
-                             :pakollinen? true :input-luokka "tavoitehinnan-muutos-input"
+                             :disabled? (not voi-muokata?)
+                             :pakollinen? true
+                             :input-luokka "tavoitehinnan-muutos-input"
                              :placeholder "Syötä hintavaikutus"}
           (r/wrap muutos-valittuna-hoitovuonna
             (fn [summa]
@@ -239,7 +242,13 @@
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
-  (let [vetolaatikkorivit (into {}
+  (let [hoitovuosi (:hoitovuosi muokattava-muutos)
+        voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
+        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
+        voi-muokata? (or
+                       (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
+                       (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen))
+        vetolaatikkorivit (into {}
                             (map (juxt :toimenpideinstanssi
                                    (fn [rivi]
                                      [pysyvan-muutoksen-vetolaatikko e!
@@ -249,7 +258,8 @@
                                                          :toimenpidekoodi
                                                          :kustannusvaikutukset
                                                          :tehtavat_ja_maarat])
-                                      (select-keys muokattava-muutos [:hoitovuosi :toimenpiteiden-tehtavat :tehtavat_ja_maarat])]
+                                      (select-keys muokattava-muutos [:hoitovuosi :toimenpiteiden-tehtavat :tehtavat_ja_maarat])
+                                      voi-muokata?]
 
                                      #_[pysyvan-muutoksen-vetolaatikko-old e! app rivi]))
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
@@ -267,7 +277,7 @@
               (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
         ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
-        :disabled false
+        :disabled (not voi-muokata?)
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
@@ -278,53 +288,65 @@
   "Pysyvän muutoksen lomakekomponentti"
   [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
 
-  [{:tyyppi :komponentti
-    :uusi-rivi? true
-    :komponentti (fn [_rivi]
-                   [:div.perustiedot
-                    [yleiset/info-laatikko :neutraali
-                     "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
-
-   (lomake/ryhma {:otsikko "Perustiedot"}
-     {:nimi :nimi
-      :otsikko "Nimi"
-      :tyyppi :string
+  (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
+        hoitovuosi (:hoitovuosi muokattava-muutos)]
+    [{:tyyppi :komponentti
       :uusi-rivi? true
-      :pakollinen? true
-      :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
-      ::lomake/col-luokka "perustiedot col-sm-6"}
+      :komponentti (fn [_rivi]
+                     [:div.perustiedot
+                      [yleiset/info-laatikko :neutraali
+                       "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
 
-     (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet true))
-
-   (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
-
-     {:otsikko "Hoitovuosi"
-      :nimi :hoitovuosi
-      :kaariva-luokka "hoitovuosi-valinta"
-      :tarkenne #(str
-                   "Oltava lomakkeelle asetetun "
-                   "'Voimassa alkaen' -pvm:n jälkeen")
-      :tyyppi :valinta
-      :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
-      :valinta-nayta #(if %
-                        (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
-                        "Valitse")
-      :valinta-arvo identity}
-
-     ;; Taulukko jossa vaikutuksia voidaan syöttää
-     (if (:hoitovuosi muokattava-muutos)
-       {:otsikko ""
+     (lomake/ryhma {:otsikko "Perustiedot"}
+       {:nimi :nimi
+        :otsikko "Nimi"
+        :tyyppi :string
         :uusi-rivi? true
-        :nimi :taulukko-pysyvan-muutoksen-vaikutukset
-        :tyyppi :komponentti
-        :komponentti (fn [rivi]
-                       [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
-       {:tyyppi :komponentti
-        :uusi-rivi? true
-        :komponentti (fn [_rivi]
-                       [:div.perustiedot
-                        [yleiset/info-laatikko :neutraali
-                         "Valitse hoitokausi, jotta voit tehdä pysyvän muutoksen."]])}))
+        :pakollinen? true
+        :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
+        ::lomake/col-luokka "perustiedot col-sm-6"}
 
-   (first (yhteiset/liite-kentta e! app))])
+       (yhteiset/+rivi-muutoksen-syy+)
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet))
+
+     (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
+
+       {:otsikko "Hoitovuosi"
+        :nimi :hoitovuosi
+        :kaariva-luokka "hoitovuosi-valinta"
+        :tyyppi :valinta
+        :valinnat (or (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos) [])
+        :valinta-nayta #(if %
+                          (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
+                          "Valitse")
+        :valinta-arvo identity}
+
+       (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
+         {:tyyppi :komponentti
+          :uusi-rivi? true
+          :komponentti (fn [_rivi]
+                         [:div.perustiedot
+                          [yleiset/info-laatikko :neutraali
+                           [:<>
+                            [:p [:b "Muutoksen voimassaolo alkaa kesken hoitovuoden"]]
+                            [:div "Kun tallennat tiedot, ne käsitellään seuraavasti:"]
+                            [:ul
+                             [:li "Ensimmäisen hoitovuoden tavoitehinnan muutos lisätään hoitovuoden lopun tavoitehintaan ilman indeksikorjausta."]
+                             [:li "Seuraavien hoitovuosien osalta tavoitehinnan muutokset siirtyvät automaattisesti Hoitovuoden alun tavoitehinta -välilehdelle indeksikorjattavaksi."]]]]])})
+
+       ;; Taulukko jossa vaikutuksia voidaan syöttää
+       (if hoitovuosi
+         {:otsikko ""
+          :uusi-rivi? true
+          :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+          :tyyppi :komponentti
+          :komponentti (fn [rivi]
+                         [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+         {:tyyppi :komponentti
+          :uusi-rivi? true
+          :komponentti (fn [_rivi]
+                         [:div.perustiedot
+                          [yleiset/info-laatikko :neutraali
+                           "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])}))
+
+     (first (yhteiset/liite-kentta e! app))]))

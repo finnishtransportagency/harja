@@ -165,8 +165,7 @@
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
 
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
-    (let [mahdolliset-hoitovuodet (->> (:urakan-hoitokaudet app)
-                                    (filter #(>= (-> % first pvm/vuosi) 2025)))]
+    (let [mahdolliset-hoitovuodet (:urakan-hoitokaudet app)]
       (-> app
         (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
         (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
@@ -174,8 +173,9 @@
         (assoc-in [:muokattava-muutos :liitteet] [])
         (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] [])
         (assoc-in [:muokattava-muutos :kustannusvaikutukset] [])
-        ;; Ei valita mitään hoitovuotta ennakkoon, vaan ensin valitaan voimassa alkaen pvm, jotta mahdolliset hoitovuodet
-        ;; tulevat hoitovuosi-valintaan saataville oikein
+        ;; TODO: Tarkista halutaanko valita jokin hoitovuosi ennakkoon, vai annetaanko käyttäjän päättää
+        ;;       Esimerkiksi yksi hyvä valinta voisi olla muutokset näkymässä valittu hoitokausi, jolloin käyttäjä
+        ;;       voisi helposti alkaa täyttämään kyseisen hoitokauden tietoja suoraan.
         (assoc-in [:muokattava-muutos :hoitovuosi] nil))))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
