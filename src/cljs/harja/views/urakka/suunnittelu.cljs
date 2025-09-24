@@ -31,7 +31,7 @@
     :kiintiot (= tyyppi :vesivayla-hoito)
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
-    :kustannussuunnitelma (= tyyppi :teiden-hoito)
+    :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
     :uusi-kustannussuunnitelma (and
                                  (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
                                  (or
