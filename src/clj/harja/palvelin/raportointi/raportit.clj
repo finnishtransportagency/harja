@@ -216,15 +216,17 @@
     :urakkatyyppi #{:hoito}}
 
    {:nimi         :tyomaakokous
-    :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöt"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat"}
+    :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöt" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Tehtävämäärät" :oletusarvo true}
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Välitavoitteet" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Soratietarkastukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laaduntarkastusraportti"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Tiestötarkastukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Kelitarkastusraportti"}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti"}
                    {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ilmoitukset"}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Toimenpiteiden ajoittuminen"}

@@ -684,6 +684,13 @@
   [vuosi]
   (formatoi fi-pvm (hoitokauden-loppupvm vuosi)))
 
+(defn vuodesta-hoitokausi
+  "Palauttaa vuosiluvusta (hoitokauden alkuvuosi) vektroin joka on hoitovuosi ja jolla on alku- ja loppupvm"
+  [vuosi]
+  (when (and vuosi (number? vuosi))
+    [(paivan-alussa (hoitokauden-alkupvm vuosi))
+     (paivan-lopussa (hoitokauden-loppupvm (inc vuosi)))]))
+
 (defn hoitokausi-str-alkuvuodesta
   "Ottaa sisään hoitokauden alkuvuodesta, palauttaa formatoidun hoitokauden esim. alasvetovalintaa varten muodossa 1.10.2021-30.09.2022"
   [hk-alkuvuosi]

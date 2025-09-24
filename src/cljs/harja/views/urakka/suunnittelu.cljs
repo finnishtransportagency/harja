@@ -65,7 +65,7 @@
                   (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
-          "Uusi Kustannussuunnitelma"
+          "Hoitovuoden alun tavoitehinta"
           :uusi-kustannussuunnitelma
           (when (and
                   (valilehti-mahdollinen? :uusi-kustannussuunnitelma ur)

@@ -241,8 +241,11 @@
   (or placeholder
     (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
-                                :as kentta} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
+                                       aputeksti regex focus on-focus on-blur lomake?
+                                       toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
+                               data]
+
   [:input {:class (cond-> nil
                     (and lomake?
                       (not vayla-tyyli?)) (str "form-control ")
@@ -793,12 +796,14 @@
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? 
+                            disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
                   {:checked valittu?})
         selite (:selite opts)
+        vaihtoehto-disabloitu? (:disabloitu? opts)
         valittu-komponentti (:valittu-komponentti opts)]
     [:<>
      [:div {:class (if (false? kaari-flex-row?)
@@ -807,7 +812,7 @@
        (merge {:id id
                :type :radio
                :name ryhma
-               :disabled disabloitu?
+               :disabled (if vaihtoehto-disabloitu? vaihtoehto-disabloitu? disabloitu?)
                :class radio-luokka
                :on-change muutos-fn}
          checked)]
