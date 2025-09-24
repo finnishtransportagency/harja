@@ -35,7 +35,13 @@
   hallinta-indeksit
   urakat-yleiset
   hallinta-tarjoushinnat
-  hallinta-rahavaraukset)
+  hallinta-rahavaraukset
+  urakat-suunnittelu-tehtava-ja-maaraluettelo
+  urakat-suunnittelu-kokonaishintaisettyot
+  urakat-suunnittelu-yksikkohintaisettyot
+  urakat-suunnittelu-muutos-ja-lisatyot
+  urakat-suunnittelu-materiaalit
+  urakat-vesivaylasuunnittelu-kiintiot)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
