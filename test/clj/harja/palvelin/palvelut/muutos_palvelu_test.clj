@@ -52,23 +52,99 @@
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
         vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                          :valittu-hoitokausi valittu-hoitokausi})
-        odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 90 :versio 1}),
-                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
-                                      :tehtavat_ja_maarat (list {:hoitokauden_alkuvuosi 2025 :tehtava 3117, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000 :versio 1}),
-                                      :urakka urakka-id, :nimi "Päällysteen paikkausmuutos", :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 3000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 89 :versio 1}),
-                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
-                                      :tehtavat_ja_maarat (list),
-                                      :urakka urakka-id, :nimi "Erillisrahoitettu sorastusmuutos", :id 2, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 3000, :tyyppi "erillisrahoitettu"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 91 :versio 1}),
-                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
+        odotetut-kirjatut-muutokset [{:id 1
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list
+                                                              {:hoitokauden_alkuvuosi 2025
+                                                              :kustannuslaji "hankintakustannukset"
+                                                              :summa 1000
+                                                              :toimenpideinstanssi 90
+                                                              :versio 1})
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi "Päällysteen paikkausmuutos"
+                                      :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."
+                                      :tavoitehinnan-muutos 1000
                                       :tehtavat_ja_maarat (list
-                                                            {:hoitokauden_alkuvuosi 2025 :tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :versio 1}
-                                                            {:hoitokauden_alkuvuosi 2025 :tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30 :versio 1}),
-                                      :urakka urakka-id, :nimi "Tämän hoitovuoden määräpoikkeamamuutos", :id 3, :jjh-muutosten-summa nil,
-                                      :liitteet (list {:id 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list), :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
-                                      :tehtavat_ja_maarat (list), :urakka urakka-id, :nimi nil, :id 4, :jjh-muutosten-summa 1230M, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1230M, :tyyppi "johto-ja-hallintokorvaus"}]]
+                                                            {:edellinen_maara 1000
+                                                             :hoitokauden_alkuvuosi 2025
+                                                             :maaramuutos 100
+                                                             :suunniteltu_maara 0
+                                                             :tehtava 3117
+                                                             :uusi_maara 1100
+                                                             :versio 1})
+                                      :tyyppi "pysyva"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:id 2
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list
+                                                              {:hoitokauden_alkuvuosi 2025
+                                                               :kustannuslaji "hankintakustannukset"
+                                                               :summa 3000
+                                                               :toimenpideinstanssi 89
+                                                               :versio 1})
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi "Erillisrahoitettu sorastusmuutos"
+                                      :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
+                                      :tavoitehinnan-muutos 3000
+                                      :tehtavat_ja_maarat ()
+                                      :tyyppi "erillisrahoitettu"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:id 3
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list
+                                                              {:hoitokauden_alkuvuosi 2025
+                                                              :kustannuslaji "hankintakustannukset"
+                                                              :summa 1000
+                                                              :toimenpideinstanssi 91
+                                                              :versio 1})
+                                      :liitteet (list {:id 11
+                                                  :muutos 3})
+                                      :luonnos false
+                                      :nimi "Tämän hoitovuoden määräpoikkeamamuutos"
+                                      :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa."
+                                      :tavoitehinnan-muutos 1000
+                                      :tehtavat_ja_maarat (list
+                                                            {:edellinen_maara 40
+                                                            :hoitokauden_alkuvuosi 2025
+                                                            :maaramuutos -40
+                                                            :suunniteltu_maara nil
+                                                            :tehtava 1406
+                                                            :uusi_maara 0
+                                                            :versio 1}
+                                                           {:edellinen_maara 30
+                                                            :hoitokauden_alkuvuosi 2025
+                                                            :maaramuutos -30
+                                                            :suunniteltu_maara 8
+                                                            :tehtava 3029
+                                                            :uusi_maara 0
+                                                            :versio 1})
+                                      :tyyppi "maarapoikkeama"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:id 4
+                                      :jjh-muutosten-summa 1230M
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset ()
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi nil
+                                      :syy "Työmääräarviot ylittyivät"
+                                      :tavoitehinnan-muutos 1230M
+                                      :tehtavat_ja_maarat ()
+                                      :tyyppi "johto-ja-hallintokorvaus"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"}]]
     (is (= (count (:kirjatut-muutokset vastaus)) 4) "oikea määrä muutoksia")
     (is (= (:kirjatut-muutokset vastaus) odotetut-kirjatut-muutokset))))
 
@@ -422,15 +498,15 @@
                                      {:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 2988 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 2989 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 2991 :uusi_maara 0 :versio 2}
+                           {:tehtava 2988 :hoitokauden_alkuvuosi 2025 :suunniteltu_maara 0 :maaramuutos 111 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 2989 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 222 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 2991 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 333 :uusi_maara nil :edellinen_maara nil :versio 2}
                            ;; Tämä rivi on poistettu, joten sitä ei pitäisi enää löytyä muualta kuin historiasta versiolla 1
-                           #_{:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 3117 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 3117 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 3117 :uusi_maara 0 :versio 2}
+                           #_{:tehtava 3117 :hoitokauden_alkuvuosi 2025 :suunniteltu_maara 0 :maaramuutos 111 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 222 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 333 :uusi_maara nil :edellinen_maara nil :versio 2}
                            ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella ennalleen
-                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3117 :uusi_maara 1100 :versio 1})
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2028 :suunniteltu_maara 0 :maaramuutos 100 :uusi_maara 1100 :edellinen_maara 1000 :versio 1})
         _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) muutos tehtava-maaramuutos-payload)
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -539,24 +615,27 @@
                                         :syy "Esko tehdä pyöräytti uutta tietä 500 kilometria, täytyy vähän justeerata määriä"
                                         :tavoitehinnan-muutos 2222
                                         :tehtavat_ja_maarat (list
-                                                              {:hoitokauden_alkuvuosi 2025
-                                                               :edellinen_maara 0
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
                                                                :maaramuutos 10
+                                                               :suunniteltu_maara 0
                                                                :tehtava 1448
-                                                               :uusi_maara 0
+                                                               :uusi_maara nil
                                                                :versio 1}
-                                                              {:hoitokauden_alkuvuosi 2025
-                                                               :edellinen_maara 0
-                                                              :maaramuutos 111
-                                                              :tehtava 2988
-                                                              :uusi_maara 0
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 2988
+                                                               :uusi_maara nil
                                                                :versio 1}
-                                                             {:hoitokauden_alkuvuosi 2025
-                                                              :edellinen_maara 0
-                                                              :maaramuutos 111
-                                                              :tehtava 3117
-                                                              :uusi_maara 0
-                                                              :versio 1})
+                                                              {:edellinen_maara 1000
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 3117
+                                                               :uusi_maara 1100
+                                                               :versio 1})
                                         :tyyppi "pysyva"
                                         :urakka urakka-id
                                         :versio 1
@@ -605,24 +684,27 @@
                                         :syy "Esko teki 100 km lisää tietä, pitääpä justeerata määriä uudestaan"
                                         :tavoitehinnan-muutos 1113
                                         :tehtavat_ja_maarat (list
-                                                              {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 10
-                                                              :tehtava 1448
-                                                              :uusi_maara 0
-                                                              :versio 1}
-                                                             {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 2
-                                                              :tehtava 2988
-                                                              :uusi_maara 0
-                                                              :versio 2}
-                                                             {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 111
-                                                              :tehtava 3117
-                                                              :uusi_maara 0
-                                                              :versio 1})
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 10
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 1448
+                                                               :uusi_maara nil
+                                                               :versio 1}
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 2
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 2988
+                                                               :uusi_maara nil
+                                                               :versio 2}
+                                                              {:edellinen_maara 1000
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 3117
+                                                               :uusi_maara 1100
+                                                               :versio 1})
                                         :tyyppi "pysyva"
                                         :urakka 45
                                         :versio 2
@@ -778,24 +860,28 @@
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2025
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2026
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2027
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2028
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3117
                                                                               :uusi_maara 1100
                                                                               :versio 1})

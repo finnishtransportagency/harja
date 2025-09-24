@@ -125,7 +125,7 @@
             :muokattava? (constantly false)}
 
            {:otsikko "Suunniteltu määrä"
-            :nimi :edellinen_maara
+            :nimi :suunniteltu_maara
             :tyyppi :positiivinen-numero
             :leveys 10
             :muokattava? (constantly false)}
@@ -140,7 +140,7 @@
             :tyyppi :numero
             :leveys 20
             :muokattava? (constantly false)
-            :hae (fn [rivi] (+ (:suunniteltu-maara rivi) (:maaramuutos rivi)))}
+            :hae (fn [rivi] (+ (or (:suunniteltu_maara rivi) 0) (:maaramuutos rivi)))}
 
            ;; Kustomoitu poisto-nappi, joka korvaa gridin oman poisto-toiminnon
            {:otsikko ""

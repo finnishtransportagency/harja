@@ -582,9 +582,12 @@
       (when (pos? (:tehtava maaramuutos))
         (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
                             (assoc maaramuutos
-                              ;; TODO: Nämä pitäisi laskea
-                              :uusi_maara 0
-                              :edellinen_maara 0))]
+                              ;; TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                              ;;       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                              ;;       lasketaan. Katsotaan myöhemmin voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                              ;;       Ja kuinka monimutkaiseksi useamman muutoksen tietojen yhdistely menee.
+                              #_:uusi_maara 0
+                              #_:edellinen_maara 0))]
           (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 

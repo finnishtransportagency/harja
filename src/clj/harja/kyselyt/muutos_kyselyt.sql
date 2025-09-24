@@ -42,14 +42,23 @@ SELECT m.id,
            (SELECT JSON_AGG(
                        JSONB_BUILD_OBJECT(
                            'tehtava', tjm.tehtava,
-                           'edellinen_maara', tjm.edellinen_maara,
+                           'suunniteltu_maara', ut.maara,
                            'maaramuutos', tjm.maaramuutos,
+                           -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                           --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                           --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                           'edellinen_maara', tjm.edellinen_maara,
                            'uusi_maara', tjm.uusi_maara,
                            'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                            'versio', tjm.versio)
                        ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
                    )
               FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+                   LEFT JOIN urakka_tehtavamaara ut
+                             ON ut.urakka = :urakka
+                                 AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
+                                 AND ut.poistettu IS NOT TRUE
+                                 AND tjm.tehtava = ut.tehtava
              WHERE tjm.muutos = m.id
                AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
            '[]'::json) AS tehtavat_ja_maarat,
@@ -307,14 +316,23 @@ SELECT
         (SELECT JSON_AGG(
                     JSONB_BUILD_OBJECT(
                         'tehtava', tjm.tehtava,
-                        'edellinen_maara', tjm.edellinen_maara,
+                        'suunniteltu_maara', ut.maara,
                         'maaramuutos', tjm.maaramuutos,
+                        -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                        --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                        --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                        'edellinen_maara', tjm.edellinen_maara,
                         'uusi_maara', tjm.uusi_maara,
                         'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                         'versio', tjm.versio)
                     ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
                 )
            FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+                LEFT JOIN urakka_tehtavamaara ut
+                          ON ut.urakka = :urakka
+                              AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
+                              AND ut.poistettu IS NOT TRUE
+                              AND tjm.tehtava = ut.tehtava
           WHERE tjm.muutos = m.id
             AND tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id)),
         '[]'::json) AS tehtavat_ja_maarat,
