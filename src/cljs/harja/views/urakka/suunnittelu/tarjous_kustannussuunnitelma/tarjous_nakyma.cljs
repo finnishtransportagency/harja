@@ -270,12 +270,7 @@
         :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
         :tasaa :oikea
         :muokattava? (constantly false)}])
-    (let [erillishankinnat-tiedot (:erillishankinnat app)]
-      (if (empty? erillishankinnat-tiedot)
-        ;; Jos ei ole tietoja, näytetään tyhjä rivi muokkausta varten
-        [{:nimi "Erillishankinnat" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0 :osio "erillishankinnat"}]
-        ;; Muutoin käytetään oikeaa dataa
-        erillishankinnat-tiedot))]))
+    (:erillishankinnat app)]))
 
 (defn hoidonjohtopalkkio-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys app]
   (let [hoidonjohtopalkkio-tiedot (:hoidonjohtopalkkiot app)
@@ -287,7 +282,7 @@
       :voi-muokata? true
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
-      :voi-lisata? true
+      :voi-lisata? false
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
@@ -310,12 +305,7 @@
          :muokattava? (constantly false) :luokka "yhteensa"
          :hae (fn [rivi] (tarjous-tiedot/laske-rivit-yhteen rivi))
          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
-
-     (if (empty? hoidonjohtopalkkio-tiedot)
-       ;; Jos ei ole tietoja, näytetään tyhjä rivi muokkausta varten
-       [{:nimi "Hoidonjohtopalkkio" :yhteensa 0 :vuosi-2021 0 :vuosi-2022 0 :vuosi-2023 0 :vuosi-2024 0 :vuosi-2025 0 :eperhoitovuosi 0 :osio "hoidonjohtopalkkio"}]
-       ;; Muutoin käytetään oikeaa dataa
-       hoidonjohtopalkkio-tiedot)]))
+     hoidonjohtopalkkio-tiedot]))
 
 (defn tavoite-ja-kattohinta-grid [e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
   (let [hankinnat-tiedot (:hankinnat app)

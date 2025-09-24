@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as clj-set]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
@@ -9,9 +10,28 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]))
 
+(defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
+  (let [olemassa-olevat-osiot (set (map :osio (:tarjous tarjous)))
+        puuttuvat-osiot (clj-set/difference
+                          #{"erillishankinnat" "hoidonjohtopalkkio"}
+                          olemassa-olevat-osiot)
+        hoitovuosittaiset-arvot (mapcat :hoitovuosittaiset-arvot (:tarjous tarjous))
+        nollatut-hoitovuosittaiset-arvot (mapv #(assoc % :summa (or (:summa %) 0)) hoitovuosittaiset-arvot)]
+
+    (into (array-map) (concat
+                        tarjous
+                        (map (fn [osio]
+                               {:nimi (case osio
+                                        "erillishankinnat" "Erillishankinnat"
+                                        "hoidonjohtopalkkio" "Hoidonjohtopalkkio")
+                                :osio osio
+                                :hoitovuosittaiset-arvot nollatut-hoitovuosittaiset-arvot
+                                :yhteensa 0})
+                          puuttuvat-osiot)))))
+
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (tarjous-kyselyt/hae-tarjous db urakka-id))
+  (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id)))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
