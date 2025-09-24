@@ -24,7 +24,7 @@
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :tavoitehinnan-muutokset
     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
-    :otsikko "Tavoitehinnan muutokset"
+    :otsikko "Kirjatut muutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos tavoitehinnan-muutokset)) ;; todo
     :toiminnot (fn [e! app]
                  [::span
