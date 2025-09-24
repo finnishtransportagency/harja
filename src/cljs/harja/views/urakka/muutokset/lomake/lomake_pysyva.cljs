@@ -273,7 +273,7 @@
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
     [:div.toimenpiteiden-tiedot
      ;; Näytä debug-info kehittäjille
-     [debug muokattava-muutos]
+     #_[debug muokattava-muutos]
 
      ;; Header vihje sekä nappi
      [:div.pysyvan-muutoksen-grid-header
