@@ -2,6 +2,7 @@
   "Tuck-apureita"
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
+            [tuck.effect :as tuck-effect]
             [harja.loki :refer [log]]
             [cljs.core.async :as async :refer [<! >! chan timeout unsub pub put! close!]]
             [harja.asiakas.kommunikaatio :as k])
@@ -129,6 +130,7 @@
 (defrecord MuutaTila [polku arvo])
 (defrecord PaivitaTila [polku f])
 (defrecord AloitaViivastettyjenEventtienKuuntelu [viive kanava])
+(defrecord DebounceEffect [effect])
 
 (extend-protocol tuck/Event
   MuutaTila
@@ -155,4 +157,31 @@
                                                                (do (e! event)
                                                                    true)))})
                                       (<! kanava))))))
-    app))
+    app)
+
+  DebounceEffect
+  (process-event [{:keys [effect]} app]
+    (tuck/fx app effect)))
+
+
+;; Tuck effects apureita
+
+(defmethod tuck-effect/process-effect :laukaise-event [e! {:keys [event]}]
+  (assert event "Määrittele event")
+  (if (fn? event)
+    (e! (event))
+    (e! event)))
+
+(defonce debounce-timeouts (atom {}))
+(defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id]}]
+  (let [timeout-id (or id event)
+        existing-timeout (get @debounce-timeouts timeout-id)]
+    (when existing-timeout
+      (.clearTimeout js/window existing-timeout))
+    (swap! debounce-timeouts
+      assoc timeout-id
+      (.setTimeout js/window #(do
+                                (swap! debounce-timeouts dissoc timeout-id)
+                                (if event
+                                  (e! (event))
+                                  (e! (->DebounceEffect effect)))) timeout))))
