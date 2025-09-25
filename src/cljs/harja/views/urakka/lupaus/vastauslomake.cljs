@@ -12,9 +12,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.ui.yleiset :as y]
-            [harja.ui.debug :refer [debug]]))
+            [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
   (let [listauksessa? false
@@ -30,9 +28,8 @@
           ^{:key (str "kk-vastaukset-" (hash lupaus-kuukausi))}
           [:div (when (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
                   {:on-click (fn [e]
-                               (do
-                                 (.preventDefault e)
-                                 (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi)))))})
+                               (.preventDefault e)
+                               (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi))))})
            [kuukausivastauksen-status e! lupaus-kuukausi lupaus app]]))]]))
 
 (defn- sisalto [e! vastaus]
@@ -112,8 +109,8 @@
                   {:keys [haku-kaynnissa? lisays-kaynnissa? poisto-kaynnissa? lupaus->kuukausi->kommentit]}
                   {:keys [vastauskuukausi lupaus-id]}]
   [:div.lupaus-kommentit
-   [y/himmennys {:himmenna? (or haku-kaynnissa? lisays-kaynnissa? poisto-kaynnissa?)
-                 :himmennyksen-sisalto [y/ajax-loader]}
+   [yleiset/himmennys {:himmenna? (or haku-kaynnissa? lisays-kaynnissa? poisto-kaynnissa?)
+                 :himmennyksen-sisalto [yleiset/ajax-loader]}
     [:<>
      (when-let [kommentit (get-in lupaus->kuukausi->kommentit [lupaus-id vastauskuukausi])]
        [:<>
@@ -154,25 +151,26 @@
   [:fieldset.tiiviit-labelit.margin-bottom-16 {:style {:padding "0 32px 0 32px"}}
    (when otsikko
      [:legend.lihavoitu.sivupalkki-footer-otsikko.margin-bottom-4  otsikko])
-   [y/himmennys {:himmenna? disabled?
+   [yleiset/himmennys {:himmenna? disabled?
                  :himmennyksen-sisalto (when ladataan?
-                                         [y/ajax-loader])}
+                                         [yleiset/ajax-loader])}
     [kentat/tee-kentta
      {:tyyppi :radio-group
-      :radio-luokka "tiivis"
       :nimi :id
       :disabloitu? disabled?
       :nayta-rivina? false
       :vayla-tyyli? true
       :vaihtoehto-arvo :id
+      :vaihtoehto-opts {:luokka "radio-column-valja"}
       :vaihtoehto-nayta (fn [arvo]
                           (let [vaihtoehto-tekstiksi #(cond
                                                         (nil? %) ""
                                                         (str/includes? % "<=") (str/replace % "<=" "alle tai yhtäsuuri kuin")
-                                                        (str/includes? % ">") (str/replace % ">" "suurempi kuin") 
+                                                        (and (str/includes? % ">") (not (str/includes? % "<br>")) (not (str/includes? % "<ul>"))) (str/replace % ">" "suurempi kuin")
                                                         :else %)]
                             [:div {:style {:flex-shrink 0 :flex-grow 1 :flex-direction "row" :display "flex"}}
-                             [:div {:style {:flex-grow 1 :text-align "left"}} (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
+                             [:div {:style {:flex-grow 1 :text-align "left"}
+                                    :dangerouslySetInnerHTML {:__html (vaihtoehto-tekstiksi (:vaihtoehto arvo))}}  #_ (:vaihtoehto arvo) #_  (vaihtoehto-tekstiksi (:vaihtoehto arvo))]
                              [:div {:style {:flex-grow 1 :text-align "right"}}
                               (when-not (:vaihtoehto-seuraava-ryhma-id arvo)
                                 (str " " (:pisteet arvo) (when (:pisteet arvo) " pistettä")))]]))
@@ -247,7 +245,8 @@
              [:h4 miten-kuukausi-meni-str]]
             (if (every? #(nil? (get % :vaihtoehto-askel)) vaihtoehdot)
               ;; Yksi monivalinta
-              [monivalinta e! {:vaihtoehdot vaihtoehdot
+              [monivalinta e! {:otsikko (:ryhma-otsikko (first vaihtoehdot))
+                               :vaihtoehdot vaihtoehdot
                                :lupaus lupaus
                                :kohdekuukausi kohdekuukausi
                                :kohdevuosi kohdevuosi
