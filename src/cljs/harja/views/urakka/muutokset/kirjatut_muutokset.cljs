@@ -30,7 +30,14 @@
         :rivin-luokka (fn [arvo _]
                         (let [rivin-id (:id arvo)
                               viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
-                          (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))}
+                          (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
+        :rivi-jalkeen-fn (fn [rivit]
+                           (let [tavoitehinnan-muutokset (map :tavoitehinnan-muutos rivit)
+                                 tavoitehinnan-muutokset-yhteensa (apply + tavoitehinnan-muutokset)]
+                             [{:teksti "Hoitovuoden lopun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
+                              {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                              {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                              {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
        ;; Taulukon kentät
        [{:otsikko "Tyyppi"
