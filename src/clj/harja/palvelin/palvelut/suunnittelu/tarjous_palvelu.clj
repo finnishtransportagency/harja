@@ -1,28 +1,38 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.set :as clj-set]
+            [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.domain.oikeudet :as oikeudet]
+            [clojure.pprint :as pprint]
             [harja.pvm :as pvm]))
+
+(defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
+  (let [tarjous-tiedot (:tarjous tarjous)
+        nollatut-arvot (mapv (fn [osio]
+                               (update osio :hoitovuosittaiset-arvot
+                                 (fn [arvot]
+                                   (mapv #(update % :summa (fn [a] (if (nil? a) 0.00M a))) arvot))))
+                         tarjous-tiedot)]
+    (assoc tarjous :tarjous nollatut-arvot)))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (tarjous-kyselyt/hae-tarjous db urakka-id))
+  (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id)))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
   palauttaa tyhjät tiedot, jotka voidaan täyttää uudelleen."
   [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user (:urakka-id tiedot))
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka-id tiedot)}))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        tarjous {:urakka-id (:urakka-id tiedot)
-                 :kaikki-toimenkuvat (if (>= urakan-alkuvuosi 2025)
-                                       (toimenkuva-kyselyt/hae-toimenkuvat db)
-                                       nil)
+  (let [tarjous {:urakka-id (:urakka-id tiedot)
+                 :kaikki-toimenkuvat (map #(assoc %
+                                             :toimenkuva (:nimi %)
+                                             :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
                  :tarjous (tarjous-kyselyt/luo-default-tarjous db (:urakka-id tiedot))}]
     tarjous))
 

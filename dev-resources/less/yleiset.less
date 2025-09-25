@@ -404,7 +404,7 @@ button > .ajax-loader {
     display: flex;
     gap: @valistys-8;
     margin: @valistys-8 0;
-    padding: @valistys-12;
+    padding: @valistys-12; 
     align-items: center;
     svg {
       vertical-align: middle;
@@ -788,4 +788,38 @@ button > .ajax-loader {
 
 .poista-label-top-margin > label {
   margin-top: 0px;
+}
+
+// Tallentamisen tatus-viestien tyylit
+.grid-status-viestit {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  
+  .status-viesti {
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    border: 1px solid;
+    
+    &.tallennettu {
+      background-color: @white-dark;
+      border-color: @white-darker;
+      color: @black-light;
+    }
+    
+    &.tallentamatta {
+      background-color: @red-lighter;
+      border-color: @red-light;
+      color: @red-default;
+    }
+    
+    &.ei-muutoksia {
+      background-color: @gray250;
+      border-color: @gray220;
+      color: @gray100;
+    }
+  }
 }
