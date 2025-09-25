@@ -29,7 +29,7 @@ CREATE TABLE lupaus_kustannusennuste (
     id SERIAL PRIMARY KEY,
     "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
     "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
-    hoitovuosi_alkuvuosi INTEGER NOT NULL,
+    hoitovuosi INTEGER NOT NULL,
     maarapaiva DATE NOT NULL,
     ennustettu_tavoitehinta DECIMAL(15,2),
     ennustetut_kustannukset DECIMAL(15,2),
