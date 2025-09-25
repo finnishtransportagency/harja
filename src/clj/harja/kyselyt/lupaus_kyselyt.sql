@@ -464,3 +464,13 @@ INNER JOIN lupaus l ON l.id = ke."lupaus-id"
 WHERE ke."urakka-id" = :urakka-id
   AND ke.hoitovuosi_alkuvuosi = :hoitokauden-alkuvuosi
   AND l.lupaustyyppi = 'kustannusennuste';
+
+-- name: hae-kustannusennuste-maarapaivat
+-- Hakee kustannusennusteen määräpäivätiedot urakan alkuvuoden perusteella
+SELECT kuukausi, 
+       paiva, 
+       kuvaus,
+       MAKE_DATE(:hoitokauden-alkuvuosi + CASE WHEN kuukausi >= 10 THEN 0 ELSE 1 END, kuukausi, paiva) AS maarapaiva_pvm
+FROM lupaus_kustannusennuste_kuukausi_pisteet 
+WHERE "urakan-alkuvuosi" = :urakan-alkuvuosi
+ORDER BY kuukausi;
