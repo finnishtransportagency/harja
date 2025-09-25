@@ -9,6 +9,7 @@ module.exports = defineConfig({
     toConsole: true,
   },
   e2e: {
+    pageLoadTimeout: 180000,
     // We've imported your old cypress plugins here.
     // You may want to clean this up later by importing these.
     setupNodeEvents(on, config) {

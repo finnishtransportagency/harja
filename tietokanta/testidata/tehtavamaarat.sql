@@ -179,3 +179,306 @@ WHERE nimi = 'Sorastus';
 -- Korjataan sorastuksen yksikkö
 UPDATE tehtava SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
 WHERE nimi = 'Sorastus';
+
+
+
+CREATE OR REPLACE FUNCTION tehtavamaara_testidata_vuodelle(
+  p_urakka text,         -- 'Iin MHU 2021-%'
+  p_hoitovuosi int       -- 2025
+) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+  v_urakka_id int;
+  v_kayttaja_id int;
+BEGIN
+  SELECT id INTO v_urakka_id FROM urakka WHERE nimi LIKE p_urakka LIMIT 1;
+  SELECT id INTO v_kayttaja_id FROM kayttaja WHERE kayttajanimi = 'Integraatio' LIMIT 1;
+
+  IF v_urakka_id IS NULL THEN  
+    RAISE EXCEPTION 'Urakkaa ei löydy: %', p_urakka;
+  END IF;
+
+  IF v_kayttaja_id IS NULL THEN
+    RAISE EXCEPTION 'Käyttäjää ei löydy.';
+  END IF;
+
+  INSERT INTO urakka_tehtavamaara
+    (urakka,"hoitokauden-alkuvuosi",tehtava,maara,poistettu,luotu,luoja,muokattu,muokkaaja,"muuttunut-tarjouksesta?")
+  VALUES
+    (v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunantäyttö'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ojitus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunapalteen poisto'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden pölynsidonta (jkm)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunapaalujen kunnossapito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ic ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Is ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ib ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Hiekkalaatikoiden täyttö ja hiekkalaatikoiden edustojen lumityöt'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka I'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Lisäkalustovalmius/-käyttö'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Portaiden talvihoito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten puhdistus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Talvihoidon kohotettu laatu'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja pysäköimisalueet'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'K2'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'K1'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kävely- ja pyöräilyväylien laatukäytävät'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'III'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'II'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ic rampit'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ic 1-ajorat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ic 2-ajorat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ib rampit'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ib 1-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ib 2-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Is rampit'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Is 1-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Is 2-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise rampit'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise 1-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise 2-ajorat.'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pölynsidonta (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus T'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Katupölynsidonta'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Graffitien poisto'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateitä kaventava ojitus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Soratieluokka I'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Soratieluokka II'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden sr-pientareen täyttö'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden pientareiden täyttö'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Soratien runkokelirikkokorjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Muiden alueiden talvihoito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikennemerkkien ja opasteiden kunnossapito (oikominen, pesu yms.)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Muut tie- levähdys- ja liitännäisalueiden puhtaanpitoon ja kalusteiden hoitoon liittyvät työt'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden ja aitojen tarkastaminen ja vaurioiden korjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunakivivaurioiden korjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Laskuojat/päällystetyt tiet'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Laskuojat/soratiet'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen uusiminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen poistaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kuumapäällyste'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Puhallus-SIP'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Massasaumaus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Valuasfaltti'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunantäyttö km'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikennemerkkipylvään tehostamismerkkien uusiminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Siltakeilojen sidekiveysten purkaumien, suojaverkkojen ja kosketussuojaseinien pienet korjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Varalaskupaikkojen hoito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Meluesteiden pienten vaurioiden korjaaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Aitojen vaurioiden korjaukset'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Tunneleiden ylläpito'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Nopeusnäyttötaulun hankinta'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden kunnostaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden rakentaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunapaalujen uusiminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Apitunnus-testitehtävä'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Apitunnus-testitehtävä, tupla'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'PAB-paikkaus levittäjällä'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'KT-reikävaluasfalttipaikkaus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus K'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttisaumaus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sohjo-ojien teko'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	-- Määrämitattavat 
+	-- Opastetaulut
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen'),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'),20,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen'),7,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet'),14,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	-- Poistot , jm 
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden poisto ja uusiminen'),11,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Runkopuiden poisto'),34,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'),14,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	-- m3 
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Maakivien (>1m3) poisto'),16,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	-- Rummut, Tonnia 
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet'),48,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, soratiet'),11,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, soratiet'),24,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Rumpujen sulatus, aukaisu ja toiminnan varmistaminen'),34,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm'),41,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø <= 600 mm'),8,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm'),61,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen  Ø> 600  <= 800 mm'),13,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	-- Ojitus, jm 
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet'),1600,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)'),4500,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/soratiet'),1100,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/soratiet (kaapeli kaivualueella)'),9500,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true);
+
+  INSERT INTO sopimus_tehtavamaara
+    (urakka,tehtava,maara,muokattu,muokkaaja,hoitovuosi)
+  VALUES
+	-- Määrämitattavat 
+	-- Opastetaulut
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen'),7,'2025-08-18 08:09:23.831',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet'),14,'2025-08-18 08:09:23.835',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen'),6,'2025-08-18 08:09:23.839',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen'),6,'2025-08-18 08:10:19.324',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'),20,'2025-08-18 08:10:21.266',v_kayttaja_id,p_hoitovuosi),
+	-- Poistot , jm 
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'),14,'2025-08-18 08:09:23.86',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Runkopuiden poisto'),34,'2025-08-18 08:09:23.848',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden poisto ja uusiminen'),11,'2025-08-18 08:09:24.379',v_kayttaja_id,p_hoitovuosi),
+	-- m3 
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Maakivien (>1m3) poisto'),16,'2025-08-18 08:09:24.266',v_kayttaja_id,p_hoitovuosi),
+	-- Rummut, Tonnia 
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen  Ø> 600  <= 800 mm'),13,'2025-08-18 08:09:23.856',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø <= 600 mm'),8,'2025-08-18 08:09:23.817',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm'),61,'2025-08-18 08:09:23.82',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm'),41,'2025-08-18 08:09:23.852',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Rumpujen sulatus, aukaisu ja toiminnan varmistaminen'),34,'2025-08-18 08:09:23.879',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet'),48,'2025-08-18 08:09:24.272',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, soratiet'),11,'2025-08-18 08:09:24.278',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, soratiet'),24,'2025-08-18 08:09:24.285',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet'),0,'2025-08-18 08:10:44.516',v_kayttaja_id,p_hoitovuosi),
+	-- Ojitus, jm 
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet'),1600,'2025-08-18 08:09:23.824',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)'),4500,'2025-08-18 08:09:23.828',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/soratiet'),1100,'2025-08-18 08:09:23.93',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/soratiet (kaapeli kaivualueella)'),9500,'2025-08-18 08:09:23.937',v_kayttaja_id,p_hoitovuosi),
+	-- 
+	-- Loput 0
+	--
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liikennemerkkien ja opasteiden kunnossapito (oikominen, pesu yms.)'),0,'2025-08-18 08:09:23.872',v_kayttaja_id,p_hoitovuosi),
+  	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus T'),0,'2025-08-18 08:09:24.434',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Katupölynsidonta'),0,'2025-08-18 08:09:23.795',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Graffitien poisto'),0,'2025-08-18 08:09:23.844',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateitä kaventava ojitus'),0,'2025-08-18 08:09:23.792',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Soratieluokka I'),0,'2025-08-18 08:09:23.798',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Soratieluokka II'),0,'2025-08-18 08:09:23.802',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden sr-pientareen täyttö'),0,'2025-08-18 08:09:23.805',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden pientareiden täyttö'),0,'2025-08-18 08:09:23.809',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Soratien runkokelirikkokorjaukset'),0,'2025-08-18 08:09:23.864',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Muiden alueiden talvihoito'),0,'2025-08-18 08:09:23.868',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Muut tie- levähdys- ja liitännäisalueiden puhtaanpitoon ja kalusteiden hoitoon liittyvät työt'),0,'2025-08-18 08:09:23.875',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden ja aitojen tarkastaminen ja vaurioiden korjaukset'),0,'2025-08-18 08:09:23.883',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunakivivaurioiden korjaukset'),0,'2025-08-18 08:09:23.887',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset'),0,'2025-08-18 08:09:23.891',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Tilaajan rahavaraus lupaukseen 1 / kannustinjärjestelmään'),0,'2025-08-18 08:09:23.896',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Laskuojat/päällystetyt tiet'),0,'2025-08-18 08:09:23.901',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Laskuojat/soratiet'),0,'2025-08-18 08:09:23.905',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen uusiminen'),0,'2025-08-18 08:09:23.91',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä'),0,'2025-08-18 08:09:23.92',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon'),0,'2025-08-18 08:09:23.925',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)'),0,'2025-08-18 08:09:23.942',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pölynsidonta (materiaali)'),0,'2025-08-18 08:09:23.947',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise 2-ajorat.'),0,'2025-08-18 08:09:23.951',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise 1-ajorat.'),0,'2025-08-18 08:09:23.957',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise rampit'),0,'2025-08-18 08:09:23.962',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Is 2-ajorat.'),0,'2025-08-18 08:09:23.969',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Is 1-ajorat.'),0,'2025-08-18 08:09:23.974',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Is rampit'),0,'2025-08-18 08:09:23.979',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ib 2-ajorat.'),0,'2025-08-18 08:09:23.984',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ib 1-ajorat.'),0,'2025-08-18 08:09:23.99',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ib rampit'),0,'2025-08-18 08:09:23.995',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ic 2-ajorat'),0,'2025-08-18 08:09:24',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ic 1-ajorat'),0,'2025-08-18 08:09:24.007',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ic rampit'),0,'2025-08-18 08:09:24.013',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'II'),0,'2025-08-18 08:09:24.019',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'III'),0,'2025-08-18 08:09:24.024',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kävely- ja pyöräilyväylien laatukäytävät'),0,'2025-08-18 08:09:24.029',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'K1'),0,'2025-08-18 08:09:24.04',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'K2'),0,'2025-08-18 08:09:24.045',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja pysäköimisalueet'),0,'2025-08-18 08:09:24.05',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Talvihoidon kohotettu laatu'),0,'2025-08-18 08:09:24.055',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten puhdistus'),0,'2025-08-18 08:09:24.062',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Portaiden talvihoito'),0,'2025-08-18 08:09:24.067',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Lisäkalustovalmius/-käyttö'),0,'2025-08-18 08:09:24.073',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka I'),0,'2025-08-18 08:09:24.079',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito'),0,'2025-08-18 08:09:24.085',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Hiekkalaatikoiden täyttö ja hiekkalaatikoiden edustojen lumityöt'),0,'2025-08-18 08:09:24.09',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ib ohituskaistat'),0,'2025-08-18 08:09:24.095',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise ohituskaistat'),0,'2025-08-18 08:09:24.1',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Is ohituskaistat'),0,'2025-08-18 08:09:24.106',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ic ohituskaistat'),0,'2025-08-18 08:09:24.117',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)'),0,'2025-08-18 08:09:24.123',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen poistaminen'),0,'2025-08-18 08:10:54.542',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen'),0,'2025-08-18 08:09:24.128',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II'),0,'2025-08-18 08:09:24.145',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),0,'2025-08-18 08:09:24.15',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)'),0,'2025-08-18 08:09:24.156',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III'),0,'2025-08-18 08:09:24.161',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kuumapäällyste'),0,'2025-08-18 08:09:24.169',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Puhallus-SIP'),0,'2025-08-18 08:09:24.174',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Massasaumaus'),0,'2025-08-18 08:09:24.179',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Valuasfaltti'),0,'2025-08-18 08:09:24.184',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset'),0,'2025-08-18 08:09:24.189',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu'),0,'2025-08-18 08:09:24.201',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)'),0,'2025-08-18 08:09:24.211',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)'),0,'2025-08-18 08:09:24.216',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunapaalujen kunnossapito'),0,'2025-08-18 08:09:24.222',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden pölynsidonta (jkm)'),0,'2025-08-18 08:09:24.233',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunapalteen poisto'),0,'2025-08-18 08:09:24.238',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ojitus'),0,'2025-08-18 08:09:24.244',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunantäyttö km'),0,'2025-08-18 08:09:24.25',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liikennemerkkipylvään tehostamismerkkien uusiminen'),0,'2025-08-18 08:09:24.255',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Juurakkopuhdistamo, selkeytys- ja hulevesiallas sekä -painanne'),0,'2025-08-18 08:09:24.292',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Siltakeilojen sidekiveysten purkaumien, suojaverkkojen ja kosketussuojaseinien pienet korjaukset'),0,'2025-08-18 08:09:24.3',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Varalaskupaikkojen hoito'),0,'2025-08-18 08:09:24.313',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten ja niiden varusteiden vaurioiden kuntoon saattaminen'),0,'2025-08-18 08:09:24.32',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Levähdys- ja P-alueiden varusteiden vaurioiden kuntoon saattaminen'),0,'2025-08-18 08:09:24.327',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Meluesteiden pienten vaurioiden korjaaminen'),0,'2025-08-18 08:09:24.333',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Aitojen vaurioiden korjaukset'),0,'2025-08-18 08:09:24.341',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'),0,'2025-08-18 08:09:24.347',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt'),0,'2025-08-18 08:09:24.353',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Tunneleiden ylläpito'),0,'2025-08-18 08:09:24.36',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)'),0,'2025-08-18 08:09:24.367',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Nopeusnäyttötaulun hankinta'),0,'2025-08-18 08:09:24.373',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden kunnostaminen'),0,'2025-08-18 08:09:24.384',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden rakentaminen'),0,'2025-08-18 08:09:24.389',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunapaalujen uusiminen'),0,'2025-08-18 08:09:24.394',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Apitunnus-testitehtävä'),0,'2025-08-18 08:09:24.399',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Apitunnus-testitehtävä, tupla'),0,'2025-08-18 08:09:24.404',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä'),0,'2025-08-18 08:09:24.41',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'PAB-paikkaus levittäjällä'),0,'2025-08-18 08:09:24.418',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'KT-reikävaluasfalttipaikkaus'),0,'2025-08-18 08:09:24.423',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus K'),0,'2025-08-18 08:09:24.43',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttisaumaus'),0,'2025-08-18 08:09:24.439',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Reunantäyttö'),0,'2025-08-18 08:09:24.446',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sohjo-ojien teko'),0,'2025-08-18 08:10:24.611',v_kayttaja_id,p_hoitovuosi);
+END $$;
+
+-- Iin MHU 2021-2026
+SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2023);
+SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2024);
+SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2025);
+SELECT tehtavamaara_testidata_vuodelle('Iin MHU 2021-%', 2026);
+
+INSERT INTO sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) VALUES 
+((SELECT id FROM urakka WHERE nimi LIKE 'Iin MHU 2021-%'), true);
+
+
+-- Suomussalmen MHU 2024-2029
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2024);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2025);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2026);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2027);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2028);
+
+INSERT INTO harja.public.sopimuksen_tehtavamaarat_tallennettu(urakka, tallennettu)
+VALUES ((SELECT id FROM urakka WHERE nimi LIKE 'POP MHU Suomussalmi 2024-%'), TRUE);
