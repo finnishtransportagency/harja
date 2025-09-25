@@ -323,12 +323,15 @@
                                                                            :hoitokaudet hoitokaudet
                                                                            :valittu-hoitokausi valittu-hoitokausi})
 
-        muutosten-vaikutus-yhteensa (reduce + 0
+        kirjatut-muutokset-yht (reduce + 0
                                       (remove nil?
                                         (concat
-                                          (map :tavoitehinnan-muutos kirjatut-muutokset)
-                                          [(:tavoitehinnan-muutos (last rahavaraukset))]
-                                          (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))]
+                                          (map :tavoitehinnan-muutos kirjatut-muutokset))))
+        toteumiin-perustuvat-muutokset-yht (reduce + 0
+                                               (remove nil?
+                                                 (concat
+                                                   [(:tavoitehinnan-muutos (last rahavaraukset))]
+                                                   (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))]
 
     {;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
      :kirjatut-muutokset kirjatut-muutokset
@@ -341,12 +344,8 @@
      :suunniteltujen-maarien-muutokset []
      :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                          :muutosten-vaikutus-yhteensa muutosten-vaikutus-yhteensa
-                          :hoitovuoden-lopun-tavoitehinta (when (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                                                            (+
-                                                              (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                                                             ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
-                                                              muutosten-vaikutus-yhteensa))}}))
+                          :kirjatut-muutokset-yht kirjatut-muutokset-yht
+                          :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}}))
 
 
 
