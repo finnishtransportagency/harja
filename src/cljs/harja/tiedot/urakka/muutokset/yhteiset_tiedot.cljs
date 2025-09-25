@@ -19,6 +19,7 @@
   nollatut-valinnat {:haku-kaynnissa? false
                      :tallennus-kesken? false
                      :voi-tallentaa? false
+                     :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
                      :kirjatut-muutokset nil
@@ -255,6 +256,7 @@
                 (assoc app :muokattava-muutos rivi))]
       (assoc app 
         :lomake-virheet nil 
+        :voi-tallentaa? true
         :tallenna-painettu? false)))
 
 
@@ -267,7 +269,8 @@
     (let [lomake-virheet (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %))))
           virheita? (empty? (-> lomake ::lomake/virheet vals))]
       (assoc app
-        :voi-tallentaa? virheita?
+        :voi-tallentaa? true
+        :lomakkeella-virheita? (boolean virheita?)
         :lomake-virheet lomake-virheet
         :muokattava-muutos (lomake/ilman-lomaketietoja lomake))))
 
@@ -316,7 +319,7 @@
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
-                           (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-keskipitka)
+                           (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
 
 

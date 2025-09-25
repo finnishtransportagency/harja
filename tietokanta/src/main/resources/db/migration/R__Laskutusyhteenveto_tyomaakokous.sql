@@ -1027,8 +1027,8 @@ BEGIN
 
     -----------------------------------------------------------
     -- Muutokset 
-    muutostyo_val_aika_yht := muutos_erillis_val_aika_yht;
-    muutostyo_hoitokausi_yht := muutos_erillis_hoitokausi_yht;
+    muutostyo_val_aika_yht := muutos_erillis_val_aika_yht + jjh_muutos_val_aika_yht;
+    muutostyo_hoitokausi_yht := muutos_erillis_hoitokausi_yht + jjh_muutos_hoitokausi_yht;
 
     -----------------------------------------------------------
     ------------------- Rahavaraukset -------------------------

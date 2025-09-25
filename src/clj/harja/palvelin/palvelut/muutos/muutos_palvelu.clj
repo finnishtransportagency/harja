@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
+            [slingshot.slingshot :refer [throw+]]
 
             [harja.pvm :as pvm]
             [harja.kokoelmat :as kokoelmat]
@@ -21,6 +22,7 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
 
@@ -592,6 +594,34 @@
           (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 
+(defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi]
+  ;; Jos tehdään muutostyö jolle voi kirjata kuluja 
+  ;; -> tämän jälkeen vaihdetaan voimassa_alkaen päivää 
+  ;; -> pitää tarkistaa voidaanko näin tehdä, esim jos kuluja on jo kirjattu
+  (let [vuosi (when voimassa_alkaen (pvm/vuosi voimassa_alkaen))
+        kk (when voimassa_alkaen (pvm/kuukausi voimassa_alkaen))
+        paiva (when voimassa_alkaen (pvm/paiva voimassa_alkaen))
+        voimassa-alkaen-sql (when voimassa_alkaen (str vuosi "-" kk "-" paiva))
+        vastaus (muutos-kyselyt/tarkista-onko-muutoksella-kuluja-ennen-voimassa-paivaa
+                  db
+                  {:muutos id
+                   :tyyppi (cond
+                             ;; Tähän voi lisätä myös poikkeamatyypin, jos sille voidaan kirjata kuluja
+                             (= alityyppi "erillisrahoitus")
+                             "erillisrahoitettu-muutos"
+
+                             :else nil)
+                   :voimassa voimassa-alkaen-sql})
+        kuluja-kirjattu? (boolean (seq vastaus))]
+    
+    (when kuluja-kirjattu?
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                          :viesti (str
+                                    "Muutostyölle on jo kirjattu kuluja ennen " (pvm/pvm (:voimassa_alkaen muutos)) ". "
+                                    "Tarkista kulujen päivämäärät.")}]}))))
+
+
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
@@ -640,6 +670,10 @@
         maaramuutokset (:tehtavat_ja_maarat muutos)]
 
     (jdbc/with-db-transaction [conn db]
+      
+      (when tyyppi-muutostyo?
+        (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi))
+      
       ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
       ;; Nämä tiedot saadaan muutos-paluurivistä
       (let [aiti-muutos-id-ja-versio (if (:id muutos)

@@ -188,6 +188,15 @@ UPDATE kulu_kohdistus
    SET muutos = :muutos
  WHERE id = :kohdistus-id;
 
+-- name: tarkista-onko-muutoksella-kuluja-ennen-voimassa-paivaa
+SELECT k.id FROM kulu k 
+	LEFT JOIN kulu_kohdistus kk ON kk.kulu = k.id 
+WHERE 
+	kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE  
+  AND k.erapaiva < :voimassa::DATE
+  AND kk.muutos = :muutos; 
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
