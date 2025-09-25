@@ -14,6 +14,8 @@
             [harja.fmt :as fmt]
             [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.yleiset :as y]
             [harja.ui.debug :refer [debug]]))
 
@@ -37,13 +39,11 @@
            [kuukausivastauksen-status e! lupaus-kuukausi lupaus app]]))]]))
 
 (defn kustannusennuste-taulukko []
-  [:div.kustannusennuste-taulukko
-   [:p "Ennustamme urakan hoitovuoden lopun tavoitehintaa ja toteutuvia kustannuksia 4 kertaa vuodessa alla mainittuihin määräpäiviin mennessä."]
-  
+  [:div.kustannusennuste-taulukko 
    [:table.table.table-striped
     [:thead
      [:tr.paivamaara
-      [:th {:colSpan 2} "15.10."]
+      [:th {:colSpan 2} "31.8.*"]
       [:th {:colSpan 2} "15.1."]
       [:th {:colSpan 2} "30.4."]
       [:th {:colSpan 2} "30.6."]]
@@ -68,7 +68,7 @@
       [:td "≤ 4,0 %"] [:td "8"]
       [:td "≤ 2,0 %"] [:td "8"]
       [:td "≤ 1,0 %"] [:td "8"]]]]
-  
+   [:p "*Tulevan hoitovuoden ennuste. Määräpäivä urakan ensimmäisenä hoitovuotena 15.10."]
    [:p "Hoitovuoden toteutuneet lupauspisteet todetaan laskemalla lupaustaulukon mukaan saatujen pisteiden keskiarvo. "
     [:strong "Mikäli jotain ennustetta ei tehdä määräaikaan mennessä, ennusteesta ei saa yhtään pistettä."]]])
 
@@ -81,11 +81,18 @@
      (str (lupaus-domain/numero->kirjain (:lupausryhma-jarjestys vastaus)) ". " (:lupausryhma-otsikko vastaus))]
     [:div.flex-row
      [:h3.vastauslomake-lupaus-jarjestys
-      (str "Lupaus " (:lupaus-jarjestys vastaus))]
+      (str "Lupaus " (:lupaus-jarjestys vastaus))] 
      [:h3.vastauslomake-lupaus-pisteet
-      (if (= "yksittainen" (:lupaustyyppi vastaus))
+      (cond
+        (= "yksittainen" (:lupaustyyppi vastaus))
         (:pisteet vastaus)
-        (str "Pisteet 0 - " (:kyselypisteet vastaus)))]]
+        
+        (= "kustannusennuste" (:lupaustyyppi vastaus))
+        (str "Pisteet 0 - " (:pisteet vastaus))
+        
+        ;; kysely ja monivalinta käyttävät kyselypisteitä
+        :else
+        (str "Pisteet 0 - " (:kyselypisteet vastaus)))]] 
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
     [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]
     ;; Näytä kustannusennuste-taulukko vain "kustannusennuste" lupaustyypille
@@ -232,95 +239,169 @@
 
 (defn- kustannusennuste-syottokentät [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]} app]
   (let [;; Hae kuukauden tiedot samalla tavalla kuin muut vastaukset
-        lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi 
-                          (get-in app [:vastaus-lomake :lupaus-kuukaudet]) 
+        lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi
+                          (get-in app [:vastaus-lomake :lupaus-kuukaudet])
                           kohdekuukausi)
+        maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? lupaus-kuukausi)
+        maarapaiva (:maarapaiva lupaus-kuukausi)
         ;; Hae kuukauden kustannusennuste samalla tavalla kuin kuukauden-vastaus
         kuukauden-kustannusennuste (:kustannusennuste lupaus-kuukausi)
         ;; Jos on lähetetty vastaus, käytä sitä (kuten muissakin vastauksissa)
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         kustannusennuste (if (:kustannusennuste lahetetty-vastaus)
-                          (:kustannusennuste lahetetty-vastaus)
-                          kuukauden-kustannusennuste) 
+                           (:kustannusennuste lahetetty-vastaus)
+                           kuukauden-kustannusennuste)
         pisteet-laskettu? (get-in app [:yhteenveto :kustannusennuste-pisteet-laskettu :kaikki-laskettu])
-        ;; Tarkista onko tallentaminen käynnissä
-        tallentaa-kustannusennustetta? (and 
-                                        (= (get-in app [:lupausta-lahetataan :tyyppi]) :kustannusennuste)
-                                        (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi)
-                                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))]
-    [:div.kustannusennuste-syottokentit
+        tallentaa-kustannusennustetta? (and
+                                         (= (get-in app [:lupausta-lahetataan :tyyppi]) :kustannusennuste)
+                                         (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi)
+                                         (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))
+        ;; Määrittele onko kustannusennuste syötetty ajoissa
+        tiedot-syotetty-ajoissa? (and kuukauden-kustannusennuste
+                                   (:tavoitehinta kuukauden-kustannusennuste)
+                                   (:toteutuneet-kustannukset kuukauden-kustannusennuste))
+        ;; Määrittele käytetäänkö read-only näkymää
+        kayta-readonly-nakymaa? (and maarapaiva-mennyt-ohi? tiedot-syotetty-ajoissa?)]
 
-     ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
-     [:div.row
-      [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
-       [:h5 "Kustannusennusteen tiedot"]]
-      (when pisteet-laskettu? 
+    (cond
+      ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
+      (and maarapaiva-mennyt-ohi? (not tiedot-syotetty-ajoissa?))
+      [:div.kustannusennuste-maarapaiva-ohitettu
+       [:div.row
+        [:div.col-xs-12
+         [:div.alert.alert-warning
+          [:h4 "Määräpäivä ohitettu"]
+          [:p (str "Hoitovuoden lopun ennustetta ei tehty määräpäivään "
+                (when maarapaiva (pvm/pvm maarapaiva)) " mennessä.")]
+          [:p [:strong "Mikäli jotain ennustetta ei tehdä määräaikaan mennessä, ennusteesta ei saa yhtään pistettä."]]]]]
+       [:div.row
+        [:div.col-xs-12
+         [:div.margin-top-16.text-left
+          [sulje-nappi e! {:luokka "pull-right"}]]]]]
+
+      ;; Muissa tapauksissa näytetään kentät (joko muokattavina tai read-only)
+      :else
+      [:div.kustannusennuste-syottokentit
+       ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
+       [:div.row
         [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
-       [:h5 "Hoitovuoden lopun tilanne"]])]
-     [:div.row
-      [:div.col-xs-12.col-md-6
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Tavoitehinta € *"
-         :luokka "poista-label-top-margin"
-         :vayla-tyyli? true
-         :arvo-atom (r/wrap (:tavoitehinta kustannusennuste)
-                      #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
-                         (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :tavoitehinta %))))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? disabled?
-                         :kokonaisosan-maara 10
-                         :desimaalien-maara 2
-                         :placeholder "0,00"}}]]
-      (when pisteet-laskettu? [:div.col-xs-12.col-md-6
-                               [kentat/nayta-otsikollinen-kentta
-                                {:otsikko "Lopun Tavoitehinta €"
-                                 :vayla-tyyli? true
-                                 :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-tavoitehinta]))
-                                 :kentta-params {:tyyppi :numero
-                                                 :vayla-tyyli? true
-                                                 :disabled? disabled?
-                                                 :kokonaisosan-maara 10
-                                                 :desimaalien-maara 2
-                                                 :placeholder "0,00"}}]])]
+         [:h5 (if kayta-readonly-nakymaa?
+                "Kustannusennusteen tiedot (määräpäivä ohitettu)"
+                "Kustannusennusteen tiedot")]]
+        (when pisteet-laskettu?
+          [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
+           [:h5 "Hoitovuoden lopun tilanne"]])]
 
-     ;; Toinen rivi - Toteutunut ja Poikkeama
-     [:div.row
-      [:div.col-xs-12.col-md-6
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Toteutuneet kustannukset € *"
-         :luokka "poista-label-top-margin"
-         :vayla-tyyli? true
-         :arvo-atom (r/wrap (:toteutuneet-kustannukset kustannusennuste)
-                      #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
-                         (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :toteutuneet-kustannukset %))))
-         :kentta-params {:tyyppi :numero
-                         :vayla-tyyli? true
-                         :disabled? disabled?
-                         :kokonaisosan-maara 10
-                         :desimaalien-maara 2
-                         :placeholder "0,00"}}]]
-      (when pisteet-laskettu? [:div.col-xs-12.col-md-6
-                               [kentat/nayta-otsikollinen-kentta
-                                {:otsikko "Lopun Toteutuneet kustannukset €"
-                                 :vayla-tyyli? true
-                                 :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-toteutuneet-kustannukset]))
-                                 :kentta-params {:tyyppi :numero
-                                                 :vayla-tyyli? true
-                                                 :disabled? disabled?
-                                                 :kokonaisosan-maara 10
-                                                 :desimaalien-maara 2
-                                                 :placeholder "0,00"}}]])]
-     [:div.row
-      [:div.col-xs-12
-       [:div.margin-top-16.text-left
-        [napit/tallenna
-         "Tallenna kustannusennuste"
-         #(e! (lupaus-tiedot/->TallennaKustannusennuste))
-         {:disabled (or disabled? ladataan? tallentaa-kustannusennustetta?)
-          :vayla-tyyli? true
-          :luokka "btn-primary"}]
-        [sulje-nappi e! {:luokka "pull-right"}]]]]]))
+       [:div.row
+        [:div.col-xs-12.col-md-6
+         (if kayta-readonly-nakymaa?
+           ;; Read-only näkymä määräpäivän ohituttua
+           [kentat/nayta-otsikollinen-kentta
+            {:otsikko "Tavoitehinta € (syötetty ajoissa)"
+             :luokka "poista-label-top-margin"
+             :vayla-tyyli? true
+             :arvo-atom (r/atom (:tavoitehinta kustannusennuste))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :fmt fmt/euro-opt}}]
+           ;; Normaali muokattava kenttä
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Tavoitehinta € *"
+             :luokka "poista-label-top-margin"
+             :vayla-tyyli? true
+             :arvo-atom (r/wrap (:tavoitehinta kustannusennuste)
+                          #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
+                             (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :tavoitehinta %))))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :disabled? disabled?
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :placeholder "0,00"}}])]
+        (when pisteet-laskettu?
+          [:div.col-xs-12.col-md-6
+           [kentat/nayta-otsikollinen-kentta
+            {:otsikko "Lopun Tavoitehinta €"
+             :vayla-tyyli? true
+             :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-tavoitehinta]))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :fmt fmt/euro-opt}}]])]
+
+       ;; Toinen rivi - Toteutuneet kustannukset
+       [:div.row
+        [:div.col-xs-12.col-md-6
+         (if kayta-readonly-nakymaa?
+           ;; Read-only näkymä määräpäivän ohituttua
+           [kentat/nayta-otsikollinen-kentta
+            {:otsikko "Toteutuneet kustannukset € (syötetty ajoissa)"
+             :luokka "poista-label-top-margin"
+             :vayla-tyyli? true
+             :arvo-atom (r/atom (:toteutuneet-kustannukset kustannusennuste))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :fmt fmt/euro-opt}}]
+           ;; Normaali muokattava kenttä
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Toteutuneet kustannukset € *"
+             :luokka "poista-label-top-margin"
+             :vayla-tyyli? true
+             :arvo-atom (r/wrap (:toteutuneet-kustannukset kustannusennuste)
+                          #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
+                             (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :toteutuneet-kustannukset %))))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :disabled? disabled?
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :placeholder "0,00"}}])]
+        (when pisteet-laskettu?
+          [:div.col-xs-12.col-md-6
+           [kentat/nayta-otsikollinen-kentta
+            {:otsikko "Lopun Toteutuneet kustannukset €"
+             :vayla-tyyli? true
+             :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-toteutuneet-kustannukset]))
+             :kentta-params {:tyyppi :numero
+                             :vayla-tyyli? true
+                             :kokonaisosan-maara 10
+                             :desimaalien-maara 2
+                             :fmt fmt/euro-opt}}]
+           [:div.margin-top-8
+            [yleiset/linkki
+             "Siirry välikatselmukseen"
+             #(let [hoitokauden-alkuvuosi (if (>= kohdekuukausi 10)
+                                            kohdevuosi
+                                            (dec kohdevuosi))
+                    valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                        (pvm/hoitokauden-loppupvm hoitokauden-alkuvuosi)]]
+                (siirtymat/avaa-valikatselmus
+                  @nav/valittu-hallintayksikko-id
+                  (:id @nav/valittu-urakka)
+                  valittu-hoitokausi))]]])]
+
+       [:div.row
+        [:div.col-xs-12
+         (if kayta-readonly-nakymaa?
+           ;; Read-only tilassa ei tallennusnappia
+           [:div.margin-top-16.text-left
+            [:div.alert.alert-info.margin-bottom-16
+             [:p [:strong "Tiedot on syötetty määräpäivään mennessä."] " Muokkaus ei ole enää mahdollista."]]
+            [sulje-nappi e! {:luokka "pull-right"}]]
+           ;; Normaali tallennusnäkymä
+           [:div.margin-top-16.text-left
+            [napit/tallenna
+             "Tallenna kustannusennuste"
+             #(e! (lupaus-tiedot/->TallennaKustannusennuste))
+             {:disabled (or disabled? ladataan? tallentaa-kustannusennustetta?)
+              :vayla-tyyli? true
+              :luokka "btn-primary"}]
+            [sulje-nappi e! {:luokka "pull-right"}]])]]])))
 
 
 (defn- vastaukset [e! app luokka]
