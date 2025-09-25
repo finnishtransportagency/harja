@@ -81,9 +81,7 @@
     [:div {:style {:display "flex"
                    :align-items "center"
                    :padding 0}}
-     (if (= "yksittainen" (:lupaustyyppi lupaus))
-       [pisteet-div (:pisteet lupaus) "MAX"]
-       [pisteet-div (:kyselypisteet lupaus) "MAX"])]]])
+     [pisteet-div (lupaus-domain/lupaus->maksimipisteet lupaus) "MAX"]]]])
 
 (defn muodosta-kannanotto [ryhma]
   (cond
