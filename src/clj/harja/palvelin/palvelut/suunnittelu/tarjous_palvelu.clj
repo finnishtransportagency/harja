@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as clj-set]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
@@ -7,11 +8,21 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.domain.oikeudet :as oikeudet]
+            [clojure.pprint :as pprint]
             [harja.pvm :as pvm]))
+
+(defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
+  (let [tarjous-tiedot (:tarjous tarjous)
+        nollatut-arvot (mapv (fn [osio]
+                               (update osio :hoitovuosittaiset-arvot
+                                 (fn [arvot]
+                                   (mapv #(update % :summa (fn [a] (if (nil? a) 0.00M a))) arvot))))
+                         tarjous-tiedot)]
+    (assoc tarjous :tarjous nollatut-arvot)))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (tarjous-kyselyt/hae-tarjous db urakka-id))
+  (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id)))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
