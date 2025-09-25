@@ -83,16 +83,7 @@
      [:h3.vastauslomake-lupaus-jarjestys
       (str "Lupaus " (:lupaus-jarjestys vastaus))] 
      [:h3.vastauslomake-lupaus-pisteet
-      (cond
-        (= "yksittainen" (:lupaustyyppi vastaus))
-        (:pisteet vastaus)
-        
-        (= "kustannusennuste" (:lupaustyyppi vastaus))
-        (str "Pisteet 0 - " (:pisteet vastaus))
-        
-        ;; kysely ja monivalinta käyttävät kyselypisteitä
-        :else
-        (str "Pisteet 0 - " (:kyselypisteet vastaus)))]] 
+      (lupaus-domain/lupaus->pistenakyma vastaus)]] 
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
     [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]
     ;; Näytä kustannusennuste-taulukko vain "kustannusennuste" lupaustyypille
@@ -285,9 +276,7 @@
        ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
        [:div.row
         [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
-         [:h5 (if kayta-readonly-nakymaa?
-                "Kustannusennusteen tiedot (määräpäivä ohitettu)"
-                "Kustannusennusteen tiedot")]]
+         [:h5 "Kustannusennusteen tiedot"]]
         (when pisteet-laskettu?
           [:div.lihavoitu.sivupalkki-footer-otsikko.col-xs-12.col-md-6
            [:h5 "Hoitovuoden lopun tilanne"]])]
@@ -298,7 +287,6 @@
            ;; Read-only näkymä määräpäivän ohituttua
            [kentat/nayta-otsikollinen-kentta
             {:otsikko "Tavoitehinta € (syötetty ajoissa)"
-             :luokka "poista-label-top-margin"
              :vayla-tyyli? true
              :arvo-atom (r/atom (:tavoitehinta kustannusennuste))
              :kentta-params {:tyyppi :numero
@@ -339,7 +327,6 @@
            ;; Read-only näkymä määräpäivän ohituttua
            [kentat/nayta-otsikollinen-kentta
             {:otsikko "Toteutuneet kustannukset € (syötetty ajoissa)"
-             :luokka "poista-label-top-margin"
              :vayla-tyyli? true
              :arvo-atom (r/atom (:toteutuneet-kustannukset kustannusennuste))
              :kentta-params {:tyyppi :numero
