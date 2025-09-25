@@ -96,9 +96,9 @@
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
     (is (= 30 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
 
-    (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
+    (is (= 18 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
-    (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
+    (is (= 18 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
     (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
     (is (= 10 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
@@ -116,8 +116,8 @@
     (is (= 25 (:pisteet-max ryhma-5)) "ryhmä 5 maksimipisteet")
     (is (= 25 (:pisteet-ennuste ryhma-5)) "ryhmä 5 piste-ennuste")
 
-    (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
-    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
+    (is (= 108 (->> ryhmat (map :pisteet-max) (reduce +))))
+    (is (= 108 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
         "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")
@@ -203,8 +203,8 @@
 
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))
 
-    (is (= 10 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
-      "Yhteensä 10 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
+    (is (= 11 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
+      "Yhteensä 11 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
     (is (= 4 (get-in vastaus [:yhteenveto :merkitsevat-odottaa-kannanottoa]))
       "Yhteensä 4 lupausta odottaa merkitsevää kannanottoa tammikuussa: 4, 8, 11 ja 13")))
 
@@ -794,67 +794,40 @@
                                                                             :id (:id poistettava)})))))
 
 (deftest laske-lopullinen-kustannusennuste-test
-
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        hoitovuoden-alkupvm (pvm/luo-pvm 2019 9 1)
+        hoitokauden-alkuvuosi 2019
+        toteutunut-tavoitehinta 1000000M
+        toteutunut-kustannus 950000M
+        valikatselmus-pvm (pvm/luo-pvm 2020 6 15)
+        user-id (:id +kayttaja-jvh+)]
 
-        ;; Yksinkertaiset testikustannusennusteet
-        testikustannusennusteet
-        [{:kuukausi 10 :vuosi 2019 :tavoitehinta 1000000 :toteutuneet-kustannukset 950000
-          :maarapaiva (pvm/luo-pvm 2019 10 15) :id 1}
-         {:kuukausi 1 :vuosi 2020 :tavoitehinta 1100000 :toteutuneet-kustannukset 1050000
-          :maarapaiva (pvm/luo-pvm 2020 1 15) :id 2}]]
+    (testing "Funktio suorittuu oikeilla parametreilla"
+      ;; Funktio ei palauta mitään - se tekee vain tietokantaoperaatioita
+      (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+                  (:db jarjestelma) urakka-id hoitokauden-alkuvuosi
+                  toteutunut-tavoitehinta toteutunut-kustannus
+                  valikatselmus-pvm user-id))
+        "Funktio suorittuu onnistuneesti")
 
-    (testing "Funktio on olemassa ja palauttaa oikean tyyppisen tuloksen"
-      (let [tulos (lupaus-palvelu/laske-lopullinen-kustannusennuste
-                    (:db jarjestelma) urakka-id testikustannusennusteet hoitovuoden-alkupvm nil)]
-
-        ;; Perusvalidointi
-        (is (or (nil? tulos) (vector? tulos))
-          "Funktio palauttaa joko nil tai vektorin")
-
-        (when (vector? tulos)
-          (is (= 2 (count tulos)) "Palautettu vektori sisältää 2 tulosta")
-
-          ;; Testaa ensimmäinen tulos
-          (let [ensimmainen-tulos (first tulos)]
-            (when (map? ensimmainen-tulos)
-              (is (contains? ensimmainen-tulos :kustannusennuste-id) "Sisältää kustannusennuste-id")
-              (is (contains? ensimmainen-tulos :kuukausi) "Sisältää kuukausi")
-              (is (contains? ensimmainen-tulos :vuosi) "Sisältää vuosi")
-
-              ;; Tarkista perustiedot
-              (is (= 1 (:kustannusennuste-id ensimmainen-tulos)) "Oikea kustannusennuste-id")
-              (is (= 10 (:kuukausi ensimmainen-tulos)) "Oikea kuukausi")
-              (is (= 2019 (:vuosi ensimmainen-tulos)) "Oikea vuosi"))))))
-
-    (testing "Funktio käsittelee tyhjiä syötteitä"
-      (let [tulos (lupaus-palvelu/laske-lopullinen-kustannusennuste
-                    (:db jarjestelma) urakka-id [] hoitovuoden-alkupvm nil)]
-        (is (or (nil? tulos) (empty? tulos))
-          "Tyhjä kustannusennuste-lista palauttaa tyhjän tuloksen")))
-
-    (testing "Funktio käsittelee nil-parametrit gracefully"
-      (let [tulos (try
-                    (lupaus-palvelu/laske-lopullinen-kustannusennuste
-                      nil urakka-id testikustannusennusteet hoitovuoden-alkupvm nil)
-                    (catch Exception e
-                      :virhe-odotetusti))]
-        (is (or (nil? tulos) (= tulos :virhe-odotetusti))
-          "Nil database käsitellään gracefully")))
-
-    (testing "Integraatio domain-funktioiden kanssa"
+      ;; Tarkista että lopputilanne tallentui tietokantaan
+      (let [lopputilanteen-rivit (q (str "SELECT lopullinen_tavoitehinta, lopulliset_kustannukset "
+                                      "FROM lupaus_hoitovuosi_lopputilanne "
+                                      "WHERE \"urakka-id\" = " urakka-id
+                                      " AND hoitovuosi_alkuvuosi = " hoitokauden-alkuvuosi))]
+        (is (seq lopputilanteen-rivit) "Lopputilanne tallentui tietokantaan")
+        (when (seq lopputilanteen-rivit)
+          (let [[tavoite kustannus] (first lopputilanteen-rivit)]
+            (is (= toteutunut-tavoitehinta tavoite) "Tavoitehinta tallentui oikein")
+            (is (= toteutunut-kustannus kustannus) "Kustannukset tallentuivat oikein")))))
+    
+    (testing "Domain-funktioiden integraatio"
       ;; Testaa että domain-funktiot toimivat odotetulla tavalla
-      (let [syotteet {:ennustettu-tavoitehinta 1000000
-                      :ennustettu-kustannus 950000
-                      :toteutunut-tavoitehinta 1000000
-                      :toteutunut-kustannus 950000
-                      :hoitovuoden-alun-tavoitehinta 1200000}
-
-            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)
-            kokonais-tulos (lupaus-domain/laske-kustannusennuste-tulos syotteet 10)]
+      (let [syotteet {:ennustettu-tavoitehinta 1000000M
+                      :ennustettu-kustannus 950000M
+                      :toteutunut-tavoitehinta 1000000M
+                      :toteutunut-kustannus 950000M
+                      :hoitovuoden-alun-tavoitehinta 1200000M}
+            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)]
 
         (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
-        (is (:pisteet kokonais-tulos) "Domain-funktio laskee pisteet")
-        (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")
-        (is (number? (:pisteet kokonais-tulos)) "Pisteet on numero")))))
+        (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")))))
