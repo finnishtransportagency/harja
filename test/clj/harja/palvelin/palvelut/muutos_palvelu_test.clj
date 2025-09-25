@@ -171,8 +171,8 @@
         vastaus (get-in
                   (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :valittu-hoitokausi valittu-hoitokausi})
-                  [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
-    (is (= (Math/round vastaus) -37048) "Muutosten vaikutus yhteensä")))
+                  [:budjettitavoitteet :muutosten-vaikutus-yht])]
+    (is (= (some-> vastaus Math/round) 292712) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
