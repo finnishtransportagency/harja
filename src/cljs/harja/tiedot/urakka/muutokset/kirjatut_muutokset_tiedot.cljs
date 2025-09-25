@@ -19,7 +19,7 @@
 
 ;; -- Pysyvät muutokset -- ALKAA
 (defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelle [])
-(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui [vastaus])
+(defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui [vastaus valittu-hoitokausi])
 (defrecord HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui [virhe])
 (defrecord PaivitaToimenpiteenTehtavamaarat [toimenpideinstanssi hk-alkuvuosi taulukon-rivit])
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
@@ -145,23 +145,25 @@
   (process-event [_ app]
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelle")
 
-    (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
-      {:urakka-id @nav/valittu-urakka-id
-       :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-       ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
-       ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
-       ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
-       ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
-       ;;       vain pelkät pohjatiedot.
-       :muutos {:id nil
-                :versio nil
-                :tyyppi "pysyva"}}
-      {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
-       :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui})
+    (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+      (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
+        {:urakka-id @nav/valittu-urakka-id
+         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+         ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
+         ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
+         ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
+         ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
+         ;;       vain pelkät pohjatiedot.
+         :muutos {:id nil
+                  :versio nil
+                  :tyyppi "pysyva"}}
+        {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
+         :onnistui-parametrit [valittu-hoitokausi]
+         :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
     app)
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
 
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
@@ -173,10 +175,8 @@
         (assoc-in [:muokattava-muutos :liitteet] [])
         (assoc-in [:muokattava-muutos :tehtavat_ja_maarat] [])
         (assoc-in [:muokattava-muutos :kustannusvaikutukset] [])
-        ;; TODO: Tarkista halutaanko valita jokin hoitovuosi ennakkoon, vai annetaanko käyttäjän päättää
-        ;;       Esimerkiksi yksi hyvä valinta voisi olla muutokset näkymässä valittu hoitokausi, jolloin käyttäjä
-        ;;       voisi helposti alkaa täyttämään kyseisen hoitokauden tietoja suoraan.
-        (assoc-in [:muokattava-muutos :hoitovuosi] nil))))
+        ;; Asetetaan suoraan Muutos-näkymässä valittu hoitokausi pysyvän muutoksen hoitovuodeksi
+        (assoc-in [:muokattava-muutos :hoitovuosi] valittu-hoitokausi))))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
   (process-event [_ app]
