@@ -549,21 +549,23 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
-         (when arvo
-           (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
-                                     {:style {:display "auto"}})]
-             ^{:key (str i otsikko)}
-             [:div.tietorivi (merge
-                                   {:class tietorivi-luokka}
-                                   (when-not piirra-viivat?
-                                     {:class (str tietorivi-luokka " tietorivi-ilman-alaviivaa")})
-                                   (when (and kavenna?
-                                           (not (jata-kaventamatta otsikko)))
-                                     {:style {:margin-bottom "0.5em"}}))
-              [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-              [:span.tietoarvo.max-width-3 arvo]
-              (when (tyhja-rivi-otsikon-jalkeen otsikko)
-                [:span [:br] [:br]])])))
+         (let [otsikko-meta (meta otsikko)]
+           (prn "otsikko-meta" otsikko-meta)
+           (when arvo
+             (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
+                                       {:style {:display "auto"}})]
+               ^{:key (str i otsikko)}
+               [:div.tietorivi (merge
+                                 {:class tietorivi-luokka}
+                                 (when-not (or piirra-viivat? (:viiva-rivin-alle? otsikko-meta))
+                                   {:class (str tietorivi-luokka " tietorivi-ilman-alaviivaa")})
+                                 (when (and kavenna?
+                                         (not (jata-kaventamatta otsikko)))
+                                   {:style {:margin-bottom "0.5em"}}))
+                [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
+                [:span.tietoarvo.max-width-3 arvo]
+                (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                  [:span [:br] [:br]])]))))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma

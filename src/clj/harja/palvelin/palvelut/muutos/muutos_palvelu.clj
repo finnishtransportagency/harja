@@ -331,7 +331,11 @@
                                                (remove nil?
                                                  (concat
                                                    [(:tavoitehinnan-muutos (last rahavaraukset))]
-                                                   (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))]
+                                                   (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
+        muutosten-vaikutus-yht (+
+                                 (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
+                                 kirjatut-muutokset-yht
+                                 toteumiin-perustuvat-muutokset-yht)]
 
     {;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
      :kirjatut-muutokset kirjatut-muutokset
@@ -345,7 +349,8 @@
      :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                           :kirjatut-muutokset-yht kirjatut-muutokset-yht
-                          :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}}))
+                          :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
+                          :muutosten-vaikutus-yht muutosten-vaikutus-yht}}))
 
 
 

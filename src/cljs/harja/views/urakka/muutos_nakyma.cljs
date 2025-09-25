@@ -128,23 +128,26 @@
   [_e! {:keys [budjettitavoitteet] :as _app}]
   (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
     [:div.muutosten-vaikutus
-     [:h2 "Muutosten vaikutus"]
-
      [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                        :tietorivi-luokka "padding-8"}
+
+      [:h2 "Muutosten vaikutus"] ""
+
       "Hoitovuoden alun indeksikorjattu tavoitehinta"
       (if-not indeksikorjaus-vahvistettu?
         t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
         (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
 
       "Kirjatut muutokset"
-      (fmt/euro-opt (:kirjatut-muutokset-yht budjettitavoitteet))
+      (fmt/euro-opt true true(:kirjatut-muutokset-yht budjettitavoitteet))
 
+      ^{:viiva-rivin-alle? true}
       [:div "Toteumiin perustuvat muutokset" [:br]
        "(vahvistetaan välikatselmuksessa)"]
-      (fmt/euro-opt (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
+      (fmt/euro-opt true true(:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
 
-      "Yhteensä" "foobar"]
+      [:b "Yhteensä"]
+      [:b (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet))]]
      (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
 
 
