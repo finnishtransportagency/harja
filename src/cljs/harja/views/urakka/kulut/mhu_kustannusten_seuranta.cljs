@@ -371,7 +371,7 @@
            [yleiset/tooltip {} (ikonit/harja-icon-status-info) "Erotus lasketaan indeksikorjatusta ja toteumasta."]]
           [:th {:style {:width (:prosentti leveydet) :text-align "right"}} "%"]]]
         [:tbody
-         (paaryhman-rivitys e! app "Suunnitellut hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true true)
+         (paaryhman-rivitys e! app "Kilpailutettavat hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain true false)

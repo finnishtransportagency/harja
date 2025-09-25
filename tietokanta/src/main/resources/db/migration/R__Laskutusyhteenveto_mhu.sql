@@ -373,9 +373,10 @@ CREATE TYPE HOIDONJOHTO_RIVI AS
 );
 
 DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER, BOOLEAN);
 CREATE OR REPLACE FUNCTION hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                                    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER,
-                                                   sopimus_id INTEGER) RETURNS SETOF HOIDONJOHTO_RIVI AS
+                                                   sopimus_id INTEGER, muutos_ BOOLEAN) RETURNS SETOF HOIDONJOHTO_RIVI AS
 $$
 DECLARE
 
@@ -424,7 +425,10 @@ BEGIN
               FROM kulu l
                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
              WHERE lk.toimenpideinstanssi = t_instanssi
-               AND lk.poistettu IS NOT TRUE
+               AND lk.poistettu IS NOT TRUE 
+               -- TRUE -> laske jjh muutokset mukaan 
+               -- FALSE -> älä laske jjh muutoksia mukaan 
+               AND (muutos_ IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
                AND l.urakka = urakka_id_
                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                AND lk.tehtavaryhma = tehtavaryhma_id
@@ -469,6 +473,7 @@ BEGIN
              WHERE lk.toimenpideinstanssi = t_instanssi
                AND lk.poistettu = FALSE
                AND l.urakka = urakka_id_
+               AND (muutos_ IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
                AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                AND lk.tehtavaryhma = tehtavaryhma_id
 
@@ -1012,7 +1017,7 @@ BEGIN
             -- kustannussuunnitelmasta. Suunniteltu rahasumma siirtyy maksuerään kuukauden viimeisenä päivänä.
             -- Poikkeustapauksissa hoidon johdon kustannuksia kirjataan kulujen kohdistuksessa. Tällöin kustannukset lasketaan mukaan samaan tapaan kuin
             -- muutkin hankinnat (ks. kohdistetut_laskutetaan alla).
-            h_rivi := (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur, sopimus_id));
+            h_rivi := (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, t.tuotekoodi, t.tpi, ur, sopimus_id, TRUE));
 
             johto_ja_hallinto_laskutettu := h_rivi.johto_ja_hallinto_laskutettu;
             johto_ja_hallinto_laskutetaan := h_rivi.johto_ja_hallinto_laskutetaan;
