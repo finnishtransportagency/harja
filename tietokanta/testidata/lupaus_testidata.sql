@@ -258,16 +258,57 @@ $$ LANGUAGE plpgsql;
   (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' AND "urakan-alkuvuosi" = 2021),
   null,
   'kustannusennuste',
-  10,
+  8,
   '{1,4,6,8}',
-  9,
+  6,
   0,
-  'Testi: Kustannusennustelupaus',
-  'Testilupaus kustannusennusteen syöttöä ja testausta varten.',
+  'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen',
+  'Ennustamme urakan hoitovuoden lopun tavoitehintaa ja toteutuvia kustannuksia 4 kertaa vuodessa alla mainittuihin määräpäiviin mennessä.',
   2019
 );
 
--- 
+-- Ensimmäinen hoitovuosi: erikoiskuukaudet
 INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
 VALUES 
-  ((SELECT id FROM lupaus WHERE jarjestys = 99 AND "urakan-alkuvuosi" = 2019 AND kuvaus = 'Testi: Kustannusennustelupaus'), 1, '{10,1,4,6}', 9, 0, 1);  -- Ensimmäinen hoitovuosi: erikoiskuukaudet
+  ((SELECT id FROM lupaus
+   WHERE jarjestys = 99 
+  AND "urakan-alkuvuosi" = 2019 
+  AND kuvaus = 'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen'), 
+  1, 
+  '{10,1,4,6}', 
+  6,
+  0, 
+  1);  
+
+
+INSERT INTO lupaus_kustannusennuste_kuukausi_pisteet ("urakan-alkuvuosi", kuukausi, paiva, kuvaus, pisterajat) VALUES
+-- 2021 urakat
+(2021, 10, 15, 'Lokakuu 15. päivä (2021 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"}, 
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"}, 
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]'),
+
+(2021, 1, 15, 'Tammikuu 15. päivä (2021 urakat)', '[
+    {"operaattori": "≤", "raja": 4.0, "pisteet": 8, "kuvaus": "≤ 4,0%"}, 
+    {"operaattori": "≤", "raja": 6.0, "pisteet": 4, "kuvaus": "≤ 6,0%"}, 
+    {"operaattori": ">", "raja": 6.0, "pisteet": 1, "kuvaus": "> 6,0%"}
+]'),
+
+(2021, 4, 30, 'Huhtikuu 30. päivä (2021 urakat)', '[
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 8, "kuvaus": "≤ 2,0%"}, 
+    {"operaattori": "≤", "raja": 3.0, "pisteet": 4, "kuvaus": "≤ 3,0%"}, 
+    {"operaattori": ">", "raja": 3.0, "pisteet": 1, "kuvaus": "> 3,0%"}
+]'),
+
+(2021, 6, 30, 'Kesäkuu 30. päivä (2021 urakat)', '[
+    {"operaattori": "≤", "raja": 1.0, "pisteet": 8, "kuvaus": "≤ 1,0%"}, 
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 4, "kuvaus": "≤ 2,0%"}, 
+    {"operaattori": ">", "raja": 2.0, "pisteet": 1, "kuvaus": "> 2,0%"}
+]'),
+
+(2021, 8, 15, 'Elokuu 15. päivä (2021 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"}, 
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"}, 
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]');
