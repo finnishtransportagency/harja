@@ -148,6 +148,27 @@
     "monivalinta" (monivalinta->toteuma lupaus)
     "kustannusennuste" (kustannusennuste->toteuma lupaus)))
 
+(defn lupaus->maksimipisteet
+  "Palauttaa lupauksen maksimipisteet lupaustyypistä riippumatta.
+   Backend palauttaa :kyselypisteet arvoksi vähintään 0 jos muuta arvoa ei ole."
+  [{:keys [lupaustyyppi pisteet kyselypisteet]}]
+  (case lupaustyyppi
+    "yksittainen" pisteet
+    "kustannusennuste" pisteet
+    ; kysely ja monivalinta käyttävät kyselypisteitä, defaulttaa 0:aan
+    (or kyselypisteet 0)))
+
+(defn lupaus->pistenakyma
+  "Palauttaa lupauksen pistenäytön merkkijonona UI:ta varten.
+   Yksittäinen: näyttää vain pisteet
+   Kustannusennuste ja muut: näyttää 'Pisteet 0 - X'"
+  [{:keys [lupaustyyppi pisteet kyselypisteet] :as lupaus}]
+  (case lupaustyyppi
+    "yksittainen" (str pisteet)
+    "kustannusennuste" (str "Pisteet 0 - " pisteet)
+    ; kysely ja monivalinta
+    (str "Pisteet 0 - " (or kyselypisteet 0))))
+
 (defn lupaus->ennuste-tai-toteuma [lupaus]
   (or (when-let [toteuma (lupaus->toteuma lupaus)]
         {:pisteet-toteuma toteuma
@@ -341,8 +362,8 @@
    :nykyhetkeen-verrattuna :mennyt-kuukausi,
    :vastaus true,
    :kustannusennuste {...}}"
-  [{:keys [vastaukset kustannusennusteet] :as lupaus}
-   nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot]
+  [{:keys [vastaukset kustannusennusteet lupaustyyppi] :as lupaus}
+   nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot maarapaiva-tiedot]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi
         kuluva-vuosi (pvm/vuosi nykyhetki)
         kuluva-kuukausi (pvm/kuukausi nykyhetki)
@@ -360,11 +381,23 @@
         kaytettava-joustovara (hoitovuoden-joustovara lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
         paatos-kkt (paatos-kk-joukko kaytettava-paatos-kk)
         kirjaus-kkt kaytettavat-kirjaus-kkt
-        paatos-hylatty? (paatos-hylatty? vastaukset kaytettava-joustovara)]
+        paatos-hylatty? (paatos-hylatty? vastaukset kaytettava-joustovara)
+         ;; Kustannusennustelupaukselle karsitaan määräpäivätiedot vain kirjauskuukausille
+        karsitut-maarapaiva-tiedot (when (and (= "kustannusennuste" lupaustyyppi) maarapaiva-tiedot)
+                                     (select-keys maarapaiva-tiedot kaytettavat-kirjaus-kkt))
+        ;; Käytetään karsittuja määräpäivätietoja kustannusennusteille, muille alkuperäisiä
+        kaytettavat-maarapaiva-tiedot (if (= "kustannusennuste" lupaustyyppi)
+                                        karsitut-maarapaiva-tiedot
+                                        maarapaiva-tiedot)]
     (for [{:keys [vuosi kuukausi]} (hoitokuukaudet (pvm/vuosi hk-alkupvm))]
       (let [vastaus (kk->vastaus kuukausi)
             kustannusennuste (when kk->kustannusennuste
-                               (kk->kustannusennuste kuukausi))]
+                               (kk->kustannusennuste kuukausi))
+            maarapaiva-tieto (when kaytettavat-maarapaiva-tiedot 
+                               (get kaytettavat-maarapaiva-tiedot kuukausi))
+            syotetty-ajoissa? (when (and kustannusennuste maarapaiva-tieto)
+                                (pvm/ennen? (:syotetty_pvm kustannusennuste) 
+                                  (:maarapaiva-pvm maarapaiva-tieto)))]
         (merge
           {:vuosi vuosi
            :kuukausi kuukausi
@@ -374,26 +407,32 @@
            :kirjauskuukausi? (contains? kirjaus-kkt kuukausi)
            :nykyhetkeen-verrattuna (vertaa-nykyhetkeen {:vuosi kuluva-vuosi
                                                         :kuukausi kuluva-kuukausi}
-                                                       {:vuosi vuosi
-                                                        :kuukausi kuukausi})}
+                                     {:vuosi vuosi
+                                      :kuukausi kuukausi})}
           (when vastaus
             {:vastaus vastaus})
-          ;; Lisätään kustannusennuste jos löytyy
           (when kustannusennuste
-            {:kustannusennuste kustannusennuste}))))))
+            {:kustannusennuste kustannusennuste})
+          (when maarapaiva-tieto
+            {:maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? maarapaiva-tieto)
+             :maarapaiva-pvm (:maarapaiva-pvm maarapaiva-tieto)
+             :syotetty-ajoissa? syotetty-ajoissa?}))))))
 
-(defn liita-lupaus-kuukaudet 
+(defn liita-lupaus-kuukaudet
   ([lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot]
    ;; Perus signature ilman kustannusennusteita (nil-käsittely)
-   (liita-lupaus-kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil))
+   (liita-lupaus-kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil nil))
   ([lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot kustannusennusteet]
-   ;; Täysi signature kustannusennusteilla - nil käsitellään automaattisesti
+   ;; Signature kustannusennusteilla mutta ilman määräpäivätietoja
+   (liita-lupaus-kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot kustannusennusteet nil))
+  ([lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot kustannusennusteet maarapaiva-tiedot]
+   ;; Täysi signature kustannusennusteilla ja määräpäivätiedoilla
    (let [lupaus-kustannusennusteilla (if kustannusennusteet
                                        (assoc lupaus :kustannusennusteet kustannusennusteet)
                                        lupaus)]
      (assoc lupaus-kustannusennusteilla :lupaus-kuukaudet
-                                        (lupaus->kuukaudet lupaus-kustannusennusteilla nykyhetki valittu-hoitokausi
-                                          hoitovuosi-nro hoitovuoden-erikoisarvot)))))
+       (lupaus->kuukaudet lupaus-kustannusennusteilla nykyhetki valittu-hoitokausi
+         hoitovuosi-nro hoitovuoden-erikoisarvot maarapaiva-tiedot)))))
 
 (defn liita-odottaa-kannanottoa [lupaus nykyhetki valittu-hoitokausi]
   (assoc lupaus :odottaa-kannanottoa?
