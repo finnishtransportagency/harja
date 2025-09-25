@@ -131,19 +131,17 @@
    []])
 
 (defn kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
-  [:<>
-   [debug/debug app]
-   [yhteiset/kehystetty-avattava-grid e! app
-    {:taulukon-avain :kirjatut-muutokset
-     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
-     :otsikko "Kirjatut muutokset"
-     :summa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))
-     :toiminnot-asetukset {:tasaa :oikea}
-     :toiminnot (fn [e! app]
-                  [napit/uusi "Lisää uusi" #(e! (t-yhteiset/->MuokkaaMuutosta {}))])
-     :taulukko
-     (fn [e! app]
-       [:<>
-        [hoitovuoden-kirjatut-muutokset-grid e! app]
-        ;; TODO: Toteuta pysyvien muutosten haku näkymään aiemmilta vuosilta
-        [aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid e! app]])}]])
+  [yhteiset/kehystetty-avattava-grid e! app
+   {:taulukon-avain :kirjatut-muutokset
+    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
+    :otsikko "Kirjatut muutokset"
+    :summa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))
+    :toiminnot-asetukset {:tasaa :oikea}
+    :toiminnot (fn [e! app]
+                 [napit/uusi "Lisää uusi" #(e! (t-yhteiset/->MuokkaaMuutosta {}))])
+    :taulukko
+    (fn [e! app]
+      [:<>
+       [hoitovuoden-kirjatut-muutokset-grid e! app]
+       ;; TODO: Toteuta pysyvien muutosten haku näkymään aiemmilta vuosilta
+       [aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid e! app]])}])
