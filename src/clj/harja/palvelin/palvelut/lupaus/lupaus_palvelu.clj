@@ -127,6 +127,28 @@
           :urakka-id urakka-id
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
 
+(defn laske-maarapaiva-tiedot
+  "Laskee määräpäivätiedot kustannusennusteille.
+   Palauttaa map-rakenteen: {kuukausi {:maarapaiva-mennyt-ohi? boolean :syotetty-ajoissa? boolean}}"
+  [db urakan-alkuvuosi hoitokauden-alkuvuosi nykyhetki]
+  {:pre [(number? urakan-alkuvuosi) (number? hoitokauden-alkuvuosi)]}
+  (try
+    (let [maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat 
+                        db {:urakan-alkuvuosi urakan-alkuvuosi
+                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+      (if (empty? maarapaivat)
+        (throw (ex-info (str "Määräpäivätietoja ei löytynyt urakan alkuvuodelle " urakan-alkuvuosi)
+                        {:urakan-alkuvuosi urakan-alkuvuosi}))
+        (into {}
+              (map (fn [{:keys [kuukausi maarapaiva_pvm]}]
+                     (let [maarapaiva-mennyt-ohi? (pvm/jalkeen? nykyhetki maarapaiva_pvm)]
+                       [kuukausi {:maarapaiva-mennyt-ohi? maarapaiva-mennyt-ohi?
+                                 :maarapaiva-pvm maarapaiva_pvm}]))
+                   maarapaivat))))
+    (catch Exception e
+      (log/error "Määräpäivätietojen laskenta epäonnistui:" (.getMessage e))
+      (throw e))))
+
 (defn- hae-lupaus-kustannukset-jarjestettyna [db urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]
   (let [kustannukset (kustannusten-seuranta-palvelu/hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia
                        db {:urakka-id urakkaid
@@ -151,6 +173,12 @@
         urakan-alkuvuosi (some-> (:alkupvm urakan-tiedot) pvm/vuosi)
         hoitovuosi-nro (when (and urakan-alkuvuosi hk-alkupvm)
                          (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/vuosi hk-alkupvm)))
+        maarapaiva-tiedot (when urakan-alkuvuosi
+                           (try
+                             (laske-maarapaiva-tiedot db urakan-alkuvuosi hoitokauden-alkuvuosi nykyhetki)
+                             (catch Exception e
+                               (log/warn "Määräpäivätietojen haku epäonnistui, jatketaan ilman:" (.getMessage e))
+                               {})))
         lupaus-idt (mapv :lupaus-id vastaus)
         erikoisarvot (if (seq lupaus-idt)
                                ;; Hae erikoisarvot yksi kerrallaan ja ryhmittele
@@ -187,7 +215,8 @@
                   (mapv #(lupaus-domain/liita-odottaa-kannanottoa % nykyhetki valittu-hoitokausi))
                   (mapv #(let [kustannusennusteet (when (= "kustannusennuste" (:lupaustyyppi %))
                                                     (hae-lupauksen-kustannusennusteet db (:lupaus-id %) urakka-id hoitokauden-alkuvuosi))]
-                           (lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro (get erikoisarvot (:lupaus-id %)) kustannusennusteet)))
+                           (lupaus-domain/liita-lupaus-kuukaudet % nykyhetki valittu-hoitokausi hoitovuosi-nro 
+                                                                (get erikoisarvot (:lupaus-id %)) kustannusennusteet maarapaiva-tiedot)))
                   (mapv #(liita-lupaus-vaihtoehdot db %))
                   (mapv #(if (= "kustannusennuste" (:lupaustyyppi %))
                            (assoc % :hoitovuosi-paattynyt? (:kaikki-laskettu kustannusennuste-pisteet-tila))
