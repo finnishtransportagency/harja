@@ -1,18 +1,22 @@
 (ns harja.tiedot.urakka.muutokset.lasketut-muutokset-tiedot
   "Urakan muutosten tiedot - lasketut muutokset."
-  (:require [taoensso.timbre :as log]
-            [tuck.core :as tuck]
-            [reagent.core :refer [atom]]
+  (:require
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [taoensso.timbre :as log]
+    [tuck.core :as tuck]
+    ;; Tuck efektit ja apurit
+    [harja.tyokalut.tuck]
+    [reagent.core :refer [atom]]
 
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.ui.nakymasiirrin :as siirrin]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.viesti :as viesti]
+    [harja.ui.liitteet :as liitteet]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.ui.nakymasiirrin :as siirrin]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tyokalut.tuck :as tuck-apurit]))
 
 ;; Muutostyypit:
 ;; - Tehtävä- ja määrämuutokset
@@ -39,6 +43,8 @@
   TallennaTehtavaMaaramuutokset
   (process-event [{:keys [rivit]}
                   {:keys [_valittu-rivi] :as app}]
+    (log/debug "TallennaTehtavaMaaramuutokset")
+
     (let [parametrit {:rivit rivit
                       :urakka-id (-> @tila/yleiset :urakka :id)
                       :hoitokaudet @u/valitun-urakan-hoitokaudet
@@ -53,10 +59,24 @@
 
   TallennaTehtavaMaaramuutoksetOnnistui
   (process-event [{:keys [vastaus]} app]
+    (log/debug "TallennaTehtavaMaaramuutoksetOnnistui")
+
     (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (assoc app
-      :tehtava-maaramuutokset vastaus
-      :haku-kaynnissa? false))
+
+    (let [app (assoc app
+                :tehtava-maaramuutokset vastaus
+                :haku-kaynnissa? false)]
+
+      ;; TODO: Kannattaa ehkä refaktoroida logiikkaa backend-palvelun puolelle pidemmän päälle, jotta vältämme
+      ;;       turhia raskaita kyselyitä.
+      ;;       Käyttöliittymään täytyy päivittää koosteita muutoksista, joten tallennuksen jälkeen on haettava
+      ;;       viimeisimmät tiedot. Tehdään nyt näin helpoimman kautta ja palataan asiaan.
+      ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
+      ;; Antaa viimeisimmän app-tilan eventille
+      (tuck/fx app
+        {:tuck.effect/type :debounce
+         :event t-yhteiset/->HaeUrakanMuutostiedot
+         :timeout 200})))
 
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
@@ -113,9 +133,23 @@
   TallennaYksikkohintaOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Yksikköhinta tallennettu" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (assoc app
-      :haku-kaynnissa? false
-      :tehtava-maaramuutokset vastaus))
+
+    (tuck/send-async! t-yhteiset/->HaeUrakanMuutostiedot)
+
+    (let [app (assoc app
+                :haku-kaynnissa? false
+                :tehtava-maaramuutokset vastaus)]
+
+      ;; TODO: Kannattaa ehkä refaktoroida logiikkaa backend-palvelun puolelle pidemmän päälle, jotta vältämme
+      ;;       turhia raskaita kyselyitä.
+      ;;       Käyttöliittymään täytyy päivittää koosteita muutoksista, joten tallennuksen jälkeen on haettava
+      ;;       viimeisimmät tiedot. Tehdään nyt näin helpoimman kautta ja palataan asiaan.
+      ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
+      ;; Antaa viimeisimmän app-tilan eventille
+      (tuck/fx app
+        {:tuck.effect/type :debounce
+         :event t-yhteiset/->HaeUrakanMuutostiedot
+         :timeout 200})))
 
   TallennaYksikkohintaEpaonnistui
   (process-event [_ app]

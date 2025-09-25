@@ -550,7 +550,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      (keep-indexed
        (fn [i [otsikko arvo]]
          (let [otsikko-meta (meta otsikko)]
-           (prn "otsikko-meta" otsikko-meta)
            (when arvo
              (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
                                        {:style {:display "auto"}})]

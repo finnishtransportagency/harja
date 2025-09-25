@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [tuck.core :as tuck]
+  (:require [harja.ui.debug :as debug]
+            [tuck.core :as tuck]
 
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
@@ -12,7 +13,7 @@
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.ui.yleiset :as yleiset]
 
-            ;; Osiot / lomake 
+    ;; Osiot / lomake
             [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
             [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
             [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
@@ -41,21 +42,21 @@
         :voi-muokata? true}
 
        ;; Taulukon kentät
-       [{:otsikko "Muutos" 
-         :nimi :muutos 
-         :tyyppi :string 
+       [{:otsikko "Muutos"
+         :nimi :muutos
+         :tyyppi :string
          :leveys 15}
-        
-        {:otsikko "Perustelu" 
-         :nimi :perustelu 
-         :tyyppi :string 
+
+        {:otsikko "Perustelu"
+         :nimi :perustelu
+         :tyyppi :string
          :leveys 35}
 
-        {:otsikko "Vaikutus € (+/-)" 
-         :nimi :tavoitehinnan-muutos 
+        {:otsikko "Vaikutus € (+/-)"
+         :nimi :tavoitehinnan-muutos
          :tyyppi :numero
-         :fmt fmt/euro-opt 
-         :tasaa :oikea 
+         :fmt fmt/euro-opt
+         :tasaa :oikea
          :leveys 15}]
        tavoitehinnan-muutokset])}])
 
@@ -81,25 +82,25 @@
         :voi-muokata? true}
 
        ;; Taulukon kentät
-       [{:otsikko "Muutoksen syy" 
-         :nimi :syy 
-         :tyyppi :string 
+       [{:otsikko "Muutoksen syy"
+         :nimi :syy
+         :tyyppi :string
          :leveys 15}
-        
-        {:otsikko "Muutokset" 
-         :nimi :muutokset 
-         :tyyppi :string 
+
+        {:otsikko "Muutokset"
+         :nimi :muutokset
+         :tyyppi :string
          :leveys 35}
 
-        {:otsikko "Lisätieto" 
-         :nimi :lisatieto 
-         :tyyppi :string 
+        {:otsikko "Lisätieto"
+         :nimi :lisatieto
+         :tyyppi :string
          :leveys 15}
 
-        {:otsikko "" :nimi 
-         :toiminnot :tyyppi 
-         :komponentti 
-         :leveys 10 
+        {:otsikko "" :nimi
+         :toiminnot :tyyppi
+         :komponentti
+         :leveys 10
          :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
@@ -139,12 +140,12 @@
         (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
 
       "Kirjatut muutokset"
-      (fmt/euro-opt true true(:kirjatut-muutokset-yht budjettitavoitteet))
+      (fmt/euro-opt true true (:kirjatut-muutokset-yht budjettitavoitteet))
 
       ^{:viiva-rivin-alle? true}
       [:div "Toteumiin perustuvat muutokset" [:br]
        "(vahvistetaan välikatselmuksessa)"]
-      (fmt/euro-opt true true(:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
+      (fmt/euro-opt true true (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
 
       [:b "Yhteensä"]
       [:b (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet))]]
@@ -155,7 +156,7 @@
   [:valinnat-ja-listaus
    [:h1 "Muutosten hallinta"]
    [:div.otsikko-ja-hoitokausi
-    
+
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
      #(e! (t-yhteiset/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
@@ -169,7 +170,7 @@
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
     (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot)))
-    (fn [e! 
+    (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu
        (if muokattava-muutos
