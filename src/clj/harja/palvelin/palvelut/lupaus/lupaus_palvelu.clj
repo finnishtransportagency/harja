@@ -726,14 +726,13 @@
     (let [hk-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
           hoitovuoden-alun-tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
       
-      ;; Tallenna ensin lopputilanne
-      (when (resolve 'lupaus-kyselyt/tallenna-lopputilanne!)
+        ;; Tallenna ensin lopputilanne 
         (lupaus-kyselyt/tallenna-lopputilanne! db {:urakka-id urakka-id
                                                    :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi
                                                    :lopullinen-tavoitehinta toteutunut-tavoitehinta
                                                    :lopulliset-kustannukset toteutunut-kustannus
                                                    :valikatselmus-pvm valikatselmus-pvm
-                                                   :vahvistaja user-id}))
+                                                   :vahvistaja user-id})
 
       ;; Hae kaikki kustannusennusteet lupausten kautta
       (let [lupaukset (lupaus-kyselyt/hae-urakan-lupaukset db {:urakka-id urakka-id})
