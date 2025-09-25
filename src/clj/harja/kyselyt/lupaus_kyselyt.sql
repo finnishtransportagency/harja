@@ -48,7 +48,8 @@ SELECT l.id                     AS "lupaus-id",
                                     AND (concat(vas.vuosi, '-', vas.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE))
        LEFT JOIN lupaus_vaihtoehto lv ON lv.id = vas."lupaus-vaihtoehto-id"
        JOIN lupausryhma_urakka lu ON r.id = lu."lupausryhma_id"
- WHERE lu."urakka_id" = :urakka
+ WHERE r."urakan-alkuvuosi" = :urakan-alkuvuosi
+   AND lu."urakka_id" = :urakka
 GROUP BY l.id, sit.id, r.id
 ORDER BY l.jarjestys, r.jarjestys;
 

@@ -818,7 +818,9 @@
          checked)]
       [:label (merge
                 {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
-                {:class (when-not nayta-rivina? "radio-column")}
+                {:class (if (and (not nayta-rivina?) (:luokka opts))
+                          (:luokka opts)
+                          (when-not nayta-rivina? "radio-column"))}
                 {:for id}) teksti]]
      [:div.vayla-radio-lapsi
       (when selite
