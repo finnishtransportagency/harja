@@ -47,7 +47,8 @@
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
                               {:teksti "" :tasaa :oikea :luokka "yhteensa"}
                               {:teksti "" :tasaa :oikea :luokka "yhteensa"}
-                              {:teksti (fmt/euro-opt false true (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}])}
+                              {:teksti (fmt/euro-opt false true (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}
+                              {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}])}
 
          ;; Taulukon kentät
          [{:otsikko "Rahavaraus" 
@@ -88,5 +89,11 @@
            :fmt fmt/euro-opt 
            :tasaa :oikea 
            :leveys 10
-           :muokattava? (constantly false)}]
+           :muokattava? (constantly false)}
+          {:otsikko ""
+           :nimi :filleri
+           :tyyppi :komponentti
+           :komponentti (constantly nil)
+           :tasaa :oikea
+           :leveys 10}]
          rivit])}]))
