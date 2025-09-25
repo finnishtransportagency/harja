@@ -253,17 +253,21 @@ UNION ALL
 SELECT CASE
            WHEN (lk.tyyppi::TEXT = 'erillisrahoitettu-muutos' AND lk.tavoitehintainen IS TRUE) THEN 
               mmk.summa 
+           WHEN (lk.tyyppi::TEXT = 'jjh-muutos' AND lk.tavoitehintainen IS TRUE) THEN 
+              -- JJh muutokset, toteutunut == suunniteltu
+              -- Suunnitellusta jjh muutoksesta kirjataan automaattisesti kulut, eli nämä on suoraa toteumia 
+              COALESCE(SUM(lk.summa), 0)
            ELSE 0
            END                    AS budjetoitu_summa,
-       -- TODO, voidaanko indeksikorjata tässä? Tehdäänkö ollenkaan
-       -- Ruukattu vahvistaa kustannussuunnitelmassa vanhassa versiossa 
-       -- indeksikorjaa(
-       --     mmk.summa, 
-       --     EXTRACT(YEAR FROM l.erapaiva)::INT, 
-       --     EXTRACT(MONTH FROM l.erapaiva)::INT, 
-       --     l.urakka
-       -- )                          AS budjetoitu_summa_indeksikorjattu,
-       0                          AS budjetoitu_summa_indeksikorjattu,
+       -- Muutoksissa, suunniteltu == indeksikorjattu 
+       -- koska muutokset tulevat olemaan vahvistetun kustannussuunnitelman lukujen sisällä eli kilpailutettavissa hankinnoissa
+       CASE
+           WHEN (lk.tyyppi::TEXT = 'erillisrahoitettu-muutos' AND lk.tavoitehintainen IS TRUE) THEN 
+              mmk.summa 
+           WHEN (lk.tyyppi::TEXT = 'jjh-muutos' AND lk.tavoitehintainen IS TRUE) THEN 
+              COALESCE(SUM(lk.summa), 0)
+           ELSE 0
+           END                    AS budjetoitu_summa_indeksikorjattu,
        COALESCE(SUM(lk.summa), 0) AS toteutunut_summa,
        lk.maksueratyyppi::TEXT    AS maksutyyppi,
        CASE
