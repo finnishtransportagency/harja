@@ -294,7 +294,7 @@
       ::lomake/col-luokka "perustiedot col-sm-6"}
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi))
+     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi true))
 
    (lomake/ryhma {:otsikko "Vaikutus tavoitehintaan ja suunniteltuihin tehtäviin"}
 
