@@ -294,6 +294,22 @@
   [coll n]
   (keep-indexed #(when (not= %1 n) %2) coll))
 
+(defn- paivita-kulu-nakyma [{:keys [valittu-hoitokausi haun-kuukausi viimeisin-haku] :as app}]
+  (let [vuosi (when valittu-hoitokausi
+                (pvm/vuosi (-> valittu-hoitokausi first)))]
+    ;; Kulu näkymässä menee hölmösti kuukausi valinnat
+    ;; Tässä kuitenkin korjaus että näkymä toimii oikein 
+    (if haun-kuukausi
+      ;; Jos kk valittu, hae pelkästään sen kuukauden kulut
+      ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+      ;; Koko hoitokausi valittu, hae valitun hoitokauden kulut 
+      ((tuck/current-send-function) (->ValitseHoitokausi vuosi)))
+    
+    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
+    (-> app
+      (assoc :syottomoodi false)
+      (assoc :lomake (alusta-lomake app)))))
+
 (extend-protocol tuck/Event
 
   AsetaNykyhetki
@@ -518,20 +534,8 @@
       (update :lomake paivita-erapaivat-tarvittaessa)))
 
   TallennusOnnistui
-  (process-event [_ {{:keys [viimeisin-haku haun-kuukausi]} :parametrit :as app}]
-    (let [vuosi (when (:valittu-hoitokausi app)
-                  (pvm/vuosi (-> (:valittu-hoitokausi app) first)))]
-      ;; Kulu näkymässä menee hölmösti kuukausi valinnat
-      ;; Tässä kuitenkin korjaus että näkymä toimii oikein 
-      (if haun-kuukausi 
-        ;; Jos kk valittu, hae pelkästään sen kuukauden kulut
-        ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-        ;; Koko hoitokausi valittu, hae valitun hoitokauden kulut 
-        ((tuck/current-send-function) (->ValitseHoitokausi vuosi)))
-      ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
-      (-> app
-        (assoc :syottomoodi false)
-        (assoc :lomake (alusta-lomake app)))))
+  (process-event [_ app]
+    (paivita-kulu-nakyma app))
 
   KuluhakuOnnistui
   (process-event [{tulos :tulos} app]
@@ -778,12 +782,8 @@
 
   PoistoOnnistui
   (process-event
-    [_ {{:keys [viimeisin-haku]} :parametrit :as app}]
-    ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
-    (-> app
-      (assoc :syottomoodi false)
-      (assoc :lomake (alusta-lomake app))))
+    [_ app]
+    (paivita-kulu-nakyma app))
 
   PoistaKulu
   (process-event

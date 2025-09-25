@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutokset.lomake.muutoslomake
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require [clojure.string :as str]
+            [reagent.core :as r]
 
             [taoensso.timbre :as log]
             [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
@@ -14,12 +15,10 @@
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.ui.yleiset :as yleiset]
 
-
-    ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
+            ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
             [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
             [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
-            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]
-            [reagent.core :as r]))
+            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
 
 (defn- lomakkeen-footer [muutos tyyppi e!
