@@ -290,7 +290,9 @@
 
      ;; Header vihje sekä nappi
      [:div.pysyvan-muutoksen-grid-header
-      [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
+      (if voi-muokata?
+        [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
+        [yleiset/vihje "Hoitovuoden tietoja ei voi muokata. Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
        #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
