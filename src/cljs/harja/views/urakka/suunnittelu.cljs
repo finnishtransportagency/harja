@@ -32,13 +32,7 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and
-                                 (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
-                                 (or
-                                   (kommunikaatio/kehitysymparistossa?) ;; Joko kehitysympäristössä
-                                   (and (>= (pvm/vuosi alkupvm) 2025) ;; Tai aloituvuosi on 2025 tai myöhemmin
-                                     (not (kommunikaatio/kehitysymparistossa?)) ;; Ja ei olla kehitysympäristössä
-                                     )))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
     :tarjous (and
                (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
                (or
