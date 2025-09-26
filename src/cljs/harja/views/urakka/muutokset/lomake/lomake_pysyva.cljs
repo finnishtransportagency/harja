@@ -321,16 +321,6 @@
                        "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
 
      (lomake/ryhma {:otsikko "Perustiedot"}
-       ;; TODO: Tarkista täytyykö nimi olla pakollinen pysyvälle muutokselle.
-       ;;       Speksissä muutokselle on vain syy ja voimassa alkaen.
-       #_{:nimi :nimi
-          :otsikko "Nimi"
-          :tyyppi :string
-          :uusi-rivi? true
-          :pakollinen? true
-          :validoi [#(when (nil? (seq %)) "Kirjoita nimi")]
-          ::lomake/col-luokka "perustiedot col-sm-6"}
-
        (yhteiset/+rivi-muutoksen-syy+)
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
 
