@@ -40,8 +40,8 @@ BEGIN
 RETURNING id INTO muutos_id_1;
 
 -- Muutos 2: erillisrahoitettu sorastus
-INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
-VALUES (_versio,urakka_id, alkaen_pvm, 'erillisrahoitettu', 'Erillisrahoitettu sorastusmuutos',
+INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, alityyppi, nimi, syy, luoja, luotu)
+VALUES (_versio,urakka_id, alkaen_pvm, 'muutostyo', 'erillisrahoitus', 'Erillisrahoitettu sorastusmuutos',
         'Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.', kayttaja_id_tero,
         NOW())
 RETURNING id INTO muutos_id_2;
@@ -51,8 +51,8 @@ VALUES (_versio, muutos_id_2, 'hankintakustannukset',
         _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
 -- Muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
-INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
-VALUES (_versio,urakka_id, alkaen_pvm, 'maarapoikkeama', 'Tämän hoitovuoden määräpoikkeamamuutos',
+INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, alityyppi, nimi, syy, luoja, luotu)
+VALUES (_versio,urakka_id, alkaen_pvm, 'muutostyo', 'poikkeama','Tämän hoitovuoden määräpoikkeamamuutos',
         'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.', kayttaja_id_tero,
         NOW())
 RETURNING id INTO muutos_id_3;
@@ -91,7 +91,7 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LO
 
 -- Muutos 4: Johto- ja hallintokorvauksen muutos
 INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
-VALUES  (1, urakka_id, '2025-06-25', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
+VALUES  (1, urakka_id, '2025-10-20', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
          kayttaja_id_tero)
 RETURNING id INTO muutos_id_4;
 
