@@ -44,36 +44,57 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta - Kajaani MHU ja MHU Suomussalmi
--- Linkitys myös Iin urakkaan - Iin MHU 2021-2026
+-- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta:
+-- MHU Suomussalmi, Ivalon MHU testiurakka (uusi), Rovaniemen MHU testiurakka (1. hoitovuosi)
+-- Tehään Lupauksien kannalta Ivalon urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
+
+-- Linkitetään Ivalo
 DO $$
     DECLARE
-        urakkaid_kajaani INTEGER;
-        urakkaid_suomussalmi INTEGER;
-        urakkaid_ii INTEGER;
+        tarkistus_lapaisty BOOLEAN;
+        urakka_id_ivalo INTEGER;
+
     BEGIN
-        urakkaid_kajaani = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2025-2030');
-        urakkaid_suomussalmi = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
-        urakkaid_ii = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
-        INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
-        VALUES
-            (1, urakkaid_kajaani),
-            (2, urakkaid_kajaani),
-            (3, urakkaid_kajaani),
-            (4, urakkaid_kajaani),
-            (5, urakkaid_kajaani),
-            (6, urakkaid_suomussalmi),
-            (7, urakkaid_suomussalmi),
-            (8, urakkaid_suomussalmi),
-            (9, urakkaid_suomussalmi),
-            (10, urakkaid_suomussalmi),
-            (1, urakkaid_ii),
-            (2, urakkaid_ii),
-            (3, urakkaid_ii),
-            (4, urakkaid_ii),
-            (5, urakkaid_ii);
-    END
-$$ LANGUAGE plpgsql;
+        urakka_id_ivalo = (SELECT id FROM urakka WHERE nimi ILIKE '%Ivalon MHU testiurakka%' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
+
+        -- Tarkista löytyykö ympäristöstä
+        IF urakka_id_ivalo IS NULL THEN
+            RAISE NOTICE 'Ivalon urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
+            tarkistus_lapaisty := FALSE;
+        ELSE
+            RAISE NOTICE 'Ivalon urakka linkitetty lupauksiin!';
+            tarkistus_lapaisty := TRUE;
+        END IF;
+
+        IF tarkistus_lapaisty THEN
+            INSERT INTO lupausryhma_urakka(lupausryhma_id, urakka_id) VALUES
+-- Ivalo
+((SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_ivalo),
+-- Ivalo
+((SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_ivalo),
+-- Ivalo
+((SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_ivalo),
+-- Ivalo
+((SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_ivalo),
+-- Ivalo
+((SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_ivalo);
+        END IF;
+    END $$;
+
+-- Linkitetään kaikki muut paitsi ivalo
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" = 2024
+  AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen'
+  AND urakka.nimi NOT LIKE '%Ivalon MHU testiurakka%'; -- TODO: Tarkista osuma oikeaan urakkaan
+
 
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 
@@ -239,3 +260,11 @@ DO $$
         PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,3', 15, null,null, 3, null, ryhma_otsikko_id_2);
     END
 $$ LANGUAGE plpgsql;
+
+--- Linkitetään 2025 urakat lupausryhmiin
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" = 2025
+  AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen';

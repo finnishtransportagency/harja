@@ -134,30 +134,45 @@
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
-  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2025-2030-id
+  (let [ivaloid (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+        ivalon-tiedot {:urakka-id ivaloid
                         :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                             #inst "2028-09-30T20:59:59.000-00:00"]
+                                             #inst "2025-09-30T20:59:59.000-00:00"]
                         :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
         suomussalmi-tiedot {:urakka-id @suomussalmen-maanteiden-hoitourakan-2024-2029-id
                             :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                                 #inst "2028-09-30T20:59:59.000-00:00"]
+                                                 #inst "2025-09-30T20:59:59.000-00:00"]
                             :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        kajaani-vastaus (hae-urakan-lupaustiedot
+        ivalo-vastaus (hae-urakan-lupaustiedot
                           +kayttaja-jvh+
-                          kajaani-tiedot)
+                          ivalon-tiedot)
         suomussalmi-vastaus (hae-urakan-lupaustiedot
                               +kayttaja-jvh+
                               suomussalmi-tiedot)
-        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        ivalo-ryhmat (:lupausryhmat ivalo-vastaus)
         suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
-        kajaani-lupaus-1 (etsi-lupaus kajaani-vastaus 1)
-        suomussalmi-lupaus-1 (etsi-lupaus suomussalmi-vastaus 15)
-        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat)) 
+        ivalo-lupaus-44 (etsi-lupaus ivalo-vastaus 44)
+        suomussalmi-lupaus-68 (etsi-lupaus suomussalmi-vastaus 68)
+        ivalo-ryhma-idt (sort (map :id ivalo-ryhmat))
         suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))]
-    (is (= (list 1 2 3 4 5) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= (list 6 7 8 9 10) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= 1 (:lupaus-id kajaani-lupaus-1)) "Kajaanilla on lupaus 1 ryhmasta 1")
-    (is (= 15 (:lupaus-id suomussalmi-lupaus-1)) "Suomussalmella on lupaus 15 ryhmasta 6")))
+    (is (= (list 17 19 21 23 25) ivalo-ryhma-idt) "Ivalon ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 16 18 20 22 24) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= 44 (:lupaus-id ivalo-lupaus-44)) "Ivalolla on lupaus 44 ryhmasta 1")
+    (is (= 68 (:lupaus-id suomussalmi-lupaus-68)) "Suomussalmella on lupaus 13 ryhmasta 5")))
+
+
+(deftest urakan-2025-lupaustiedot-toimii
+  (let [kajaani-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        kajaani-tiedot {:urakka-id kajaani-id
+                       :valittu-hoitokausi [#inst "2025-09-30T21:00:00.000-00:00"
+                                            #inst "2026-09-30T20:59:59.000-00:00"]
+                       :nykyhetki #inst "2025-10-01T21:00:00.000-00:00"}
+        kajaani-vastaus (hae-urakan-lupaustiedot +kayttaja-jvh+ kajaani-tiedot)
+
+        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        kajaani-lupaus-83 (etsi-lupaus kajaani-vastaus 83)]
+
+    (is (= 83 (:lupaus-id kajaani-lupaus-83)) "Kajaanilla on lupaus 83 ryhmasta 5")))
 
 (deftest urakan-lupaustietojen-vaihtoehtojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id

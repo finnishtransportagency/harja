@@ -106,13 +106,15 @@
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         [hk-alkupvm hk-loppupvm] valittu-hoitokausi
         hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
         vastaus (into []
                       (lupaus-kyselyt/hae-urakan-lupaustiedot db {:urakka urakka-id
-                                                                  :urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+                                                                  :urakan-alkuvuosi urakan-alkuvuosi
                                                                   :alkupvm hk-alkupvm
                                                                   :loppupvm hk-loppupvm}))
+
         vastaus (->> vastaus
                   (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
                      (mapv #(update % :vastaukset
