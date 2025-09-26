@@ -14,6 +14,7 @@
 (defn hoitovuoden-kirjatut-muutokset-grid [e! {:keys [kirjatut-muutokset valittu-hoitokausi urakan-hoitokaudet] :as app}]
   [grid/grid
    {:tunniste :id
+    ;; Näytetään otsikko tyyliin: "2. hoitovuoden (01.10.2025 − 30.09.2026) kirjatut muutokset"
     :otsikko (str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
                     (pvm/vuosi (first valittu-hoitokausi)) (map (comp pvm/vuosi first) urakan-hoitokaudet) "hoitovuoden")
                " kirjatut muutokset")
@@ -70,8 +71,8 @@
                      #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
    kirjatut-muutokset])
 
-;; TODO: Toteuta loppuun
-(defn aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid [e! {:keys [kirjatut-muutokset] :as app}]
+;; TODO: Toteuta loppuun ja testaa
+(defn aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid [e! {:keys [aiempien-hoitovuosien-pysyvat-muutokset] :as app}]
   [grid/grid
    {:tunniste :id
     :otsikko "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset"
@@ -127,10 +128,9 @@
      :komponentti (fn [rivi]
                     [napit/muokkaa "Muokkaa"
                      #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
-   ;; TODO: Data
-   []])
+   aiempien-hoitovuosien-pysyvat-muutokset])
 
-(defn kirjatut-muutokset [e! {:keys [kirjatut-muutokset] :as app}]
+(defn kirjatut-muutokset [e! {:keys [kirjatut-muutokset aiempien-hoitovuosien-pysyvat-muutokset] :as app}]
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :kirjatut-muutokset
     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
