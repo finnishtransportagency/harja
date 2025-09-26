@@ -72,10 +72,19 @@ SELECT m.id,
   FROM ONLY mhu_muutos m
        LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
   WHERE m.urakka = :urakka
-    -- Kirjatuista muutoksista taulukossa saa näyttää vain ne, joiden voimassa_alkaen osuu valitulle hoitokaudelle
-    AND (m.tyyppi IN ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND
-         m.voimassa_alkaen BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                 (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD')))
+    AND CASE
+        --- Mahdollistetaan myös suodatus tyypin ja voimassa_ennen_hoitovuotta perusteella
+            WHEN :tyyppi::TEXT IS NOT NULL AND
+                 :voimassa_ennen_hoitovuotta::TEXT IS NOT NULL THEN
+                (m.tyyppi = :tyyppi::MHU_MUUTOSTYYPPI AND
+                 m.voimassa_alkaen < (SELECT TO_DATE(:voimassa_ennen_hoitovuotta || '-10-01', 'YYYY-MM-DD')))
+        -- Kirjatuista muutoksista taulukossa saa näyttää vain ne, joiden voimassa_alkaen osuu valitulle hoitokaudelle
+            ELSE
+                m.tyyppi IN
+                ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND
+                m.voimassa_alkaen BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+                        (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+      END
     AND m.poistettu IS FALSE
   GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi,
            m.syy, m.kulu_kohdistus, m.luonnos;

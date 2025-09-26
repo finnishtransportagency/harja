@@ -20,6 +20,7 @@
                      :haku-kaynnissa? false
                      :tallennus-kesken? false
                      :kirjatut-muutokset nil
+                     :aiempien-hoitovuosien-pysyvat-muutokset nil
                      :tehtava-maaramuutokset nil
                      :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
@@ -115,6 +116,7 @@
     :haku-kaynnissa? false
     :tallennus-kesken? false
     :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+    :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
     :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
     :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
     :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)

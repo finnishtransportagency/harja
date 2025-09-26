@@ -292,8 +292,23 @@
                                          (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
                                          (update :liitteet #(konv/jsonb->clojuremap %))))
                                      (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db {:urakka urakka-id
-                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                                                                                   :tyyppi nil
+                                                                                                   :voimassa_ennen_hoitovuotta nil}))
         kirjatut-muutokset (tavoitehinnan-muutos kirjatut-muutokset-vastaus)
+        ;; TODO: Vielä kesken. Tämä on hahmotelma aiempien vuosien pysyville muutoksisien hausta.
+        aiempien-vuosien-pysyvat-muutokset-vastaus (mapv
+                                                     (fn [rivi]
+                                                       (-> rivi
+                                                         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+                                                         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
+                                                         (update :liitteet #(konv/jsonb->clojuremap %))))
+                                                     (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                                                       {:urakka urakka-id
+                                                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                                        :tyyppi "pysyva"
+                                                        :voimassa_ennen_hoitovuotta hoitokauden-alkuvuosi}))
+        aiempien-vuosien-pysyvat-muutokset (tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset-vastaus)
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
@@ -339,6 +354,7 @@
 
     {;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
      :kirjatut-muutokset kirjatut-muutokset
+     :aiempien-hoitovuosien-pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
      ;; laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
      :lasketut-muutokset tehtava-ja-maaramuutokset
      :rahavarausten-muutokset rahavaraukset
