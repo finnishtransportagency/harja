@@ -14,7 +14,6 @@
              [lupaus-kyselyt :as lupaus-kyselyt]
              [urakat :as urakat-q]
              [budjettisuunnittelu :as budjetti-q]
-             [valikatselmus :as valikatselmus-q]
              [paatos-kyselyt :as paatos-kyselyt]]
    [harja.kyselyt.kommentit :as kommentit]
    [harja.kyselyt.konversio :as konversio]
@@ -101,7 +100,8 @@
                                                                     :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
     lupauspaatos))
 
-(defn valikatselmus-tehty-urakalle? "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
+(defn valikatselmus-tehty-urakalle?
+"Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
   [db urakka-id hoitokauden-alkuvuosi]
   {:pre [(number? urakka-id)]}
   (let [lupauspaatos (first (paatos-kyselyt/hae-lupauspaatokset db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
