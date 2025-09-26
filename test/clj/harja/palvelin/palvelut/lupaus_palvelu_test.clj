@@ -7,7 +7,6 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -97,9 +96,9 @@
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
     (is (= 30 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
 
-    (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
+    (is (= 18 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
-    (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
+    (is (= 18 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
     (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
     (is (= 10 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
@@ -117,8 +116,8 @@
     (is (= 25 (:pisteet-max ryhma-5)) "ryhmä 5 maksimipisteet")
     (is (= 25 (:pisteet-ennuste ryhma-5)) "ryhmä 5 piste-ennuste")
 
-    (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
-    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
+    (is (= 108 (->> ryhmat (map :pisteet-max) (reduce +))))
+    (is (= 108 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
         "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")
@@ -219,8 +218,8 @@
 
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))
 
-    (is (= 10 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
-      "Yhteensä 10 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
+    (is (= 11 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
+      "Yhteensä 11 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
     (is (= 4 (get-in vastaus [:yhteenveto :merkitsevat-odottaa-kannanottoa]))
       "Yhteensä 4 lupausta odottaa merkitsevää kannanottoa tammikuussa: 4, 8, 11 ja 13")))
 
@@ -808,3 +807,42 @@
     (is (thrown? Exception (tallenna-kk-pisteet +kayttaja-uuno+ urakka-id vuosi kuukausi pisteet tyyppi)))
     (is (thrown? Exception (poista-kuukausittaiset-pisteet +kayttaja-uuno+ {:urakka-id urakka-id
                                                                             :id (:id poistettava)})))))
+
+(deftest laske-lopullinen-kustannusennuste-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoitokauden-alkuvuosi 2019
+        toteutunut-tavoitehinta 1000000M
+        toteutunut-kustannus 950000M
+        valikatselmus-pvm (pvm/luo-pvm 2020 6 15)
+        user-id (:id +kayttaja-jvh+)]
+
+    (testing "Funktio suorittuu oikeilla parametreilla"
+      ;; Funktio ei palauta mitään - se tekee vain tietokantaoperaatioita
+      (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+                  (:db jarjestelma) urakka-id hoitokauden-alkuvuosi
+                  toteutunut-tavoitehinta toteutunut-kustannus
+                  valikatselmus-pvm user-id))
+        "Funktio suorittuu onnistuneesti")
+
+      ;; Tarkista että lopputilanne tallentui tietokantaan
+      (let [lopputilanteen-rivit (q (str "SELECT lopullinen_tavoitehinta, lopulliset_kustannukset "
+                                      "FROM lupaus_hoitovuosi_lopputilanne "
+                                      "WHERE \"urakka-id\" = " urakka-id
+                                      " AND hoitovuosi_alkuvuosi = " hoitokauden-alkuvuosi))]
+        (is (seq lopputilanteen-rivit) "Lopputilanne tallentui tietokantaan")
+        (when (seq lopputilanteen-rivit)
+          (let [[tavoite kustannus] (first lopputilanteen-rivit)]
+            (is (= toteutunut-tavoitehinta tavoite) "Tavoitehinta tallentui oikein")
+            (is (= toteutunut-kustannus kustannus) "Kustannukset tallentuivat oikein")))))
+    
+    (testing "Domain-funktioiden integraatio"
+      ;; Testaa että domain-funktiot toimivat odotetulla tavalla
+      (let [syotteet {:ennustettu-tavoitehinta 1000000M
+                      :ennustettu-kustannus 950000M
+                      :toteutunut-tavoitehinta 1000000M
+                      :toteutunut-kustannus 950000M
+                      :hoitovuoden-alun-tavoitehinta 1200000M}
+            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)]
+
+        (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
+        (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")))))

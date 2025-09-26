@@ -67,6 +67,12 @@
 (defrecord Kuukausipisteitamuokattu [pisteet kuukausi])
 (defrecord AvaaKuukausipisteetMuokattavaksi [kuukausi])
 
+;; Kustannusennuste
+(defrecord PaivitaKustannusennuste [kuukausi kentta arvo])
+(defrecord TallennaKustannusennuste [])
+(defrecord TallennaKustannusennusteOnnistui [vastaus])
+(defrecord TallennaKustannusennusteEpaonnistui [vastaus])
+
 ;; Testaus
 (defrecord AsetaNykyhetki [nykyhetki])
 
@@ -146,6 +152,16 @@
           (virhe!)
           (tulos!))))
     app))
+
+(defn paivita-kuukauden-kustannusennuste
+  "Päivittää kuukauden kustannusennusteen kentän lupaus-kuukaudet rakenteessa"
+  [app kuukausi kentta arvo]
+  (update-in app [:vastaus-lomake :lupaus-kuukaudet]
+    (fn [kuukaudet]
+      (mapv #(if (= (:kuukausi %) kuukausi)
+               (assoc-in % [:kustannusennuste kentta] arvo)
+               %)
+        kuukaudet))))
 
 (extend-protocol tuck/Event
   HoitokausiVaihdettu
@@ -466,8 +482,55 @@
     (viesti/nayta-toast! "Kuukausipisteiden lisäys epäonnistui!" :varoitus)
     app)
 
+  PaivitaKustannusennuste
+  (process-event [{kuukausi :kuukausi kentta :kentta arvo :arvo} app]
+    (paivita-kuukauden-kustannusennuste app kuukausi kentta arvo))
+
   AsetaNykyhetki
   (process-event [{nykyhetki :nykyhetki} app]
     (-> app
         (assoc :nykyhetki nykyhetki)
-        hae-urakan-lupaustiedot)))
+        hae-urakan-lupaustiedot))
+  
+  TallennaKustannusennuste
+    (process-event [_ app]
+      (let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])
+            lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi
+                              (get-in app [:vastaus-lomake :lupaus-kuukaudet])
+                              kohdekuukausi)
+            kuukauden-kustannusennuste (:kustannusennuste lupaus-kuukausi)
+            lupaus-id (get-in app [:vastaus-lomake :lupaus-id])
+            kohdevuosi (get-in app [:vastaus-lomake :vastausvuosi])
+            urakka-id (-> @tila/tila :yleiset :urakka :id)
+            lupaus (get-in app [:vastaus-lomake])  ; Koko lupaus-objekti
+            vastaus-data {:lupaus-id lupaus-id
+                          :urakka-id urakka-id
+                          :kuukausi kohdekuukausi
+                          :vuosi kohdevuosi
+                          :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
+                                        (= 0 (:paatos-kk lupaus)))
+                                    true false)
+                          :vastaus nil
+                          :lupaus-vaihtoehto-id nil
+                          :kustannusennuste kuukauden-kustannusennuste}]
+        (tuck-apurit/post! :vastaa-lupaukseen
+          vastaus-data
+          {:onnistui ->TallennaKustannusennusteOnnistui
+           :epaonnistui ->TallennaKustannusennusteEpaonnistui})
+        (-> app
+          (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus-data)
+          (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi
+                                       :lupaus-id lupaus-id
+                                       :tyyppi :kustannusennuste}))))
+  
+    TallennaKustannusennusteOnnistui
+    (process-event [{vastaus :vastaus} app]
+      ;; Koska vastauksen antaminen muuttaa sekä vastauslomaketta, että vastauslistaa, niin haetaan koko setti uusiksi
+      (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
+      (viesti/nayta! "Kustannusennuste tallennettu onnistuneesti" :success)
+      app)
+  
+    TallennaKustannusennusteEpaonnistui
+    (process-event [{vastaus :vastaus} app]
+      (viesti/nayta! "Kustannusennusteen tallentaminen epäonnistui" :danger)
+      (dissoc app :lupausta-lahetataan)))
