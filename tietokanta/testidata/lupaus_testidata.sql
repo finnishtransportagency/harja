@@ -93,8 +93,13 @@ FROM urakka
          JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
 WHERE lupausryhma."urakan-alkuvuosi" = 2024
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen'
-  AND urakka.nimi NOT LIKE '%Ivalon MHU testiurakka%'; -- TODO: Tarkista osuma oikeaan urakkaan
+  AND urakka.nimi NOT LIKE '%Ivalon MHU testiurakka%';
 
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" BETWEEN 2020 AND 2023;
 
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 

@@ -5,14 +5,11 @@
              [lupaus-kyselyt :as lupaus-kyselyt]
              [urakat :as urakat-q]
              [budjettisuunnittelu :as budjetti-q]
-             [valikatselmus :as valikatselmus-q]
              [paatos-kyselyt :as paatos-kyselyt]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.domain.roolit :as roolit]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.kulut.valikatselmus :as valikatselmus-domain]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
@@ -97,8 +94,9 @@
                                                                     :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
     lupauspaatos))
 
-(defn valikatselmus-tehty-urakalle? [db urakka-id hoitokauden-alkuvuosi]
+(defn valikatselmus-tehty-urakalle?
   "Onko urakalle tehty välikatselmus minä tahansa hoitokautena."
+  [db urakka-id hoitokauden-alkuvuosi]
   {:pre [(number? urakka-id)]}
   (let [lupauspaatos (first (paatos-kyselyt/hae-lupauspaatokset db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
     (boolean lupauspaatos)))

@@ -10,5 +10,10 @@
 
 (defqueries "harja/kyselyt/lupaus_kyselyt.sql")
 
-(declare hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
-  hae-kaynnissa-olevat-lupaus-urakat)
+(declare hae-lupaus hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
+  hae-kaynnissa-olevat-lupaus-urakat hae-lupauksen-urakkatieto paivita-urakan-luvatut-pisteet<!
+  lisaa-urakan-luvatut-pisteet<! paivita-lupaus-vastaus! hae-lupaus-vastaus lisaa-lupaus-vastaus<!
+  hae-lupaus-vaihtoehto
+  kommentit lisaa-lupaus-kommentti<! poista-kayttajan-oma-kommentti!
+  paivita-kuukausittaiset-pisteet<! tallenna-kuukausittaiset-pisteet<! poista-kuukausittaiset-pisteet<!
+  hae-kuukausivastaus)
