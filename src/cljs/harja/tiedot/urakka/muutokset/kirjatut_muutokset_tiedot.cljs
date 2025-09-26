@@ -64,23 +64,48 @@
       (flatten)
       (vec))))
 
-;; Apureita tehtävien määrämuutosten ja kustannusvaikutusten kopiointiin hoitovuodelle
-(defn- muunna-tehtava-ja-maara-rivit-kohdevuodelle
-  "Tekee muunnoksia tehtävät-ja-määrät riveihin, jotta ne sopivat kopioitavaksi toiselle hoitovuodelle."
-  [lahderivit kohdevuosi]
-  (mapv (fn [rivi]
-          (-> rivi
-            (assoc :hoitokauden_alkuvuosi kohdevuosi)))
-    lahderivit))
+;; -- Apureita tehtävien määrämuutosten ja kustannusvaikutusten kopiointiin hoitovuodelle
+(defn- korvaa-rivi-tai-merkitse-poistetuksi
+  "Merkitse rivit poistetuksi tai korvaa tehtava-avainta vastaava rivi uusilla tiedoilla lähdehoitovuodelta."
+  [lahderivit kohderivi]
+  ;; Etsitään korvaava rivi lähderivien joukosta tehtava-avaimen perusteella
+  (let [korvaava-rivi (some #(when (= (:tehtava kohderivi) (:tehtava %)) %) lahderivit)]
+    (cond
+      korvaava-rivi
+      (assoc korvaava-rivi :korvattu? true)
+      ;; Jos rivi on täysin uusi (eli vain UI:n tilassa), niin ei merkitä poistetuksi, vaan poistetaan kokonaan UI:sta
+      ;; Muutoin, ohjeistetaan backendiä poistamaan rivi tietokannasta
+      (not (:uusi? kohderivi))
+      (assoc kohderivi :poistettu true)
+      ;; Vain UI:n tilassa olevat rivit (eli :uusi? true) rivit suodatetaan pois
+      :else nil)))
 
-(defn- merkitse-rivit-poistetuksi
-  "Merkitse rivit poistetuksi."
-  [lahderivit]
-  (mapv (fn [rivi]
-          ;; Jos rivi on uusi (eli vain UI:ssa olemassaoleva), niin ei merkitä poistetuksi, vaan poistetaan kokonaan UI:sta
-          (when (not (:uusi? rivi))
-            (assoc rivi :poistettu true)))
-    lahderivit))
+(defn- muunna-tehtava-ja-maara-rivit-kohdevuodelle
+  "Muuntaa lahde- ja kohderivejä siten, että kopiointi kohdehoitovuodelle onnistuu ja vanhat rivit kohdevuodelta poistetaan."
+  [lahderivit kohderivit kohdevuosi]
+  (let [
+        ;; Käydään kohdevuoden rivit läpi. Rivit joko korvataan vastaavien lähderivien tiedoilla tai poistetaan
+        kohderivit (remove nil?
+                     (mapv
+                       (fn [rivi]
+                         (korvaa-rivi-tai-merkitse-poistetuksi lahderivit rivi))
+                       kohderivit))
+        ;; Lahderiveistä poistetaan ne rivit, jotka on jo korvattu kohderiveihin
+        ;; Myöskään lähderiveissä poistetuksi merkittyjä rivejä ei saa kopioida kohdevuodelle
+        lahderivit (remove #(some (fn [kohderivi]
+                                    (or
+                                      (= (:tehtava kohderivi) (:tehtava %))
+                                      (:poistettu %)))
+                              kohderivit)
+                     lahderivit)
+        ;; Yhdistetään rivien joukot. Näistä tulee lopullinen rivijoukko, joka kopioidaan kohdehoitovuodelle.
+        uudet-rivit (concat kohderivit lahderivit)]
+
+    ;; Lisätään vielä riveihin oikea kohdevuotta vastaava hoitovuosi
+    (mapv (fn [rivi]
+            (-> rivi
+              (assoc :hoitokauden_alkuvuosi kohdevuosi)))
+      uudet-rivit)))
 
 (defn- korvaa-vuosien-tehtavat-ja-maara-rivit
   "Korvaa kohdevuosien tehtävä- ja määrärivit kopiolla lähdevuoden riveistä.
@@ -93,13 +118,9 @@
       (->> (reduce (fn [m vuosi]
                      ;; Korvaa vuoden tehtävä- ja määrärivit lähderiveillä, aseta uusi alkuvuosi
                      (assoc m vuosi (concat
-                                      ;; Merkitse vanhat rivit poistetuksi ennen korvaavien rivien lisäämistä
-                                      ;; FIXME: Grid-komponentissa on ongelmia säilöä samanaikaisesti poistettu- ja ei-poistettuja rivejä
-                                      ;;       joilla on sama tunniste (eli tässä tapauksessa :tehtävä id)
-                                      ;;       Eli, jos kopioidaan toiselle hoitovuodelle rivi, jolla on sama tehtävä id kuin lähderivillä,
-                                      ;;       poistamisen sijaan pitäisi korvatakin kyseisen rivin tiedot lähderivin tiedoilla.
-                                      (remove nil? (merkitse-rivit-poistetuksi (get m vuosi)))
-                                      (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit vuosi))))
+                                      ;; Korvataan kohdevuoden rivit lähderiveillä tai poistetaan sellaisia
+                                      ;; kohdevuoden rivejä, joita ei löydy lähderivien joukosta.
+                                      (muunna-tehtava-ja-maara-rivit-kohdevuodelle lahderivit (get m vuosi) vuosi))))
              tjm-per-vuosi-map
              vuodet)
         (sort-by first)
