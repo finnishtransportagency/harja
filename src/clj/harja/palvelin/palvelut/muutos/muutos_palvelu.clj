@@ -291,8 +291,8 @@
                                          (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
                                          (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
                                          (update :liitteet #(konv/jsonb->clojuremap %))))
-                                     (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
-                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+                                     (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db {:urakka urakka-id
+                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
         kirjatut-muutokset (tavoitehinnan-muutos kirjatut-muutokset-vastaus)
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])

@@ -1,4 +1,4 @@
--- name: hae-urakan-hoitovuoden-muutostiedot
+-- name: hae-urakan-hoitovuoden-kirjatut-muutokset
 SELECT m.id,
        m.versio,
        m.urakka,
