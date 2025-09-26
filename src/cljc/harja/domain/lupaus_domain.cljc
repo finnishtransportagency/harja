@@ -223,10 +223,18 @@
      {:vuosi loppuvuosi :kuukausi 8}
      {:vuosi loppuvuosi :kuukausi 9}]))
 
-(defn paatos-kk-joukko [paatos-kk]
+#_ (defn paatos-kk-joukko [paatos-kk]
   (if (= 0 paatos-kk)
     (set kaikki-kuukaudet)
     #{paatos-kk}))
+
+(defn paatos-kk-joukko
+  "Päätös-kk on uudemmassa versiossa vectori, esim [0] tai [4,9] tai [12]. 0 = kaikki kuukaudet.
+  Aiemmin päätöskk on ollut yksittäinen numero."
+  [paatos-kk]
+  (if (= 0 (first paatos-kk))
+    (set kaikki-kuukaudet)
+    (set paatos-kk)))
 
 (defn hoitovuoden-kirjauskuukaudet [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
   (or (:kirjaus-kkt hoitovuoden-erikoisarvot)

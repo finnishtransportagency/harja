@@ -3,6 +3,7 @@
    [cheshire.core :as cheshire]
    [clojure.java.jdbc :as jdbc]
    [clojure.set :as set]
+   [clojure.string :as str]
    [com.stuartsierra.component :as component]
    [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
    [harja.domain.lupaus-domain :as lupaus-domain]
@@ -717,6 +718,7 @@
                            :else nil)))
                  pisterajat-result)]
      (or tulos 0))))
+
 (defn laske-lopullinen-kustannusennuste!
   "Laskee lopulliset pisteet kustannusennusteille kun välikatselmus on saatavilla.
    Kutsutaan välikatselmuksen päätöksestä."
@@ -793,7 +795,7 @@
                     ;; Arvoja puuttuu - loki varoitus ja jatka seuraavaan
                     (log/error (format "Kustannusennuste %s: Päivitys ohitettiin puuttuvien arvojen takia. Puuttuvat: %s. Arvot: ennustettu-tavoitehinta=%s, ennustetut-kustannukset=%s, hoitovuoden-alun-tavoitehinta=%s"
                                 kustannusennuste-id
-                                (clojure.string/join ", " puuttuvat-arvot)
+                                (str/join ", " puuttuvat-arvot)
                                 ennustettu-tavoitehinta
                                 ennustetut-kustannukset
                                 hoitovuoden-alun-tavoitehinta)))))))))

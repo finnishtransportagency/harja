@@ -84,7 +84,7 @@
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
     [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]
     ;; Näytä kustannusennuste-taulukko vain "kustannusennuste" lupaustyypille
-    (when (= "kustannusennuste" (:lupaustyyppi vastaus))
+    #_ (when (= "kustannusennuste" (:lupaustyyppi vastaus))
       [kustannusennuste-taulukko])]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]

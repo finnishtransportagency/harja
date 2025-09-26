@@ -413,11 +413,11 @@ WHERE l.lupaustyyppi = 'kustannusennuste'::lupaustyyppi
 -- name: tallenna-lopputilanne!
 -- Tallentaa hoitovuoden lopputilanteen
 INSERT INTO lupaus_hoitovuosi_lopputilanne
-       ("urakka-id", hoitovuosi, lopullinen_tavoitehinta, 
+       ("urakka-id", hoitovuosi_alkuvuosi, lopullinen_tavoitehinta,
         lopulliset_kustannukset, valikatselmus_pvm, vahvistaja, vahvistettu)
 VALUES (:urakka-id, :hoitovuosi-alkuvuosi, :lopullinen-tavoitehinta,
         :lopulliset-kustannukset, :valikatselmus-pvm, :vahvistaja, NOW())
-    ON CONFLICT ("urakka-id", hoitovuosi)
+    ON CONFLICT ("urakka-id", hoitovuosi_alkuvuosi)
     DO UPDATE SET
         lopullinen_tavoitehinta = EXCLUDED.lopullinen_tavoitehinta,
         lopulliset_kustannukset = EXCLUDED.lopulliset_kustannukset,
@@ -434,7 +434,7 @@ SELECT lopullinen_tavoitehinta,
        vahvistettu
 FROM lupaus_hoitovuosi_lopputilanne
 WHERE "urakka-id" = :urakka-id
-  AND hoitovuosi = :hoitovuosi-alkuvuosi;
+  AND hoitovuosi_alkuvuosi = :hoitovuosi-alkuvuosi;
 
 -- name: paivita-kustannusennuste-lopulliset-pisteet!
 -- Päivittää kustannusennusteen lopulliset pisteet
