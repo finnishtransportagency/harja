@@ -184,11 +184,26 @@
         valittu-hoitokausi-24-25 [(pvm/->pvm "1.10.2024") (pvm/->pvm "30.09.2025")]
         vastaus-24-25 (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :valittu-hoitokausi valittu-hoitokausi-24-25})
-        odotetut-rivit []]
+        odotetut-rivit-24-25 [{:alityyppi nil
+                               :id 5
+                               :jjh-muutosten-summa nil
+                               :kulu_kohdistus nil
+                               :kustannusvaikutukset ()
+                               :liitteet nil
+                               :luonnos false
+                               :nimi "Lisää paikkausta"
+                               :syy "Jonkin verran pitäisi paikkailla lisää tänä vuonna"
+                               :tavoitehinnan-muutos 0
+                               :tehtavat_ja_maarat ()
+                               :tyyppi "pysyva"
+                               :urakka 36
+                               :versio 1
+                               :voimassa_alkaen #inst"2024-09-30T21:00:00.000-00:00"}]]
     (is (= (count (:kirjatut-muutokset vastaus-22-23)) 0) "oikea määrä muutoksia 22-23")
     (is (= (count (:kirjatut-muutokset vastaus-23-24)) 0) "oikea määrä muutoksia 23-24")
-    (is (= (count (:kirjatut-muutokset vastaus-24-25)) 0) "oikea määrä muutoksia 24-25")
-    (is (= odotetut-rivit (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24) (:kirjatut-muutokset vastaus-24-25)))))
+    (is (= (count (:kirjatut-muutokset vastaus-24-25)) 1) "oikea määrä muutoksia 24-25")
+    (is (= [] (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24)))
+    (is (= odotetut-rivit-24-25 (:kirjatut-muutokset vastaus-24-25)))))
 
 
 (deftest tallenna-rahavarausmuutosten-syyt-ii

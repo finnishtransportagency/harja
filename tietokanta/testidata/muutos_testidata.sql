@@ -29,17 +29,19 @@ declare
     muutos_id_4 INTEGER := NULL;
     muutos_id_4_kulu_1 INTEGER := NULL;
 
+    muutos_id_5 INTEGER := NULL;
+
 BEGIN
 -- itse muutoksia on vain yksi, ja siitä tallennetaan kaikille tuleville hoitokausille kustannus- ja määrävaikutus
 
--- Muutos 1: päällysteiden paikkausta enemmän
+-- Muutos 1: [Pysyvä muutos] Päällysteiden paikkausta enemmän
    INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
    VALUES (_versio, urakka_id, alkaen_pvm, 'pysyva', 'Päällysteen paikkausmuutos',
            'Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.', kayttaja_id_tero,
            NOW())
 RETURNING id INTO muutos_id_1;
 
--- Muutos 2: erillisrahoitettu sorastus
+-- Muutos 2: [Muutostyö: Erillisrahoitus] Erillisrahoitettu sorastus
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, alityyppi, nimi, syy, luoja, luotu)
 VALUES (_versio,urakka_id, alkaen_pvm, 'muutostyo', 'erillisrahoitus', 'Erillisrahoitettu sorastusmuutos',
         'Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.', kayttaja_id_tero,
@@ -50,7 +52,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpi
 VALUES (_versio, muutos_id_2, 'hankintakustannukset',
         _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
--- Muutos 3: poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
+-- Muutos 3: [Muutostyö: Poikkeama] Poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, alityyppi, nimi, syy, luoja, luotu)
 VALUES (_versio,urakka_id, alkaen_pvm, 'muutostyo', 'poikkeama','Tämän hoitovuoden määräpoikkeamamuutos',
         'Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.', kayttaja_id_tero,
@@ -76,28 +78,16 @@ RETURNING id INTO muutos_id_3_liite_1;
 INSERT INTO mhu_muutos_liite (muutos, liite)
 VALUES (muutos_id_3,muutos_id_3_liite_1);
 
--- Usean hoitokauden muutokset
-FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi LOOP
-            -- muutos 1: päällysteiden paikkausta enemmän - kustannusvaikutus
-            INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-            VALUES (_versio, muutos_id_1, 'hankintakustannukset',
-                    _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
-            -- muutos 1: päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
-            INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
-            VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi,
-                    1000, 100, 1100);
-
-        END LOOP;
 
 -- Muutos 4: Johto- ja hallintokorvauksen muutos
-INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
-VALUES  (1, urakka_id, '2025-10-20', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
-         kayttaja_id_tero)
+   INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja)
+   VALUES  (1, urakka_id, '2025-10-20', 'johto-ja-hallintokorvaus', null, 'Työmääräarviot ylittyivät',
+            kayttaja_id_tero)
 RETURNING id INTO muutos_id_4;
 
-INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,  lisatieto, koontilaskun_kuukausi)
-VALUES  (1230, '2025-10-15', urakka_id, kayttaja_id_tero,
-         'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi')
+   INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,  lisatieto, koontilaskun_kuukausi)
+   VALUES  (1230, '2025-10-15', urakka_id, kayttaja_id_tero,
+            'Muutoksesta automaattisesti luotu kulu 1', 'lokakuu/5-hoitovuosi')
 RETURNING id INTO muutos_id_4_kulu_1;
 
 INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luoja, tyyppi, tavoitehintainen)
@@ -105,6 +95,49 @@ VALUES  ( 0, muutos_id_4_kulu_1, 1230, _toimenpideinstassi_id_hoidon_johto, _joh
           kayttaja_id_tero, 'jjh-muutos', true);
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES  (1, muutos_id_4,muutos_id_4_kulu_1);
+
+
+-- Muutos 5: [Pysyvä muutos] Edellisen hoitokauden pysyvä muutos
+--           Tämän pitäisi tulla näkyviin "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset"-taulukkoon Muutos-näkymässä
+INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, nimi, syy, luoja, luotu)
+   VALUES (_versio, urakka_id, (SELECT alkaen_pvm - INTERVAL '1 year'), 'pysyva', 'Lisää paikkausta',
+           'Jonkin verran pitäisi paikkailla lisää tänä vuonna', kayttaja_id_tero,
+           NOW())
+RETURNING id INTO muutos_id_5;
+
+
+-- Usean hoitokauden muutoksia varten loopataan hoitokaudet läpi ja lisätään data tässä
+FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi
+    LOOP
+        -- Muutos 1: Päällysteiden paikkausta enemmän - kustannusvaikutus
+        INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi,
+                                                 hoitokauden_alkuvuosi, summa)
+        VALUES (_versio, muutos_id_1, 'hankintakustannukset',
+                _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
+        -- Muutos 1: Päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
+                                                        maaramuutos, uusi_maara)
+        VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi,
+                1000, 100, 1100);
+
+        -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - kustannusvaikutus
+        --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta kustannusvaikutusta lisätään
+        --                seuraaville kokonaisille hoitovuosille
+        INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi,
+                                                 hoitokauden_alkuvuosi, summa)
+        VALUES (_versio, muutos_id_5, 'hankintakustannukset',
+                _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
+        -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - tehtävä- ja määräluettelon muutokset
+        --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta määrämuutoksia lisätään
+        --           seuraaville kokonaisille hoitovuosille
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
+                                                        maaramuutos, uusi_maara)
+        VALUES (_versio, muutos_id_5, _tehtava_id_ab_paikkaus, vuosi,
+                1000, 100, 1100);
+
+    END LOOP;
+
+--
 
 -- Iihin vähän kiinteähintaista työtä, jotta nähdään että nousee oikein pysyävän muutoksen lomakkeelle
 -- TODO: Tämä ei välttämättä ole tarpeeksi geneerinen eri urakoihin, mutta toimii ainakin Iissä
