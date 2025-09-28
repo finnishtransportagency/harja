@@ -1,5 +1,11 @@
+@import "../vayla/colors.less";
+
 // Muutokset-sivun tyylit
 .muutokset-sivu {
+  .harmaa-tumma-teksti {
+    color: @harmaa-tumma;
+  }
+
   .muutosten-vaikutus {
     margin-top: @valistys-32;
     .muutosten-vaikutus-container {
@@ -12,6 +18,7 @@
         }
         span.tietoarvo {
           font-weight: normal;
+          white-space: pre;
         }
         display: flex;
         justify-content: space-between;

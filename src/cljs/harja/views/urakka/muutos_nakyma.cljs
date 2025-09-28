@@ -139,6 +139,14 @@
         t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
         (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
 
+      (when (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet)
+        [:ul
+         [:li.harmaa-tumma-teksti "Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)"]])
+      (when (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet)
+        (if-not indeksikorjaus-vahvistettu?
+          t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
+          (fmt/euro-opt true true (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))))
+
       "Kirjatut muutokset"
       (fmt/euro-opt true true (:kirjatut-muutokset-yht budjettitavoitteet))
 
@@ -148,7 +156,9 @@
       (fmt/euro-opt true true (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
 
       [:b "Yhteensä"]
-      [:b (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet))]]
+      [:b (if (not indeksikorjaus-vahvistettu?)
+            t-yhteiset/+muutosten-vaikutus-yhteensa-ei-saatavilla+
+            (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet)))]]
      (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
 
 

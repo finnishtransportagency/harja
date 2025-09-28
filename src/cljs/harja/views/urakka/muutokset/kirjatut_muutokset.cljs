@@ -29,8 +29,7 @@
                           viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
                       (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
     :rivi-jalkeen-fn (fn [rivit]
-                       (let [tavoitehinnan-muutokset (map :tavoitehinnan-muutos rivit)
-                             tavoitehinnan-muutokset-yhteensa (apply + tavoitehinnan-muutokset)]
+                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))]
                          [{:teksti "Hoitovuoden lopun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
@@ -87,8 +86,7 @@
                           viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
                       (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
     :rivi-jalkeen-fn (fn [rivit]
-                       (let [tavoitehinnan-muutokset (map :tavoitehinnan-muutos rivit)
-                             tavoitehinnan-muutokset-yhteensa (apply + tavoitehinnan-muutokset)]
+                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))]
                          [{:teksti "Hoitovuoden alun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
                           ;; TODO:
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}

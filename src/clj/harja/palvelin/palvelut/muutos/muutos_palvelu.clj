@@ -333,10 +333,9 @@
                                                                            :hoitokaudet hoitokaudet
                                                                            :valittu-hoitokausi valittu-hoitokausi})
 
-        kirjatut-muutokset-yht (reduce + 0
-                                      (remove nil?
-                                        (concat
-                                          (map :tavoitehinnan-muutos kirjatut-muutokset))))
+        kirjatut-muutokset-yht (reduce + (map :tavoitehinnan-muutos kirjatut-muutokset))
+        ;; TODO: Luo indeksikorjattu summa aiempien vuosien pysyville muutoksille
+        aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
         toteumiin-perustuvat-muutokset-yht (reduce + 0
                                                (remove nil?
                                                  (concat
@@ -344,6 +343,7 @@
                                                    (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
         muutosten-vaikutus-yht (+
                                  (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
+                                 (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
                                  kirjatut-muutokset-yht
                                  toteumiin-perustuvat-muutokset-yht)]
 
@@ -359,6 +359,7 @@
      :suunniteltujen-maarien-muutokset []
      :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                          :aiemmat-pysyvat-muutokset-indeksikorjattu-yht aiemmat-pysyvat-muutokset-indeksikorjattu-yht
                           :kirjatut-muutokset-yht kirjatut-muutokset-yht
                           :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
                           :muutosten-vaikutus-yht muutosten-vaikutus-yht}}))

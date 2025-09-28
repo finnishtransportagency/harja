@@ -37,7 +37,8 @@
                             :syy "Muutoksen syy"
                             :voimassa_alkaen "Voimassa alkaen"})
 
-(def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
+(def +indeksikorjausta-ei-vahvistettu-txt+ "Ei saatavilla")
+(def +muutosten-vaikutus-yhteensa-ei-saatavilla+ "Ei saatavilla")
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
 (defonce nakymassa? (atom false))
