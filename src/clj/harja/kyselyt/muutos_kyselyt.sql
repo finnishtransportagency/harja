@@ -73,12 +73,12 @@ SELECT m.id,
        LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
   WHERE m.urakka = :urakka
     AND CASE
-        --- Mahdollistetaan myös suodatus tyypin ja voimassa_ennen_hoitovuotta perusteella
-            WHEN :tyyppi::TEXT IS NOT NULL AND
-                 :voimassa_ennen_hoitovuotta::TEXT IS NOT NULL THEN
-                (m.tyyppi = :tyyppi::MHU_MUUTOSTYYPPI AND
-                 m.voimassa_alkaen < (SELECT TO_DATE(:voimassa_ennen_hoitovuotta || '-10-01', 'YYYY-MM-DD')))
+        -- Mahdollistetaan aiempien vuosien pysyvien muutosten haku samalla kyselyllä
+            WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
+                (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
+                 m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
         -- Kirjatuista muutoksista taulukossa saa näyttää vain ne, joiden voimassa_alkaen osuu valitulle hoitokaudelle
+        -- Haetaan kaikkien kirjattujen muutostyyppien tiedot
             ELSE
                 m.tyyppi IN
                 ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND

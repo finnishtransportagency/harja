@@ -279,36 +279,31 @@
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi))))
 
+(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
+  (->> vastaus
+    (mapv (fn [rivi]
+      (-> rivi
+        (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+        (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
+        (update :liitteet #(konv/jsonb->clojuremap %)))))
+    (tavoitehinnan-muutos)))
 
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        kirjatut-muutokset-vastaus (mapv
-                                     (fn [rivi]
-                                       (-> rivi
-                                         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
-                                         (update :liitteet #(konv/jsonb->clojuremap %))))
-                                     (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db {:urakka urakka-id
-                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                                                                                   :tyyppi nil
-                                                                                                   :voimassa_ennen_hoitovuotta nil}))
-        kirjatut-muutokset (tavoitehinnan-muutos kirjatut-muutokset-vastaus)
-        ;; TODO: Vielä kesken. Tämä on hahmotelma aiempien vuosien pysyville muutoksisien hausta.
-        aiempien-vuosien-pysyvat-muutokset-vastaus (mapv
-                                                     (fn [rivi]
-                                                       (-> rivi
-                                                         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                                         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
-                                                         (update :liitteet #(konv/jsonb->clojuremap %))))
-                                                     (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
-                                                       {:urakka urakka-id
-                                                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                                        :tyyppi "pysyva"
-                                                        :voimassa_ennen_hoitovuotta hoitokauden-alkuvuosi}))
-        aiempien-vuosien-pysyvat-muutokset (tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset-vastaus)
+        kirjatut-muutokset (->
+                             (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                               {:urakka urakka-id
+                                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                :hae-vain-aiemmat-pysyvat-muutokset? false})
+                             (parsi-kirjatut-muutokset-vastaus))
+        aiempien-vuosien-pysyvat-muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                                                 {:urakka urakka-id
+                                                  :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                                  :hae-vain-aiemmat-pysyvat-muutokset? true})
+                                             (parsi-kirjatut-muutokset-vastaus))
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id

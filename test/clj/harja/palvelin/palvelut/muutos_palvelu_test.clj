@@ -203,6 +203,8 @@
     (is (= (count (:kirjatut-muutokset vastaus-23-24)) 0) "oikea määrä muutoksia 23-24")
     (is (= (count (:kirjatut-muutokset vastaus-24-25)) 1) "oikea määrä muutoksia 24-25")
     (is (= [] (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24)))
+
+    ;; Pitäisi löytyä "aiemman vuoden pysyvä muutos" joka on voimassa 1.10.2024 alkaen
     (is (= odotetut-rivit-24-25 (:kirjatut-muutokset vastaus-24-25)))))
 
 
