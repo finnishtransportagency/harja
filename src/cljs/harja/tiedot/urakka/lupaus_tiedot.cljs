@@ -353,14 +353,14 @@
                      :urakka-id (-> @tila/tila :yleiset :urakka :id)
                      :kuukausi kohdekuukausi
                      :vuosi kohdevuosi
-                     :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus)) (= 0 (:paatos-kk lupaus)))
+                     :paatos (if (or (some #(= kohdekuukausi %) (:paatos-kk lupaus)) (= 0 (first (:paatos-kk lupaus))))
                                true false)
                      :vastaus nil
                      :lupaus-vaihtoehto-id (:id vaihtoehto)})
           ei-valintaa-valittu? (nil? (:id vaihtoehto))
           aseta-naytettavat-monivalinnat (fn [app]
-                                            (if ei-valintaa-valittu?
-                                              (assoc-in app [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
+                                           (if ei-valintaa-valittu?
+                                             (assoc-in app [:vastaus-lomake :naytettavat-valinnat] naytettavat-valinnat-alustus)
                                               app))]
       (tuck-apurit/post! :vastaa-lupaukseen
                          vastaus
@@ -401,15 +401,15 @@
                               :urakka-id (-> @tila/tila :yleiset :urakka :id)
                               :kuukausi kohdekuukausi
                               :vuosi kohdevuosi
-                              :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
-                                              (= 0 (:paatos-kk lupaus)))
+                              :paatos (if (or (some #(= % kohdekuukausi) (:paatos-kk lupaus))
+                                            (= 0 (first (:paatos-kk lupaus))))
                                         true false)
                               :vastaus (:vastaus vastaus)
                               :lupaus-vaihtoehto-id nil})]
       (tuck-apurit/post! :vastaa-lupaukseen
-                         vastaus-map
-                         {:onnistui ->ValitseKEOnnistui
-                          :epaonnistui ->ValitseKEEpaonnistui})
+        vastaus-map
+        {:onnistui ->ValitseKEOnnistui
+         :epaonnistui ->ValitseKEEpaonnistui})
       (-> app
         (assoc-in [:vastaus-lomake :lahetetty-vastaus] vastaus-map)
         (assoc :lupausta-lahetataan {:kohdekuukausi kohdekuukausi :lupaus-id (:lupaus-id lupaus)}))))
@@ -507,8 +507,8 @@
                           :urakka-id urakka-id
                           :kuukausi kohdekuukausi
                           :vuosi kohdevuosi
-                          :paatos (if (or (= kohdekuukausi (:paatos-kk lupaus))
-                                        (= 0 (:paatos-kk lupaus)))
+                          :paatos (if (or (some #(= kohdekuukausi %) (:paatos-kk lupaus))
+                                        (= 0 (first (:paatos-kk lupaus))))
                                     true false)
                           :vastaus nil
                           :lupaus-vaihtoehto-id nil
