@@ -264,13 +264,17 @@
      toimenpiteiden-tiedot]))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
-        voi-muokata? (or
-                       (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
-                       (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen))
+        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)
+        voi-muokata? (and
+                       ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
+                       (or
+                         (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
+                         (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen))
+                       ;; Voi muokata, jos tavoitehinnan indeksikorjaus ei ole vielä vahvistettu hoitovuodelle
+                       (not indeksikorjaus-vahvistettu?))
         vetolaatikkorivit (into {}
                             (map (juxt :toimenpideinstanssi
                                    (fn [rivi]
@@ -294,7 +298,10 @@
      [:div.pysyvan-muutoksen-grid-header
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
-        [yleiset/vihje "Hoitovuoden tietoja ei voi muokata. Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."])
+        [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
+                         (if indeksikorjaus-vahvistettu?
+                           "Hoitovuoden alun tavoitehinta on jo vahvistettu."
+                           "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
        #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
