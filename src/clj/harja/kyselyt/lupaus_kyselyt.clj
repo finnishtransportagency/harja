@@ -21,4 +21,4 @@
   hae-lupaus-vaihtoehto
   kommentit lisaa-lupaus-kommentti<! poista-kayttajan-oma-kommentti!
   paivita-kuukausittaiset-pisteet<! tallenna-kuukausittaiset-pisteet<! poista-kuukausittaiset-pisteet<!
-  hae-kuukausivastaus)
+  hae-kuukausivastaus hae-lupauksen-hoitovuoden-kirjauskuukaudet)

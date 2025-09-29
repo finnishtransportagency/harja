@@ -18,7 +18,7 @@
 
 (deftest odottaa-kannanottoa
   (let [lupaus {:kirjaus-kkt [10 11]
-                :paatos-kk 6
+                :paatos-kk [6]
                 :joustovara-kkta 0
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:lupaus-vaihtoehto-id nil
@@ -46,7 +46,7 @@
           "Lupaus ei odota kannanottoa, jos valittu hoitokausi on tulevaisuudessa")))
 
   (let [lupaus {:kirjaus-kkt [10 11]
-                :paatos-kk 6
+                :paatos-kk [6]
                 :pisteet 10
                 :joustovara-kkta 0
                 :lupaustyyppi "yksittainen"
@@ -67,7 +67,7 @@
 
   ;; paatos-kk = 0 (kaikki)
   (let [lupaus {:kirjaus-kkt nil
-                :paatos-kk 0
+                :paatos-kk [0]
                 :joustovara-kkta 0
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:lupaus-vaihtoehto-id nil
@@ -85,7 +85,7 @@
   ;; paatos-kk = 0 (kaikki)
   ;; Yksittäinen lupaus voidaan hylätä ennen kuin kaikki päättävät vastaukset on annettu
   (let [lupaus {:kirjaus-kkt nil
-                :paatos-kk 0
+                :paatos-kk [0]
                 :joustovara-kkta 1
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:lupaus-vaihtoehto-id nil
@@ -116,7 +116,7 @@
 
 (deftest lupaus-kuukaudet
   (let [lupaus {:kirjaus-kkt nil
-                :paatos-kk 0
+                :paatos-kk [0]
                 :joustovara-kkta 1
                 :lupaustyyppi "yksittainen"
                 :vastaukset [{:vuosi 2021
@@ -181,13 +181,16 @@
                    {:vuosi 2022 :kuukausi 6 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
                    {:vuosi 2022 :kuukausi 7 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
                    {:vuosi 2022 :kuukausi 8 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}
-                   {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]]
+                   {:vuosi 2022 :kuukausi 9 :odottaa-kannanottoa? false :paatos-hylatty? true :paattava-kuukausi? true :kirjauskuukausi? false :nykyhetkeen-verrattuna :tuleva-kuukausi}]
+
+        ;maarapaiva-tiedot (laske-maarapaiva-tiedot db urakan-alkuvuosi hoitokauden-alkuvuosi nykyhetki)
+        ]
     (is (= kuukaudet
-           (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)))
+           (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil)))
     (let [lupaus (dissoc lupaus :vastaukset)
           valittu-hoitokausi [#inst "2022-09-30T21:00:00.000-00:00"
                               #inst "2023-09-30T20:59:59.000-00:00"]
-          lupaus-kuukaudet (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)]
+          lupaus-kuukaudet (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil)]
       (is (= (repeat 12 false)
              (->> lupaus-kuukaudet (map :odottaa-kannanottoa?)))
         "Tuleviin hoitokausiin ei oteta kantaa")
@@ -202,7 +205,7 @@
                       (assoc-in [2 :odottaa-kannanottoa?] true))
           kuukaudet (map #(assoc % :paatos-hylatty? false) kuukaudet)]
       (is (= kuukaudet
-             (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot))))))
+             (lupaus-domain/lupaus->kuukaudet lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot nil))))))
 
 (deftest odottaa-urakoitsijan-kannanottoa?
   (is (true? (lupaus-domain/odottaa-urakoitsijan-kannanottoa?
@@ -267,7 +270,7 @@
 
 (deftest sallittu-kuukausi-hoitovuodelle-test
   (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
-                :paatos-kk 9}
+                :paatos-kk [9]}
         erikoisarvot {:kirjaus-kkt [10 1 4 6]  ; Vain neljä kuukautta
                       :paatos-kk 6}]           ; Kesäkuu päätös
 
@@ -286,9 +289,9 @@
 
 (deftest vaaditut-vastauskuukaudet-hoitovuodelle-test
   (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
-                :paatos-kk 9}
+                :paatos-kk [9]}
         erikoisarvot {:kirjaus-kkt [10 1 4 6]
-                      :paatos-kk 6}]
+                      :paatos-kk [6]}]
 
     (testing "Yhdistää erikoisarvojen kirjaus- ja päätöskuukaudet"
       (is (= #{10 1 4 6}
