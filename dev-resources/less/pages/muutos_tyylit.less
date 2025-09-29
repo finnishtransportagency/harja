@@ -1,3 +1,4 @@
+@import "../yleiset.less";
 @import "../vayla/colors.less";
 
 // Muutokset-sivun tyylit
@@ -22,6 +23,23 @@
         }
         display: flex;
         justify-content: space-between;
+
+        &.keskita-rivin-sisalto {
+          justify-content: center;
+        }
+
+        &.piilota-rivin-sisalto {
+          display: none;
+        }
+
+        .vihje-indeksikorjaus {
+          border: 1px solid @blue-default;
+          margin: @valistys-8;
+
+          .vihjeen-sisalto {
+            padding: 0.25rem 0.5rem;
+          }
+        }
       }
     }
   }
