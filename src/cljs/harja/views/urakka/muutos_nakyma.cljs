@@ -168,15 +168,17 @@
       ^{:koko-rivin-leveys? true :tietorivi-luokka (str "keskita-rivin-sisalto"
                                                      (when indeksikorjaus-vahvistettu?
                                                        " piilota-rivin-sisalto"))}
-      [yleiset/vihje [:span "Indeksikorjaus vahvistetaan "
-                      [:a.klikattava.alleviivaa {:href "#"
-                                                 :on-click #(siirtymat/siirry-annettuun-valilehteen
-                                                              @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
-                                                              {:taso1 :urakat
-                                                               :taso2 :suunnittelu
-                                                               :taso3 :uusi-kustannussuunnitelma})}
-                       "kustannussuunnitelmassa."]]
-       "vihje-indeksikorjaus"] ""]]))
+      [yleiset/info-laatikko :neutraali
+       [:span "Indeksikorjaus vahvistetaan "
+        [:a.klikattava.alleviivaa {:href "#"
+                                   :on-click #(siirtymat/siirry-annettuun-valilehteen
+                                                @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                                {:taso1 :urakat
+                                                 :taso2 :suunnittelu
+                                                 :taso3 :uusi-kustannussuunnitelma})}
+         "kustannussuunnitelmassa."]]
+       nil
+       {:luokka "vihje-indeksikorjaus"}] ""]]))
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
