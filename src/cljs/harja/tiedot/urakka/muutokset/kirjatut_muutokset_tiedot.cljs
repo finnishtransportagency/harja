@@ -169,7 +169,6 @@
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
       (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
         {:urakka-id @nav/valittu-urakka-id
-         :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
          ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
          ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
          ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.

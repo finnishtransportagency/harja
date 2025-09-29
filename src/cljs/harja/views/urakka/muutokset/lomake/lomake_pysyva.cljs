@@ -312,7 +312,10 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        hoitovuosi (:hoitovuosi muokattava-muutos)]
+        hoitovuosi (:hoitovuosi muokattava-muutos)
+        indeksikorjatut-hoitovuodet (:urakan-tavoitehinnat-indeksikorjattu budjettitavoitteet)
+        hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
+        indeksikorjaus-vahvistettu? (get indeksikorjatut-hoitovuodet hoitokauden-alkuvuosi false)]
     [{:tyyppi :komponentti
       :uusi-rivi? true
       :komponentti (fn [_rivi]
@@ -364,7 +367,7 @@
                           "Valitse")
         :valinta-arvo identity}
 
-       (when (:indeksikorjaus-vahvistettu? budjettitavoitteet)
+       (when indeksikorjaus-vahvistettu?
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_]

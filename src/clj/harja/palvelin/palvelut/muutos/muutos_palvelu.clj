@@ -279,6 +279,19 @@
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi))))
 
+(defn urakan-tavoitehinnat-indeksikorjattu
+  "Palauttaa hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu"
+  [db urakka-id hoitokaudet]
+  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+    (into {}
+      (mapv (fn [hoitokausi]
+              (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
+                    vahvistettu? (boolean (some #(and (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi)
+                                                   (:indeksikorjaus-vahvistettu %))
+                                            tavoitehintojen-tilat))]
+                [hoitokauden-alkuvuosi vahvistettu?]))
+        hoitokaudet))))
+
 (defn- parsi-kirjatut-muutokset-vastaus [vastaus]
   (->> vastaus
     (mapv (fn [rivi]
@@ -327,6 +340,7 @@
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
+        tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id hoitokaudet)
 
         ;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
         tehtava-ja-maaramuutokset (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
@@ -357,7 +371,7 @@
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
      :suunniteltujen-maarien-muutokset []
-     :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
+     :budjettitavoitteet {:urakan-tavoitehinnat-indeksikorjattu tavoitehinnat-indeksikorjattu
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                           :aiemmat-pysyvat-muutokset-indeksikorjattu-yht aiemmat-pysyvat-muutokset-indeksikorjattu-yht
                           :kirjatut-muutokset-yht kirjatut-muutokset-yht
@@ -383,7 +397,7 @@
 
 (defn hae-pysyvan-muutoksen-pohjatiedot
   "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
-  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
+  [db kayttaja {:keys [urakka-id muutos-id muutos-versio] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
   (let [toimenpiteiden-tiedot (mapv
@@ -395,8 +409,7 @@
                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
                                                                                           :versio muutos-versio
-                                                                                          :urakka urakka-id
-                                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+                                                                                          :urakka urakka-id}))
         toimenpiteiden-tehtavat (hae-toimenpiteiden-tehtavat db urakka-id)]
     {:toimenpiteiden-tiedot toimenpiteiden-tiedot
      :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
@@ -406,7 +419,7 @@
 ;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
+  [db kayttaja {:keys [urakka-id muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
   (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
@@ -435,7 +448,6 @@
                          (first tyyppikohtaiset-tiedot)
                          (when (= (:tyyppi muutos) "pysyva")
                            (hae-pysyvan-muutoksen-pohjatiedot db kayttaja {:urakka-id urakka-id
-                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                                            :muutos-id (:id muutos)
                                                                            :muutos-versio (:versio muutos)})))
                   :liitteet liitteet)]

@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [harja.tiedot.navigaatio :as nav]
+  (:require [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.ui.debug :as debug]
             [tuck.core :as tuck]
@@ -128,8 +129,10 @@
 
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
-  [_e! {:keys [budjettitavoitteet] :as _app}]
-  (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
+  [_e! {:keys [budjettitavoitteet valittu-hoitokausi] :as _app}]
+  (let [indeksikorjatut-hoitovuodet (:urakan-tavoitehinnat-indeksikorjattu budjettitavoitteet)
+        hoitokauden-alkuvuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
+        indeksikorjaus-vahvistettu? (get indeksikorjatut-hoitovuodet hoitokauden-alkuvuosi false)]
     [:div.muutosten-vaikutus
      [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                        :tietorivi-luokka "padding-8"}
