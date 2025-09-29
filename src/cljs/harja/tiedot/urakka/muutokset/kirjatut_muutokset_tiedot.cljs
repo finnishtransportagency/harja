@@ -211,8 +211,6 @@
                    hk-alkuvuosi :hk-alkuvuosi
                    ;; Yhden vetolaatikon tehtävät-ja-määrät rivit valitulta hoitovuodelta
                    taulukon-rivit :taulukon-rivit} app]
-    (log/debug "PaivitaToimenpiteenTehtavamaarat taulukon-rivit: " taulukon-rivit)
-
     (-> app
       ;; Nämä pitävät gridin tilan synkassa app-tilan kanssa
       (muokkaa-toimenpiteen-rivit-pysyva-muutos toimenpideinstanssi
@@ -235,8 +233,6 @@
                    tehtava-id :tehtava-id
                    hk-alkuvuosi :hk-alkuvuosi
                    poistettu? :poistettu?} app]
-    (log/debug "MerkitseTehtavanMaaramuutosPoistetuksi, tpi " toimenpideinstanssi " tehtava-id " tehtava-id " hk-alkuvuosi " hk-alkuvuosi " poistettu? " poistettu?)
-
     (-> app
       ;; Nämä pitävät gridin tilan synkassa app-tilan kanssa
       (muokkaa-toimenpiteen-rivit-pysyva-muutos toimenpideinstanssi
@@ -266,7 +262,6 @@
   (process-event [{muutos-summa :muutos-summa
                    toimenpideinstanssi :toimenpideinstanssi
                    hk-alkuvuosi :hk-alkuvuosi} app]
-    (log/debug "PaivitaToimenpiteenTavoitehinnanMuutos, summa" muutos-summa " tpi " toimenpideinstanssi "hk-alkuvuosi " hk-alkuvuosi)
     (assert (int? hk-alkuvuosi))
 
     (-> app
@@ -318,7 +313,6 @@
 
   PeruutaTavoiteJaKattohinta
   (process-event [{hk-alkuvuosi :hk-alkuvuosi} app]
-    (log/debug "PeruUrakanTavoitehinnanVahvistus, hoitovuosi: " hk-alkuvuosi)
     (assert (int? hk-alkuvuosi))
 
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta

@@ -191,7 +191,6 @@
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
-    (log/debug "PaivitaLomake")
     (assoc app :muokattava-muutos lomake))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
@@ -312,19 +311,16 @@
   LisaaLiite
   (process-event
     [{:keys [liite]} app]
-    (prn "LisaaLiite")
     (-> app
       (update-in [:muokattava-muutos :liitteet] conj liite)))
 
   PoistaLisattyLiite
   (process-event [_ app]
-    (prn "PoistaLisattyLiite")
     (assoc app :uusi-liite nil))
 
   PoistaTallennettuLiite
   (process-event
     [{:keys [liite-id]} app]
-    (prn "PoistaTallennettuLiite, liite-id: " liite-id)
     (let [{urakka-id :id} @nav/valittu-urakka
           e! (tuck/current-send-function)
           ;; hanskataan tässä myös tilanne, jossa muutosta ei ole vielä tallennettu
