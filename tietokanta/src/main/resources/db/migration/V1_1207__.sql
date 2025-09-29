@@ -82,7 +82,7 @@ CREATE TABLE lupaus_hoitovuoden_kirjauskuukaudet (
                                                      "lupaus-id" BIGINT NOT NULL REFERENCES lupaus(id) ON DELETE CASCADE,
                                                      "hoitovuosi-nro" INTEGER NOT NULL CHECK ("hoitovuosi-nro" >= 1 AND "hoitovuosi-nro" <= 15),
                                                      "kirjaus-kkt" INTEGER[] NOT NULL,
-                                                     "paatos-kk" INTEGER CHECK ("paatos-kk" BETWEEN 0 AND 12),
+                                                     "paatos-kk" INTEGER[],
                                                      "joustovara-kkta" INTEGER CHECK ("joustovara-kkta" BETWEEN 0 AND 12),
                                                      luotu TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
                                                      luoja INTEGER REFERENCES kayttaja(id),
