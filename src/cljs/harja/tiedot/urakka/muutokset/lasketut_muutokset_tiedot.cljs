@@ -1,22 +1,15 @@
 (ns harja.tiedot.urakka.muutokset.lasketut-muutokset-tiedot
   "Urakan muutosten tiedot - lasketut muutokset."
   (:require
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [taoensso.timbre :as log]
     [tuck.core :as tuck]
-    ;; Tuck efektit ja apurit
-    [harja.tyokalut.tuck]
-    [reagent.core :refer [atom]]
 
-    [harja.pvm :as pvm]
+    ;; Tuck efektit ja apurit
+    [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka :as u]
-    [harja.ui.lomake :as lomake]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.ui.viesti :as viesti]
-    [harja.ui.liitteet :as liitteet]
-    [harja.tiedot.navigaatio :as nav]
-    [harja.ui.nakymasiirrin :as siirrin]
-    [harja.tiedot.urakka.urakka :as tila]
-    [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.tiedot.urakka.urakka :as tila]))
 
 ;; Muutostyypit:
 ;; - Tehtävä- ja määrämuutokset
