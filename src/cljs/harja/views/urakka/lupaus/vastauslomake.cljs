@@ -227,15 +227,21 @@
      kuukauden-vastaus-atom]]])
 
 (defn- kustannusennuste-syottokentät [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]} app]
-  (let [;; Hae kuukauden tiedot samalla tavalla kuin muut vastaukset
-        lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi
+  (let [lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi
                           (get-in app [:vastaus-lomake :lupaus-kuukaudet])
                           kohdekuukausi)
-        maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? lupaus-kuukausi)
-        maarapaiva (:maarapaiva lupaus-kuukausi)
-        ;; Hae kuukauden kustannusennuste samalla tavalla kuin kuukauden-vastaus
+        nykyhetki (or (:nykyhetki app) (pvm/nyt)) 
+        maarapaiva-pvm (:maarapaiva-pvm lupaus-kuukausi)
+        maarapaiva-mennyt-ohi? (and maarapaiva-pvm
+                                    (pvm/jalkeen? nykyhetki maarapaiva-pvm))
+        maarapaivan-kuukausi (when maarapaiva-pvm (pvm/kuukausi maarapaiva-pvm))
+        maarapaivan-vuosi (when maarapaiva-pvm (pvm/vuosi maarapaiva-pvm))
+        nykyinen-kuukausi (pvm/kuukausi nykyhetki)
+        nykyinen-vuosi (pvm/vuosi nykyhetki)
+        ei-maarapaivan-kuukausi? (and maarapaivan-kuukausi maarapaivan-vuosi
+                                      (or (not= nykyinen-kuukausi maarapaivan-kuukausi)
+                                          (not= nykyinen-vuosi maarapaivan-vuosi)))
         kuukauden-kustannusennuste (:kustannusennuste lupaus-kuukausi)
-        ;; Jos on lähetetty vastaus, käytä sitä (kuten muissakin vastauksissa)
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         kustannusennuste (if (:kustannusennuste lahetetty-vastaus)
                            (:kustannusennuste lahetetty-vastaus)
@@ -250,10 +256,11 @@
                                    (:tavoitehinta kuukauden-kustannusennuste)
                                    (:toteutuneet-kustannukset kuukauden-kustannusennuste))
         ;; Määrittele käytetäänkö read-only näkymää
-        kayta-readonly-nakymaa? (and maarapaiva-mennyt-ohi? tiedot-syotetty-ajoissa?)]
+        kayta-readonly-nakymaa? (and maarapaiva-mennyt-ohi? tiedot-syotetty-ajoissa?)
+        disabled? (or disabled? ei-maarapaivan-kuukausi?)]
 
-    (cond
-      ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
+    (cond 
+        ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
       (and maarapaiva-mennyt-ohi? (not tiedot-syotetty-ajoissa?))
       [:div.kustannusennuste-maarapaiva-ohitettu
        [:div.row
@@ -261,8 +268,25 @@
          [:div.alert.alert-warning
           [:h4 "Määräpäivä ohitettu"]
           [:p (str "Hoitovuoden lopun ennustetta ei tehty määräpäivään "
-                (when maarapaiva (pvm/pvm maarapaiva)) " mennessä.")]
+                (when maarapaiva-pvm (pvm/pvm maarapaiva-pvm)) " mennessä.")]
           [:p [:strong "Mikäli jotain ennustetta ei tehdä määräaikaan mennessä, ennusteesta ei saa yhtään pistettä."]]]]]
+       [:div.row
+        [:div.col-xs-12
+         [:div.margin-top-16.text-left
+          [sulje-nappi e! {:luokka "pull-right"}]]]]]
+      
+       ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
+      ei-maarapaivan-kuukausi?
+      [:div.kustannusennuste-vaara-kuukausi
+       [:div.row
+        [:div.col-xs-12
+         [:div.alert.alert-info
+          [:h4 "Kirjaus ei ole mahdollista tässä kuussa"]
+          [:p (str "Kustannusennuste voidaan syöttää vain määräpäivän kuukaudessa "
+                (when maarapaivan-kuukausi (pvm/kuukauden-nimi maarapaivan-kuukausi))
+                (when maarapaivan-vuosi (str "/" maarapaivan-vuosi)) ".")]
+          (when maarapaiva-pvm
+            [:p (str "Määräpäivä: " (pvm/pvm maarapaiva-pvm))])]]]
        [:div.row
         [:div.col-xs-12
          [:div.margin-top-16.text-left
