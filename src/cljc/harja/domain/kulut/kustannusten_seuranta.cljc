@@ -51,7 +51,10 @@
 
                                  (= toimenpide-nimi "jjh-muutos")
                                  "Johto- ja hallintokorvauksen muutokset"
-
+                                 
+                                 (= toimenpide-nimi "pysyva")
+                                 "Pysyvät muutokset"
+                                 
                                  :else
                                  toimenpide-nimi)
               ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät

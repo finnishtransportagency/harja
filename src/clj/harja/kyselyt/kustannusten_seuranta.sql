@@ -331,6 +331,29 @@ WHERE l.urakka = :urakka
 GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.syy, mmk.summa, lk.maksueratyyppi, l.erapaiva, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
          lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi), lk.tavoitehintainen
 UNION ALL
+-- Lisätään pysyvät muutokset
+-- Näillä ei ole toteutuneita kuluja, noudetaan pekästään tavoitehinnan muutos (suunniteltu määrä)
+-- TODO .. 
+SELECT mmk.summa                                    AS budjetoitu_summa,
+       mmk.summa                                    AS budjetoitu_summa_indeksikorjattu,
+       0                                            AS toteutunut_summa,
+       NULL::TEXT                                   AS maksutyyppi,
+       'hankinta'                                   AS toimenpideryhma,
+       'Pysyvä muutos'                              AS tehtava_nimi,
+       'jotain'                                     AS toimenpide,
+       '2025-01-01'::TEXT                           AS ajankohta,
+       'toteutunut'                                 AS toteutunut,
+       0                                            AS jarjestys,
+       'muutokset'                                  AS paaryhma,
+       NOW()                                        AS indeksikorjaus_vahvistettu,
+       'pysyva'                                     AS kulu_tyyppi,
+       m.syy                                        AS muutostyo_syy
+    FROM mhu_muutos m
+         LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id 
+WHERE m.urakka = :urakka
+  AND mmk.hoitokauden_alkuvuosi = 2025
+  AND mmk.versio = 1
+UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut kulu_kohdistus taulusta.
 -- Rajaus tehty toimenpidekoodi.koodi = 23151 perusteella

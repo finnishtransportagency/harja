@@ -95,6 +95,7 @@
                   (when (nil? valittu-pvm) "Syötä muutoksen syy")
 
                   ;; Muussa tapauksessa katsotaan että voimassa alkaen osuu valittuun hoitokauteen
+                  ;; Erityisesti tärkeä muutostyö kirjauksissa 
                   (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
                                                    (pvm/valissa?
                                                      valittu-pvm

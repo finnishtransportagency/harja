@@ -51,7 +51,7 @@
   [:tr.bottom-border {:key (hash (str nimi toteuma indeksikorjattu budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-   [:td {:style {:width (:tehtava leveydet)}} nimi]
+   [:td.livi-reunaviiva {:style {:width (:tehtava leveydet)}} nimi]
    [:td.numero {:style {:width (:suunniteltu leveydet)}} (when (and (not= "0,00" budjetoitu) (not tavoitehinnanoikaisu?)) budjetoitu)]
    [:td.numero {:class (when (false? vahvistettu)
                                 "vahvistamatta")
@@ -91,11 +91,12 @@
               neg? (big/gt (big/->big toteutunut-summa) (big/->big budjetoitu-summa-indeksikorjattu))]
           (concat
             [^{:key (str toimenpide "-" (hash rivi))}
-             (lisaa-taulukkoon-tehtava-rivi [:span.livi-reunaviiva {:style {:padding-left "16px"}} (nimi-avain rivi)]
+             (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (nimi-avain rivi)]
                (fmt->big (big/->big budjetoitu-summa) false)
                (fmt->big budjetoitu-summa-indeksikorjattu false)
                true ;; Kaikki kolmannen portaan tehtävät merkitään "vahvistetuksi" koska niille ei näytetä summaa
                (fmt->big (big/->big toteutunut-summa) false)
+               
                (when nayta-erotus? (fmt->big erotus false))
                (when nayta-erotus?
                  (muotoile-prosentti
@@ -119,6 +120,7 @@
              rivi-avain (keyword (str paaryhma "-" toimenpide-nimi))
              muutokset-jjh (filter #(= "jjh-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              muutos-jjh? (boolean (seq muutokset-jjh))
+             muutokset-pysyva (filter #(= "pysyva" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              nayta-erotus? (not muutos-jjh?)
              muutokset-erillisrahoitettu (filter #(= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
@@ -136,7 +138,8 @@
                                         (tehtavatason-rivitys toimenpide hankinta-tehtavat false :tehtava_nimi)
                                         (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true :tehtava_nimi))
                                       (tehtavatason-rivitys toimenpide muutokset-jjh false :muutostyo_syy)
-                                      (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu true :muutostyo_syy)))
+                                      (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu true :muutostyo_syy)
+                                      (tehtavatason-rivitys toimenpide muutokset-pysyva true :muutostyo_syy)))
              vahvistettu? (or
                             (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu"))))
                             (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu")))))
