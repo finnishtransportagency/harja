@@ -33,6 +33,9 @@ INSERT INTO materiaalikoodi (nimi, yksikko, kohdistettava, materiaalityyppi, ura
 VALUES ('Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen', 't', false, 'hiekoitushiekka', 'hoito', 17,
         (select id from materiaaliluokka where materiaalityyppi = 'hiekoitushiekka'), '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe');
 
+-- Päivitetään olemassa olleen materiaalin nimi
+UPDATE materiaalikoodi SET nimi = 'Hiekoitushiekka, liukkaudentorjunta' WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5';
+
 -- TEHTÄVIEN TIETOJEN PÄIVITYS
 -- Varmistetaan että asiaan liittyvät tehtävät linkittyvät materiaaliin ja materiaaliluokkaan oikein.
 -- Lisätään tehtävälle samalla yksilöivä tunnista.
