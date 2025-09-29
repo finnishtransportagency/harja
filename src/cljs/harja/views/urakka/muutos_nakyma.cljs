@@ -1,6 +1,8 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [harja.ui.debug :as debug]
+  (:require [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.ui.debug :as debug]
             [tuck.core :as tuck]
 
             [harja.fmt :as fmt]
@@ -163,7 +165,15 @@
       ^{:koko-rivin-leveys? true :tietorivi-luokka (str "keskita-rivin-sisalto"
                                                      (when indeksikorjaus-vahvistettu?
                                                        " piilota-rivin-sisalto"))}
-      [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa." "vihje-indeksikorjaus"] ""]]))
+      [yleiset/vihje [:span "Indeksikorjaus vahvistetaan "
+                      [:a.klikattava.alleviivaa {:href "#"
+                                                 :on-click #(siirtymat/siirry-annettuun-valilehteen
+                                                              @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                                              {:taso1 :urakat
+                                                               :taso2 :suunnittelu
+                                                               :taso3 :uusi-kustannussuunnitelma})}
+                       "kustannussuunnitelmassa."]]
+       "vihje-indeksikorjaus"] ""]]))
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
