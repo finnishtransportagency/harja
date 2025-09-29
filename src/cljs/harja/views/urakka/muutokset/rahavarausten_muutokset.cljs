@@ -90,6 +90,8 @@
            :tasaa :oikea 
            :leveys 10
            :muokattava? (constantly false)}
+          ;; Tyhjä sarake, jotta "Tavoitehinnan muutos (€)" -sarake asettuun samaan kohtaan kuin muissa muutostauluissa
+          ;; Muissa tauluissa tässä sarakkeessa on toimintopainikkeet, mutta tässä ei ole toimintoja
           {:otsikko ""
            :nimi :filleri
            :tyyppi :komponentti
