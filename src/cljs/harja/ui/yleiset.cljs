@@ -534,7 +534,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
   :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
   :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)
-  :tietorivi-luokka             Aseta lisäluokka tietoriville"
+  :tietorivi-luokka             Aseta lisäluokka tietoriville
+
+  Otsikon metadata:
+  - Otsikon metadata toimii keinona ujuttaa rivikohtaisia optioita otsikon tietojen yhteydessä.
+  :viiva-rivin-alle?            Hallitse yksittäisen rivin kohdalla viivan piirtämistä
+  :koko-rivin-leveys?           Jos true, tietokenttä vie koko rivin leveyden (oletus false), ja erillinen arvo jätetään pois.
+  :tietorivi-luokka             Aseta lisäluokka koko tietoriville otsikon metadatassa"
   [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
            tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys tietorivi-luokka]} & otsikot-ja-arvot]
   (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
@@ -552,7 +558,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (let [otsikko-meta (meta otsikko)]
            (when arvo
              (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
-                                       {:style {:display "auto"}})]
+                                       {:style {:display "auto"}})
+                   tietorivi-luokka (or (:tietorivi-luokka otsikko-meta) tietorivi-luokka)]
                ^{:key (str i otsikko)}
                [:div.tietorivi (merge
                                  {:class tietorivi-luokka}
@@ -562,7 +569,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          (not (jata-kaventamatta otsikko)))
                                    {:style {:margin-bottom "0.5em"}}))
                 [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-                [:span.tietoarvo.max-width-3 arvo]
+                ;; Jätetään "täyttöelementti" pois, jos otsikko vie koko rivin leveyden
+                (when-not (:koko-rivin-leveys? otsikko-meta)
+                  (if otsikot-omalla-rivilla?
+                    [:div]
+                    [:span {:style {:display "inline-block" :width "1em"}}]))
+                ;; Jätetään renderöimättä arvo, jos otsikko vie koko rivin leveyden
+                (when-not (:koko-rivin-leveys? otsikko-meta)
+                  [:span.tietoarvo.max-width-3 arvo])
                 (when (tyhja-rivi-otsikon-jalkeen otsikko)
                   [:span [:br] [:br]])]))))
        (partition 2 otsikot-ja-arvot))]))
