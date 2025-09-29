@@ -275,37 +275,13 @@ WHERE lupausryhma."urakan-alkuvuosi" = 2025
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen';
 
 -- Kustannusennusten testausta varten
- INSERT INTO lupaus (
-  jarjestys,
-  "lupausryhma-id",
-  "urakka-id",
-  lupaustyyppi,
-  pisteet,
-  "kirjaus-kkt",
-  "paatos-kk",
-  "joustovara-kkta",
-  kuvaus,
-  sisalto,
-  "urakan-alkuvuosi"
-) VALUES (
-  99, -- testijärjestys, muuta tarvittaessa
-  (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' AND "urakan-alkuvuosi" = 2025),
-  null,
-  'kustannusennuste',
-  8,
-  '{1,4,6,8}',
-  '{6}',
-  0,
-  'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen',
-  'Ennustamme urakan hoitovuoden lopun tavoitehintaa ja toteutuvia kustannuksia 4 kertaa vuodessa alla mainittuihin määräpäiviin mennessä.',
-  2025
-);
+
 
 -- Ensimmäinen hoitovuosi: erikoiskuukaudet
 INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
 VALUES
   ((SELECT id FROM lupaus
-   WHERE jarjestys = 99
+   WHERE jarjestys = 7
   AND "urakan-alkuvuosi" = 2025
   AND kuvaus = 'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen'),
   1,
