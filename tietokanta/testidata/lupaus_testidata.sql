@@ -286,7 +286,7 @@ VALUES
   AND kuvaus = 'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen'),
   1,
   '{10,1,4,6}',
-   6,
+  '{10,1,4,6}',
   0,
   1);
 
