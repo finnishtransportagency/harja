@@ -113,7 +113,7 @@
 
 
 (defn muutoslistaus [e! app]
-  [:span.muutoslistaus
+  [:div.muutoslistaus
    (when (:valittu-hoitokausi app)
      (if (t-yhteiset/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
        ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien " legacy " muutostoiminnot
