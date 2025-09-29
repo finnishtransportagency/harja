@@ -1,27 +1,28 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.ui.debug :as debug]
-            [tuck.core :as tuck]
+  (:require
+    [tuck.core :as tuck]
+    [harja.pvm :as pvm]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
 
-            [harja.fmt :as fmt]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-            [harja.ui.yleiset :as yleiset]
+
+    [harja.fmt :as fmt]
+    [harja.ui.grid :as grid]
+    [harja.ui.napit :as napit]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.komponentti :as komp]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.views.urakka.valinnat :as urakka-valinnat]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.ui.yleiset :as yleiset]
 
     ;; Osiot / lomake
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
-            [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
-            [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
-            [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
-            [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
+    [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
+    [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
+    [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
+    [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
+    [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
 
 
 (defn- tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
