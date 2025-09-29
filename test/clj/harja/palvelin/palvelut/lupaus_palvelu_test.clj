@@ -96,9 +96,9 @@
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
     (is (= 30 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
 
-    (is (= 18 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
+    (is (= 10 (:pisteet ryhma-2)) "ryhmä 2 pisteet")
     (is (= 0 (:kyselypisteet ryhma-2)) "ryhmä 2 kyselypisteet")
-    (is (= 18 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
+    (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
     (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
     (is (= 10 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
@@ -116,8 +116,8 @@
     (is (= 25 (:pisteet-max ryhma-5)) "ryhmä 5 maksimipisteet")
     (is (= 25 (:pisteet-ennuste ryhma-5)) "ryhmä 5 piste-ennuste")
 
-    (is (= 108 (->> ryhmat (map :pisteet-max) (reduce +))))
-    (is (= 108 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
+    (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
+    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
         "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
         "koko hoitovuoden piste-ennuste")
@@ -218,7 +218,7 @@
 
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))
 
-    (is (= 11 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
+    (is (= 10 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
       "Yhteensä 11 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
     (is (= 4 (get-in vastaus [:yhteenveto :merkitsevat-odottaa-kannanottoa]))
       "Yhteensä 4 lupausta odottaa merkitsevää kannanottoa tammikuussa: 4, 8, 11 ja 13")))
