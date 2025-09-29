@@ -20,14 +20,16 @@ VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :maksukausi, :o
 -- name: hae-tarjouksen-tiedot
 SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
        (SELECT array_agg(row(tk.id,
-           CASE WHEN tk.osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN r.nimi
+           CASE WHEN tk.osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), r.nimi)
                 WHEN tk.osio = 'hankintakustannukset'::suunnittelu_osio THEN 'Kilpailutettavat hankinnat'
                 WHEN tk.osio = 'erillishankinnat'::suunnittelu_osio THEN 'Erillishankinnat'
                 WHEN tk.osio = 'hoidonjohtopalkkio'::suunnittelu_osio THEN 'Hoidonjohtopalkkio'
                 ELSE tk.osio::text END,
+           CASE WHEN r.jarjestys IS NULL THEN 999 ELSE r.jarjestys END,
             tk.summa, tk.osio, tk.tehtava_id, tk.tehtavaryhma_id, tk.rahavaraus_id))
         FROM tarjous_kustannukset tk
                  LEFT JOIN rahavaraus r ON r.id = tk.rahavaraus_id
+                 LEFT JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = r.id AND rvu.urakka_id = t.urakka_id
         WHERE tk.tarjous_id = t.id) as kustannukset,
        (SELECT array_agg(row(tj.id, UPPER(LEFT(jjht.toimenkuva, 1)) || RIGHT(jjht.toimenkuva, -1), tj.summa, tj.maksukausi, tj.osio, tj.johto_ja_hallintokorvaus_toimenkuva_id))
         FROM tarjous_johto_ja_hallintokorvaus tj

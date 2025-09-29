@@ -20,7 +20,7 @@ SELECT rv.id,
            JOIN toimenpide tp ON t.emo = tp.id
            JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :id
  GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, rv.jarjestys
- ORDER BY rv.jarjestys ASC;
+ ORDER BY rv.jarjestys;
 
 -- name: hae-urakoiden-rahavaraukset
 SELECT u.id                     AS "urakka-id",

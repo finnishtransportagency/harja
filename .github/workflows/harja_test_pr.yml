@@ -31,14 +31,9 @@ jobs:
       checks: write
 
     with:
-      # HUOM: PR:t Testataan vanhemmalla PostgreSQL-versiolla, jotta on-prem ympäristöön ei lipsahda
-      #       siirtymäaikana vain uudemmissa PostgreSQL-versioissa toimivia kantamuutoksia, jotka voivat rikkoa
-      #       Harjan toimintoja on-prem ympäristössä
-      #       On-prem ympäristön deployment tapahtuu automaattisesti eri ympäristössä kuin GH Actions, joten
-      #       deploymenttiä ei voi täällä rajoittaa GH Actions testitulosten perusteella.
 
       # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
-      test-db-service: harjadb-13.13-3.3.3
+      test-db-service: harjadb-latest
       e2e-browsers: "['chrome']"
       # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.
       build-harja: 'light'
