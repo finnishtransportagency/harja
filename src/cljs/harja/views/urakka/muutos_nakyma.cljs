@@ -158,8 +158,12 @@
       [:b "Yhteensä"]
       [:b (if (not indeksikorjaus-vahvistettu?)
             t-yhteiset/+muutosten-vaikutus-yhteensa-ei-saatavilla+
-            (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet)))]]
-     (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
+            (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet)))]
+
+      ^{:koko-rivin-leveys? true :tietorivi-luokka (str "keskita-rivin-sisalto"
+                                                     (when indeksikorjaus-vahvistettu?
+                                                       " piilota-rivin-sisalto"))}
+      [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa." "vihje-indeksikorjaus"] ""]]))
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
