@@ -467,10 +467,9 @@
   lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))
   urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
   urakan-alkupvm (:alkupvm urakan-tiedot)
-  ;; Hoitovuoden järjestysnumero (1 = ensimmäinen) perustuen kuukausi/vuosi -parametreihin
   paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
   hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
-  hoitovuoden-erikoisarvot nil #_(first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
+  hoitovuoden-erikoisarvot (first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
     (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
