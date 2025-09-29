@@ -56,7 +56,7 @@
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
      :tyyppi :numero
-     :fmt fmt/euro-opt
+     :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
      :leveys 15}
 
@@ -107,14 +107,14 @@
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
      :tyyppi :numero
-     :fmt fmt/euro-opt
+     :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
      :leveys 15}
 
     {:otsikko "Indeksikorjattu"
      :nimi :tavoitehinnan-muutos-indeksikorjattu
      :tyyppi :numero
-     :fmt fmt/euro-opt
+     :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
      :leveys 15}
 
