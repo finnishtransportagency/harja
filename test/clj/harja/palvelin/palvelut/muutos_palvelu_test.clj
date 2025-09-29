@@ -4,6 +4,7 @@
             [clojure.walk :as walk]
             [com.stuartsierra.component :as component]
 
+            [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -167,11 +168,60 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
 
-        vastaus (get-in
-                  (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                           :valittu-hoitokausi valittu-hoitokausi})
-                  [:budjettitavoitteet :muutosten-vaikutus-yht])]
-    (is (= (some-> vastaus Math/round) 292712) "Muutosten vaikutus yhteensä")))
+        vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                         :valittu-hoitokausi valittu-hoitokausi})
+        budjettitavoitteet (:budjettitavoitteet vastaus)]
+
+    ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
+    (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
+
+    (is (= 1000 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
+      "Aiemmat pysyvät muutokset indeksikorjattuna")
+
+    (is (= 6230M (:kirjatut-muutokset-yht budjettitavoitteet)) "Kirjatut muutokset yhteensä")
+
+    (is (= -43277.74 (some->>
+                       (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet)
+                       (round2 2))) "Toteutumiin perustuvat muutokset yhteensä")
+
+
+    ;; Muutosten vaikutus yhteensä sisältää:
+    ;; * Indeksikorjatun tavoitehinnan
+    ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
+    ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
+    ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
+    (is (= (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2)) 293712.26) "Muutosten vaikutus yhteensä")))
+
+(deftest hae-urakan-tavoitehinta-muutosten-kokonaissumma-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2026") (pvm/->pvm "30.09.2027")]
+
+        vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                         :valittu-hoitokausi valittu-hoitokausi})
+        budjettitavoitteet (:budjettitavoitteet vastaus)]
+
+    ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
+    ;; TODO: Hoidetaan testidataan Iin tai Suomussalmen urakalle vahvistettu tavoitehinta, jotta saadaan tämäkin
+    ;;       testattua kunnolla (toinen urakka riittää, ei tarvi molempiin), ja UI:ssa näkyisi jotain järkevää suoraan
+    (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
+
+    (is (= 2000 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
+      "Aiemmat pysyvät muutokset indeksikorjattuna")
+
+    ;; Urakalle ei ole kirjattu muutoksia hoitovuodelle 2026-2027, ainoastaan aiemman vuoden pysyvät muutokset pitäisi näkyä
+    (is (= 0 (:kirjatut-muutokset-yht budjettitavoitteet)) "Kirjatut muutokset yhteensä")
+
+    ;; Urakalle ei ole lainkaan kirjattu toteutumiin perustuvia muutoksia
+    (is (= 0.0 (some->>
+                 (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet)
+                 (round2 2))) "Toteutumiin perustuvat muutokset yhteensä")
+
+    ;; Muutosten vaikutus yhteensä sisältää:
+    ;; * Indeksikorjatun tavoitehinnan
+    ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
+    ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
+    ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
+    (is (= (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2)) 2000.00) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -619,14 +669,14 @@
                                         :kustannusvaikutukset (list
                                                                 {:hoitokauden_alkuvuosi 2025
                                                                  :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
-                                                                :toimenpideinstanssi 129
+                                                                 :summa 1111
+                                                                 :toimenpideinstanssi 129
                                                                  :versio 1}
-                                                               {:hoitokauden_alkuvuosi 2025
-                                                                :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
-                                                                :toimenpideinstanssi 132
-                                                                :versio 1})
+                                                                {:hoitokauden_alkuvuosi 2025
+                                                                 :kustannuslaji "hankintakustannukset"
+                                                                 :summa 1111
+                                                                 :toimenpideinstanssi 132
+                                                                 :versio 1})
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi "Eskon muutos"
@@ -694,9 +744,9 @@
                                                                  :versio 1}
                                                                 {:hoitokauden_alkuvuosi 2025
                                                                  :kustannuslaji "hankintakustannukset"
-                                                                :summa 2
-                                                                :toimenpideinstanssi 132
-                                                                :versio 2})
+                                                                 :summa 2
+                                                                 :toimenpideinstanssi 132
+                                                                 :versio 2})
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi "Eskon muutos"
