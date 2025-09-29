@@ -251,7 +251,7 @@
        :nimi :muuttunut-kustannus
        :vaadi-ei-negatiivinen? true
        :tyyppi :numero
-       :fmt fmt/euro-opt
+       :fmt (partial fmt/euro-opt false false)
        :tasaa :oikea
        :leveys 8
        :hae (fn [rivi]
@@ -309,7 +309,7 @@
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)]
@@ -363,6 +363,17 @@
                           (fmt/hoitokauden-jarjestysluku-ja-vuodet % urakan-hoitokaudet "Hoitovuosi")
                           "Valitse")
         :valinta-arvo identity}
+
+       (when (:indeksikorjaus-vahvistettu? budjettitavoitteet)
+         {:uusi-rivi? true
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.perustiedot
+                          [yleiset/info-laatikko :vahva-ilmoitus
+                           "Hoitovuoden alun tavoitehinta on vahvistettu"
+                           "Pysyvän muutoksen tallentaminen peruu vahvistuksen. Vahvista tiedot uudelleen tallentamisen jälkeen."
+                           nil
+                           {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
 
        ;; Taulukko jossa vaikutuksia voidaan syöttää
        (if hoitovuosi
