@@ -130,7 +130,7 @@ Tilaajan ja meidän rahavarauksemme yhdistetään ja tätä summaa käytetään 
  2025),
 
 -- Lupaus 7
-(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kustannusennuste', 8, '{10,1,4,6,8}', '{10,1,4,6,8}', 0,
+(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kustannusennuste', 8, '{1,4,6,8}', '{1,4,6,8}', 0,
  'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen',
  'Ennustamme urakan hoitovuoden lopun tavoitehintaa ja toteutuvia kustannuksia 4 kertaa vuodessa alla mainittuihin määräpäiviin mennessä.<br><br>
 <table class="lupaus-kuvaus-taulukko">
@@ -311,10 +311,51 @@ $$
 $$ LANGUAGE plpgsql;
 
 -- Lupaus nro. 7 Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen
--- Tämä on vain placeholderi, tässä ei ole oikeita vaihtehtoja
-SELECT * FROM luo_lupauksen_vaihtoehto(7, 2025, 'Ennusteen tarkkuus > 9,0 %', 1,'Toiminnan suunnitelmallisuus','Yleinen', null, null, null);
-SELECT * FROM luo_lupauksen_vaihtoehto(7, 2025, 'Ennusteen tarkkuus ≤ 9,0 %', 4,'Toiminnan suunnitelmallisuus','Yleinen', null, null, null);
-SELECT * FROM luo_lupauksen_vaihtoehto(7, 2025, 'Ennusteen tarkkuus ≤ 7,0 %', 8,'Toiminnan suunnitelmallisuus','Yleinen', null, null, null);
+-- Ensimmäinen hoitovuosi: erikoiskuukaudet
+INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
+VALUES
+  ((SELECT id FROM lupaus
+   WHERE jarjestys = 7
+  AND "urakan-alkuvuosi" = 2025
+  AND kuvaus = 'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen'),
+  1,
+  '{10,1,4,6,8}',
+  '{10,1,4,6,8}',
+  0,
+  1);
+
+-- Lupaus 7 tarvitsemat deadline ja pisteytysmääritykset 2025 urakoille
+INSERT INTO lupaus_kustannusennuste_kuukausi_pisteet ("urakan-alkuvuosi", kuukausi, paiva, kuvaus, pisterajat) VALUES
+(2025, 10, 15, 'Lokakuu 15. päivä (2025 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]'),
+
+(2025, 1, 15, 'Tammikuu 15. päivä (2025 urakat)', '[
+    {"operaattori": "≤", "raja": 4.0, "pisteet": 8, "kuvaus": "≤ 4,0%"},
+    {"operaattori": "≤", "raja": 6.0, "pisteet": 4, "kuvaus": "≤ 6,0%"},
+    {"operaattori": ">", "raja": 6.0, "pisteet": 1, "kuvaus": "> 6,0%"}
+]'),
+
+(2025, 4, 30, 'Huhtikuu 30. päivä (2025 urakat)', '[
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 8, "kuvaus": "≤ 2,0%"},
+    {"operaattori": "≤", "raja": 3.0, "pisteet": 4, "kuvaus": "≤ 3,0%"},
+    {"operaattori": ">", "raja": 3.0, "pisteet": 1, "kuvaus": "> 3,0%"}
+]'),
+
+(2025, 6, 30, 'Kesäkuu 30. päivä (2025 urakat)', '[
+    {"operaattori": "≤", "raja": 1.0, "pisteet": 8, "kuvaus": "≤ 1,0%"},
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 4, "kuvaus": "≤ 2,0%"},
+    {"operaattori": ">", "raja": 2.0, "pisteet": 1, "kuvaus": "> 2,0%"}
+]'),
+
+(2025, 8, 15, 'Elokuu 15. päivä (2025 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]');
+
 
 -- Lupaus nro. 8 Luovutuksen menettely
 DO
