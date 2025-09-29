@@ -45,9 +45,9 @@
   (> (count (hylatyt vastaukset)) joustovara-kkta))
 
 (defn hyvaksytty? [vastaukset joustovara-kkta paatos-kk]
-  (let [vastaus-kuukaudet-lkm (if (= paatos-kk 0)
+  (let [vastaus-kuukaudet-lkm (if (= (first paatos-kk) 0)
                                 12                          ; 0 = kaikki
-                                1)
+                                (count paatos-kk))
         vaaditut-hyvaksynnat (- vastaus-kuukaudet-lkm joustovara-kkta)
         hyvaksynnat (count (hyvaksytyt vastaukset))]
     (>= hyvaksynnat vaaditut-hyvaksynnat)))
