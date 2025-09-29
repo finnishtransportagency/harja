@@ -141,5 +141,4 @@
     (fn [e! app]
       [:<>
        [hoitovuoden-kirjatut-muutokset-grid e! app]
-       ;; TODO: Toteuta pysyvien muutosten haku näkymään aiemmilta vuosilta
        [aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid e! app]])}])
