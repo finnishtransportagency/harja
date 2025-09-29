@@ -14,6 +14,7 @@
              [lupaus-kyselyt :as lupaus-kyselyt]
              [urakat :as urakat-q]
              [budjettisuunnittelu :as budjetti-q]
+             [valikatselmus :as valikatselmus-q]
              [paatos-kyselyt :as paatos-kyselyt]]
    [harja.kyselyt.kommentit :as kommentit]
    [harja.kyselyt.konversio :as konversio]
