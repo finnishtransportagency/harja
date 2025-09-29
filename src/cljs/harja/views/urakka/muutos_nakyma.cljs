@@ -130,9 +130,8 @@
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
   [_e! {:keys [budjettitavoitteet valittu-hoitokausi] :as _app}]
-  (let [indeksikorjatut-hoitovuodet (:urakan-tavoitehinnat-indeksikorjattu budjettitavoitteet)
-        hoitokauden-alkuvuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
-        indeksikorjaus-vahvistettu? (get indeksikorjatut-hoitovuodet hoitokauden-alkuvuosi false)]
+  (let [indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu?
+                                      budjettitavoitteet valittu-hoitokausi)]
     [:div.muutosten-vaikutus
      [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                        :tietorivi-luokka "padding-8"}

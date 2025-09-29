@@ -340,6 +340,7 @@
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
+        ;; Mapataan hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu
         tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id hoitokaudet)
 
         ;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
@@ -371,7 +372,7 @@
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
      :suunniteltujen-maarien-muutokset []
-     :budjettitavoitteet {:urakan-tavoitehinnat-indeksikorjattu tavoitehinnat-indeksikorjattu
+     :budjettitavoitteet {:tavoitehinta-indeksikorjattu-per-hoitovuosi tavoitehinnat-indeksikorjattu
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
                           :aiemmat-pysyvat-muutokset-indeksikorjattu-yht aiemmat-pysyvat-muutokset-indeksikorjattu-yht
                           :kirjatut-muutokset-yht kirjatut-muutokset-yht

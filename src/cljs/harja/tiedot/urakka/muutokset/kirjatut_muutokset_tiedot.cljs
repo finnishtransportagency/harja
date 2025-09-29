@@ -25,6 +25,9 @@
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
 (defrecord MerkitseTehtavanMaaramuutosPoistetuksi [toimenpideinstanssi tehtava-id hk-alkuvuosi poistettu?])
 (defrecord KopioiHoitovuodenMuutoksetTulevilleHoitovuosille [hk-alkuvuosi urakan-hoitovuodet])
+(defrecord PeruutaTavoiteJaKattohinta [hk-alkuvuosi])
+(defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
+(defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
 (defn muokkaa-toimenpiteen-rivit-pysyva-muutos
   "Palauttaa app-tilan, jossa yhden toimenpideinstanssin vetolaatikon rivejä on muokattu muokkaus-fn avulla."
@@ -264,6 +267,7 @@
                    toimenpideinstanssi :toimenpideinstanssi
                    hk-alkuvuosi :hk-alkuvuosi} app]
     (log/debug "PaivitaToimenpiteenTavoitehinnanMuutos, summa" muutos-summa " tpi " toimenpideinstanssi "hk-alkuvuosi " hk-alkuvuosi)
+    (assert (int? hk-alkuvuosi))
 
     (-> app
       ;; Nämä pitävät gridin tilan synkassa app-tilan kanssa
@@ -291,6 +295,8 @@
   KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
   (process-event [{hk-alkuvuosi :hk-alkuvuosi urakan-hoitovuodet :urakan-hoitovuodet} app]
     (log/debug "KopioiHoitovuodenMuutoksetTulevilleHoitovuosille, hoitovuosi: " hk-alkuvuosi)
+    (assert (int? hk-alkuvuosi))
+
     ;; TODO: Tässä on tarkoituksena on kopioida valitun hoitokauden muutokset urakan kaikille tuleville hoitovuosille
     ;;       Eli, valitun hoitovuoden tiedot ensin etsitään [:muokattava-muutos :toimenpiteiden-tiedot] polusta
     ;;       Sieltä otetaan talteen :tehtavat_ja_maarat ja :kustannusvaikutukset
@@ -308,7 +314,45 @@
 
         ;; Yhdistä tehtavat ja määrät, sekä kustannusvaikutukset kaikista vetolaatikoista tallennusta varten
         (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)
-        (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))))
+        (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
+
+  PeruutaTavoiteJaKattohinta
+  (process-event [{hk-alkuvuosi :hk-alkuvuosi} app]
+    (log/debug "PeruUrakanTavoitehinnanVahvistus, hoitovuosi: " hk-alkuvuosi)
+    (assert (int? hk-alkuvuosi))
+
+    (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
+      {:urakka-id @nav/valittu-urakka-id
+       :hoitovuoden-alkuvuosi hk-alkuvuosi
+       :vahvista? false}
+      {:onnistui ->PeruutaTavoiteJaKattohintaOnnistui
+       :onnistui-parametrit [hk-alkuvuosi]
+       :epaonnistui ->PeruutaTavoiteJaKattohintaEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+    PeruutaTavoiteJaKattohintaOnnistui
+    (process-event [{hk-alkuvuosi :hk-alkuvuosi vastaus :vastaus } app]
+      (assert (int? hk-alkuvuosi))
+
+      (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
+        (viesti/nayta-toast!
+          "Tavoite- ja kattohinnan peruminen epäonnistui!"
+          :varoitus
+          viesti/viestin-nayttoaika-keskipitka)
+        (viesti/nayta-toast! "Tavoite- ja kattohinnan vahvistus peruttu."))
+
+      ;; Päivitä app-tilaan tieto, että hoitovuoden vahvistukset on purettu
+      (-> app
+        (assoc-in [:budjettitavoitteet :tavoitehinta-indeksikorjattu-per-hoitovuosi hk-alkuvuosi] false)))
+
+    PeruutaTavoiteJaKattohintaEpaonnistui
+    (process-event [_ app]
+      (viesti/nayta-toast!
+        "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
+        :varoitus
+        viesti/viestin-nayttoaika-keskipitka)
+      app))
 
 ;; -- Pysyvät muutokset -- LOPPUU
 

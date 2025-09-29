@@ -1,19 +1,21 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-pysyva
   "Muutokset välilehden lomakkeet - Pysyvä muutos"
-  (:require [harja.domain.muutos-domain :as muutos-domain]
-            [reagent.core :as r]
+  (:require
+    [reagent.core :as r]
+    [harja.fmt :as fmt]
+    [harja.pvm :as pvm]
+    [harja.ui.grid :as grid]
+    [harja.ui.napit :as napit]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.kentat :as kentat]
 
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.debug :refer [debug]]
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
-            [harja.ui.yleiset :as yleiset]))
+    [harja.ui.debug :refer [debug]]
+    [harja.domain.muutos-domain :as muutos-domain]
+    [harja.views.urakka.muutokset.yhteiset :as yhteiset]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
+    [harja.ui.yleiset :as yleiset]))
 
 (defn- uusi-tehtava-id [tehtavat-ja-maarat-valittuna-hoitovuonna]
   (dec (apply min
@@ -313,9 +315,7 @@
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
-        indeksikorjatut-hoitovuodet (:urakan-tavoitehinnat-indeksikorjattu budjettitavoitteet)
-        hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
-        indeksikorjaus-vahvistettu? (get indeksikorjatut-hoitovuodet hoitokauden-alkuvuosi false)]
+        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)]
     [{:tyyppi :komponentti
       :uusi-rivi? true
       :komponentti (fn [_rivi]
@@ -374,7 +374,13 @@
                          [:div.perustiedot
                           [yleiset/info-laatikko :vahva-ilmoitus
                            "Hoitovuoden alun tavoitehinta on vahvistettu"
-                           "Pysyvän muutoksen tallentaminen peruu vahvistuksen. Vahvista tiedot uudelleen tallentamisen jälkeen."
+                           [:<>
+                            [:div "Voit perua vahvistuksen lisätäksesi hoitovuodelle pysyvän muutoksen." [:br]
+                             "Muista vahvistaa hoitovuoden tavoitehinta muutoksen tallentamisen jälkeen."]
+                            [:br]
+                            [:div [napit/yleinen-toissijainen "Peru vahvistus"
+                                   #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
+                                          (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))))]]]
                            nil
                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
 
