@@ -345,8 +345,12 @@
                             [:p [:b "Muutoksen voimassaolo alkaa kesken hoitovuoden"]]
                             [:div "Kun tallennat tiedot, ne käsitellään seuraavasti:"]
                             [:ul
-                             [:li "Ensimmäisen hoitovuoden tavoitehinnan muutos lisätään hoitovuoden lopun tavoitehintaan ilman indeksikorjausta."]
-                             [:li "Seuraavien hoitovuosien osalta tavoitehinnan muutokset siirtyvät automaattisesti Hoitovuoden alun tavoitehinta -välilehdelle indeksikorjattavaksi."]]]]])})
+                             [:li
+                              "Ensimmäisen hoitovuoden tavoitehinnan muutos lisätään hoitovuoden lopun "
+                              "tavoitehintaan ilman indeksikorjausta."]
+                             [:li
+                              "Seuraavien hoitovuosien osalta tavoitehinnan muutokset siirtyvät automaattisesti "
+                              "Hoitovuoden alun tavoitehinta -välilehdelle indeksikorjattavaksi."]]]]])})
 
 
        ;; -- Liitekenttä --

@@ -86,11 +86,12 @@
                           viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
                       (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
     :rivi-jalkeen-fn (fn [rivit]
-                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))]
+                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))
+                             ;; TODO: Tavoitehinnan muutokset indeksikorjattu yhteensä pitää toteuttaa
+                             tavoitehinnan-muutokset-indeksikorjattu-yht nil]
                          [{:teksti "Hoitovuoden alun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
-                          ;; TODO:
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
-                          {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                          {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-indeksikorjattu-yht) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
    ;; Taulukon kentät
