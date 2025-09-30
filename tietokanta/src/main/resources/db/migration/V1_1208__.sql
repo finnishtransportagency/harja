@@ -325,32 +325,37 @@ VALUES
   1);
 
 -- Lupaus 7 tarvitsemat deadline ja pisteytysmääritykset 2025 urakoille
-INSERT INTO lupaus_kustannusennuste_kuukausi_pisteet ("urakan-alkuvuosi", kuukausi, paiva, kuvaus, pisterajat) VALUES
-(2025, 10, 15, 'Lokakuu 15. päivä (2025 urakat)', '[
+INSERT INTO lupaus_kustannusennuste_kuukausi_pisteet ("lupaus-id", "urakan-alkuvuosi", kuukausi, paiva, kuvaus, pisterajat) VALUES
+((SELECT id FROM lupaus WHERE jarjestys = 7 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2025), 
+2025, 10, 15, 'Lokakuu 15. päivä (2025 urakat)', '[
     {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
     {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
     {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
 ]'),
 
-(2025, 1, 15, 'Tammikuu 15. päivä (2025 urakat)', '[
+((SELECT id FROM lupaus WHERE jarjestys = 7 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2025), 
+2025, 1, 15, 'Tammikuu 15. päivä (2025 urakat)', '[
     {"operaattori": "≤", "raja": 4.0, "pisteet": 8, "kuvaus": "≤ 4,0%"},
     {"operaattori": "≤", "raja": 6.0, "pisteet": 4, "kuvaus": "≤ 6,0%"},
     {"operaattori": ">", "raja": 6.0, "pisteet": 1, "kuvaus": "> 6,0%"}
 ]'),
 
-(2025, 4, 30, 'Huhtikuu 30. päivä (2025 urakat)', '[
+((SELECT id FROM lupaus WHERE jarjestys = 7 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2025), 
+2025, 4, 30, 'Huhtikuu 30. päivä (2025 urakat)', '[
     {"operaattori": "≤", "raja": 2.0, "pisteet": 8, "kuvaus": "≤ 2,0%"},
     {"operaattori": "≤", "raja": 3.0, "pisteet": 4, "kuvaus": "≤ 3,0%"},
     {"operaattori": ">", "raja": 3.0, "pisteet": 1, "kuvaus": "> 3,0%"}
 ]'),
 
-(2025, 6, 30, 'Kesäkuu 30. päivä (2025 urakat)', '[
+((SELECT id FROM lupaus WHERE jarjestys = 7 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2025), 
+2025, 6, 30, 'Kesäkuu 30. päivä (2025 urakat)', '[
     {"operaattori": "≤", "raja": 1.0, "pisteet": 8, "kuvaus": "≤ 1,0%"},
     {"operaattori": "≤", "raja": 2.0, "pisteet": 4, "kuvaus": "≤ 2,0%"},
     {"operaattori": ">", "raja": 2.0, "pisteet": 1, "kuvaus": "> 2,0%"}
 ]'),
 
-(2025, 8, 15, 'Elokuu 15. päivä (2025 urakat)', '[
+((SELECT id FROM lupaus WHERE jarjestys = 7 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2025), 
+2025, 8, 15, 'Elokuu 15. päivä (2025 urakat)', '[
     {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
     {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
     {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}

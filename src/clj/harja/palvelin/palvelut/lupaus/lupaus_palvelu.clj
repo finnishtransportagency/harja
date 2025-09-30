@@ -130,26 +130,27 @@
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
 
 (defn laske-maarapaiva-tiedot
-  "Laskee määräpäivätiedot kustannusennusteille.
-   Palauttaa map-rakenteen: {kuukausi {:maarapaiva-mennyt-ohi? boolean :syotetty-ajoissa? boolean}}"
-  [db urakan-alkuvuosi hoitokauden-alkuvuosi nykyhetki]
-  {:pre [(number? urakan-alkuvuosi) (number? hoitokauden-alkuvuosi)]}
+  [db lupaukset urakka-id urakan-tiedot hoitokauden-alkuvuosi nykyhetki]
+  {:pre [(coll? lupaukset) (number? urakka-id) (map? urakan-tiedot) (number? hoitokauden-alkuvuosi)]}
   (try
-    (let [maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat
-                        db {:urakan-alkuvuosi urakan-alkuvuosi
-                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-      (if (empty? maarapaivat)
-        (throw (ex-info (str "Määräpäivätietoja ei löytynyt urakan alkuvuodelle " urakan-alkuvuosi)
-                        {:urakan-alkuvuosi urakan-alkuvuosi}))
-        (into {}
-              (map (fn [{:keys [kuukausi maarapaiva_pvm]}]
-                     (let [maarapaiva-mennyt-ohi? (pvm/jalkeen? nykyhetki maarapaiva_pvm)]
-                       [kuukausi {:maarapaiva-mennyt-ohi? maarapaiva-mennyt-ohi?
-                                 :maarapaiva-pvm maarapaiva_pvm}]))
-                   maarapaivat))))
+    (let [kustannusennuste-lupaus (first (filter #(= (:lupaustyyppi %) "kustannusennuste") lupaukset))]
+      (if-not kustannusennuste-lupaus
+        (do
+          (log/warn "Kustannusennuste-lupausta ei löytynyt urakalle" urakka-id)
+          {})
+        (let [maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat
+                            db {:lupaus-id (:lupaus-id kustannusennuste-lupaus)
+                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+
+          (into {}
+            (map (fn [{:keys [kuukausi maarapaiva_pvm]}]
+                   (let [maarapaiva-mennyt-ohi? (pvm/jalkeen? nykyhetki maarapaiva_pvm)]
+                     [kuukausi {:maarapaiva-mennyt-ohi? maarapaiva-mennyt-ohi?
+                                :maarapaiva-pvm maarapaiva_pvm}]))
+              maarapaivat)))))
     (catch Exception e
-      (log/error "Määräpäivätietojen laskenta epäonnistui:" (.getMessage e))
-      (throw e))))
+      (log/error e "Virhe määräpäivätietojen haussa urakalle" urakka-id)
+      {})))
 
 (defn- hae-lupaus-kustannukset-jarjestettyna [db urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]
   (let [kustannukset (kustannusten-seuranta-palvelu/hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia
@@ -178,12 +179,7 @@
         urakan-alkuvuosi (some-> (:alkupvm urakan-tiedot) pvm/vuosi)
         hoitovuosi-nro (when (and urakan-alkuvuosi hk-alkupvm)
                          (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/vuosi hk-alkupvm)))
-        maarapaiva-tiedot (when urakan-alkuvuosi
-                           (try
-                             (laske-maarapaiva-tiedot db urakan-alkuvuosi hoitokauden-alkuvuosi nykyhetki)
-                             (catch Exception e
-                               (log/warn "Määräpäivätietojen haku epäonnistui, jatketaan ilman:" (.getMessage e))
-                               {})))
+        maarapaiva-tiedot (laske-maarapaiva-tiedot db vastaus urakka-id urakan-tiedot hoitokauden-alkuvuosi nykyhetki)
         lupaus-idt (mapv :lupaus-id vastaus)
         erikoisarvot (if (seq lupaus-idt)
                                ;; Hae erikoisarvot yksi kerrallaan ja ryhmittele
@@ -684,10 +680,10 @@
 
 (defn- hae-kustannusennuste-pisterajat
   "Hakee kustannusennusteen pisterajat tietokannasta ja konvertoi JSONB:n Clojure-dataksi"
-  [db urakan-alkuvuosi kuukausi]
+  [db lupaus-id kuukausi]
   (let [tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
                 db
-                {:urakan-alkuvuosi urakan-alkuvuosi
+                {:lupaus-id lupaus-id
                  :kuukausi kuukausi})]
     (when tulos
       (konversio/jsonb->clojuremap tulos))))
@@ -695,13 +691,13 @@
 (defn maarita-kustannusennuste-pisteet
   "Määrittää pisteet tarkkuuden ja kuukauden perusteella tietokannasta haettujen pisterajojen mukaan.
    Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
-  ([db tarkkuus-prosentti kuukausi urakan-alkuvuosi]
-   (maarita-kustannusennuste-pisteet db tarkkuus-prosentti kuukausi urakan-alkuvuosi nil))
-  ([db tarkkuus-prosentti kuukausi urakan-alkuvuosi pisterajat-data]
-   {:pre [(number? tarkkuus-prosentti) (number? kuukausi) (number? urakan-alkuvuosi)]}
+  ([db tarkkuus-prosentti kuukausi lupaus-id]
+   (maarita-kustannusennuste-pisteet db tarkkuus-prosentti kuukausi lupaus-id nil))
+  ([db tarkkuus-prosentti kuukausi lupaus-id pisterajat-data]
+   {:pre [(number? tarkkuus-prosentti) (number? kuukausi) (number? lupaus-id)]}
    (let [tarkkuus-abs (Math/abs tarkkuus-prosentti)
          pisterajat-result (when-not pisterajat-data
-                             (hae-kustannusennuste-pisterajat db urakan-alkuvuosi kuukausi))
+                             (hae-kustannusennuste-pisterajat db lupaus-id kuukausi))
 
          ;; Käy läpi pisterajat järjestyksessä ja etsi sopiva
          tulos (some (fn [raja]
