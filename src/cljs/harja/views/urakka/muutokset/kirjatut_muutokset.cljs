@@ -16,7 +16,8 @@
    {:tunniste :id
     ;; Näytetään otsikko tyyliin: "2. hoitovuoden (01.10.2025 − 30.09.2026) kirjatut muutokset"
     :otsikko (str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
-                    (pvm/vuosi (first valittu-hoitokausi)) (map (comp pvm/vuosi first) urakan-hoitokaudet) "hoitovuoden")
+                    (some-> valittu-hoitokausi (first) (pvm/vuosi))
+                    (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden")
                " kirjatut muutokset")
     :luokat ["kirjatut-muutokset-grid"]
     :tyhja "Ei kirjattuja muutoksia."

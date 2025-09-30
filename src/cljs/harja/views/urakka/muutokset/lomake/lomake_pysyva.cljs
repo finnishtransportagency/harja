@@ -23,7 +23,7 @@
 
 (defn- hae-elementti-hoitokauden-alkuvuodella
   [hoitovuosi sekvenssi]
-  (let [alkuvuosi (when hoitovuosi (pvm/vuosi (first hoitovuosi)))]
+  (let [alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))]
     (some #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) sekvenssi)))
 
 (defn- hae-tehtavan-suunniteltu-maara
@@ -44,7 +44,7 @@
   (let [g (grid/grid-ohjaus)]
     (fn [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
          {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos} voi-muokata?]
-      (let [valittu-hoitovuoden-alkuvuosi (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+      (let [valittu-hoitovuoden-alkuvuosi (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
             tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi
                                                                 (:hoitokauden_alkuvuosi %))
                                                        (:tehtavat_ja_maarat rivi))
@@ -188,7 +188,7 @@
             (fn [summa]
               (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
                     (:toimenpideinstanssi rivi)
-                    (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+                    (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
                     summa))))]]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
@@ -305,7 +305,7 @@
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
        #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
-              (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))
+              (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
               (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
         ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
@@ -391,7 +391,7 @@
                             [:br]
                             [:div [napit/yleinen-toissijainen "Peru vahvistus"
                                    #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
-                                          (pvm/vuosi (first (:hoitovuosi muokattava-muutos)))))]]]
+                                          (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
                            nil
                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
 

@@ -290,8 +290,9 @@
   (process-event [{hk-alkuvuosi :hk-alkuvuosi urakan-hoitovuodet :urakan-hoitovuodet} app]
     (log/debug "KopioiHoitovuodenMuutoksetTulevilleHoitovuosille, hoitovuosi: " hk-alkuvuosi)
     (assert (int? hk-alkuvuosi))
+    (assert (sequential? urakan-hoitovuodet))
 
-    (let [urakan-hoitovuodet (map #(-> % first pvm/vuosi) urakan-hoitovuodet)]
+    (let [urakan-hoitovuodet (map #(some-> % first pvm/vuosi) urakan-hoitovuodet)]
       (-> app
         (update-in [:muokattava-muutos :toimenpiteiden-tiedot]
           (fn [rivit]
