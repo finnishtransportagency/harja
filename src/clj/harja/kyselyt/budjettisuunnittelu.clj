@@ -10,7 +10,9 @@
   onko-kustannussuunnitelma-vahvistettu hae-suunnitelman-tilat paivita-kiinteahintaiset-tyot-indeksille!
   paivita-kustannusarvioidut-tyot-indeksille! paivita-johto-ja-hallintokorvaus-indeksille!
   paivita-urakka-tavoite-indeksille! tallenna-budjettitavoite<! paivita-budjettitavoite<!
-  hae-urakoiden-tarjoushinnat paivita-tarjoushinta<! lisaa-tarjoushinta<!)
+  hae-urakoiden-tarjoushinnat paivita-tarjoushinta<! lisaa-tarjoushinta<!
+  hae-kiinteat-kustannukset hae-arvioidut-kustannukset hae-johto-ja-hallintokorvauksen-tehtavaryhma
+  hae-johto-ja-hallintokorvauksen-toimenpide johto-ja-hallintokorvaukset-analytiikan-kustannustensuunnitteluun)
 
 (defn redusoi-suunnitelutilat
   [tilat tila]
