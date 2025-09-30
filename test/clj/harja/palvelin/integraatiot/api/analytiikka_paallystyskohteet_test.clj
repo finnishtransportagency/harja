@@ -73,7 +73,7 @@
           (cheshire/decode (:body vastaus))))))
 
 (deftest hoidon-paikkauskustannukset-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-hoidon-paikkauskustannusten-haku-response.json")
+  (let [odotettu-vastaus (slurp "test/resurssit/api/paikkaukset/analytiikka-hoidon-paikkauskustannusten-haku-response-example.json")
         alkuaika "2023-11-01T00:00:00Z"
         loppuaika "2023-11-01T23:59:59Z"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/hoidon-paikkauskustannukset/" alkuaika "/" loppuaika)]

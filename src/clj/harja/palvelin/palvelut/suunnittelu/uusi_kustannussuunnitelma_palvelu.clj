@@ -34,6 +34,22 @@
                          johto-ja-hallintokorvaukset))]
     summa))
 
+(defn- taydenna-rahavaraus-suunniteltu-summa
+  "Täydentää rahavarauksen suunnitellun summan tarjoussummalla jos suunniteltu summa puuttuu.
+   Laskee myös indeksikorjatun summan tarvittaessa."
+  [indeksikerroin rahavaraus]
+  (let [suunniteltu-summa (or (:suunniteltu-summa rahavaraus)
+                            (:tarjous-summa rahavaraus))
+        indeksikorjattu-summa (or (:suunniteltu-summa-indeksikorjattu rahavaraus)
+                                (when (:tarjous-summa rahavaraus)
+                                  (indeksi-kyselyt/indeksikorjaa (:tarjous-summa rahavaraus) indeksikerroin)))]
+    (cond-> rahavaraus
+      (nil? (:suunniteltu-summa rahavaraus))
+      (assoc :suunniteltu-summa suunniteltu-summa)
+
+      (nil? (:suunniteltu-summa-indeksikorjattu rahavaraus))
+      (assoc :suunniteltu-summa-indeksikorjattu indeksikorjattu-summa))))
+
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
@@ -82,8 +98,9 @@
           suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
           rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
+          ;; Jos rahavarausta ei ole suunniteltu, niin hae suunniteltu summa tarjouksen puolelta
+          rahavaraukset (map (partial taydenna-rahavaraus-suunniteltu-summa indeksikerroin) rahavaraukset)
           rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
-
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
