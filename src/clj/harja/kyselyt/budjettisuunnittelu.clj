@@ -6,7 +6,7 @@
 (defqueries "harja/kyselyt/budjettisuunnittelu.sql"
   {:positional? false})
 
-(declare lisaa-suunnitelmalle-tila hae-budjettitavoite hae-valikatselmus-siirrot-ed-vuodelta
+(declare lisaa-suunnitelmalle-tila hae-urakan-tavoitehintojen-tilat hae-budjettitavoite hae-valikatselmus-siirrot-ed-vuodelta
   onko-kustannussuunnitelma-vahvistettu hae-suunnitelman-tilat paivita-kiinteahintaiset-tyot-indeksille!
   paivita-kustannusarvioidut-tyot-indeksille! paivita-johto-ja-hallintokorvaus-indeksille!
   paivita-urakka-tavoite-indeksille! tallenna-budjettitavoite<! paivita-budjettitavoite<!
@@ -19,6 +19,9 @@
   (let [{:keys [hoitovuosi osio vahvistettu]} tila
         osio (keyword osio)]
     (assoc-in tilat [osio hoitovuosi] vahvistettu)))
+
+(defn urakan-tavoitehintojen-tilat [db urakka-id]
+  (hae-urakan-tavoitehintojen-tilat db {:urakka urakka-id}))
 
 (defn budjettitavoite-vuodelle [db urakka-id hoitokauden-alkuvuosi]
   (->>
