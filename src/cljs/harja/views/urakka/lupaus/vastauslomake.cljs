@@ -35,40 +35,6 @@
                                (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi))))})
            [kuukausivastauksen-status e! lupaus-kuukausi lupaus app]]))]]))
 
-(defn kustannusennuste-taulukko []
-  [:div.kustannusennuste-taulukko
-   [:table.table.table-striped
-    [:thead
-     [:tr.paivamaara
-      [:th {:colSpan 2} "31.8.*"]
-      [:th {:colSpan 2} "15.1."]
-      [:th {:colSpan 2} "30.4."]
-      [:th {:colSpan 2} "30.6."]]
-     [:tr.aliotsikko
-      [:th "Tarkkuus"] [:th "Pisteet"]
-      [:th "Tarkkuus"] [:th "Pisteet"]
-      [:th "Tarkkuus"] [:th "Pisteet"]
-      [:th "Tarkkuus"] [:th "Pisteet"]]]
-    [:tbody
-     [:tr
-      [:td "> 9,0 %"] [:td "1"]
-      [:td "> 6,0 %"] [:td "1"]
-      [:td "> 3,0 %"] [:td "1"]
-      [:td "> 2,0 %"] [:td "1"]]
-     [:tr
-      [:td "≤ 9,0 %"] [:td "4"]
-      [:td "≤ 6,0 %"] [:td "4"]
-      [:td "≤ 3,0 %"] [:td "4"]
-      [:td "≤ 2,0 %"] [:td "4"]]
-     [:tr
-      [:td "≤ 7,0 %"] [:td "8"]
-      [:td "≤ 4,0 %"] [:td "8"]
-      [:td "≤ 2,0 %"] [:td "8"]
-      [:td "≤ 1,0 %"] [:td "8"]]]]
-   [:p "*Tulevan hoitovuoden ennuste. Määräpäivä urakan ensimmäisenä hoitovuotena 15.10."]
-   [:p "Hoitovuoden toteutuneet lupauspisteet todetaan laskemalla lupaustaulukon mukaan saatujen pisteiden keskiarvo. "
-    [:strong "Mikäli jotain ennustetta ei tehdä määräaikaan mennessä, ennusteesta ei saa yhtään pistettä."]]])
-
 (defn- sisalto [_e! vastaus]
   [:div {:id "vastauslomake-sisalto"}
    [:hr]
@@ -82,10 +48,7 @@
      [:h3.vastauslomake-lupaus-pisteet
       (lupaus-domain/lupaus->pistenakyma vastaus)]]
     [:div.caption.vastauslomake-lupaus-kuvaus (:kuvaus vastaus)]
-    [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]
-    ;; Näytä kustannusennuste-taulukko vain "kustannusennuste" lupaustyypille
-    #_ (when (= "kustannusennuste" (:lupaustyyppi vastaus))
-      [kustannusennuste-taulukko])]])
+    [:div.sisalto {:dangerouslySetInnerHTML {:__html (:sisalto vastaus)}}]]])
 
 (defn- kommentti-rivi [e! {:keys [id luotu luoja etunimi sukunimi kommentti poistettu]}]
   [:div.kommentti-rivi
@@ -226,7 +189,7 @@
       :kaari-flex-row? false}
      kuukauden-vastaus-atom]]])
 
-(defn- kustannusennuste-syottokentät [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]} app]
+(defn- kustannusennuste-syottokentat [e! {:keys [kohdekuukausi kohdevuosi lupaus disabled? ladataan?]} app]
   (let [lupaus-kuukausi (lupaus-domain/etsi-lupaus-kuukausi
                           (get-in app [:vastaus-lomake :lupaus-kuukaudet])
                           kohdekuukausi)
@@ -311,7 +274,7 @@
             {:otsikko "Tavoitehinta € (syötetty ajoissa)"
              :vayla-tyyli? true
              :arvo-atom (r/atom (:tavoitehinta kustannusennuste))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :kokonaisosan-maara 10
                              :desimaalien-maara 2
@@ -324,7 +287,7 @@
              :arvo-atom (r/wrap (:tavoitehinta kustannusennuste)
                           #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
                              (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :tavoitehinta %))))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :disabled? disabled?
                              :kokonaisosan-maara 10
@@ -336,7 +299,7 @@
             {:otsikko "Lopun Tavoitehinta €"
              :vayla-tyyli? true
              :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-tavoitehinta]))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :kokonaisosan-maara 10
                              :desimaalien-maara 2
@@ -351,7 +314,7 @@
             {:otsikko "Toteutuneet kustannukset € (syötetty ajoissa)"
              :vayla-tyyli? true
              :arvo-atom (r/atom (:toteutuneet-kustannukset kustannusennuste))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :kokonaisosan-maara 10
                              :desimaalien-maara 2
@@ -364,7 +327,7 @@
              :arvo-atom (r/wrap (:toteutuneet-kustannukset kustannusennuste)
                           #(let [kohdekuukausi (get-in app [:vastaus-lomake :vastauskuukausi])]
                              (e! (lupaus-tiedot/->PaivitaKustannusennuste kohdekuukausi :toteutuneet-kustannukset %))))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :disabled? disabled?
                              :kokonaisosan-maara 10
@@ -376,7 +339,7 @@
             {:otsikko "Lopun Toteutuneet kustannukset €"
              :vayla-tyyli? true
              :arvo-atom (r/atom (get-in app [:yhteenveto :oikaistu-toteutuneet-kustannukset]))
-             :kentta-params {:tyyppi :numero
+             :kentta-params {:tyyppi :positiivinen-numero
                              :vayla-tyyli? true
                              :kokonaisosan-maara 10
                              :desimaalien-maara 2
@@ -453,7 +416,7 @@
        ;; Kustannusennustelupaus - näytä syöttökentät
        (= "kustannusennuste" (:lupaustyyppi lupaus))
        [:div
-        [kustannusennuste-syottokentät e! {:kohdekuukausi kohdekuukausi
+        [kustannusennuste-syottokentat e! {:kohdekuukausi kohdekuukausi
                                            :kohdevuosi kohdevuosi
                                            :lupaus lupaus
                                            :disabled? disabled?
