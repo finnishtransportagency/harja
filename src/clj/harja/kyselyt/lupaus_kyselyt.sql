@@ -372,7 +372,7 @@ ORDER BY ke.maarapaiva;
 -- Hakee kuukauden pisterajat JSON-muodossa uudesta taulusta
 SELECT kp.pisterajat
 FROM lupaus_kustannusennuste_kuukausi_pisteet kp
-WHERE kp."urakan-alkuvuosi" = :urakan-alkuvuosi
+WHERE kp."lupaus-id" = :lupaus-id
   AND kp.kuukausi = :kuukausi  
 ORDER BY kp.paiva;
 
@@ -473,5 +473,5 @@ SELECT kuukausi,
        kuvaus,
        MAKE_DATE(:hoitokauden-alkuvuosi + CASE WHEN kuukausi >= 10 THEN 0 ELSE 1 END, kuukausi, paiva) AS maarapaiva_pvm
 FROM lupaus_kustannusennuste_kuukausi_pisteet 
-WHERE "urakan-alkuvuosi" = :urakan-alkuvuosi
+WHERE "lupaus-id" = :lupaus-id
 ORDER BY kuukausi;

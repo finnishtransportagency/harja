@@ -4,6 +4,7 @@ ALTER TYPE lupaustyyppi ADD VALUE 'kustannusennuste';
 -- Lisää taulu pisterajojen tallentamiselle urakan-alkuvuosi kohtaisena
 CREATE TABLE lupaus_kustannusennuste_kuukausi_pisteet (
                                                           id SERIAL PRIMARY KEY,
+                                                          "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
                                                           "urakan-alkuvuosi" INTEGER NOT NULL,
                                                           kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
                                                           paiva INTEGER NOT NULL,
@@ -11,7 +12,7 @@ CREATE TABLE lupaus_kustannusennuste_kuukausi_pisteet (
                                                           pisterajat JSONB NOT NULL,
                                                           luotu TIMESTAMP DEFAULT NOW(),
                                                           luoja INTEGER REFERENCES kayttaja(id),
-                                                          UNIQUE ("urakan-alkuvuosi", kuukausi, paiva)
+                                                          UNIQUE ("lupaus-id", kuukausi, paiva)
 );
 
 -- Indeksit nopeuttamaan hakuja
