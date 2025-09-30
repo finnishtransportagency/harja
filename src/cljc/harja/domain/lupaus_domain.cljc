@@ -248,30 +248,46 @@
   (or (:joustovara-kkta hoitovuoden-erikoisarvot)
     (:joustovara-kkta lupaus)))
 
-(defn vaaditut-vastauskuukaudet-hoitovuodelle 
+(defn vaaditut-vastauskuukaudet-hoitovuodelle
   [lupaus kuluva-kuukausi hoitovuosi-nro hoitovuoden-erikoisarvot]
   (let [kaytettavat-kirjaus-kkt (hoitovuoden-kirjauskuukaudet lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
         kaytettava-paatos-kk (hoitovuoden-paatos-kk lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)]
     (->>
       ;; Yhdistä kirjaus- ja päätöskuukaudet
       (set/union (set kaytettavat-kirjaus-kkt)
-                 (paatos-kk-joukko kaytettava-paatos-kk))
-      ;; Suodata vain kuluvan kuukauden sisään
+        (paatos-kk-joukko kaytettava-paatos-kk))
+      ;; Kustannusennusteelle eri logiikka kuin muille
       (filter #(or
                  (nil? kuluva-kuukausi)
-                 (hoitokuukausi-ennen? % kuluva-kuukausi)))
+                 (if (= "kustannusennuste" (:lupaustyyppi lupaus))
+                   ;; Kustannusennusteelle: näytä vain kuluva kuukausi
+                   (= % kuluva-kuukausi)
+                   ;; Muille: näytä kuluvan kuukauden edeltävät kuukaudet
+                   (hoitokuukausi-ennen? % kuluva-kuukausi))))
       set)))
 
 
 (defn puuttuvat-vastauskuukaudet-hoitovuodelle
   [lupaus kuluva-kuukausi hoitovuosi-nro hoitovuoden-erikoisarvot]
-  (let [vastaus-kkt (->> (:vastaukset lupaus)
+  (let [;; Tavallisten vastausten kuukaudet
+        vastaus-kkt (->> (:vastaukset lupaus)
                       (filter vastattu?)
                       (map :kuukausi)
                       set)
+
+        ;; Kustannusennusteiden kuukaudet (jos lupaus on kustannusennuste)
+        kustannusennuste-kkt (if (= "kustannusennuste" (:lupaustyyppi lupaus))
+                               (->> (:kustannusennusteet lupaus)
+                                 (filter #(and (:tavoitehinta %) (:toteutuneet-kustannukset %)))
+                                 (map #(pvm/kuukausi (:maarapaiva %)))
+                                 set)
+                               #{})
+
+        ;; Yhdistetään kaikki vastatut kuukaudet
+        kaikki-vastatut-kkt (set/union vastaus-kkt kustannusennuste-kkt)
         vaaditut-kkt (vaaditut-vastauskuukaudet-hoitovuodelle
                        lupaus kuluva-kuukausi hoitovuosi-nro hoitovuoden-erikoisarvot)]
-    (set/difference vaaditut-kkt vastaus-kkt)))
+    (set/difference vaaditut-kkt kaikki-vastatut-kkt)))
 
 ;; Päivitä vanha funktio käyttämään uutta:
 (defn puuttuvat-vastauskuukaudet [{:keys [lupaustyyppi joustovara-kkta kirjaus-kkt paatos-kk vastaukset] :as lupaus}

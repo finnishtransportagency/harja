@@ -288,15 +288,32 @@
       (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 9 true 1 nil))))))
 
 (deftest vaaditut-vastauskuukaudet-hoitovuodelle-test
-  (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
-                :paatos-kk [9]}
+  (let [tavallinen-lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
+                           :paatos-kk [9]
+                           :lupaustyyppi "yksittainen"}
+        kustannusennuste-lupaus {:kirjaus-kkt [10 1 4 6]
+                                 :paatos-kk [6]
+                                 :lupaustyyppi "kustannusennuste"}
         erikoisarvot {:kirjaus-kkt [10 1 4 6]
                       :paatos-kk [6]}]
 
-    (testing "Yhdistää erikoisarvojen kirjaus- ja päätöskuukaudet"
+    (testing "Tavallinen lupaus: yhdistää erikoisarvojen kirjaus- ja päätöskuukaudet"
       (is (= #{10 1 4 6}
-             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle lupaus nil 1 erikoisarvot))))
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle tavallinen-lupaus nil 1 erikoisarvot))))
 
-    (testing "Suodattaa kuluvan kuukauden mukaan"
+    (testing "Tavallinen lupaus: suodattaa kuluvan kuukauden mukaan (vanha logiikka)"
       (is (= #{10}
-             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle lupaus 11 1 erikoisarvot))))))
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle tavallinen-lupaus 11 1 erikoisarvot))))
+
+    (testing "Kustannusennuste: näyttää vain kuluva kuukausi jos se on kirjauskuukausi"
+      ;; Tammikuu on kirjauskuukausissa
+      (is (= #{1}
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 1 1 erikoisarvot)))
+
+      ;; Marraskuu ei ole kirjauskuukausissa [10 1 4 6]  
+      (is (= #{}
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 11 1 erikoisarvot)))
+
+      ;; Huhtikuu on kirjauskuukausissa
+      (is (= #{4}
+             (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 4 1 erikoisarvot))))))
