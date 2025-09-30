@@ -23,7 +23,8 @@
   hae-paikkauskohteet-ulkoisella-idlla paivita-paikkauskohteen-korjausluokka
   paivita-paikkauskohteen-ilmoitettu-virhe!
   tallenna-paikkauskohde<! paivita-paikkauskohde! poista-paikkauskohde! hae-paikkauskohteen-tierekisteriosoite
-  paikkauskohteet-urakan-alueella paikkauskohteet-elyn-alueella paikkauskohteet-urakalle)
+  paikkauskohteet-urakan-alueella paikkauskohteet-elyn-alueella paikkauskohteet-urakalle
+  hae-paikkauskohteet-analytiikalle hae-paikkaukset-analytiikalle)
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
