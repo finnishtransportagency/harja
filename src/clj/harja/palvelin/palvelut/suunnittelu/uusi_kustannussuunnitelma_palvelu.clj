@@ -82,8 +82,18 @@
           suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
           rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
+          ;; Jos rahavarausta ei ole suunniteltu, niin hae suunniteltu summa tarjouksen puolelta
+          rahavaraukset (map
+                          (fn [r]
+                            (let [r (if (nil? (:suunniteltu-summa r))
+                                      (assoc r :suunniteltu-summa (:tarjous-summa r))
+                                      r)
+                                  r (if (nil? (:suunniteltu-summa-indeksikorjattu r))
+                                      (assoc r :suunniteltu-summa-indeksikorjattu (indeksi-kyselyt/indeksikorjaa (:tarjous-summa r) indeksikerroin))
+                                      r)]
+                              r))
+                          rahavaraukset)
           rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
-
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
