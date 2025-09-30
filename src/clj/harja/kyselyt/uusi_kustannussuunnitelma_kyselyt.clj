@@ -46,7 +46,7 @@
   hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio
   tulevilla-hoitovuosilla-arvoja?)
 
-(defn- laske-indeksikorjattu-summa
+(defn laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
   [summa urakan-indeksit hoitovuosi-nro]
   (when summa
