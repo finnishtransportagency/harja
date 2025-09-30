@@ -569,11 +569,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                          (not (jata-kaventamatta otsikko)))
                                    {:style {:margin-bottom "0.5em"}}))
                 [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-                ;; Jätetään "täyttöelementti" pois, jos otsikko vie koko rivin leveyden
-                (when-not (:koko-rivin-leveys? otsikko-meta)
-                  (if otsikot-omalla-rivilla?
-                    [:div]
-                    [:span {:style {:display "inline-block" :width "1em"}}]))
                 ;; Jätetään renderöimättä arvo, jos otsikko vie koko rivin leveyden
                 (when-not (:koko-rivin-leveys? otsikko-meta)
                   [:span.tietoarvo.max-width-3 arvo])
