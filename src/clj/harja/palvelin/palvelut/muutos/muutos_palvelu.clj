@@ -15,6 +15,7 @@
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.liitteet :as liite-kyselyt]
             [harja.domain.muutos-domain :as muutos-domain]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
@@ -22,22 +23,6 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
-
-
-(defn tavoitehinnan-muutos
-  "Laskee rivin tavoitehinnan muutoksen. Sen sijainti vaihtelee tyyppikohtaisesti."
-  ;; on hyvä saada tavoitehinnan muutos samaan avaimeen, niin summauslaskennat jne. toimivat myöhemmin suoraan
-  [muutokset]
-  (mapv (fn [rivi]
-          (let [total (if (= (:tyyppi rivi)
-                            "johto-ja-hallintokorvaus")
-                        (or (:jjh-muutosten-summa rivi) 0)
-                        (some->>
-                          (:kustannusvaikutukset rivi)
-                          (map :summa)
-                          (reduce + 0)))]
-            (assoc rivi :tavoitehinnan-muutos total)))
-    muutokset))
 
 (defn- rahavarausten-summarivi [rahavaraukset]
   (let [{:keys [summa-indeksikorjattu toteumat]}
@@ -292,6 +277,42 @@
                 [hoitokauden-alkuvuosi vahvistettu?]))
         hoitokaudet))))
 
+(defn- laske-indeksikorjattu-summa
+  "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä.
+  Jos summaa ei ole annettu tai indeksiä hoitovuodelle ei löydy, palautetaan nil."
+  [summa urakan-indeksit hoitovuosi-nro]
+  (when summa
+    (indeksi-kyselyt/indeksikorjaa
+      (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitovuosi-nro) summa)))
+
+(defn tavoitehinnan-muutos
+  "Laskee rivin tavoitehinnan muutoksen. Sen sijainti vaihtelee tyyppikohtaisesti."
+  ;; on hyvä saada tavoitehinnan muutos samaan avaimeen, niin summauslaskennat jne. toimivat myöhemmin suoraan
+  [muutokset]
+  (mapv (fn [rivi]
+          (let [total (if (= (:tyyppi rivi)
+                            "johto-ja-hallintokorvaus")
+                        (or (:jjh-muutosten-summa rivi) 0)
+                        (some->>
+                          (:kustannusvaikutukset rivi)
+                          (map :summa)
+                          (reduce + 0)))]
+            (assoc rivi :tavoitehinnan-muutos total)))
+    muutokset))
+
+(defn indeksikorjaa-tavoitehinnan-muutokset [db urakka-id hoitokauden-alkuvuosi muutokset]
+  (if (seq muutokset)
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          hoitokauden-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakka) hoitokauden-alkuvuosi)
+          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)]
+      (map (fn [rivi]
+             (assoc rivi :tavoitehinnan-muutos-indeksikorjattu
+               (or
+                 (laske-indeksikorjattu-summa (:tavoitehinnan-muutos rivi) urakan-indeksit hoitokauden-nro)
+                 0)))
+        muutokset))
+    muutokset))
+
 (defn- parsi-kirjatut-muutokset-vastaus [vastaus]
   (->> vastaus
     (mapv (fn [rivi]
@@ -317,6 +338,9 @@
                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                   :hae-vain-aiemmat-pysyvat-muutokset? true})
                                              (parsi-kirjatut-muutokset-vastaus))
+        ;; Indeksikorjataan ainoastaan aiemmat pysyvät muutokset
+        aiempien-vuosien-pysyvat-muutokset (indeksikorjaa-tavoitehinnan-muutokset db
+                                             urakka-id hoitokauden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
@@ -349,8 +373,11 @@
                                                                            :valittu-hoitokausi valittu-hoitokausi})
 
         kirjatut-muutokset-yht (reduce + (map :tavoitehinnan-muutos kirjatut-muutokset))
-        ;; TODO: Luo indeksikorjattu summa aiempien vuosien pysyville muutoksille
-        aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+        aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce +
+                                                        ;; Arvot voivat periaatteessa olla nil, jos indeksikorjausta ei ole
+                                                        ;; tehty, joten poistetaan nillit ennen summauksen laskemista
+                                                        (remove nil?
+                                                          (map :tavoitehinnan-muutos-indeksikorjattu aiempien-vuosien-pysyvat-muutokset)))
         toteumiin-perustuvat-muutokset-yht (reduce + 0
                                                (remove nil?
                                                  (concat
