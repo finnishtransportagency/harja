@@ -263,10 +263,6 @@
       set)))
 
 
-;; Säilytä vanha funktio taaksepäinyhteensopivuudelle:
-(defn vaaditut-vastauskuukaudet [{:keys [kirjaus-kkt paatos-kk] :as lupaus} kuluva-kuukausi]
-  (vaaditut-vastauskuukaudet-hoitovuodelle lupaus kuluva-kuukausi nil nil))
-
 (defn puuttuvat-vastauskuukaudet-hoitovuodelle
   [lupaus kuluva-kuukausi hoitovuosi-nro hoitovuoden-erikoisarvot]
   (let [vastaus-kkt (->> (:vastaukset lupaus)
