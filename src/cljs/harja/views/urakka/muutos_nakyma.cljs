@@ -157,7 +157,14 @@
 
       ^{:viiva-rivin-alle? true}
       [:div "Toteumiin perustuvat muutokset" [:br]
-       "(vahvistetaan välikatselmuksessa)"]
+       "(vahvistetaan "
+       [:a.klikattava.alleviivaa {:href "#"
+                                  :on-click
+                                  #(siirtymat/avaa-valikatselmus
+                                     @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                     [(first valittu-hoitokausi)
+                                      (second valittu-hoitokausi)])}
+        "välikatselmuksessa."] ")"]
       (fmt/euro-opt true true (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
 
       [:b "Yhteensä"]
