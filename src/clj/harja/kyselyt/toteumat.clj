@@ -15,7 +15,8 @@
 
 (declare luo-erilliskustannus<! onko-olemassa-ulkoisella-idlla onko-toteumalla-suolausta hae-pisteen-hoitoluokat
   luo-toteuma<! luodun-toteuman-id hae-toteuman-hash siirra-toteumat-analytiikalle
-  hae-reitittomat-mutta-reittipisteelliset-toteumat hae-reitittomat-mutta-osoitteelliset-toteumat)
+  hae-reitittomat-mutta-reittipisteelliset-toteumat hae-reitittomat-mutta-osoitteelliset-toteumat
+  hae-reittitoteumat-analytiikalle)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
