@@ -286,20 +286,10 @@
       ;; Yhdistä kustannusvaikutukset kaikista vetolaatikoista tallennusta varten
       (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))
 
-  ;; TODO: Jätetään myöhemmäksi, aluksi tallennus muokkaus ja muut tärkeämmät ominaisuudet.
   KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
   (process-event [{hk-alkuvuosi :hk-alkuvuosi urakan-hoitovuodet :urakan-hoitovuodet} app]
     (log/debug "KopioiHoitovuodenMuutoksetTulevilleHoitovuosille, hoitovuosi: " hk-alkuvuosi)
     (assert (int? hk-alkuvuosi))
-
-    ;; TODO: Tässä on tarkoituksena on kopioida valitun hoitokauden muutokset urakan kaikille tuleville hoitovuosille
-    ;;       Eli, valitun hoitovuoden tiedot ensin etsitään [:muokattava-muutos :toimenpiteiden-tiedot] polusta
-    ;;       Sieltä otetaan talteen :tehtavat_ja_maarat ja :kustannusvaikutukset
-    ;;       Sitten etsitään urakan kaikki hoitokaudet, jotka ovat saatilla :toimenpiteiden-tiedot polusta
-    ;;       Ja käydään ne läpi, ja päivitetään kunkin hoitokauden :tehtavat_ja_maarat ja :kustannusvaikutukset
-    ;;       Jokaisen hoitokauden päivityksessä tulee huomioida, että vanhat rivit korvataan kopioiduilla riveillä
-    ;;       ja jokaisen rivin kohdalle päivitetään :hoitokauden_alkuvuosi vastaamaan kunkin hoitokauden alkuvuotta
-    ;;       Lopuksi päivitetään app-tila kutsumalla koosta-tehtavat-ja-maarat-pysyvaan-muutokseen ja koosta-kustannusvaikutukset-pysyvaan-muutokseen
 
     (let [urakan-hoitovuodet (map #(-> % first pvm/vuosi) urakan-hoitovuodet)]
       (-> app
