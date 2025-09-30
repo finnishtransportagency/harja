@@ -190,13 +190,13 @@ Tilaajan ja meidän rahavarauksemme yhdistetään ja tätä summaa käytetään 
 
 -- C. Laadunvarmistus ja laadunosoitus
 -- Lupaus 8
-(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja laadunosoitus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 20, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{9}', 0,
+(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja laadunosoitus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 20, '{9}', '{9}', 0,
  'Luovutuksen menettely',
  'Meillä (pääurakoitsijalla) on käytössä itselleluovutuksen menettely määräaikaan sidotuista töistä / työkokonaisuuksista, varusteiden ja laitteiden lisäämisestä ja uusimisesta. Alihankkijamme tekevät itselleluovutuksen vastaavista omista töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttamista. Itselleluovutukset dokumentoidaan tilaajan hankeaineiston hallintajärjestelmään.',
  2025),
 
 -- Lupaus 9
-(9, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja laadunosoitus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 4, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{9}', 0,
+(9, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja laadunosoitus' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 4, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{0}', 0,
  'Kohdistetun seurannan parantaminen',
  'Sijoittamme hoidollisesti haastaviin tai muuten tilaajan toiminnan kannalta tarpeellisiin kohteisiin eri puolille urakka-aluetta yhdestä neljään työmaakameraa, tai vastaavaa.
 <b>Kohteet, joihin kamerat sijoitetaan, sovitaan yhteistyössä tilaajan kanssa ja ne voivat vaihtua urakan ja hoitovuoden aikana.</b><br><br>
@@ -218,7 +218,7 @@ Kamerat tulee pyrkiä sijoittamaan niin, ettei yksittäisen tienkäyttäjän tun
 
 
 -- Lupaus 11
-(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja ympäristö' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{9}', 0,
+(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja ympäristö' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{0}', 0,
  'Ajoneuvokohtainen ajotavanseurantajärjestelmä',
  'Alihankkijoiltamme, jotka tekevät hoitokaudella hoitourakan töitä vähintään 20 henkilötyöpäivää tai laskuttavat vähintään 10 000 euroa, edellytetään <b>ajoneuvokohtaista ajotavanseurantajärjestelmää</b> ja hyödynnämme järjestelmän antamaa tietoa toiminnan johtamisessa.',
  2025),
@@ -234,7 +234,7 @@ Kamerat tulee pyrkiä sijoittamaan niin, ettei yksittäisen tienkäyttäjän tun
  2025),
 
 -- Lupaus 13
-(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely',14, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9}', '{9}', 0,
+(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2025 and "rivin-tunnistin-selite" = 'Yleinen'), null, 'kysely',14, '{9}', '{9}', 0,
  'Viestintä sidosryhmien kanssa',
  'Tunnistamme urakka-alueen tärkeimmät sidosryhmät (esim. Vapo, metsäyhtiöt, linja-autoyhtiöt, koululaiskuljetukset, yms.). Sovimme hoitovuosittain heidän kanssaan käytävästä vuoropuhelusta ja viestinnästä. Vuoropuhelun perusteella kehitämme toimintaamme siten, että sidosryhmien tarpeet sopimuksen puitteissa tulevat huomioiduiksi mahdollisimman hyvin. Olemme yhteydessä paikallismedioihin ja sovimme hoitovuosittain heidän kanssaan käytävästä vuoropuhelusta ja viestinnästä.',
  2025),
