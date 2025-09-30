@@ -501,11 +501,9 @@
   (let [kirjaus-kkt (hoitovuoden-kirjauskuukaudet lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
         paatos-kk (hoitovuoden-paatos-kk lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)]
     (if paatos
-      (or (and (vector? paatos-kk) (some #(= kuukausi %) paatos-kk))
-        (and (not (vector? paatos-kk)) (= paatos-kk kuukausi))
-        (and (vector? paatos-kk) (some #(= 0 %) paatos-kk))
-        (and (not (vector? paatos-kk)) (= paatos-kk 0)))
-      (some #(= kuukausi %) kirjaus-kkt))))
+      (or (boolean (some #(= kuukausi %) paatos-kk))
+        (boolean (some #(= 0 %) paatos-kk)))
+      (boolean (some #(= kuukausi %) kirjaus-kkt)))))
 
 ;; Taaksepäinyhteensopivuus: jos ei annettu hoitovuositietoja, käytetään perusarvoja
 (defn sallittu-kuukausi? [lupaus kuukausi paatos]

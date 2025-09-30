@@ -272,7 +272,7 @@
   (let [lupaus {:kirjaus-kkt [10 11 12 1 2 3 4 5 6 7 8 9]
                 :paatos-kk [9]}
         erikoisarvot {:kirjaus-kkt [10 1 4 6]  ; Vain neljä kuukautta
-                      :paatos-kk 6}]           ; Kesäkuu päätös
+                      :paatos-kk [6]}]           ; Kesäkuu päätös
 
     (testing "Erikoisarvot rajoittavat kirjauskuukausia"
       (is (true? (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus 10 false 1 erikoisarvot)))
