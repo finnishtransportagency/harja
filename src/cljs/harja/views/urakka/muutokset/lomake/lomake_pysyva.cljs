@@ -71,7 +71,8 @@
          ^{:key (str valittu-hoitovuoden-alkuvuosi "_"
                   ;; Älä seuraa koko vektorin sisältöä, vaan counttia, jotta ei jatkuvasti renderöidä uudelleen
                   ;; input-kenttien muuttuessa
-                  (count tehtavat-ja-maarat-valittuna-hoitovuonna))}
+                  (count tehtavat-ja-maarat-valittuna-hoitovuonna) "_"
+                  voi-muokata?)}
          [grid/grid
           {:luokat ["vaikutus-tehtaviin-grid"]
            :tunniste :tehtava
@@ -104,6 +105,7 @@
           [{:otsikko "Tehtävä"
             :nimi :tehtava
             :tyyppi :valinta
+            :muokattava? (constantly voi-muokata?)
             ;; Varmistetaan, että useammalle riville ei voi valita samaa tehtävää
             :valinnat-fn (fn [rivi]
                            (let [valittu-tehtava (:tehtava rivi)
@@ -148,6 +150,7 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
+            :muokattava? (constantly voi-muokata?)
             :leveys 20}
 
            {:otsikko "Muuttunut määrä"
@@ -171,7 +174,8 @@
                                    valittu-hoitovuoden-alkuvuosi
                                    true))
                             {:ikoni (ikonit/livicon-trash)
-                             :luokka "nappi-toissijainen"}])}]
+                             :luokka "nappi-toissijainen"
+                             :disabled (not voi-muokata?)}])}]
           tehtavat-ja-maarat-valittuna-hoitovuonna]
 
          [:h4 "Vaikutus tavoitehintaan"]
