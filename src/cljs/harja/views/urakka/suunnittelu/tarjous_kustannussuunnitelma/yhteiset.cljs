@@ -4,6 +4,7 @@
    Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit."
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
@@ -50,8 +51,12 @@
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Pysyvät muutokset"]
          [:div.body-text "Ei muutoksia"]
-         [:div.body-text [yleiset/linkki "Siirry muutoksiin"
-                          #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+         [:div.body-text
+           [yleiset/linkki "Siirry muutoksiin"
+            #(do
+               (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))
+            ; Toistaiseksi siirrytään vain kustannussuunnitelman sisäiseen pysyvien muutosten placeholderiin.
+            #_  #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
                              {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
