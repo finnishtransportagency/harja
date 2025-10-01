@@ -1,6 +1,7 @@
 (ns ^:integraatio harja.palvelin.integraatiot.tloik.ilmoitukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [clojure.data.zip.xml :as z]
+            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.integraatio :as integraatio]
             [com.stuartsierra.component :as component]
@@ -127,16 +128,28 @@
 
 (deftest tarkista-ilmoituksen-urakan-paattely
   (ei-lisattavia-kuuntelijoita!)
-  (tuo-ilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
-         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-      "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
-  (poista-ilmoitus 123456789)
+  (let [;; 1.10 ja 2.10 Ilmoitus ei saa kuulua Rovaniemen urakalle, koska rovaniemen urakka päivitetään testidatassa joka
+        ;; vuosi 1.10 alkamaan sinä vuinna. Ja koska ilmoitukset kuuluvat urakkauvoden alkaessa 36 tuntia vanhalle urakalle
+        ;; niin ne ei voi kuulua vielä Rovaniemen urakalle, joka on juuri 1.10 muokattu alkamaan sinä vuonna.
+        onko-hoitokauden-ensimmaiset-paivat? (and
+                                               (= 10 (pvm/kuukausi (pvm/nyt)))
+                                               (<= (pvm/paiva (pvm/nyt)) 2))]
+    (if onko-hoitokauden-ensimmaiset-paivat?
+      (is (thrown? Exception (tuo-ilmoitus)))
+      (do
+        (tuo-ilmoitus)
+        (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
+              (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+          "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Rovaniemen MHU testiurakka (1. hoitovuosi).")))
 
-  (tuo-paallystysilmoitus)
-  (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
-         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
-      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
+  (poista-ilmoitus 123456789)
+  (if onko-hoitokauden-ensimmaiset-paivat?
+   (is (thrown? Exception (tuo-paallystysilmoitus)))
+    (do
+      (tuo-paallystysilmoitus)
+      (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
+            (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+        "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")))
   (poista-ilmoitus 123456789)
 
   (tuo-ilmoitus-teknisista-laitteista)
@@ -150,7 +163,7 @@
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oikein siltojen palvelusopimukselle.")
 
-  (poista-ilmoitus 123456789))
+  (poista-ilmoitus 123456789)))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset-ilman-paivystajaa
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
