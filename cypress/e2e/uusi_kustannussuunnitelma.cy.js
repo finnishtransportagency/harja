@@ -5,8 +5,8 @@ import {avaaKustannussuunnittelu, avaaUusiKustannussuunnittelu} from "../support
 // Täytetään ajax kutsun vastauksen perusteella
 const indeksit = [];
 
-function alustaIvalonUrakka() {
-    ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
+function alustaSuomussalmenUrakka() {
+    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
 }
 function alustaIinUrakka() {
     ks.alustaKanta('Iin MHU 2021-2026');
@@ -133,7 +133,7 @@ function tarkistaToimenkuva2025Luvut(kuukausi, luku1, luku2) {
 describe('Tavoitehintaiset rahavaraukset osio', function () {
 
     before(function () {
-        alustaIvalonUrakka();
+        alustaSuomussalmenUrakka();
         alustaIinUrakka();
         alustaKajaanin25Urakka();
     })
@@ -141,7 +141,13 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa kilpailutetttavat hankinnat 2024', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-kilpailutettavat-hankinnat').as('tallenna-kilpailutettavat-hankinnat');
-            avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
+            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -214,7 +220,13 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa rahavaraukset 2024', function () {
 
         beforeEach(function () {
-            avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
+            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -240,7 +252,13 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa erillishankinnat', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
-            avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
+            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -381,7 +399,13 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa Johto- ja hallintokorvaus 2024', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2019').as('tallenna-toimenkuvat-2022');
-            avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
+            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -495,7 +519,13 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
-            avaaUusiKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi');
+            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {

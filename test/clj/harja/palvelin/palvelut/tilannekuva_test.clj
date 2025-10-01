@@ -445,12 +445,12 @@
                                             :urakkanro "1267"}
                                            {:nimi "Oulun MHU 2019-2024"
                                             :urakkanro "1238"}
+                                           {:nimi "Raahen MHU 2023-2028"
+                                            :urakkanro "1259"}
                                            {:nimi "Aktiivinen Oulu Testi"
-                                            :urakkanro "12501"}
+                                            :urakkanro "1250"}
                                            {:nimi "Kajaanin alueurakka 2014-2019"
                                             :urakkanro "1236"}
-                                           {:nimi "Raahen MHU 2023-2028"
-                                            :urakkanro "1649"}
                                            {:nimi "Pudasjärven alueurakka 2007-2012"
                                             :urakkanro "1229"})}
                                  {:hallintayksikko {:elynumero 12
@@ -509,18 +509,18 @@
                                                     :id 13
                                                     :nimi "Lappi"}
                                   :tyyppi :hoito
-                                  :urakat ({:nimi "Kittilän MHU 2019-2024"
-                                            :urakkanro "1436"}
-                                           {:nimi "Ivalon MHU testiurakka (uusi)"
-                                            :urakkanro "13374"}
+                                  :urakat ({:nimi "Ivalon MHU testiurakka (uusi)"
+                                            :urakkanro "PR00054012"}
                                            {:nimi "Kemin MHU testiurakka (5. hoitovuosi)"
-                                            :urakkanro "13373"}
-                                           {:nimi "Pellon MHU testiurakka (3. hoitovuosi)"
-                                            :urakkanro "13372"}
+                                            :urakkanro "1440"}
                                            {:nimi "Kittilän MHU 2025-2030"
-                                            :urakkanro "1437"}
+                                            :urakkanro "1444"}
                                            {:nimi "Rovaniemen MHU testiurakka (1. hoitovuosi)"
-                                            :urakkanro "13371"})}
+                                            :urakkanro "1443"}
+                                           {:nimi "Pellon MHU testiurakka (3. hoitovuosi)"
+                                            :urakkanro "1442"}
+                                           {:nimi "Kittilän MHU 2019-2024"
+                                            :urakkanro "1444"})}
                                  {:hallintayksikko {:elynumero nil
                                                     :id 3
                                                     :nimi "Meriväylät"}
