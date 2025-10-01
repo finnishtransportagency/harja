@@ -1,14 +1,8 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-muutostyo
   "Muutokset välilehden lomakkeet - Muutostyö"
-  (:require [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.ui.grid :as grid]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
+  (:require [harja.ui.lomake :as lomake]
             [harja.domain.muutos-domain :as muutos-domain]
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
+            [harja.views.urakka.muutokset.yhteiset :as yhteiset]))
 
 
 (defn lomake-muutostyo

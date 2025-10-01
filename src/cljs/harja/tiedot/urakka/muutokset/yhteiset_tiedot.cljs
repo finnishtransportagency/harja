@@ -12,7 +12,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+            [harja.tyokalut.tuck :as tuck-apurit])) 
 
 
 (defonce ^{:private true}
@@ -187,10 +187,6 @@
   (process-event [{taulukon-avain :taulukon-avain} app]
     (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
       (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
-
-  PaivitaLomake
-  (process-event [{:keys [lomake]} app]
-    (assoc app :muokattava-muutos lomake))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
   HaeMuutoksenTiedot

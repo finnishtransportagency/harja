@@ -335,7 +335,7 @@
 
      (lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi true)
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
@@ -364,8 +364,7 @@
      ;; Jakaja
      {:tyyppi :komponentti
       :uusi-rivi? true
-      :komponentti (fn [_rivi]
-                     [:hr])}
+      :komponentti (fn [_rivi] [:hr])}
 
      ;; --
 

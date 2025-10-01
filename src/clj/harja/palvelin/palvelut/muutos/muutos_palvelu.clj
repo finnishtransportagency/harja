@@ -326,6 +326,7 @@
   (->> vastaus
     (mapv (fn [rivi]
       (-> rivi
+        (update :alityyppi #(keyword %))
         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
         (update :liitteet #(konv/jsonb->clojuremap %)))))
