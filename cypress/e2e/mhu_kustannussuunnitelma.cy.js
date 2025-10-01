@@ -19,16 +19,16 @@ import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 const indeksit = [];
 
 function alustaIvalonUrakka() {
-    ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
+    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
 }
 
 
 // ### Testit ###
 
-describe('Testaa Inarin MHU urakan kustannussuunnitelmanäkymää', function () {
+describe('Testaa Suomussalmen MHU urakan kustannussuunnitelmanäkymää', function () {
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi', indeksit);
+        avaaKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
     })
 
     it('Testaa tilayhteenvedon vierityslinkit', function () {
@@ -447,6 +447,11 @@ describe('Erillishankinnat osio', function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
             cy.intercept('POST', '_/tallenna-kustannusarvioitu-tyo').as('tallenna-kustannusarvioitu-tyo');
 
+            // Valitse ensimmäinen hoitovuosi
+            cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {
+                cy.get('button').click({force: true});
+                cy.contains('1. hoitovuosi').click();
+            });
         });
 
         it('Taulukon arvot alussa oikein', function () {

@@ -11,6 +11,12 @@ describe('Johto- & Hallintokorvaukset, 2024->', () => {
     before(function () {
         alustaSuomussalmenUrakka();
         avaaKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
+
+        // Valitse ensimmäinen hoitovuosi
+        cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('1. hoitovuosi').click();
+        });
     })
 
     describe('Vakiotoimenkuvat', () => {
