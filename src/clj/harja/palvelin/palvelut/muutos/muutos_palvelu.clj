@@ -323,16 +323,21 @@
         muutokset))
     muutokset))
 
-(defn hae-aiempien-vuosien-pysyvat-muutokset [db urakka-id hoitokauden-alkuvuosi]
-  (let [muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
-                        {:urakka urakka-id
-                         :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                         :hae-vain-aiemmat-pysyvat-muutokset? true})
-                    (parsi-kirjatut-muutokset-vastaus))]
+(defn hae-aiempien-vuosien-pysyvat-muutokset
+  ([db urakka-id hoitokauden-alkuvuosi]
+   (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi true))
+  ([db urakka-id hoitokauden-alkuvuosi indeksikorjaa?]
+   (let [muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                         {:urakka urakka-id
+                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                          :hae-vain-aiemmat-pysyvat-muutokset? true})
+                     (parsi-kirjatut-muutokset-vastaus))]
 
-    ;; Lasketaan lopuksi tavoitehintojen muutokset indeksikorjaukset
-    (indeksikorjaa-tavoitehinnan-muutokset db
-      urakka-id hoitokauden-alkuvuosi muutokset)))
+     ;; Lasketaan lopuksi tavoitehintojen muutokset indeksikorjaukset
+     (if indeksikorjaa?
+       (indeksikorjaa-tavoitehinnan-muutokset db
+         urakka-id hoitokauden-alkuvuosi muutokset)
+       muutokset))))
 
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
