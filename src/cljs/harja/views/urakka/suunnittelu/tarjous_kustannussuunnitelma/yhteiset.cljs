@@ -4,6 +4,7 @@
    Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit."
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
@@ -52,12 +53,14 @@
          [:div.small-text.bold "Pysyvät muutokset"]
          [:div.body-text "Ei muutoksia"]
          [:div.body-text
-           [yleiset/linkki "Siirry muutoksiin"
-            #(do
-               (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))
-            ; Toistaiseksi siirrytään vain kustannussuunnitelman sisäiseen pysyvien muutosten placeholderiin.
-            #_  #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                             {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]])
+          (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+            [yleiset/linkki "Siirry muutoksiin"
+             #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+                {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]
+            ;; Siirtyy sisäiseen placeholderiin, jos muutokset eivät ole käytössä
+            [yleiset/linkki "Siirry muutoksiin"
+             #(do
+                (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))])]])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
       (when (and div3 (>= valittu-vuosi rajavuosi))
