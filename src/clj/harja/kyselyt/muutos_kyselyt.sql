@@ -1,9 +1,10 @@
--- name: hae-urakan-hoitovuoden-muutostiedot
+-- name: hae-urakan-hoitovuoden-kirjatut-muutokset
 SELECT m.id,
        m.versio,
        m.urakka,
        m.voimassa_alkaen,
        m.tyyppi,
+       m.alityyppi,
        m.nimi,
        m.syy,
        m.kulu_kohdistus,
@@ -42,14 +43,23 @@ SELECT m.id,
            (SELECT JSON_AGG(
                        JSONB_BUILD_OBJECT(
                            'tehtava', tjm.tehtava,
-                           'edellinen_maara', tjm.edellinen_maara,
+                           'suunniteltu_maara', ut.maara,
                            'maaramuutos', tjm.maaramuutos,
+                           -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                           --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                           --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                           'edellinen_maara', tjm.edellinen_maara,
                            'uusi_maara', tjm.uusi_maara,
                            'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                            'versio', tjm.versio)
                        ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
                    )
               FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+                   LEFT JOIN urakka_tehtavamaara ut
+                             ON ut.urakka = :urakka
+                                 AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
+                                 AND ut.poistettu IS NOT TRUE
+                                 AND tjm.tehtava = ut.tehtava
              WHERE tjm.muutos = m.id
                AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
            '[]'::json) AS tehtavat_ja_maarat,
@@ -60,16 +70,25 @@ SELECT m.id,
                'id', lii.liite)) END AS liitteet
 -- ONLY tarvitaan, jottei kysellä historiatauluista
   FROM ONLY mhu_muutos m
-           LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos
-      -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
-      --       liittyy yhteen muutokseen. .. sama teksti kuin yllä
-      -- AND m.versio = lii.versio
-      )
- WHERE m.urakka = :urakka
-   -- hox: on myös sellaisia muutoksia, jotka ovat voimassa vain meneillään olevan hoitokauden
-   -- niiden käsittely puuttuu vielä tästä kyselystä
-   AND m.voimassa_alkaen <= (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-10-01', 'YYYY-MM-DD'))
- GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
+       LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
+  WHERE m.urakka = :urakka
+    AND CASE
+        -- Mahdollistetaan aiempien vuosien pysyvien muutosten haku samalla kyselyllä
+            WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
+                (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
+                 m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
+        -- Kirjatuista muutoksista taulukossa saa näyttää vain ne, joiden voimassa_alkaen osuu valitulle hoitokaudelle
+        -- Haetaan kaikkien kirjattujen muutostyyppien tiedot
+            ELSE
+                m.tyyppi IN
+                ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND
+                m.voimassa_alkaen BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+                        (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+      END
+    AND m.poistettu IS FALSE
+  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi,
+           m.syy, m.kulu_kohdistus, m.luonnos;
+
 
 -- name: rahavarausten-toteumat
 SELECT rv.id, SUM(kk.summa) as toteumat
@@ -325,14 +344,23 @@ SELECT
         (SELECT JSON_AGG(
                     JSONB_BUILD_OBJECT(
                         'tehtava', tjm.tehtava,
-                        'edellinen_maara', tjm.edellinen_maara,
+                        'suunniteltu_maara', ut.maara,
                         'maaramuutos', tjm.maaramuutos,
+                        -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                        --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                        --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                        'edellinen_maara', tjm.edellinen_maara,
                         'uusi_maara', tjm.uusi_maara,
                         'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                         'versio', tjm.versio)
                     ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
                 )
            FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+                LEFT JOIN urakka_tehtavamaara ut
+                          ON ut.urakka = :urakka
+                              AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
+                              AND ut.poistettu IS NOT TRUE
+                              AND tjm.tehtava = ut.tehtava
           WHERE tjm.muutos = m.id
             AND tjm.tehtava IN (SELECT id FROM tehtava WHERE emo = tp.id)),
         '[]'::json) AS tehtavat_ja_maarat,

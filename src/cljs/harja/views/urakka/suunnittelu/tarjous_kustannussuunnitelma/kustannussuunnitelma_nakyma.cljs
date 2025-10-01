@@ -363,7 +363,7 @@
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
-    [:div#tavoite-ja-kattohinta-elementti.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#pysyvat-muutokset-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [:div.row
       [:div.col-xs-12
        [:h2 "Pysyvät muutokset"]

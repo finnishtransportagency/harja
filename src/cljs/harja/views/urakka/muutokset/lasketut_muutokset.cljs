@@ -124,7 +124,14 @@
                     [ajax-loader-pieni "Haku käynnissä..."]
                     "Aikavälille ei löytynyt tuloksia.")
            :tallenna (fn [sisalto]
-                       (tuck-apurit/e-kanavalla! e! t-lasketut/->TallennaTehtavaMaaramuutokset sisalto))}
+                       (tuck-apurit/e-kanavalla! e! t-lasketut/->TallennaTehtavaMaaramuutokset sisalto))
+           :rivi-jalkeen-fn (fn [rivit]
+                              (let [tavoitehinnan-muutokset (map :tavoitehinnan_muutos rivit)
+                                    tavoitehinnan-muutokset-yhteensa (apply + tavoitehinnan-muutokset)]
+                                [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 7}
+                                 {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                                 {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                                 {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
           [{:otsikko "Tehtävä"
             :nimi :tehtava

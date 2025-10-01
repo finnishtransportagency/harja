@@ -1,16 +1,10 @@
 -- name: hae-urakan-toimenpiteet
 SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id"
-FROM toimenpideinstanssi tpi
+  FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
-WHERE tpi.urakka = :urakkaid
-  -- Ei haeta kaikkia toimenpiteitä
-  AND (t.koodi = '23104' -- talvihoito
-    OR t.koodi = '23116' -- liikenneympariston-hoito
-    OR t.koodi = '23124' -- sorateiden-hoito
-    OR t.koodi = '20107' -- paallystepaikkaukset
-    OR t.koodi = '20191' -- mhu-yllapito
-    OR t.koodi = '14301' -- mhu-korvausinvestointi
-    );
+ WHERE tpi.urakka = :urakkaid
+   AND true = onko_mhu_hankintatoimenpide(t.koodi)
+ ORDER BY t.jarjestys;
 
 -- name: hae-kiintea-kustannus-kuukausittain
 SELECT id, vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi,

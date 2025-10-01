@@ -818,7 +818,9 @@
          checked)]
       [:label (merge
                 {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
-                {:class (when-not nayta-rivina? "radio-column")}
+                {:class (if (and (not nayta-rivina?) (:luokka opts))
+                          (:luokka opts)
+                          (when-not nayta-rivina? "radio-column"))}
                 {:for id}) teksti]]
      [:div.vayla-radio-lapsi
       (when selite
@@ -1896,10 +1898,11 @@
           [:div.kentta
            [tee-kentta kentta-params arvo-atom]])]])
 
-(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
-  [:span {:class (or luokka "label-ja-kentta")}
+(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+  [:span {:class (str (or luokka "label-ja-kentta") " lukutila-kentta")
+          :style tyylit}
    [:span.kentan-otsikko otsikko]
-   [:div.kentta
+   [:div.kentta.lukutila-arvo
     [nayta-arvo kentta-params arvo-atom]]])
 
 (def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")

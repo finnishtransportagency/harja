@@ -23,6 +23,7 @@
                      :tallenna-painettu? false
                      :muokattava-muutos nil
                      :kirjatut-muutokset nil
+                     :aiempien-hoitovuosien-pysyvat-muutokset nil
                      :tehtava-maaramuutokset nil
                      :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
@@ -39,7 +40,8 @@
                             :syy "Muutoksen syy"
                             :voimassa_alkaen "Voimassa alkaen"})
 
-(def +indeksikorjausta-ei-vahvistettu-txt+ "Indeksikorjausta ei saatavilla")
+(def +indeksikorjausta-ei-vahvistettu-txt+ "Ei saatavilla")
+(def +muutosten-vaikutus-yhteensa-ei-saatavilla+ "Ei saatavilla")
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
 (defonce nakymassa? (atom false))
@@ -66,6 +68,12 @@
   (when valittu-hoitokausi
     (< (pvm/vuosi (first valittu-hoitokausi))
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
+
+(defn hoitovuoden-indeksikorjaus-vahvistettu?
+  [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi] :as budjettitavoitteet} hoitovuosi]
+  (let [hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
+        indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
+    indeksikorjaus-vahvistettu?))
 
 
 ;; --- Tuck-eventit ja käsittelijät ---
@@ -118,6 +126,7 @@
     :haku-kaynnissa? false
     :tallennus-kesken? false
     :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+    :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
     :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
     :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
     :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
@@ -156,6 +165,8 @@
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [_ app]
+    (log/debug "HaeUrakanMuutostiedot")
+
     (hae-urakan-muutostiedot
       (assoc
         (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
@@ -166,6 +177,8 @@
 
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
+    (log/debug "HaeUrakanMuutostiedotOnnistui")
+
     (vastaus-haku-onnistui app vastaus))
 
 
@@ -178,6 +191,10 @@
   (process-event [{taulukon-avain :taulukon-avain} app]
     (assoc-in app [:taulukko-nakyvissa? taulukon-avain]
       (not (get-in app [:taulukko-nakyvissa? taulukon-avain]))))
+
+  PaivitaLomake
+  (process-event [{:keys [lomake]} app]
+    (assoc app :muokattava-muutos lomake))
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
   HaeMuutoksenTiedot
@@ -205,20 +222,12 @@
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
           toimenpiteiden-tehtavat (:toimenpiteiden-tehtavat vastaus)
-          ;; lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
+          ;; Lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
           ;; halutaan defaulttina näyttää aikaisin hoitovuosi, jossa on kirjauksia.
-          ;; Jos aikaisin kirjauksia sisältävä hoitovuosi ei ole mahdollisten hoitovuosien listassa,
-          ;; valitaan ensimmäinen mahdollisista hoitovuosista.
-          ;; jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
+          ;; Jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
           aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
-          ;; vain ne hoitovuodet mahdollisia, jotka ovat voimassa alkaen pvm:n jälkeen eli alkupvm on sen jälkeen
-          mahdolliset-hoitovuodet-lomakkeella (filter #(pvm/jalkeen? (first %) (get-in app [:muokattava-muutos :voimassa_alkaen]))
-                                                (:urakan-hoitokaudet app))
-          hoitovuosi-lomakkeelle (or (when (and aikaisin-hoitovuosi-jossa-kirjauksia
-                                             ;; Varmista, että hoitovuosi on mahdollisissa hoitovuosissa
-                                             ;; :budjetoidut_summat voi sisältää arvoja, mutta sellaista hoitovuotta ei
-                                             ;; saa kuitenkaan valita, jos se ei ole mahdollisten hoitovuosien joukossa.
-                                             (contains? (vec mahdolliset-hoitovuodet-lomakkeella) aikaisin-hoitovuosi-jossa-kirjauksia))
+          mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
+          hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
                                        (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
                                    (first mahdolliset-hoitovuodet-lomakkeella))
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
@@ -327,19 +336,16 @@
   LisaaLiite
   (process-event
     [{:keys [liite]} app]
-    (prn "LisaaLiite")
     (-> app
       (update-in [:muokattava-muutos :liitteet] conj liite)))
 
   PoistaLisattyLiite
   (process-event [_ app]
-    (prn "PoistaLisattyLiite")
     (assoc app :uusi-liite nil))
 
   PoistaTallennettuLiite
   (process-event
     [{:keys [liite-id]} app]
-    (prn "PoistaTallennettuLiite, liite-id: " liite-id)
     (let [{urakka-id :id} @nav/valittu-urakka
           e! (tuck/current-send-function)
           ;; hanskataan tässä myös tilanne, jossa muutosta ei ole vielä tallennettu
