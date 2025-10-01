@@ -202,7 +202,8 @@
 (deftest tarkista-viestin-kasittely-ja-kuittaukset-paivystajan-kanssa
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
-  (let [kuittausviestit-tloikkiin (atom [])]
+  (let [kuittausviestit-tloikkiin (atom [])
+        oulu-ilmoitus-id 99887766]
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! kuittausviestit-tloikkiin conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
@@ -218,10 +219,12 @@
                                             :loppu (t/now)
                                             :vastuuhenkilo true
                                             :varahenkilo true}))]
-     (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+     (let [;urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+           urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+           _ (println "urakka-id" urakka-id)
            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
                                   kayttaja portti))
-           testi-sanoma (testi-ilmoitus-sanoma)]
+           testi-sanoma (testi-ilmoitus-sanoma-oululle)]
        (async/<!! (async/timeout timeout))
        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ testi-sanoma)
 
@@ -230,11 +233,11 @@
 
        ;; Tarkista saapuneen ilmoituksen tila
        (let [_ (odota-arvo kuittausviestit-tloikkiin kuittaus-timeout)
-             _ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla 123456789) "Toimenpide on tietokannassa." kuittaus-timeout)
+             _ (odota-ehdon-tayttymista #(hae-ilmoitustoimenpide-ilmoitusidlla oulu-ilmoitus-id) "Toimenpide on tietokannassa." kuittaus-timeout)
              {:keys [status body] :as vastaus} @ilmoitushaku
-             ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
+             ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla oulu-ilmoitus-id)]
 
-         (is (= 123456789 (:ilmoitusid ilmoitustoimenpide))
+         (is (= oulu-ilmoitus-id (:ilmoitusid ilmoitustoimenpide))
            "Löydetään ilmoitustoimenpide -taulusta merkintä välittämisestä päivystäjälle")
          (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
          ;; Kommentoin tämän testin pois, koska jostain minulle tuntemattomasta syytä
@@ -256,7 +259,7 @@
 
        (is (= 1 (count (hae-testi-ilmoitukset)))
          "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")))
-    (poista-ilmoitus 123456789)))
+    (poista-ilmoitus oulu-ilmoitus-id)))
 
 ;; Palauttaa ilmoituksen vastaanottajalle virheen
 (deftest testaa-toimenpidepyynto-ilman-sijaintia
