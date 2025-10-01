@@ -168,12 +168,12 @@
 (deftest tarkista-viestin-kasittely-ja-kuittaukset-ilman-paivystajaa
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
    viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
-  (let [viestit (atom [])]
+  (let [viestit (atom [])
+        ilmoitusid 99887766]
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
     (let [urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
-          ilmoitusid 99887766
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (async/<!! (async/timeout timeout))
