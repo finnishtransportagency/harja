@@ -538,6 +538,15 @@
                   (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
     vastaus))
 
+(defn hae-testi-ilmoitukset-ilmoitusidlla [ilmoitusid]
+  (let [vastaus (mapv
+                  #(-> %
+                     (konv/array->set :selitteet)
+                     (konv/array->set :kuvat)
+                     (set/rename-keys {:ilmoitusid :ilmoitus-id}))
+                  (q-map (format "select * from ilmoitus where ilmoitusid = %s;" ilmoitusid)))]
+    vastaus))
+
 (defn hae-ilmoitus-ilmoitusidlla-tietokannasta [ilmoitus-id]
   (let [vastaus (first (mapv
                          #(-> %

@@ -172,11 +172,12 @@
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
-    (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+    (let [urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+          ilmoitusid 99887766
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (async/<!! (async/timeout timeout))
-      (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma))
+      (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma-oululle))
 
       (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
@@ -190,14 +191,14 @@
         (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
         (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
-      (is (= 1 (count (hae-testi-ilmoitukset)))
+      (is (= 1 (count (hae-testi-ilmoitukset-ilmoitusidlla ilmoitusid)))
           "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
 
       (let [{:keys [status body] :as vastaus} @ilmoitushaku
-            ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla 123456789)]
+            ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla ilmoitusid)]
         (is (nil? ilmoitustoimenpide) "Ei löydetään ilmoitustoimenpide -taulusta merkintää, koska päivystäjää ei ole.")
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")))
-    (poista-ilmoitus 123456789)))
+    (poista-ilmoitus ilmoitusid)))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset-paivystajan-kanssa
   "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
@@ -219,9 +220,7 @@
                                             :loppu (t/now)
                                             :vastuuhenkilo true
                                             :varahenkilo true}))]
-     (let [;urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
-           urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
-           _ (println "urakka-id" urakka-id)
+     (let [urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
                                   kayttaja portti))
            testi-sanoma (testi-ilmoitus-sanoma-oululle)]
@@ -257,7 +256,7 @@
          (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
          (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
-       (is (= 1 (count (hae-testi-ilmoitukset)))
+       (is (= 1 (count (hae-testi-ilmoitukset-ilmoitusidlla oulu-ilmoitus-id)))
          "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")))
     (poista-ilmoitus oulu-ilmoitus-id)))
 
