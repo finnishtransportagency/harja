@@ -28,10 +28,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.lupaus.vastauslomake :as vastauslomake]
-            [harja.ui.yleiset :as y]
-            [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.asiakas.kommunikaatio :as k]))
 
 (defn- pisteet-div [pisteet teksti]
   [:div {:class (str "lupausryhman-" (str/lower-case teksti))
@@ -41,24 +38,24 @@
 
 (defn- toteuma-tai-ennuste-div [{:keys [pisteet-toteuma pisteet-ennuste]}]
   (cond pisteet-toteuma
-        [pisteet-div pisteet-toteuma "TOTEUMA"]
+    [pisteet-div pisteet-toteuma "TOTEUMA"]
 
-        pisteet-ennuste
-        [pisteet-div pisteet-ennuste "ENNUSTE"]
+    pisteet-ennuste
+    [pisteet-div pisteet-ennuste "ENNUSTE"]
 
-        :else
-        [:div]))
+    :else
+    [:div]))
 
 (defn- kuukausivastauksen-status [e! app lupaus lupaus-kuukausi]
   (let [listauksessa? true
         valittu? (and (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))
-                      (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
+                   (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
     [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {}]))
 
 (defn- toteuma-tai-ennuste-luokka [{:keys [pisteet-toteuma]}]
   (cond (and pisteet-toteuma (pos? pisteet-toteuma)) "toteuma-pisteet-positiivnen"
-        pisteet-toteuma "toteuma-pisteet-nolla"
-        :else "ennuste-pisteet"))
+    pisteet-toteuma "toteuma-pisteet-nolla"
+    :else "ennuste-pisteet"))
 
 (defn- lupaus-kuukausi-rivi [e! app {:keys [lupaus-kuukaudet] :as lupaus}]
   [:div.row.kk-tilanne
@@ -81,9 +78,7 @@
     [:div {:style {:display "flex"
                    :align-items "center"
                    :padding 0}}
-     (if (= "yksittainen" (:lupaustyyppi lupaus))
-       [pisteet-div (:pisteet lupaus) "MAX"]
-       [pisteet-div (:kyselypisteet lupaus) "MAX"])]]])
+     [pisteet-div (lupaus-domain/lupaus->maksimipisteet lupaus) "MAX"]]]])
 
 (defn muodosta-kannanotto [ryhma]
   (cond
@@ -155,7 +150,7 @@
             (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
             @istunto/kayttaja)
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
-                                    (:id urakka))
+            (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
         input-id (str "input-sitoutuminen-pisteet")]
@@ -177,13 +172,16 @@
                             :vayla-tyyli? true
                             :input-luokka "lupaus-sitoutumis-pisteet"
                             :kokonaisluku? true
-                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0 100 1))
+                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
+                                                              ;; Asetetaan pisteiden yläraja 200 2025 alkaville urakoille ja 100 muille
+                                                              (if (= 2025 (pvm/vuosi (:alkupvm urakka))) 200 100)
+                                                              1))
                             :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
                                             (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
                             :on-blur #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))}
          (r/wrap (get-in app [:lupaus-sitoutuminen :pisteet])
-                 (fn [pisteet]
-                   (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
+           (fn [pisteet]
+             (e! (lupaus-tiedot/->LuvattujaPisteitaMuokattu pisteet))))]
         [:div.pisteluku (:pisteet tiedot)])
       (when (and (not (true? muokkaa?)) toiminto oikeus-asettaa-luvatut-pisteet?)
         [:div.edit-ikoni (ikonit/action-edit)])]
@@ -206,7 +204,7 @@
      (when vanha-urakka?
        [:div {:style {:display "flex" :flex-grow 1 :justify-content "right" :padding-right "32px"}}
         (for [kp kuukausipisteet]
-          ^{:key (str "kuukausipisteet-" (hash kp) )}
+          ^{:key (str "kuukausipisteet-" (hash kp))}
           [kuukausitilat/kuukausiennuste e! app kp urakka])])
 
      [:div.lupauspisteet
@@ -215,20 +213,20 @@
         (when-not vanha-urakka?
           [pisteympyra e!
            (cond toteuma
-                 {:pisteet toteuma
-                  :tyyppi :toteuma}
+             {:pisteet toteuma
+              :tyyppi :toteuma}
 
-               (and ennuste (not= :ei-viela-ennustetta (:ennusteen-tila yhteenveto)))
-               {:pisteet ennuste
-                :tyyppi :ennuste}
+             (and ennuste (not= :ei-viela-ennustetta (:ennusteen-tila yhteenveto)))
+             {:pisteet ennuste
+              :tyyppi :ennuste}
 
-                 :else
-                 {:pisteet nil
-                  :tyyppi :ennuste})
+             :else
+             {:pisteet nil
+              :tyyppi :ennuste})
            nil urakka app false]))
       ;; Lupaus
       [pisteympyra e! (merge lupaus-sitoutuminen
-                             {:tyyppi :lupaus})
+                        {:tyyppi :lupaus})
        #(e! (lupaus-tiedot/->VaihdaLuvattujenPisteidenMuokkausTila))
        urakka
        app
@@ -247,9 +245,9 @@
   (if (:yhteenveto app)
     (let [ennusteen-tila (get-in app [:yhteenveto :ennusteen-tila])
           bonusta? (and (not= :ei-viela-ennustetta ennusteen-tila)
-                        (get-in app [:yhteenveto :bonus-tai-sanktio :bonus]))
+                     (get-in app [:yhteenveto :bonus-tai-sanktio :bonus]))
           sanktiota? (and (not= :ei-viela-ennustetta ennusteen-tila)
-                          (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
+                       (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio]))
           neutraali? (= :ei-viela-ennustetta ennusteen-tila)
           tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
           summa (cond
@@ -262,41 +260,41 @@
                                                                  (pvm/vuosi (first (:valittu-hoitokausi app)))))
           tavoitehinta (get-in app [:yhteenveto :tavoitehinta])]
       [:div.lupausten-ennuste {:class (cond bonusta? " bonusta"
-                                            tavoite-taytetty? " bonusta"
-                                            sanktiota? " sanktiota"
-                                            neutraali? " neutraali")}
+                                        tavoite-taytetty? " bonusta"
+                                        sanktiota? " sanktiota"
+                                        neutraali? " neutraali")}
        [:div {:style {:display "flex"
                       :align-items "center"}}
         [:div {:style {:flex "4 1 0"}}
          (cond
            (get-in app [:yhteenveto :luvatut-pisteet-puuttuu?])
            (ennuste-opaste [ikonit/harja-icon-status-alert]
-                           (str "Luvattu pistemäärä puuttuu")
-                           "Syötä urakoitsijan lupaama pistemäärä.")
+             (str "Luvattu pistemäärä puuttuu")
+             "Syötä urakoitsijan lupaama pistemäärä.")
            (get-in app [:yhteenveto :tavoitehinta-puuttuu?])
            (ennuste-opaste [ikonit/harja-icon-status-alert]
-                           (str "Hoitokauden tavoitehinta puuttuu")
-                           "Täytä tarjouksen alkuperäinen tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
+             (str "Hoitokauden tavoitehinta puuttuu")
+             "Täytä tarjouksen alkuperäinen tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
            (= :ei-viela-ennustetta ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-help]
-                           "Ei vielä ennustetta"
-                           "Ensimmäiset ennusteet annetaan lokakuun alussa.")
+             "Ei vielä ennustetta"
+             "Ensimmäiset ennusteet annetaan lokakuun alussa.")
            (= :ennuste ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (if (not= 0 summa)
-                             (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                             (str "Ennusteen mukaan urakka on päässyt tavoitteeseen."))
-                           "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
+             (if (not= 0 summa)
+               (str "Ennusteen mukaan urakalle on tulossa " ennusteen-tila-teksti)
+               (str "Ennusteen mukaan urakka on päässyt tavoitteeseen."))
+             "Kaikista lupauksista pitää olla viimeinen päättävä merkintä tehty ennen kuin toteuman voi laskea.")
            (= :alustava-toteuma ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (if (not= 0 summa)
-                             (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
-                             (str "Toteuman mukaan urakka pääsi tavoitteeseen."))
-                           "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
+             (if (not= 0 summa)
+               (str "Toteuman mukaan urakalle on tulossa " ennusteen-tila-teksti)
+               (str "Toteuman mukaan urakka pääsi tavoitteeseen."))
+             "Lopulliset bonukset ja sanktiot sovitaan välikatselmuksessa.")
            (= :katselmoitu-toteuma ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-info]
-                           (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
-                           "Tiedot on käyty läpi välikatselmuksessa.")
+             (str "Urakalle tuli " ennusteen-tila-teksti " " hoitokauden-jarj-nro ". hoitovuotena ")
+             "Tiedot on käyty läpi välikatselmuksessa.")
            :else
            [:div "Ennustetta ei voitu laskea"])]
         [:div {:style {:order 2
@@ -322,7 +320,7 @@
                  [:div.vihje-teksti "Tarjouksen tavoitehinta:"]
                  [:div.vihje-teksti (fmt/desimaaliluku tavoitehinta 2 true) " €"]])])])]])
     [:div.flex-row.keskita
-     [y/ajax-loader]]))
+     [yleiset/ajax-loader]]))
 
 (defn nykyhetki [data]
   [:span.nykyhetki.label-ja-kentta
@@ -354,11 +352,11 @@
              (e! (lupaus-tiedot/->HaeUrakanLupaustiedot urakka))))
         #(e! (lupaus-tiedot/->NakymastaPoistuttiin)))
       (komp/watcher nav/valittu-urakka
-                    (fn [_ _ urakka]
-                      ;; Näytetään välittömästi oikea hoitovuosi.
-                      ;; Uudet lupaustiedot haetaan vähän myöhemmin :component-will-mount-vaiheessa
-                      (when urakka
-                        (e! (lupaus-tiedot/->ValitseUrakka urakka)))))
+        (fn [_ _ urakka]
+          ;; Näytetään välittömästi oikea hoitovuosi.
+          ;; Uudet lupaustiedot haetaan vähän myöhemmin :component-will-mount-vaiheessa
+          (when urakka
+            (e! (lupaus-tiedot/->ValitseUrakka urakka)))))
       (fn [e! app]
         [:span.lupaukset-sivu
          (when (:vastaus-lomake app)
@@ -371,15 +369,15 @@
          [yhteenveto e! app urakka]
          [ennuste e! app]
          ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
-         (when (>= (pvm/vuosi (:alkupvm urakka)) 2021 )
+         (when (>= (pvm/vuosi (:alkupvm urakka)) 2021)
            (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
-            [:div.row {:style (merge {}
-                                     (when (not (empty? (:lupausryhmat app)))
-                                       {:border-top "1px solid #D6D6D6"}))}
-             (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
-                 (for [ryhma lupausryhmat]
-                   ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-                   [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
+             [:div.row {:style (merge {}
+                                 (when (not (empty? (:lupausryhmat app)))
+                                   {:border-top "1px solid #D6D6D6"}))}
+              (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
+                (for [ryhma lupausryhmat]
+                  ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+                  [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
          [testausvalinnat e! app]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]

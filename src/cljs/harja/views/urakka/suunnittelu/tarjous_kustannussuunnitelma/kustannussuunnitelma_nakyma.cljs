@@ -12,6 +12,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
+            [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
@@ -358,6 +359,21 @@
            tulevaisuudessa-arvoja?
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
+(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi] :as app}]
+  (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
+        hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
+    [:div#pysyvat-muutokset-elementti.row.kustannussuunnitelma-osio.kapea-osio
+     [:div.row
+      [:div.col-xs-12
+       [:h2 "Pysyvät muutokset"]
+       [:div.body-text {:style {:margin-top "-15px" :margin-bottom "12px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
+       [:div.row {:style {:margin-bottom "20px"}}
+        [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
+       [:div {:style {:background "#f0f0f0" :padding "20px" :margin "12px 0"}}
+        [:div {:style {:text-align "center" :font-size "40px" :color "#0066CC"}} [ikonit/ikoni-ja-teksti (ikonit/harja-icon-misc-maintenance) ""]]
+        [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]]]]))
+
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin
@@ -469,6 +485,7 @@
      [erillishankinnat e! app]
      [jjh/johto-ja-hallintokorvaus e! app]
      [hoidonjohtopalkkiot e! app]
+     [pysyvat-muutokset e! app]
      [tavoite-ja-kattohinta e! app]
      [debug/debug app]]))
 
