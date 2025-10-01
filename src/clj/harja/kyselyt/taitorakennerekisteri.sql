@@ -45,8 +45,9 @@ SELECT
 FROM siltatarkastus st
 JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
-WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
-   OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
+WHERE s.silta_oid IS NOT NULL
+  AND ((st.luotu BETWEEN :alkuaika AND :loppuaika)
+   OR (st.muokattu BETWEEN :alkuaika AND :loppuaika))
 ORDER BY st.luotu DESC;
 
 -- name: loytyyko-silta-oidilla
