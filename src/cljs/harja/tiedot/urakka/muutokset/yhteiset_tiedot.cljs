@@ -165,8 +165,6 @@
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [_ app]
-    (log/debug "HaeUrakanMuutostiedot")
-
     (hae-urakan-muutostiedot
       (assoc
         (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
@@ -177,8 +175,6 @@
 
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "HaeUrakanMuutostiedotOnnistui")
-
     (vastaus-haku-onnistui app vastaus))
 
 

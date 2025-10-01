@@ -219,7 +219,7 @@
                       (and
                         tavoitehinnan_muutos
                         anna-kirjata-tavoitehinta?
-                        (> tavoitehinnan_muutos 0))
+                        (not= tavoitehinnan_muutos 0))
                       "puuttuu"
 
                       ;; Yksikköhinta on valittu edelliseltä vuodelta 
