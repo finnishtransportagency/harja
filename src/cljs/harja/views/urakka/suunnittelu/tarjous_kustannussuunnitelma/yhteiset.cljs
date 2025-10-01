@@ -51,7 +51,9 @@
       (when (and div2 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Pysyvät muutokset"]
-         [:div.body-text "Ei muutoksia"]
+         (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+           [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
+           [:div.body-text "Ei vielä saatavilla"])
          [:div.body-text
           (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
             [yleiset/linkki "Siirry muutoksiin"

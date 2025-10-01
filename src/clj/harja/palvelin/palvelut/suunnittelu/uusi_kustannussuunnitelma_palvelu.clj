@@ -12,7 +12,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
 
 (defn jasenna-rahavaraukset-tarjouksesta
   "Muokkaa tarjouksen tietomallin rahavaraukset sopivaksi kustannussuunnitelman käyttöön.
@@ -128,7 +129,8 @@
           hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
 
           hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht johto-ja-hallintokorvaukset-yht hoidonjohtopalkkiot-yht)
-          pysyvat-muutokset-maara 0
+          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi false)
+          pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
           hoitovuoden-alun-tavoitehinta (+ hoitovuoden-alun-tavoitehinta pysyvat-muutokset-maara)
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (when indeksikerroin
                                                               (* indeksikerroin hoitovuoden-alun-tavoitehinta)) 0)

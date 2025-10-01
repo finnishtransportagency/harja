@@ -22,12 +22,12 @@
   (if (nil? (get-in kustannussuunnitelma [:kilpailutettavat-hankinnat :toimenpiteet]))
     [yleiset/ajax-loader-pieni "Ladataan..."]
     (let [{:keys [kilpailutettavat-hankinnat vahvistettu?
-                  kilpailutettavat-hankinnat-virheet]} kustannussuunnitelma
+                  kilpailutettavat-hankinnat-virheet
+                  pysyvat-muutokset-maara]} kustannussuunnitelma
           tarjous-hankintakustannukset (filter #(= (:osio %) "hankintakustannukset") (:tarjous tarjous))
           valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
           tarjouksen-maara (:summa (first (filter #(= (:vuosi %) valittu-vuosi)
                                             (:hoitovuosittaiset-arvot (first tarjous-hankintakustannukset)))))
-          pysyvamuutos-maara 0 ;; Toteutus kesken
           toimenpiteet (:toimenpiteet kilpailutettavat-hankinnat)
           taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
           _ (reset! yhteiset/grid-hankinnat-atom taulukon-tiedot)
@@ -62,7 +62,7 @@
           kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
       [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
-       [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Kilpailutettavat hankinnat" tarjouksen-maara pysyvamuutos-maara
+       [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Kilpailutettavat hankinnat" tarjouksen-maara pysyvat-muutokset-maara
         kilpailutettavat-hankinnat-yhteensa kilpailutettavat-hankinnat-yhteensa-indeksikorjattu
         {:div1 true :div2 true :div3 true :div4 true} valittu-vuosi]
 
