@@ -133,31 +133,33 @@
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
-  (let [ivaloid (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
-        ivalon-tiedot {:urakka-id ivaloid
-                        :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                             #inst "2025-09-30T20:59:59.000-00:00"]
-                        :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        suomussalmi-tiedot {:urakka-id @suomussalmen-maanteiden-hoitourakan-2024-2029-id
-                            :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                                 #inst "2025-09-30T20:59:59.000-00:00"]
-                            :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        ivalo-vastaus (hae-urakan-lupaustiedot
+  (let [kajaaniid (hae-urakan-id-nimella "Aktiivinen Kajaani Testi")
+        kajaanin-tiedot {:urakka-id kajaaniid
+                         :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                              #inst "2025-09-30T20:59:59.000-00:00"]
+                         :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        oulunid (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+        oulu-tiedot {:urakka-id oulunid
+                     :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                          #inst "2025-09-30T20:59:59.000-00:00"]
+                     :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        kajaani-vastaus (hae-urakan-lupaustiedot
                           +kayttaja-jvh+
-                          ivalon-tiedot)
-        suomussalmi-vastaus (hae-urakan-lupaustiedot
+                          kajaanin-tiedot)
+        oulu-vastaus (hae-urakan-lupaustiedot
                               +kayttaja-jvh+
-                              suomussalmi-tiedot)
-        ivalo-ryhmat (:lupausryhmat ivalo-vastaus)
-        suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
-        ivalo-lupaus-44 (etsi-lupaus ivalo-vastaus 44)
-        suomussalmi-lupaus-68 (etsi-lupaus suomussalmi-vastaus 68)
-        ivalo-ryhma-idt (sort (map :id ivalo-ryhmat))
-        suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))]
-    (is (= (list 17 19 21 23 25) ivalo-ryhma-idt) "Ivalon ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= (list 16 18 20 22 24) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= 44 (:lupaus-id ivalo-lupaus-44)) "Ivalolla on lupaus 44 ryhmasta 1")
-    (is (= 68 (:lupaus-id suomussalmi-lupaus-68)) "Suomussalmella on lupaus 13 ryhmasta 5")))
+                       oulu-tiedot)
+        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        oulu-ryhmat (:lupausryhmat oulu-vastaus)
+        kajaani-lupaus-44 (etsi-lupaus kajaani-vastaus 44)
+        oulu-lupaus-68 (etsi-lupaus oulu-vastaus 68)
+        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat))
+        oulu-ryhma-idt (sort (map :id oulu-ryhmat))]
+    (is (= (list 17 19 21 23 25) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 16 18 20 22 24) oulu-ryhma-idt) "Oulun ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (not= kajaani-ryhma-idt oulu-ryhma-idt) "Ryhmät pitää olla erit, koska Kajaani simuloi erittäin vaativaa urakkaa tässä testissä.")
+    (is (= 44 (:lupaus-id kajaani-lupaus-44)) "Kajaanilla on lupaus 44 ryhmasta 1")
+    (is (= 68 (:lupaus-id oulu-lupaus-68)) "Oululla on lupaus 13 ryhmasta 5")))
 
 
 (deftest urakan-2025-lupaustiedot-toimii
@@ -834,7 +836,7 @@
           (let [[tavoite kustannus] (first lopputilanteen-rivit)]
             (is (= toteutunut-tavoitehinta tavoite) "Tavoitehinta tallentui oikein")
             (is (= toteutunut-kustannus kustannus) "Kustannukset tallentuivat oikein")))))
-    
+
     (testing "Domain-funktioiden integraatio"
       ;; Testaa että domain-funktiot toimivat odotetulla tavalla
       (let [syotteet {:ennustettu-tavoitehinta 1000000M
