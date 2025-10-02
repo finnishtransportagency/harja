@@ -83,7 +83,7 @@
                                       :jjh-muutosten-summa nil
                                       :kulu_kohdistus nil
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
-                                                                   :kustannuslaji "hankintakustannukset"
+                                                                   :kustannuslaji "erillishankinnat"
                                                                    :summa 3000
                                                                    :toimenpideinstanssi 89
                                                                    :versio 1})
@@ -620,7 +620,7 @@
                            {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027 :versio 2}
                            ;; Tämän rivin pitäisi jäädä ennalleen alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
                            {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2028 :versio 1})
-        _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload)
+        _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload false)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
                   +kayttaja-jvh+
