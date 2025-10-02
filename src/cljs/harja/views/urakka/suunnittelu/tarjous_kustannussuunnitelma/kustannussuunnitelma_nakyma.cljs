@@ -431,9 +431,9 @@
        [:h2 "Pysyvät muutokset"]
        [:div.flex-row {:style {:margin-top "-15px" :margin-bottom "12px"}}
         [:div.body-text (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
-        [yleiset/linkki "Siirry muutokset-sivulle"
-         #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-            {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
+        (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+          [yleiset/linkki "Siirry muutokset-sivulle"
+           #(e! (muutokset-tiedot/->SiirryMuutosNakymaan))])]
        [:div.row
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
