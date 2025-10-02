@@ -16,6 +16,7 @@
     [tuck.core :as tuck]))
 
 (defonce virheet-atom (atom {}))
+(defonce uusi-toimenkuva-valittavana (atom false))
 
 ;; Määritellään kaikkien kolumnien leveyksiä
 (def nimi-leveys 20)
@@ -101,7 +102,7 @@
                            kaikki-toimenkuvat)
 
         ;; Toimenkuvan voi aina lisätä, paitsi jos kaikki toimenkuvat on jo lisätty.
-        voi-lisata? (if (> (count muut-toimenkuvat) 0)
+        voi-lisata? (if (and (> (count muut-toimenkuvat) 0) (not @uusi-toimenkuva-valittavana))
                       true false)
         vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
         vuosi-map (zipmap vuosiavaimet (repeat 0))]
@@ -113,7 +114,9 @@
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
       :voi-lisata? voi-lisata?
-      :uusi-rivi (fn [rivi] (merge (assoc rivi :id -1 :nimi "" :jarjestys 99 :yhteensa 0) vuosi-map))
+      :uusi-rivi (fn [rivi]
+                   (reset! uusi-toimenkuva-valittavana true)
+                   (merge (assoc rivi :id -1 :nimi "" :jarjestys 99 :yhteensa 0) vuosi-map))
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
@@ -151,8 +154,11 @@
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
-                 :valinnat-fn #(map :nimi muut-toimenkuvat)
+                 :valinnat-fn #(if (= 0 (count muut-toimenkuvat))
+                                 (map :nimi toimenkuvat)
+                                 (map :nimi muut-toimenkuvat))
                  :aseta (fn [rivi arvo]
+                          (reset! uusi-toimenkuva-valittavana false)
                           (merge
                             (assoc rivi :id -1
                               :nimi arvo
@@ -165,12 +171,13 @@
                             vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 :muokattava? (fn [rivi arvo] (if (= -1 (:id rivi)) true false))}
+                 :muokattava? (fn [rivi arvo] (if (and (= -1 (:id rivi)) (seq muut-toimenkuvat)) true false))}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
                  :aseta (fn [rivi arvo]
+                          (reset! uusi-toimenkuva-valittavana false)
                           (merge (assoc rivi :id -1
                                    :nimi arvo
                                    :toimenkuva (str/lower-case arvo)
