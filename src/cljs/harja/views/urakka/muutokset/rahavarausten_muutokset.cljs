@@ -13,7 +13,7 @@
   "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon.
   Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
   [e! {:keys [rahavarausten-muutokset] :as app}]
-  (let [rivit (butlast rahavarausten-muutokset)
+  (let [rivit (or (butlast rahavarausten-muutokset) [])
         yhteenveto (last rahavarausten-muutokset)
         suunnittelutiedot-puuttuvat (every? #(or
                                                (nil? (:summa-indeksikorjattu %))
