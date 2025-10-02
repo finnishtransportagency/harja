@@ -55,7 +55,7 @@
            [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
            [:div.body-text "Ei muutoksia"])
          [:div.body-text
-          [yleiset/linkki "Siirry muutoksiin"
+          [yleiset/linkki "Siirry osioon"
            #(do
               (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]])
 

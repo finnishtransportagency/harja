@@ -1,6 +1,7 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma
   "Uusi kustannusten suunnittelu"
-  (:require [tuck.core :as tuck]
+  (:require [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+            [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
@@ -9,6 +10,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
@@ -359,20 +361,83 @@
            tulevaisuudessa-arvoja?
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
-(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi] :as app}]
-  (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+(defn- pysyvat-muutokset-grid* [e! muutokset]
+  [grid/grid
+   {:tunniste :id
+    :luokat ["kirjatut-muutokset-grid"]
+    :tyhja "Ei muutoksia aiemmilta hoitovuosilta."
+    :voi-lisata? false
+    :voi-kumota? false
+    :voi-poistaa? (constantly false)
+    :voi-muokata? false
+    :rivi-jalkeen-fn (fn [rivit]
+                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))
+                             tavoitehinnan-muutokset-indeksikorjattu-yht (reduce + (map :tavoitehinnan-muutos-indeksikorjattu rivit))]
+                         [{:teksti "Hoitovuoden alun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
+                          {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                          {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-indeksikorjattu-yht) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                          {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
+
+   ;; Taulukon kentät
+   [{:otsikko "Muutoksen syy"
+     :nimi :syy
+     :tyyppi :string
+     :leveys 40}
+
+    {:otsikko "Voimassa alkaen"
+     :nimi :voimassa_alkaen
+     :tyyppi :pvm
+     :leveys 15}
+
+    {:otsikko "Tavoitehinnan muutos (€)"
+     :nimi :tavoitehinnan-muutos
+     :tyyppi :numero
+     :fmt (partial fmt/euro-opt false true)
+     :tasaa :oikea
+     :leveys 15}
+
+    {:otsikko "Indeksikorjattu"
+     :nimi :tavoitehinnan-muutos-indeksikorjattu
+     :tyyppi :numero
+     :fmt (partial fmt/euro-opt false true)
+     :tasaa :oikea
+     :leveys 15}
+
+    {:otsikko ""
+     :nimi :toiminnot
+     :tyyppi :komponentti
+     :leveys 10
+     :tasaa :oikea
+     :komponentti (fn [rivi]
+                    [napit/muokkaa "Muokkaa"
+                     #(js/alert "TODO")])}]
+   muutokset])
+
+(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app}]
+  (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
+        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
-    [:div#pysyvat-muutokset-elementti.row.kustannussuunnitelma-osio.kapea-osio
+    [:div#pysyvat-muutokset-elementti.row.kustannussuunnitelma-osio
      [:div.row
       [:div.col-xs-12
        [:h2 "Pysyvät muutokset"]
-       [:div.body-text {:style {:margin-top "-15px" :margin-bottom "12px"}} (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
-       [:div.row {:style {:margin-bottom "20px"}}
+       [:div.flex-row {:style {:margin-top "-15px" :margin-bottom "12px"}}
+        [:div.body-text (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
+        [yleiset/linkki "Siirry muutokset-sivulle"
+         #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+            {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
+       [:div.row
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
-       [:div {:style {:background "#f0f0f0" :padding "20px" :margin "12px 0"}}
-        [:div {:style {:text-align "center" :font-size "40px" :color "#0066CC"}} [ikonit/ikoni-ja-teksti (ikonit/harja-icon-misc-maintenance) ""]]
-        [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]]]]))
+
+       (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+         [pysyvat-muutokset-grid* e! muutokset]
+
+         ;; Mhu-muutokset ei käytössä, näytetään placeholder
+         [:div.row
+          [:div {:style {:background "#f0f0f0" :padding "20px" :margin "12px 0"}}
+           [:div {:style {:text-align "center" :font-size "40px" :color "#0066CC"}} [ikonit/ikoni-ja-teksti (ikonit/harja-icon-misc-maintenance) ""]]
+           [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]])]]]))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
