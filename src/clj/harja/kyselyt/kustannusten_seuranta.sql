@@ -276,7 +276,7 @@ SELECT CASE
            WHEN lk.tyyppi::TEXT = 'lisatyo' THEN 'lisatyo'
            WHEN lk.tyyppi::TEXT = 'rahavaraus' THEN 'rahavaraus'
            ELSE 'hankinta'
-           END                            AS toimenpideryhma,
+       END                                AS toimenpideryhma,
        COALESCE(tr.nimi, tk.nimi)         AS tehtava_nimi,
        CASE
            WHEN (tk.koodi = '23104' AND lk.rahavaraus_id IS NULL) THEN 'Talvihoito'
@@ -286,7 +286,7 @@ SELECT CASE
            WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
            WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
            WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi)
-           END                            AS toimenpide,
+       END                                AS toimenpide,
        MIN(l.erapaiva)::TEXT              AS ajankohta,
        'toteutunut'                       AS toteutunut,
        tr.jarjestys                       AS jarjestys,
@@ -319,7 +319,9 @@ WHERE l.urakka = :urakka
   AND lk.poistettu IS NOT TRUE
   AND (
       -- Rajataan johto- ja hallintokorvaus, hoidonjohdonpalkkio ja erilliskorvaus ulos
-      tk.koodi IN ('23104','23116','20107','20191','14301')
+      -- Rajaa tästä kaikki muutostyypit myös pois, niille omat laarit.
+      tk.koodi IN ('23104','23116','20107','20191','14301', '23124')
+      AND NOT lk.tyyppi IN ('jjh-muutos', 'erillisrahoitettu-muutos')
       -- Laske mukaan jjh muutokset muutoksien alle 
       OR (tk.koodi = '23151' AND lk.tyyppi = 'jjh-muutos')
   )
@@ -370,7 +372,6 @@ FROM mhu_muutos mm
                AND lk.poistettu IS NOT TRUE 
          LEFT JOIN mhu_muutos_kustannusvaikutus mmk 
                 ON mmk.muutos = mm.id 
-               AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
          LEFT JOIN tehtavaryhma tr 
                 ON tr.id = lk.tehtavaryhma
          LEFT JOIN rahavaraus_urakka ru 
@@ -383,7 +384,9 @@ FROM mhu_muutos mm
          LEFT JOIN toimenpide tk 
                 ON tpi.toimenpide = tk.id 
                AND tk.koodi IN ('23104','23116','20107','20191','14301')
-WHERE mm.alityyppi::TEXT = 'erillisrahoitus'
+WHERE mm.urakka = :urakka 
+  AND mm.alityyppi::TEXT = 'erillisrahoitus' 
+  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
 GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.syy, mmk.summa, mm.alityyppi,
          lk.maksueratyyppi, l.erapaiva, l.urakka, tk.koodi, 
          tr.jarjestys, tr.yksiloiva_tunniste,
@@ -411,8 +414,8 @@ SELECT mmk.summa                                    AS budjetoitu_summa,
     FROM mhu_muutos m
          LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id 
 WHERE m.urakka = :urakka
-  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER
   AND m.tyyppi = 'pysyva'
+  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut kulu_kohdistus taulusta.

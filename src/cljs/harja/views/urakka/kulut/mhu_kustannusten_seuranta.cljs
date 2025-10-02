@@ -90,8 +90,9 @@
               erotus (- toteutunut-summa budjetoitu-summa-indeksikorjattu)
               neg? (big/gt (big/->big toteutunut-summa) (big/->big budjetoitu-summa-indeksikorjattu))]
           (concat
-            [^{:key (str toimenpide "-" (hash rivi))}
-             (lisaa-taulukkoon-tehtava-rivi [:span {:style {:padding-left "16px"}} (nimi-avain rivi)]
+            [^{:key (str (:paaryhma toimenpide) "-" (hash rivi))}
+             (lisaa-taulukkoon-tehtava-rivi 
+               [:span {:style {:padding-left "16px"}} (nimi-avain rivi)]
                (fmt->big (big/->big budjetoitu-summa) false)
                (fmt->big budjetoitu-summa-indeksikorjattu false)
                true ;; Kaikki kolmannen portaan tehtävät merkitään "vahvistetuksi" koska niille ei näytetä summaa
@@ -130,17 +131,22 @@
              palkka-tehtavat (filter #(= "palkat" (:toimenpideryhma %)) (:tehtavat toimenpide))
              negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                              (big/->big (or (:toimenpide-budjetoitu-summa-indeksikorjattu toimenpide) 0)))
-             muodostetut-tehtavat (if-not (contains? (:avatut-rivit app) rivi-avain)
+             muodostetut-tehtavat (cond
+                                    (not (contains? (:avatut-rivit app) rivi-avain))
                                     nil
+
+                                    muutostyo?
                                     (concat
-                                      (when-not muutostyo?
-                                        (tehtavatason-rivitys toimenpide toimistokulu-tehtavat false :tehtava_nimi)
-                                        (tehtavatason-rivitys toimenpide palkka-tehtavat false :tehtava_nimi)
-                                        (tehtavatason-rivitys toimenpide hankinta-tehtavat false :tehtava_nimi)
-                                        (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true :tehtava_nimi))
                                       (tehtavatason-rivitys toimenpide muutokset-jjh false :muutostyo_syy)
                                       (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu true :muutostyo_syy)
-                                      (tehtavatason-rivitys toimenpide muutokset-pysyva false :muutostyo_syy)))
+                                      (tehtavatason-rivitys toimenpide muutokset-pysyva false :muutostyo_syy))
+                                    
+                                    :else 
+                                    (concat
+                                      (tehtavatason-rivitys toimenpide toimistokulu-tehtavat false :tehtava_nimi)
+                                      (tehtavatason-rivitys toimenpide palkka-tehtavat false :tehtava_nimi)
+                                      (tehtavatason-rivitys toimenpide hankinta-tehtavat false :tehtava_nimi)
+                                      (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true :tehtava_nimi)))
              vahvistettu? (or
                             (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu"))))
                             (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu")))))
