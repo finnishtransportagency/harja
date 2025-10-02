@@ -300,7 +300,6 @@
   HaeTyhjatTarjouksenTiedot
   (process-event
     [_ app]
-    (nollaa-muutokset!)
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
       {:urakka-id (-> @tila/yleiset :urakka :id)}
       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
@@ -311,15 +310,7 @@
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [toimenkuvat (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) (:tarjous vastaus))
-          toimenkuva-rivit (konvertoi-grid-muotoon toimenkuvat)
-          ;; Asetetaan tyhjät tiedot grid atomeihin
-          _ (reset! grid-toimenkuvat-atom toimenkuva-rivit)]
-
-      (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
-        (assoc :tarjous (:tarjous vastaus)))))
+    (-> (kasittele-tarjouksen-vastaus vastaus app)))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -347,7 +338,8 @@
   TallennaTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
-    (kasittele-tarjouksen-vastaus vastaus app))
+    (-> (kasittele-tarjouksen-vastaus vastaus app)
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -723,22 +715,30 @@
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
     (merkitse-muutos!)
-    (assoc app :hankinnat (sort-by :jarjestys hankinnat)))
+    (-> app
+      (assoc :hankinnat (sort-by :jarjestys hankinnat))
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
     (merkitse-muutos!)
-    (assoc app :erillishankinnat erillishankinnat))
+    (-> app
+      (assoc :erillishankinnat erillishankinnat)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaToimenkuvatGrid
   (process-event [{:keys [toimenkuvat]} app]
     (merkitse-muutos!)
-    (assoc app :toimenkuvat toimenkuvat))
+    (-> app
+      (assoc :toimenkuvat toimenkuvat)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaHoidonjohtopalkkioGrid
   (process-event [{:keys [hoidonjohtopalkkiot]} app]
     (merkitse-muutos!)
-    (assoc app :hoidonjohtopalkkiot hoidonjohtopalkkiot))
+    (-> app
+      (assoc :hoidonjohtopalkkiot hoidonjohtopalkkiot)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   NollaaMuutokset
   (process-event [_ app]
