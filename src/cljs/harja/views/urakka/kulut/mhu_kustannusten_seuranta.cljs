@@ -51,7 +51,7 @@
   [:tr.bottom-border {:key (hash (str nimi toteuma indeksikorjattu budjetoitu))}
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
    [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
-   [:td.livi-reunaviiva {:style {:width (:tehtava leveydet)}} nimi]
+   [:td.livi-reunaviiva nimi]
    [:td.numero {:style {:width (:suunniteltu leveydet)}} (when (and (not= "0,00" budjetoitu) (not tavoitehinnanoikaisu?)) budjetoitu)]
    [:td.numero {:class (when (false? vahvistettu)
                                 "vahvistamatta")
