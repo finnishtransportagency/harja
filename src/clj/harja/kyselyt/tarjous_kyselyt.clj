@@ -302,11 +302,13 @@
                                                                 ;; Tämä map pyörähtää jokaisena hoitovuonna. Mutta toimenkuvan kannalta riittää
                                                                 ;; että toimenkuvia lisätään vain kerran urakalle
                                                                 ;; Tarkistetaan siis, ettei toimenkuvaa löydy jo tietokannasta
-                                                                (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:toimenkuva (:toimenkuva toimenkuva)
-                                                                                                                             :urakkaid urakka-id}))
-                                                                  (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:toimenkuva toimenkuva)
-                                                                                                                    :urakkaid urakka-id
-                                                                                                                    :urakkakohtainen-nimi (:nimi toimenkuva)})))
+                                                                (let [toimenkuva-kannasta (first (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                                               :urakkaid urakka-id}))]
+                                                                  (if-not (nil? toimenkuva-kannasta)
+                                                                    (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                      :urakkaid urakka-id
+                                                                                                                      :urakkakohtainen-nimi (:nimi toimenkuva)})
+                                                                    toimenkuva-kannasta)))
                                            toimenkuvadb (if (:id tarjousdb)
                                                           (first (hae-toimenkuva-tarjoukselle db
                                                                    {:tarjous_id (:id tarjousdb)
