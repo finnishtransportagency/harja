@@ -92,7 +92,7 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
-                    (= "Muutostyöt" otsikko)
+                    (= "Muutokset" otsikko)
                     [(taulukko-rivi data kyseessa-kk-vali? "Muutostyöt (erillisrahoitetut)" :muutos_erillis_hoitokausi_yht :muutos_erillis_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutos_hoitokausi_yht :jjh_muutos_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muutostyo_hoitokausi_yht :muutostyo_val_aika_yht true)]
@@ -254,10 +254,10 @@
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
      
      ;; --------------- ;;
-     ;;   Muutostyöt    ;;
+     ;;    Muutokset    ;;
      ;; --------------- ;;
      (taulukko {:data rivitiedot
-                :otsikko "Muutostyöt"
+                :otsikko "Muutokset"
                 :laskutettu-teksti laskutettu-teksti
                 :laskutetaan-teksti laskutetaan-teksti
                 :kyseessa-kk-vali? kyseessa-kk-vali?})

@@ -121,7 +121,8 @@
              muutokset-jjh (filter #(= "jjh-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              muutos-jjh? (boolean (seq muutokset-jjh))
              muutokset-pysyva (filter #(= "pysyva" (:kulu_tyyppi %)) (:tehtavat toimenpide))
-             nayta-erotus? (not muutos-jjh?)
+             muutokset-pysyva? (boolean (seq muutokset-pysyva))
+             nayta-erotus? (not (or muutos-jjh? muutokset-pysyva?))
              muutokset-erillisrahoitettu (filter #(= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) (:tehtavat toimenpide))
              hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
              rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
@@ -139,7 +140,7 @@
                                         (tehtavatason-rivitys toimenpide rahavaraus-tehtavat true :tehtava_nimi))
                                       (tehtavatason-rivitys toimenpide muutokset-jjh false :muutostyo_syy)
                                       (tehtavatason-rivitys toimenpide muutokset-erillisrahoitettu true :muutostyo_syy)
-                                      (tehtavatason-rivitys toimenpide muutokset-pysyva true :muutostyo_syy)))
+                                      (tehtavatason-rivitys toimenpide muutokset-pysyva false :muutostyo_syy)))
              vahvistettu? (or
                             (nil? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu"))))
                             (true? (get toimenpide (keyword (str paaryhma "-indeksikorjaus-vahvistettu")))))
