@@ -32,7 +32,10 @@
                    :toteumat (+ (:toteumat acc 0)
                                (or toteumat 0))})
           {}
-          rahavaraukset)]
+          rahavaraukset)
+        ;; Jos rahavaraukset vektori on tyhjä, nil arvoja voi olla
+        summa-indeksikorjattu (or summa-indeksikorjattu 0)
+        toteumat (or toteumat 0)]
     {:id :yhteenveto
      :summa-indeksikorjattu summa-indeksikorjattu
      :toteumat toteumat
