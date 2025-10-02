@@ -754,7 +754,8 @@
                               [:http-palvelin :db :integraatioloki])
       
       :api-taitorakennerekisteri (component/using
-                                   (taitorakennerekisteri/->Taitorakennerekisteri)
+                                   (taitorakennerekisteri/->Taitorakennerekisteri 
+                                     (:harja-url asetukset))
                                    [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
