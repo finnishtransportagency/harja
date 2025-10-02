@@ -528,6 +528,7 @@
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
    :tehtava {:nimi nil, :id nil},
    :summa 400.77M, :kohdistus-id 12,
+   :muutos-voimassa nil, :muutos-nimi nil, :muutos-id nil,
    :rahavaraus nil
    :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
    :tehtavaryhma 15, :lisatieto nil, :rivi 1})
