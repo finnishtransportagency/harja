@@ -40,9 +40,12 @@
   "Piirtää yhtenäisesti Muutoksien taulukot collapsoitaviksi.
    summan saa piiloon antamalla sille arvon :ei-summaa"
   [e! app {:keys [taulukon-avain taulukon-nakyvyys-event
-                  otsikko summa toiminnot taulukko] :as _tiedot}]
+                  otsikko summa toiminnot toiminnot-asetukset taulukko] :as _tiedot}]
 
-  (let [sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])]
+  (let [sisalto-nakyvissa? (get-in app [:taulukko-nakyvissa? taulukon-avain])
+        toiminnot-asetukset (merge
+                              {:tasaa :vasen}
+                              (when (map? toiminnot-asetukset) toiminnot-asetukset))]
     [:div.collapsoitava-osio
      [:div.otsikkorivi.klikattava {:on-click taulukon-nakyvyys-event}
       [:span
@@ -57,7 +60,9 @@
 
      (when sisalto-nakyvissa?
        [:span
-        [:div.toiminnot
+        [:div.toiminnot {:style (merge {}
+                                  (when (= :oikea (:tasaa toiminnot-asetukset))
+                                    {:float "right"}))}
          [toiminnot e! app]]
         [:div.taulukko
          [taulukko e! app]]])]))
@@ -97,9 +102,7 @@
                                             %)]
                (-> rivi
                  (assoc :voimassa_alkaen arvo)
-                 (assoc :mahdolliset-hoitovuodet-lomakkeella
-                   (filter #(pvm/jalkeen? (first %) arvo)
-                     urakan-hoitokaudet))
+                 (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
                  (resetoi-hoitovuosi-fn))))}))
 
 

@@ -1,6 +1,19 @@
 (ns harja.loki
   "Apufunktioita lokittamiseen."
-  (:require [clojure.string :refer [join]]))
+  (:require
+    [clojure.string :refer [join]]
+    [taoensso.timbre :as log]))
+
+;; -- Konfiguroi Timbre-lokitus dev-ympäristöihin--
+;; Timbre käyttää js/console appenderia CLJS:ssa, konfiguroidaan min-level sopivalle tasolle, jotta selaimen
+;; konsoli ei täyty turhista lokituksista
+
+(log/merge-config!
+  {:appenders
+   {:console
+    {:min-level :debug}}})
+
+;; ---
 
 (def +mittaa-aika+ false)
 
@@ -33,3 +46,4 @@
   [nimi atomi]
   (add-watch atomi :tarkkailija (fn [_ _ vanha uusi]
                                   (log nimi ": " (pr-str vanha) " => " (pr-str uusi)))))
+

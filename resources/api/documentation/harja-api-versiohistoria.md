@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.65</b>
-<b>Julkaistu: 09.01.2024</b>
+<b>Nykyinen versio: 1.0.66</b>
+<b>Julkaistu: 01.09.2025</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.66 Julkaistu 1.9.2025
+    - Poistettu tiestötoimenpiteiden pakollisuus työmaapäiväkirjarajapinnasta.
 - Versionumero 1.0.65 Julkaistu 9.1.2025
     - Lisätty reikäpaikkausrajapinta.
     - Päivitetty materiaaliraporttirajapinnalle toteumarajapinnasta erillinen materiaalimääritys, jotta negatiiviset materiaalimäärät voidaan palauttaa rajapinnan kautta.

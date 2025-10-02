@@ -153,7 +153,7 @@
                                                      (if (and
                                                            (not= "yhteensa" (:osio vuosisumma))
                                                            (= vuosi (:vuosi vuosisumma)))
-                                                       (:summa vuosisumma) 0))
+                                                       (or (:summa vuosisumma) 0) 0))
                                                    hoitovuoden-arvot))]
                  vuosittaiset-arvot))
              (:tarjous tarjous-tietomalli))))
@@ -240,7 +240,7 @@
                                                                :urakka_id urakka-id
                                                                :hoitokauden_alkuvuosi (:vuosi r)
                                                                :johto_ja_hallintokorvaus_toimenkuva_id (:toimenkuva-id rivi)
-                                                               :summa (:summa r)
+                                                               :summa (or (:summa r) 0)
                                                                :osio (:osio rivi)
                                                                :luoja kayttaja-id})
                                                             (:hoitovuosittaiset-arvot rivi))]
@@ -275,7 +275,9 @@
                                ;; Tallennetaan tarjouksen kustannukset ja toimenkuvat tietokantaan
                                vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi rivi) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
                                _ (mapv (fn [kustannus]
-                                         (let [; tarkistetaan, että löytyykö jo tietokannasta
+                                         (let [;; Varmistetaan, että käyttäjä antoi summan ennen tallennusta
+                                               kustannus (if (nil? (:summa kustannus)) (assoc kustannus :summa 0.00M) kustannus)
+                                               ; tarkistetaan, että löytyykö jo tietokannasta
                                                kustannusdb (if (:id tarjousdb)
                                                              (first (hae-kustannus-tarjoukselle db {:tarjous_id (:id tarjousdb)
                                                                                                     :urakka_id urakka-id

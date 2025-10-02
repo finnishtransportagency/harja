@@ -1,5 +1,20 @@
 (ns harja.loki
-  "Tuotantomoodin lokitus. Lokita, jos erikseen laitettu päälle.")
+  "Tuotantomoodin lokitus. Lokita, jos erikseen laitettu päälle."
+  (:require
+    [taoensso.timbre :as log]))
+
+;; -- Konfiguroi Timbre-lokitus tuotantoon --
+;; Timbre käyttää js/console appenderia CLJS:ssa, konfiguroidaan min-level sopivalle tasolle, jotta selaimen
+;; konsoli ei täyty turhista lokituksista
+
+(log/merge-config!
+  {:appenders
+   {:console
+    {:min-level :info}}})
+
+;; ---
+
+;; TODO: Näitä apufunktioita ei juurikaan käytetä, poista jos ei tarvetta
 
 (def +lokitetaan+ false)
 

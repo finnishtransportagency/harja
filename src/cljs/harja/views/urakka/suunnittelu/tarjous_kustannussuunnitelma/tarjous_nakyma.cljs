@@ -280,7 +280,7 @@
       :voi-muokata? true
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
-      :voi-lisata? true
+      :voi-lisata? false
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
