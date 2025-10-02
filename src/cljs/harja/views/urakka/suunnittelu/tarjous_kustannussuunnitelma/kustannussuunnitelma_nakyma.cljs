@@ -1,6 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma
   "Uusi kustannusten suunnittelu"
-  (:require [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+  (:require
             [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
@@ -15,9 +15,11 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
-            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
+            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as muutokset-tiedot]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma
                                              tulevaisuudessa-arvoja? viimeinen-hoitovuosi? onko-hankinnat-muutoksia?] :as app}]
@@ -410,7 +412,12 @@
      :tasaa :oikea
      :komponentti (fn [rivi]
                     [napit/muokkaa "Muokkaa"
-                     #(js/alert "TODO")])}]
+                     (fn []
+                       (let [muutokset-e! (tuck/control tila/muutokset)]
+                         ;; Resetoidaan scroll, jotta scrollbar ei jää väärään kohtaan kohdenäkymässä
+                         (siirrin/resetoi-scroll {:siirry-heti? true})
+                         ;; Siirry muutoslomakkeelle, käyttäen muutosten omaa tilakontrolleria
+                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi))))])}]
    muutokset])
 
 (defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app}]

@@ -10,7 +10,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as k-tiedot]))
