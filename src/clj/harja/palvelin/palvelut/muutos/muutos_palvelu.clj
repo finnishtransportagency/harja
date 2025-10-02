@@ -604,14 +604,16 @@
    :summa summa})
 
 (defn tallenna-muutoksen-kustannusvaikutukset
-  [db aiti-muutos-id-ja-versio kustannusvaikutukset]
+  [db aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?]
   (log/debug "Tallenna muutoksen kustannusvaikutukset: " kustannusvaikutukset)
 
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)]
     (doseq [kustannusvaikutus kustannusvaikutukset]
       (let [kustannusvaikutus (luo-kustannusvaikutus muutos-id (or muutos-versio 1) kustannusvaikutus)]
-        (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus)))))
+        (if tyyppi-muutostyo?
+          (muutos-kyselyt/paivita-erillisrahoitettu-kustannusvaikutus<! db kustannusvaikutus)
+          (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus))))))
 
 
 (defn luo-tehtava-ja-maaramuutos
@@ -692,14 +694,23 @@
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
         hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        ;; Pysyvien muutosten kustannusvaikutukset per toimenpideinstanssi
-        kustannusvaikutukset (:kustannusvaikutukset muutos)
         ;; Tehtävien määrämuutokset (per tehtävä)
         maaramuutokset (:tehtavat_ja_maarat muutos)
         tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
         tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
         tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
         tyyppi-johto-ja-hallinto? (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+        kustannusvaikutukset (cond
+                               ;; Pysyvä muutos 
+                               tyyppi-pysyva?
+                               (:kustannusvaikutukset muutos)
+
+                               ;; Muutostyö
+                               tyyppi-muutostyo?
+                               (list {:summa tavoitehinnan-muutos
+                                      :kustannuslaji "erillishankinnat"
+                                      :hoitokauden_alkuvuosi hk-alkuvuosi
+                                      :toimenpideinstanssi nil}))
 
         ;; Alityyppi pelkästään olemassa muutostyöllä 
         alityyppi (when tyyppi-muutostyo? (-> muutos :alityyppi name))
@@ -715,28 +726,13 @@
                 :hoitokauden_alkuvuosi hk-alkuvuosi
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
-                :alityyppi alityyppi}
-
-        kustannusvaikutukset (cond
-                               ;; Pysyvä muutos 
-                               tyyppi-pysyva?
-                               (:kustannusvaikutukset muutos)
-
-                               ;; Muutostyö
-                               tyyppi-muutostyo?
-                               (list {:summa tavoitehinnan-muutos
-                                      :kustannuslaji "erillishankinnat"
-                                      :hoitokauden_alkuvuosi hk-alkuvuosi
-                                      :tpi nil}))
-
-        ;; Pysyvien muutosten tehtävien määrämuutokset
-        maaramuutokset (:tehtavat_ja_maarat muutos)]
+                :alityyppi alityyppi}]
 
     (jdbc/with-db-transaction [conn db]
-      
+
       (when tyyppi-muutostyo?
         (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi))
-      
+
       ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
       ;; Nämä tiedot saadaan muutos-paluurivistä
       (let [aiti-muutos-id-ja-versio (if (:id muutos)
@@ -748,7 +744,7 @@
 
         ;; Tallenna kustannusvaikutukset
         (when (pos? (count kustannusvaikutukset))
-          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio kustannusvaikutukset))
+          (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?))
 
         ;; Tallenna määrämuutokset
         (when (pos? (count maaramuutokset))

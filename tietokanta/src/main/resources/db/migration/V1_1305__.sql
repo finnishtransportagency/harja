@@ -4,8 +4,8 @@ ALTER TABLE kulu_kohdistus ADD COLUMN muutos INTEGER REFERENCES mhu_muutos(id) D
 
 
 -- Muutostöillä tpi:tä ei ole, koska kuluja ei kirjata suoraan 
-ALTER TABLE mhu_muutos_kustannusvaikutus DROP CONSTRAINT IF EXISTS uniikki_muutos_kustannusvaikutus;
-CREATE UNIQUE INDEX uniikki_muutos_kustannusvaikutus ON mhu_muutos_kustannusvaikutus (
+ALTER TABLE mhu_muutos_kustannusvaikutus DROP CONSTRAINT IF EXISTS kustannusvaikutus_tpi_null;
+CREATE UNIQUE INDEX kustannusvaikutus_tpi_null ON mhu_muutos_kustannusvaikutus (
     muutos, kustannuslaji, hoitokauden_alkuvuosi,
     COALESCE(toimenpideinstanssi, -1)
 );

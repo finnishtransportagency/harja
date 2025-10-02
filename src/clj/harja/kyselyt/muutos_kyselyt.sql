@@ -176,6 +176,31 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     :toimenpideinstanssi,
     :hoitokauden_alkuvuosi,
     :summa
+) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
+DO UPDATE SET
+  versio               = EXCLUDED.versio,
+  kustannuslaji        = EXCLUDED.kustannuslaji,
+  toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
+  summa                = EXCLUDED.summa
+-- Päivitetään vain jos tulee uusi määrämuutos
+WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
+
+
+-- name: paivita-erillisrahoitettu-kustannusvaikutus<!
+INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
+    versio,
+    muutos,
+    kustannuslaji,
+    toimenpideinstanssi,
+    hoitokauden_alkuvuosi,
+    summa
+  ) VALUES (
+    :versio,
+    :muutos_id,
+    :kustannuslaji::SUUNNITTELU_OSIO,
+    NULL,
+    :hoitokauden_alkuvuosi,
+    :summa
 ) ON CONFLICT (
   muutos,
   kustannuslaji,

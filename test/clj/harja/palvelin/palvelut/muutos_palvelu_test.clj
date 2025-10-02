@@ -78,7 +78,7 @@
                                       :urakka 36
                                       :versio 1
                                       :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
-                                     {:alityyppi "erillisrahoitus"
+                                     {:alityyppi :erillisrahoitus
                                       :id 2
                                       :jjh-muutosten-summa nil
                                       :kulu_kohdistus nil
@@ -97,7 +97,7 @@
                                       :urakka 36
                                       :versio 1
                                       :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
-                                     {:alityyppi "poikkeama"
+                                     {:alityyppi :poikkeama
                                       :id 3
                                       :jjh-muutosten-summa nil
                                       :kulu_kohdistus nil
@@ -1014,7 +1014,7 @@
    :kulut nil,
    :tavoitehinnan-muutos 1000,
    :tyyppi "muutostyo"
-   :alityyppi "poikkeama"})
+   :alityyppi :poikkeama})
 
 (deftest testaa-muutoksen-liitteiden-lisays-ja-poisto
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
