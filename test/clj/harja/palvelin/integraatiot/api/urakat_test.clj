@@ -116,9 +116,10 @@
           fn-vastaus (fn [palauta-lahin-hoitourakka]
                        (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                          {"urakkatyyppi" urakkatyyppi
-                          "x" 362936.79209318693    ;; Piste Kolarissa
-                          "y" 7472377.554345913
+                          "x" 482104.04975820595            ;; Piste Sodankylässä
+                          "y" 7477257.478724676
                           "palauta-lahin-hoitourakka" palauta-lahin-hoitourakka} portti))
+          ; Sodankylä 482104.04975820595 7477257.478724676
           
           ;; Palauta lähin hoitourakka == false 
           vastaus (fn-vastaus false)
@@ -135,7 +136,7 @@
       (is (= 200 (:status vastaus)))
       (is (every?
             (fn [nimi]
-              (some #(clojure.string/includes? nimi %) #{"Pellon MHU"}))
+              (some #(clojure.string/includes? nimi %) #{"Kittilän MHU 2025-2030"}))
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
   (testing "Urakkatyyppi: paallystys (sopimustyyppi = palvelusopimus)"
