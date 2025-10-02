@@ -53,16 +53,11 @@
          [:div.small-text.bold "Pysyvät muutokset"]
          (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
            [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
-           [:div.body-text "Ei vielä saatavilla"])
+           [:div.body-text "Ei muutoksia"])
          [:div.body-text
-          (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
-            [yleiset/linkki "Siirry muutoksiin"
-             #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]
-            ;; Siirtyy sisäiseen placeholderiin, jos muutokset eivät ole käytössä
-            [yleiset/linkki "Siirry muutoksiin"
-             #(do
-                (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))])]])
+          [yleiset/linkki "Siirry muutoksiin"
+           #(do
+              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
       (when (and div3 (>= valittu-vuosi rajavuosi))
