@@ -183,7 +183,7 @@
         {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
          :onnistui-parametrit [valittu-hoitokausi]
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
-    app)
+    (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
@@ -192,6 +192,7 @@
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
     (let [mahdolliset-hoitovuodet (:urakan-hoitokaudet app)]
       (-> app
+        (dissoc :muutoksen-tiedot-haku-kaynnissa?)
         (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
         (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
         (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
@@ -204,7 +205,7 @@
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Pysyvän muutoksen taustatietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (dissoc app :muutoksen-tiedot-haku-kaynnissa?))
 
   PaivitaToimenpiteenTehtavamaarat
   (process-event [{toimenpideinstanssi :toimenpideinstanssi
