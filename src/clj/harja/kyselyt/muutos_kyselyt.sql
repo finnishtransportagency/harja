@@ -665,6 +665,7 @@ DO UPDATE SET
 SELECT  DISTINCT ON (m.id)
         m.id,
         m.tyyppi, 
+        m.alityyppi,
         m.nimi, 
         m.voimassa_alkaen
  FROM mhu_muutos m

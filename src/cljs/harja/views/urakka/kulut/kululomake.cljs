@@ -361,7 +361,9 @@
                                                      ;; Erillisrahoitetut muutostyöt ovat tavoitehintaisia 
                                                      (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
                                                      (e! (tiedot/->ValitseMuutostyoKohdistukselle % nro)))}
-         (vec urakan-muutostyot)]]
+         (vec 
+           ;; Halutaan näyttää pelkästään erillisrahoitetut
+           (filter #(= "erillisrahoitus" (:alityyppi %)) urakan-muutostyot))]]
 
        [:div.label-ja-alasveto {:style {:width "320px"}}
         [:span.alasvedon-otsikko "Toimenpide*"]
