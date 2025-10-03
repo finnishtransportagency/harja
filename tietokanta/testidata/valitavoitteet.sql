@@ -138,3 +138,161 @@ VALUES ((SELECT id
    NULL,
    NULL,
    false);
+
+---------------------------------------------
+-- MHU-URAKAT (TESTIDATA)
+---------------------------------------------
+
+-- Rovaniemen MHU testiurakka (1. hoitovuosi)
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+         'TEST: Talvihoito valmis',
+         '2026-02-28',
+         '2026-02-15',
+         'Talvihoito suoritettu suunnitellusti',
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+         'TEST: Kesähuolto tehty',
+         '2026-06-30',
+         NULL,
+         NULL,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+         'TEST: Syksyn hoito aloitettu',
+         '2026-09-15',
+         NULL,
+         NULL,
+         false);
+
+-- Kemin MHU testiurakka (5. hoitovuosi)
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+         'TEST: Vuosittainen kunnossapito',
+         '2026-10-01',
+         '2026-09-28',
+         'Kunnossapito valmistui ennen määräaikaa',
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+         'TEST: Liikennemerkkien tarkistus',
+         '2026-03-15',
+         NULL,
+         NULL,
+         false);
+
+-- Oulun MHU 2019-2024
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Tiemerkinnät kunnostettu',
+         '2024-05-31',
+         '2024-05-20',
+         'Merkinnät kunnostettu hyvällä laadulla',
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Sorateiden hoito',
+         '2024-08-15',
+         NULL,
+         NULL,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Vesakonraivaus',
+         '2024-07-01',
+         '2024-06-25',
+         'Raivaus suoritettu tehokkaasti',
+         false);
+
+-- Kittilän MHU 2025-2030
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kittilän MHU 2025-2030'),
+         'TEST: Talvihiekoitus valmis',
+         '2026-01-31',
+         NULL,
+         NULL,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kittilän MHU 2025-2030'),
+         'TEST: Kesäteiden päällystehoito',
+         '2026-07-15',
+         '2026-07-10',
+         'Päällystehoito onnistui erinomaisesti',
+         false);
+
+---------------------------------------------
+-- VALTAKUNNALLISET VÄLITAVOITTEET URAKOISSA (TESTIDATA)
+---------------------------------------------
+
+-- Rovaniemen MHU testiurakka - valtakunnalliset tavoitteet
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valtakunnallinen_valitavoite, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+         'TEST: Koko Suomen liikenneympäristö hoidettu',
+         '2026-01-01',
+         21,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'),
+         'TEST: Koko Suomen tiemerkintä suoritettu',
+         '2026-06-06',
+         22,
+         false);
+
+-- Kemin MHU testiurakka - valtakunnalliset tavoitteet
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valtakunnallinen_valitavoite, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+         'TEST: Massavaatimusteiden keskiviistaton merkinnät kunnostettu',
+         '2026-07-31',
+         1,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Kemin MHU testiurakka (5. hoitovuosi)'),
+         'TEST: Suojatiet ja pyörätiet kunnostettu',
+         '2026-07-31',
+         4,
+         false);
+
+-- Oulun MHU 2019-2024 - valtakunnalliset tavoitteet
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valtakunnallinen_valitavoite, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Kevään kuntoarvo, massavaatimustiet, pituussuuntaiset merkinnät raportoitu',
+         '2024-05-31',
+         6,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Syksyn kuntoarvo, maalivaatimustiet, pituussuuntaiset merkinnät raportoitu',
+         '2024-10-15',
+         7,
+         false);
