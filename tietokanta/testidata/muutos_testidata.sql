@@ -49,8 +49,7 @@ VALUES (_versio, urakka_id, alkaen_pvm, 'muutostyo', 'erillisrahoitus', 'Erillis
 RETURNING id INTO muutos_id_2;
 
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
-VALUES (_versio, muutos_id_2, 'erillishankinnat',
-        _toimenpideinstanssi_id_sorateiden_hoito, ensimmainen_tayden_hkn_alkuvuosi, 3000);
+VALUES (_versio, muutos_id_2, 'erillishankinnat', NULL, ensimmainen_tayden_hkn_alkuvuosi, 3000);
 
 -- Muutos 3: [Muutostyö: Poikkeama] Poikkeama tehtävä- ja määräluettelon määrästä yksittäisen hoitovuoden osalta, ei tehdäkään sorateiden rumpuja
 INSERT INTO mhu_muutos(versio, urakka, voimassa_alkaen, tyyppi, alityyppi, nimi, syy, luoja, luotu)

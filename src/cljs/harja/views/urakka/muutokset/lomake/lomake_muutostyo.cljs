@@ -19,7 +19,7 @@
         :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
         :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
         :oletusarvo :erillisrahoitus ;; Toistaiseksi vain erillisrahoitus käytössä
-        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; Tämä ei käytössä, eikä ole vielä tarkoitus toteuttaa  
+        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; TODO - tarvitaan poikkeama
         })
 
      (lomake/rivi
