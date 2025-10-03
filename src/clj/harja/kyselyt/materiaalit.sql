@@ -375,7 +375,7 @@ SELECT id
 FROM materiaalikoodi
 WHERE nimi = :nimi;
 
--- name: hae-suolatoteumien-tarkat-tiedot-materiaalille
+-- name: hae-toteumien-tarkat-tiedot-materiaalille
 -- Hakee annettujen toteumien ja materiaalikoodin tarkat tiedot
 SELECT
   tm.id                        AS tmid,
