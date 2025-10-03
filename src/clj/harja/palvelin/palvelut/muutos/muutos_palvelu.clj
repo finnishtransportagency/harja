@@ -312,6 +312,16 @@
             (assoc rivi :tavoitehinnan-muutos total)))
     muutokset))
 
+(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
+  (->> vastaus
+    (mapv (fn [rivi]
+            (-> rivi
+              (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+              (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
+              (update :liitteet #(konv/jsonb->clojuremap %)))))
+    (tavoitehinnan-muutos)))
+
+
 (defn indeksikorjaa-tavoitehinnan-muutokset [db urakka-id hoitokauden-alkuvuosi muutokset]
   (if (seq muutokset)
     (let [urakka (first (q-urakat/hae-urakka db urakka-id))
@@ -325,15 +335,21 @@
         muutokset))
     muutokset))
 
-(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
-  (->> vastaus
-    (mapv (fn [rivi]
-      (-> rivi
-        (update :alityyppi #(keyword %))
-        (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-        (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
-        (update :liitteet #(konv/jsonb->clojuremap %)))))
-    (tavoitehinnan-muutos)))
+(defn hae-aiempien-vuosien-pysyvat-muutokset
+  ([db urakka-id hoitokauden-alkuvuosi]
+   (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi true))
+  ([db urakka-id hoitokauden-alkuvuosi indeksikorjaa?]
+   (let [muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                         {:urakka urakka-id
+                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                          :hae-vain-aiemmat-pysyvat-muutokset? true})
+                     (parsi-kirjatut-muutokset-vastaus))]
+
+     ;; Lasketaan lopuksi tavoitehintojen muutokset indeksikorjaukset
+     (if indeksikorjaa?
+       (indeksikorjaa-tavoitehinnan-muutokset db
+         urakka-id hoitokauden-alkuvuosi muutokset)
+       muutokset))))
 
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
@@ -345,14 +361,7 @@
                                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                 :hae-vain-aiemmat-pysyvat-muutokset? false})
                              (parsi-kirjatut-muutokset-vastaus))
-        aiempien-vuosien-pysyvat-muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
-                                                 {:urakka urakka-id
-                                                  :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                                  :hae-vain-aiemmat-pysyvat-muutokset? true})
-                                             (parsi-kirjatut-muutokset-vastaus))
-        ;; Indeksikorjataan ainoastaan aiemmat pysyvät muutokset
-        aiempien-vuosien-pysyvat-muutokset (indeksikorjaa-tavoitehinnan-muutokset db
-                                             urakka-id hoitokauden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
+        aiempien-vuosien-pysyvat-muutokset (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi)
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id

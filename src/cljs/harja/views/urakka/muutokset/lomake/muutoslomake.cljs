@@ -1,8 +1,6 @@
 (ns harja.views.urakka.muutokset.lomake.muutoslomake
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require [clojure.string :as str]
-            [reagent.core :as r]
-
             [taoensso.timbre :as log]
             [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
             [harja.ui.napit :as napit]
