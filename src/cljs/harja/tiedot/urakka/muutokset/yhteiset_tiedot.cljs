@@ -19,6 +19,7 @@
 (defonce ^{:private true}
   nollatut-valinnat {:muokattava-muutos nil
                      :haku-kaynnissa? false
+                     :muutoksen-tiedot-haku-kaynnissa? false
                      :tallennus-kesken? false
                      :kirjatut-muutokset nil
                      :aiempien-hoitovuosien-pysyvat-muutokset nil
@@ -200,20 +201,22 @@
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
     (log/debug "HaeMuutoksenTiedot")
-    (when (:id muutos)
-      (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-        (tuck-apurit/post! :hae-muutoksen-tiedot
-          {:urakka-id @nav/valittu-urakka-id
-           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-           :muutos {:id (:id muutos)
-                    :versio (:versio muutos)
-                    :tyyppi (:tyyppi muutos)
-                    :liite-idt (into #{}
-                                 (map :id (:liitteet muutos)))}}
-          {:onnistui ->HaeMuutoksenTiedotOnnistui
-           :onnistui-parametrit [muutos valittu-hoitokausi]
-           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})))
-    app)
+    (if (:id muutos)
+      (do
+        (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+          (tuck-apurit/post! :hae-muutoksen-tiedot
+            {:urakka-id @nav/valittu-urakka-id
+             :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+             :muutos {:id (:id muutos)
+                      :versio (:versio muutos)
+                      :tyyppi (:tyyppi muutos)
+                      :liite-idt (into #{}
+                                   (map :id (:liitteet muutos)))}}
+            {:onnistui ->HaeMuutoksenTiedotOnnistui
+             :onnistui-parametrit [muutos valittu-hoitokausi]
+             :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+        (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
+      app))
 
   HaeMuutoksenTiedotOnnistui
   (process-event [{vastaus :vastaus
@@ -235,6 +238,7 @@
                                    (first mahdolliset-hoitovuodet-lomakkeella))
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
+                (dissoc :muutoksen-tiedot-haku-kaynnissa?)
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
                 ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
                 ;; on vielä tutkittava, minne kannattaa säilöä muiden kuin lomakkeella valitun hoitokauden tiedot,
@@ -252,7 +256,7 @@
   HaeMuutoksenTiedotEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Muutoksen tietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (dissoc app :muutoksen-tiedot-haku-kaynnissa?))
 
 
   MuokkaaMuutosta
