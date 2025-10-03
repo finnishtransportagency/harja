@@ -32,6 +32,7 @@
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
         indeksikerroin (:indeksikerroin kustannussuunnitelma)
+        indeksikerroin-str (:indeksikerroin-str kustannussuunnitelma)
         tarjous-pysyvat-yhteensa (+ tarjouksen-maara pysyvamuutos-maara)
         tarjous-pysyvat-yhteensa-indeksikorjattu (* tarjous-pysyvat-yhteensa indeksikerroin)]
     [:div
@@ -78,7 +79,7 @@
          [:div.body-text (if indeksikerroin (fmt/euro-opt true tarjous-pysyvat-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
          (when indeksikerroin
            [:div.body-text
-            (str "(" (fmt/desimaaliluku indeksikerroin nil nil false) " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
+            (str "(" indeksikerroin-str " * " (if tarjous-pysyvat-yhteensa (fmt/euro-opt false tarjous-pysyvat-yhteensa) "0,00 €") " )")])])
 
       ;; -23 vuoteen asti näytetään indeksikorjattu määrä suunnitellulle summalle, koska tarjousihintoja ja pysyviä muutoksia ei ole ollut
       (when (and div4 (< valittu-vuosi rajavuosi))
@@ -87,7 +88,7 @@
          [:div.body-text (if indeksikerroin (fmt/euro-opt true suunniteltu-yhteensa-indeksikorjattu) "Indeksilukua ei ole saatavilla")]
          (when indeksikerroin
            [:div.body-text
-            (str "(" (fmt/desimaaliluku indeksikerroin nil nil false) " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
+            (str "(" indeksikerroin-str " * " (if suunniteltu-yhteensa (fmt/euro-opt false suunniteltu-yhteensa) "0,00 €") " )")])])]]))
 
 (defn tallenna-painike-rivi [viimeisin-muokkaus viimeisin-muokkaaja tallennus-kesken?
                              tallenna-fn jaa-tasan-fn kopioi-tuleville-hoitovuosille-fn
