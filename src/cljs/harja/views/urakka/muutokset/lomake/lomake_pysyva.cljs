@@ -322,19 +322,12 @@
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet muutoksen-tiedot-haku-kaynnissa?] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
         indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)]
-    [{:tyyppi :komponentti
-      :uusi-rivi? true
-      :komponentti (fn [_rivi]
-                     [:div.perustiedot
-                      [yleiset/info-laatikko :neutraali
-                       "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
-
-     (lomake/ryhma {:otsikko "Perustiedot"}
+    [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
 
@@ -399,17 +392,23 @@
                            nil
                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
 
-       ;; Taulukko jossa vaikutuksia voidaan syöttää
-       (if hoitovuosi
-         {:otsikko ""
-          :uusi-rivi? true
-          :nimi :taulukko-pysyvan-muutoksen-vaikutukset
-          :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+       (if muutoksen-tiedot-haku-kaynnissa?
          {:tyyppi :komponentti
           :uusi-rivi? true
           :komponentti (fn [_rivi]
-                         [:div.perustiedot
-                          [yleiset/info-laatikko :neutraali
-                           "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])}))]))
+                         [yleiset/ajax-loader "Haetaan muutoksen tietoja..."])}
+
+         (if hoitovuosi
+           ;; Taulukko jossa vaikutuksia voidaan syöttää
+           {:otsikko ""
+            :uusi-rivi? true
+            :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+           {:tyyppi :komponentti
+            :uusi-rivi? true
+            :komponentti (fn [_rivi]
+                           [:div.perustiedot
+                            [yleiset/info-laatikko :neutraali
+                             "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])})))]))
