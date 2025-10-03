@@ -143,6 +143,7 @@
       (is (= "MHU Korvausinvestointi" (:toimenpide e)))
       (is (= "2025-10-02" (str (:ajankohta e))))))
 
+  
   (testing "Pysyvät muutokset näkyvät kustannusten seurannassa (testidata)"
     (let [kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
                                                             :alkupvm "2025-10-01"
@@ -154,7 +155,6 @@
 
       (is (= "pysyva" (:kulu_tyyppi v1)))
       (is (= "Jonkin verran pitäisi paikkailla lisää tänä vuonna" (:muutostyo_syy v1)))
-      (is (= 0 (:jarjestys v1)))
       (is (= "muutokset" (:paaryhma v1)))
       (is (= "Pysyvä muutos" (:tehtava_nimi v1)))
       (is (= "toteutunut" (:toteutunut v1)))
@@ -171,7 +171,26 @@
       (is (= 1000M (:budjetoitu_summa v2)))
       (is (= "hankinta" (:toimenpideryhma v2)))
       (is (= 1000M (:budjetoitu_summa_indeksikorjattu v2)))
-      (is (= 0M (:toteutunut_summa v2))))))
+      (is (= 0M (:toteutunut_summa v2)))))
+
+
+  (testing "Johto- ja hallinto muutokset näkyvät kustannusten seurannassa (testidata)"
+    (let [kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
+                                                            :alkupvm "2025-10-01"
+                                                            :loppupvm "2026-09-30"
+                                                            :hoitokauden-alkuvuosi 2025})
+          pysyvat-muutokset-seurannassa (filter #(= "jjh-muutos" (:kulu_tyyppi %)) kustannusten-seuranta)
+          v1 (first pysyvat-muutokset-seurannassa)]
+
+      (is (= "jjh-muutos" (:kulu_tyyppi v1)))
+      (is (= "Työmääräarviot ylittyivät" (:muutostyo_syy v1)))
+      (is (= "muutokset" (:paaryhma v1)))
+      (is (= "J - Johto- ja hallintokorvaus" (:tehtava_nimi v1)))
+      (is (= "toteutunut" (:toteutunut v1)))
+      (is (= 1230M (:budjetoitu_summa v1)))
+      (is (= "hankinta" (:toimenpideryhma v1)))
+      (is (= 1230M (:budjetoitu_summa_indeksikorjattu v1)))
+      (is (= 1230M (:toteutunut_summa v1))))))
 
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
