@@ -85,7 +85,7 @@
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                    :kustannuslaji "erillishankinnat"
                                                                    :summa 3000
-                                                                   :toimenpideinstanssi 89
+                                                                   :toimenpideinstanssi nil
                                                                    :versio 1})
                                       :liitteet nil
                                       :luonnos false
@@ -1415,3 +1415,29 @@
       (is (= versio-runkopuut 2))
       (is (= versio-palteet 2))
       (is (= versio-maakivet 2)))))
+
+
+(deftest hae-urakan-muutostyot-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                      (range 2021 2026))
+
+        params {:urakka-id urakka-id
+                :valittu-hoitokausi (last hoitokaudet)}
+
+        vastaus (kutsu-palvelua
+                  (:http-palvelin jarjestelma)
+                  :hae-urakan-muutostyot +kayttaja-jvh+ params)]
+
+    (is (= (count vastaus) 2) "Urakalla olemassa 2 muutostyötä")
+
+    (is (some #(= "Erillisrahoitettu sorastusmuutos" (:nimi %)) vastaus)
+      "Muutostyö 'Erillisrahoitettu sorastusmuutos' löytyy")
+
+    (is (some #(= "Tämän hoitovuoden määräpoikkeamamuutos" (:nimi %)) vastaus)
+      "Muutostyö 'Tämän hoitovuoden määräpoikkeamamuutos' löytyy")
+
+    (is (every? #(= #inst "2025-09-30T21:00:00.000-00:00" (:voimassa_alkaen %)) vastaus)
+      "Molemmilla voimassa_alkaen on 2025-09-30")))

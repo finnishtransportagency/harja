@@ -841,6 +841,7 @@
     (poista-palvelut (:http-palvelin this)
       :tallenna-muutos
       :hae-muutoksen-tiedot
+      :hae-urakan-muutostyot
       :hae-urakan-muutostiedot
       :hae-tehtava-maaramuutokset
       :tallenna-tehtava-maaramuutokset
