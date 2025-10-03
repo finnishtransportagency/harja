@@ -11,6 +11,7 @@
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.nakymasiirrin :as siirrin]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
@@ -103,6 +104,11 @@
 (defrecord LisaaTavoitehintojenMuutos [])
 (defrecord LisaaSuunniteltujenMaarienMuutos [])
 
+;; -- Siirtymät ja muut UI-toiminnot --
+;; - Siirtymä esimerkiksi kustannussuunnitelmasta muutoksiin suoraan lomakkeelle
+(defrecord SiirryMuutosNakymaan [])
+(defrecord SiirryPysyvanMuutoksenMuokkauslomakkeelle [muutos])
+
 (defn scrollaa-viimeksi-valitulle-riville []
   (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
 
@@ -118,10 +124,7 @@
 
 (defn- vastaus-haku-onnistui [app vastaus]
   (assoc app
-    ;; suljetaan aina lomake kun on saatu uudet muutostiedot
-    :muokattava-muutos nil
     :haku-kaynnissa? false
-    :tallennus-kesken? false
     :kirjatut-muutokset (:kirjatut-muutokset vastaus)
     :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
     :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
@@ -298,7 +301,13 @@
   TallennaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (vastaus-haku-onnistui app vastaus))
+
+    (-> app
+      ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
+      (assoc :muokattava-muutos nil
+             :tallennus-kesken? false
+             :viimeksi-valittu nil)
+      (vastaus-haku-onnistui vastaus)))
 
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -352,4 +361,26 @@
   (process-event [_ app]
     app)
   ;; -- Aika ennen 2025-2026 hoitovuotta -- LOPPUU
-  )
+
+  ;; -- Siirtymät muutoslomakkeelle muista näkymistä (esim. kustannussuunnitelma) --
+  SiirryMuutosNakymaan
+  (process-event [_ app]
+    (siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+      {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil
+       ;; Resetoidaan scroll selaimen yläosaan Muutoksen-näkymään siirtyessä, koska Kustannussuunnitelma-näkymässä
+       ;; scrollia ollaan ohjelmallisesti siirretty eri kohtaan
+       :resetoi-scroll? true})
+    app)
+
+  SiirryPysyvanMuutoksenMuokkauslomakkeelle
+  (process-event [{muutos :muutos} app]
+    ;; Suoritetaan peräkkäisinä efekteinä viivästettynä
+    ;; Ensin siirtymä ja sitten muutoslomakkeen alustus
+    (tuck/fx
+      app
+      {:tuck.effect/type :debounce
+       :event ->SiirryMuutosNakymaan
+       :timeout 0}
+      {:tuck.effect/type :debounce
+       :event #(->MuokkaaMuutosta muutos)
+       :timeout 100})))

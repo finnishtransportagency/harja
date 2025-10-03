@@ -2,10 +2,8 @@
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
   (:require
     [tuck.core :as tuck]
-    [harja.pvm :as pvm]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.siirtymat :as siirtymat]
-
 
     [harja.fmt :as fmt]
     [harja.ui.grid :as grid]
