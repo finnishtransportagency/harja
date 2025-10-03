@@ -97,7 +97,7 @@
                 
                 ;; Jos esim pysyvä muutos, ei haluta tuota alempaa validointia
                 (if resetoi-hoitovuosi?
-                  (when (nil? valittu-pvm) "Syötä muutoksen syy")
+                  (when (nil? valittu-pvm) "Syötä muutoksen voimassaolo pvm")
 
                   ;; Muussa tapauksessa katsotaan että voimassa alkaen osuu valittuun hoitokauteen
                   ;; Erityisesti tärkeä muutostyö kirjauksissa 
