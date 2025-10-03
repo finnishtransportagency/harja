@@ -93,17 +93,19 @@
           ::lomake/col-luokka "perustiedot col-sm-6"}]))))
 
 
-(defn muutoslomake [e! {:keys [muokattava-muutos] :as _app}]
+(defn muutoslomake [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as _app}]
   (komp/luo
     (komp/sisaan-ulos
       #(e! (t-yhteiset/->HaeMuutoksenTiedot muokattava-muutos))
       #(e! (t-yhteiset/->MuokkaaMuutosta nil)))
 
-    (fn [e! {:keys [muokattava-muutos] :as app}]
-      [:span.muutoslomake
-
+    (fn [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as app}]
+      [:div.muutoslomake
        [lomake/lomake
-        {:otsikko (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
+        {:otsikko [:div.flex-row.alkuun
+                   (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
+                   (when muutoksen-tiedot-haku-kaynnissa?
+                     [yleiset/ajax-loader-pieni])]
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (t-yhteiset/->PaivitaLomake (lomake/ilman-lomaketietoja %)))
          :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))}
