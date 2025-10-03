@@ -366,7 +366,10 @@
   SiirryMuutosNakymaan
   (process-event [_ app]
     (siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-      {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})
+      {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil
+       ;; Resetoidaan scroll selaimen yläosaan Muutoksen-näkymään siirtyessä, koska Kustannussuunnitelma-näkymässä
+       ;; scrollia ollaan ohjelmallisesti siirretty eri kohtaan
+       :resetoi-scroll? true})
     app)
 
   SiirryPysyvanMuutoksenMuokkauslomakkeelle

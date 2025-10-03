@@ -414,8 +414,6 @@
                     [napit/muokkaa "Muokkaa"
                      (fn []
                        (let [muutokset-e! (tuck/control tila/muutokset)]
-                         ;; Resetoidaan scroll, jotta scrollbar ei jää väärään kohtaan kohdenäkymässä
-                         (siirrin/resetoi-scroll {:siirry-heti? true})
                          ;; Siirry muutoslomakkeelle, käyttäen muutosten omaa tilakontrolleria
                          (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi))))])}]
    muutokset])
@@ -433,10 +431,7 @@
         [:div.body-text (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
         (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
           [yleiset/linkki "Siirry muutokset-sivulle"
-           #(do
-              ;; Resetoidaan scroll, jotta scrollbar ei jää väärään kohtaan kohdenäkymässä
-              (siirrin/resetoi-scroll {:siirry-heti? true})
-              (e! (muutokset-tiedot/->SiirryMuutosNakymaan)))])]
+           #(e! (muutokset-tiedot/->SiirryMuutosNakymaan))])]
        [:div.row
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
