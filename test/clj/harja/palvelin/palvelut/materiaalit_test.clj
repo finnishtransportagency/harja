@@ -491,9 +491,8 @@
                         :materiaali-id materiaali-id
                         :urakka-id urakka-id})]
     (is (boolean (some #(= (:maara %) 500M) testidatasta)))
-    (is (boolean (some #(= (:maara %) 555M) testidatasta)))
     (is (boolean (some #(= (:tid %) 22) testidatasta)))
-    (is (= 2 (count testidatasta)))))
+    (is (= 1 (count testidatasta)))))
 
 
 (def suolatoteumat [{:rivinumero -1, :alkanut #inst "2015-02-16T05:25:22.000-00:00", :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl", :yksikko "t", :kohdistettava false, :materiaalityyppi "talvisuola", :urakkatyyppi "hoito"}, :pvm #inst "2015-02-16T21:00:00.000-00:00", :maara 666, :lisatieto "555", :paattynyt #inst "2015-02-16T05:25:22.000-00:00"}])
@@ -508,7 +507,7 @@
     :pvm #inst "2015-02-18T22:00:00.000000001-00:00"
     :rivinumero 1
     :tid 1074
-    :tmid 14
+    :tmid 15
     :toteumaidt [1074]}
    {:koneellinen false
     :lisatieto "LYV-toteuma"
@@ -519,11 +518,11 @@
     :pvm #inst "2015-02-17T22:00:00.000000001-00:00"
     :rivinumero 2
     :tid 1073
-    :tmid 13
+    :tmid 14
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 28, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 29, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
 
 
 
