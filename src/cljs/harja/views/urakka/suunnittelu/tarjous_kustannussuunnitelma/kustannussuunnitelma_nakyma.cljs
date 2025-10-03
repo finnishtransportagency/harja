@@ -433,7 +433,10 @@
         [:div.body-text (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
         (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
           [yleiset/linkki "Siirry muutokset-sivulle"
-           #(e! (muutokset-tiedot/->SiirryMuutosNakymaan))])]
+           #(do
+              ;; Resetoidaan scroll, jotta scrollbar ei jää väärään kohtaan kohdenäkymässä
+              (siirrin/resetoi-scroll {:siirry-heti? true})
+              (e! (muutokset-tiedot/->SiirryMuutosNakymaan)))])]
        [:div.row
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
