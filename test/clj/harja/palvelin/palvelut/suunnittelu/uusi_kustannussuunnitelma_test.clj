@@ -119,23 +119,37 @@
       (:toimenpiteet hankinnat-tietomalli))))
 
 (deftest hae-kilpailutettavat-hankinnat-tietokannasta-onnistuneesti
-  (let [db (:db jarjestelma)
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
-        hoitovuoden-alkuvuosi 2024
-        ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
-        hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
-        ;; Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
-        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
-        tiedot {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
-        kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
-        hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
+  (testing "Hoitovuosi 2024"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+          hoitovuoden-alkuvuosi 2024
+          ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
+          hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
+          ;; Poista yhteenvetorivi ennen tallennusta
+          hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+          _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+          tiedot {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
+          kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
+          hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
-    (is (= (count (:toimenpiteet hankinnat)) 7))
-    (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
-    (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
-    (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
+      (is (= (count (:toimenpiteet hankinnat)) 7))
+      (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
+      (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
+      (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
+
+  (testing "Pysyvät muutokset 2025"
+    (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitovuoden-alkuvuosi 2025
+          tiedot {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
+          kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
+          pysyvat-muutokset (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :pysyvat-muutokset])
+          pysyvat-muutokset-maara (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :pysyvat-muutokset-maara])]
+
+      (is (= 1000 pysyvat-muutokset-maara))
+      (is (= {:tavoitehinnan-muutos 1000
+              :tavoitehinnan-muutos-indeksikorjattu 1374.0} (select-keys (first pysyvat-muutokset)
+                                                                           [:tavoitehinnan-muutos :tavoitehinnan-muutos-indeksikorjattu]))))))
 
 (deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
