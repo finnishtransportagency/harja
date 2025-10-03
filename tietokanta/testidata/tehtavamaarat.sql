@@ -153,7 +153,7 @@ WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (mater
 
 -- Materiaaleihin mäpättävät tehtavat
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
-                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5')
 WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)'; -- Liukkaudentorjunta hiekoituksella (materiaali)
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
@@ -165,8 +165,12 @@ UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE 
 WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
-                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be'; -- Ennalta arvaamattomien kuljetusten avustaminen
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka, liukkaudentorjunta')
+WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be'; -- Ennalta arvaamattomien kuljetusten avustaminen (km)
+
+UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+                   materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka, liukkaudentorjunta')
+WHERE yksiloiva_tunniste = 'ae67d2b5-a9d9-4880-a7ee-b3870737a177'; -- Ennalta arvaamattomien kuljetusten avustaminen (materiaali)
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Reunantäyttömurske')

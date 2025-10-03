@@ -1,6 +1,6 @@
 -- Lisätään materiaalikoodi-tauluun yksilöivä tunniste
 ALTER TABLE materiaalikoodi
-    ADD COLUMN yksiloiva_tunniste UUID UNIQUE;
+      ADD COLUMN yksiloiva_tunniste UUID UNIQUE;
 
 -- HIEKOITUSHIEKKA-MATERIAALIN JAKAMINEN KAHDEKSI
 
@@ -35,10 +35,13 @@ UPDATE materiaalikoodi SET yksiloiva_tunniste = '6bbe4261-1e22-43ec-a4c4-ae63ecc
 INSERT INTO materiaalikoodi (nimi, yksikko, kohdistettava, materiaalityyppi, urakkatyyppi, jarjestys,
                              materiaaliluokka_id, yksiloiva_tunniste)
 VALUES ('Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen', 't', false, 'hiekoitushiekka', 'hoito', 17,
-        (select id from materiaaliluokka where materiaalityyppi = 'hiekoitushiekka'), '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe');
+        (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+        '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe');
 
 -- Päivitetään olemassa olleen materiaalin nimi
-UPDATE materiaalikoodi SET nimi = 'Hiekoitushiekka, liukkaudentorjunta' WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5';
+UPDATE materiaalikoodi
+   SET nimi = 'Hiekoitushiekka, liukkaudentorjunta'
+ WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5';
 
 -- TEHTÄVIEN TIETOJEN PÄIVITYS
 -- Varmistetaan että asiaan liittyvät tehtävät linkittyvät materiaaliin ja materiaaliluokkaan oikein.
@@ -47,27 +50,25 @@ UPDATE materiaalikoodi SET nimi = 'Hiekoitushiekka, liukkaudentorjunta' WHERE yk
 -- Liukkaudentorjunta hiekoituksella (materiaali)
 UPDATE tehtava
 SET yksiloiva_tunniste  = 'b3e39662-5bb3-4dc1-9d30-95d5692118f4',
-    materiaalikoodi_id  = (select id
-                           from materiaalikoodi
-                           where yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), -- Hiekoitushiekka, liukkaudentorjunta
-    materiaaliluokka_id = (select id
-                           from materiaaliluokka
-                           where materiaalityyppi = 'hiekoitushiekka'),
-    muokattu = current_timestamp,
-    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
+    materiaalikoodi_id  = (SELECT id
+                             FROM materiaalikoodi
+                            WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), -- Hiekoitushiekka, liukkaudentorjunta
+    materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)';
 
 -- Täydennetään ja varmistetaan tietojen oikeellisuus: Ennalta arvaamattomien kuljetusten avustaminen (materiaali)
 UPDATE tehtava
 SET yksiloiva_tunniste  = 'ae67d2b5-a9d9-4880-a7ee-b3870737a177',
-    materiaalikoodi_id  = (select id
-                           from materiaalikoodi
-                           where yksiloiva_tunniste = '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe'), -- Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen
-    materiaaliluokka_id = (select id
-                           from materiaaliluokka
-                           where materiaalityyppi = 'hiekoitushiekka'),
-    muokattu = current_timestamp,
-    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
+    materiaalikoodi_id  = (SELECT id
+                             FROM materiaalikoodi
+                            WHERE yksiloiva_tunniste = '378bc7d7-4ec2-4fb9-96ca-29584cfd09fe'), -- Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen
+    materiaaliluokka_id = (SELECT id
+                             FROM materiaaliluokka
+                            WHERE materiaalityyppi = 'hiekoitushiekka'),
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)';
 
 -- TEHTÄVÄRYHMÄKOJRAUS
@@ -84,9 +85,11 @@ WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)';
 -- Muutoksella ei ole vaikutusta historiatietoihin, koska ennalta arvaamattomien kuljetusten toteumia ei ole kirjattu aiemmin.
 
 UPDATE tehtava
-SET nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (km)',
-    yksiloiva_tunniste  = 'c3ada25e-70f2-407b-8dff-2c1a303578be',
-    tehtavaryhma = (select id from tehtavaryhma where tehtava.yksiloiva_tunniste = '3a5cb840-11a7-438f-bdae-a87da64bf98a'), -- B4 - Ennalta arvaamattomien kuljetusten avustaminen hiekoituksella (materiaali)
-    muokattu = current_timestamp,
-    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
+SET nimi               = 'Ennalta arvaamattomien kuljetusten avustaminen (km)',
+    yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be',
+    tehtavaryhma       = (SELECT id
+                            FROM tehtavaryhma
+                           WHERE tehtava.yksiloiva_tunniste = '3a5cb840-11a7-438f-bdae-a87da64bf98a'), -- B4 - Ennalta arvaamattomien kuljetusten avustaminen hiekoituksella (materiaali)
+    muokattu           = current_timestamp,
+    muokkaaja          = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen';
