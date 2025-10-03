@@ -54,7 +54,7 @@
                                                          :valittu-hoitokausi valittu-hoitokausi})
         odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 90 :versio 1}),
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
-                                      :tehtavat_ja_maarat (list {:hoitokauden_alkuvuosi 2025 :tehtava 3117, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000 :versio 1}),
+                                      :tehtavat_ja_maarat (list {:hoitokauden_alkuvuosi 2025 :tehtava 3118, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000 :versio 1}),
                                       :urakka urakka-id, :nimi "Päällysteen paikkausmuutos", :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
                                      {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 3000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 89 :versio 1}),
                                       :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
@@ -404,7 +404,7 @@
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
                 :versio 2 :tyyppi "pysyva" :liite-idt #{}}
-        poistettava-rivi {:tehtava 3117, :poistettu true :hoitokauden_alkuvuosi 2025}
+        poistettava-rivi {:tehtava 3118, :poistettu true :hoitokauden_alkuvuosi 2025}
         ;; Payload muodossa mikä tulisi UI-lomakkeelta osana muuta muutosdataa
         tehtava-maaramuutos-payload [{:tehtava 2988, :uusi? true, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
                                      {:tehtava 2989, :uusi? true, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
@@ -430,7 +430,10 @@
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 3117 :uusi_maara 0 :versio 2}
                            {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 3117 :uusi_maara 0 :versio 2}
                            ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella ennalleen
-                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3117 :uusi_maara 1100 :versio 1})
+                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3117 :uusi_maara 0 :versio 2}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2026 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2027 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1})
         _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) muutos tehtava-maaramuutos-payload)
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -778,25 +781,25 @@
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2025
                                                                               :maaramuutos 100
-                                                                              :tehtava 3117
+                                                                              :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2026
                                                                               :maaramuutos 100
-                                                                              :tehtava 3117
+                                                                              :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2027
                                                                               :maaramuutos 100
-                                                                              :tehtava 3117
+                                                                              :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2028
                                                                               :maaramuutos 100
-                                                                              :tehtava 3117
+                                                                              :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1})
                                                        :toimenpide "Päällysteiden paikkaus"
