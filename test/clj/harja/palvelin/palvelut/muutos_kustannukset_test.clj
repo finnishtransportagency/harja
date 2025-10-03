@@ -75,7 +75,6 @@
 
 (defn- tarkista-muutos-kulu-on-validi "Tarkistaa että vastaus on validi, ja kulu tallennettiin"
   [uusi-muutos-kulu kulu-erapaiva muutos-voimassa]
-
   (is (= kulu-erapaiva (:erapaiva uusi-muutos-kulu)))
   (is (= 188M (:kokonaissumma uusi-muutos-kulu)))
   (is (= "lokakuu/5-hoitovuosi" (:koontilaskun-kuukausi uusi-muutos-kulu)))
@@ -95,14 +94,8 @@
 
 
 (deftest kustannusten-seuranta-toimii-muutoksissa
-
   (testing "Erillisrahoitettu muutos kulu näkyy kustannusten seurannassa"
     (let [erillisrahoitettu-muutostyo (hae-muutostyot)
-          seuranta-payload {:urakka +urakka+
-                            :alkupvm "2025-10-01"
-                            :loppupvm "2026-09-30"
-                            :hoitokauden-alkuvuosi 2025}
-
           kulu {:kokonaissumma 250,
                 :erapaiva (pvm/->pvm "02.10.2025"),
                 :kohdistukset [{:rivi 0
@@ -125,16 +118,21 @@
                          {:urakka-id             +urakka+
                           :kulu-kohdistuksineen  kulu})
 
-          kustannusten-seuranta (hae-kustannusten-seuranta seuranta-payload)
+          kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
+                                                            :alkupvm "2025-10-01"
+                                                            :loppupvm "2026-09-30"
+                                                            :hoitokauden-alkuvuosi 2025})
           erillisrahoitettu-kulu-seurannassa (filter #(= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) kustannusten-seuranta)
           e (first erillisrahoitettu-kulu-seurannassa)]
-      
+
       ;; Erillisrahoitettu muutos kulu on nyt tallennettu, ja pitäisi näkyä seurannassa 
       (is (= 250M (:kokonaissumma kulu-vastaus)) "Kulu tallentui kantaan")
-      (is (= "kokonaishintainen" (:maksutyyppi e)))
-      (is (= "erillisrahoitettu-muutos" (:kulu_tyyppi e)))
+
       (is (= "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
              (:muutostyo_syy e)) "Syyn pitää näkyä seurannassa")
+
+      (is (= "kokonaishintainen" (:maksutyyppi e)))
+      (is (= "erillisrahoitettu-muutos" (:kulu_tyyppi e)))
       (is (= "muutokset" (:paaryhma e)) "Pääryhmä täytyy olla muutokset")
       (is (= "MHU Korvausinvestointi" (:tehtava_nimi e)))
       (is (= "toteutunut" (:toteutunut e)))
@@ -145,8 +143,35 @@
       (is (= "MHU Korvausinvestointi" (:toimenpide e)))
       (is (= "2025-10-02" (str (:ajankohta e))))))
 
-  ;; TODO moar tests..
-  )
+  (testing "Pysyvät muutokset näkyvät kustannusten seurannassa (testidata)"
+    (let [kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
+                                                            :alkupvm "2025-10-01"
+                                                            :loppupvm "2026-09-30"
+                                                            :hoitokauden-alkuvuosi 2025})
+          pysyvat-muutokset-seurannassa (filter #(= "pysyva" (:kulu_tyyppi %)) kustannusten-seuranta)
+          v1 (first pysyvat-muutokset-seurannassa)
+          v2 (second pysyvat-muutokset-seurannassa)]
+
+      (is (= "pysyva" (:kulu_tyyppi v1)))
+      (is (= "Jonkin verran pitäisi paikkailla lisää tänä vuonna" (:muutostyo_syy v1)))
+      (is (= 0 (:jarjestys v1)))
+      (is (= "muutokset" (:paaryhma v1)))
+      (is (= "Pysyvä muutos" (:tehtava_nimi v1)))
+      (is (= "toteutunut" (:toteutunut v1)))
+      (is (= 1000M (:budjetoitu_summa v1)))
+      (is (= "hankinta" (:toimenpideryhma v1)))
+      (is (= 1000M (:budjetoitu_summa_indeksikorjattu v1)))
+      (is (= 0M (:toteutunut_summa v1)))
+
+      (is (= "pysyva" (:kulu_tyyppi v2)))
+      (is (= "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."  (:muutostyo_syy v2)))
+      (is (= "muutokset" (:paaryhma v2)))
+      (is (= "Pysyvä muutos" (:tehtava_nimi v2)))
+      (is (= "toteutunut" (:toteutunut v2)))
+      (is (= 1000M (:budjetoitu_summa v2)))
+      (is (= "hankinta" (:toimenpideryhma v2)))
+      (is (= 1000M (:budjetoitu_summa_indeksikorjattu v2)))
+      (is (= 0M (:toteutunut_summa v2))))))
 
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
