@@ -2,17 +2,21 @@
   "Ylläpidon urakoiden välitavoitteiden tiedot."
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as t]
-            [harja.loki :refer [log tarkkaile!]]
-            [cljs.core.async :refer [<! >! chan]]
-            [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [tuck.core :as tuck])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
+
+(defonce valitavoitteet-app-tila
+  (atom {:valittu-hoitokausi nil
+         :nakymassa? false}))
+
+(defrecord NakymaAvattu [])
+(defrecord NakymaSuljettu [])
+(defrecord HoitokausiVaihdettu [hoitokausi])
 
 (defn hae-urakan-valitavoitteet [urakka-id]
   (k/post! :hae-urakan-valitavoitteet urakka-id))
@@ -30,9 +34,11 @@
             :valitavoitteet valitavoitteet}))
 
 (def valitavoitteet
-  "Urakan omat ja valtakunnalliset välitavoitteet"
+  "Urakan omat ja valtakunnalliset välitavoitteet.
+   Riippuu valitusta hoitokaudesta, jotta data päivittyy hoitokauden vaihtuessa."
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               nakymassa? @nakymassa?]
+               nakymassa? @nakymassa?
+               _ @u/valittu-hoitokausi]
               {:nil-kun-haku-kaynnissa? true}
               (when (and urakka-id nakymassa?)
                 (hae-urakan-valitavoitteet urakka-id))))
@@ -54,10 +60,38 @@
 
 (def urakan-yllapitokohteet-lomakkeelle
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               urakka-tyyppi (:tyyppi @nav/valittu-urakka)
+               _ (:tyyppi @nav/valittu-urakka)
                [sopimus-id _] @u/valittu-sopimusnumero
                nakymassa? @nakymassa?
                yllapitokohdeurakka? @u/yllapitokohdeurakka?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and yllapitokohdeurakka? nakymassa? urakka-id sopimus-id)
-                (hae-urakan-yllapitokohteet urakka-id sopimus-id))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and yllapitokohdeurakka? nakymassa? urakka-id sopimus-id)
+      (hae-urakan-yllapitokohteet urakka-id sopimus-id))))
+
+
+(extend-protocol tuck/Event
+  NakymaAvattu
+  (process-event [_ app]
+    ;; Alusta hoitokausi globaalista jos ei ole asetettu
+    (let [globaali-hk @u/valittu-hoitokausi
+          app-hk (:valittu-hoitokausi app)
+          hoitokausi (or app-hk globaali-hk)
+          hoitokaudet @u/valitun-urakan-hoitokaudet]
+      (reset! nakymassa? true)
+      (-> app
+        (assoc :nakymassa? true)
+        (assoc :valittu-hoitokausi hoitokausi)
+        (assoc :urakan-hoitokaudet hoitokaudet))))
+  
+  NakymaSuljettu
+  (process-event [_ app]
+    (reset! nakymassa? false)
+    (assoc app :nakymassa? false))
+  
+  HoitokausiVaihdettu
+  (process-event [{:keys [hoitokausi]} app]
+    ;; Päivitä globaali hoitokausi
+    (u/valitse-hoitokausi! hoitokausi)
+    (assoc app :valittu-hoitokausi hoitokausi)))
+
+
