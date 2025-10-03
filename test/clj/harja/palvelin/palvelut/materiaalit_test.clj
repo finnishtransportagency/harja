@@ -123,7 +123,11 @@
                                 :hae-urakan-materiaalit
                                 +kayttaja-jvh+ urakka-id)]
     (is (= (sort-by :id vastaus)
-           (sort-by :id [{:id 1, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 2, :alkupvm #inst "2015-09-30T21:00:00.000-00:00", :loppupvm #inst "2016-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 3, :alkupvm #inst "2016-09-30T21:00:00.000-00:00", :loppupvm #inst "2017-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 4, :alkupvm #inst "2017-09-30T21:00:00.000-00:00", :loppupvm #inst "2018-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}} {:id 6, :alkupvm #inst "2018-09-30T21:00:00.000-00:00", :loppupvm #inst "2019-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka", :yksikko "t"}}])))))
+           (sort-by :id [{:id 6, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
+                         {:id 7, :alkupvm #inst "2015-09-30T21:00:00.000-00:00", :loppupvm #inst "2016-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
+                         {:id 8, :alkupvm #inst "2016-09-30T21:00:00.000-00:00", :loppupvm #inst "2017-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
+                         {:id 4, :alkupvm #inst "2017-09-30T21:00:00.000-00:00", :loppupvm #inst "2018-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
+                         {:id 9, :alkupvm #inst "2018-09-30T21:00:00.000-00:00", :loppupvm #inst "2019-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 2, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}])))))
 
 (deftest hae-urakan-toteumat-materiaalille-sarakkeet
   (let [tunnisteet

@@ -222,7 +222,7 @@
                                                   :tehtavamaarat virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
 
 (def odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat
-  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 32}
+  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 31}
    {:nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 2}
    {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 3}
    {:nimi "2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
