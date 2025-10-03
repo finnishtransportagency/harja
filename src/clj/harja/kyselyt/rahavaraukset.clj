@@ -10,4 +10,4 @@
   hae-rahavaraukselle-mahdolliset-tehtavat hae-urakan-rahavaraus paivita-urakan-rahavaraus<!
   lisaa-urakan-rahavaraus<! poista-urakan-rahavaraus<! lisaa-uusi-rahavaraus<! lisaa-rahavaraukselle-tehtava<!
   poista-rahavaraukselta-tehtava! onko-rahavaraus-kaytossa? poista-rahavaraus-urakoilta!
-  poista-rahavarauksen-tehtavat! poista-rahavaraus!)
+  poista-rahavarauksen-tehtavat! poista-rahavaraus! listaa-rahavaraukset-analytiikalle)
