@@ -304,7 +304,8 @@ SELECT CASE
 FROM kulu_kohdistus lk 
          LEFT JOIN kulu l ON lk.kulu = l.id 
          LEFT JOIN mhu_muutos_kulu mkulu ON mkulu.kulu = l.id 
-         LEFT JOIN mhu_muutos mm ON (mm.id = lk.muutos OR mm.id = mkulu.muutos)
+         LEFT JOIN mhu_muutos mm ON (mm.id = lk.muutos OR mm.id = mkulu.muutos) 
+               AND mm.poistettu IS NOT TRUE 
          LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id 
          LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma
          LEFT JOIN rahavaraus_urakka ru 
@@ -385,6 +386,7 @@ FROM mhu_muutos mm
                 ON tpi.toimenpide = tk.id 
                AND tk.koodi IN ('23104','23116','20107','20191','14301')
 WHERE mm.urakka = :urakka 
+  AND mm.poistettu IS NOT TRUE 
   AND mm.alityyppi::TEXT = 'erillisrahoitus' 
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
 GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.syy, mmk.summa, mm.alityyppi,
@@ -413,7 +415,8 @@ SELECT mmk.summa                                    AS budjetoitu_summa,
        m.syy                                        AS muutostyo_syy
     FROM mhu_muutos m
          LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id 
-WHERE m.urakka = :urakka
+WHERE m.urakka = :urakka 
+  AND m.poistettu IS NOT TRUE 
   AND m.tyyppi = 'pysyva'
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER
 UNION ALL
