@@ -303,6 +303,8 @@
     (assert (int? hk-alkuvuosi))
     (assert (sequential? urakan-hoitovuodet))
 
+    (viesti/nayta-toast! "Tiedot kopioitu tuleville hoitovuosille lomakkeella.")
+
     (let [urakan-hoitovuodet (map #(some-> % first pvm/vuosi) urakan-hoitovuodet)]
       (-> app
         (update-in [:muokattava-muutos :toimenpiteiden-tiedot]
