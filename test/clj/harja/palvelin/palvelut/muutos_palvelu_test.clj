@@ -71,7 +71,7 @@
                                                                  :hoitokauden_alkuvuosi 2025
                                                                  :maaramuutos 100
                                                                  :suunniteltu_maara 0
-                                                                 :tehtava 3117
+                                                                 :tehtava 3118
                                                                  :uusi_maara 1100
                                                                  :versio 1})
                                       :tyyppi "pysyva"
@@ -576,10 +576,10 @@
                            {:tehtava 3117 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 222 :uusi_maara nil :edellinen_maara nil :versio 2}
                            {:tehtava 3117 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 333 :uusi_maara nil :edellinen_maara nil :versio 2}
                            ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella ennalleen
-                           {:tehtava 3117 :hoitokauden_alkuvuosi 2028 :suunniteltu_maara 0 :maaramuutos 100 :uusi_maara 1100 :edellinen_maara 1000 :versio 2}
-                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2026 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
-                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2027 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
-                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1})
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2028 :suunniteltu_maara 0 :maaramuutos 100 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
+                           {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :suunniteltu_maara 0 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1})
         _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) muutos tehtava-maaramuutos-payload)
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
