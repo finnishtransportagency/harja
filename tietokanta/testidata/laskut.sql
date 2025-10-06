@@ -225,5 +225,65 @@ INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksu
 ((select id from kulu where kokonaissumma = 10.20 AND erapaiva = '2020-04-22'),
  1, tinst_mhu_hoidon_johto, tehtava_erillishankinnat, 'kokonaishintainen'::MAKSUERATYYPPI, 'hankintakulu', 10.20, current_timestamp, kayttaja_id);
 
+-- Lupausten kustannukset
+
+-- Lisää budjetoituja kustannuksia eri toimenpiteille hoitovuosi 4 (2023-2024)
+INSERT INTO kustannusarvioitu_tyo (sopimus, toimenpideinstanssi, tehtavaryhma, summa, summa_indeksikorjattu, vuosi, kuukausi, tyyppi, luoja, luotu) 
+VALUES 
+-- Talvihoitokustannuksia (käytetään A - Talvihoito tehtäväryhmää)
+((SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') LIMIT 1),
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23104' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'),
+ 15000, 15450, 2023, 10, 'kokonaishintainen', 1, NOW()),
+
+-- Liikenneympäristön hoitokustannuksia (käytetään B - Liikenneympäristön hoito tehtäväryhmää)
+((SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') LIMIT 1),
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23116' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '1855032a-2bb3-46d4-b9b4-c6d4e4c25d05'), 
+ 8000, 8240, 2023, 11, 'kokonaishintainen', 1, NOW()),
+
+-- Sorateiden hoitokustannuksia (käytetään C - Sorateiden hoito tehtäväryhmää)
+((SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') LIMIT 1),
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23124' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'dc151971-facc-48c4-90c9-e429987206e1'),
+ 5000, 5150, 2023, 12, 'kokonaishintainen', 1, NOW());
+
+-- Lisää toteutuneita kuluja
+INSERT INTO kulu (urakka, erapaiva, kokonaissumma, luoja, luotu, koontilaskun_kuukausi)
+VALUES 
+((SELECT id FROM urakka WHERE sampoid = '1242141-II3'), '2023-10-15', 66000, 1, NOW(), 'lokakuu/4-hoitovuosi'),
+((SELECT id FROM urakka WHERE sampoid = '1242141-II3'), '2023-11-20', 35000, 1, NOW(), 'lokakuu/4-hoitovuosi'),
+((SELECT id FROM urakka WHERE sampoid = '1242141-II3'), '2023-12-10', 21000, 1, NOW(), 'lokakuu/4-hoitovuosi');
+
+-- Kohdista kulut toimenpiteisiin (käytetään tehtäväryhmiä)
+INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luoja, luotu, tavoitehintainen)
+VALUES 
+-- Talvihoito
+((SELECT id FROM kulu WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND kokonaissumma = 66000 LIMIT 1),
+ 1, 
+ 66000,
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23104' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'),
+ 'kokonaishintainen'::MAKSUERATYYPPI,
+ 'hankintakulu', 1, NOW(), TRUE),
+
+-- Liikenneympäristön hoito  
+((SELECT id FROM kulu WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND kokonaissumma = 35000 LIMIT 1),
+ 1,  
+ 35000,
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23116' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '1855032a-2bb3-46d4-b9b4-c6d4e4c25d05'),
+ 'kokonaishintainen'::MAKSUERATYYPPI,
+ 'hankintakulu', 1, NOW(), TRUE),
+
+-- Sorateiden hoito
+((SELECT id FROM kulu WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND kokonaissumma = 21000 LIMIT 1),
+ 1,  
+ 21000,
+ (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23124' LIMIT 1),
+ (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'dc151971-facc-48c4-90c9-e429987206e1'),
+ 'kokonaishintainen'::MAKSUERATYYPPI,
+ 'hankintakulu', 1, NOW(), TRUE);
+
         END
 $$ LANGUAGE plpgsql;

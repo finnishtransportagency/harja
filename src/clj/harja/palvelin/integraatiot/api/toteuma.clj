@@ -202,7 +202,9 @@
    ;; Päällystettyjen teiden pölynsidonta on uusi materiaali
    "Kesäsuola päällystettyjen teiden pölynsidonta" "Kesäsuola päällystettyjen teiden pölynsidonta"
 
-   "Hiekoitushiekka" "Hiekoitushiekka"
+   "Hiekoitushiekka" "Hiekoitushiekka, liukkaudentorjunta"
+   "Hiekoitushiekka, liukkaudentorjunta" "Hiekoitushiekka, liukkaudentorjunta"
+   "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen" "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen"
 
    "Jätteet kaatopaikalle" "Jätteet kaatopaikalle"
    "Rikkaruohojen torjunta-aineet" "Rikkaruohojen torjunta-aineet"

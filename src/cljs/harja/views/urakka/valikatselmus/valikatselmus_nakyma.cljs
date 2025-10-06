@@ -27,21 +27,26 @@
 (defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
         nykykuukausi (pvm/kuukausi nykyhetki)
-        nykyvuosi (pvm/vuosi nykyhetki)]
-    (cond
-      ;; Alkaa samana vuonna, mutta ei olla vielä syksyssä tarpeeksi pitkällä
-      (and
-        (= hoitokauden-alkuvuosi nykyvuosi)
-        (< nykykuukausi 10))
-      true
-      ;; On alkanut aiempana vuonna
-      (< hoitokauden-alkuvuosi nykyvuosi)
-      false
-      ;; Alkaa myöhemmin vuoden perusteella
-      (> hoitokauden-alkuvuosi nykyvuosi)
-      true
-      ;; Jää case, jossa vuosi on sama ja kuukausi on suurempi
-      :else true)))
+        nykyvuosi (pvm/vuosi nykyhetki)
+        vastaus (cond
+                  ;; Alkaa samana vuonna, mutta ei olla vielä syksyssä tarpeeksi pitkällä
+                  (and
+                    (= hoitokauden-alkuvuosi nykyvuosi)
+                    (< nykykuukausi 10))
+                  true
+                  ;; On alkanut aiempana vuonna
+                  (< hoitokauden-alkuvuosi nykyvuosi)
+                  false
+                  ;; Alkaa myöhemmin vuoden perusteella
+                  (> hoitokauden-alkuvuosi nykyvuosi)
+                  true
+                  (and
+                    (= hoitokauden-alkuvuosi nykyvuosi)
+                    (= nykykuukausi 10))
+                  false
+                  ;; Jää vain tapaukset, joissa hoitovuosi ei ole tulevaisuudessa
+                  :else false)]
+    vastaus))
 
 (defn- onko-hoitokausi-urakkakauden-jalkeen? [hoitokausi urakan-loppuvuosi]
   (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))]
@@ -54,9 +59,7 @@
 (defn valikatselmus-otsikko-ja-tiedot [e! {:keys [tallennus-kesken?] :as app}]
   (let
     [urakan-nimi (:nimi @nav/valittu-urakka)
-     valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
      valittu-hoitokausi (:valittu-hoitokausi app)
-     hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
      urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
      urakan-loppuvuosi (pvm/vuosi (:loppupvm @nav/valittu-urakka))
      urakan-kesto-vuosina (- urakan-loppuvuosi urakan-alkuvuosi)

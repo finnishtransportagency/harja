@@ -1,69 +1,102 @@
--- Muutoksia tehtäviin, tehtäväryhmiin ja rahavarauksiin
+-- Lisää kustannusennuste tyyppi
+ALTER TYPE lupaustyyppi ADD VALUE 'kustannusennuste';
 
--- Rahavarausten muutokset
--- Käyttöliittymässä lisätty uudet rahavaraukset: Jääteiden hoito, Reikäpaikkaukset
+-- Lisää taulu pisterajojen tallentamiselle urakan-alkuvuosi kohtaisena
+CREATE TABLE lupaus_kustannusennuste_kuukausi_pisteet (
+                                                          id SERIAL PRIMARY KEY,
+                                                          "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
+                                                          "urakan-alkuvuosi" INTEGER NOT NULL,
+                                                          kuukausi INTEGER NOT NULL CHECK (kuukausi BETWEEN 1 AND 12),
+                                                          paiva INTEGER NOT NULL,
+                                                          kuvaus VARCHAR(100) NOT NULL,
+                                                          pisterajat JSONB NOT NULL,
+                                                          luotu TIMESTAMP DEFAULT NOW(),
+                                                          luoja INTEGER REFERENCES kayttaja(id),
+                                                          UNIQUE ("lupaus-id", kuukausi, paiva)
+);
 
--- Jääteiden hoito linkittyy A - Talvihoito-tehtäväryhmään ja Talvihoito-toimenpiteeseen
-UPDATE tehtava
-SET yksiloiva_tunniste = '74692bc3-a780-4a9f-8124-4e48ae7472ef',
-    tehtavaryhma       = (select id
-                          from tehtavaryhma
-                          where yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'), -- A - Talvihoito
-    "mhu-tehtava?"     = true,
-    muokattu           = current_timestamp,
-    muokkaaja          = (select id from kayttaja where kayttajanimi = 'Integraatio')
-WHERE nimi = 'Jäätien hoito';
+-- Indeksit nopeuttamaan hakuja
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_alkuvuosi
+    ON lupaus_kustannusennuste_kuukausi_pisteet ("urakan-alkuvuosi");
 
--- Linkitetään jäätietehtävä rahavaraukseen Jäätien hoito
-INSERT INTO rahavaraus_tehtava(rahavaraus_id, tehtava_id, luotu, luoja)
-VALUES ((select id from rahavaraus where nimi = 'Jäätien hoito'),
-        (select id from tehtava where yksiloiva_tunniste = '74692bc3-a780-4a9f-8124-4e48ae7472ef'),
-        current_timestamp,
-        (select id from kayttaja where kayttajanimi = 'Integraatio'))
-ON CONFLICT DO NOTHING;
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_kuukausi_paiva
+    ON lupaus_kustannusennuste_kuukausi_pisteet (kuukausi, paiva);
 
--- Pysäkkikatosten uusinen linkittyy E-tehtäväryhmään
-UPDATE tehtava
-SET yksiloiva_tunniste = '17e1f66b-6dde-4caf-ab5b-48aa0ba924a8',
-    tehtavaryhma       = (select id
-                          from tehtavaryhma
-                          where yksiloiva_tunniste = 'c8c65700-7178-4de0-b298-a715d6552840'), -- E - ELY-rahoitteiset, ylläpito
-    muokattu           = current_timestamp,
-    muokkaaja          = (select id from kayttaja where kayttajanimi = 'Integraatio')
-WHERE nimi = 'Pysäkkikatoksen uusiminen'
-  and "mhu-tehtava?" = true
-  and emo = (select id from toimenpide where koodi = '20191');
+CREATE INDEX idx_kustannusennuste_kuukausi_pisteet_jsonb
+    ON lupaus_kustannusennuste_kuukausi_pisteet USING gin (pisterajat);
 
--- Uusi tehtväryhmä T5 - KT-reikävaluasfalttipaikkaus
--- Tehtäväryhmälle kohdistetut kustannukset kuuluvat MHU Ylläpito-toimenpiteelle
--- Jotta tehtäväryhmän voi linkittää rahavarauksiin ja jotta tietomalli on kokonainen, tarivitaan tehäväryhmälle tehtävä, vaikka sille ei vaadittaisikaan toteumakirjauksia
+-- Lisää lupaus_kustannusennuste taulu
+CREATE TABLE lupaus_kustannusennuste (
+                                         id SERIAL PRIMARY KEY,
+                                         "lupaus-id" INTEGER NOT NULL REFERENCES lupaus (id),
+                                         "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
+                                         hoitovuosi INTEGER NOT NULL,
+                                         maarapaiva DATE NOT NULL,
+                                         ennustettu_tavoitehinta DECIMAL(15,2),
+                                         ennustetut_kustannukset DECIMAL(15,2),
+                                         syotetty_pvm TIMESTAMP,
+                                         lasketut_pisteet INTEGER, -- Tämän ennusteen saamat pisteet
+                                         tarkkuus_prosentti DECIMAL(5,2),
+                                         laskentakaava_versio VARCHAR(10),
+                                         laskentakaava_teksti TEXT,
+                                         laskentakaava_parametrit JSONB,
+                                         laskentakaava_vaiheet JSONB,
+                                         luoja INTEGER NOT NULL REFERENCES kayttaja (id),
+                                         luotu TIMESTAMP NOT NULL DEFAULT NOW(),
+                                         muokkaaja INTEGER REFERENCES kayttaja (id),
+                                         muokattu TIMESTAMP,
+                                         CONSTRAINT lupaus_kustannusennuste_unique UNIQUE ("lupaus-id", "urakka-id", maarapaiva)
+);
 
-INSERT INTO tehtavaryhma (nimi, jarjestys, nakyva, poistettu, luotu, luoja, yksiloiva_tunniste,
-                          tehtavaryhmaotsikko_id, voimassaolo_alkuvuosi, toimenpide_id)
-VALUES ('T5 - KT-reikävaluasfalttipaikkaus', 208, true, false, current_timestamp,
-        (select id from kayttaja where kayttajanimi = 'Integraatio'), '3d9772fb-3c52-4310-9976-db3b260cc235',
-        (select id from tehtavaryhmaotsikko where otsikko = '8 MUUTA'), 2025,
-        (select id from toimenpide where koodi = '20191'))
-ON CONFLICT DO NOTHING;
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_versio
+    IS 'Käytetyn laskentakaavan versionumero, esim. v1.0';
 
-INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, hinnoittelu, api_seuranta, tehtavaryhma, "mhu-tehtava?",
-                     yksiloiva_tunniste, suunnitteluyksikko,
-                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto,
-                     "maaramitattava?")
-VALUES ('KT-reikävaluasfalttipaikkaus (ELY-rahoitus)', (select id from toimenpide where koodi = '20191'),
-        current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'kpl', '{kokonaishintainen}',
-        false, (select id from tehtavaryhma where yksiloiva_tunniste = '3d9772fb-3c52-4310-9976-db3b260cc235'), true,
-        'f5f1dde9-93ea-47be-9f5d-aff9ead7add9', 'kpl', 2025, true, false, false, true)
-ON CONFLICT DO NOTHING;
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_teksti
+    IS 'Laskentakaava ihmisluettavassa muodossa';
 
--- Linkitetään uusi tehtäväryhmä Reikävalu-rahavaraukseen edellä luodun tehtävän kautta
-INSERT INTO rahavaraus_tehtava(rahavaraus_id, tehtava_id, luotu, luoja)
-VALUES ((select id from rahavaraus where nimi = 'Reikävalu'),
-        (select id from tehtava where yksiloiva_tunniste = 'f5f1dde9-93ea-47be-9f5d-aff9ead7add9'), current_timestamp,
-        (select id from kayttaja where kayttajanimi = 'Integraatio'))
-ON CONFLICT DO NOTHING;
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_parametrit
+    IS 'Laskennassa käytetyt syöttöarvot JSON-muodossa';
 
--- Päivitetään parempi nimi reikävalurahavaraukselle
-UPDATE rahavaraus
-SET nimi = 'Tilaajan rahavaraus KT-reikävaluasfalttipaikkaus'
-WHERE nimi = 'Reikävalu';
+COMMENT ON COLUMN lupaus_kustannusennuste.laskentakaava_vaiheet
+    IS 'Laskentavaiheet ja väliarvot JSON-muodossa auditointia varten';
+
+CREATE TABLE lupaus_hoitovuosi_lopputilanne (
+                                                id SERIAL PRIMARY KEY,
+                                                "urakka-id" INTEGER NOT NULL REFERENCES urakka (id),
+                                                hoitovuosi_alkuvuosi INTEGER NOT NULL,
+                                                lopullinen_tavoitehinta DECIMAL(15,2),
+                                                lopulliset_kustannukset DECIMAL(15,2),
+                                                valikatselmus_pvm DATE,
+                                                vahvistaja INTEGER REFERENCES kayttaja (id),
+                                                vahvistettu TIMESTAMP,
+                                                CONSTRAINT hoitovuosi_lopputilanne_unique UNIQUE ("urakka-id", hoitovuosi_alkuvuosi)
+);
+
+-- Mahdollistaa hoitovuosikohtaiset erikoisarvot lupauksen kirjauskuukausille
+-- sekä (vaihtoehtoisesti) päätöskuukaudelle ja joustovaran kuukausille.
+--
+-- Varasuunnitelmalogiikka: jos tälle (lupaus_id, hoitovuosi_nro) ei löydy riviä,
+-- käytetään lupaus-taulun alkuperäisiä sarakkeita (kirjaus-kkt, paatos-kk, joustovara-kkta).
+
+CREATE TABLE lupaus_hoitovuoden_kirjauskuukaudet (
+                                                     id BIGSERIAL PRIMARY KEY,
+                                                     "lupaus-id" BIGINT NOT NULL REFERENCES lupaus(id) ON DELETE CASCADE,
+                                                     "hoitovuosi-nro" INTEGER NOT NULL CHECK ("hoitovuosi-nro" >= 1 AND "hoitovuosi-nro" <= 15),
+                                                     "kirjaus-kkt" INTEGER[] NOT NULL,
+                                                     "paatos-kk" INTEGER[],
+                                                     "joustovara-kkta" INTEGER CHECK ("joustovara-kkta" BETWEEN 0 AND 12),
+                                                     luotu TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+                                                     luoja INTEGER REFERENCES kayttaja(id),
+                                                     CONSTRAINT lupaus_hoitovuoden_kirjauskuukaudet_unique UNIQUE ("lupaus-id", "hoitovuosi-nro")
+);
+
+CREATE INDEX idx_lupaus_hoitovuoden_kirjauskuukaudet_lupaus_id ON lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id");
+
+COMMENT ON TABLE lupaus_hoitovuoden_kirjauskuukaudet IS 'Hoitovuosikohtaiset erikoisarvot lupauksen kirjauskuukausille ja tarvittaessa päätös- sekä joustovaratiedoille.';
+COMMENT ON COLUMN lupaus_hoitovuoden_kirjauskuukaudet."hoitovuosi-nro" IS 'Hoitovuoden järjestysnumero (1 = ensimmäinen hoitovuosi urakan alusta).';
+COMMENT ON COLUMN lupaus_hoitovuoden_kirjauskuukaudet."kirjaus-kkt" IS 'Hoitovuoden kirjauskuukaudet, korvaa lupaus.kirjaus-kkt';
+COMMENT ON COLUMN lupaus_hoitovuoden_kirjauskuukaudet."paatos-kk" IS 'Hoitovuoden päätöskuukausi, korvaa lupaus.paatos-kk jos ei NULL';
+COMMENT ON COLUMN lupaus_hoitovuoden_kirjauskuukaudet."joustovara-kkta" IS 'Hoitovuoden joustovara kuukausissa, korvaa lupaus.joustovara-kkta jos ei NULL';
+
+---------------------------------------------------------------
+

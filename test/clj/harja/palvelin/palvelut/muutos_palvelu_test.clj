@@ -4,6 +4,7 @@
             [clojure.walk :as walk]
             [com.stuartsierra.component :as component]
 
+            [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -52,23 +53,98 @@
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
         vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                          :valittu-hoitokausi valittu-hoitokausi})
-        odotetut-kirjatut-muutokset [{:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 90 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot.",
-                                      :tehtavat_ja_maarat (list {:hoitokauden_alkuvuosi 2025 :tehtava 3118, :uusi_maara 1100, :maaramuutos 100, :edellinen_maara 1000 :versio 1}),
-                                      :urakka urakka-id, :nimi "Päällysteen paikkausmuutos", :id 1, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "pysyva"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 3000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 89 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua.",
-                                      :tehtavat_ja_maarat (list),
-                                      :urakka urakka-id, :nimi "Erillisrahoitettu sorastusmuutos", :id 2, :jjh-muutosten-summa nil, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 3000, :tyyppi "erillisrahoitettu"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025 :summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 91 :versio 1}),
-                                      :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00", :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
-                                      :tehtavat_ja_maarat (list
-                                                            {:hoitokauden_alkuvuosi 2025 :tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :versio 1}
-                                                            {:hoitokauden_alkuvuosi 2025 :tehtava 3029, :uusi_maara 0, :maaramuutos -30, :edellinen_maara 30 :versio 1}),
-                                      :urakka urakka-id, :nimi "Tämän hoitovuoden määräpoikkeamamuutos", :id 3, :jjh-muutosten-summa nil,
-                                      :liitteet (list {:id 11, :muutos 3}), :versio 1, :luonnos false, :tavoitehinnan-muutos 1000, :tyyppi "maarapoikkeama"}
-                                     {:kulu_kohdistus nil, :kustannusvaikutukset (list), :voimassa_alkaen #inst "2025-06-24T21:00:00.000-00:00", :syy "Työmääräarviot ylittyivät",
-                                      :tehtavat_ja_maarat (list), :urakka urakka-id, :nimi nil, :id 4, :jjh-muutosten-summa 1230M, :liitteet nil, :versio 1, :luonnos false, :tavoitehinnan-muutos 1230M, :tyyppi "johto-ja-hallintokorvaus"}]]
+        odotetut-kirjatut-muutokset [{:alityyppi nil
+                                      :id 1
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                   :kustannuslaji "hankintakustannukset"
+                                                                   :summa 1000
+                                                                   :toimenpideinstanssi 90
+                                                                   :versio 1})
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi "Päällysteen paikkausmuutos"
+                                      :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."
+                                      :tavoitehinnan-muutos 1000
+                                      :tehtavat_ja_maarat (list {:edellinen_maara 1000
+                                                                 :hoitokauden_alkuvuosi 2025
+                                                                 :maaramuutos 100
+                                                                 :suunniteltu_maara 0
+                                                                 :tehtava 3117
+                                                                 :uusi_maara 1100
+                                                                 :versio 1})
+                                      :tyyppi "pysyva"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:alityyppi "erillisrahoitus"
+                                      :id 2
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                   :kustannuslaji "hankintakustannukset"
+                                                                   :summa 3000
+                                                                   :toimenpideinstanssi 89
+                                                                   :versio 1})
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi "Erillisrahoitettu sorastusmuutos"
+                                      :syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
+                                      :tavoitehinnan-muutos 3000
+                                      :tehtavat_ja_maarat ()
+                                      :tyyppi "muutostyo"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:alityyppi "poikkeama"
+                                      :id 3
+                                      :jjh-muutosten-summa nil
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                   :kustannuslaji "hankintakustannukset"
+                                                                   :summa 1000
+                                                                   :toimenpideinstanssi 91
+                                                                   :versio 1})
+                                      :liitteet (list {:id 11
+                                                       :muutos 3})
+                                      :luonnos false
+                                      :nimi "Tämän hoitovuoden määräpoikkeamamuutos"
+                                      :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa."
+                                      :tavoitehinnan-muutos 1000
+                                      :tehtavat_ja_maarat (list {:edellinen_maara 40
+                                                                 :hoitokauden_alkuvuosi 2025
+                                                                 :maaramuutos -40
+                                                                 :suunniteltu_maara nil
+                                                                 :tehtava 1406
+                                                                 :uusi_maara 0
+                                                                 :versio 1}
+                                                            {:edellinen_maara 30
+                                                             :hoitokauden_alkuvuosi 2025
+                                                             :maaramuutos -30
+                                                             :suunniteltu_maara 8
+                                                             :tehtava 3029
+                                                             :uusi_maara 0
+                                                             :versio 1})
+                                      :tyyppi "muutostyo"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
+                                     {:alityyppi nil
+                                      :id 4
+                                      :jjh-muutosten-summa 1230M
+                                      :kulu_kohdistus nil
+                                      :kustannusvaikutukset ()
+                                      :liitteet nil
+                                      :luonnos false
+                                      :nimi nil
+                                      :syy "Työmääräarviot ylittyivät"
+                                      :tavoitehinnan-muutos 1230M
+                                      :tehtavat_ja_maarat ()
+                                      :tyyppi "johto-ja-hallintokorvaus"
+                                      :urakka 36
+                                      :versio 1
+                                      :voimassa_alkaen #inst"2025-10-19T21:00:00.000-00:00"}]]
     (is (= (count (:kirjatut-muutokset vastaus)) 4) "oikea määrä muutoksia")
     (is (= (:kirjatut-muutokset vastaus) odotetut-kirjatut-muutokset))))
 
@@ -92,11 +168,62 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
 
-        vastaus (get-in
-                  (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                           :valittu-hoitokausi valittu-hoitokausi})
-                  [:budjettitavoitteet :muutosten-vaikutus-yhteensa])]
-    (is (= (Math/round vastaus) -37048) "Muutosten vaikutus yhteensä")))
+        vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                         :valittu-hoitokausi valittu-hoitokausi})
+        budjettitavoitteet (:budjettitavoitteet vastaus)]
+
+    ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
+    (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
+    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+
+    (is (= 1374.0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
+      "Aiemmat pysyvät muutokset indeksikorjattuna")
+
+    (is (= 6230M (:kirjatut-muutokset-yht budjettitavoitteet)) "Kirjatut muutokset yhteensä")
+
+    (is (= -43277.74 (some->>
+                       (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet)
+                       (round2 2))) "Toteutumiin perustuvat muutokset yhteensä")
+
+
+    ;; Muutosten vaikutus yhteensä sisältää:
+    ;; * Indeksikorjatun tavoitehinnan
+    ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
+    ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
+    ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
+    (is (= 294086.26 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
+
+(deftest hae-urakan-tavoitehinta-muutosten-kokonaissumma-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2026") (pvm/->pvm "30.09.2027")]
+
+        vastaus (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                         :valittu-hoitokausi valittu-hoitokausi})
+        budjettitavoitteet (:budjettitavoitteet vastaus)]
+
+    ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
+    ;; TODO: Hoidetaan testidataan Iin tai Suomussalmen urakalle vahvistettu tavoitehinta, jotta saadaan tämäkin
+    ;;       testattua kunnolla (toinen urakka riittää, ei tarvi molempiin), ja UI:ssa näkyisi jotain järkevää suoraan
+    (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
+    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+    ;; TODO: Eikä urakalla ole myöskään indeksiä vuodelle 2026, joten ei voida laskea indeksikorjauksia
+    (is (= 0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
+      "Aiemmat pysyvät muutokset indeksikorjattuna")
+
+    ;; Urakalle ei ole kirjattu muutoksia hoitovuodelle 2026-2027, ainoastaan aiemman vuoden pysyvät muutokset pitäisi näkyä
+    (is (= 0 (:kirjatut-muutokset-yht budjettitavoitteet)) "Kirjatut muutokset yhteensä")
+
+    ;; Urakalle ei ole lainkaan kirjattu toteutumiin perustuvia muutoksia
+    (is (= 0.0 (some->>
+                 (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet)
+                 (round2 2))) "Toteutumiin perustuvat muutokset yhteensä")
+
+    ;; Muutosten vaikutus yhteensä sisältää:
+    ;; * Indeksikorjatun tavoitehinnan
+    ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
+    ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
+    ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
+    (is (= 0.0 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -109,11 +236,28 @@
         valittu-hoitokausi-24-25 [(pvm/->pvm "1.10.2024") (pvm/->pvm "30.09.2025")]
         vastaus-24-25 (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :valittu-hoitokausi valittu-hoitokausi-24-25})
-        odotetut-rivit []]
+        odotetut-rivit-24-25 [{:alityyppi nil
+                               :id 5
+                               :jjh-muutosten-summa nil
+                               :kulu_kohdistus nil
+                               :kustannusvaikutukset ()
+                               :liitteet nil
+                               :luonnos false
+                               :nimi "Lisää paikkausta"
+                               :syy "Jonkin verran pitäisi paikkailla lisää tänä vuonna"
+                               :tavoitehinnan-muutos 0
+                               :tehtavat_ja_maarat ()
+                               :tyyppi "pysyva"
+                               :urakka 36
+                               :versio 1
+                               :voimassa_alkaen #inst"2024-09-30T21:00:00.000-00:00"}]]
     (is (= (count (:kirjatut-muutokset vastaus-22-23)) 0) "oikea määrä muutoksia 22-23")
     (is (= (count (:kirjatut-muutokset vastaus-23-24)) 0) "oikea määrä muutoksia 23-24")
-    (is (= (count (:kirjatut-muutokset vastaus-24-25)) 0) "oikea määrä muutoksia 24-25")
-    (is (= odotetut-rivit (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24) (:kirjatut-muutokset vastaus-24-25)))))
+    (is (= (count (:kirjatut-muutokset vastaus-24-25)) 1) "oikea määrä muutoksia 24-25")
+    (is (= [] (:kirjatut-muutokset vastaus-22-23) (:kirjatut-muutokset vastaus-23-24)))
+
+    ;; Pitäisi löytyä "aiemman vuoden pysyvä muutos" joka on voimassa 1.10.2024 alkaen
+    (is (= odotetut-rivit-24-25 (:kirjatut-muutokset vastaus-24-25)))))
 
 
 (deftest tallenna-rahavarausmuutosten-syyt-ii
@@ -247,7 +391,7 @@
 (deftest tallenna-johto-ja-hallintokorvausmuutos-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
-        muutos-payload {:voimassa_alkaen #inst "2025-06-25T10:07:32.000-00:00",
+        muutos-payload {:voimassa_alkaen #inst "2025-10-20T10:07:32.000-00:00",
                         :syy "Johtamisen tarve muuttui",
                         :kulut (list {:pvm #inst "2025-10-14T21:00:00.000-00:00", :tavoitehinnan-muutos 10}
                                  {:pvm #inst "2025-11-14T22:00:00.000-00:00", :tavoitehinnan-muutos 20}
@@ -284,9 +428,10 @@
                                         :tavoitehinnan-muutos 780M
                                         :tehtavat_ja_maarat (list)
                                         :tyyppi "johto-ja-hallintokorvaus"
+                                        :alityyppi nil
                                         :urakka urakka-id
                                         :versio 1
-                                        :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"})
+                                        :voimassa_alkaen #inst"2025-10-19T21:00:00.000-00:00"})
         ;; sitten päivitetään samaa muutosta, jolloin tulee rivi historiatietoon...
         vastaus-updaten-jalkeen (filter
                                   #(= "Johtamisen tarve muuttui taas" (:syy %))
@@ -310,9 +455,10 @@
                                         :tavoitehinnan-muutos 780M
                                         :tehtavat_ja_maarat (list)
                                         :tyyppi "johto-ja-hallintokorvaus"
+                                        :alityyppi nil
                                         :urakka urakka-id
                                         :versio 2
-                                        :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"})
+                                        :voimassa_alkaen #inst"2025-10-19T21:00:00.000-00:00"})
         odotettu-historiarivi {:id (inc max-id-ennen-tallennusta)
                                :kulu_kohdistus nil
                                :luoja (:id +kayttaja-jvh+)
@@ -323,7 +469,7 @@
                                :tyyppi "johto-ja-hallintokorvaus"
                                :urakka 36
                                :versio 1
-                               :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"}
+                               :voimassa_alkaen #inst"2025-10-19T21:00:00.000-00:00"}
 
         historiassa-rivi-updaten-jalkeen-count (ffirst (q (format "SELECT count(*) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         historiassa-rivi-updaten-jalkeen (first (q-map (format "SELECT id, kulu_kohdistus, luoja, luonnos, nimi, poistettu, syy, tyyppi,
@@ -422,15 +568,15 @@
                                      {:tehtava 3117 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
                            ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 2988 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 2989 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 2991 :uusi_maara 0 :versio 2}
+                           {:tehtava 2988 :hoitokauden_alkuvuosi 2025 :suunniteltu_maara 0 :maaramuutos 111 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 2989 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 222 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 2991 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 333 :uusi_maara nil :edellinen_maara nil :versio 2}
                            ;; Tämä rivi on poistettu, joten sitä ei pitäisi enää löytyä muualta kuin historiasta versiolla 1
-                           #_{:edellinen_maara 0 :hoitokauden_alkuvuosi 2025 :maaramuutos 111 :tehtava 3117 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2026 :maaramuutos 222 :tehtava 3117 :uusi_maara 0 :versio 2}
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2027 :maaramuutos 333 :tehtava 3117 :uusi_maara 0 :versio 2}
+                           #_{:tehtava 3117 :hoitokauden_alkuvuosi 2025 :suunniteltu_maara 0 :maaramuutos 111 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2026 :suunniteltu_maara 0 :maaramuutos 222 :uusi_maara nil :edellinen_maara nil :versio 2}
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2027 :suunniteltu_maara 0 :maaramuutos 333 :uusi_maara nil :edellinen_maara nil :versio 2}
                            ;; Tämän rivin pitäisi jäädä alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella ennalleen
-                           {:edellinen_maara 0 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3117 :uusi_maara 0 :versio 2}
+                           {:tehtava 3117 :hoitokauden_alkuvuosi 2028 :suunniteltu_maara 0 :maaramuutos 100 :uusi_maara 1100 :edellinen_maara 1000 :versio 2}
                            {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2026 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
                            {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2027 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1}
                            {:edellinen_maara 1000 :hoitokauden_alkuvuosi 2028 :maaramuutos 100 :tehtava 3118 :uusi_maara 1100 :versio 1})
@@ -493,7 +639,7 @@
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
         muutos-syy-insert "Esko tehdä pyöräytti uutta tietä 500 kilometria, täytyy vähän justeerata määriä"
         muutos-payload {:tyyppi "pysyva"
-                        :voimassa_alkaen #inst "2025-06-25T10:07:32.000-00:00",
+                        :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00",
                         :syy muutos-syy-insert,
                         :nimi "Eskon muutos"
                         :tehtavat_ja_maarat [{:tehtava 1448, :uusi? true, :maaramuutos 10, :hoitokauden_alkuvuosi 2025}
@@ -528,42 +674,46 @@
                                         :kustannusvaikutukset (list
                                                                 {:hoitokauden_alkuvuosi 2025
                                                                  :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
-                                                                :toimenpideinstanssi 129
+                                                                 :summa 1111
+                                                                 :toimenpideinstanssi 129
                                                                  :versio 1}
-                                                               {:hoitokauden_alkuvuosi 2025
-                                                                :kustannuslaji "hankintakustannukset"
-                                                                :summa 1111
-                                                                :toimenpideinstanssi 132
-                                                                :versio 1})
+                                                                {:hoitokauden_alkuvuosi 2025
+                                                                 :kustannuslaji "hankintakustannukset"
+                                                                 :summa 1111
+                                                                 :toimenpideinstanssi 132
+                                                                 :versio 1})
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi "Eskon muutos"
                                         :syy "Esko tehdä pyöräytti uutta tietä 500 kilometria, täytyy vähän justeerata määriä"
                                         :tavoitehinnan-muutos 2222
                                         :tehtavat_ja_maarat (list
-                                                              {:hoitokauden_alkuvuosi 2025
-                                                               :edellinen_maara 0
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
                                                                :maaramuutos 10
+                                                               :suunniteltu_maara 0
                                                                :tehtava 1448
-                                                               :uusi_maara 0
+                                                               :uusi_maara nil
                                                                :versio 1}
-                                                              {:hoitokauden_alkuvuosi 2025
-                                                               :edellinen_maara 0
-                                                              :maaramuutos 111
-                                                              :tehtava 2988
-                                                              :uusi_maara 0
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 2988
+                                                               :uusi_maara nil
                                                                :versio 1}
-                                                             {:hoitokauden_alkuvuosi 2025
-                                                              :edellinen_maara 0
-                                                              :maaramuutos 111
-                                                              :tehtava 3117
-                                                              :uusi_maara 0
-                                                              :versio 1})
+                                                              {:edellinen_maara 1000
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 3117
+                                                               :uusi_maara 1100
+                                                               :versio 1})
                                         :tyyppi "pysyva"
+                                        :alityyppi nil
                                         :urakka urakka-id
                                         :versio 1
-                                        :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"})
+                                        :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"})
 
 
         ;; sitten päivitetään samaa muutosta, jolloin tulee rivi historiatietoon...
@@ -599,37 +749,41 @@
                                                                  :versio 1}
                                                                 {:hoitokauden_alkuvuosi 2025
                                                                  :kustannuslaji "hankintakustannukset"
-                                                                :summa 2
-                                                                :toimenpideinstanssi 132
-                                                                :versio 2})
+                                                                 :summa 2
+                                                                 :toimenpideinstanssi 132
+                                                                 :versio 2})
                                         :liitteet nil
                                         :luonnos nil
                                         :nimi "Eskon muutos"
                                         :syy "Esko teki 100 km lisää tietä, pitääpä justeerata määriä uudestaan"
                                         :tavoitehinnan-muutos 1113
                                         :tehtavat_ja_maarat (list
-                                                              {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 10
-                                                              :tehtava 1448
-                                                              :uusi_maara 0
-                                                              :versio 1}
-                                                             {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 2
-                                                              :tehtava 2988
-                                                              :uusi_maara 0
-                                                              :versio 2}
-                                                             {:edellinen_maara 0
-                                                              :hoitokauden_alkuvuosi 2025
-                                                              :maaramuutos 111
-                                                              :tehtava 3117
-                                                              :uusi_maara 0
-                                                              :versio 1})
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 10
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 1448
+                                                               :uusi_maara nil
+                                                               :versio 1}
+                                                              {:edellinen_maara nil
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 2
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 2988
+                                                               :uusi_maara nil
+                                                               :versio 2}
+                                                              {:edellinen_maara 1000
+                                                               :hoitokauden_alkuvuosi 2025
+                                                               :maaramuutos 111
+                                                               :suunniteltu_maara 0
+                                                               :tehtava 3117
+                                                               :uusi_maara 1100
+                                                               :versio 1})
                                         :tyyppi "pysyva"
+                                        :alityyppi nil
                                         :urakka 45
                                         :versio 2
-                                        :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"})
+                                        :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"})
         odotettu-historiarivi {:id (inc max-id-ennen-tallennusta)
                                :kulu_kohdistus nil
                                :luoja (:id +kayttaja-jvh+)
@@ -640,7 +794,7 @@
                                :tyyppi "pysyva"
                                :urakka urakka-id
                                :versio 1
-                               :voimassa_alkaen #inst"2025-06-24T21:00:00.000-00:00"}
+                               :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00"}
 
         historiassa-rivi-updaten-jalkeen-count (ffirst (q (format "SELECT count(*) FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         historiassa-rivi-updaten-jalkeen (first (q-map (format "SELECT id, kulu_kohdistus, luoja, luonnos, nimi, poistettu, syy, tyyppi,
@@ -680,7 +834,7 @@
     (is (pvm/ennen? historiarivi-validi-aikana-alku historiarivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
     (is (pvm/ennen? muutosrivi-validi-aikana-alku muutosrivi-validi-aikana-loppu) "validi_aikana on ts-range, jossa alku < loppu")
 
-    (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "PYsyvä muutos luonnin jälkeen")
+    (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Pysyvä muutos luonnin jälkeen")
     (is (nil? historia-tyhja-insertin-jalkeen) "Ei vielä historiatietoa, koska vain INSERT tehtiin")
 
     (is (= vastaus-updaten-jalkeen odotetut-updaten-jalkeen) "Pysyvä muutos updaten jälkeen")
@@ -781,24 +935,28 @@
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2025
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2026
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2027
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1}
                                                                              {:edellinen_maara 1000
                                                                               :hoitokauden_alkuvuosi 2028
                                                                               :maaramuutos 100
+                                                                              :suunniteltu_maara 0
                                                                               :tehtava 3118
                                                                               :uusi_maara 1100
                                                                               :versio 1})
@@ -845,7 +1003,7 @@
   {:kulu_kohdistus nil,
    :kustannusvaikutukset (list
                            {:summa 1000, :toimenpide 700, :kustannuslaji "hankintakustannukset" :hoitokauden_alkuvuosi 2025}),
-   :voimassa_alkaen #inst "2025-05-06T21:00:00.000-00:00",
+   :voimassa_alkaen #inst"2025-09-30T21:00:00.000-00:00",
    :syy "Ei tehdä tänä kesänä rumpuja, ovat vielä kunnossa.",
    :tehtavat_ja_maarat (list
                          {:tehtava 1406, :uusi_maara 0, :maaramuutos -40, :edellinen_maara 40 :hoitokauden_alkuvuosi 2025}
@@ -858,7 +1016,8 @@
    :luonnos false,
    :kulut nil,
    :tavoitehinnan-muutos 1000,
-   :tyyppi "maarapoikkeama"})
+   :tyyppi "muutostyo"
+   :alityyppi "poikkeama"})
 
 (deftest testaa-muutoksen-liitteiden-lisays-ja-poisto
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -884,6 +1043,7 @@
                    :muutos muutos-payload})
         liitelinkkien-maara-tallennuksen-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s;" muutos-id)))
         kirjatut (:kirjatut-muutokset vastaus)
+        _ (prn "toni" vastaus)
         paivitetty (first (filter #(= (:id %) muutos-id) kirjatut))
         odotetut-liite-linkit (list {:id olemassaoleva-liite-id, :muutos muutos-id} {:id luotu-liite-id, :muutos muutos-id})
         liitteet-poistava-payload (muutospayload-liitteilla muutos-id urakka-id [])

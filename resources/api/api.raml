@@ -133,10 +133,12 @@ documentation:
       - urakka 9001 JCDeaux JCDeauxin mainossoppari
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.66</b>
-      <b>Julkaistu: 1.09.2025</b>
+      <b>Nykyinen versio: 1.0.67</b>
+      <b>Julkaistu: 1.10.2025</b>
 
       <b>Versiohistoria:</b>
+       - Versionumero 1.0.67 Julkaistu 1.10.2025
+               - Lisätty toteuma- ja materiaaliraporttirajapintoihin dokumentaatiota
       - Versionumero 1.0.66 Julkaistu 1.9.2025
          - Poistettu tiestötoimenpiteiden pakollisuus työmaapäiväkirjarajapinnasta.
       - Versionumero 1.0.65 Julkaistu 9.1.2025
@@ -2401,7 +2403,7 @@ types:
         post:
           is:
             - secured
-          description: 'Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.'
+          description: 'Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä. Urakassa voimassa olevien tehtävät ja materiaalit saa /urakat/{id}-rajapinnasta. Aiemmin käytössä olleet materiaalinimet Talvisuola ja Hiekoitushiekka mäpätään Harjassa materiaaleihin Talvisuola, rakeinen NaCl ja Hiekoitushiekka, liukkaudentorjunta.'
           responses:
             '200':
               body:
@@ -5762,10 +5764,14 @@ types:
                           maara:
                             yksikko: t
                             maara: 2
-                        - materiaali: Hiekoitushiekka
+                        - materiaali: Hiekoitushiekka, liukkaudentorjunta
                           maara:
                             yksikko: t
-                            maara: 4
+                            maara: 3
+                         - materiaali: Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen
+                           maara:
+                             yksikko: t
+                             maara: 1
                         - materiaali: Jätteet kaatopaikalle
                           maara:
                             yksikko: t
