@@ -31,6 +31,22 @@
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
+(defn pysyvia-muutoksia-tulevilla-hoitovuosilla?
+  "Hakee pysyvän muutoksen tiedoista, onko muutoksia tulevilla hoitovuosilla."
+  [hoitovuosi muokattava-muutos]
+  (let [alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
+        toimenpiteiden-tiedot (:toimenpiteiden-tiedot muokattava-muutos)
+        ;; Hakee kaukaisimman alkuvuoden, jolta löytyy muutoksia pysyvästä muutoksesta
+        max-alkuvuosi (when (seq toimenpiteiden-tiedot)
+                        (->> toimenpiteiden-tiedot
+                          (mapcat (fn [rivi]
+                                    (concat
+                                      (map :hoitokauden_alkuvuosi (:tehtavat_ja_maarat rivi))
+                                      (map :hoitokauden_alkuvuosi (:kustannusvaikutukset rivi)))))
+                          (remove nil?)
+                         (apply max)))]
+    (< alkuvuosi (or max-alkuvuosi 0))))
+
 (defn muokkaa-toimenpiteen-rivit-pysyva-muutos
   "Palauttaa app-tilan, jossa yhden toimenpideinstanssin vetolaatikon rivejä on muokattu muokkaus-fn avulla."
   [app toimenpideinstanssi muokkaus-fn]

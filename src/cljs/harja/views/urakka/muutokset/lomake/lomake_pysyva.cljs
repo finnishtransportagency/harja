@@ -1,6 +1,7 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-pysyva
   "Muutokset välilehden lomakkeet - Pysyvä muutos"
   (:require
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
     [reagent.core :as r]
     [harja.fmt :as fmt]
     [harja.pvm :as pvm]
@@ -267,6 +268,11 @@
                   (+ budjetoitu muutos))))}]
      toimenpiteiden-tiedot]))
 
+(defn- kopioi-tuleville-hoitovuosille! [e! muokattava-muutos]
+  (e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
+        (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
+
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
@@ -308,9 +314,15 @@
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
-       #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
-              (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-              (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos)))
+       (fn []
+         (if (t-kirjatut/pysyvia-muutoksia-tulevilla-hoitovuosilla? hoitovuosi muokattava-muutos)
+           (varmista-kayttajalta/varmista-kayttajalta
+             {:otsikko "Tulevilla hoitovuosilla on jo tietoja"
+              :sisalto [:div "Tulevilla hoitovuosilla on jo tietoja. Ylikirjoitetaanko tiedot valitun hoitovuoden tiedoilla?"
+                        [:div "Ylikirjoitetut tiedot menetetään, kun tallennat lomakkeen."]]
+              :hyvaksy "Ylikirjoita"
+              :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
+           (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
         ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
         :disabled (not voi-muokata?)
