@@ -133,12 +133,6 @@
                             (:yksikko %))
                      (:toimenpiteiden-tehtavat muokattava-muutos)))}
 
-           {:otsikko "Hoitovuosi"
-            :nimi :hoitokauden_alkuvuosi
-            :tyyppi :positiivinen-numero
-            :leveys 5
-            :muokattava? (constantly false)}
-
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
             :tyyppi :positiivinen-numero
