@@ -25,6 +25,8 @@
 (defrecord PaivitaToimenpiteenTavoitehinnanMuutos [toimenpideinstanssi hk-alkuvuosi muutos-summa])
 (defrecord MerkitseTehtavanMaaramuutosPoistetuksi [toimenpideinstanssi tehtava-id hk-alkuvuosi poistettu?])
 (defrecord KopioiHoitovuodenMuutoksetTulevilleHoitovuosille [hk-alkuvuosi urakan-hoitovuodet])
+
+;; Peruuttaa tavoite-ja kattohinnan vahvistuksen Kustannussuunnitelmassa (Hoitovuoden alun tavoitehinta)
 (defrecord PeruutaTavoiteJaKattohinta [hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
@@ -226,7 +228,10 @@
                 tehtavat-ja-maarat)))))
 
       ;; Yhdistä tehtavat ja määrät kaikista vetolaatikoista tallennusta varten
-      (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)))
+      (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)
+
+      ;; Salli lomakkeen tallennus
+      (assoc :voi-tallentaa? true)))
 
   MerkitseTehtavanMaaramuutosPoistetuksi
   (process-event [{toimenpideinstanssi :toimenpideinstanssi
@@ -256,7 +261,10 @@
                   tehtavat-ja-maarat))))))
 
       ;; Yhdistä tehtavat ja määrät kaikista vetolaatikoista tallennusta varten
-      (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)))
+      (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)
+
+      ;; Salli lomakkeen tallennus
+      (assoc :voi-tallentaa? true)))
 
   PaivitaToimenpiteenTavoitehinnanMuutos
   (process-event [{muutos-summa :muutos-summa
@@ -284,7 +292,10 @@
                 (-> kv-map vals vec))))))
 
       ;; Yhdistä kustannusvaikutukset kaikista vetolaatikoista tallennusta varten
-      (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))
+      (koosta-kustannusvaikutukset-pysyvaan-muutokseen)
+
+      ;; Salli lomakkeen tallennus
+      (assoc :voi-tallentaa? true)))
 
   KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
   (process-event [{hk-alkuvuosi :hk-alkuvuosi urakan-hoitovuodet :urakan-hoitovuodet} app]
@@ -300,7 +311,10 @@
 
         ;; Yhdistä tehtavat ja määrät, sekä kustannusvaikutukset kaikista vetolaatikoista tallennusta varten
         (koosta-tehtavat-ja-maarat-pysyvaan-muutokseen)
-        (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
+        (koosta-kustannusvaikutukset-pysyvaan-muutokseen)
+
+        ;; Salli lomakkeen tallennus
+        (assoc :voi-tallentaa? true))))
 
   PeruutaTavoiteJaKattohinta
   (process-event [{hk-alkuvuosi :hk-alkuvuosi} app]
