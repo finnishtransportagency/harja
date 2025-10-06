@@ -298,7 +298,8 @@
            valittu-hoitokausi
            urakan-hoitokaudet
            #(e! (tiedot/->HoitokausiVaihdettu %))
-           {:wrapper-luokka "label-ja-alasveto hoitokausi"}]]
+           {:wrapper-luokka "label-ja-alasveto hoitokausi"
+            :kaikki-valinta? true}]] 
 
          (when nayta-urakkakohtaiset-grid?
            [urakan-omat-valitavoitteet
