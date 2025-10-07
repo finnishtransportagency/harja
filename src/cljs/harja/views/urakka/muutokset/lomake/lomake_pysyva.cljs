@@ -1,7 +1,6 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-pysyva
   "Muutokset välilehden lomakkeet - Pysyvä muutos"
   (:require
-    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
     [reagent.core :as r]
     [harja.fmt :as fmt]
     [harja.pvm :as pvm]
@@ -10,6 +9,7 @@
     [harja.ui.lomake :as lomake]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.kentat :as kentat]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
     [harja.ui.debug :refer [debug]]
     [harja.domain.muutos-domain :as muutos-domain]
