@@ -606,7 +606,20 @@
 
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
-              (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos db paatos))]
+              (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos db paatos))
+        
+          ;; Laske lopullinen lupausten kustannusennuste kun välikatselmus on tehty
+          _ (let [toteutunut-tavoitehinta (:tavoitehinta_jalkeen paatos)
+                  kustannukset-jarjestettyna (hae-kustannukset-jarjestettyna
+                                               db urakka-id hoitokauden-alkuvuosi
+                                               (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))
+                  toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
+                  paatos-pvm (pvm/nyt)
+                  user-id (:id kayttaja)]
+              (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+                db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta
+                toteutuneet-kustannukset paatos-pvm user-id))]
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 

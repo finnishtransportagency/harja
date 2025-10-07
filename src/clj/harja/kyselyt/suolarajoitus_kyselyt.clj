@@ -15,7 +15,8 @@
   tallenna-talvisuolan-kayttoraja-alueurakka<! paivita-rajoitusalueen-suolasanktio! tallenna-rajoitusalueen-suolasanktio!
   hae-rajoitusalueen-suolatoteumasummat hae-rajoitusalueen-paivan-toteumat hae-pohjavesialueidenurakat
   hae-urakan-siirrettavat-pohjavesialueet onko-urakalla-suolatoteumia hae-rajoitusalueet-summatiedoin
-  hae-rajoitusaluetta-muokanneet-urakat paivita-suolatoteumat-urakalle nollaa-paivittyneet-rajoitusalueet!)
+  hae-rajoitusaluetta-muokanneet-urakat paivita-suolatoteumat-urakalle nollaa-paivittyneet-rajoitusalueet!
+  hae-suunniteltu-suolan-kaytto-hoitovuosittain-alueurakalle)
 
 (defn hae-suolatoteumat-rajoitusalueittain [db {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (let [;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista

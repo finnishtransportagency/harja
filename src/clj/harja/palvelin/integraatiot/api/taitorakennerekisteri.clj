@@ -101,9 +101,22 @@
                :havainnot (muodosta-havainnot kohde)}})
         kohteet))))
 
+(defn muodosta-harja-url [tarkastus ympariston-harja-url]
+  (when (and (:urakka_hallintayksikko tarkastus)
+          (:urakka_id tarkastus)
+          (:silta_id tarkastus)
+          (:siltatarkastus_id tarkastus))
+    (str
+      ympariston-harja-url
+      "/#urakat/laadunseuranta/siltatarkastukset?&hy="
+      (:urakka_hallintayksikko tarkastus)
+      "&u=" (:urakka_id tarkastus)
+      "&sil=" (:silta_id tarkastus)
+      "&st=" (:siltatarkastus_id tarkastus))))
+
 (defn hae-siltatarkastukset
   "Hakee siltatarkastukset annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
+  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja ympariston-harja-url]
   (log/info "Taitorakennerekisteri API, siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :aikavali)
   
@@ -111,15 +124,16 @@
         loppu-timestamp (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
         
         siltatarkastukset (taitorakennerekisteri-kyselyt/hae-siltatarkastukset-taitorakennerekisterille
-                           db {:alkuaika alku-timestamp
-                               :loppuaika loppu-timestamp})
-          
+                            db {:alkuaika alku-timestamp
+                                :loppuaika loppu-timestamp})
+        
         muunnetut-tarkastukset (map (fn [tarkastus]
                                       {:siltatarkastus
                                        {:harja-id (:siltatarkastus_id tarkastus)
                                         :tarkastusaika (when (:tarkastusaika tarkastus)
                                                          (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
                                         :tarkastaja (:tarkastaja tarkastus)
+                                        :harja-url (muodosta-harja-url tarkastus ympariston-harja-url)
                                         :luotu (when (:luotu tarkastus)
                                                  (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
                                         :muokattu (when (:muokattu tarkastus)
@@ -140,7 +154,7 @@
 
 (defn hae-sillan-siltatarkastukset
   "Hakee siltatarkastukset sillalle sillan silta_oid:n perusteella."
-  [db {:keys [silta-oid] :as parametrit} _kayttaja]
+  [db {:keys [silta-oid] :as parametrit} _kayttaja ympariston-harja-url]
   (log/info "Taitorakennerekisteri API, sillan siltatarkastusten haku, parametrit: " (pr-str parametrit))
   (tarkista-api-parametrit parametrit :silta-oid)
 
@@ -156,6 +170,7 @@
                                           :tarkastusaika (when (:tarkastusaika tarkastus)
                                                            (pvm/aika-iso8601-aikavyohykkeen-kanssa (:tarkastusaika tarkastus)))
                                           :tarkastaja (:tarkastaja tarkastus)
+                                          :harja-url (muodosta-harja-url tarkastus ympariston-harja-url)
                                           :luotu (when (:luotu tarkastus)
                                                    (pvm/aika-iso8601-aikavyohykkeen-kanssa (:luotu tarkastus)))
                                           :muokattu (when (:muokattu tarkastus)
@@ -167,7 +182,7 @@
                                    siltatarkastukset)]
       {:siltatarkastukset muunnetut-tarkastukset})))
 
-(defrecord Taitorakennerekisteri []
+(defrecord Taitorakennerekisteri [ympariston-harja-url]
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -176,7 +191,7 @@
         (kasittele-get-kutsu db integraatioloki :hae-siltatarkastukset parametrit
           json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
-            (hae-siltatarkastukset db parametrit kayttaja))
+            (hae-siltatarkastukset db parametrit kayttaja ympariston-harja-url))
           :taitorakenne "trex")))
     (julkaise-reitti
       http :hae-sillan-siltatarkastukset
@@ -184,7 +199,7 @@
         (kasittele-get-kutsu db integraatioloki :hae-sillan-siltatarkastukset parametrit
           json-skeemat/+taitorakennerekisteri-siltatarkastukset-haku-vastaus+
           (fn [parametrit kayttaja db]
-            (hae-sillan-siltatarkastukset db parametrit kayttaja))
+            (hae-sillan-siltatarkastukset db parametrit kayttaja ympariston-harja-url))
           :taitorakenne "trex")))
     this)
 

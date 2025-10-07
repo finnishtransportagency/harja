@@ -15,20 +15,10 @@
 (def +muutostyo-valinnat+ {:erillisrahoitus "Erillisrahoituksella tehtävä muutostyö"
                            :poikkeama "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
 
-;; TODO: Figma-speksissä muutostyypit ovat lomaketasolla nykyisin:
-;;       Muutostyö: Sisältää erillisrahoitettu ja maarapoikkeama tyypit
-;;                  erillisrahoitettu = Erillisrahoituksella tehtävä muutostyö
-;;                  maarapoikkeama = Poikkeaminen tehtävä- ja määräluettelon määrästä
-;;       Toteutuneet määrät taitaa olla oma asiansa nykyisin, ja se ei noudata mhu_muutos-taulun mallia kuten muut muutokset
-;;       Lomakkeen muutostyypit ja niiden nimet pitää tarkistaa ja päivittää
-
 (def +muutostyypit-lomakkeella+
   "MHU muutosten mahdolliset tyypit. Näiden tulee matchata tietokannassa olevaan custom typeen MHU_MUUTOSTYYPPI"
-  ["erillisrahoitettu"
+  ["pysyva"
    "johto-ja-hallintokorvaus"
-   "maarapoikkeama"
-   "pysyva"
-   "toteutuneet-maarat"
    "muutostyo"])
 
 
@@ -52,3 +42,8 @@
   (if (pvm/ennen? urakan-alkupvm (pvm/->pvm "5.10.2024"))
     :muutos
     :vahennys))
+
+(defn muutos-voimassa-kesken-hoitokauden?
+  "Muutoksen voimassaolo alkaa kesken hoitovuoden?"
+  [voimassa-alkaen hoitovuosi]
+  (pvm/valissa? voimassa-alkaen (first hoitovuosi) (second hoitovuosi)))

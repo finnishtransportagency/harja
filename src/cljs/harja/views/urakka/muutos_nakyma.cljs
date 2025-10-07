@@ -1,23 +1,26 @@
 (ns harja.views.urakka.muutos-nakyma
   "MHU-urakoiden muutosten välilehti. Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
-  (:require [tuck.core :as tuck]
+  (:require
+    [tuck.core :as tuck]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
 
-            [harja.fmt :as fmt]
-            [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-            [harja.ui.yleiset :as yleiset]
+    [harja.fmt :as fmt]
+    [harja.ui.grid :as grid]
+    [harja.ui.napit :as napit]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.komponentti :as komp]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.views.urakka.valinnat :as urakka-valinnat]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.ui.yleiset :as yleiset]
 
-            ;; Osiot / lomake 
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
-            [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
-            [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
-            [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
-            [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
+    ;; Osiot / lomake
+    [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
+    [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
+    [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
+    [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
+    [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
 
 
 (defn- tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
@@ -41,21 +44,21 @@
         :voi-muokata? true}
 
        ;; Taulukon kentät
-       [{:otsikko "Muutos" 
-         :nimi :muutos 
-         :tyyppi :string 
+       [{:otsikko "Muutos"
+         :nimi :muutos
+         :tyyppi :string
          :leveys 15}
-        
-        {:otsikko "Perustelu" 
-         :nimi :perustelu 
-         :tyyppi :string 
+
+        {:otsikko "Perustelu"
+         :nimi :perustelu
+         :tyyppi :string
          :leveys 35}
 
-        {:otsikko "Vaikutus € (+/-)" 
-         :nimi :tavoitehinnan-muutos 
+        {:otsikko "Vaikutus € (+/-)"
+         :nimi :tavoitehinnan-muutos
          :tyyppi :numero
-         :fmt fmt/euro-opt 
-         :tasaa :oikea 
+         :fmt fmt/euro-opt
+         :tasaa :oikea
          :leveys 15}]
        tavoitehinnan-muutokset])}])
 
@@ -81,25 +84,25 @@
         :voi-muokata? true}
 
        ;; Taulukon kentät
-       [{:otsikko "Muutoksen syy" 
-         :nimi :syy 
-         :tyyppi :string 
+       [{:otsikko "Muutoksen syy"
+         :nimi :syy
+         :tyyppi :string
          :leveys 15}
-        
-        {:otsikko "Muutokset" 
-         :nimi :muutokset 
-         :tyyppi :string 
+
+        {:otsikko "Muutokset"
+         :nimi :muutokset
+         :tyyppi :string
          :leveys 35}
 
-        {:otsikko "Lisätieto" 
-         :nimi :lisatieto 
-         :tyyppi :string 
+        {:otsikko "Lisätieto"
+         :nimi :lisatieto
+         :tyyppi :string
          :leveys 15}
 
-        {:otsikko "" :nimi 
-         :toiminnot :tyyppi 
-         :komponentti 
-         :leveys 10 
+        {:otsikko "" :nimi
+         :toiminnot :tyyppi
+         :komponentti
+         :leveys 10
          :tasaa :oikea
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
@@ -108,7 +111,7 @@
 
 
 (defn muutoslistaus [e! app]
-  [:span.muutoslistaus
+  [:div.muutoslistaus
    (when (:valittu-hoitokausi app)
      (if (t-yhteiset/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
        ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien " legacy " muutostoiminnot
@@ -125,27 +128,69 @@
 
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
-  [_e! {:keys [budjettitavoitteet] :as _app}]
-  (let [indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu? budjettitavoitteet)]
+  [_e! {:keys [budjettitavoitteet valittu-hoitokausi] :as _app}]
+  (let [indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu?
+                                      budjettitavoitteet valittu-hoitokausi)]
     [:div.muutosten-vaikutus
-    [:h2 "Muutosten vaikutus"]
-    [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
-                      :tietorivi-luokka "padding-8"}
-     "Hoitovuoden alun indeksikorjattu tavoitehinta" (if-not indeksikorjaus-vahvistettu?
-                                                       t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
-                                                       (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
-     "Tavoitehinnan muutokset" (fmt/euro-opt (:muutosten-vaikutus-yhteensa budjettitavoitteet))
-     "Hoitovuoden lopun tavoitehinta" (if-not indeksikorjaus-vahvistettu?
-                                        t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
-                                        (fmt/euro-opt (:hoitovuoden-lopun-tavoitehinta budjettitavoitteet)))]
-     (when-not indeksikorjaus-vahvistettu? [yleiset/vihje "Indeksikorjaus vahvistetaan kustannussuunnitelmassa."])]))
+     [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
+                       :tietorivi-luokka "padding-8"}
+
+      [:h2 "Muutosten vaikutus"] ""
+
+      "Hoitovuoden alun indeksikorjattu tavoitehinta"
+      (if-not indeksikorjaus-vahvistettu?
+        t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
+        (fmt/euro-opt (:hoitovuoden-alun-indeksikorjattu-tavoitehinta budjettitavoitteet)))
+
+      (when (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet)
+        [:ul
+         [:li.harmaa-tumma-teksti "Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)"]])
+      (when (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet)
+        (if-not indeksikorjaus-vahvistettu?
+          t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
+          (fmt/euro-opt true true (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))))
+
+      "Kirjatut muutokset"
+      (fmt/euro-opt true true (:kirjatut-muutokset-yht budjettitavoitteet))
+
+      ^{:viiva-rivin-alle? true}
+      [:div "Toteumiin perustuvat muutokset" [:br]
+       "(vahvistetaan "
+       [:a.klikattava.alleviivaa {:href "#"
+                                  :on-click
+                                  #(siirtymat/avaa-valikatselmus
+                                     @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                     [(first valittu-hoitokausi)
+                                      (second valittu-hoitokausi)])}
+        "välikatselmuksessa."] ")"]
+      (fmt/euro-opt true true (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet))
+
+      [:b "Yhteensä"]
+      [:b (if (not indeksikorjaus-vahvistettu?)
+            t-yhteiset/+muutosten-vaikutus-yhteensa-ei-saatavilla+
+            (fmt/euro-opt (:muutosten-vaikutus-yht budjettitavoitteet)))]
+
+      ^{:koko-rivin-leveys? true :tietorivi-luokka (str "keskita-rivin-sisalto"
+                                                     (when indeksikorjaus-vahvistettu?
+                                                       " piilota-rivin-sisalto"))}
+      [yleiset/info-laatikko :neutraali
+       [:span "Indeksikorjaus vahvistetaan "
+        [:a.klikattava.alleviivaa {:href "#"
+                                   :on-click #(siirtymat/siirry-annettuun-valilehteen
+                                                @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                                {:taso1 :urakat
+                                                 :taso2 :suunnittelu
+                                                 :taso3 :uusi-kustannussuunnitelma})}
+         "kustannussuunnitelmassa."]]
+       nil
+       {:luokka "vihje-indeksikorjaus"}] ""]]))
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
   [:valinnat-ja-listaus
    [:h1 "Muutosten hallinta"]
    [:div.otsikko-ja-hoitokausi
-    
+
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
      #(e! (t-yhteiset/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
@@ -159,7 +204,7 @@
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
     (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot)))
-    (fn [e! 
+    (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu
        (if muokattava-muutos

@@ -13,7 +13,7 @@
   "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon.
   Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
   [e! {:keys [rahavarausten-muutokset] :as app}]
-  (let [rivit (butlast rahavarausten-muutokset)
+  (let [rivit (or (butlast rahavarausten-muutokset) [])
         yhteenveto (last rahavarausten-muutokset)
         suunnittelutiedot-puuttuvat (every? #(or
                                                (nil? (:summa-indeksikorjattu %))
@@ -45,9 +45,10 @@
           :rivi-jalkeen-fn (fn []
                              [{:teksti "Tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :yhteenveto-vayla true}
                               {:teksti "" :sarakkeita 1 :luokka "yhteensa"}
-                              {:teksti (fmt/euro-opt (:summa-indeksikorjattu yhteenveto)) :tasaa :oikea :luokka "yhteensa"}
-                              {:teksti (fmt/euro-opt (:toteumat yhteenveto)) :tasaa :oikea :luokka "yhteensa"}
-                              {:teksti (fmt/euro-opt (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}])}
+                              {:teksti "" :tasaa :oikea :luokka "yhteensa"}
+                              {:teksti "" :tasaa :oikea :luokka "yhteensa"}
+                              {:teksti (fmt/euro-opt false true (:tavoitehinnan-muutos yhteenveto)) :tasaa :oikea :luokka "yhteensa"}
+                              {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}])}
 
          ;; Taulukon kentät
          [{:otsikko "Rahavaraus" 
@@ -88,5 +89,13 @@
            :fmt fmt/euro-opt 
            :tasaa :oikea 
            :leveys 10
-           :muokattava? (constantly false)}]
+           :muokattava? (constantly false)}
+          ;; Tyhjä sarake, jotta "Tavoitehinnan muutos (€)" -sarake asettuun samaan kohtaan kuin muissa muutostauluissa
+          ;; Muissa tauluissa tässä sarakkeessa on toimintopainikkeet, mutta tässä ei ole toimintoja
+          {:otsikko ""
+           :nimi :filleri
+           :tyyppi :komponentti
+           :komponentti (constantly nil)
+           :tasaa :oikea
+           :leveys 10}]
          rivit])}]))

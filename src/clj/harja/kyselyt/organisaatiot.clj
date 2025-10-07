@@ -4,3 +4,5 @@
 
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})
+
+(declare listaa-organisaatiot-analytiikalle)

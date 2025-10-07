@@ -9,7 +9,8 @@ SELECT
   -- Urakka tiedot
   u.id as urakka_id,
   u.nimi as urakka_nimi,
-  u.sampoid as urakka_tunnus,
+  u.urakkanro as urakka_tunnus,
+  u.hallintayksikko as urakka_hallintayksikko,
   -- Silta tiedot
   s.id as silta_id,
   s.siltatunnus,
@@ -44,8 +45,9 @@ SELECT
 FROM siltatarkastus st
 JOIN urakka u ON st.urakka = u.id
 JOIN silta s ON st.silta = s.id
-WHERE (st.luotu BETWEEN :alkuaika AND :loppuaika)
-   OR (st.muokattu BETWEEN :alkuaika AND :loppuaika)
+WHERE s.silta_oid IS NOT NULL
+  AND ((st.luotu BETWEEN :alkuaika AND :loppuaika)
+   OR (st.muokattu BETWEEN :alkuaika AND :loppuaika))
 ORDER BY st.luotu DESC;
 
 -- name: loytyyko-silta-oidilla
@@ -67,7 +69,8 @@ SELECT
   -- Urakka tiedot
   u.id as urakka_id,
   u.nimi as urakka_nimi,
-  u.sampoid as urakka_tunnus,
+  u.urakkanro as urakka_tunnus,  
+  u.hallintayksikko as urakka_hallintayksikko,
   -- Silta tiedot
   s.id as silta_id,
   s.siltatunnus,

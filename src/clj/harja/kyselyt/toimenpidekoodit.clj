@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/toimenpidekoodit.sql"
   {:positional? true})
 
-(declare hae-tehtava-tunnisteella)
+(declare hae-tehtava-tunnisteella listaa-tehtavat listaa-tehtavaryhmat listaa-toimenpiteet-analytiikalle)

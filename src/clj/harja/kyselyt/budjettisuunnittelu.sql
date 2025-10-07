@@ -16,6 +16,30 @@ UPDATE urakka_tavoite
    AND hoitokausi = :hoitokausi;
 
 
+-- name: hae-urakan-tavoitehintojen-tilat
+SELECT ut.id,
+       ut.urakka,
+       ut.hoitokausi,
+       ut.tavoitehinta,
+       ut.tavoitehinta_siirretty,
+       ut.kattohinta,
+       ut.luotu,
+       ut.luoja,
+       ut.muokattu,
+       ut.muokkaaja,
+       ut.tavoitehinta_indeksikorjattu                                                        AS "tavoitehinta-indeksikorjattu",
+       ut.tavoitehinta_siirretty_indeksikorjattu                                              AS "tavoitehinta-siirretty-indeksikorjattu",
+       ut.kattohinta_indeksikorjattu                                                          AS "kattohinta-indeksikorjattu",
+       ut.indeksikorjaus_vahvistettu                                                          AS "indeksikorjaus-vahvistettu",
+       ut.vahvistaja,
+       ut.versio,
+       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
+       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
+  FROM urakka_tavoite ut
+           LEFT JOIN urakka u ON ut.urakka = u.id
+ WHERE urakka = :urakka
+ ORDER BY ut.hoitokausi;
+
 -- name: hae-budjettitavoite
 WITH tavoitehinnan_oikaisut AS
          (SELECT sum(summa) AS summa, "urakka-id", "hoitokauden-alkuvuosi"

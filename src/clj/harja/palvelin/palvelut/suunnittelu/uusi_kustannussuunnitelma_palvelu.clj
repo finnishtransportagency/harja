@@ -12,7 +12,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
 
 (defn jasenna-rahavaraukset-tarjouksesta
   "Muokkaa tarjouksen tietomallin rahavaraukset sopivaksi kustannussuunnitelman käyttöön.
@@ -33,6 +34,22 @@
   (let [summa (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0))
                          johto-ja-hallintokorvaukset))]
     summa))
+
+(defn- taydenna-rahavaraus-suunniteltu-summa
+  "Täydentää rahavarauksen suunnitellun summan tarjoussummalla jos suunniteltu summa puuttuu.
+   Laskee myös indeksikorjatun summan tarvittaessa."
+  [indeksikerroin rahavaraus]
+  (let [suunniteltu-summa (or (:suunniteltu-summa rahavaraus)
+                            (:tarjous-summa rahavaraus))
+        indeksikorjattu-summa (or (:suunniteltu-summa-indeksikorjattu rahavaraus)
+                                (when (:tarjous-summa rahavaraus)
+                                  (indeksi-kyselyt/indeksikorjaa (:tarjous-summa rahavaraus) indeksikerroin)))]
+    (cond-> rahavaraus
+      (nil? (:suunniteltu-summa rahavaraus))
+      (assoc :suunniteltu-summa suunniteltu-summa)
+
+      (nil? (:suunniteltu-summa-indeksikorjattu rahavaraus))
+      (assoc :suunniteltu-summa-indeksikorjattu indeksikorjattu-summa))))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -82,8 +99,9 @@
           suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
           rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
+          ;; Jos rahavarausta ei ole suunniteltu, niin hae suunniteltu summa tarjouksen puolelta
+          rahavaraukset (map (partial taydenna-rahavaraus-suunniteltu-summa indeksikerroin) rahavaraukset)
           rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
-
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
@@ -111,7 +129,9 @@
           hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
 
           hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht johto-ja-hallintokorvaukset-yht hoidonjohtopalkkiot-yht)
-          pysyvat-muutokset-maara 0
+          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
+          ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
+          pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
           hoitovuoden-alun-tavoitehinta (+ hoitovuoden-alun-tavoitehinta pysyvat-muutokset-maara)
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (when indeksikerroin
                                                               (* indeksikerroin hoitovuoden-alun-tavoitehinta)) 0)
@@ -139,6 +159,7 @@
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
+                                    :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
                                     :kattohintakerroin kattohintakerroin

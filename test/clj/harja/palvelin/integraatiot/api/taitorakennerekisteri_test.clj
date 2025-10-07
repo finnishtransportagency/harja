@@ -14,7 +14,7 @@
   (laajenna-integraatiojarjestelmafixturea kayttaja
     :api-taitorakennerekisteri
     (component/using
-      (api-taitorakennerekisteri/->Taitorakennerekisteri)
+      (api-taitorakennerekisteri/->Taitorakennerekisteri "harja.testi")
       [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -109,3 +109,27 @@
                     [(str "/api/taitorakennerekisteri/siltatarkastukset/" silta_oid)]
                     kayttaja portti)]
       (is (= 403 (:status vastaus))))))
+
+(deftest harja-url-rakentaminen-toimii
+  (testing "Harja-URL muodostetaan oikein siltatarkastuksille"
+    (let [alkuaika "2006-01-01T00:00:00+02:00"
+          loppuaika "2008-12-31T23:59:59+02:00"
+          vastaus (api-tyokalut/get-kutsu
+                    [(str "/api/taitorakennerekisteri/siltatarkastukset/" alkuaika "/" loppuaika)]
+                    kayttaja portti)
+          dekoodattu-body (cheshire/decode (:body vastaus) true)
+          ensimmainen-tarkastus (first (:siltatarkastukset dekoodattu-body))]
+      (is (= 200 (:status vastaus)))
+      (when ensimmainen-tarkastus
+        (let [harja-url (get-in ensimmainen-tarkastus [:siltatarkastus :harja-url])
+              urakka-id (get-in ensimmainen-tarkastus [:siltatarkastus :urakka :harja-id])
+              hallintayksikko-id (get-in ensimmainen-tarkastus [:siltatarkastus :urakka :hallintayksikko])
+              silta-id (get-in ensimmainen-tarkastus [:siltatarkastus :silta :harja-id])
+              tarkastus-id (get-in ensimmainen-tarkastus [:siltatarkastus :harja-id])]
+          (is (not (nil? harja-url)) "Harja-URL ei saa olla nil")
+          (is (.contains harja-url "harja.testi") "URL sisältää base URL:n")
+          (is (.contains harja-url "#urakat/laadunseuranta/siltatarkastukset") "URL sisältää oikean polun")
+          (is (.contains harja-url (str "hy=" hallintayksikko-id)) "URL sisältää hallintayksikko-parametrin")
+          (is (.contains harja-url (str "u=" urakka-id)) "URL sisältää urakka-parametrin")
+          (is (.contains harja-url (str "sil=" silta-id)) "URL sisältää silta-parametrin")
+          (is (.contains harja-url (str "st=" tarkastus-id)) "URL sisältää siltatarkastus-parametrin"))))))
