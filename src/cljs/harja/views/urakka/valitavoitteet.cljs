@@ -58,11 +58,10 @@
                       "Ei kohdetta"))})
 
 (defn urakan-omat-valitavoitteet-grid
-  [e! app {:keys [urakka urakan-valitavoitteet valittu-hoitokausi]}]
+  [e! {:keys [urakka urakan-valitavoitteet valittu-hoitokausi yllapitokohteet] :as app}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
-        yllapitokohteet (:yllapitokohteet app)
         ladataan-kohteita? (and @urakka/yllapitokohdeurakka? (nil? yllapitokohteet))]
     (if ladataan-kohteita?
       [yleiset/ajax-loader "Ladataan..."]
@@ -113,11 +112,9 @@
 (defn urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [e! app {:keys [urakka valittu-hoitokausi]}]
+  [e! {:keys [urakka valittu-hoitokausi yllapitokohteet kaikki-valitavoitteet] :as app}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
-        yllapitokohteet (:yllapitokohteet app)
-        kaikki-valitavoitteet (:valitavoitteet app)]
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
      {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
       :tyhja (if (nil? kaikki-valitavoitteet)
@@ -178,7 +175,7 @@
                  rivit)))
 
 (defn valtakunnalliset-valitavoitteet-grid
-  [e! app {:keys [urakka valtakunnalliset-valitavoitteet valittu-hoitokausi]}]
+  [e! {:keys [urakka valtakunnalliset-valitavoitteet valittu-hoitokausi] :as app}]
   (let [voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         voi-tehda-tarkennuksen? voi-merkita-valmiiksi? ; Toistaiseksi oletetaan nämä oikeudet samaksi
         ;; Mitään taulukon kenttää ei voi muokata ilman oikeutta merkitä valmiiksi tai tehdä tarkennuksia
@@ -278,7 +275,9 @@
                                      (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
             nayta-valtakunnalliset-grid? (and (not nayta-yhdistetty-grid?)
                                            (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
-            nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
+            nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)
+            ;; Lisää urakka app-tilaan grid-funktioita varten
+            app (assoc app :urakka ur)] 
         
         (if ladataan?
           [:div.valitavoitteet
@@ -294,24 +293,13 @@
               :kaikki-valinta? true}]] 
 
            (when nayta-urakkakohtaiset-grid?
-             [urakan-omat-valitavoitteet-grid
-              e! app
-              {:urakka ur
-               :urakan-valitavoitteet urakan-valitavoitteet
-               :valittu-hoitokausi valittu-hoitokausi}])
+             [urakan-omat-valitavoitteet-grid e! app])
 
            (when nayta-valtakunnalliset-grid?
-             [valtakunnalliset-valitavoitteet-grid
-              e! app
-              {:urakka ur
-               :valtakunnalliset-valitavoitteet valtakunnalliset-valitavoitteet
-               :valittu-hoitokausi valittu-hoitokausi}])
+             [valtakunnalliset-valitavoitteet-grid e! app])
            
            (when nayta-yhdistetty-grid?
-             [urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
-              e! app
-              {:urakka ur
-               :valittu-hoitokausi valittu-hoitokausi}])
+             [urakan-omat-ja-valtakunnalliset-valitavoitteet-grid e! app])
 
            (when nayta-valtakunnalliset-grid?
              [yleiset/vihje (str
