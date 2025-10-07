@@ -2,8 +2,6 @@
   "Ylläpidon urakoiden välitavoitteiden näkymä"
   (:require
    [cljs-time.core :as t]
-   [cljs.core.async :refer [<!]]
-   [harja.asiakas.kommunikaatio :as k]
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.urakka :as u-domain]
    [harja.domain.valitavoite :as vt-domain]
@@ -12,14 +10,13 @@
    [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]
    [harja.tiedot.urakka :as urakka]
    [harja.tiedot.urakka.valitavoitteet :as tiedot]
+   [harja.tyokalut.tuck :as tuck-apurit]
    [harja.ui.debug :as debug]
    [harja.ui.grid :as grid]
    [harja.ui.komponentti :as komp]
    [harja.ui.valinnat :as valinnat]
-   [harja.ui.viesti :as viesti]
    [harja.ui.yleiset :as yleiset]
-   [tuck.core :as tuck])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+   [tuck.core :as tuck]))
 
 
 
@@ -60,13 +57,14 @@
                                     :tr-loppuetaisyys (:tr-loppuetaisyys valittu-kohde)}}))
                       "Ei kohdetta"))})
 
-(defn urakan-omat-valitavoitteet
-  [{:keys [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet valittu-hoitokausi]}]
+(defn urakan-omat-valitavoitteet-grid
+  [e! app {:keys [urakka urakan-valitavoitteet valittu-hoitokausi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
-        yllapitokohteet @tiedot/urakan-yllapitokohteet-lomakkeelle]
-    (if (and @urakka/yllapitokohdeurakka? (nil? @tiedot/urakan-yllapitokohteet-lomakkeelle))
+        yllapitokohteet (:yllapitokohteet app)
+        ladataan-kohteita? (and @urakka/yllapitokohdeurakka? (nil? yllapitokohteet))]
+    (if ladataan-kohteita?
       [yleiset/ajax-loader "Ladataan..."]
       [grid/grid
        {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
@@ -74,11 +72,7 @@
                  [yleiset/ajax-loader "Tavoitteita haetaan..."]
                  "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
         :tallenna (if voi-muokata?
-                    #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
-                           (if (k/virhe? vastaus)
-                             (viesti/nayta! "Tallentaminen epäonnistui"
-                               :warning viesti/viestin-nayttoaika-lyhyt)
-                             (reset! kaikki-valitavoitteet-atom vastaus))))
+                    #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaValitavoitteet %)
                     :ei-mahdollinen)
         :tallennus-ei-mahdollinen-tooltip
         (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
@@ -116,24 +110,21 @@
                                   (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
        (suodata-valitavoitteet-hoitokaudella urakan-valitavoitteet valittu-hoitokausi)])))
 
-(defn urakan-omat-ja-valtakunnalliset-valitavoitteet
+(defn urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [{:keys [urakka kaikki-valitavoitteet-atom valittu-hoitokausi]}]
+  [e! app {:keys [urakka valittu-hoitokausi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
-        yllapitokohteet @tiedot/urakan-yllapitokohteet-lomakkeelle]
+        yllapitokohteet (:yllapitokohteet app)
+        kaikki-valitavoitteet (:valitavoitteet app)]
     [grid/grid
      {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
-      :tyhja (if (nil? @kaikki-valitavoitteet-atom)
+      :tyhja (if (nil? kaikki-valitavoitteet)
                [yleiset/ajax-loader "Tavoitteita haetaan..."]
                "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
       :tallenna (if voi-muokata?
-                  #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
-                         (if (k/virhe? vastaus)
-                           (viesti/nayta! "Tallentaminen epäonnistui"
-                             :warning viesti/viestin-nayttoaika-lyhyt)
-                           (reset! kaikki-valitavoitteet-atom vastaus))))
+                  #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaValitavoitteet %)
                   :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
@@ -161,7 +152,7 @@
       {:otsikko "Merkit\u00ADsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (suodata-valitavoitteet-hoitokaudella @kaikki-valitavoitteet-atom valittu-hoitokausi)]))
+     (suodata-valitavoitteet-hoitokaudella kaikki-valitavoitteet valittu-hoitokausi)]))
 
 (defn takaraja-poikkeaa-valtakunnallisesta? [{:keys [takaraja valtakunnallinen-takaraja
                                                      valtakunnallinen-takarajan-toistopaiva
@@ -186,14 +177,14 @@
                       (not= (:valtakunnallinen-nimi %) (:nimi %)))
                  rivit)))
 
-(defn valtakunnalliset-valitavoitteet
-  [{:keys [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet valittu-hoitokausi]}]
+(defn valtakunnalliset-valitavoitteet-grid
+  [e! app {:keys [urakka valtakunnalliset-valitavoitteet valittu-hoitokausi]}]
   (let [voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         voi-tehda-tarkennuksen? voi-merkita-valmiiksi? ; Toistaiseksi oletetaan nämä oikeudet samaksi
         ;; Mitään taulukon kenttää ei voi muokata ilman oikeutta merkitä valmiiksi tai tehdä tarkennuksia
         voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
-                          (or voi-merkita-valmiiksi?
-                              voi-tehda-tarkennuksen?))]
+                       (or voi-merkita-valmiiksi?
+                         voi-tehda-tarkennuksen?))]
     [:div
      [grid/grid
       {:otsikko "Kaikissa urakoissa määräaikaan mennessä tehtävät työt"
@@ -201,11 +192,7 @@
                 [yleiset/ajax-loader "Tavoitteita haetaan..."]
                 "Ei valtakunnallisia määräajassa tehtäviä töitä")
        :tallenna (if voi-muokata?
-                   #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
-                          (if (k/virhe? vastaus)
-                            (viesti/nayta! "Tallentaminen epäonnistui"
-                                           :warning viesti/viestin-nayttoaika-lyhyt)
-                            (reset! kaikki-valitavoitteet-atom vastaus))))
+                   #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaValitavoitteet %)
                    :ei-mahdollinen)
        :tallennus-ei-mahdollinen-tooltip
        (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)
@@ -232,11 +219,11 @@
                 (pvm/pvm-opt (:valtakunnallinen-takaraja %))
 
                 (and (:valtakunnallinen-takarajan-toistopaiva %)
-                     (:valtakunnallinen-takarajan-toistokuukausi %))
+                  (:valtakunnallinen-takarajan-toistokuukausi %))
                 (str "Vuosittain "
-                     (:valtakunnallinen-takarajan-toistopaiva %)
-                     "."
-                     (:valtakunnallinen-takarajan-toistokuukausi %))
+                  (:valtakunnallinen-takarajan-toistopaiva %)
+                  "."
+                  (:valtakunnallinen-takarajan-toistokuukausi %))
 
                 :else
                 "Ei takarajaa")
@@ -263,7 +250,7 @@
                 "-")}
        {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
         :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
-                                                      (:valmispvm %))
+                                                   (:valmispvm %))
         :nimi :valmis-kommentti}
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :merkitsija :hae (fn [rivi]
@@ -280,54 +267,60 @@
   "Sisäinen komponentti joka saa app-tilan Tuck:lta"
   [e! app ur]
   (komp/luo
-    (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(do
                     (when (urakka/koko-urakkakausi-valittuna?) (urakka/valitse-kuluva-hk!))
                     (e! (tiedot/->NakymaAvattu))))
     (komp/ulos #(e! (tiedot/->NakymaSuljettu)))
-    (fn [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app} ur]
+    (fn [e! {:keys [valittu-hoitokausi urakan-hoitokaudet ladataan? 
+                    urakan-valitavoitteet valtakunnalliset-valitavoitteet] :as app} ur]
       (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur))
             nayta-yhdistetty-grid? (and (boolean (#{:tiemerkinta} (:tyyppi ur)))
                                      (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
             nayta-valtakunnalliset-grid? (and (not nayta-yhdistetty-grid?)
                                            (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
             nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
-        [:div.valitavoitteet
-         [:div.flex-row.margin-bottom-16
-          [valinnat/urakan-hoitokausi-tuck
-           valittu-hoitokausi
-           urakan-hoitokaudet
-           #(e! (tiedot/->HoitokausiVaihdettu %))
-           {:wrapper-luokka "label-ja-alasveto hoitokausi"
-            :kaikki-valinta? true}]] 
+        
+        (if ladataan?
+          [:div.valitavoitteet
+           [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
+          
+          [:div.valitavoitteet
+           [:div.flex-row.margin-bottom-16
+            [valinnat/urakan-hoitokausi-tuck
+             valittu-hoitokausi
+             urakan-hoitokaudet
+             #(e! (tiedot/->HoitokausiVaihdettu %))
+             {:wrapper-luokka "label-ja-alasveto hoitokausi"
+              :kaikki-valinta? true}]] 
 
-         (when nayta-urakkakohtaiset-grid?
-           [urakan-omat-valitavoitteet
-            {:urakka ur
-             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
-             :urakan-valitavoitteet @tiedot/urakan-valitavoitteet
-             :valittu-hoitokausi valittu-hoitokausi}])
+           (when nayta-urakkakohtaiset-grid?
+             [urakan-omat-valitavoitteet-grid
+              e! app
+              {:urakka ur
+               :urakan-valitavoitteet urakan-valitavoitteet
+               :valittu-hoitokausi valittu-hoitokausi}])
 
-         (when nayta-valtakunnalliset-grid?
-           [valtakunnalliset-valitavoitteet
-            {:urakka ur
-             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
-             :valtakunnalliset-valitavoitteet @tiedot/valtakunnalliset-valitavoitteet
-             :valittu-hoitokausi valittu-hoitokausi}])
+           (when nayta-valtakunnalliset-grid?
+             [valtakunnalliset-valitavoitteet-grid
+              e! app
+              {:urakka ur
+               :valtakunnalliset-valitavoitteet valtakunnalliset-valitavoitteet
+               :valittu-hoitokausi valittu-hoitokausi}])
+           
+           (when nayta-yhdistetty-grid?
+             [urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
+              e! app
+              {:urakka ur
+               :valittu-hoitokausi valittu-hoitokausi}])
 
-         (when nayta-yhdistetty-grid?
-           [urakan-omat-ja-valtakunnalliset-valitavoitteet
-            {:urakka ur
-             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
-             :valittu-hoitokausi valittu-hoitokausi}])
+           (when nayta-valtakunnalliset-grid?
+             [yleiset/vihje (str
+                              "Järjestelmävastaava hallinnoi listaa valtakunnallisista, määräaikaan mennessä tehtävistä töistä."
+                              " "
+                              (when voi-muokata?
+                                "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])
+           [debug/debug app]])))))
 
-         (when nayta-valtakunnalliset-grid?
-           [yleiset/vihje (str
-                            "Järjestelmävastaava hallinnoi listaa valtakunnallisista, määräaikaan mennessä tehtävistä töistä."
-                            " "
-                            (when voi-muokata?
-                              "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])
-         [debug/debug app]]))))
 
 (defn valitavoitteet [ur]
   [tuck/tuck tiedot/valitavoitteet-app-tila
