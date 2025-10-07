@@ -14,7 +14,8 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
+            [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
+            [harja.ui.nakymasiirrin :as siirrin])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
@@ -231,13 +232,16 @@
 
 (defn siirry-annettuun-valilehteen
   "Yleiskäyttöinen siirtymäfunktio, jonne annetaan hallintayksikkö-id ja urakka-id, sekä kolmen välilehden avain minne siirtyä, sekä halutessaan app-state mikä välitetään annetulle atomille"
-  [hallintayksikko-id urakka-id {:keys [taso1 taso2 taso3 app-state app-state-atom]}]
+  [hallintayksikko-id urakka-id {:keys [taso1 taso2 taso3 app-state app-state-atom resetoi-scroll?]}]
   (assert (integer? hallintayksikko-id) "oltava integer")
   (assert (integer? urakka-id) "oltava integer")
   (assert (keyword? taso1) "oltava keyword")
   (assert (keyword? taso2) "oltava keyword")
   (go
     (do
+      (when resetoi-scroll?
+        ;; Resetoi selaimen scroll yläosaan tarpeen vaatiessa
+        (siirrin/resetoi-scroll {:siirry-heti? true}))
       (nav/esta-url-paivitys!)
       (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
       (nav/aseta-valittu-valilehti! :sivu taso1)
