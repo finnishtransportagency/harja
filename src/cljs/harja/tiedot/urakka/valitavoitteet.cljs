@@ -1,73 +1,52 @@
 (ns harja.tiedot.urakka.valitavoitteet
   "Ylläpidon urakoiden välitavoitteiden tiedot."
-  (:require [reagent.core :refer [atom]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [tuck.core :as tuck])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+  (:require
+   [clojure.core.async :refer [go]]
+   [harja.asiakas.kommunikaatio :as k]
+   [harja.tiedot.navigaatio :as nav]
+   [harja.tiedot.urakka :as u]
+   [harja.tyokalut.tuck :as tuck-apurit]
+   [harja.ui.viesti :as viesti]
+   [reagent.core :refer [atom]]
+   [tuck.core :as tuck]))
 
-(def nakymassa? (atom false))
+
+
 
 (defonce valitavoitteet-app-tila
   (atom {:valittu-hoitokausi nil
-         :nakymassa? false}))
+         :nakymassa? false
+         :urakan-hoitokaudet []
+         
+         ;; Haun tila
+         :ladataan? false
+         :virhe nil
+         
+         ;; Data
+         :valitavoitteet nil  ;; Kaikki välitavoitteet (urakan + valtakunnalliset)
+         :urakan-valitavoitteet nil  ;; Suodatettu: ei valtakunnallinen-id
+         :valtakunnalliset-valitavoitteet nil  ;; Suodatettu: on valtakunnallinen-id
+         :yllapitokohteet nil
+         
+         ;; Tallennustila
+         :tallennetaan? false
+         :tallennus-virhe nil}))
 
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord HoitokausiVaihdettu [hoitokausi])
 
-(defn hae-urakan-valitavoitteet [urakka-id]
-  (k/post! :hae-urakan-valitavoitteet urakka-id))
+(defrecord HaeValitavoitteet [])
+(defrecord HaeValitavoitteetOnnistui [vastaus])
+(defrecord HaeValitavoitteetEpaonnistui [vastaus])
 
-(defn merkitse-valmiiksi! [urakka-id valitavoite-id valmis-pvm kommentti]
-  (k/post! :merkitse-valitavoite-valmiiksi
-           {:urakka-id urakka-id
-            :valitavoite-id valitavoite-id
-            :valmis-pvm valmis-pvm
-            :kommentti kommentti}))
+(defrecord HaeYllapitokohteet [])
+(defrecord HaeYllapitokohteetOnnistui [vastaus])
+(defrecord HaeYllapitokohteetEpaonnistui [vastaus])
 
-(defn tallenna-valitavoitteet! [urakka-id valitavoitteet]
-  (k/post! :tallenna-urakan-valitavoitteet
-           {:urakka-id urakka-id
-            :valitavoitteet valitavoitteet}))
-
-(def valitavoitteet
-  "Urakan omat ja valtakunnalliset välitavoitteet.
-   Riippuu valitusta hoitokaudesta, jotta data päivittyy hoitokauden vaihtuessa."
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               nakymassa? @nakymassa?
-               _ @u/valittu-hoitokausi]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and urakka-id nakymassa?)
-                (hae-urakan-valitavoitteet urakka-id))))
-
-(def urakan-valitavoitteet
-  (reaction (when @valitavoitteet
-              (filterv (comp not :valtakunnallinen-id) @valitavoitteet))))
-
-(def valtakunnalliset-valitavoitteet
-  (reaction (when @valitavoitteet
-              (filterv :valtakunnallinen-id @valitavoitteet))))
-
-(defn hae-urakan-yllapitokohteet
-  "Hakee urakan ylläpitokohteet näytettäväksi välitavoitteiden näkymässä"
-  [urakka-id sopimus-id]
-  (k/post! :urakan-yllapitokohteet-lomakkeelle
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id}))
-
-(def urakan-yllapitokohteet-lomakkeelle
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               _ (:tyyppi @nav/valittu-urakka)
-               [sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @nakymassa?
-               yllapitokohdeurakka? @u/yllapitokohdeurakka?]
-    {:nil-kun-haku-kaynnissa? true}
-    (when (and yllapitokohdeurakka? nakymassa? urakka-id sopimus-id)
-      (hae-urakan-yllapitokohteet urakka-id sopimus-id))))
-
+(defrecord TallennaValitavoitteet [tiedot])
+(defrecord TallennaValitavoitteetOnnistui [vastaus])
+(defrecord TallennaValitavoitteetEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   NakymaAvattu
@@ -76,22 +55,113 @@
     (let [globaali-hk @u/valittu-hoitokausi
           app-hk (:valittu-hoitokausi app)
           hoitokausi (or app-hk globaali-hk)
-          hoitokaudet @u/valitun-urakan-hoitokaudet]
-      (reset! nakymassa? true)
+          hoitokaudet @u/valitun-urakan-hoitokaudet
+          yllapitokohdeurakka? @u/yllapitokohdeurakka?
+          hae-valitavoitteet! (tuck/send-async! ->HaeValitavoitteet)
+          hae-yllapitokohteet! (tuck/send-async! ->HaeYllapitokohteet)]
+
+      ;; Hae välitavoitteet
+      (go  (hae-valitavoitteet!))
+      ;; Hae ylläpitokohteet jos ylläpitokohdeurakka
+      (when yllapitokohdeurakka?
+        (go (hae-yllapitokohteet!)))
+
       (-> app
         (assoc :nakymassa? true)
         (assoc :valittu-hoitokausi hoitokausi)
-        (assoc :urakan-hoitokaudet hoitokaudet))))
+        (assoc :urakan-hoitokaudet hoitokaudet)
+        (assoc :ladataan? true))))
   
   NakymaSuljettu
   (process-event [_ app]
-    (reset! nakymassa? false)
-    (assoc app :nakymassa? false))
+    (-> app
+      (assoc :nakymassa? false)
+      (assoc :ladataan? false)
+      (assoc :valitavoitteet nil)
+      (assoc :urakan-valitavoitteet nil)
+      (assoc :valtakunnalliset-valitavoitteet nil)
+      (assoc :yllapitokohteet nil)
+      (assoc :virhe nil)))
   
   HoitokausiVaihdettu
   (process-event [{:keys [hoitokausi]} app]
     ;; Päivitä globaali hoitokausi
     (u/valitse-hoitokausi! hoitokausi)
-    (assoc app :valittu-hoitokausi hoitokausi)))
+    
+    ;; Hae uudet välitavoitteet valitulle hoitokaudelle 
+    (assoc app :valittu-hoitokausi hoitokausi))
+  
+  HaeValitavoitteet
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakan-valitavoitteet
+      (:id @nav/valittu-urakka)
+      {:onnistui ->HaeValitavoitteetOnnistui
+       :epaonnistui ->HaeValitavoitteetEpaonnistui})
+    (assoc app :ladataan? true :virhe nil))
+  
+  HaeValitavoitteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [urakan (filterv (comp not :valtakunnallinen-id) vastaus)
+          valtakunnalliset (filterv :valtakunnallinen-id vastaus)]
+      (-> app
+        (assoc :ladataan? false)
+        (assoc :valitavoitteet vastaus)
+        (assoc :urakan-valitavoitteet urakan)
+        (assoc :valtakunnalliset-valitavoitteet valtakunnalliset))))
+  
+  HaeValitavoitteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Välitavoitteiden haku epäonnistui" :varoitus)
+    (-> app
+      (assoc :ladataan? false)
+      (assoc :virhe vastaus)
+      (assoc :valitavoitteet nil)
+      (assoc :urakan-valitavoitteet nil)
+      (assoc :valtakunnalliset-valitavoitteet nil)))
+  
+  HaeYllapitokohteet
+  (process-event [_ app]
+    (let [urakka-id (:id @nav/valittu-urakka)
+          [sopimus-id _] @u/valittu-sopimusnumero]
+      (when (and urakka-id sopimus-id)
+        (tuck-apurit/post! :urakan-yllapitokohteet-lomakkeelle
+          {:urakka-id urakka-id
+           :sopimus-id sopimus-id}
+          {:onnistui ->HaeYllapitokohteetOnnistui
+           :epaonnistui ->HaeYllapitokohteetEpaonnistui})))
+    app)
+  
+  HaeYllapitokohteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :yllapitokohteet vastaus))
+  
+  HaeYllapitokohteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Ylläpitokohteiden haku epäonnistui" :varoitus)
+    (assoc app :yllapitokohteet nil))
+  
+  TallennaValitavoitteet
+  (process-event [{tiedot :tiedot} app]
+    (let [urakka-id (:id @nav/valittu-urakka)
+          payload {:urakka-id urakka-id
+                   :valitavoitteet tiedot}]
+      (tuck-apurit/post! :tallenna-urakan-valitavoitteet
+        payload
+        {:onnistui ->TallennaValitavoitteetOnnistui
+         :epaonnistui ->TallennaValitavoitteetEpaonnistui}))
+    (assoc app :tallennetaan? true :tallennus-virhe nil))
+  
+  TallennaValitavoitteetOnnistui
+  (process-event [_ app]
+    ((tuck/current-send-function) (->HaeValitavoitteet))
+    (viesti/nayta-toast! "Välitavoitteiden tallennus onnistui!" :onnistui)
+    (assoc app :tallennetaan? false)) 
+  
+  TallennaValitavoitteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Välitavoitteiden tallennuksessa tapahtui virhe" :varoitus)
+    (-> app
+      (assoc :tallennetaan? false)
+      (assoc :tallennus-virhe vastaus))))
 
 
