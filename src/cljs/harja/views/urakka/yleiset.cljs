@@ -385,8 +385,7 @@
         voi-muokata? (and (not (k/virhe? kayttajat))
                        (not (empty? kayttajat))
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
-                       (or (not= rooli "ELY_Urakanvalvoja")
-                         (not= rooli "Tilaajan_Urakanvalvoja")
+                       (or (not= #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"} rooli)
                          (= :tilaaja (roolit/osapuoli kayttaja))))]
     [:div.vastuuhenkilo
      [:div
