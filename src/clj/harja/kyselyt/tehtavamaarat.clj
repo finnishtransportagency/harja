@@ -10,7 +10,9 @@
 (defqueries "harja/kyselyt/tehtavamaarat.sql"
   {:positional? true})
 
-(declare hae-sopimuksen-tehtavamaarat-urakalle)
+(declare hae-sopimuksen-tehtavamaarat-urakalle hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista-analytiikalle
+  hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
+  mhu-suunniteltavat-tehtavat)
 
 (defn hae-sopimuksen-tila
   [db {:keys [urakka-id sopimus-id]}]

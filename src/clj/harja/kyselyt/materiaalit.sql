@@ -375,7 +375,7 @@ SELECT id
 FROM materiaalikoodi
 WHERE nimi = :nimi;
 
--- name: hae-suolatoteumien-tarkat-tiedot-materiaalille
+-- name: hae-toteumien-tarkat-tiedot-materiaalille
 -- Hakee annettujen toteumien ja materiaalikoodin tarkat tiedot
 SELECT
   tm.id                        AS tmid,
@@ -493,7 +493,8 @@ SELECT m.id                               AS materiaali_id,
        LEFT JOIN materiaaliluokka ml ON m.materiaaliluokka_id = ml.id
  WHERE mk.urakka = :urakka
    AND mk.poistettu = FALSE
-   AND m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
+   AND m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI)
+    ORDER BY m.jarjestys;
 
 -- name: hae-talvisuolan-materiaaliluokka
 SELECT nimi as materiaaliluokka, yksikko as materiaaliluokka_yksikko, materiaalityyppi as materiaaliluokka_tyyppi

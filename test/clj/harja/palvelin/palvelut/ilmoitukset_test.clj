@@ -320,6 +320,22 @@
                                                                 (pvm/iso-8601->pvm "2023-04-06")))
                                    :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva
                                                                         (pvm/iso-8601->pvm "2023-04-06"))) :kuittaukset []}]
+        (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus))))))
+  (testing "Kesäkaudella tulleen ilmoituksen myöhästymistä tarkastellaan talvikaudella (Ei myöhässä)"
+    (with-redefs [t/now #(->
+                           (pvm/iso-8601->pvm "2023-05-11")
+                           (pvm/aikana 8 59 0 0)
+                           (tc/to-date-time)
+                           (pvm/suomen-aikavyohykkeeseen))]
+      (let [myohastynyt-tiedoitus {:ilmoitustyyppi :tiedoitus
+                                   :urakka-kesakausi-alkupvm "2023-04-01"
+                                   :urakka-kesakausi-loppupvm "2023-04-30"
+                                   ;; 6.4.2023 on arkipäivä, sen jälkeen arkipyhinä pitkäperjantai ja toinen pääsiäispäivä
+                                   ;; Seuraava arkipäivä on 11.4. (tiistai)
+                                   :ilmoitettu (c/to-sql-time (pvm/keskipaiva
+                                                                (pvm/iso-8601->pvm "2023-04-06")))
+                                   :valitetty-urakkaan (c/to-sql-time (pvm/keskipaiva (pvm/iso-8601->pvm "2023-04-06")))
+                                   :kuittaukset [{:kuitattu (c/to-sql-time (pvm/keskipaiva (pvm/iso-8601->pvm "2023-04-10"))) :kuittaustyyppi :vastaanotto}]}]
         (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))))
 
 (deftest ilmoitus-myohassa-kun-kuittaus-myohassa

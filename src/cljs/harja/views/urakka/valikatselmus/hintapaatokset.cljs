@@ -115,7 +115,7 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
         siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)
-        maksimi-siirrettava-maara (fmt/desimaaliluku (:maksimi_siirrettava_maara paatos) 2 2 false)
+        maksimi-siirrettava-maara (fmt/desimaaliluku (or (:maksimi_siirrettava_maara paatos) 0)  2 2 false)
         muokattu-maksimi-siirrettava-maara (str/replace maksimi-siirrettava-maara "," ".")]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella

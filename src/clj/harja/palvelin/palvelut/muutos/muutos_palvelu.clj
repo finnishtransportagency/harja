@@ -15,6 +15,7 @@
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.liitteet :as liite-kyselyt]
             [harja.domain.muutos-domain :as muutos-domain]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
@@ -22,22 +23,6 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
-
-
-(defn tavoitehinnan-muutos
-  "Laskee rivin tavoitehinnan muutoksen. Sen sijainti vaihtelee tyyppikohtaisesti."
-  ;; on hyvä saada tavoitehinnan muutos samaan avaimeen, niin summauslaskennat jne. toimivat myöhemmin suoraan
-  [muutokset]
-  (mapv (fn [rivi]
-          (let [total (if (= (:tyyppi rivi)
-                            "johto-ja-hallintokorvaus")
-                        (or (:jjh-muutosten-summa rivi) 0)
-                        (some->>
-                          (:kustannusvaikutukset rivi)
-                          (map :summa)
-                          (reduce + 0)))]
-            (assoc rivi :tavoitehinnan-muutos total)))
-    muutokset))
 
 (defn- rahavarausten-summarivi [rahavaraukset]
   (let [{:keys [summa-indeksikorjattu toteumat]}
@@ -47,7 +32,10 @@
                    :toteumat (+ (:toteumat acc 0)
                                (or toteumat 0))})
           {}
-          rahavaraukset)]
+          rahavaraukset)
+        ;; Jos rahavaraukset vektori on tyhjä, nil arvoja voi olla
+        summa-indeksikorjattu (or summa-indeksikorjattu 0)
+        toteumat (or toteumat 0)]
     {:id :yhteenveto
      :summa-indeksikorjattu summa-indeksikorjattu
      :toteumat toteumat
@@ -279,21 +267,93 @@
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi))))
 
+(defn urakan-tavoitehinnat-indeksikorjattu
+  "Palauttaa hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu"
+  [db urakka-id hoitokaudet]
+  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+    (into {}
+      (mapv (fn [hoitokausi]
+              (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
+                    vahvistettu? (boolean (some #(and (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi)
+                                                   (:indeksikorjaus-vahvistettu %))
+                                            tavoitehintojen-tilat))]
+                [hoitokauden-alkuvuosi vahvistettu?]))
+        hoitokaudet))))
+
+(defn- laske-indeksikorjattu-summa
+  "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä.
+  Jos summaa ei ole annettu tai indeksiä hoitovuodelle ei löydy, palautetaan nil."
+  [summa urakan-indeksit hoitovuosi-nro]
+  (when summa
+    (indeksi-kyselyt/indeksikorjaa
+      (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitovuosi-nro) summa)))
+
+(defn tavoitehinnan-muutos
+  "Laskee rivin tavoitehinnan muutoksen. Sen sijainti vaihtelee tyyppikohtaisesti."
+  ;; on hyvä saada tavoitehinnan muutos samaan avaimeen, niin summauslaskennat jne. toimivat myöhemmin suoraan
+  [muutokset]
+  (mapv (fn [rivi]
+          (let [total (if (= (:tyyppi rivi)
+                            "johto-ja-hallintokorvaus")
+                        (or (:jjh-muutosten-summa rivi) 0)
+                        (some->>
+                          (:kustannusvaikutukset rivi)
+                          (map :summa)
+                          (reduce + 0)))]
+            (assoc rivi :tavoitehinnan-muutos total)))
+    muutokset))
+
+(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
+  (->> vastaus
+    (mapv (fn [rivi]
+            (-> rivi
+              (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
+              (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
+              (update :liitteet #(konv/jsonb->clojuremap %)))))
+    (tavoitehinnan-muutos)))
+
+
+(defn indeksikorjaa-tavoitehinnan-muutokset [db urakka-id hoitokauden-alkuvuosi muutokset]
+  (if (seq muutokset)
+    (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+          hoitokauden-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakka) hoitokauden-alkuvuosi)
+          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)]
+      (map (fn [rivi]
+             (assoc rivi :tavoitehinnan-muutos-indeksikorjattu
+               (or
+                 (laske-indeksikorjattu-summa (:tavoitehinnan-muutos rivi) urakan-indeksit hoitokauden-nro)
+                 0)))
+        muutokset))
+    muutokset))
+
+(defn hae-aiempien-vuosien-pysyvat-muutokset
+  ([db urakka-id hoitokauden-alkuvuosi]
+   (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi true))
+  ([db urakka-id hoitokauden-alkuvuosi indeksikorjaa?]
+   (let [muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                         {:urakka urakka-id
+                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                          :hae-vain-aiemmat-pysyvat-muutokset? true})
+                     (parsi-kirjatut-muutokset-vastaus))]
+
+     ;; Lasketaan lopuksi tavoitehintojen muutokset indeksikorjaukset
+     (if indeksikorjaa?
+       (indeksikorjaa-tavoitehinnan-muutokset db
+         urakka-id hoitokauden-alkuvuosi muutokset)
+       muutokset))))
 
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "hae-urakan-muutostiedot: " tiedot)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        kirjatut-muutokset-vastaus (mapv
-                                     (fn [rivi]
-                                       (-> rivi
-                                         (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
-                                         (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))
-                                         (update :liitteet #(konv/jsonb->clojuremap %))))
-                                     (muutos-kyselyt/hae-urakan-hoitovuoden-muutostiedot db {:urakka urakka-id
-                                                                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
-        kirjatut-muutokset (tavoitehinnan-muutos kirjatut-muutokset-vastaus)
+        kirjatut-muutokset (->
+                             (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
+                               {:urakka urakka-id
+                                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                :hae-vain-aiemmat-pysyvat-muutokset? false})
+                             (parsi-kirjatut-muutokset-vastaus))
+        aiempien-vuosien-pysyvat-muutokset (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi)
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
@@ -317,21 +377,34 @@
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
+        ;; Mapataan hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu
+        tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id hoitokaudet)
 
         ;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
         tehtava-ja-maaramuutokset (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
                                                                            :hoitokaudet hoitokaudet
                                                                            :valittu-hoitokausi valittu-hoitokausi})
 
-        muutosten-vaikutus-yhteensa (reduce + 0
-                                      (remove nil?
-                                        (concat
-                                          (map :tavoitehinnan-muutos kirjatut-muutokset)
-                                          [(:tavoitehinnan-muutos (last rahavaraukset))]
-                                          (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))]
+        kirjatut-muutokset-yht (reduce + (map :tavoitehinnan-muutos kirjatut-muutokset))
+        aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce +
+                                                        ;; Arvot voivat periaatteessa olla nil, jos indeksikorjausta ei ole
+                                                        ;; tehty, joten poistetaan nillit ennen summauksen laskemista
+                                                        (remove nil?
+                                                          (map :tavoitehinnan-muutos-indeksikorjattu aiempien-vuosien-pysyvat-muutokset)))
+        toteumiin-perustuvat-muutokset-yht (reduce + 0
+                                               (remove nil?
+                                                 (concat
+                                                   [(:tavoitehinnan-muutos (last rahavaraukset))]
+                                                   (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
+        muutosten-vaikutus-yht (+
+                                 (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
+                                 (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
+                                 kirjatut-muutokset-yht
+                                 toteumiin-perustuvat-muutokset-yht)]
 
     {;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
      :kirjatut-muutokset kirjatut-muutokset
+     :aiempien-hoitovuosien-pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
      ;; laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
      :lasketut-muutokset tehtava-ja-maaramuutokset
      :rahavarausten-muutokset rahavaraukset
@@ -339,14 +412,12 @@
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
      :suunniteltujen-maarien-muutokset []
-     :budjettitavoitteet {:indeksikorjaus-vahvistettu? (:indeksikorjaus-vahvistettu budjettitavoiteet)
+     :budjettitavoitteet {:tavoitehinta-indeksikorjattu-per-hoitovuosi tavoitehinnat-indeksikorjattu
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                          :muutosten-vaikutus-yhteensa muutosten-vaikutus-yhteensa
-                          :hoitovuoden-lopun-tavoitehinta (when (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                                                            (+
-                                                              (:tavoitehinta-indeksikorjattu budjettitavoiteet)
-                                                             ;; TODO: tässä huomioitava kaikkien muutosten vaikutus, työversiossa vasta kirjatut muutokset mukana
-                                                              muutosten-vaikutus-yhteensa))}}))
+                          :aiemmat-pysyvat-muutokset-indeksikorjattu-yht aiemmat-pysyvat-muutokset-indeksikorjattu-yht
+                          :kirjatut-muutokset-yht kirjatut-muutokset-yht
+                          :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
+                          :muutosten-vaikutus-yht muutosten-vaikutus-yht}}))
 
 
 
@@ -367,7 +438,7 @@
 
 (defn hae-pysyvan-muutoksen-pohjatiedot
   "Hakee pohjatiedot uuden pysyvän muutoksen lomakkeelle"
-  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos-id muutos-versio] :as tiedot}]
+  [db kayttaja {:keys [urakka-id muutos-id muutos-versio] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
   (let [toimenpiteiden-tiedot (mapv
@@ -379,8 +450,7 @@
                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
                                                                                           :versio muutos-versio
-                                                                                          :urakka urakka-id
-                                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+                                                                                          :urakka urakka-id}))
         toimenpiteiden-tehtavat (hae-toimenpiteiden-tehtavat db urakka-id)]
     {:toimenpiteiden-tiedot toimenpiteiden-tiedot
      :toimenpiteiden-tehtavat toimenpiteiden-tehtavat}))
@@ -390,7 +460,7 @@
 ;;       Olemassaolevaa muutosta muokatessa on myös tarpeen hakea muutoksen id:n perusteella lisää tietoja
 (defn hae-muutoksen-tiedot
   "Palauttaa yksittäisen muutoksen tarkat tiedot lomaketta varten."
-  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi muutos] :as tiedot}]
+  [db kayttaja {:keys [urakka-id muutos] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
   (let [tyyppikohtaiset-tiedot (case (:tyyppi muutos)
@@ -419,7 +489,6 @@
                          (first tyyppikohtaiset-tiedot)
                          (when (= (:tyyppi muutos) "pysyva")
                            (hae-pysyvan-muutoksen-pohjatiedot db kayttaja {:urakka-id urakka-id
-                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                                            :muutos-id (:id muutos)
                                                                            :muutos-versio (:versio muutos)})))
                   :liitteet liitteet)]
@@ -582,9 +651,12 @@
       (when (pos? (:tehtava maaramuutos))
         (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
                             (assoc maaramuutos
-                              ;; TODO: Nämä pitäisi laskea
-                              :uusi_maara 0
-                              :edellinen_maara 0))]
+                              ;; TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                              ;;       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                              ;;       lasketaan. Katsotaan myöhemmin voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
+                              ;;       Ja kuinka monimutkaiseksi useamman muutoksen tietojen yhdistely menee.
+                              #_:uusi_maara 0
+                              #_:edellinen_maara 0))]
           (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 

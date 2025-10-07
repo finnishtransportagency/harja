@@ -5,7 +5,11 @@
 
 (defqueries "harja/kyselyt/paallystys.sql")
 
-(declare yllapitokohteella-paallystysilmoitus hae-urakan-paallystysilmoitukset hae-paikkauskohde-yllapitokohde-idlla)
+(declare yllapitokohteella-paallystysilmoitus hae-urakan-paallystysilmoitukset hae-paikkauskohde-yllapitokohde-idlla
+  hae-hoidon-paallystyksen-kulut-analytiikalle hae-paallystyskohteet-analytiikalle
+  hae-paallystyksen-alikohteet-analytiikalle hae-paallystyskohteiden-aikataulut-analytiikalle
+  hae-paallystysilmoitukset-analytiikalle hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle
+  hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle)
 
 (defn onko-olemassa-paallystysilmoitus? [db yllapitokohde-id]
   (:exists (first (yllapitokohteella-paallystysilmoitus

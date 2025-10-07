@@ -39,7 +39,6 @@
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
@@ -900,7 +899,7 @@
                             (let [kustannukset (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id kuluva-hoitovuosi
                                                  (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi)))
                                   toteutuneet-kustannukset (get-in kustannukset [:yhteensa :yht-toteutunut-summa])
-                                  budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
+                                  budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite db {:urakka urakka-id})
                                   ;; Otetaan käytyn hoitovuoden budjetti
                                   budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
                                   kattohinta (:kattohinta-oikaistu budjettitavoite)
