@@ -274,6 +274,24 @@ VALUES (null,
        'kertaluontoinen'::valitavoite_tyyppi,
        false);
 
+-- Oulun MHU 2019-2024 - valtakunnalliset tavoitteet
+
+INSERT INTO valitavoite (urakka, nimi, takaraja, valtakunnallinen_valitavoite, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Kevään kuntoarvo, massavaatimustiet, pituussuuntaiset merkinnät raportoitu',
+         '2024-05-31',
+         6,
+         false),
+         ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Oulun MHU 2019-2024'),
+         'TEST: Syksyn kuntoarvo, maalivaatimustiet, pituussuuntaiset merkinnät raportoitu',
+         '2024-10-15',
+         7,
+         false);       
+
 -- Valtakunnalliset (toistuvat)
 
 INSERT INTO valitavoite (urakka, nimi, urakkatyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, tyyppi, poistettu)
@@ -481,20 +499,16 @@ VALUES ((SELECT id
          4,
          false);
 
--- Oulun MHU 2019-2024 - valtakunnalliset tavoitteet
+-- ================================================================
+-- PÄÄLLYSTYSURAKOIDEN VÄLITAVOITTEET
+-- ================================================================
 
-INSERT INTO valitavoite (urakka, nimi, takaraja, valtakunnallinen_valitavoite, poistettu)
-VALUES ((SELECT id
-         FROM   urakka
-         WHERE  nimi = 'Oulun MHU 2019-2024'),
-         'TEST: Kevään kuntoarvo, massavaatimustiet, pituussuuntaiset merkinnät raportoitu',
-         '2024-05-31',
-         6,
-         false),
-         ((SELECT id
-         FROM   urakka
-         WHERE  nimi = 'Oulun MHU 2019-2024'),
-         'TEST: Syksyn kuntoarvo, maalivaatimustiet, pituussuuntaiset merkinnät raportoitu',
-         '2024-10-15',
-         7,
-         false);
+-- Utajärven päällystysurakka (id: 7, 2021-2025)
+-- Urakan omat välitavoitteet (ei kohdekohtaisia)
+INSERT INTO valitavoite (nimi, tyyppi, takaraja, valmis_pvm, urakka, yllapitokohde, poistettu, luotu, luoja, muokattu, muokkaaja)
+VALUES 
+    ('Päällystyskohdeluettelo hyväksytty', 'kertaluontoinen', '2021-04-30', NULL, 7, NULL, FALSE, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), NULL, NULL),
+    ('Kaikki kohteet aloitettu', 'kertaluontoinen', '2021-06-30', '2021-06-15', 7, NULL, FALSE, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), NULL, NULL),
+    ('Vuoden 2021 kohteet valmis', 'kertaluontoinen', '2021-09-30', '2021-09-28', 7, NULL, FALSE, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus')),
+    ('Talvikauden tarkastus', 'kertaluontoinen', '2022-03-31', '2022-03-29', 7, NULL, FALSE, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), NULL, NULL),
+    ('Kesäkauden kohteet käynnissä', 'kertaluontoinen', '2022-07-15', NULL, 7, NULL, FALSE, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), NULL, NULL);
