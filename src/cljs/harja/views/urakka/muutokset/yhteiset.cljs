@@ -86,20 +86,16 @@
 
 (defn +rivi-muutos-voimassa+
   ([urakan-hoitokaudet valittu-hoitokausi]
-   (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi false))
-  ([urakan-hoitokaudet valittu-hoitokausi resetoi-hoitovuosi?]
+   (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi true))
+  ([urakan-hoitokaudet valittu-hoitokausi pakota-valittuun-hoitokauteen?]
    {:otsikko "Voimassa alkaen"
     :nimi :voimassa_alkaen
     :tyyppi :pvm
     :pakollinen? true
     ;; Rajoita valinta hoitokaudelle 
     :validoi [(fn [valittu-pvm]
-                
-                ;; Jos esim pysyvä muutos, ei haluta tuota alempaa validointia
-                (if resetoi-hoitovuosi?
-                  (when (nil? valittu-pvm) "Syötä muutoksen voimassaolo pvm")
-
-                  ;; Muussa tapauksessa katsotaan että voimassa alkaen osuu valittuun hoitokauteen
+                (if pakota-valittuun-hoitokauteen?
+                  ;; Katsotaan että voimassa alkaen osuu valittuun hoitokauteen
                   ;; Erityisesti tärkeä muutostyö kirjauksissa 
                   (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
                                                    (pvm/valissa?
@@ -114,17 +110,18 @@
                         "("
                         (pvm/pvm (first valittu-hoitokausi)) " - "
                         (pvm/pvm (second valittu-hoitokausi))
-                        ").")))))]
+                        ").")))
+
+                  ;; Esimerkiksi pysyvässä muutoksessa kevyempi validointi riittää,
+                  ;; koska pysyvässä muutoksessa valitaan hoitokausi erikseen ja voimassa-alkaen
+                  ;; saa osua mihin tahansa hoitokauteen
+                  (when (nil? valittu-pvm) "Syötä muutoksen voimassaolo pvm")))]
     ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
     ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
     :aseta (fn [rivi arvo]
-             (let [resetoi-hoitovuosi-fn #(if resetoi-hoitovuosi?
-                                            (assoc % :hoitovuosi nil)
-                                            %)]
-               (-> rivi
-                 (assoc :voimassa_alkaen arvo)
-                 (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
-                 (resetoi-hoitovuosi-fn))))}))
+             (-> rivi
+               (assoc :voimassa_alkaen arvo)
+               (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)))}))
 
 
 (defn +rivi-muutos-tavoitehinta+ []
@@ -139,7 +136,7 @@
    ::lomake/col-luokka "perustiedot col-xs-6"})
 
 
-(defn lomake-yhteinen [e! 
+(defn lomake-yhteinen [e!
                        {:keys [urakan-hoitokaudet valittu-hoitokausi] :as app}]
   (concat
     [(lomake/ryhma {:otsikko "Perustiedot"}
