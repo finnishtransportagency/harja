@@ -1163,8 +1163,8 @@
                                     :tavoitehinnan-muutos 6000
                                     :tehtavat_ja_maarat ()}]
 
-      (is (= odotettu-luonnin-jalkeen muutos-luonnin-jalkeen) "Muutostiedot luonin jälkeen")
-      (is (= odotettu-updaten-jalkeen muutos-updaten-jalkeen) "Muutostiedot luonin jälkeen")))
+      (is (= odotettu-luonnin-jalkeen muutos-luonnin-jalkeen) "Muutostiedot luonnin jälkeen")
+      (is (= odotettu-updaten-jalkeen muutos-updaten-jalkeen) "Muutostiedot updaten jälkeen")))
 
   (testing "Muutostyö ei kohdistu valittuun hoitokauteen"
     (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
