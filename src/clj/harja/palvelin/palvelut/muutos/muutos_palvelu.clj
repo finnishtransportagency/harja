@@ -738,6 +738,20 @@
                 :kayttaja (:id kayttaja)
                 :alityyppi alityyppi}]
 
+    ;; Validoi voimassa_alkaen päivämäärä
+    (when tyyppi-muutostyo?
+      (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
+                                       (pvm/valissa?
+                                         (:voimassa_alkaen muutos)
+                                         (first valittu-hoitokausi)
+                                         (second valittu-hoitokausi))))]
+        (when (and
+                valittu-hoitokausi
+                (not pvm-hk-valissa?))
+          (throw+ {:type virheet/+viallinen-kutsu+
+                   :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                              :viesti "Voimassa alkaen täytyy kohdistua valittuun hoitokauteen"}]}))))
+
     (jdbc/with-db-transaction [conn db]
 
       (when tyyppi-muutostyo?

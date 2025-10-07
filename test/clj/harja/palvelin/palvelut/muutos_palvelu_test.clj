@@ -1062,6 +1062,134 @@
     (is (= 0 liitelinkkien-maara-liitteiden-poiston-jalkeen) "Liitteiden poistamisen jälkeen ei liitelinkkejä")
     (is (nil? (:liitteet paivitetty-liitteet-poistettu)) "Ei palaudu enää liitteitä kun ne on poistettu muutoksesta.")))
 
+;; --- Muutostyöt ----
+
+(deftest hae-urakan-muutostyot-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                      (range 2021 2026))
+
+        params {:urakka-id urakka-id
+                :valittu-hoitokausi (last hoitokaudet)}
+
+        vastaus (kutsu-palvelua
+                  (:http-palvelin jarjestelma)
+                  :hae-urakan-muutostyot +kayttaja-jvh+ params)]
+
+    (is (= (count vastaus) 2) "Urakalla olemassa 2 muutostyötä")
+
+    (is (some #(= "Erillisrahoitettu sorastusmuutos" (:nimi %)) vastaus)
+      "Muutostyö löytyy")
+
+    (is (some #(= "Tämän hoitovuoden määräpoikkeamamuutos" (:nimi %)) vastaus)
+      "Muutostyö löytyy")
+
+    (is (every? #(= #inst "2025-09-30T21:00:00.000-00:00" (:voimassa_alkaen %)) vastaus)
+      "Molemmilla sama voimassa_alkaen")))
+
+;; TODO: Testaa kulut
+(deftest muutostyo-erillisrahoitettu-tallennus-suomussalmi
+  (testing "Tallennataan erillisrahoitettu muutostyö, joka kohdistuu valittuun hoitokauteen"
+    (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+          valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+          muutos-nimi-insert "Erillisrahoitettu1"
+          muutos-payload {:nimi muutos-nimi-insert
+                          :syy "Erillisrahoitettu testimuutos",
+                          :voimassa_alkaen #inst "2025-10-25T10:07:32.000-00:00",
+                          :tavoitehinnan-muutos 5000,
+                          :tyyppi "muutostyo"
+                          :alityyppi :erillisrahoitus}
+          max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
+          muutos-luonnin-jalkeen (first (filter #(= muutos-nimi-insert (:nimi %))
+                                          (:kirjatut-muutokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :tallenna-muutos
+                                                                 +kayttaja-jvh+
+                                          {:urakka-id urakka-id
+                                           :valittu-hoitokausi valittu-hoitokausi
+                                           :muutos muutos-payload}))))
+          odotettu-luonnin-jalkeen {:id 11
+                                :versio 1
+                                :voimassa_alkaen #inst"2025-10-24T21:00:00.000-00:00"
+                                :urakka 45
+                                :tyyppi "muutostyo"
+                                :alityyppi :erillisrahoitus
+                                :jjh-muutosten-summa nil
+                                :kulu_kohdistus nil
+                                :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                        :kustannuslaji "erillishankinnat"
+                                                        :summa 5000
+                                                        :toimenpideinstanssi nil
+                                                        :versio 1})
+                                :liitteet nil
+                                :luonnos nil
+                                :nimi "Erillisrahoitettu1"
+                                :syy "Erillisrahoitettu testimuutos"
+                                :tavoitehinnan-muutos 5000
+                                :tehtavat_ja_maarat ()}
+          ;; Sitten päivitetään samaa muutosta, jolloin tulee rivi historiatietoon...
+          muutos-syy-update-1 "Erillisrahoitettu testimuutos päivitetty 1"
+          muutos-update-payload-1 (assoc muutos-payload
+                                    :id (inc max-id-ennen-tallennusta)
+                                    :syy muutos-syy-update-1
+                                    :tavoitehinnan-muutos 6000)
+          muutos-updaten-jalkeen (first (filter
+                                          #(= muutos-syy-update-1 (:syy %))
+                                          (:kirjatut-muutokset
+                                            (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :tallenna-muutos
+                                              +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :valittu-hoitokausi valittu-hoitokausi
+                                               :muutos muutos-update-payload-1}))))
+          odotettu-updaten-jalkeen {:id (inc max-id-ennen-tallennusta)
+                                    :versio 2
+                                    :voimassa_alkaen #inst"2025-10-24T21:00:00.000-00:00"
+                                    :urakka 45
+                                    :nimi "Erillisrahoitettu1"
+                                    :syy muutos-syy-update-1
+                                    :tyyppi "muutostyo"
+                                    :alityyppi :erillisrahoitus
+                                    :jjh-muutosten-summa nil
+                                    :kulu_kohdistus nil
+                                    :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                 :kustannuslaji "erillishankinnat"
+                                                                 :summa 6000
+                                                                 :toimenpideinstanssi nil
+                                                                 :versio 2})
+                                    :liitteet nil
+                                    :luonnos nil
+                                    :tavoitehinnan-muutos 6000
+                                    :tehtavat_ja_maarat ()}]
+
+      (is (= odotettu-luonnin-jalkeen muutos-luonnin-jalkeen) "Muutostiedot luonin jälkeen")
+      (is (= odotettu-updaten-jalkeen muutos-updaten-jalkeen) "Muutostiedot luonin jälkeen")))
+
+  (testing "Muutostyö ei kohdistu valittuun hoitokauteen"
+    (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+          valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+          muutos-nimi-insert "Erillisrahoitettu1"
+          muutos-payload {:nimi muutos-nimi-insert
+                          :syy "Erillisrahoitettu testimuutos",
+                          :voimassa_alkaen #inst "2025-06-25T10:07:32.000-00:00",
+                          :tavoitehinnan-muutos 5000,
+                          :tyyppi "muutostyo"
+                          :alityyppi :erillisrahoitus}]
+
+      ;; Heitetään virhe, jos yritetään tallentaa muutostyötä, joka ei kohdistu valittuun hoitokauteen
+      (is (thrown? Exception
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-muutos
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :valittu-hoitokausi valittu-hoitokausi
+                                :muutos muutos-payload}))))))
+
+;; ----
+
+
+;; -- Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset ----
 
 (defn- hae-maaramuutos-alkutiedot []
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -1419,29 +1547,3 @@
       (is (= versio-runkopuut 2))
       (is (= versio-palteet 2))
       (is (= versio-maakivet 2)))))
-
-
-(deftest hae-urakan-muutostyot-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        hoitokaudet (mapv (fn [vuosi]
-                            [(pvm/hoitokauden-alkupvm vuosi)
-                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
-                      (range 2021 2026))
-
-        params {:urakka-id urakka-id
-                :valittu-hoitokausi (last hoitokaudet)}
-
-        vastaus (kutsu-palvelua
-                  (:http-palvelin jarjestelma)
-                  :hae-urakan-muutostyot +kayttaja-jvh+ params)]
-
-    (is (= (count vastaus) 2) "Urakalla olemassa 2 muutostyötä")
-
-    (is (some #(= "Erillisrahoitettu sorastusmuutos" (:nimi %)) vastaus)
-      "Muutostyö löytyy")
-
-    (is (some #(= "Tämän hoitovuoden määräpoikkeamamuutos" (:nimi %)) vastaus)
-      "Muutostyö löytyy")
-
-    (is (every? #(= #inst "2025-09-30T21:00:00.000-00:00" (:voimassa_alkaen %)) vastaus)
-      "Molemmilla sama voimassa_alkaen")))
