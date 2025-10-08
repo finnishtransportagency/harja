@@ -741,13 +741,13 @@ SELECT urakkanro AS alueurakkanro
 FROM urakka
 WHERE id = :id;
 
--- name: hae-aktiivisten-hoitourakoiden-alueurakkanumerot
--- Hakee käynnissäolevien hoitourakoiden alueurakkanumerot
+-- name: hae-aktiivisten-hoitourakoiden-urakkanumerot
+-- Hakee käynnissäolevien hoitourakoiden urakkanumerot
 SELECT
   u.id,
   u.hanke,
   u.nimi,
-  lpad(cast(u.urakkanro AS VARCHAR), 4, '0') AS alueurakkanro
+  u.urakkanro 
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka
