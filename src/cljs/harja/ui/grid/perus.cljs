@@ -855,7 +855,7 @@
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
   :muokattava?                          funktio, jonka avulla päätellään, voiko solun tietoja muokata. Anna esim. (constantly false) - Olisi hyvä, jos tämä voitaisiin joskus nimetä :solu-muokattava?
-   
+  :piilota-muokkaus?                    Default false, piilottaa muokkausrivin.
   :sivuta                               Ottaa integerin montako riviä näkyy yhdellä sivulla. Lisää sivutuksen (paginaation) taulukkoon
                                         Tälle olemassa myös muuttuja grid/vakiosivutus, mutta voi antaa minkä vaan numeron 
   :piilota-sivutus-footer?              Boolean mikäli halutaan piilottaa taulukon alapuolen sivutuskontrollit,

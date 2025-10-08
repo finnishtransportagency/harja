@@ -34,6 +34,7 @@
 (defrecord ToggleTallennus [])
 (defrecord PeruutaTallennus [])
 (defrecord PaivitaTehtavatGrid [tehtavat])
+(defrecord AvaaRivi [tehtavat])
 
 (extend-protocol tuck/Event
 
@@ -55,7 +56,9 @@
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :tehtavaryhman-tehtavat (:tehtavaryhman-tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
       ))
 
   HaeTehtavatJaMaaratEpaonnistui
@@ -110,4 +113,13 @@
 
     (assoc app :tallennustila? (not (:tallennustila? app))))
 
+  AvaaRivi
+  (process-event [{avain :avain} app]
+    (let [_ (js/console.log "AvaaRivi :: avain " (pr-str avain))
+          app (if (nil? (:avatut-rivit app))
+                (assoc app :avatut-rivit #{})
+                app)]
+      (if (contains? (:avatut-rivit app) avain)
+        (assoc app :avatut-rivit (disj (:avatut-rivit app) avain))
+        (assoc app :avatut-rivit (merge (:avatut-rivit app) avain)))))
   )

@@ -1,5 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
   (:require [harja.pvm :as pvm]
+            [harja.ui.dom :as dom]
             [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
@@ -48,17 +49,53 @@
         {:disabled (or tallennus-kesken? false)}]]]
 
      [:span {:style {:margin-left "1rem"}}
-      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä"  #(e! (tiedot/->ToggleTallennus))
+      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennus))
        {:vayla-tyyli? true}]])])
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat]
+(defn- avaa-tai-sulje-haitari [event e! tehtavaryhmaotsikko]
+  (when (dom/enter-nappain? event)
+    (e! (tiedot/->AvaaRivi tehtavaryhmaotsikko))))
+
+(defn- piirra-caret [e! tehtavaryhmaotsikko avatut-rivit]
+  (if (contains? avatut-rivit tehtavaryhmaotsikko)
+    [:img {:alt "Expander"
+           :src "images/expander-down.svg"
+           :tabIndex "0"
+           :on-key-down #(avaa-tai-sulje-haitari % e! tehtavaryhmaotsikko)}]
+    [:img {:alt "Expander"
+           :src "images/expander.svg"
+           :tabIndex "0"
+           :on-key-down #(avaa-tai-sulje-haitari % e! tehtavaryhmaotsikko)}]))
+
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit]
   (let [_ (js/console.log "Tehtavataulukko :: tallennustila?" (pr-str tallennustila?) tallennustila? (boolean tallennustila?))
-        sarakkeet [{:otsikko "nro" :leveys "30%" :nimi :jarjestys :tyyppi :numero :muokattava? (constantly false)}
-                   {:otsikko "Tehtävä" :leveys "30%" :nimi :nimi :tyyppi :teksti :muokattava? (constantly false)}
-                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :euro :tasaa :vasen :fmt (partial fmt/euro-opt false) :muokattava? (constantly (or tallennustila? false))}
-                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :vasen :muokattava? (constantly false)}
-                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :vasen :muokattava? (constantly false)}
-                   {:otsikko "Yksikkö" :leveys "20%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false)}]]
+        solun-luokka-fn (fn [_arvo rivi]
+                          (when (or
+                                  haku-kaynnissa?
+                                  (some? (:valiotsikko rivi))) "vaalen-tumma-tausta"))
+        sarakkeet [{:otsikko "nro" :leveys "5%"
+                    :tyyppi :komponentti
+                    :komponentti (fn [rivi]
+                                   (piirra-caret e! (:tehtavaryhmaotsikko rivi) avatut-rivit))
+                    :solun-luokka solun-luokka-fn}
+                   {:otsikko "Tehtävä"
+                    :leveys "30%"
+                    :nimi :tehtava
+                    :solun-luokka solun-luokka-fn
+                    :muokattava? (constantly true)
+                    :tyyppi :komponentti
+                    :komponentti (fn [{:keys [tehtava_id nimi valiotsikko]}]
+                                   (if tehtava_id
+                                     [:<> nimi]
+                                     [:div.body-text.strong valiotsikko]))}
+                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :euro :tasaa :vasen :fmt (partial fmt/euro-opt false)
+                    :muokattava? #(and
+                                    tallennustila?
+                                    ;; Älä anna muokata väliotsikkorivejä
+                                    (nil? (:valiotsikko %))) :solun-luokka solun-luokka-fn}
+                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}
+                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}
+                   {:otsikko "Yksikkö" :leveys "20%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid
@@ -66,21 +103,26 @@
         :tyhja "Ei tietoja."
         :luokat ["matala-panel"]
         :data-cy "tehtavat-ja-maarat-grid"
-        :muokkaa-aina (or tallennustila? false)
+        :muokkaa-aina true
         :voi-muokata? (or tallennustila? false)
-        :muokattava? (constantly (or tallennustila? false))
         :voi-poistaa? (constantly false)
+        :peruuta false
         :voi-lisata? false
         :voi-kumota? false
-        :piilota-toiminnot? false
-        :tunniste :tehtava_id
+        :piilota-toiminnot? true
+        :piilota-muokkaus? true
+        :tunniste :nimi
         :jarjesta :jarjestys
         :muutos #(do
-                   (e! (tiedot/->PaivitaTehtavatGrid (vals (grid/hae-muokkaustila %)))))}
+                   (e! (tiedot/->PaivitaTehtavatGrid (vals (grid/hae-muokkaustila %)))))
+        :rivi-klikattu (fn [rivi]
+                         (js/console.log "Rivi klikattu: " (pr-str rivi))
+                         (e! (tiedot/->AvaaRivi (:valiotsikko rivi))))}
        sarakkeet
        tehtavat-ja-maarat])))
 
-(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat] :as app}]
+(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
+                         tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit] :as app}]
   (js/console.log "nakyma")
   [:div#vayla
    [:div.row
@@ -94,7 +136,7 @@
       #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
 
    [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
-   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat]
+   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit]
    [debug/debug app]])
 
 (defn tehtavat-maarat*
