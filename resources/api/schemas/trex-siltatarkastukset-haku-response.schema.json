@@ -28,6 +28,10 @@
                 "type": "string",
                 "description": "Siltatarkastuksen suoritaneen henkilön nimi. Esim. Mari Meikäläinen. Tieto on henkilötieto, käsittele sitä sen mukaisesti."
               },
+              "harja-url": {
+                "type": "string",
+                "description": "Suora linkki siltatarkastukseen Harja-sovelluksessa. Tarkastuksen katselu vaatii sisäänkirjautumisen Väyläviraston palveluihin ja riittävät oikeudet Harja-sovelluksessa. Kun kirjautumistiedot ovat kunnossa, linkki avaa halutun siltatarkastuksen käyttöliittymään. Käyttäjä pääsee siltatarkastuksesta katselmaan siihen liittyviä kuvia."
+              },
               "luotu": {
                 "type": "string",
                 "format": "date-time",
@@ -109,7 +113,7 @@
                           "type": "integer",
                           "minimum": 1,
                           "maximum": 24,
-                          "description": "Siltatarkastuskohteen tyypin id. Esim. 3. Eri kohdetyyppejä on Harjassa tällä hetkellä 24. Kohdetyypit kuuluvat kolmeen päärakenneosaan. Mikäli kohdetyyppejä tulee tulevaisuudessa lisää, tämän elementin maksimiarvo muuttuu."
+                          "description": "Siltatarkastuskohteen tyypin id. Esim. 3. Eri kohdetyyppejä on Harjassa tällä hetkellä 24. Kohdetyypit kuuluvat kolmeen päärakenneosaan. Mikäli kohdetyyppejä tulee tulevaisuudessa lisää, tämän elementin maksimiarvo muuttuu. Tyyppi-id yksilöi siltatarkastuskohteen."
                         },
                         "tyyppi": {
                           "type": "string",

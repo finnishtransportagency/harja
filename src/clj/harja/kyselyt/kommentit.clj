@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/kommentit.sql"
   {:positional? true})
+
+(declare luo-kommentti<!)
