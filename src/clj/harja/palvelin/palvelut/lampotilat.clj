@@ -29,7 +29,7 @@
                                                 (str/replace url "tieindeksi2" "tieindeksi") apiavain nil)
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url apiavain 1981)
         ;; Ei voida hakea 91-20 keskiarvoa ennen vuotta 2021, koska keskiarvoa ei ole muodostettu.
-        hoidon-urakoiden-lampotilat-1991-2020 (when (w> vuosi 2020)
+        hoidon-urakoiden-lampotilat-1991-2020 (when (> vuosi 2020)
                                                 (hae-urakoiden-lampotilat url apiavain 1991))
         hoidon-urakka-ja-alueurakkanro-avaimet
         (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
