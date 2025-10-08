@@ -5,11 +5,35 @@
 
 (defonce nakymassa? (atom false))
 
+;; Muutosten seuranta
+(defonce tallentamattomia-muutoksia (atom false))
+
+(defn merkitse-muutos!
+  "Merkitsee että muutoksia on tehty"
+  []
+  (reset! tallentamattomia-muutoksia true))
+
+(defn nollaa-muutokset!
+  "Nollaa muutosten seurannan"
+  []
+  (reset! tallentamattomia-muutoksia false))
+
+(defn onko-muutoksia?
+  "Tarkistaa onko tallentamattomia muutoksia"
+  []
+  @tallentamattomia-muutoksia)
+
 (defrecord HaeTehtavatJaMaarat [parametrit])
 (defrecord HaeTehtavatJaMaaratOnnistui [vastaus parametrit])
 (defrecord HaeTehtavatJaMaaratEpaonnistui [vastaus parametrit])
 
-(defrecord ToggleMuuttuneetTehtavat [])
+(defrecord TallennaTehtavat [tehtavat])
+(defrecord TallennaTehtavatOnnistui [vastaus])
+(defrecord TallennaTehtavatEpaonnistui [vastaus])
+
+(defrecord ToggleTallennus [])
+(defrecord PeruutaTallennus [])
+(defrecord PaivitaTehtavatGrid [tehtavat])
 
 (extend-protocol tuck/Event
 
@@ -28,12 +52,11 @@
 
   HaeTehtavatJaMaaratOnnistui
   (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaaratOnnistui :: vastaus" (pr-str vastaus))
-    (js/console.log "HaeTehtavatJaMaaratOnnistui :: parametrit" (pr-str parametrit))
-
     (-> app
       (assoc :haku-kaynnissa? false)
-      (assoc :tehtavat-ja-maarat vastaus)))
+      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      ))
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus parametrit :parametrit} app]
@@ -41,9 +64,50 @@
     (-> app
       (assoc :haku-kaynnissa? false)))
 
-  ToggleMuuttuneetTehtavat
-  (process-event [_ app]
-    (js/console.log "ToggleMuuttuneetTehtavat")
-    (assoc app :nayta-muuttuneet-tehtavat (not (:nayta-muuttuneet-tehtavat app))))
+  TallennaTehtavat
+  (process-event [{tehtavat :tehtavat} app]
+    (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+       :tehtavat tehtavat}
+      {:onnistui ->TallennaTehtavatOnnistui
+       :epaonnistui ->TallennaTehtavatEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :tallennus-kaynnissa? true))
 
-    )
+  TallennaTehtavatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+      (assoc :tallennus-kaynnissa? false)
+      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))))
+
+  TallennaTehtavatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+      (assoc :tallennus-kaynnissa? false)))
+
+  PaivitaTehtavatGrid
+  (process-event [{tehtavat :tehtavat} app]
+    (js/console.log "PaivitaTehtavatGrid")
+    (merkitse-muutos!)
+    (assoc app :tehtavat-ja-maarat (sort-by :jarjestys tehtavat)))
+
+  ToggleTallennus
+  (process-event [_ app]
+    (js/console.log "ToggleTallennus")
+    (assoc app :tallennustila? (not (:tallennustila? app))))
+
+  PeruutaTallennus
+  (process-event [_ app]
+    (js/console.log "ToggleTallennus")
+
+    (tuck-apurit/post! :hae-tehtavat-ja-maarat
+      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+       :hoitokauden-alkuvuosi :kaikki}
+      {:onnistui ->HaeTehtavatJaMaaratOnnistui
+       :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
+       :paasta-virhe-lapi? true})
+
+    (assoc app :tallennustila? (not (:tallennustila? app))))
+
+  )

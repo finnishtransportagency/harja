@@ -1,5 +1,7 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
-  (:require [tuck.core :as tuck]
+  (:require [harja.pvm :as pvm]
+            [tuck.core :as tuck]
+            [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka :as u]
@@ -11,60 +13,89 @@
             [harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot :as tiedot]
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn tehtava-taulukko [e! {:keys [haku-kaynnissa? tehtavat-ja-maarat nayta-muuttuneet-tehtavat]}]
-  (let [sarakkeet [{:otsikko "Tehtävä" :leveys "30%" :nimi :nimi}
-                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :sopimus-maara}
-                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset}
-                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut-maara}]]
+(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
+  [:div.painikkeet.text-right
+   [:div.grid-status-viestit
+    (cond
+      (and (tiedot/onko-muutoksia?) viimeisin-muokkaus)
+      [:<>
+       [:div.status-viesti.tallennettu
+        (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+       [:div.status-viesti.tallentamatta
+        "Tallentamattomia muutoksia"]]
+
+      (tiedot/onko-muutoksia?)
+      [:div.status-viesti.tallentamatta
+       "Tallentamattomia muutoksia"]
+
+      viimeisin-muokkaus
+      [:div.status-viesti.tallennettu
+       (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+
+      :else
+      [:div.status-viesti.ei-muutoksia
+       "Ei tallennettuja muutoksia"])]
+
+   (if tallennustila?
+     [:div
+      [:span {:style {:margin-left "1rem"}}
+       [napit/yleinen-ensisijainen "Tallenna"
+        #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat))
+        {:disabled (or tallennus-kesken? false)}]]
+      [:span {:style {:margin-left "1rem"}}
+       [napit/yleinen-toissijainen "Peruuta"
+        #(e! (tiedot/->PeruutaTallennus))
+        {:disabled (or tallennus-kesken? false)}]]]
+
+     [:span {:style {:margin-left "1rem"}}
+      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä"  #(e! (tiedot/->ToggleTallennus))
+       {:vayla-tyyli? true}]])])
+
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat]
+  (let [_ (js/console.log "Tehtavataulukko :: tallennustila?" (pr-str tallennustila?) tallennustila? (boolean tallennustila?))
+        sarakkeet [{:otsikko "nro" :leveys "30%" :nimi :jarjestys :tyyppi :numero :muokattava? (constantly false)}
+                   {:otsikko "Tehtävä" :leveys "30%" :nimi :nimi :tyyppi :teksti :muokattava? (constantly false)}
+                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :euro :tasaa :vasen :fmt (partial fmt/euro-opt false) :muokattava? (constantly (or tallennustila? false))}
+                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :vasen :muokattava? (constantly false)}
+                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :vasen :muokattava? (constantly false)}
+                   {:otsikko "Yksikkö" :leveys "20%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false)}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid
-       {:otsikko ""}
+       {:otsikko ""
+        :tyhja "Ei tietoja."
+        :luokat ["matala-panel"]
+        :data-cy "tehtavat-ja-maarat-grid"
+        :muokkaa-aina (or tallennustila? false)
+        :voi-muokata? (or tallennustila? false)
+        :muokattava? (constantly (or tallennustila? false))
+        :voi-poistaa? (constantly false)
+        :voi-lisata? false
+        :voi-kumota? false
+        :piilota-toiminnot? false
+        :tunniste :tehtava_id
+        :jarjesta :jarjestys
+        :muutos #(do
+                   (e! (tiedot/->PaivitaTehtavatGrid (vals (grid/hae-muokkaustila %)))))}
        sarakkeet
        tehtavat-ja-maarat])))
 
-(defn nakyma [e! {:keys [haku-kaynnissa? nayta-muuttuneet-tehtavat] :as app}]
-  (let [valittu-toimenpide {:nimi "Talvihoito"}]
-    [:div#vayla
+(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat] :as app}]
+  (js/console.log "nakyma")
+  [:div#vayla
+   [:div.row
+    [:div.col-xs-12
+     [:h1 "Tehtävät ja määrät"]]]
 
-     [:div.row
-      [:div.col-xs-12
-       [:h1 "Tehtävät ja määrät"]]]
+   [:div.flex-row {:style {:justify-content "flex-start"}}
+    [:div.filtteri {:style {:width "200px"}}
+     [urakka-valinnat/paivittava-urakkavuosi-tuck
+      @u/valittu-aikavali
+      #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
 
-     [:div.flex-row {:style {:justify-content "flex-start"}}
-      [:div.filtteri {:style {:width "200px"}}
-       [urakka-valinnat/paivittava-urakkavuosi-tuck
-        @u/valittu-aikavali
-        #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]
-
-      [:div.filtteri.label-ja-kentta {:style {:padding-left "1rem" :padding-top "23px"}}
-       [:div
-        [napit/yleinen-toissijainen "Tuo tiedot excelistä" #(js/console.log "Tuo tiedot excelistä :: Ei vielä toiminnallisuutta")
-         {:vayla-tyyli? true}]]]]
-
-     [:div.flex-row {:style {:justify-content "flex-start"}}
-      [:div.filtteri {:style {:width "200px"}}
-       [yleiset/pudotusvalikko
-        "Toimenpide"
-        {:valinta valittu-toimenpide
-         :valitse-fn #(e! (tiedot/->HaeTehtavatJaMaarat {:toimenpide %}))
-         :vayla-tyyli? true
-         :format-fn :nimi}
-        [{:nimi "Näytä kaikki"} {:nimi "Talvihoito"} {:nimi "Liikenneympäristön hoito"}]]]
-
-      [:div.filtteri.label-ja-kentta {:style {:padding-left "1rem" :padding-top "45px"}}
-       [:div
-        [kentat/raksiboksi {:teksti "Näytä vain muuttuneet tehtävät"
-                            :tiivis? true
-                            :toiminto #(e! (tiedot/->ToggleMuuttuneetTehtavat))}
-         nayta-muuttuneet-tehtavat]]]]
-
-     [:div.row
-      [:div.col-xs-12.col-md-2
-       [napit/yleinen-ensisijainen "Lisää muutos" #(js/console.log "Lisää muutos :: Ei vielä toiminnallisuutta")]]]
-
-     (tehtava-taulukko e! app)
-     [debug/debug app]]))
+   [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
+   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat]
+   [debug/debug app]])
 
 (defn tehtavat-maarat*
   [e! _]

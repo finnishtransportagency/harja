@@ -37,7 +37,8 @@
                                                       :toimenpide nil
                                                       :valitaso nil
                                                       :noudetaan 0}}
-                                :tehtavat-maarat {:nayta-muuttuneet-tehtavat true}
+                                :tehtavat-maarat {:nayta-muuttuneet-tehtavat true
+                                                  :tallennustila? true}
                                 :kustannussuunnitelma kustannussuunnitelma-default
                                 :suolarajoitukset suolarajoitukset-default})
 
