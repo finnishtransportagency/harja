@@ -894,7 +894,8 @@
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
   :custom-toiminto                      Muokkauspaneeliin vietävä custom-toiminto
-  :paneelikomponentit                   vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.\n  :tunniste                             rivin tunnistava kenttä, oletuksena :id
+  :paneelikomponentit                   vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
+  :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
@@ -918,7 +919,9 @@
                                         oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
+  :muokkaa-aina                         Jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole.
+                                        Jos haluat asettaa gridin ulkopuolisella napilla muokkaustilaan, niin jätä tämä aina trueksi
+                                        ja säädä yksittäisen kolumnin muokkaustatusta :muokattava? attribuutilla otsikkotiedoista.
   :muutos                               jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                         Parametrina Grid ohjauskahva
   :prosessoi-muutos                     funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
