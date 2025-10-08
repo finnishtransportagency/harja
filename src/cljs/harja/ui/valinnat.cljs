@@ -118,19 +118,31 @@
        @hoitokaudet]])))
 
 (defn urakan-hoitokausi-tuck
+  "Hoitokauden valinta Tuck-arkkitehtuurilla.
+  
+  Optiot:
+  - :wrapper-luokka - CSS-luokka (oletus: 'col-xs-6.col-md-3')
+  - :kaikki-valinta? - Lisää 'Kaikki' valinnan (arvo nil)"
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
-        vuosi-termi (palauta-urakkatyypin-vuosi-termi urakkatyyppi)]
-    [:div {:class (if (:wrapper-luokka optiot)
-                    (:wrapper-luokka optiot)
-                    "col-xs-6.col-md-3")}
+        vuosi-termi (palauta-urakkatyypin-vuosi-termi urakkatyyppi)
+        kaikki-valinta? (:kaikki-valinta? optiot)
+        kaikki-teksti "Kaikki"
+        valinnat (if kaikki-valinta?
+                   (concat [nil] hoitokaudet)
+                   hoitokaudet)]
+    [:div {:class (or (:wrapper-luokka optiot) "col-xs-6.col-md-3")}
      [:label.alasvedon-otsikko-vayla vuosi-termi]
-     [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
-                                   :vayla-tyyli? true
-                                   :skrollattava? true
-                                   :valitse-fn tuck-event
-                                   :format-fn #(if % (fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet vuosi-termi) "Valitse")}
-      hoitokaudet]]))
+     [yleiset/livi-pudotusvalikko
+      {:valinta valittu-hoitokausi
+       :vayla-tyyli? true
+       :skrollattava? true
+       :valitse-fn tuck-event
+       :format-fn (fn [hk]
+                    (if hk
+                      (fmt/hoitokauden-jarjestysluku-ja-vuodet hk hoitokaudet vuosi-termi)
+                      kaikki-teksti))}
+      valinnat]]))
 
 (defn hoitokausi
   ([hoitokaudet valittu-hoitokausi-atom]
