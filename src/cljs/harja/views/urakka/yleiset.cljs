@@ -313,10 +313,7 @@
                                                               [uusi-varalla])
                                                             (if (= :ei-muutosta uudet-varalla-toissijaiset)
                                                               varalla-toissijaiset
-                                                              uudet-varalla-toissijaiset))
-                                            rooli (case rooli
-                                                              #{"ELY_Urakanvalvoja", "Tilaajan_Urakanvalvoja"} "Tilaajan_Urakanvalvoja"
-                                                              "vastuuhenkilo" "vastuuhenkilo")]
+                                                              uudet-varalla-toissijaiset))]
 
                                         (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
