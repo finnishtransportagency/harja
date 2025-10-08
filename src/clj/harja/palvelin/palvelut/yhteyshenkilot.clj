@@ -228,7 +228,9 @@
 
   (let [luo<! (fn [c kayttaja ensisijainen]
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
-                                                 :rooli rooli
+                                                 :rooli (if (= rooli "vastuuhenkilo")
+                                                                  rooli
+                                                                  (or (first (:roolinimet kayttaja))(:rooli kayttaja)))
                                                  :etunimi  (:etunimi kayttaja)
                                                  :sukunimi (:sukunimi kayttaja)
                                                  :puhelin (:puhelin kayttaja)
@@ -237,7 +239,11 @@
                                                  :ensisijainen ensisijainen
                                                  :toissijainen-varahenkilo (:toissijainen-varahenkilo kayttaja)}))]
     (jdbc/with-db-transaction [c db]
-      (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
+      (if (= rooli "vastuuhenkilo")
+        (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
+        (do
+          (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli "ELY_Urakanvalvoja"})
+          (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli "Tilaajan_Urakanvalvoja"})))
       (when vastuuhenkilo
         (luo<! c vastuuhenkilo true))
       (doseq [varahenkilo varahenkilot]
@@ -326,4 +332,3 @@
       :tallenna-urakan-vastuuhenkilot-roolille
       :tallenna-urakan-yleinen-puh-ja-sposti)
     this))
-

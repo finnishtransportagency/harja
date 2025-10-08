@@ -674,9 +674,6 @@
                                                          (= valittujen-valintojen-maara 1) (or
                                                                                              yksi-valittu-teksti
                                                                                              (str "1" (first teksti)))
-                                                         (and
-                                                           (= 0 (:id (first valinnat)))
-                                                           (:valittu? (first valinnat))) "Kaikki valittu"
                                                          :else (str valittujen-valintojen-maara (second teksti)))]
                                  naytettava-teksti)
               :itemit-komponentteja? true}
