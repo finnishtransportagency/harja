@@ -622,7 +622,7 @@
     (doseq [kustannusvaikutus kustannusvaikutukset]
       (let [kustannusvaikutus (luo-kustannusvaikutus muutos-id (or muutos-versio 1) kustannusvaikutus)]
         (if tyyppi-muutostyo?
-          (muutos-kyselyt/paivita-erillisrahoitettu-kustannusvaikutus<! db kustannusvaikutus)
+          (muutos-kyselyt/luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<! db kustannusvaikutus)
           (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus))))))
 
 

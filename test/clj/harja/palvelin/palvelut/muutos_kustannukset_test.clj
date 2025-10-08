@@ -74,7 +74,7 @@
 
 
 (defn- tarkista-muutos-kulu-on-validi "Tarkistaa että vastaus on validi, ja kulu tallennettiin"
-  [uusi-muutos-kulu kulu-erapaiva muutos-voimassa]
+  [uusi-muutos-kulu kulu-erapaiva muutos-voimassa-alkaen]
   (is (= kulu-erapaiva (:erapaiva uusi-muutos-kulu)))
   (is (= 188M (:kokonaissumma uusi-muutos-kulu)))
   (is (= "lokakuu/5-hoitovuosi" (:koontilaskun-kuukausi uusi-muutos-kulu)))
@@ -85,7 +85,7 @@
     (is (= :true (:tavoitehintainen kohdistus)))
     (is (= "kokonaishintainen" (:maksueratyyppi kohdistus)))
     (is (= 188M (:summa kohdistus)))
-    (is (= muutos-voimassa (:muutos-voimassa kohdistus)))
+    (is (= muutos-voimassa-alkaen (:muutos-voimassa-alkaen kohdistus)))
     (is (= nil (:tehtavaryhma kohdistus)))
     (is (= nil (:muokkausaika kohdistus)))
     (is (= "erillisrahoitettu-muutos" (:tyyppi kohdistus)))
@@ -125,7 +125,7 @@
           erillisrahoitettu-kulu-seurannassa (filter #(= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) kustannusten-seuranta)
           e (first erillisrahoitettu-kulu-seurannassa)]
 
-      ;; Erillisrahoitettu muutos kulu on nyt tallennettu, ja pitäisi näkyä seurannassa 
+      ;; Erillisrahoitettu muutos kulu on nyt tallennettu, ja pitäisi näkyä seurannassa
       (is (= 250M (:kokonaissumma kulu-vastaus)) "Kulu tallentui kantaan")
 
       (is (= "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
@@ -143,7 +143,7 @@
       (is (= "MHU Korvausinvestointi" (:toimenpide e)))
       (is (= "2025-10-02" (str (:ajankohta e))))))
 
-  
+
   (testing "Pysyvät muutokset näkyvät kustannusten seurannassa (testidata)"
     (let [kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
                                                             :alkupvm "2025-10-01"
@@ -211,9 +211,9 @@
                           :liitteet [],
                           :tyyppi "laskutettava",
                           :koontilaskun-kuukausi "lokakuu/5-hoitovuosi"}
-        
+
         paivita-erapaivat-fn (fn [muutostyo-voimassa kulu-erapaiva]
-                               (let [_ (i (format 
+                               (let [_ (i (format
                                             "UPDATE mhu_muutos SET voimassa_alkaen = '%s' WHERE id = %s;"
                                             muutostyo-voimassa (:id erillisrahoitettu-muutostyo)))
                                      ;; Hae päivitetyt muutostyöt
@@ -234,7 +234,7 @@
                       :tallenna-kulu +kayttaja-jvh+
                       {:urakka-id     +urakka+
                        :kulu-kohdistuksineen uusi-muutos-kulu})]
-        ;; Tarkista, että kulu palautuu validina 
+        ;; Tarkista, että kulu palautuu validina
         (tarkista-muutos-kulu-on-validi vastaus kulu-erapaiva muutos-voimassa-inst)))
 
 
@@ -248,7 +248,7 @@
                       :tallenna-kulu +kayttaja-jvh+
                       {:urakka-id     +urakka+
                        :kulu-kohdistuksineen uusi-muutos-kulu})]
-        ;; Tarkista, että kulu palautuu validina 
+        ;; Tarkista, että kulu palautuu validina
         (tarkista-muutos-kulu-on-validi vastaus kulu-erapaiva muutos-voimassa-inst)))
 
 

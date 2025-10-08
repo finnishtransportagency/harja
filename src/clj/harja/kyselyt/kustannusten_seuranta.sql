@@ -173,8 +173,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS jarjestys,
        'hoidonjohdonpalkkio'                          AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                     AS kulu_tyyppi,
+       NULL::TEXT                                     AS muutostyo_syy
 from toimenpide tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id,
@@ -209,8 +209,8 @@ SELECT SUM((hjh.tunnit * hjh.tuntipalkka * hjh."osa-kuukaudesta")) AS budjetoitu
        160                                                         AS jarjestys,
        'johto-ja-hallintokorvaus'                                  AS paaryhma,
        hjh.indeksikorjaus_vahvistettu                              AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                                  AS kulu_tyyppi,
+       NULL::TEXT                                                  AS muutostyo_syy
 FROM johto_ja_hallintokorvaus hjh
          LEFT JOIN johto_ja_hallintokorvaus_toimenkuva jjht on hjh."toimenkuva-id" = jjht.id
 WHERE hjh."urakka-id" = :urakka
@@ -232,8 +232,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        160                                            AS jarjestys,
        'johto-ja-hallintokorvaus'                     AS paaryhma,
        kt.indeksikorjaus_vahvistettu                  AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                     AS kulu_tyyppi,
+       NULL::TEXT                                     AS muutostyo_syy
 from toimenpide tk,
      kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
@@ -468,8 +468,8 @@ SELECT 0                          AS budjetoitu_summa,
            WHEN tr.yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' THEN 'kattohinnan-ylitys'
            END                   AS paaryhma,
            NOW()                 AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+           NULL::TEXT            AS kulu_tyyppi,
+           NULL::TEXT            AS muutostyo_syy
 FROM kulu_kohdistus lk
      LEFT JOIN mhu_muutos mm ON mm.id = lk.muutos 
      LEFT JOIN tehtavaryhma tr ON tr.id = lk.tehtavaryhma,
@@ -518,8 +518,8 @@ SELECT 0                                            AS budjetoitu_summa,
            WHEN tk_tehtava.yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' then 'hoidonjohdonpalkkio' --'c9712637-fbec-4fbd-ac13-620b5619c744' THEN 'hoidonjohdonpalkkio'
            END                                      AS paaryhma,
        t.indeksikorjaus_vahvistettu                 AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                   AS kulu_tyyppi,
+       NULL::TEXT                                   AS muutostyo_syy
     FROM toteutuneet_kustannukset t
          LEFT JOIN tehtava tk_tehtava ON tk_tehtava.id = t.tehtava
          LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma,
@@ -548,8 +548,8 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        0                                              AS jarjestys,
        'ulkopuoliset-rahavaraukset'                   AS paaryhma,
        NOW()                                          AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy 
+       NULL::TEXT                                     AS kulu_tyyppi,
+       NULL::TEXT                                     AS muutostyo_syy 
 FROM kustannusarvioitu_tyo kt,
      sopimus s
 WHERE s.urakka = :urakka
@@ -588,8 +588,8 @@ CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS
        0                        AS jarjestys,
        'bonukset'               AS paaryhma,
        NOW()                    AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT               AS kulu_tyyppi,
+       NULL::TEXT               AS muutostyo_syy
 FROM erilliskustannus ek
      JOIN urakka u ON ek.urakka = u.id,
      sopimus s
@@ -620,8 +620,8 @@ SELECT 0                       AS budjetoitu_summa,
        0                       AS jarjestys,
        'sanktiot'              AS paaryhma,
        NOW()                   AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT              AS kulu_tyyppi,
+       NULL::TEXT              AS muutostyo_syy
 FROM sanktio s
      JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
      JOIN sanktiotyyppi st ON s.tyyppi = st.id
@@ -643,8 +643,8 @@ SELECT 0                                          AS budjetoitu_summa,
        0                                          AS jarjestys,
        'siirto'                                   AS paaryhma,
        NOW()                                      AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                 AS kulu_tyyppi,
+       NULL::TEXT                                 AS muutostyo_syy
 FROM paatos_tavoitehinta_alitus pta
 WHERE pta.urakkaid = :urakka
   AND pta.hoitokauden_alkuvuosi+1 = :hoitokauden-alkuvuosi::INTEGER -- Haetaan edellisen vuoden päätöksestä
@@ -664,8 +664,8 @@ SELECT 0                                          AS budjetoitu_summa,
     0                                             AS jarjestys,
     'siirto'                                      AS paaryhma,
     NOW()                                         AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+    NULL::TEXT                                    AS kulu_tyyppi,
+    NULL::TEXT                                    AS muutostyo_syy
 FROM paatos_kattohinta pk
 WHERE pk.urakkaid = :urakka
   AND pk.hoitokauden_alkuvuosi+1 = :hoitokauden-alkuvuosi::INTEGER -- Haetaan edellisen vuoden päätöksestä
@@ -685,8 +685,8 @@ SELECT COALESCE(pta.tavoitepalkkio, 0)            AS budjetoitu_summa,
         0                                         AS jarjestys,
        'tavoitepalkkio'                           AS paaryhma,
        NOW()                                      AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                 AS kulu_tyyppi,
+       NULL::TEXT                                 AS muutostyo_syy
 FROM urakka u
     JOIN paatos_tavoitehinta_alitus pta
 ON pta.urakkaid = u.id AND pta.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi:: INTEGER AND pta.poistettu = FALSE
@@ -703,8 +703,8 @@ SELECT COALESCE(pty.urakoitsija_maksaa, 0)                                      
        'budjetointi'                                                            AS toteutunut,
        0 AS jarjestys, 'tavoitehinnan-ylitys'                                   AS paaryhma,
        NOW()                                                                    AS indeksikorjaus_vahvistettu ,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                                                               AS kulu_tyyppi,
+       NULL::TEXT                                                               AS muutostyo_syy
 FROM urakka u
     LEFT JOIN paatos_tavoitehinta_ylitys pty
 ON pty.urakkaid = u.id AND pty.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER AND pty.poistettu = FALSE
@@ -722,8 +722,8 @@ SELECT COALESCE(pk.urakoitsija_maksaa, 0)                                     AS
         0                                                                     AS jarjestys,
         'kattohinnan-ylitys'                                                  AS paaryhma,
         NOW()                                                                 AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+        NULL::TEXT                                                            AS kulu_tyyppi,
+        NULL::TEXT                                                            AS muutostyo_syy
     FROM urakka u
     LEFT JOIN paatos_kattohinta pk
 ON pk.urakkaid = u.id AND pk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER AND pk.poistettu = FALSE
@@ -742,8 +742,8 @@ SELECT SUM(toik.summa)                AS budjetoitu_summa,
        0                              AS jarjestys,
        'tavoitehinnanoikaisu'         AS paaryhma,
        null                           AS indeksikorjaus_vahvistettu,
-       NULL::TEXT                                              AS kulu_tyyppi,
-       NULL::TEXT                                              AS muutostyo_syy
+       NULL::TEXT                     AS kulu_tyyppi,
+       NULL::TEXT                     AS muutostyo_syy
 FROM tavoitehinnan_oikaisu toik
 WHERE toik."urakka-id" = :urakka
   AND toik."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi::INTEGER

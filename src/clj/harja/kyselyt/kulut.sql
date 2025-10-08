@@ -86,9 +86,9 @@ WITH kohdistukset_ajalla AS (
     -- Jos ei ole kuluja, niin tehtäväryhmää, joka on poistettu, ei oteta mukaan
     AND (tr.poistettu = false AND kohd.summa IS NULL OR kohd.summa IS NOT NULL)
     AND (tr.yksiloiva_tunniste IS NULL OR tr.yksiloiva_tunniste NOT IN(
-        -- Urakoitsija maksaa alituksesta, ei kuulu raporttiin 
+        -- Urakoitsija maksaa alituksesta, ei kuulu raporttiin
         'be34116b-2264-43e0-8ac8-3762b27a9557',
-        -- Urakoitsija maksaa ylityksestä, ei kuulu raporttiin 
+        -- Urakoitsija maksaa ylityksestä, ei kuulu raporttiin
         '19907c24-dd26-460f-9cb4-2ed974b891aa',
         -- Tavoitepalkkio, ei myöskään kuulu raporttiin
         '55c920e7-5656-4bb0-8437-1999add714a3',
@@ -165,10 +165,10 @@ SELECT m.numero                AS "maksuera-numero",
        kk.tehtava              AS "tehtava_id",
        t.nimi                  AS "tehtava_nimi",
        kk.muutos               AS "muutos-id",
-       muutos.voimassa_alkaen  AS "muutos-voimassa",
+       muutos.voimassa_alkaen  AS "muutos-voimassa-alkaen",
        muutos.nimi             AS "muutos-nimi"
 FROM   kulu k
-       JOIN kulu_kohdistus kk ON k.id = kk.kulu 
+       JOIN kulu_kohdistus kk ON k.id = kk.kulu
        AND kk.poistettu IS NOT TRUE
        LEFT JOIN maksuera m ON kk.toimenpideinstanssi = m.toimenpideinstanssi
        LEFT JOIN tehtava t ON kk.tehtava = t.id
@@ -218,7 +218,7 @@ SELECT kk.id                                      AS "kohdistus-id",
        COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), rv.nimi) AS rahavaraus_nimi,
        kk.tyyppi                                  AS tyyppi,
        kk.tavoitehintainen                        AS tavoitehintainen,
-       CASE WHEN kk.tehtava IS NOT NULL THEN 
+       CASE WHEN kk.tehtava IS NOT NULL THEN
          jsonb_build_object(
            'id', t.id,
            'nimi', t.nimi,
@@ -235,7 +235,7 @@ SELECT kk.id                                      AS "kohdistus-id",
            LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
            LEFT JOIN rahavaraus_urakka ru ON rv.id = ru.rahavaraus_id AND ru.urakka_id = :urakka_id
            LEFT JOIN tehtava t ON kk.tehtava = t.id
-           LEFT JOIN mhu_muutos muutos ON muutos.id = kk.muutos 
+           LEFT JOIN mhu_muutos muutos ON muutos.id = kk.muutos
  WHERE kk.kulu = :kulu
    AND kk.poistettu IS NOT TRUE
  ORDER BY kk.id;

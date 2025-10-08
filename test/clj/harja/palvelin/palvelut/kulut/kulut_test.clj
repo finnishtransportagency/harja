@@ -149,7 +149,7 @@
                              {:id 6 :toimenpideinstanssi 3 :laskun-numero 665 :erapaiva (pvm/->pvm "12.09.2021") :summa 100}
                              {:id 7 :toimenpideinstanssi 6 :laskun-numero nil :erapaiva (pvm/->pvm "10.09.2021") :summa 100}
                              {:id 8 :toimenpideinstanssi 4 :laskun-numero 664 :erapaiva (pvm/->pvm "10.08.2021") :summa 100}]
-                             
+
         paha-rakenne [{:id 1 :toimenpideinstanssi 1 :laskun-numero 666 :erapaiva nil :summa 100}
                       {:id 2 :toimenpideinstanssi 1 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}
                       {:id 3 :toimenpideinstanssi 2 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}
@@ -158,31 +158,31 @@
                       {:id 6 :toimenpideinstanssi 3 :laskun-numero 665 :erapaiva (pvm/->pvm "12.09.2021") :summa 100}
                       {:id 7 :toimenpideinstanssi 6 :laskun-numero nil :erapaiva (pvm/->pvm "10.09.2021") :summa nil}
                       {:id 8 :toimenpideinstanssi nil :laskun-numero 664 :erapaiva (pvm/->pvm "10.08.2021") :summa 100}]
-                      
-        odotettu-bad-case [[:pvm "2021/10" 300]                           
+
+        odotettu-bad-case [[:pvm "2021/10" 300]
                            [:laskun-numero 667 300]
                            [:tpi 1 100
-                            [{:id 2 :toimenpideinstanssi 1 :laskun-numero 667 
+                            [{:id 2 :toimenpideinstanssi 1 :laskun-numero 667
                               :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                            [:tpi 2 100
-                            [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667 
+                            [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667
                               :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                            [:tpi nil 100
-                            [{:id 4 :toimenpideinstanssi nil :laskun-numero 667 
+                            [{:id 4 :toimenpideinstanssi nil :laskun-numero 667
                               :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                            [:pvm "2021/09" 100]
                            [:laskun-numero 665 100]
                            [:tpi 3 100
-                            [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665 
+                            [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665
                               :erapaiva (pvm/->pvm "12.09.2021") :summa 100}]]
                            [:laskun-numero 0 0]
                            [:tpi 6 0
-                            [{:id 7 :toimenpideinstanssi 6 :laskun-numero nil 
+                            [{:id 7 :toimenpideinstanssi 6 :laskun-numero nil
                               :erapaiva (pvm/->pvm "10.09.2021") :summa nil}]]
                            [:pvm "2021/08" 100]
                            [:laskun-numero 664 100]
                            [:tpi nil 100
-                            [{:id 8 :toimenpideinstanssi nil :laskun-numero 664 
+                            [{:id 8 :toimenpideinstanssi nil :laskun-numero 664
                               :erapaiva (pvm/->pvm "10.08.2021") :summa 100}]]
                            [:pvm nil 100]
                            [:laskun-numero 666 100]
@@ -192,73 +192,73 @@
         odotettu-rakenne [[:pvm "2021/10" 500] ; :tagi, pvm, kokonaissumma
                           [:laskun-numero 666 100] ; :tagi, laskun-nro, kokonaissumma
                           [:tpi 1 100 ; :tagi, toimenpideinstanssin id, kokonaissumma
-                           [{:id 1 :toimenpideinstanssi 1 :laskun-numero 666 
+                           [{:id 1 :toimenpideinstanssi 1 :laskun-numero 666
                              :erapaiva (pvm/->pvm "11.10.2021") :summa 100}]]
                           [:laskun-numero 667 400]
                           [:tpi 1 100
-                           [{:id 2 :toimenpideinstanssi 1 :laskun-numero 667 
+                           [{:id 2 :toimenpideinstanssi 1 :laskun-numero 667
                              :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                           [:tpi 2 100
-                           [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667 
+                           [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667
                              :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                           [:tpi 3 200
-                           [{:id 4 :toimenpideinstanssi 3 :laskun-numero 667 
+                           [{:id 4 :toimenpideinstanssi 3 :laskun-numero 667
                              :erapaiva (pvm/->pvm "10.10.2021") :summa 100}
-                            {:id 5 :toimenpideinstanssi 3 :laskun-numero 667 
+                            {:id 5 :toimenpideinstanssi 3 :laskun-numero 667
                              :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]]
                           [:pvm "2021/09" 200]
                           [:laskun-numero 665 100]
                           [:tpi 3 100
-                           [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665 
+                           [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665
                              :erapaiva (pvm/->pvm "12.09.2021") :summa 100}]]
                           [:laskun-numero 0 100]
                           [:tpi 6 100
-                           [{:id 7 :toimenpideinstanssi 6 :laskun-numero nil 
+                           [{:id 7 :toimenpideinstanssi 6 :laskun-numero nil
                              :erapaiva (pvm/->pvm "10.09.2021") :summa 100}]]
                           [:pvm "2021/08" 100]
                           [:laskun-numero 664 100]
                           [:tpi 4 100
-                           [{:id 8 :toimenpideinstanssi 4 :laskun-numero 664 
+                           [{:id 8 :toimenpideinstanssi 4 :laskun-numero 664
                              :erapaiva (pvm/->pvm "10.08.2021") :summa 100}]]]
-        odotettu-ryhmittely [["2021/10" 
-                              {:rivit 
-                               [[666 
-                                 {:rivit 
-                                  [[1 
+        odotettu-ryhmittely [["2021/10"
+                              {:rivit
+                               [[666
+                                 {:rivit
+                                  [[1
                                     {:rivit [{:id 1 :toimenpideinstanssi 1 :laskun-numero 666 :erapaiva (pvm/->pvm "11.10.2021") :summa 100}]
                                      :summa 100}]]
                                   :summa 100}]
-                                [667 {:rivit 
+                                [667 {:rivit
                                       [[1 {:rivit [{:id 2 :toimenpideinstanssi 1 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]
                                            :summa 100}]
-                                       [2 {:rivit [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}] 
+                                       [2 {:rivit [{:id 3 :toimenpideinstanssi 2 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]
                                            :summa 100}]
                                        [3 {:rivit [{:id 4 :toimenpideinstanssi 3 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}
-                                                   {:id 5 :toimenpideinstanssi 3 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}] 
+                                                   {:id 5 :toimenpideinstanssi 3 :laskun-numero 667 :erapaiva (pvm/->pvm "10.10.2021") :summa 100}]
                                            :summa 200}]]
-                                      :summa 400}]]                               
+                                      :summa 400}]]
                                :summa 500}]
                              ["2021/09"
-                              {:rivit 
-                               [[665 
-                                 {:rivit 
-                                  [[3 
-                                    {:rivit [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665 :erapaiva (pvm/->pvm "12.09.2021") :summa 100}] 
+                              {:rivit
+                               [[665
+                                 {:rivit
+                                  [[3
+                                    {:rivit [{:id 6 :toimenpideinstanssi 3 :laskun-numero 665 :erapaiva (pvm/->pvm "12.09.2021") :summa 100}]
                                      :summa 100}]]
                                   :summa 100}]
-                                [0 {:rivit 
+                                [0 {:rivit
                                     [[6 {:rivit [{:id 7 :toimenpideinstanssi 6 :laskun-numero nil :erapaiva (pvm/->pvm "10.09.2021") :summa 100}]
                                          :summa 100}]]
                                     :summa 100}]]
                                :summa 200}]
                              ["2021/08"
-                              {:rivit 
-                               [[664 
-                                 {:rivit 
-                                  [[4 
-                                    {:rivit [{:id 8 :toimenpideinstanssi 4 :laskun-numero 664 :erapaiva (pvm/->pvm "10.08.2021") 
-                                              :summa 100}] 
-                                     :summa 100}]] 
+                              {:rivit
+                               [[664
+                                 {:rivit
+                                  [[4
+                                    {:rivit [{:id 8 :toimenpideinstanssi 4 :laskun-numero 664 :erapaiva (pvm/->pvm "10.08.2021")
+                                              :summa 100}]
+                                     :summa 100}]]
                                   :summa 100}]]
                                :summa 100}]]
         ryhmitelty-rakenne (kulut/ryhmittele-urakan-kulut munklattava-rakenne)
@@ -357,7 +357,7 @@
     (is (= (count (:kohdistukset poistettu-kohdistus)) 2) "Kohdistuksen poistaminen vähensi kohdistusten määrää yhdellä (poistettu-kohdistus).")
     (is (= (:id poistettu-kulu) tallennettu-id) "kulun poistaminen palauttaa poistetun kulun (poistettu-kulu)")
     (is (empty? poistetun-kulun-haku) "Poistettua kulua ei palaudu (poistetun-kulun-haku).")
-    
+
     ;; Tehtävä tallennuksessa
     (is (map? tehtava) "Tehtava tallentui kohdistukseen.")
     (is (contains? tehtava :id) "Tehtavalla on ID.")
@@ -514,11 +514,11 @@
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-akillinen-hoitotyo))) "akillinen-hoitotyo"))
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-muu))) "muu"))))
 
-(defn riisu-kilkkeet 
+(defn riisu-kilkkeet
   [kaikki rivi]
   (if (not= :tpi (first rivi))
     kaikki
-    (let [[_ _ _ rivit] rivi] 
+    (let [[_ _ _ rivit] rivi]
       (apply conj kaikki rivit))))
 
 (def odotettu-kulu_kohdistus-id-9
@@ -528,7 +528,7 @@
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
    :tehtava {:nimi nil, :id nil},
    :summa 400.77M, :kohdistus-id 12,
-   :muutos-voimassa nil, :muutos-nimi nil, :muutos-id nil,
+   :muutos-voimassa-alkaen nil, :muutos-nimi nil, :muutos-id nil,
    :rahavaraus nil
    :toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'")),
    :tehtavaryhma 15, :lisatieto nil, :rivi 1})

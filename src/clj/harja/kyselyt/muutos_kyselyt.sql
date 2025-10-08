@@ -186,7 +186,7 @@ DO UPDATE SET
 WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
--- name: paivita-erillisrahoitettu-kustannusvaikutus<!
+-- name: luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<!
 INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     versio,
     muutos,
@@ -201,7 +201,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     NULL,
     :hoitokauden_alkuvuosi,
     :summa
-) ON CONFLICT (
+) ON CONFLICT ( -- Erillisrahoitetuille ei anneta tpi:tä, joten ideksin käyttö eri
   muutos,
   kustannuslaji,
   hoitokauden_alkuvuosi,
@@ -211,7 +211,6 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
   summa                = EXCLUDED.summa
--- Päivitetään vain jos tulee uusi määrämuutos
 WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
