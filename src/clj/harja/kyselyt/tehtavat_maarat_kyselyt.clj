@@ -9,11 +9,12 @@
   hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
 
-(defn tallenna-tarjouksen-tehtavat-ja-maarat [db urakka-id kayttaja-id tehtavat]
+(defn tallenna-tarjouksen-tehtavat-ja-maarat [db urakka-id kayttaja-id hk-alkuvuosi tehtavat]
   ;; Filtteröidään valiotsikot pois
   (doseq [{:keys [tehtava_id tarjous_maara nimi] :as tehtava} (filter #(nil? (:valiotsikko %)) tehtavat)]
     (let [dbtehtava (first (hae-tarjous-tehtava-idlla db {:tehtavaid tehtava_id
-                                                          :urakkaid urakka-id}))
+                                                          :urakkaid urakka-id
+                                                          :hoitokauden-alkuvuosi hk-alkuvuosi}))
           dbvastaus (if dbtehtava
                       ;; Tehtävä löytyy kannasta
                       (paivita-tarjous-tehtava<! db {:tarjous_tehtava_id (:id dbtehtava)
@@ -24,11 +25,13 @@
                       (lisaa-tarjous-tehtava<! db {:tehtavaid tehtava_id
                                                    :urakkaid urakka-id
                                                    :maara tarjous_maara
-                                                   :luoja kayttaja-id}))])))
+                                                   :luoja kayttaja-id
+                                                   :hoitokauden-alkuvuosi hk-alkuvuosi}))])))
 
 (defn hae-tehtavat-ja-maarat
-  [db urakka-id]
-  (let [tehtavat (hae-maaramitattavat-tehtavat db {:urakkaid urakka-id})
+  [db urakka-id hoitokauden-alkuvuosi]
+  (let [tehtavat (hae-maaramitattavat-tehtavat db {:urakkaid urakka-id
+                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         ;; Jaotellaan tehtävät tehtävryhmäotsikon alle
         tehtavaryhman-tehtavat (group-by :tehtavaryhmaotsikko tehtavat)
         tehtavaryhman-tehtavat (sort-by :nimi

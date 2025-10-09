@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot
-  (:require [harja.ui.viesti :as viesti]
+  (:require [harja.tiedot.urakka :as u]
+            [harja.ui.viesti :as viesti]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]))
@@ -40,7 +41,7 @@
 (defn hae-tetavat-ja-maarat [parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
     {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-     :hoitokauden-alkuvuosi :kaikki}
+     :valittu-hoitokausi @u/valittu-hoitokausi}
     {:onnistui ->HaeTehtavatJaMaaratOnnistui
      :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
      :paasta-virhe-lapi? true}))
@@ -72,7 +73,8 @@
   (process-event [{tehtavat :tehtavat} app]
     (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
       {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-       :tehtavat tehtavat}
+       :tehtavat tehtavat
+       :valittu-hoitokausi @u/valittu-hoitokausi}
       {:onnistui ->TallennaTehtavatOnnistui
        :epaonnistui ->TallennaTehtavatEpaonnistui
        :paasta-virhe-lapi? true})

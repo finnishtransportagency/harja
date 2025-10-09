@@ -6,7 +6,12 @@ WITH rahavaraustehtava AS (
     WHERE rvu.urakka_id = :urakkaid
 )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
-       tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, tt.maara as tarjous_maara
+       tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, ut.maara as tarjous_maara,
+       ut.maaramuutos,
+       CASE
+           WHEN ut.maara IS NOT NULL OR ut.maaramuutos IS NOT NULL THEN (COALESCE(ut.maara,0) + COALESCE(ut.maaramuutos, 0))
+           ELSE null
+           END AS yhteensa
 FROM tehtavaryhma tr
       JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
       JOIN tehtava t ON tr.id = t.tehtavaryhma
@@ -14,7 +19,7 @@ FROM tehtavaryhma tr
             AND t.poistettu IS NOT TRUE
             AND t.piilota IS NOT TRUE
       JOIN toimenpide tp ON t.emo = tp.id
-      LEFT JOIN tarjous_tehtavamaara tt ON tt.tehtava_id = t.id AND tt.urakka_id = :urakkaid
+      LEFT JOIN urakka_tehtavamaara ut ON ut.tehtava = t.id AND ut.urakka = :urakkaid AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
       JOIN urakka u ON u.id = :urakkaid
 WHERE  (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -28,31 +33,32 @@ WHERE  (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_par
 ORDER BY tro.id, t.jarjestys;
 
 -- name: hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
-SELECT GREATEST(tt.muokattu, tt.luotu) AS viimeisin_muokkaus,
+SELECT GREATEST(ut.muokattu, ut.luotu) AS viimeisin_muokkaus,
        CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
-FROM tarjous_tehtavamaara tt
-         LEFT JOIN kayttaja k ON COALESCE(tt.muokkaaja, tt.luoja) = k.id
+FROM urakka_tehtavamaara ut
+         LEFT JOIN kayttaja k ON COALESCE(ut.muokkaaja, ut.luoja) = k.id
          LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
-WHERE tt.urakka_id = :urakkaid
+WHERE ut.urakka = :urakkaid
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 1;
 
 -- name: hae-tarjous-tehtava-idlla
-SELECT id, urakka_id, tehtava_id, maara, muokattu, muokkaaja
-  FROM tarjous_tehtavamaara
- WHERE tehtava_id = :tehtavaid
-AND urakka_id = :urakkaid;
+SELECT id, urakka as urakka_id, tehtava as tehtava_id, maara, muokattu, muokkaaja
+  FROM urakka_tehtavamaara
+ WHERE tehtava = :tehtavaid
+   AND urakka = :urakkaid
+   AND "hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi;
 
 -- name: paivita-tarjous-tehtava<!
-UPDATE tarjous_tehtavamaara
+UPDATE urakka_tehtavamaara
    SET maara = :maara,
        muokattu = NOW(),
        muokkaaja = :muokkaaja
  WHERE id = :tarjous_tehtava_id;
 
 -- name: lisaa-tarjous-tehtava<!
-INSERT INTO tarjous_tehtavamaara (urakka_id, tehtava_id, maara, luoja, luotu)
-VALUES (:urakkaid, :tehtavaid, :maara, :luoja, NOW())
-RETURNING id, urakka_id, tehtava_id, maara, muokattu, muokkaaja, luotu, luoja;
+INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden-alkuvuosi, :tehtavaid, :maara, :luoja, NOW())
+RETURNING id, urakka as urakka_id, "hoitokauden-alkuvuosi", tehtava as tehtava_id, maara, muokattu, muokkaaja, luotu, luoja;

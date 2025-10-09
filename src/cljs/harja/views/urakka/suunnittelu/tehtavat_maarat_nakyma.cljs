@@ -61,21 +61,16 @@
     [:img {:alt "Expander"
            :src "images/expander-down.svg"
            :tabIndex "0"
-           :on-click #(do
-                        (js/console.log "KLICK :: Avaa tai sulje haitari: " (pr-str valiotsikko))
-                        (e! (tiedot/->AvaaRivi valiotsikko)))
+           :on-click #(e! (tiedot/->AvaaRivi valiotsikko))
            :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]
     [:img {:alt "Expander"
            :src "images/expander.svg"
            :tabIndex "0"
-           :on-click #(do
-                       (js/console.log "KLICK :: Avaa tai sulje haitari: " (pr-str valiotsikko))
-                       (e! (tiedot/->AvaaRivi valiotsikko)))
+           :on-click #(e! (tiedot/->AvaaRivi valiotsikko))
            :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]))
 
 (defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
-  (let [_ (js/console.log "Tehtavataulukko :: avatut-rivit" (pr-str avatut-rivit))
-        ;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
+  (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (contains? avatut-rivit (:kuuluu rivi))) tehtavat-ja-maarat)
 
@@ -105,13 +100,13 @@
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %))) :solun-luokka solun-luokka-fn
-                    :fmt (fn [arvo]
-                           (if (nil? arvo) "-" arvo))}
-                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :oikea
+                    #_#_:fmt (fn [arvo]
+                           (if (and (not tallennustila?) (nil? arvo)) "-" arvo))}
+                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false) :solun-luokka solun-luokka-fn
                     :fmt (fn [arvo]
                            (if (nil? arvo) "-" arvo))}
-                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :oikea
+                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :yhteensa :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false) :solun-luokka solun-luokka-fn
                     :fmt (fn [arvo]
                            (if (nil? arvo) "-" arvo))}
@@ -135,15 +130,12 @@
         :jarjesta :jarjestys
         :muutos #(do
                    (e! (tiedot/->PaivitaTehtavatGrid (vals (grid/hae-muokkaustila %)))))
-        :rivi-klikattu (fn [rivi]
-                         (js/console.log "Rivi klikattu: " (pr-str rivi))
-                         (e! (tiedot/->AvaaRivi (:valiotsikko rivi))))}
+        :rivi-klikattu (fn [rivi] (e! (tiedot/->AvaaRivi (:valiotsikko rivi))))}
        sarakkeet
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
                          tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit] :as app}]
-  (js/console.log "nakyma")
   [:div#vayla
    [:div.row
     [:div.col-xs-12

@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [harja.pvm :as pvm]))
 
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
@@ -12,15 +13,17 @@
   [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [_ (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) (:tehtavat tiedot))
+    (let [hk-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
+          _ (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) hk-alkuvuosi (:tehtavat tiedot))
           ;; Haetaan tallennetut tiedot
-          tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id)]
+          tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hk-alkuvuosi)]
       tehtavat-ja-maarat)))
 
 (defn hae-tehtavat-ja-maarat [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id)))
+    (println "hae-tehtavat-ja-maarat :: tiedot" (pr-str tiedot))
+    (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id (pvm/vuosi (first (:valittu-hoitokausi tiedot))))))
 
 (defrecord TehtavatJaMaarat []
   component/Lifecycle
