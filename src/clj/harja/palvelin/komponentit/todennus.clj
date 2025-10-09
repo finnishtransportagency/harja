@@ -268,7 +268,6 @@
                     :organisaatio (:id organisaatio)}
           kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
           piilota-nimi? (:piilota_nimi kayttaja-kannassa)
-          kayttaja-kannassa (dissoc kayttaja-kannassa :piilota_nimi) ;; Tietoa ei enää tarvita myöhemmin
           kayttaja-id-kannassa (:id kayttaja-kannassa)
           kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
                                                                     :etunimi
