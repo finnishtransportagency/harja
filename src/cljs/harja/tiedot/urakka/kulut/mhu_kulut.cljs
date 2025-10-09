@@ -605,7 +605,7 @@
          :epaonnistui        ->KutsuEpaonnistui
          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
          :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] + 1))
+    (update-in app [:parametrit :haetaan] inc))
 
   HaeUrakanMuutostyot
   (process-event [{:keys [hakuparametrit]} app]
@@ -617,7 +617,7 @@
          :epaonnistui        ->KutsuEpaonnistui
          :epaonnistui-parametrit [{:viesti "Urakan muutostöiden haku epäonnistui"}]
          :paasta-virhe-lapi? true}))
-    (update-in app [:parametrit :haetaan] + 1))
+    (update-in app [:parametrit :haetaan] inc))
 
   HaeUrakanMuutostyotOnnistui
   (process-event [{tulos :tulos} app]

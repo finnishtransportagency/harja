@@ -229,7 +229,7 @@ SELECT kk.id                                      AS "kohdistus-id",
          )
        ELSE NULL END                              AS "tehtava",
        kk.muutos                                  AS "muutos-id",
-       muutos.voimassa_alkaen                     AS "muutos-voimassa",
+       muutos.voimassa_alkaen                     AS "muutos-voimassa-alkaen",
        muutos.nimi                                AS "muutos-nimi"
   FROM kulu_kohdistus kk
            LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
