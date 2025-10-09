@@ -411,11 +411,15 @@ SELECT mmk.summa                                    AS budjetoitu_summa,
        m.tyyppi::TEXT                               AS kulu_tyyppi,
        m.syy                                        AS muutostyo_syy
     FROM mhu_muutos m
-         LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id 
+         LEFT JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id
 WHERE m.urakka = :urakka 
   AND m.poistettu IS NOT TRUE 
   AND m.tyyppi = 'pysyva'
-  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER
+  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
+  -- Voimassa alkaen on valittu vuosi 
+  AND EXTRACT(YEAR FROM m.voimassa_alkaen) = :hoitokauden-alkuvuosi::INTEGER
+  -- Pysyvä muutos astunut voimaan tällä hoitokaudella 
+  AND EXTRACT(MONTH FROM m.voimassa_alkaen) >= 10
 UNION ALL
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset
 -- ja vuoden päättämiseen liittyvät kulut kulu_kohdistus taulusta.
