@@ -48,6 +48,13 @@
    :yht-rivi true
    :tyyppi "kesasuola"})
 
+(def materiaali-kaikki-heikoitushiekat-yhteensa
+  {:id 999
+   :nimi "Hiekoitushiekka yhteensä"
+   :yksikko "t"
+   :yht-rivi true
+   :tyyppi "hiekoitushiekka"})
+
 (def materiaali-kaikki-murskeet-yhteensa
   {:id 999
    :nimi "Murskeet yhteensä"

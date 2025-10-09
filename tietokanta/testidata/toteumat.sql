@@ -21,7 +21,7 @@ DO $$
         sopimus_id_kajaani_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019' AND paasopimus IS NULL));
 
         toimenpidekoodi_suolaus = (SELECT id FROM tehtava WHERE nimi = 'Suolaus');
-        materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka');
+        materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'); -- Hiekoitushiekka, liukkaudentorjunta
 
 -- Oulun alueurakka 2005-2012
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja) VALUES ('harja-ui'::lahde, urakka_id_oulu_2005_2012, sopimus_id_oulu_2005_2012, NOW(), '2005-10-01 00:00:00+02', '2005-10-02 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Reitillinen yksikköhintainen toteuma 1', (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'));
@@ -117,6 +117,21 @@ INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id) 
 ((SELECT id FROM toteuma WHERE lisatieto = 'Varustetoteuma 3'), '2005-10-01 00:00.00', (SELECT id FROM tehtava WHERE nimi = 'Pensaiden täydennysistutus'), 668, (SELECT urakka FROM toteuma WHERE lisatieto = 'Varustetoteuma 3'));
 
 -- Materiaalitoteumat
+-- 2014 alkavalla hoitovuodelle
+INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto, luotu) VALUES (
+                                                                                                'harja-ui'::lahde,
+                                                                                                urakka_id_oulu_2014_2019,
+                                                                                                sopimus_id_oulu_2014_2019,
+                                                                                                '2015-03-21 12:00', '2015-03-21 13:00',
+                                                                                                'kokonaishintainen',
+                                                                                                (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE LIMIT 1),
+                                                                                                'Tämä on käyttäjän UI:lta luoma materiaalitoteuma',
+                                                                                                '2015-03-21 12:00');
+INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, urakka_id) VALUES (
+                                                                                       (SELECT MAX(id) FROM toteuma),
+                                                                                       materiaalikoodi_hiekoitushiekka,
+                                                                                       500, urakka_id_oulu_2014_2019);
+        -- 2015 alkavalle hoitovuodelle
 INSERT INTO toteuma (lahde, urakka,sopimus,alkanut,paattynyt,tyyppi,luoja,lisatieto) VALUES (
   'harja-ui'::lahde,
   urakka_id_oulu_2014_2019,

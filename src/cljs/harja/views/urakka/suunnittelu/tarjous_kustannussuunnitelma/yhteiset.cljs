@@ -4,12 +4,12 @@
    Tämä sisältää esimerkiksi otsikkotiedot ja tallennusnapit."
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as k-tiedot]))
@@ -51,14 +51,13 @@
       (when (and div2 (>= valittu-vuosi rajavuosi))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Pysyvät muutokset"]
-         [:div.body-text "Ei muutoksia"]
+         (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+           [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
+           [:div.body-text "Ei muutoksia"])
          [:div.body-text
-           [yleiset/linkki "Siirry muutoksiin"
-            #(do
-               (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))
-            ; Toistaiseksi siirrytään vain kustannussuunnitelman sisäiseen pysyvien muutosten placeholderiin.
-            #_  #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                             {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]])
+          [yleiset/linkki "Siirry osioon"
+           #(do
+              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
       (when (and div3 (>= valittu-vuosi rajavuosi))
