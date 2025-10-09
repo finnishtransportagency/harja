@@ -297,18 +297,20 @@
 (defn- paivita-kulu-nakyma [{:keys [valittu-hoitokausi haun-kuukausi viimeisin-haku] :as app}]
   (let [vuosi (when valittu-hoitokausi
                 (some-> valittu-hoitokausi first pvm/vuosi))]
-    ;; Kulu näkymässä menee hölmösti kuukausi valinnat
-    ;; Tässä kuitenkin korjaus että näkymä toimii oikein 
-    (if haun-kuukausi
-      ;; Jos kk valittu, hae pelkästään sen kuukauden kulut
-      ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-      ;; Koko hoitokausi valittu, hae valitun hoitokauden kulut 
-      ((tuck/current-send-function) (->ValitseHoitokausi vuosi)))
-    
-    ((tuck/current-send-function) (->HaeUrakanHintapaatokset))
-    (-> app
-      (assoc :syottomoodi false)
-      (assoc :lomake (alusta-lomake app)))))
+    ;; Korjaus että näkymän listaus päivittyy oikein, kun kulun päivittää
+    (tuck/fx
+      ;; Efektille annetaan muunnettu app-tila
+      (-> app
+        (assoc :syottomoodi false)
+        (assoc :lomake (alusta-lomake app)))
+      {:tuck.effect/type :laukaise-event
+       :event (if haun-kuukausi
+                ;; Jos kk valittu, hae pelkästään sen kuukauden kulut
+                #(->HaeUrakanKulut viimeisin-haku)
+                ;; Koko hoitokausi valittu, hae valitun hoitokauden kulut 
+                #(->ValitseHoitokausi vuosi))}
+      {:tuck.effect/type :laukaise-event
+       :event ->HaeUrakanHintapaatokset})))
 
 (extend-protocol tuck/Event
 
