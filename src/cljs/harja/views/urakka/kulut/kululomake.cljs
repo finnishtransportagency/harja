@@ -5,6 +5,7 @@
             [clojure.string :as str] 
 
             [harja.fmt :as fmt]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
@@ -84,8 +85,8 @@
     :rahavaraus "Rahavaraukselle kohdistettava kulu"
     :lisatyo "Lisätyö"
     :paatos "Hoitovuoden päätös"
-    :jjh-muutos "Muutostyö (Johto- ja hallintokorvaus)"
-    :erillisrahoitettu-muutos "Muutostyö (erillisrahoitettu)"
+    :jjh-muutos (:jjh-muutos muutos-domain/+muutos-kulu-tyypit+)
+    :erillisrahoitettu-muutos (:erillisrahoitettu-muutos muutos-domain/+muutos-kulu-tyypit+)
     "Tuntematon"))
 
 (defn- nayta-kohdistuksen-virhe? [lomake nro avain]

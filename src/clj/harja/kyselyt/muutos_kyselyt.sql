@@ -201,7 +201,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     NULL,
     :hoitokauden_alkuvuosi,
     :summa
-) ON CONFLICT ( -- Erillisrahoitetuille ei anneta tpi:tä, joten ideksin käyttö eri
+) ON CONFLICT ( -- Erillisrahoitetuille ei anneta tpitä, joten ideksin käyttö eri
   muutos,
   kustannuslaji,
   hoitokauden_alkuvuosi,
@@ -226,12 +226,13 @@ UPDATE mhu_muutos_kulu
  WHERE muutos = :muutos
    AND kulu = :vanha-kulu;
 
--- name: paivita-muutostyo-kohdistus!
+-- name: paivita-muutostyo-kulukohdistus!
 UPDATE kulu_kohdistus
    SET muutos = :muutos
  WHERE id = :kohdistus-id;
 
--- name: tarkista-onko-muutoksella-kuluja-ennen-voimassa-paivaa
+-- name: onko-muutoksella-kuluja-ennen-voimassa-paivaa?
+-- single?: true
 SELECT k.id FROM kulu k 
 	LEFT JOIN kulu_kohdistus kk ON kk.kulu = k.id 
 WHERE 
@@ -416,7 +417,7 @@ SELECT
 FROM toimenpiteet tk
     LEFT JOIN toimenpide tp ON tp.koodi = tk.koodi
     LEFT JOIN toimenpideinstanssi tpi ON tp.id = tpi.toimenpide AND tpi.urakka = :urakka
-    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id AND
+    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id
                                     -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
                                     --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
                                     --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
@@ -424,7 +425,8 @@ FROM toimenpiteet tk
                                     --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
                                     --       silti löydettävissä äiti muutos id:n avulla.
                                     --m.versio = :versio AND
-                                    m.poistettu IS FALSE)
+                                    AND m.poistettu IS FALSE 
+                                    AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI)
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
 GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tp.id, tp.jarjestys
 ORDER BY tp.jarjestys;

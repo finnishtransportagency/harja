@@ -48,8 +48,8 @@
   [db muutostyo kohdistus-id]
   (when (and
           kohdistus-id (:id muutostyo))
-    (muutos-kyselyt/paivita-muutostyo-kohdistus! db {:muutos (:id muutostyo)
-                                                     :kohdistus-id kohdistus-id})))
+    (muutos-kyselyt/paivita-muutostyo-kulukohdistus! db {:muutos (:id muutostyo)
+                                                         :kohdistus-id kohdistus-id})))
 
 (defn hae-hoitovuosien-yksikkohinnat
   [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]
@@ -677,7 +677,7 @@
         kk (when voimassa_alkaen (pvm/kuukausi voimassa_alkaen))
         paiva (when voimassa_alkaen (pvm/paiva voimassa_alkaen))
         voimassa-alkaen-sql (when voimassa_alkaen (str vuosi "-" kk "-" paiva))
-        vastaus (muutos-kyselyt/tarkista-onko-muutoksella-kuluja-ennen-voimassa-paivaa
+        vastaus (muutos-kyselyt/onko-muutoksella-kuluja-ennen-voimassa-paivaa?
                   db
                   {:muutos id
                    :tyyppi (cond
@@ -687,7 +687,7 @@
 
                              :else nil)
                    :voimassa voimassa-alkaen-sql})
-        kuluja-kirjattu? (boolean (seq vastaus))]
+        kuluja-kirjattu? (boolean vastaus)]
     
     (when kuluja-kirjattu?
       (throw+ {:type virheet/+viallinen-kutsu+

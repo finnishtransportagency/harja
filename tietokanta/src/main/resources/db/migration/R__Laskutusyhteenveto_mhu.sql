@@ -376,7 +376,7 @@ DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER,
 DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER, BOOLEAN);
 CREATE OR REPLACE FUNCTION hoidon_johto_yhteenveto(hk_alkupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
                                                    toimenpide_koodi TEXT, t_instanssi INTEGER, urakka_id_ INTEGER,
-                                                   sopimus_id INTEGER, muutos_ BOOLEAN) RETURNS SETOF HOIDONJOHTO_RIVI AS
+                                                   sopimus_id INTEGER, kyseessa_muutos BOOLEAN) RETURNS SETOF HOIDONJOHTO_RIVI AS
 $$
 DECLARE
 
@@ -428,7 +428,7 @@ BEGIN
                AND lk.poistettu IS NOT TRUE 
                -- TRUE -> laske jjh muutokset mukaan 
                -- FALSE -> älä laske jjh muutoksia mukaan 
-               AND (muutos_ IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
+               AND (kyseessa_muutos IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
                AND l.urakka = urakka_id_
                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                AND lk.tehtavaryhma = tehtavaryhma_id
@@ -473,7 +473,7 @@ BEGIN
              WHERE lk.toimenpideinstanssi = t_instanssi
                AND lk.poistettu = FALSE
                AND l.urakka = urakka_id_
-               AND (muutos_ IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
+               AND (kyseessa_muutos IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
                AND l.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm
                AND lk.tehtavaryhma = tehtavaryhma_id
 

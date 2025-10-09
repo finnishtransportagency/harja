@@ -296,7 +296,7 @@
 
 (defn- paivita-kulu-nakyma [{:keys [valittu-hoitokausi haun-kuukausi viimeisin-haku] :as app}]
   (let [vuosi (when valittu-hoitokausi
-                (pvm/vuosi (-> valittu-hoitokausi first)))]
+                (some-> valittu-hoitokausi first pvm/vuosi))]
     ;; Kulu näkymässä menee hölmösti kuukausi valinnat
     ;; Tässä kuitenkin korjaus että näkymä toimii oikein 
     (if haun-kuukausi
