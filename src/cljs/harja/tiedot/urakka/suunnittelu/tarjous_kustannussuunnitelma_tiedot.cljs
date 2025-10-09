@@ -279,7 +279,7 @@
 
 (defn synkronoi-muutokset-atomiin!
   "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
-   Kutsutaan automaattisesti kaikissa eventeissä jotka muuttavat tilaa."
+   Kutsutaan automaattisesti kaikissa eventeissä, jotka muuttavat tilaa."
   [app]
   (reset! tallentamattomia-muutoksia (boolean (get app :tallentamattomia-muutoksia? false)))
   app)

@@ -45,6 +45,7 @@
 (defonce tallentamattomia-muutoksia-atomit (atom {}))
 
 (defn rekisteroi-tallentamattomia-muutoksia-atomi!
+  "Rekisteröi atomi jota tarkistetaan sekä navigoinnin että beforeunload yhteydessä"
   [atomi-avain atomi-tai-funktio & {:keys [beforeunload-viesti]}]
   (let [beforeunload-viesti (or beforeunload-viesti "Sinulla on tallentamattomia muutoksia!")
         tarkistus-funktio (if (fn? atomi-tai-funktio)
