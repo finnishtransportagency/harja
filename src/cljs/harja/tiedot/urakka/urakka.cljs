@@ -37,8 +37,8 @@
                                                       :toimenpide nil
                                                       :valitaso nil
                                                       :noudetaan 0}}
-                                :tehtavat-maarat {:nayta-muuttuneet-tehtavat true
-                                                  :tallennustila? true}
+                                :tehtavat-maarat {:tallennustila? true
+                                                  :avatut-rivit #{"1.0 TALVIHOITO"}}
                                 :kustannussuunnitelma kustannussuunnitelma-default
                                 :suolarajoitukset suolarajoitukset-default})
 

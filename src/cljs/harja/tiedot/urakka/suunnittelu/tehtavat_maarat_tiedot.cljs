@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [harja.ui.viesti :as viesti]
+            [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]))
 
@@ -34,21 +35,22 @@
 (defrecord ToggleTallennus [])
 (defrecord PeruutaTallennus [])
 (defrecord PaivitaTehtavatGrid [tehtavat])
-(defrecord AvaaRivi [tehtavat])
+(defrecord AvaaRivi [valiotsikko])
+
+(defn hae-tetavat-ja-maarat [parametrit]
+  (tuck-apurit/post! :hae-tehtavat-ja-maarat
+    {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+     :hoitokauden-alkuvuosi :kaikki}
+    {:onnistui ->HaeTehtavatJaMaaratOnnistui
+     :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
+     :paasta-virhe-lapi? true}))
 
 (extend-protocol tuck/Event
 
   HaeTehtavatJaMaarat
   (process-event [{parametrit :parametrit} app]
     (js/console.log "HaeTehtavatJaMaarat :: parametrit " (pr-str parametrit))
-
-    (tuck-apurit/post! :hae-tehtavat-ja-maarat
-      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-       :hoitokauden-alkuvuosi :kaikki}
-      {:onnistui ->HaeTehtavatJaMaaratOnnistui
-       :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
-       :onnistui-parametrit [parametrit]
-       :paasta-virhe-lapi? true})
+    (hae-tetavat-ja-maarat parametrit)
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
@@ -58,12 +60,11 @@
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
       (assoc :tehtavaryhman-tehtavat (:tehtavaryhman-tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
-      ))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaaratEpaonnistui")
+    (viesti/nayta-toast! (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :haku-kaynnissa? false)))
 
@@ -79,6 +80,7 @@
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
     (-> app
       (assoc :tallennus-kaynnissa? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
@@ -86,40 +88,29 @@
 
   TallennaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :tallennus-kaynnissa? false)))
 
   PaivitaTehtavatGrid
   (process-event [{tehtavat :tehtavat} app]
-    (js/console.log "PaivitaTehtavatGrid")
     (merkitse-muutos!)
     (assoc app :tehtavat-ja-maarat (sort-by :jarjestys tehtavat)))
 
   ToggleTallennus
   (process-event [_ app]
-    (js/console.log "ToggleTallennus")
     (assoc app :tallennustila? (not (:tallennustila? app))))
 
   PeruutaTallennus
   (process-event [_ app]
-    (js/console.log "ToggleTallennus")
-
-    (tuck-apurit/post! :hae-tehtavat-ja-maarat
-      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-       :hoitokauden-alkuvuosi :kaikki}
-      {:onnistui ->HaeTehtavatJaMaaratOnnistui
-       :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
-       :paasta-virhe-lapi? true})
-
+    (hae-tetavat-ja-maarat nil)
     (assoc app :tallennustila? (not (:tallennustila? app))))
 
   AvaaRivi
-  (process-event [{avain :avain} app]
-    (let [_ (js/console.log "AvaaRivi :: avain " (pr-str avain))
-          app (if (nil? (:avatut-rivit app))
+  (process-event [{valiotsikko :valiotsikko} app]
+    (let [app (if (nil? (:avatut-rivit app))
                 (assoc app :avatut-rivit #{})
                 app)]
-      (if (contains? (:avatut-rivit app) avain)
-        (assoc app :avatut-rivit (disj (:avatut-rivit app) avain))
-        (assoc app :avatut-rivit (merge (:avatut-rivit app) avain)))))
-  )
+      (if (contains? (:avatut-rivit app) valiotsikko)
+        (assoc app :avatut-rivit (disj (:avatut-rivit app) valiotsikko))
+        (assoc app :avatut-rivit (merge (:avatut-rivit app) valiotsikko))))))

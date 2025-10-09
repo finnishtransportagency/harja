@@ -52,23 +52,33 @@
       [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennus))
        {:vayla-tyyli? true}]])])
 
-(defn- avaa-tai-sulje-haitari [event e! tehtavaryhmaotsikko]
+(defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
-    (e! (tiedot/->AvaaRivi tehtavaryhmaotsikko))))
+    (e! (tiedot/->AvaaRivi valiotsikko))))
 
-(defn- piirra-caret [e! tehtavaryhmaotsikko avatut-rivit]
-  (if (contains? avatut-rivit tehtavaryhmaotsikko)
+(defn- piirra-valiotsikko-caret [e! valiotsikko avatut-rivit]
+  (if (contains? avatut-rivit valiotsikko)
     [:img {:alt "Expander"
            :src "images/expander-down.svg"
            :tabIndex "0"
-           :on-key-down #(avaa-tai-sulje-haitari % e! tehtavaryhmaotsikko)}]
+           :on-click #(do
+                        (js/console.log "KLICK :: Avaa tai sulje haitari: " (pr-str valiotsikko))
+                        (e! (tiedot/->AvaaRivi valiotsikko)))
+           :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]
     [:img {:alt "Expander"
            :src "images/expander.svg"
            :tabIndex "0"
-           :on-key-down #(avaa-tai-sulje-haitari % e! tehtavaryhmaotsikko)}]))
+           :on-click #(do
+                       (js/console.log "KLICK :: Avaa tai sulje haitari: " (pr-str valiotsikko))
+                       (e! (tiedot/->AvaaRivi valiotsikko)))
+           :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]))
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit]
-  (let [_ (js/console.log "Tehtavataulukko :: tallennustila?" (pr-str tallennustila?) tallennustila? (boolean tallennustila?))
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+  (let [_ (js/console.log "Tehtavataulukko :: avatut-rivit" (pr-str avatut-rivit))
+        ;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
+        ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
+        tehtavat-ja-maarat (filter (fn [rivi] (contains? avatut-rivit (:kuuluu rivi))) tehtavat-ja-maarat)
+
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or
                                   haku-kaynnissa?
@@ -76,7 +86,9 @@
         sarakkeet [{:otsikko "nro" :leveys "5%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
-                                   (piirra-caret e! (:tehtavaryhmaotsikko rivi) avatut-rivit))
+                                   (if (:valiotsikko rivi)
+                                     (piirra-valiotsikko-caret e! (:valiotsikko rivi) avatut-rivit)
+                                     [:span]))
                     :solun-luokka solun-luokka-fn}
                    {:otsikko "Tehtävä"
                     :leveys "30%"
@@ -88,13 +100,21 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :euro :tasaa :vasen :fmt (partial fmt/euro-opt false)
+                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
                     :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
-                                    (nil? (:valiotsikko %))) :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}
+                                    (nil? (:valiotsikko %))) :solun-luokka solun-luokka-fn
+                    :fmt (fn [arvo]
+                           (if (nil? arvo) "-" arvo))}
+                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :euro :tasaa :oikea
+                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
+                    :fmt (fn [arvo]
+                           (if (nil? arvo) "-" arvo))}
+                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :muuttunut_maara :tyyppi :euro :tasaa :oikea
+                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
+                    :fmt (fn [arvo]
+                           (if (nil? arvo) "-" arvo))}
                    {:otsikko "Yksikkö" :leveys "20%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
@@ -136,7 +156,7 @@
       #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
 
    [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
-   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit]
+   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
    [debug/debug app]])
 
 (defn tehtavat-maarat*

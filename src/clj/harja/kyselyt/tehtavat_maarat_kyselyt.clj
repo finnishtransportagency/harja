@@ -46,6 +46,8 @@
                                          :jarjestys (:jarjestys tehtavaryhma)
                                          :valiotsikko (:valiotsikko tehtavaryhma)}
                                  tehtavat (:tehtavat tehtavaryhma)
+                                 ;; Lisää tehtävälle tieto, että mille väliotsikolle se kuuluu
+                                 tehtavat (map #(assoc % :kuuluu (:valiotsikko tehtavaryhma)) tehtavat)
                                  uudet (concat [t-rivi] tehtavat)
                                  lopulliset (concat lopulliset uudet)]
                              lopulliset))
