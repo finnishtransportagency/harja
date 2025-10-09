@@ -1,5 +1,5 @@
 -- name: hae-urakan-toimenpiteet
-SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id"
+SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id", t.jarjestys
   FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
  WHERE tpi.urakka = :urakkaid
