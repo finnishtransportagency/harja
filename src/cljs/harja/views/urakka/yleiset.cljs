@@ -313,7 +313,12 @@
                                                               [uusi-varalla])
                                                             (if (= :ei-muutosta uudet-varalla-toissijaiset)
                                                               varalla-toissijaiset
-                                                              uudet-varalla-toissijaiset))]
+                                                              uudet-varalla-toissijaiset))
+                                            ;;Vaikka Käyttövaltuushallinnasta tulisi käyttäjiä "Tilaajan_Urakanvalvoja"-roolilla, heillekin tallennetaan kantaan "ELY_Urakanvalvoja"-rooli,
+                                            ;;koska URAKANVASTUUHENKILO.rooli ei ole sama asia kuin Käyttövaltuushallinnassa käyttäjälle annettu rooli.
+                                            rooli (case rooli
+                                                    #{"ELY_Urakanvalvoja", "Tilaajan_Urakanvalvoja"} "ELY_Urakanvalvoja"
+                                                    "vastuuhenkilo" "vastuuhenkilo")]
 
                                         (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
