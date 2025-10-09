@@ -45,12 +45,14 @@
 (defonce tallentamattomia-muutoksia-atomit (atom {}))
 
 (defn rekisteroi-tallentamattomia-muutoksia-atomi!
-  "Rekisteröi atomi jota tarkistetaan sekä navigoinnin että beforeunload yhteydessä"
-  [atomi-avain atomi & {:keys [beforeunload-viesti]}]
-  (let [beforeunload-viesti (or beforeunload-viesti "Sinulla on tallentamattomia muutoksia!")]
+  [atomi-avain atomi-tai-funktio & {:keys [beforeunload-viesti]}]
+  (let [beforeunload-viesti (or beforeunload-viesti "Sinulla on tallentamattomia muutoksia!")
+        tarkistus-funktio (if (fn? atomi-tai-funktio)
+                            atomi-tai-funktio
+                            (fn [] @atomi-tai-funktio))]
     (swap! tallentamattomia-muutoksia-atomit
       assoc atomi-avain
-      {:atomi atomi
+      {:tarkistus-funktio tarkistus-funktio
        :beforeunload-viesti beforeunload-viesti
        :beforeunload-handler nil})))
 
@@ -62,35 +64,35 @@
       (.removeEventListener js/window "beforeunload" beforeunload-handler))
     (swap! tallentamattomia-muutoksia-atomit dissoc atomi-avain)))
 
-(defn- luo-beforeunload-handler [atomi viesti]
+(defn- luo-beforeunload-handler [tarkistus-funktio viesti]
   (fn [event]
-    (when @atomi
+    (when (tarkistus-funktio)
       (set! (.-returnValue event) viesti)
       viesti)))
 
 (defn- paivita-beforeunload-kuuntelijat! []
   (doseq [[atomi-avain entry] @tallentamattomia-muutoksia-atomit]
-    (let [{:keys [atomi beforeunload-viesti beforeunload-handler]} entry]
+    (let [{:keys [tarkistus-funktio beforeunload-viesti beforeunload-handler]} entry]
       (when-not beforeunload-handler
-        (let [handler (luo-beforeunload-handler atomi beforeunload-viesti)]
+        (let [handler (luo-beforeunload-handler tarkistus-funktio beforeunload-viesti)]
           (.addEventListener js/window "beforeunload" handler)
           (swap! tallentamattomia-muutoksia-atomit
             assoc-in [atomi-avain :beforeunload-handler] handler))))))
 
 (defn luo-muutosten-hallinta
-  "Luo yhtenäinen muutosten hallinta joka hoitaa sekä sisäisen navigoinnin varmistuksen 
+  "Luo yhtenäinen muutosten hallinta joka hoitaa sekä sisäisen navigoinnin varmistuksen
    että beforeunload-varoituksen selaimen sulkemisen/uudelleenlatauksen yhteydessä.
-   
+
    Palauttaa mapin jossa on :sisaan ja :ulos funktiot komponenttien elinkaaren hallintaan.
-   
+
    Parametrit:
    - atomi-avain: Uniikki avain tälle komponentille (keyword, esim. :tarjous-nakyma/muutokset)
-   - atomi: Reagent-atomi joka seuraa onko tallentamattomia muutoksia (true = muutoksia)
+   - atomi-tai-funktio: Reagent-atomi tai funktio joka seuraa onko tallentamattomia muutoksia (true = muutoksia)
    - :beforeunload-viesti: Valinnainen viesti beforeunload-tapahtumalle
-   
+
    Käyttöesimerkki lomake-komponentissa:
-   
- 
+
+
    (defn lomake-nakyma [e! _app]
      (let [muutokset-atom (atom false)  ; Seuraa lomakkeen muutoksia
            {:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
@@ -103,13 +105,13 @@
          (fn [e! app]
            [:div
             [grid/grid {:muutos #(reset! muutokset-atom true)} data]
-            [napit/tallenna #(do 
+            [napit/tallenna #(do
                                (tallenna-data!)
                                (reset! muutokset-atom false))]]))))"
-  [atomi-avain atomi & {:keys [beforeunload-viesti]}]
+  [atomi-avain atomi-tai-funktio & {:keys [beforeunload-viesti]}]
   {:sisaan (fn []
              (rekisteroi-tallentamattomia-muutoksia-atomi!
-               atomi-avain atomi
+               atomi-avain atomi-tai-funktio
                :beforeunload-viesti beforeunload-viesti)
              (paivita-beforeunload-kuuntelijat!))
    :ulos (fn []
@@ -118,33 +120,25 @@
 ;; Navigaation varmistukset jos tallentamattomia muutoksia
 
 (defn tarkista-tallentamattomat-muutokset
-  "Tarkistaa onko jossain rekisteröidyssä atomissa tallentamattomia muutoksia"
   []
   (some (fn [[avain entry]]
-          (let [atomi (:atomi entry)]
-            (when @atomi
-              {:avain avain :atomi atomi})))
+          (let [tarkistus-funktio (:tarkistus-funktio entry)]
+            (when (tarkistus-funktio)
+              {:avain avain :tarkistus-funktio tarkistus-funktio})))
     @tallentamattomia-muutoksia-atomit))
 
 (defn hae-kaikki-tallentamattomat-muutokset
-  "Hakee kaikki rekisteröidyt atomit joissa on tallentamattomia muutoksia"
   []
   (keep (fn [[avain entry]]
-          (let [atomi (:atomi entry)]
-            (when @atomi
-              {:avain avain :atomi atomi})))
+          (let [tarkistus-funktio (:tarkistus-funktio entry)]
+            (when (tarkistus-funktio)
+              {:avain avain :tarkistus-funktio tarkistus-funktio})))
     @tallentamattomia-muutoksia-atomit))
 
 (defn varmista-navigointi-fn
-  "Varmistaa että käyttäjä haluaa navigoida jos on tallentamattomia muutoksia.
-   Nollaa muutokset jos käyttäjä vahvistaa navigoinnin."
   [_uusi-sivu]
   (if (tarkista-tallentamattomat-muutokset)
-    (when (js/confirm "Sinulla on tallentamattomia muutoksia! Haluatko varmasti poistua? Muutokset menetetään.")
-      ;; Käyttäjä vahvisti - nollataan kaikki tallentamattomat muutokset
-      (doseq [{:keys [atomi]} (hae-kaikki-tallentamattomat-muutokset)]
-        (reset! atomi false))
-      true)
+    (js/confirm "Sinulla on tallentamattomia muutoksia! Haluatko varmasti poistua? Muutokset menetetään.")
     true))
 
 (defn aseta-valittu-valilehti-varmistuksella! 

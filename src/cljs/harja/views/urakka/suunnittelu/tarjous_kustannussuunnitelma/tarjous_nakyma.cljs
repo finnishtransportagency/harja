@@ -392,10 +392,13 @@
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
      [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]]))
 
+
+
+
 (defn nakyma* [e! _app]
   (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
                                 :tarjous-nakyma/muutokset
-                                tarjous-tiedot/tallentamattomia-muutoksia
+                                #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
                                 :beforeunload-viesti "Tarjouslomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
       (komp/sisaan

@@ -275,6 +275,13 @@
       (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
       (assoc :urakka-id (:urakka-id vastaus)))))
 
+(defn synkronoi-muutokset-atomiin!
+  "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
+   Kutsutaan automaattisesti kaikissa eventeissä jotka muuttavat tilaa."
+  [app]
+  (reset! tallentamattomia-muutoksia (boolean (get app :tallentamattomia-muutoksia? false)))
+  app)
+
 (extend-protocol tuck/Event
 
   HaeTarjouksenTiedot
@@ -310,7 +317,9 @@
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (-> (kasittele-tarjouksen-vastaus vastaus app)))
+    (-> (kasittele-tarjouksen-vastaus vastaus app)
+      (assoc :tallentamattomia-muutoksia? false)
+      (synkronoi-muutokset-atomiin!)))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -339,7 +348,8 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)))
+      (assoc :tallentamattomia-muutoksia? false)
+      (synkronoi-muutokset-atomiin!)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -714,10 +724,10 @@
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
-    (merkitse-muutos!)
     (-> app
       (assoc :hankinnat (sort-by :jarjestys hankinnat))
-      (assoc :tallentamattomia-muutoksia? true)))
+      (assoc :tallentamattomia-muutoksia? true)
+      (synkronoi-muutokset-atomiin!)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
