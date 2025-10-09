@@ -1,5 +1,7 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
   (:require [clojure.string :as str]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tyokalut.yleiset :as tyokalut]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]

@@ -56,7 +56,7 @@
   (let [;; Haetaan urakan toimenpiteet
         toimenpiteet (hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Kiinteähintaiset kustannukset
-        kiinteat (reduce (fn [acc {:keys [nimi koodi toimenpideinstanssi-id]}]
+        kiinteat (reduce (fn [acc {:keys [nimi koodi toimenpideinstanssi-id jarjestys]}]
                            (let [kiinteat (hae-kiintea-kustannus-kuukausittain
                                             db {:sopimus-id sopimus-id
                                                 :vuosi hoitovuoden-alkuvuosi
@@ -89,6 +89,7 @@
                                                               0)]
                              (conj acc {:nimi nimi
                                         :koodi koodi
+                                        :jarjestys jarjestys
                                         :toimenpideinstanssi-id toimenpideinstanssi-id
                                         :alkukausi alkukausi
                                         :alkukausi-indeksikorjattu alkukausi-indeksikorjattu
@@ -112,10 +113,10 @@
                     :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
                     :pysyvat-muutokset "Ei muutoksia"
-                    :toimenpideinstanssi-id 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
+                    :jarjestys 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
-        kiinteat (vec (sort-by :toimenpideinstanssi-id (conj kiinteat yhteenveto)))]
+        kiinteat (vec (sort-by :jarjestys (conj kiinteat yhteenveto)))]
     kiinteat))
 
 (defn hae-rahavaraukset

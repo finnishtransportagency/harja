@@ -8,7 +8,6 @@
             [harja.views.kartta.infopaneeli-test]
             [harja.views.urakka.siltatarkastukset-test]
             [harja.views.urakka.yllapitokohteet-test]
-            [harja.views.urakka.valitavoitteet-test]
             [harja.views.urakka.yleiset-test]
             [harja.views.urakka.kulut-test]
             [harja.ui.historia-test]
@@ -58,7 +57,6 @@
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test
            'harja.views.urakka.yllapitokohteet-test
-           'harja.views.urakka.valitavoitteet-test
            'harja.views.urakka.yleiset-test
            'harja.views.urakka.kulut-test
            'harja.ui.historia-test
