@@ -115,7 +115,7 @@
                                 :nimi (:materiaali tot-mat)}))
                            [] toteuma-materiaalit)
         ;; Me tiedetään, että kutsussa palautuu Hiekoitushiekkaa, niin varmistetaan, että sen id on oikein
-        odotetut-materiaalitiedot {:id 5, :nimi "Hiekoitushiekka"}]
+        odotetut-materiaalitiedot {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta"}]
     (is (= 200 (:status toteumavastaus)))
     (is (= 200 (:status materiaalivastaus)))
     (is (= odotetut-materiaalitiedot materiaalitiedot))))
@@ -246,8 +246,8 @@
     (is (not (nil? encoodattu-body)))
     ;(is (= materiaali_id (:materiaali_id ensimmainen-hoitovuosi)))
     (is (nil? (:materiaali (first ensimmainen-hoitovuosi))))
+    (is (= "Hiekoitushiekka, liukkaudentorjunta" (:materiaali (second ensimmainen-hoitovuosi))))
     (is (= "Talvisuola" (:materiaaliluokka (first ensimmainen-hoitovuosi))))
-    (is (= "Hiekoitushiekka" (:materiaali (second ensimmainen-hoitovuosi))))
     (is (= "Kelirikkomurske" (:materiaali (nth ensimmainen-hoitovuosi 2))))
     (is (= "hiekoitushiekka" (:materiaali_tyyppi (second ensimmainen-hoitovuosi))))
     (is (= "murske" (:materiaali_tyyppi (nth ensimmainen-hoitovuosi 2))))
