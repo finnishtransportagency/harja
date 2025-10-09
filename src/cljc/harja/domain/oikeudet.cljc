@@ -42,7 +42,8 @@
   urakat-suunnittelu-muutos-ja-lisatyot
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
-  urakat-toteumat-materiaalit)
+  urakat-toteumat-materiaalit
+  roolit)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

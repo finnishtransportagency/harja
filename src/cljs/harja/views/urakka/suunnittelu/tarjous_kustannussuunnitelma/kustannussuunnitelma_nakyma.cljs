@@ -90,7 +90,7 @@
         [:div.col-xs-12
          [grid/grid (merge (yhteiset/grid-perusasetukset (if vahvistettu? false true)  :nimi)
                       {:otsikko ""
-                       :jarjestys :toimenpideinstanssi-id
+                       :jarjestys :jarjestys
                        :muutos #(do
                                   (reset! yhteiset/tallenna-painettu false)
                                   (reset! yhteiset/grid-hankinnat-atom (vals (grid/hae-muokkaustila %)))
