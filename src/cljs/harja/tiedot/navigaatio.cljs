@@ -35,8 +35,6 @@
 (def valittu-valilehti reitit/valittu-valilehti)
 (def valittu-valilehti-atom reitit/valittu-valilehti-atom)
 
-(def valittu-sivu (reaction (get @reitit/url-navigaatio :sivu)))
-
 (declare kasittele-url! paivita-url valitse-urakka! aseta-valittu-valilehti-varmistuksella!)
 
 
@@ -155,12 +153,12 @@
 
 (defonce murupolku-nakyvissa? (reaction (and
                                           (not @raportit/raportit-nakymassa?)
-                                          (not= @valittu-sivu :tilannekuva)
-                                          (not= @valittu-sivu :info)
-                                          (not= @valittu-sivu :tienpidon-luvat)
-                                          (not= @valittu-sivu :urakoiden-tilanne)
-                                          (not= @valittu-sivu :about)
-                                          (not= @valittu-sivu :hallinta))))
+                                          (not= (@reitit/url-navigaatio :sivu) :tilannekuva)
+                                          (not= (@reitit/url-navigaatio :sivu) :info)
+                                          (not= (@reitit/url-navigaatio :sivu) :tienpidon-luvat)
+                                          (not= (@reitit/url-navigaatio :sivu) :urakoiden-tilanne)
+                                          (not= (@reitit/url-navigaatio :sivu) :about)
+                                          (not= (@reitit/url-navigaatio :sivu) :hallinta))))
 
 (defonce kartan-extent (atom nil))
 
@@ -452,11 +450,6 @@
   (reset! valittu-ilmoitus-id id)
   (paivita-url)
   (log "VALITTIIN ILMOITUS: " (pr-str id)))
-
-(defonce urakka-klikkaus-kuuntelija
-  (t/kuuntele! :urakka-klikattu
-    (fn [urakka]
-      (valitse-urakka! urakka))))
 
 (defn valitse-hallintayksikko-varmistuksella! [yks]
   (when (varmista-navigointi-fn :hallintayksikko)
