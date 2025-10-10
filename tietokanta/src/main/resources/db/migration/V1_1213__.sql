@@ -7,8 +7,8 @@ SET jarjestys = subquery.uusi_jarjestys
          SELECT id, ROW_NUMBER() OVER (ORDER BY jarjestys) as uusi_jarjestys
          FROM rahavaraus
      ) AS subquery
-
 WHERE rahavaraus.id = subquery.id;
+
 CREATE SEQUENCE rahavaraus_jarjestys_seq;
 
 SELECT setval('rahavaraus_jarjestys_seq', COALESCE((SELECT MAX(jarjestys) FROM rahavaraus), 0));
