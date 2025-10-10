@@ -1,40 +1,55 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu
   (:require [harja.domain.mhu :as mhu]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
 
 (defn jasenna-rahavaraukset-tarjouksesta
   "Muokkaa tarjouksen tietomallin rahavaraukset sopivaksi kustannussuunnitelman käyttöön.
   Saadaan [{:nimi <rahavarausnimi> :summa <summa> :summa-indeksikorjattu nil} ...]"
   [tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi]
   (let [tarjous-rahavaraukset (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %)) (:tarjous tarjous))
-        rahavaraus-rivit (reduce (fn [lopulliset tarjous-rahavaraus]
-                                   (let [vuosittainen-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))
-                                         suunniteltu-rahavaraus (some #(when (= (:nimi tarjous-rahavaraus) (:nimi %)) %) suunnitellut-rahavaraukset)]
-                                     (vec (concat lopulliset [{:nimi (:nimi tarjous-rahavaraus)
-                                                               :tarjous-summa vuosittainen-summa
+        rahavaraus-rivit (reduce (fn [lopulliset suunniteltu-rahavaraus]
+                                   (let [tarjous-rahavaraus (first (filter #(= (:rahavaraus_id suunniteltu-rahavaraus) (:rahavaraus-id %)) tarjous-rahavaraukset))
+                                         tarjous-summa (:summa (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (:hoitovuosittaiset-arvot tarjous-rahavaraus))))]
+                                     (vec (concat lopulliset [{:nimi (:nimi suunniteltu-rahavaraus)
+                                                               :tarjous-summa tarjous-summa
                                                                :suunniteltu-summa (:suunniteltu-summa suunniteltu-rahavaraus)
                                                                :suunniteltu-summa-indeksikorjattu (:suunniteltu-summa-indeksikorjattu suunniteltu-rahavaraus)}]))))
-                           [] tarjous-rahavaraukset)]
+                           [] suunnitellut-rahavaraukset)]
     rahavaraus-rivit))
 
 (defn- laske-2019-jjh-yhteen [johto-ja-hallintokorvaukset]
-  (let [summa (apply + (map
-                         (fn [rivi]
-                           (if (and (:tuntipalkka rivi) (:tunnit rivi))
-                             (* (:tuntipalkka rivi) (:tunnit rivi))
-                             0))
+  (let [summa (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0))
                          johto-ja-hallintokorvaukset))]
     summa))
+
+(defn- taydenna-rahavaraus-suunniteltu-summa
+  "Täydentää rahavarauksen suunnitellun summan tarjoussummalla jos suunniteltu summa puuttuu.
+   Laskee myös indeksikorjatun summan tarvittaessa."
+  [indeksikerroin rahavaraus]
+  (let [suunniteltu-summa (or (:suunniteltu-summa rahavaraus)
+                            (:tarjous-summa rahavaraus))
+        indeksikorjattu-summa (or (:suunniteltu-summa-indeksikorjattu rahavaraus)
+                                (when (:tarjous-summa rahavaraus)
+                                  (indeksi-kyselyt/indeksikorjaa (:tarjous-summa rahavaraus) indeksikerroin)))]
+    (cond-> rahavaraus
+      (nil? (:suunniteltu-summa rahavaraus))
+      (assoc :suunniteltu-summa suunniteltu-summa)
+
+      (nil? (:suunniteltu-summa-indeksikorjattu rahavaraus))
+      (assoc :suunniteltu-summa-indeksikorjattu indeksikorjattu-summa))))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -50,8 +65,9 @@
           ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
           hoitovuoden-alkuvuosi (cond
                                   (< hoitovuoden-alkuvuosi urakan-alkuvuosi) urakan-alkuvuosi
-                                  (> hoitovuoden-alkuvuosi urakan-loppuvuosi) urakan-loppuvuosi
+                                  (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) (dec urakan-loppuvuosi)
                                   :else hoitovuoden-alkuvuosi)
+          viimeinen-hoitovuosi? (boolean (= hoitovuoden-alkuvuosi (dec urakan-loppuvuosi)))
 
           vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
                          {:urakka-id urakka-id
@@ -80,10 +96,12 @@
           hankinnat-yht (:yhteensa (last kiinteat))
 
           ;: Hae rahavaraukset
-          suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id hoitovuoden-alkuvuosi)
-          rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
-          rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
+          suunnitellut-rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
+          rahavaraukset (jasenna-rahavaraukset-tarjouksesta tarjous suunnitellut-rahavaraukset hoitovuoden-alkuvuosi)
+          ;; Jos rahavarausta ei ole suunniteltu, niin hae suunniteltu summa tarjouksen puolelta
+          rahavaraukset (map (partial taydenna-rahavaraus-suunniteltu-summa indeksikerroin) rahavaraukset)
+          rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           erillishankinnat-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) erillishankinnat))
@@ -95,8 +113,8 @@
             (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
             (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2019-2024 db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-alkuvuosi toimenkuvat-tarjouksesta)
             (>= urakan-alkuvuosi 2025)
-            (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta)
-            :else (suunnitelma-q/hae-johto-ja-hallintokorvaukset db urakka-id hoitovuoden-alkuvuosi toimenkuvat-tarjouksesta))
+            (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
+            :else (suunnitelma-q/hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
 
           johto-ja-hallintokorvaukset-yht (cond
                                             ;; 2019 - 2021
@@ -111,7 +129,9 @@
           hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
 
           hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht johto-ja-hallintokorvaukset-yht hoidonjohtopalkkiot-yht)
-          pysyvat-muutokset-maara 0
+          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
+          ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
+          pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
           hoitovuoden-alun-tavoitehinta (+ hoitovuoden-alun-tavoitehinta pysyvat-muutokset-maara)
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (when indeksikerroin
                                                               (* indeksikerroin hoitovuoden-alun-tavoitehinta)) 0)
@@ -120,10 +140,16 @@
                                             (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
           hoitovuoden-alun-indeksikorjattu-kattohinta (or (when (and indeksikerroin hoitovuoden-alun-kattohinta)
                                                             (* indeksikerroin hoitovuoden-alun-kattohinta)) 0)
+
+          ;; Haetaan tieto, että onko tulevilla hoitovuosilla mitään arvoja tallennettuna.
+          tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi)
+
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
+             :tulevaisuudessa-arvoja? tulevaisuudessa-arvoja
+             :viimeinen-hoitovuosi? viimeinen-hoitovuosi?
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
                                     :erillishankinnat erillishankinnat
@@ -133,33 +159,58 @@
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
+                                    :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
                                     :kattohintakerroin kattohintakerroin
                                     :vahvistettu? indeksikorjaukset-vahvistettu?}}]
       k)))
 
-(defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+(defn jasenna-tallennettavat-vuodet
+  "Jäsentää talletettavat hoitovuodet listaksi.
+  Jos kopioi-tuleville-vuosille? on true, niin palauttaa kaikki hoitovuodet urakan alkamisvuodesta urakan loppumisvuoteen asti.
+  Muuten palauttaa vain hoitovuoden-alkuvuoden."
+  [db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?]
+  (if kopioi-tuleville-vuosille?
+    (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+          urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+          urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+          ;; Varmista, että hoitovuoden-alkuvuosi on urakan sisällä
+          hoitovuoden-alkuvuosi (cond
+                                  (< hoitovuoden-alkuvuosi urakan-alkuvuosi) urakan-alkuvuosi
+                                  (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) urakan-loppuvuosi
+                                  :else hoitovuoden-alkuvuosi)
+          vuodet (range hoitovuoden-alkuvuosi urakan-loppuvuosi)]
+      vuodet)
+    [hoitovuoden-alkuvuosi]))
+
+(defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id hoitovuoden-alkuvuosi (:toimenpiteet tiedot))
-    (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
-    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+    (let [vuodet (jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+      (doseq [vuosi vuodet]
+        (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
+        (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id vuosi))
+      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
-(defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+(defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot))
-    (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
+    (let [vuodet (jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+      (doseq [vuosi vuodet]
+        (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
+        (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
-(defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+(defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+          vuodet (jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)
+
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
           ;; Valitaan oikea avain riippuen urakan alkamisvuodesta
           ;; 2019-2024 käytetään vanhaa avainta, 2025- eteenpäin uutta avainta
@@ -167,31 +218,48 @@
           avain (if (<= urakan-alkuvuosi 2024)
                   :johto-ja-hallintokorvaukset-2019
                   :johto-ja-hallintokorvaukset-2025)]
-      (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain))
-      (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
+      (doseq [vuosi vuodet]
+        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi)
+        (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id vuosi))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
-(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
+(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot))
-    (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id hoitovuoden-alkuvuosi)
+    (let [vuodet (jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+      (doseq [vuosi vuodet]
+        (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
+        (suunnitelma-q/paivita-tavoite-ja-kattohinta db kayttaja urakka-id vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista?] :as tiedot}]
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [;; Tarkistetaan, että kilpailutettavat hankinnat, erillishankinnat, hoidonjohtopalkkiot on tallennettu.
+    (let [virhe []
+          ;; Onko indeksit valmiina
+          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+          indeksi-olemassa? (boolean (some #(= hoitovuoden-alkuvuosi (:vuosi %)) urakan-indeksit))
+          virhe (if indeksi-olemassa?
+                  virhe
+                  (conj virhe (str "Indeksit puuttuvat hoitovuodelle " hoitovuoden-alkuvuosi ". Indeksit on lisättävä ennen vahvistusta.")))
+
+          ;; Tarkistetaan, että kilpailutettavat hankinnat, erillishankinnat, hoidonjohtopalkkiot on tallennettu.
           ;; Muuten ei voida vahvistaa tavoitehintaa.
-          vahvistus-mahdollinen? (suunnitelma-q/voidaanko-vahvistaa-tavoitehintaa? db urakka-id hoitovuoden-alkuvuosi)
-          _ (when vahvistus-mahdollinen?
+          puuttuvat-suunnitelmat (suunnitelma-q/puuttuvat-suunnitelmat db urakka-id hoitovuoden-alkuvuosi)
+          suunnitelmat-annettu? (if (empty? puuttuvat-suunnitelmat)
+                                  true
+                                 false)
+          _ (when (and suunnitelmat-annettu? indeksi-olemassa?)
               (suunnitelma-q/vahvista-tavoite-ja-kattohinta db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi))
           vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
-          vastaus (if vahvistus-mahdollinen?
-                    vastaus
-                    (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista ja korjaa tiedot."))]
-      vastaus)))
+          virhe (if suunnitelmat-annettu?
+                    virhe
+                    (conj virhe (str "Kustannustietoja puuttuu. Tarkista " (str/join ", " puuttuvat-suunnitelmat))))]
+
+      (if-not (empty? virhe)
+        (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] (str/join " " virhe))
+        vastaus))))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
   component/Lifecycle

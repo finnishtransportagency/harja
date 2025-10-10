@@ -17,6 +17,7 @@
       "aluetieto": false,
       "raportoi-tehtava?": true,
       "ensisijainen": true,
+      "maaramitattava": true,
       "voimassaolo_alkuvuosi": 2024
     }
   ],

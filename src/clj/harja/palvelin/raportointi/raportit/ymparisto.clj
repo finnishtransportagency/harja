@@ -48,6 +48,13 @@
    :yht-rivi true
    :tyyppi "kesasuola"})
 
+(def materiaali-kaikki-heikoitushiekat-yhteensa
+  {:id 999
+   :nimi "Hiekoitushiekka yhteensä"
+   :yksikko "t"
+   :yht-rivi true
+   :tyyppi "hiekoitushiekka"})
+
 (def materiaali-kaikki-murskeet-yhteensa
   {:id 999
    :nimi "Murskeet yhteensä"
@@ -111,7 +118,7 @@
     "Kesäsuola sorateiden pölynsidonta" {:arvo "Kesäsuola" :selite "sorateiden pölynsidonta"}
     "Kesäsuola sorateiden kevätkunnostus" {:arvo "Kesäsuola" :selite "sorateiden kevätkunnostus"}
     "Kesäsuola päällystettyjen teiden pölynsidonta" {:arvo "Kesäsuola" :selite "päällystettyjen teiden pölynsidonta"}
-    "Kesäsuola yhteensä" {:arvo "Kesäsuola yhteensä" :selite "100% kuivatonnia"}
+    "Kesäsuola yhteensä" {:arvo "Kesäsuola yhteensä" :selite "77% kuivatonnia"}
     "Murskeet yhteensä" {:arvo "Murskeet yhteensä" :selite "tonnia"}
 
     ;; default

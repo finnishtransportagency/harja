@@ -1,9 +1,9 @@
 (ns harja.views.urakka.suunnittelu
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.bootstrap :as bs]
+  (:require [harja.ui.bootstrap :as bs]
+            [harja.pvm :as pvm]
+            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
@@ -16,29 +16,36 @@
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma :as tarjous-nakyma]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma :as kustannussuunitelma-nakyma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
-            [harja.loki :refer [log]]
-            [harja.ui.debug :as debug]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.domain.urakka :as ur]
-            [tuck.core :as tuck])
+            [harja.domain.urakka :as ur]))
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
-
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
-      (case valilehti
-            :materiaalit (and (not (#{ :teiden-hoito  :paallystys :tiemerkinta} tyyppi))
-                              (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-            :tehtavat (= tyyppi  :teiden-hoito )
-            :suola (#{:hoito  :teiden-hoito } tyyppi)
-            :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
-                            (not= tyyppi :teiden-hoito))
-            :kiintiot (= tyyppi :vesivayla-hoito)
-            :kokonaishintaiset (not= tyyppi  :teiden-hoito )
-            :yksikkohintaiset (not= tyyppi  :teiden-hoito )
-            :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm]}]
+  (case valilehti
+    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+                   (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+    :tehtavat (= tyyppi :teiden-hoito)
+    :suola (#{:hoito :teiden-hoito} tyyppi)
+    :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+            (not= tyyppi :teiden-hoito))
+    :kiintiot (= tyyppi :vesivayla-hoito)
+    :kokonaishintaiset (not= tyyppi :teiden-hoito)
+    :yksikkohintaiset (not= tyyppi :teiden-hoito)
+    :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
+    :uusi-kustannussuunnitelma (and
+                                 (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
+                                 (or
+                                   (kommunikaatio/kehitysymparistossa?) ;; Joko kehitysympäristössä
+                                   (and (>= (pvm/vuosi alkupvm) 2025) ;; Tai aloituvuosi on 2025 tai myöhemmin
+                                     (not (kommunikaatio/kehitysymparistossa?)) ;; Ja ei olla kehitysympäristössä
+                                     )))
+    :tarjous (and
+               (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
+               (or
+                 (kommunikaatio/kehitysymparistossa?) ;; Joko kehitysympäristössä
+                 (and (>= (pvm/vuosi alkupvm) 2025) ;; Tai aloituvuosi on 2025 tai myöhemmin
+                   (not (kommunikaatio/kehitysymparistossa?)) ;; Ja ei olla kehitysympäristössä
+                   )))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -47,20 +54,23 @@
 
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :suunnittelu)}
+                   :active (nav/valittu-valilehti-atom :suunnittelu)
+                   :on-change #(nav/aseta-valittu-valilehti! :suunnittelu %)}
 
-          "Hoitovuoden alun tavoitehinta"
+          "Tarjouksen tiedot"
           :tarjous
           (when (and
-                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
-                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (valilehti-mahdollinen? :tarjous ur)
+                  (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
-          "Uusi Kustannussuunnitelma"
+          "Hoitovuoden alun tavoitehinta"
           :uusi-kustannussuunnitelma
           (when (and
-                (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
-                (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (valilehti-mahdollinen? :uusi-kustannussuunnitelma ur)
+                  (istunto/ominaisuus-kaytossa? :kustannussuunnitelma-tarjous)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [kustannussuunitelma-nakyma/kustannussuunitelma])
 
           "Kustannussuunnitelma"
