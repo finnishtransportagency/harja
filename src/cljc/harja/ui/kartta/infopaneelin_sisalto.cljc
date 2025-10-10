@@ -964,13 +964,26 @@
 
 (defn- jarjesta [eka toka]
   (cond
-    (false? eka)
-    false
+   ;; Ei järjestetä tapaukset
+    (false? eka) false
+    (false? toka) true
+    (nil? eka) false
+    (nil? toka) true
 
-    (false? toka)
-    true
+    ;; Merkkijonot - aakkosjärjestys
+    (and (string? eka) (string? toka))
+    (pos? (compare (string/lower-case eka) (string/lower-case toka)))
 
-    :default (pvm/jalkeen? eka toka)))
+    ;; Numerot
+    (and (number? eka) (number? toka))
+    (> eka toka)
+
+    ;; Päivämäärät
+    (and (pvm/pvm? eka) (pvm/pvm? toka))
+    (pvm/jalkeen? eka toka)
+
+    :else
+    false))
 
 (defn- skeema-ilman-tyhjia-riveja [skeema]
   (assoc skeema :tiedot (keep identity (:tiedot skeema))))
