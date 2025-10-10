@@ -4,7 +4,7 @@
 UPDATE rahavaraus
 SET jarjestys = subquery.uusi_jarjestys
     FROM (
-         SELECT id, ROW_NUMBER() OVER (ORDER BY id) as uusi_jarjestys
+         SELECT id, ROW_NUMBER() OVER (ORDER BY jarjestys) as uusi_jarjestys
          FROM rahavaraus
      ) AS subquery
 
