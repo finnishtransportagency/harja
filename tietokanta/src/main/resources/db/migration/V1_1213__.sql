@@ -7,6 +7,7 @@ SET jarjestys = subquery.uusi_jarjestys
          SELECT id, ROW_NUMBER() OVER (ORDER BY id) as uusi_jarjestys
          FROM rahavaraus
      ) AS subquery
+
 WHERE rahavaraus.id = subquery.id;
 CREATE SEQUENCE rahavaraus_jarjestys_seq;
 
