@@ -241,8 +241,11 @@
   (or placeholder
     (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
-                                :as kentta} data]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
+                                       aputeksti regex focus on-focus on-blur lomake?
+                                       toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
+                               data]
+
   [:input {:class (cond-> nil
                     (and lomake?
                       (not vayla-tyyli?)) (str "form-control ")
@@ -484,14 +487,15 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa?] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen?] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
                 :fmt (or fmt (partial fmt/euro-opt false nayta-plus))
                 :salli-whitespace? true
                 :yksikko (when-not ei-yksikkoa? (or teksti-oikealla "€"))
                 :desimaalien-maara 2
-                :veda-oikealle? true)
+                :veda-oikealle? true
+                :vaadi-ei-negatiivinen? (or vaadi-ei-negatiivinen? false))
    data])
 
 (defmethod nayta-arvo :euro [{:keys [fmt] :as kentta} data]
@@ -792,12 +796,14 @@
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? 
+                            disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
                   {:default-checked oletus-valittu?}
                   {:checked valittu?})
         selite (:selite opts)
+        vaihtoehto-disabloitu? (:disabloitu? opts)
         valittu-komponentti (:valittu-komponentti opts)]
     [:<>
      [:div {:class (if (false? kaari-flex-row?)
@@ -806,13 +812,15 @@
        (merge {:id id
                :type :radio
                :name ryhma
-               :disabled disabloitu?
+               :disabled (if vaihtoehto-disabloitu? vaihtoehto-disabloitu? disabloitu?)
                :class radio-luokka
                :on-change muutos-fn}
          checked)]
       [:label (merge
                 {:style (when (false? kaari-flex-row?) {:flex-shrink 0 :flex-grow 1})}
-                {:class (when-not nayta-rivina? "radio-column")}
+                {:class (if (and (not nayta-rivina?) (:luokka opts))
+                          (:luokka opts)
+                          (when-not nayta-rivina? "radio-column"))}
                 {:for id}) teksti]]
      [:div.vayla-radio-lapsi
       (when selite
@@ -1890,10 +1898,11 @@
           [:div.kentta
            [tee-kentta kentta-params arvo-atom]])]])
 
-(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
-  [:span {:class (or luokka "label-ja-kentta")}
+(defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+  [:span {:class (str (or luokka "label-ja-kentta") " lukutila-kentta")
+          :style tyylit}
    [:span.kentan-otsikko otsikko]
-   [:div.kentta
+   [:div.kentta.lukutila-arvo
     [nayta-arvo kentta-params arvo-atom]]])
 
 (def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")

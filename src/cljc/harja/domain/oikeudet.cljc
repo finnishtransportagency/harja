@@ -33,7 +33,17 @@
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
   hallinta-indeksit
-  urakat-yleiset)
+  urakat-yleiset
+  hallinta-tarjoushinnat
+  hallinta-rahavaraukset
+  urakat-suunnittelu-tehtava-ja-maaraluettelo
+  urakat-suunnittelu-kokonaishintaisettyot
+  urakat-suunnittelu-yksikkohintaisettyot
+  urakat-suunnittelu-muutos-ja-lisatyot
+  urakat-suunnittelu-materiaalit
+  urakat-vesivaylasuunnittelu-kiintiot
+  urakat-toteumat-materiaalit
+  roolit)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

@@ -9,3 +9,5 @@
 
 (defn onko-olemassa? [db urakka-id sopimus-id]
   (:exists (first (onko-olemassa db urakka-id sopimus-id))))
+
+(declare hae-urakan-sopimus-idt)

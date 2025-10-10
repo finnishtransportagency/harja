@@ -16,7 +16,7 @@
                                                                                            (let [urakka-alkupvm (:urakka-alkupvm (first urakan-tarjoushinnat))
                                                                                                  hoidokauden-alkuvuosi (+ (pvm/vuosi urakka-alkupvm) vuosinro)
                                                                                                  paatoksia-tekematta? (valikatselmus-palvelu/onko-paatoksia-tekematta db kayttaja {:urakkaid urakka
-                                                                                                                                                                                  :kuluva-hoitovuosi hoidokauden-alkuvuosi})]
+                                                                                                                                                                                   :kuluva-hoitovuosi hoidokauden-alkuvuosi})]
                                                                                              (conj acc {:urakka urakka
                                                                                                         :urakka-nimi urakka-nimi
                                                                                                         ;; Asetetaan id (urakka_tavoite -taulu), jos se saatiin tietokannasta

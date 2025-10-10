@@ -117,7 +117,7 @@
                 hallintayksikon-urakkalista (<! (urakat/hae-hallintayksikon-urakat
                                                   {:id (get-in haettu-urakka [:hallintayksikko :id])}))]
             (reset! nav/hallintayksikon-urakkalista hallintayksikon-urakkalista)
-            (nav/aseta-hallintayksikko-ja-urakka
+            (nav/aseta-hallintayksikko-ja-urakka-varmistuksella!
               (get-in haettu-urakka [:hallintayksikko :id])
               haettu-urakka))
           :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]

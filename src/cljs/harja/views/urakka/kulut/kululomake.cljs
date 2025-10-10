@@ -254,9 +254,7 @@
                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
 
 (defn- rahavaraus-kohdistus [e! lomake kohdistus rahavaraukset nro]
-  (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))
-        _ (when (= 1 (count tehtavaryhmat))
-            (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle (first tehtavaryhmat) nro)))]
+  (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))]
    [:div.row
     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
      [:div.label-ja-alasveto {:style {:width "320px"}}
@@ -355,8 +353,8 @@
                            [:hankintakulu :rahavaraus :lisatyo :muukulu])
         voiko-muokata? (cond
                         ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
-                        (= :paatos kohdistustyyppi) false
-                        :else true)]
+                         (= :paatos kohdistustyyppi) false
+                         :else true)]
     [:div {:style {:background-color "#F5F5F5"
                    :padding-bottom "20px"
                    :margin-bottom "10px"}}
@@ -390,25 +388,26 @@
        :hankintakulu [hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro]
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
-       :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro])
+       :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
+       :jjh-muutos [:<> "Sisältöä ei löytynyt."])
 
      ;; Kohdistuksen summa
      [:div.row
       [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
        [:div
         [kentat/tee-otsikollinen-kentta
-         {:otsikko "Määrä € *"
-          :otsikon-tag "span"
-          :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-          :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
-                          :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
-                          :tyyppi :euro
-                          :tyylit {:width "110px" :height "34px"}
-                          :vaadi-negatiivinen? urakoitsija-maksaa?
-                          :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
-                          ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                          :input-luokka "maara-input"
-                          :vayla-tyyli? true}}]]]]]))
+           {:otsikko "Määrä € *"
+            :otsikon-tag "span"
+            :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
+            :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
+                            :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
+                            :tyyppi :euro
+                            :tyylit {:width "110px" :height "34px"}
+                            :vaadi-negatiivinen? urakoitsija-maksaa?
+                            :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
+                            ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
+                            :input-luokka "maara-input"
+                            :vayla-tyyli? true}}]]]]]))
 
 (defn testausvalinnat [e! app]
   (when (k/kehitysymparistossa?)
