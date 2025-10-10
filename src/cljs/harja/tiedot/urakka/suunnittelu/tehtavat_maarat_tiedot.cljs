@@ -29,11 +29,11 @@
 (defrecord HaeTehtavatJaMaaratOnnistui [vastaus parametrit])
 (defrecord HaeTehtavatJaMaaratEpaonnistui [vastaus parametrit])
 
-(defrecord TallennaTehtavat [tehtavat])
+(defrecord TallennaTehtavat [tehtavat kopioi-tuleville-vuosille?])
 (defrecord TallennaTehtavatOnnistui [vastaus])
 (defrecord TallennaTehtavatEpaonnistui [vastaus])
 
-(defrecord ToggleTallennus [])
+(defrecord ToggleTallennusTila [])
 (defrecord PeruutaTallennus [])
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
@@ -70,10 +70,11 @@
       (assoc :haku-kaynnissa? false)))
 
   TallennaTehtavat
-  (process-event [{tehtavat :tehtavat} app]
+  (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
       {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
        :tehtavat tehtavat
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
        :valittu-hoitokausi @u/valittu-hoitokausi}
       {:onnistui ->TallennaTehtavatOnnistui
        :epaonnistui ->TallennaTehtavatEpaonnistui
@@ -99,7 +100,7 @@
     (merkitse-muutos!)
     (assoc app :tehtavat-ja-maarat (sort-by :jarjestys tehtavat)))
 
-  ToggleTallennus
+  ToggleTallennusTila
   (process-event [_ app]
     (assoc app :tallennustila? (not (:tallennustila? app))))
 

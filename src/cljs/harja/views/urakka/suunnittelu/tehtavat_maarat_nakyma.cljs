@@ -5,6 +5,7 @@
             [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka :as u]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
@@ -14,7 +15,8 @@
             [harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot :as tiedot]
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
+(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
+                             tehtavat-ja-maarat kopioi-tuleville-vuosille?]
   [:div.painikkeet.text-right
    [:div.grid-status-viestit
     (cond
@@ -39,9 +41,16 @@
 
    (if tallennustila?
      [:div
+      (when kopioi-tuleville-vuosille?
+        [:span {:style {:margin-left "1rem"}}
+         [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
+          #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat true))
+          {:disabled (or tallennus-kesken? false)
+           :luokka "ikoni-16"
+           :ikoni (ikonit/action-copy)}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
-        #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat))
+        #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
         {:disabled (or tallennus-kesken? false)}]]
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-toissijainen "Peruuta"
@@ -49,7 +58,7 @@
         {:disabled (or tallennus-kesken? false)}]]]
 
      [:span {:style {:margin-left "1rem"}}
-      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennus))
+      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennusTila))
        {:vayla-tyyli? true}]])])
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
@@ -135,21 +144,25 @@
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat tehtavaryhman-tehtavat avatut-rivit] :as app}]
-  [:div#vayla
-   [:div.row
-    [:div.col-xs-12
-     [:h1 "Tehtävät ja määrät"]]]
+                         tehtavat-ja-maarat avatut-rivit] :as app}]
+  (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
+        valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+        onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
+    [:div#vayla
+        [:div.row
+         [:div.col-xs-12
+          [:h1 "Tehtävät ja määrät"]]]
 
-   [:div.flex-row {:style {:justify-content "flex-start"}}
-    [:div.filtteri {:style {:width "200px"}}
-     [urakka-valinnat/paivittava-urakkavuosi-tuck
-      @u/valittu-aikavali
-      #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
+        [:div.flex-row {:style {:justify-content "flex-start"}}
+         [:div.filtteri {:style {:width "200px"}}
+          [urakka-valinnat/paivittava-urakkavuosi-tuck
+           @u/valittu-aikavali
+           #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
 
-   [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat]
-   [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
-   [debug/debug app]])
+        [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
+         (not onko-viimeinen-vuosi?)]
+        [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+        [debug/debug app]]))
 
 (defn tehtavat-maarat*
   [e! _]

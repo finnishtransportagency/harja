@@ -1,20 +1,22 @@
 (ns harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
-            [clojure.pprint :as pprint]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]))
 
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
    Palautetaan tallennetut tehtävät ja määrät."
-  [db kayttaja {:keys [urakka-id] :as tiedot}]
+  [db kayttaja {:keys [urakka-id kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [hk-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
-          _ (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) hk-alkuvuosi (:tehtavat tiedot))
+          vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
+          _ (doseq [vuosi vuodet]
+              (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) vuosi (:tehtavat tiedot)))
           ;; Haetaan tallennetut tiedot
           tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hk-alkuvuosi)]
       tehtavat-ja-maarat)))
