@@ -57,19 +57,7 @@
 
        [:section.klinikat
         [:h2 "Harja-klinikat"]
-        [:p.sisalto "Vuonna 2025 Harjan kehitystiimi järjestää joka neljäs keskiviikko Harja-klinikoita. Niissä kerrotaan ajankohtaisia Harjan käyttöön liittyviä asioita, sekä on mahdollista esittää kysymyksiä. Alla Harja-klinikoiden alustavia päivämääriä (voi tulla muutoksia). Pyrimme ilmoittamaan Harja-klinikoista myös Harjassa näkyvillä mainosbannereilla. Tervetuloa!"]
-        (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "18.6.2025"))
-          [:span
-           [:br]
-           [:p "Seuraavat Harja-klinikat:"]
-           [:ul
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "29.1.2025")) [:li "Ke 29.1.2025"])
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "26.2.2025")) [:li "Ke 26.2.2025"])
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "26.3.2025")) [:li "Ke 26.3.2025"])
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "23.4.2025")) [:li "Ke 23.4.2025"])
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "21.5.2025")) [:li "Ke 21.5.2025"])
-            (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "18.6.2025")) [:li "Ke 18.6.2025"])]])]
-
+        [:p.sisalto "Vuonna 2025 Harjan kehitystiimi järjestää joka neljäs keskiviikko Harja-klinikoita. Niissä kerrotaan ajankohtaisia Harjan käyttöön liittyviä asioita, sekä on mahdollista esittää kysymyksiä. Lisätietoa Harja-klinikoiden aikataulusta löydät Sharepointista: " [yleiset/staattinen-linkki-uuteen-valilehteen "siirry Sharepointiin" "https://vayla365.sharepoint.com/sites/ExtranetJarjestelmat/SitePages/Harja.aspx"] ". Pyrimme ilmoittamaan Harja-klinikoista myös Harjassa näkyvillä mainosbannereilla. Tervetuloa!"]]
 
         [:section.koulutusvideot
          [:h2 "Harja-koulutusvideot"]
