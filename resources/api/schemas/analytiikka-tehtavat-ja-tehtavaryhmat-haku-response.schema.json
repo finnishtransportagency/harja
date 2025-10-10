@@ -59,18 +59,23 @@
           "suoritettavatehtava": {
             "type": ["string", "null"]
           },
-
           "kasin_lisattava_maara": {
             "type": "boolean"
           },
           "aluetieto": {
-            "type": "boolean"
+            "type": "boolean",
+            "$comment": "Jos true, tehtävän suunniteltu määrä on luonteeltaan urakka-aluetta kuvaileva (esim. hoitoluokkatehtävät)."
           },
           "raportoi-tehtava?": {
             "type": "boolean"
           },
           "ensisijainen": {
-            "type": "boolean"
+            "type": "boolean",
+            "$comment": "Tämä tieto löytyy Harjassa sarakkeesta TEHTAVA.mhu-tehtava?"
+          },
+          "maaramitattava": {
+            "type": "boolean",
+            "$comment": "Jos true, tehtävän suunniteltuja ja toteutuneita määriä seurataan tehtävän yksikön mukaan."
           },
           "muokattu": {
             "type": ["string", "null"],
