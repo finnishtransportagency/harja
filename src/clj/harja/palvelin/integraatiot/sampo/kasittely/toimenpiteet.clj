@@ -2,11 +2,16 @@
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
+            [harja.kyselyt.urakat :as urakka]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
   (:use [slingshot.slingshot :only [throw+]]))
 
+
+(defn onko-mhu-toimenpidekoodi? [toimenpidekoodi]
+  ;MH-urakoissa (urakka.tyyppi: teiden-hoito) sallitut toimenpidekoodit
+ (contains? #{23104 23116 23124 20107 20191 14301 23151} toimenpidekoodi))
 
 (defn paivita-toimenpide [db nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id
                           talousosasto-polku tuote-id tuote-polku urakka-sampo-id
@@ -55,6 +60,12 @@
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Illegal operation code provided.")
              :ei-kriittinen? true
              :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu."}]}))
+  (when (not (and (= (urakka/hae-urakkatyyppi-sampoidlla sampo-urakka-id) "teiden-hoito") (onko-mhu-toimenpidekoodi? sampo-toimenpidekoodi)))
+    (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
+             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Illegal operation code provided.")
+             :ei-kriittinen? true
+             :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu maanteiden hoidon urakoissa."}]}))
+
   (if (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
     (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
       (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
