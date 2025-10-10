@@ -14,7 +14,7 @@
 
 (declare
   tallenna-lopputilanne! hae-urakan-lupaukset
-  hae-lupauksen-kaikki-kustannusennusteet paivita-kustannusennuste-lopulliset-pisteet!
+  hae-lupauksen-kaikki-kustannusennusteet hae-kustannusennuste-kuukausi-pisterajat paivita-kustannusennuste-lopulliset-pisteet!
   hae-lupaus hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
   hae-kaynnissa-olevat-lupaus-urakat hae-lupauksen-urakkatieto paivita-urakan-luvatut-pisteet<!
   lisaa-urakan-luvatut-pisteet<! paivita-lupaus-vastaus! hae-lupaus-vastaus lisaa-lupaus-vastaus<!

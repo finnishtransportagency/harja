@@ -308,7 +308,6 @@ WHERE ke."lupaus-id" = :lupaus-id
   AND ke.maarapaiva = :maarapaiva;
 
 -- name: hae-kustannusennuste
--- single?: true  
 SELECT ke.id,
        ke."lupaus-id",
        ke."urakka-id", 
@@ -332,13 +331,14 @@ INSERT INTO lupaus_kustannusennuste
   ("lupaus-id", "urakka-id", hoitovuosi, maarapaiva, 
    ennustettu_tavoitehinta, ennustetut_kustannukset, syotetty_pvm, 
    lasketut_pisteet, luoja)
-VALUES (:lupaus-id, :urakka-id, :hoitovuosi-alkuvuosi, :maarapaiva,
+VALUES (:lupaus-id, :urakka-id, :hoitovuosi, :maarapaiva,
         :tavoitehinta, :toteutuneet-kustannukset, :syotetty-pvm,
         :pisteet, :kayttaja);
 
 -- name: paivita-kustannusennuste<!
 UPDATE lupaus_kustannusennuste
 SET ennustettu_tavoitehinta = :tavoitehinta,
+    hoitovuosi = :hoitovuosi,
     ennustetut_kustannukset = :toteutuneet-kustannukset,
     syotetty_pvm = :syotetty-pvm,
     lasketut_pisteet = :pisteet,
@@ -375,6 +375,16 @@ FROM lupaus_kustannusennuste_kuukausi_pisteet kp
 WHERE kp."lupaus-id" = :lupaus-id
   AND kp.kuukausi = :kuukausi  
 ORDER BY kp.paiva;
+
+-- name: hae-kustannusennuste-kuukausi-offset 
+-- single?: true
+-- Hakee kuukauden pisterajat JSON-muodossa uudesta taulusta
+SELECT kp.pisteytys_hoitovuosi_offset AS "pisteytys-hoitovuosi-offset"
+FROM lupaus_kustannusennuste_kuukausi_pisteet kp
+WHERE kp."lupaus-id" = :lupaus-id
+  AND kp.kuukausi = :kuukausi  
+ORDER BY kp.paiva;
+
 
 -- name: hae-valikatselmuksen-vahvistetut-kustannusennusteet
 SELECT pty.tavoitehinta AS "vahvistettu-tavoitehinta",
