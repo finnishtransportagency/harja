@@ -120,11 +120,13 @@
    
    HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
    Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
-  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt?]}] 
+  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt? hoitovuosi-nro]}] 
     (when hoitovuosi-paattynyt?
       ;; Hae kaikki kuukaudet joissa on kustannusennusteita ja pisteitä
       (let [kuukaudet-pisteilla (->> lupaus-kuukaudet
                                   (filter #(get-in % [:kustannusennuste :pisteet]))
+                                  (filter #(= hoitovuosi-nro
+                                              (get-in % [:kustannusennuste :hoitovuosi])))
                                   (map #(get-in % [:kustannusennuste :pisteet])))]
         (if (seq kuukaudet-pisteilla)
           ;; Laske keskiarvo vain niistä kuukausista joissa on pisteitä
@@ -702,6 +704,35 @@
     #?(:clj (double (/ (double a) (double b)))
        :cljs (/ a b))))
 
+(defn laske-pisteytyshoitovuosi
+  "Laskee hoitovuoden, johon kustannusennuste-kuukausi pisteytetään.
+  
+  Parametrit:
+  - vuosi: Kalenterivuosi jolloin kustannus kirjataan (esim. 2024)
+  - kuukausi: Kuukausi 1-12 (esim. 8 = elokuu)
+  - offset: Siirtymä normaalista pisteytyksestä (0 = normaali, 1 = +1 vuosi)
+  
+  Logiikka:
+  - Jos offset = 0: Kuukausi pisteytetään normaalisti sen omassa hoitokaudessa
+    -> Käytetään pvm/hoitokauden-alkuvuosi funktiota
+  - Jos offset > 0: Kuukausi pisteytetään N vuotta myöhemmin
+    -> Käytetään kalenterivuotta + offset
+  
+  Esimerkit:
+  - Elokuu 2024, offset=1 => 2025 (pisteytetään HK 2025-2026:ssa)
+  - Tammikuu 2025, offset=0 => 2024 (pisteytetään HK 2024-2025:ssa)
+  - Lokakuu 2024, offset=1 => 2025 (pisteytetään HK 2025-2026:ssa)"
+  [vuosi kuukausi offset]
+  {:pre [(int? vuosi)
+         (int? kuukausi)
+         (int? offset)
+         (<= 1 kuukausi 12)
+         (>= offset 0)]
+   :post [(int? %)]}
+  (if (pos? offset)
+    (+ vuosi offset)
+    (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
+
 (defn laske-kustannusennusteen-tarkkuus
   "Laskee kustannusennusteen tarkkuuden ja palauttaa tietokantaan tallennettavan muodon."
   [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta
@@ -759,46 +790,6 @@
          :laskentakaava-teksti kaava-teksti
          :laskentakaava-parametrit parametrit
          :laskentakaava-vaiheet vaiheet}))))
-
-(defn maarita-kustannusennuste-pisteet-kovakoodattu
-  "Määrittää pisteet tarkkuuden ja kuukauden perusteella.
-   Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
-  [tarkkuus-prosentti kuukausi]
-  {:pre [(number? tarkkuus-prosentti) (number? kuukausi)]}
-  (let [tarkkuus-itseisarvo (Math/abs tarkkuus-prosentti)]
-    (case kuukausi
-      ;; Lokakuu: ≤ 7,0% = 8p, ≤ 9,0% = 4p, > 9,0% = 1p
-      10 (cond
-           (<= tarkkuus-itseisarvo 7.0) 8
-           (<= tarkkuus-itseisarvo 9.0) 4
-           :else 1)
-
-      ;; Tammikuu: ≤ 4,0% = 8p, ≤ 6,0% = 4p, > 6,0% = 1p
-      1 (cond
-          (<= tarkkuus-itseisarvo 4.0) 8
-          (<= tarkkuus-itseisarvo 6.0) 4
-          :else 1)
-
-      ;; Huhtikuu: ≤ 2,0% = 8p, ≤ 3,0% = 4p, > 3,0% = 1p
-      4 (cond
-          (<= tarkkuus-itseisarvo 2.0) 8
-          (<= tarkkuus-itseisarvo 3.0) 4
-          :else 1)
-
-      ;; Kesäkuu: ≤ 1,0% = 8p, ≤ 2,0% = 4p, > 2,0% = 1p
-      6 (cond
-          (<= tarkkuus-itseisarvo 1.0) 8
-          (<= tarkkuus-itseisarvo 2.0) 4
-          :else 1)
-
-      ;; Elokuu: samat arvot kuin lokakuu
-      8 (cond
-          (<= tarkkuus-itseisarvo 7.0) 8
-          (<= tarkkuus-itseisarvo 9.0) 4
-          :else 1)
-
-      ;; Muut kuukaudet - oletusarvo
-      0)))
 
 (defn odottaa-urakoitsijan-kannanottoa?
   "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
