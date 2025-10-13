@@ -163,15 +163,26 @@
             lisatyot)))
 
 (defn- luo-excel-rivi-toimenpiteelle [rivi ensimmainen?]
-  (if ensimmainen?
+  (let [nayta-erotus? (cond
+                        (and
+                          (= (:paaryhma rivi) "Muutokset")
+                          (= (:toimenpide rivi) "Muutostyöt (erillisrahoitetut)"))
+                        true
+
+                        (= (:paaryhma rivi) "Muutokset") 
+                        false 
+
+                        :else true)]
+    
+    (if ensimmainen?
     {:rivi [(:paaryhma rivi)
             (:toimenpide rivi)
             (:tehtava_nimi rivi)
             (:budjetoitu_summa rivi)
             (:budjetoitu_summa_indeksikorjattu rivi)
             (:toteutunut_summa rivi)
-            (:erotus rivi)
-            (:prosentti rivi)]
+            (when nayta-erotus? (:erotus rivi))
+            (when nayta-erotus? (:prosentti rivi))]
      :lihavoi? true}
     (merge {:rivi [nil
                    (:toimenpide rivi)
@@ -179,9 +190,9 @@
                    (:budjetoitu_summa rivi)
                    (:budjetoitu_summa_indeksikorjattu rivi)
                    (:toteutunut_summa rivi)
-                   (:erotus rivi)
-                   (:prosentti rivi)]
-            :lihavoi? (:lihavoi? rivi)})))
+                   (when nayta-erotus? (:erotus rivi))
+                   (when nayta-erotus? (:prosentti rivi))]
+            :lihavoi? true}))))
 
 (defn- luo-excel-rivit [kustannusdata avain excel-nimi]
   (let [bud (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu"))])
@@ -239,13 +250,19 @@
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm
                                         :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})
+        
         kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain)
+
         hankintakustannusten-toimenpiteet (rivita-toimenpiteet
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])
                                             "Suunnitellut hankinnat")
         rahavarausten-toimenpiteet (rivita-toimenpiteet
                                      (get-in kustannusdata [:taulukon-rivit :rahavaraukset])
                                      "Rahavaraukset")
+        muutosten-toimenpiteet (rivita-toimenpiteet
+                                     (get-in kustannusdata [:taulukon-rivit :muutokset])
+                                     "Muutokset")
+
         lisatyot (rivita-lisatyot (get-in kustannusdata [:taulukon-rivit :lisatyot]) (get-in kustannusdata [:taulukon-rivit :lisatyot-summa]))
         sarakkeet [{:otsikko "Ryhmä"} {:otsikko "Toimenpide"} {:otsikko "Tehtavä"}
                    {:otsikko "Suunniteltu (€)" :fmt :raha} {:otsikko "Indeksikorjattu (€)" :fmt :raha}
@@ -262,6 +279,10 @@
                      (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first rahavarausten-toimenpiteet))
                                                                true
                                                                false)) rahavarausten-toimenpiteet)
+                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first muutosten-toimenpiteet))
+                                                               true
+                                                               false)) muutosten-toimenpiteet)
+
                      (luo-excel-rivit kustannusdata "johto-ja-hallintokorvaus" "Johto- ja Hallintokorvaukset")
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
