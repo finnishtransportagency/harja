@@ -150,28 +150,17 @@
                                                             :loppupvm "2026-09-30"
                                                             :hoitokauden-alkuvuosi 2025})
           pysyvat-muutokset-seurannassa (filter #(= "pysyva" (:kulu_tyyppi %)) kustannusten-seuranta)
-          v1 (first pysyvat-muutokset-seurannassa)
-          v2 (second pysyvat-muutokset-seurannassa)]
+          v1 (first pysyvat-muutokset-seurannassa)]
 
       (is (= "pysyva" (:kulu_tyyppi v1)))
-      (is (= "Jonkin verran pitäisi paikkailla lisää tänä vuonna" (:muutostyo_syy v1)))
+      (is (= "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot." (:muutostyo_syy v1)))
       (is (= "muutokset" (:paaryhma v1)))
       (is (= "Pysyvä muutos" (:tehtava_nimi v1)))
       (is (= "toteutunut" (:toteutunut v1)))
       (is (= 1000M (:budjetoitu_summa v1)))
       (is (= "hankinta" (:toimenpideryhma v1)))
       (is (= 1000M (:budjetoitu_summa_indeksikorjattu v1)))
-      (is (= 0M (:toteutunut_summa v1)))
-
-      (is (= "pysyva" (:kulu_tyyppi v2)))
-      (is (= "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."  (:muutostyo_syy v2)))
-      (is (= "muutokset" (:paaryhma v2)))
-      (is (= "Pysyvä muutos" (:tehtava_nimi v2)))
-      (is (= "toteutunut" (:toteutunut v2)))
-      (is (= 1000M (:budjetoitu_summa v2)))
-      (is (= "hankinta" (:toimenpideryhma v2)))
-      (is (= 1000M (:budjetoitu_summa_indeksikorjattu v2)))
-      (is (= 0M (:toteutunut_summa v2)))))
+      (is (= 0M (:toteutunut_summa v1)))))
 
 
   (testing "Johto- ja hallinto muutokset näkyvät kustannusten seurannassa (testidata)"

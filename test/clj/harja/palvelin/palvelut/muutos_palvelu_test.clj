@@ -35,10 +35,7 @@
                              [:http-palvelin :db])
           :tallenna-rahavarausmuutosten-syyt (component/using
                                                (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                               [:http-palvelin :db])
-          :kulut (component/using
-                   (kulut/->Kulut)
-                   [:http-palvelin :db])))))
+                                               [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
