@@ -6,7 +6,10 @@
   {:positional? true})
 
 (declare onko-kayttaja-urakan-organisaatiossa onko-normikayttajalla-lisaoikeus-urakkaan
-  onko-kayttajalla-lisaoikeus-urakkaan onko-kayttaja-organisaatiossa onko-kayttaja-nimella-urakan-organisaatiossa)
+  onko-kayttajalla-lisaoikeus-urakkaan onko-kayttaja-organisaatiossa onko-kayttaja-nimella-urakan-organisaatiossa
+  onko-jarjestelma? luo-kayttaja<! paivita-kayttaja! piilota-jvh-nimi!
+  hae-kayttaja-kayttajanimella hae-urakan-id-sampo-idlla hae-urakoitsijan-id-ytunnuksella
+  hae-organisaatio-y-tunnuksella hae-organisaatio-idlla hae-organisaatio-nimella hae-ely-numerolla)
 
 (defn onko-kayttaja-urakan-organisaatiossa? [db urakka-id kayttaja-id]
   (:exists (first (onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))
