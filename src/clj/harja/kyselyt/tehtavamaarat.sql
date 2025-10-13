@@ -156,10 +156,10 @@ FROM maaramitattavat_tehtavat
 
 UNION ALL
 
--- 2. Palautetaan "Muu tehtävä", jos ehdot täyttyvät
+-- 2. Palautetaan "Muu tehtävä (ei määrämitattava)", jos ehdot täyttyvät
 SELECT
   -1 as id,
-  'Muu tehtävä' as nimi,
+  'Muu tehtävä (ei määrämitattava)' as nimi,
   99999 as jarjestys,
   NULL as emo,
   true as "maaramitattava?",

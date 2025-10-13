@@ -25,7 +25,7 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
                 console.log("Poista tarjoussumma tehtavalta:", tulos)
             });
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ennalta arvaamattomien kuljetusten avustaminen') " +
+            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Pysäkkikatosten puhdistus') " +
             ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista tarjoussumma tehtavalta:", tulos)
@@ -63,9 +63,9 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     it('Tarjousmäärän voi syöttää', () => {
         cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
         cy.get('h3').contains('Syötä tarjouksen määrät').should('be.visible');
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('666').blur()
-        cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.muokattava').find('input').clear().type('666').blur()
-        cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.muokattava').find('input').clear().type('666').blur()
+        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('123').blur()
+        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('123').blur()
+        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('123').blur()
     })
 
     it('Ei voi tallentaa keskeneräisenä', () => {
@@ -112,9 +112,8 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('555').blur()
         cy.wait('@sopimusmaara')
         //cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').should('have.value');
-        cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.muokattava').find('input').clear().type('555').blur()
+        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('555').blur()
         cy.wait('@sopimusmaara')
-        //cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.muokattava').find('input').should('have.value');
         cy.contains('Tallenna').click()
         cy.wait('@tila')
         cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('not.exist')

@@ -21,18 +21,18 @@
 (def nimi-leveys 20)
 (def yhteensa-leveys 20)
 
-(defn- tallennus-painikkeet [e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat]
+(defn- tallennus-painikkeet [e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]
   [:div.painikkeet.text-right
    [:div.grid-status-viestit
     (cond
-      (and (tarjous-tiedot/onko-muutoksia?) viimeisin-muokkaus)
+      (and tallentamattomia-muutoksia? viimeisin-muokkaus)
       [:<>
        [:div.status-viesti.tallennettu
         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
        [:div.status-viesti.tallentamatta
         "Tallentamattomia muutoksia"]]
 
-      (tarjous-tiedot/onko-muutoksia?)
+      tallentamattomia-muutoksia?
       [:div.status-viesti.tallentamatta
        "Tallentamattomia muutoksia"]
 
@@ -348,7 +348,7 @@
      [tavoitehinta-rivi kattohinta-rivi]]))
 
 (defn tarjous-nakyma [e! {:keys [tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat
-                                 hoidonjohtopalkkiot erillishankinnat] :as app}]
+                                 hoidonjohtopalkkiot erillishankinnat tallentamattomia-muutoksia?] :as app}]
   (let [ensimmainen-rivi-jossa-hoitovuodet (first (:tarjous app))
         ;; Jos ei ole dataa, käytetään oletusarvoja 5 vuodelle
         hoitovuosittaiset-arvot (or (:hoitovuosittaiset-arvot ensimmainen-rivi-jossa-hoitovuodet)
@@ -372,7 +372,7 @@
     [:div
      [:hr]
      ;; Custom toteutus - Tallennusnapit on taulukon yläpuolella
-     [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat]
+     [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]
 
      ;;Hankinnat
      [hankinnat-grid e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys hankinnat]
@@ -390,12 +390,15 @@
      [tavoite-ja-kattohinta-grid vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
-     [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat]]))
+     [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]]))
+
+
+
 
 (defn nakyma* [e! _app]
   (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
                                 :tarjous-nakyma/muutokset
-                                tarjous-tiedot/tallentamattomia-muutoksia
+                                #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
                                 :beforeunload-viesti "Tarjouslomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
       (komp/sisaan
