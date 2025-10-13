@@ -15,6 +15,10 @@
 (def +muutostyo-valinnat+ {:erillisrahoitus "Erillisrahoituksella tehtävä muutostyö"
                            :poikkeama "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
 
+(def +muutos-kulu-tyypit+
+  {:jjh-muutos "Muutos (Johto- ja hallintokorvaus)"
+   :erillisrahoitettu-muutos "Muutostyö (erillisrahoitettu)"})
+
 (def +muutostyypit-lomakkeella+
   "MHU muutosten mahdolliset tyypit. Näiden tulee matchata tietokannassa olevaan custom typeen MHU_MUUTOSTYYPPI"
   ["pysyva"
