@@ -1,13 +1,21 @@
 -- name: hae-maaramitattavat-tehtavat
-WITH rahavaraustehtava AS (
+WITH rahavaraustehtava AS
+    (
     SELECT rt.id, rt.tehtava_id
     FROM rahavaraus_urakka rvu
              JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
-    WHERE rvu.urakka_id = :urakkaid
-)
+    WHERE rvu.urakka_id = :urakkaid ),
+ muutokset AS (
+    SELECT mmtm.maaramuutos, mmtm.tehtava as tehtavaid
+      FROM mhu_muutos mm
+           LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
+    WHERE mm.urakka = :urakkaid
+      AND extract(YEAR from mm.voimassa_alkaen) <= :hoitokauden-alkuvuosi
+      AND mm.poistettu IS NOT TRUE
+    )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, ut.maara as tarjous_maara,
-       ut.maaramuutos,
+       ut.maaramuutos,  (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutos_maaramuutos,
        CASE
            WHEN ut.maara IS NOT NULL OR ut.maaramuutos IS NOT NULL THEN (COALESCE(ut.maara,0) + COALESCE(ut.maaramuutos, 0))
            ELSE null

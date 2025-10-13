@@ -81,7 +81,10 @@
 (defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
-        tehtavat-ja-maarat (filter (fn [rivi] (contains? avatut-rivit (:kuuluu rivi))) tehtavat-ja-maarat)
+        tehtavat-ja-maarat (filter (fn [rivi] (or
+                                                (not (nil? (:valiotsikko rivi)))
+                                                (contains? avatut-rivit (:tehtavaryhmaotsikko rivi))))
+                             tehtavat-ja-maarat)
 
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or
@@ -112,6 +115,10 @@
                     #_#_:fmt (fn [arvo]
                            (if (and (not tallennustila?) (nil? arvo)) "-" arvo))}
                    {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :numero :tasaa :oikea
+                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
+                    :fmt (fn [arvo]
+                           (if (nil? arvo) "-" arvo))}
+                   {:otsikko "Muutos Muutokset" :leveys "15%" :nimi :muutos_maaramuutos :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false) :solun-luokka solun-luokka-fn
                     :fmt (fn [arvo]
                            (if (nil? arvo) "-" arvo))}
