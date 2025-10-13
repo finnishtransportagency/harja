@@ -1,20 +1,19 @@
 (ns harja.domain.kanavat.hairiotilanne
   (:require
-    [clojure.spec.alpha :as s]
-    [clojure.set :as set]
+   [clojure.spec.alpha :as s]
+   [clojure.set :as set]
 
-    #?@(:clj  [
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    ]
-        :cljs [[specql.impl.registry]])
+   #?@(:clj  [
+              [harja.kyselyt.specql-db :refer [define-tables]]
+              ]
+       :cljs [[specql.impl.registry]])
 
-    [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.domain.vesivaylat.materiaali :as materiaali]
-    [harja.domain.kanavat.kohde :as kohde]
-    [harja.domain.kanavat.kohteenosa :as kohteenosa]
-    [harja.domain.urakka :as ur]
-    [harja.domain.kayttaja :as kayttaja]
-    [harja.domain.muokkaustiedot :as muokkaustiedot])
+   [harja.domain.muokkaustiedot :as muokkaustiedot]
+   [harja.domain.vesivaylat.materiaali :as materiaali]
+   [harja.domain.kanavat.kohde :as kohde]
+   [harja.domain.kanavat.kohteenosa :as kohteenosa]
+   [harja.domain.urakka :as ur]
+   [harja.domain.kayttaja :as kayttaja])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
