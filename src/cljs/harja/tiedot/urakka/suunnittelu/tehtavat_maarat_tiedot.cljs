@@ -98,7 +98,10 @@
   PaivitaTehtavatGrid
   (process-event [{tehtavat :tehtavat} app]
     (merkitse-muutos!)
-    (assoc app :tehtavat-ja-maarat (sort-by :jarjestys tehtavat)))
+    #_ (js/console.log "PaivitaTehtavatGrid :: tehtavat " (pr-str tehtavat))
+    (-> app
+      #_ (assoc :viimeksi-valittu rivi :muokattava-muutos rivi)
+      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))))
 
   ToggleTallennusTila
   (process-event [_ app]

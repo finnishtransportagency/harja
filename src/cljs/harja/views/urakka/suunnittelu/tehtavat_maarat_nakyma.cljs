@@ -78,18 +78,46 @@
            :on-click #(e! (tiedot/->AvaaRivi valiotsikko))
            :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]))
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+(defn tehtava-vetolaatikko
+  "Näyttää tehtävän muutokset vetolatikossa"
+  [tehtava muutokset]
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
+        hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
+    [:div
+     [:h2 "Muutokset"]
+     [:div.body-text {:style {:margin-top "-15px"}} (str tehtava ", " (fmt/hoitokauden-jarjestysluku-ja-vuodet hoitokauden-alkuvuosi hoitovuodet "Hoitovuosi"))]
+
+
+     [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
+      [grid/grid
+       {:otsikko ""
+        :voi-poistaa? (constantly false)
+        :voi-lisata? false
+        :piilota-toiminnot? true
+        :muokkauspaneeli? false
+        :jarjesta :voimassa_alkaen
+        :tunniste :id
+        :voi-kumota? false}
+       [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "15%"}
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "15%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "15%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "15%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Lisätieto" :nimi :syy :leveys "40%" :tyyppi :string :tasaa :vasen}]
+       muutokset]]]))
+
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit viimeksi-klikattu]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (or
                                                 (not (nil? (:valiotsikko rivi)))
                                                 (contains? avatut-rivit (:tehtavaryhmaotsikko rivi))))
                              tehtavat-ja-maarat)
-
+        rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
-                          (when (or
-                                  haku-kaynnissa?
-                                  (some? (:valiotsikko rivi))) "vaalen-tumma-tausta"))
+                          (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
+                          "vaalen-tumma-tausta"))
         sarakkeet [{:otsikko "nro" :leveys "5%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
@@ -97,6 +125,7 @@
                                      (piirra-valiotsikko-caret e! (:valiotsikko rivi) avatut-rivit)
                                      [:span]))
                     :solun-luokka solun-luokka-fn}
+                   {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :solun-luokka solun-luokka-fn :luokka "muokattava"}
                    {:otsikko "Tehtävä"
                     :leveys "30%"
                     :nimi :tehtava
@@ -111,13 +140,8 @@
                     :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
-                                    (nil? (:valiotsikko %))) :solun-luokka solun-luokka-fn
-                    #_#_:fmt (fn [arvo]
-                           (if (and (not tallennustila?) (nil? arvo)) "-" arvo))}
-                   {:otsikko "Muutokset" :leveys "15%" :nimi :muutokset :tyyppi :numero :tasaa :oikea
-                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
-                    :fmt (fn [arvo]
-                           (if (nil? arvo) "-" arvo))}
+                                    (nil? (:valiotsikko %)))
+                    :solun-luokka solun-luokka-fn}
                    {:otsikko "Muutos Muutokset" :leveys "15%" :nimi :muutos_maaramuutos :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false) :solun-luokka solun-luokka-fn
                     :fmt (fn [arvo]
@@ -144,9 +168,16 @@
         :piilota-muokkaus? true
         :tunniste :nimi
         :jarjesta :jarjestys
+        :nayta-toimintosarake? false
         :muutos #(do
                    (e! (tiedot/->PaivitaTehtavatGrid (vals (grid/hae-muokkaustila %)))))
-        :rivi-klikattu (fn [rivi] (e! (tiedot/->AvaaRivi (:valiotsikko rivi))))}
+        :vetolaatikot (into {}
+                        (map (juxt :nimi (fn [rivi]
+                                           [tehtava-vetolaatikko (:nimi rivi)
+                                            (:muutokset rivi)]))
+                          rivit-joilla-muutos))
+
+        :vetolaatikko-optiot {:ei-paddingia true}}
        sarakkeet
        tehtavat-ja-maarat])))
 
@@ -156,20 +187,20 @@
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
     [:div#vayla
-        [:div.row
-         [:div.col-xs-12
-          [:h1 "Tehtävät ja määrät"]]]
+     [:div.row
+      [:div.col-xs-12
+       [:h1 "Tehtävät ja määrät"]]]
 
-        [:div.flex-row {:style {:justify-content "flex-start"}}
-         [:div.filtteri {:style {:width "200px"}}
-          [urakka-valinnat/paivittava-urakkavuosi-tuck
-           @u/valittu-aikavali
-           #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
+     [:div.flex-row {:style {:justify-content "flex-start"}}
+      [:div.filtteri {:style {:width "200px"}}
+       [urakka-valinnat/paivittava-urakkavuosi-tuck
+        @u/valittu-aikavali
+        #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
 
-        [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
-         (not onko-viimeinen-vuosi?)]
-        [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
-        [debug/debug app]]))
+     [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
+      (not onko-viimeinen-vuosi?)]
+     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+     [debug/debug app]]))
 
 (defn tehtavat-maarat*
   [e! _]

@@ -162,14 +162,15 @@
   (when (nil? rivi)
     (log "muokkausrivi on nil"))
   [:tr.muokataan {:class luokka}
-
-   (doall (for [{:keys [nimi tyyppi] :as sarake} (if (:colspan rivi)
+   (doall (for [{:keys [nimi tyyppi luokka solun-luokka] :as sarake} (if (:colspan rivi)
                                                    (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
                                                    skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                  (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
+                                                          luokka
+                                                          (when solun-luokka (solun-luokka (get rivi nimi) rivi))
+                                                          (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index esta-tiivis-grid?])))
    (when-not piilota-toiminnot?
