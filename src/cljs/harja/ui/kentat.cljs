@@ -367,7 +367,7 @@
                                        desimaalien-maara min-desimaalit max-desimaalit on-key-down
                                        veda-oikealle? luokka teksti-oikealla data-cy aria-label]
                                 :as kentta} data]
-  (let [fmt (or (numero-fmt kentta) str)
+  (let [fmt-fn (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
         id (or elementin-id (gensym))]
@@ -379,9 +379,9 @@
         (let [yksikko (if-not yksikko teksti-oikealla yksikko)
               nykyinen-data @data
               nykyinen-teksti (or @teksti
-                                  (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
-                                  "")
-              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+                                (normalisoi-numero (fmt-fn nykyinen-data) salli-whitespace?)
+                                "")
+              kokonaisluku-re (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
                                   (contains? kentta :desimaalien-maara) ; Salli nil-arvo
                                   desimaalien-maara
@@ -394,13 +394,13 @@
 
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
-              desimaaliluku-re-pattern (re-pattern (str
-                                                     "[+-]?\\d{1,"
-                                                     kokonaisosan-maara
-                                                     "}((\\.|,)\\d{0,"
-                                                     desimaalien-maara
-                                                     "})?"))]
-          
+              desimaaliluku-re (re-pattern (str
+                                             "[+-]?\\d{1,"
+                                             kokonaisosan-maara
+                                             "}((\\.|,)\\d{0,"
+                                             desimaalien-maara
+                                             "})?"))]
+
           [:span.numero
            [:input (merge {:id id
                            :class (cond-> nil
@@ -424,43 +424,45 @@
                                          (on-blur %))
                                        (reset! teksti nil))
                            :value nykyinen-teksti
-                           :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
-                                             v (cond
-                                                 vaadi-ei-negatiivinen?
-                                                 (str/replace v #"-" "")
-                                                 vaadi-negatiivinen?
-                                                 (if (= (first v) \-)
-                                                   v
-                                                   (str "-" v))
-                                                 :default v)]
-                                         (when (and
-                                                 (or (nil? validoi-kentta-fn)
-                                                   (validoi-kentta-fn v))
-                                                 (or (= v "")
-                                                   (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                                   (re-matches (if kokonaisluku?
-                                                                 kokonaisluku-re-pattern
-                                                                 desimaaliluku-re-pattern)
-                                                     ;; Matchataan whitespacesta huolimatta
-                                                     (str/replace v #"\s" ""))))
-                                           (reset! teksti v)
+                           :on-change (fn [e]
+                                        (let [syotto (normalisoi-numero (some-> e .-target .-value) salli-whitespace?)
+                                              syotto (cond
+                                                       vaadi-ei-negatiivinen?
+                                                       (str/replace syotto #"-" "")
+                                                       vaadi-negatiivinen?
+                                                       (if (= (first syotto) \-)
+                                                         syotto
+                                                         (str "-" syotto))
+                                                       :else syotto)]
+                                          (when (and
+                                                  (or (nil? validoi-kentta-fn) (validoi-kentta-fn syotto))
+                                                  (or
+                                                    ;; Salli tyhjä syöte, jotta käyttäjä voi poistaa arvon
+                                                    (str/blank? syotto)
+                                                    ;; Sallitaan joko kokonaisluku tai desimaaliluku
+                                                    (re-matches (if kokonaisluku? kokonaisluku-re desimaaliluku-re)
+                                                      (str/replace syotto #"\s" ""))))
 
-                                           ;; Numeron parsimista varten pitää poistaa whitespace,
-                                           ;; vaikka haluttaisiin näyttää se.
-                                           (let [v (str/replace v #"\s" "")
-                                                 numero (if kokonaisluku?
-                                                          (js/parseInt v)
-                                                          (js/parseFloat (str/replace v #"," ".")))]
-                                             (if (not (js/isNaN numero))
-                                               (reset! data numero)
-                                               (reset! data nil))
-                                             (when toiminta-f
-                                               (toiminta-f (when-not (js/isNaN numero)
-                                                             numero))))))}
+                                            ;; Aseta inputin raakateksti aina ensin
+                                            (reset! teksti syotto)
+
+                                            ;; Poistetaan whitespace ennen numeron parsintaa
+                                            (let [puhdas (str/replace syotto #"\s" "")
+                                                  numero (if kokonaisluku?
+                                                           (js/parseInt puhdas)
+                                                           (js/parseFloat (str/replace puhdas #"," ".")))]
+
+                                              (if (js/isNaN numero)
+                                                (reset! data nil)
+
+                                                ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
+                                                (when (not= numero @data)
+                                                  (reset! data numero)
+                                                  (when toiminta-f (toiminta-f numero))))))))}
                      (when data-cy {:data-cy data-cy})
                      (when aria-label {:aria-label aria-label}))]
            (when (and yksikko vayla-tyyli?)
-             [:span.sisainen-label.black-lighter {:style 
+             [:span.sisainen-label.black-lighter {:style
                                                   {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))
                                                    :margin-top "10px"}} yksikko])])))))
 
