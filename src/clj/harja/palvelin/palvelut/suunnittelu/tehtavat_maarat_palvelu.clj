@@ -42,5 +42,6 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-      :hae-tehtavat-ja-maarat)
+      :hae-tehtavat-ja-maarat
+      :tallenna-tehtavat-ja-maarat)
     this))

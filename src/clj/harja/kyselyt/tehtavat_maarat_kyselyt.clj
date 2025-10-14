@@ -35,16 +35,16 @@
                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         ;; Mäppää tehtavan tietokantarivit clojure-mapeiksi.
         tehtavat (mapv
-                        (fn [tehtava]
-                          (-> tehtava
-                            (assoc :muutokset
-                              (if (:muutokset tehtava)
-                                (mapv
-                                  (fn [k]
-                                    (konversio/pgobject->map k :id :long :edellinen_maara :double :maaramuutos :double
-                                      :uusi_maara :double :tehtavaid :long :voimassa_alkaen :date :syy :string))
-                                  (konversio/pgarray->vector (:muutokset tehtava)))
-                                []))))
+                   (fn [tehtava]
+                     (-> tehtava
+                       (assoc :muutokset
+                         (if (:muutokset tehtava)
+                           (mapv
+                             (fn [k]
+                               (konversio/pgobject->map k :id :long :edellinen_maara :double :maaramuutos :double
+                                 :uusi_maara :double :tehtavaid :long :voimassa_alkaen :date :syy :string))
+                             (konversio/pgarray->vector (:muutokset tehtava)))
+                           []))))
                    tehtavat)
 
         ;; Jaotellaan tehtävät tehtävryhmäotsikon alle
