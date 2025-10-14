@@ -31,6 +31,15 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     hjpalkkio_val_aika_yht                           NUMERIC,
     hoidonjohto_hoitokausi_yht                       NUMERIC,
     hoidonjohto_val_aika_yht                         NUMERIC,
+
+    -- Muutokset 
+    muutostyo_val_aika_yht                           NUMERIC,
+    muutostyo_hoitokausi_yht                         NUMERIC,
+    muutos_erillis_hoitokausi_yht                    NUMERIC,
+    muutos_erillis_val_aika_yht                      NUMERIC,
+    jjh_muutos_hoitokausi_yht                        NUMERIC,
+    jjh_muutos_val_aika_yht                          NUMERIC,
+
     hankinnat_ja_hoidon_hk_yht                       NUMERIC,
     hankinnat_ja_hoidon_val_yht                      NUMERIC,
     tavhin_hoitokausi_yht                            NUMERIC,
@@ -166,6 +175,19 @@ DECLARE
     -- Hoidonjohto yhteensä
     hoidonjohto_hoitokausi_yht            NUMERIC;
     hoidonjohto_val_aika_yht              NUMERIC;
+
+    -- Muutokset 
+    muutostyo_hoitokausi_yht              NUMERIC;
+    muutostyo_val_aika_yht                NUMERIC;
+    muutos_erillis_hoitokausi_yht         NUMERIC;
+    muutos_erillis_val_aika_yht           NUMERIC;
+    jjh_muutos_hoitokausi_yht             NUMERIC;
+    jjh_muutos_val_aika_yht               NUMERIC;
+    muutokset_erillis_rivi                RECORD;
+    rivi_on_erillis_muutos                BOOLEAN;
+    muutokset_jjh_rivi                    RECORD;
+    rivi_on_jjh_muutos                    BOOLEAN;
+
 
     -- Hankinnat ja hoidonjohto yhteensä
     hankinnat_ja_hoidon_hk_yht            NUMERIC;
@@ -437,6 +459,12 @@ BEGIN
     yllapito_val_aika_yht := 0.0;
     korvausinv_hoitokausi_yht := 0.0;
     korvausinv_val_aika_yht := 0.0;
+    muutos_erillis_hoitokausi_yht := 0.0;
+    muutos_erillis_val_aika_yht := 0.0;
+    jjh_muutos_hoitokausi_yht := 0.0;
+    jjh_muutos_val_aika_yht := 0.0;
+    muutostyo_val_aika_yht := 0.0;
+    muutostyo_hoitokausi_yht := 0.0;
 
     -- Alustetaan lisätyöarvoja
     lisatyo_talvihoito_hoitokausi_yht := 0.0;
@@ -463,7 +491,8 @@ BEGIN
       lk.maksueratyyppi, 
       lk.rahavaraus_id,
       tr.yksiloiva_tunniste,
-      lk.tavoitehintainen
+      lk.tavoitehintainen,
+      lk.tyyppi AS tyyppi
       FROM kulu l
         JOIN kulu_kohdistus lk ON lk.kulu = l.id
         JOIN toimenpideinstanssi tpi
@@ -486,6 +515,8 @@ BEGIN
         LOOP
 
             -- Alusta hankitojen muuttujat, on tehtävä tässä muuten tulee virhettä
+            SELECT NULL::numeric AS summa INTO muutokset_erillis_rivi;
+            SELECT NULL::numeric AS summa INTO muutokset_jjh_rivi;
             SELECT NULL::numeric AS summa INTO talvihoito_rivi;
             SELECT NULL::numeric AS summa INTO lisatyo_talvihoito_rivi;
             SELECT NULL::numeric AS summa INTO lyh_rivi;
@@ -500,11 +531,16 @@ BEGIN
             SELECT NULL::numeric AS summa INTO lisatyo_korvausinv_rivi;
             SELECT NULL::numeric AS summa INTO lisatyo_hoidonjohto_rivi;
 
+            rivi_on_erillis_muutos := rivi.tyyppi = 'erillisrahoitettu-muutos';
+            rivi_on_jjh_muutos := rivi.tyyppi = 'jjh-muutos';
+
             RAISE NOTICE 'rivi: %', rivi;
 
             -- Kohdista talvihoitoon liittyvät rivit talvihoito_rivi:lle
             IF rivi.tavoitehintainen IS TRUE -- Talvihoito hankinnat ovat tavoitehintaisia
-            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -516,7 +552,9 @@ BEGIN
 
             -- Kohdista talvihoitoon liittyvät lisätyö rivit lisatyo_talvihoito:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = talvihoito_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -528,7 +566,9 @@ BEGIN
 
             -- Kohdista Liikenneympäristön hoitoon liittyvät rivit lyh_rivi:lle
             IF rivi.tavoitehintainen IS TRUE -- Liikenneympäristön hoitoon liittyvät rivit ovat tavoitehintaisia
-            AND rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = lyh_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -540,7 +580,9 @@ BEGIN
 
             -- Kohdista Liikenneympäristön hoitoon liittyvät lisätyörivit lisatyo_lyh_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = lyh_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = lyh_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -552,7 +594,9 @@ BEGIN
 
             -- Kohdista Soratien hoitoon liittyvät rivit sora_rivi:lle
             IF rivi.tavoitehintainen IS TRUE -- Soratien hoitoon liittyvät rivit ovat tavoitehintaisia
-            AND rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = sora_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -564,7 +608,9 @@ BEGIN
 
             -- Kohdista Soratien hoitoon liittyvät lisätyö rivit sora_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = sora_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = sora_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -576,7 +622,9 @@ BEGIN
 
             -- Kohdista Päällysteiden paikkaukseen liittyvät rivit paallyste_rivi:lle
             IF rivi.tavoitehintainen IS TRUE -- Päällysteiden paikkaukseen liittyvät rivit ovat tavoitehintaisia
-            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -588,7 +636,9 @@ BEGIN
 
             -- Kohdista Päällysteiden paikkaukseen liittyvät lisätyö rivit paallyste_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = paallyste_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -602,7 +652,8 @@ BEGIN
             IF rivi.tavoitehintainen IS TRUE
             AND rivi.toimenpideinstanssi_id = yllapito_tpi_id 
             AND rivi.maksueratyyppi != 'lisatyo' 
-            AND rivi.rahavaraus_id IS NULL THEN
+            AND rivi.rahavaraus_id IS NULL 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -616,7 +667,8 @@ BEGIN
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
             AND rivi.toimenpideinstanssi_id = yllapito_tpi_id 
             AND rivi.maksueratyyppi = 'lisatyo' 
-            AND rivi.rahavaraus_id IS NULL THEN
+            AND rivi.rahavaraus_id IS NULL 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -628,7 +680,9 @@ BEGIN
 
             -- Kohdista MHU korvausinvestointeihin liittyvät rivit korvausinv_rivi:lle
             IF rivi.tavoitehintainen IS TRUE
-            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id 
+            AND rivi.maksueratyyppi != 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -640,7 +694,9 @@ BEGIN
 
             -- Kohdista MHU korvausinvestointeihin liittyvät lisätyö rivit lisatyo_korvausinv_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = korvausinv_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -652,7 +708,9 @@ BEGIN
 
             -- Kohdista MHU Hoidonjohto liittyvät lisätyö rivit lisatyo_hoidonjohto_rivi:lle
             IF rivi.tavoitehintainen IS FALSE -- Lisätyöt eivät ole tavoitehintaisia 
-            AND rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+            AND rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id 
+            AND rivi.maksueratyyppi = 'lisatyo' 
+            AND NOT rivi_on_erillis_muutos THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
                        0::NUMERIC     AS korotus
@@ -662,11 +720,36 @@ BEGIN
                 RAISE NOTICE 'lisatyo_hoidonjohto_rivi.summa: %', lisatyo_hoidonjohto_rivi.summa;
             END IF;
 
+            
+            -----------------------------------------------------
+            -- Muutokset 
+            IF rivi.tavoitehintainen IS TRUE 
+            AND rivi_on_jjh_muutos THEN
+                SELECT rivi.kht_summa AS summa,
+                       rivi.kht_summa AS korotettuna,
+                       0::NUMERIC     AS korotus
+                INTO muutokset_jjh_rivi;
+
+                RAISE NOTICE 'muutokset_jjh_rivi: % ', muutokset_jjh_rivi;
+                RAISE NOTICE 'muutokset_jjh_rivi.summa: %', muutokset_jjh_rivi.summa;
+            END IF;
+
+            IF rivi.tavoitehintainen IS TRUE 
+            AND rivi_on_erillis_muutos THEN
+                SELECT rivi.kht_summa AS summa,
+                       rivi.kht_summa AS korotettuna,
+                       0::NUMERIC     AS korotus
+                INTO muutokset_erillis_rivi;
+
+                RAISE NOTICE 'muutokset_erillis_rivi: % ', muutokset_erillis_rivi;
+                RAISE NOTICE 'muutokset_erillis_rivi.summa: %', muutokset_erillis_rivi.summa;
+            END IF;
+
             RAISE NOTICE 'rivi.erapaiva: %', rivi.erapaiva;
             RAISE NOTICE 'aikavali_loppupvm: %', aikavali_loppupvm;
 
             IF rivi.erapaiva <= aikavali_loppupvm THEN
-
+                
                 -- Talvihoito Hoitokauden alusta
                 IF rivi.toimenpideinstanssi_id = talvihoito_tpi_id AND rivi.maksueratyyppi != 'lisatyo' THEN
 
@@ -827,6 +910,29 @@ BEGIN
                                 lisatyo_hoidonjohto_val_aika_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
                     END IF;
                 END IF;
+
+                -- Muutokset 
+                IF rivi_on_erillis_muutos THEN
+                    muutos_erillis_hoitokausi_yht := muutos_erillis_hoitokausi_yht + COALESCE(muutokset_erillis_rivi.summa, 0.0);
+                    RAISE NOTICE 'muutos_erillis_hoitokausi_yht: %', muutos_erillis_hoitokausi_yht;
+
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        muutos_erillis_val_aika_yht := muutos_erillis_val_aika_yht + COALESCE(muutokset_erillis_rivi.summa, 0.0);
+                    END IF;
+                END IF;
+
+
+                IF rivi_on_jjh_muutos THEN
+                    jjh_muutos_hoitokausi_yht := jjh_muutos_hoitokausi_yht + COALESCE(muutokset_jjh_rivi.summa, 0.0);
+                    RAISE NOTICE 'jjh_muutos_hoitokausi_yht: %', jjh_muutos_hoitokausi_yht;
+
+                    IF rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        jjh_muutos_val_aika_yht := jjh_muutos_val_aika_yht + COALESCE(muutokset_jjh_rivi.summa, 0.0);
+                    END IF;
+                END IF;
+
             END IF;
         END LOOP;
 
@@ -871,7 +977,7 @@ BEGIN
         (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
                                         hoidonjohto_tpi_id::INTEGER,
                                         ur::INTEGER,
-                                        sopimus_id::INTEGER));
+                                        sopimus_id::INTEGER, FALSE));
     johtojahallinto_hoitokausi_yht := 0.0;
     johtojahallinto_val_aika_yht := 0.0;
     johtojahallinto_hoitokausi_yht := johtojahallinto_hoitokausi_yht + johtojahallinto_rivi.johto_ja_hallinto_laskutettu;
@@ -919,6 +1025,10 @@ BEGIN
     hankinnat_ja_hoidon_val_yht := hankinnat_val_aika_yht + hoidonjohto_val_aika_yht;
     hankinnat_ja_hoidon_hk_yht := hankinnat_hoitokausi_yht + hoidonjohto_hoitokausi_yht;
 
+    -----------------------------------------------------------
+    -- Muutokset 
+    muutostyo_val_aika_yht := muutos_erillis_val_aika_yht + jjh_muutos_val_aika_yht;
+    muutostyo_hoitokausi_yht := muutos_erillis_hoitokausi_yht + jjh_muutos_hoitokausi_yht;
 
     -----------------------------------------------------------
     ------------------- Rahavaraukset -------------------------
@@ -1070,6 +1180,7 @@ BEGIN
             johtojahallinto_hoitokausi_yht + 
             erillishankinnat_hoitokausi_yht + 
             hjpalkkio_hoitokausi_yht + 
+            muutostyo_hoitokausi_yht +
             kaikki_rahavaraukset_hoitokausi_yht + 
             muut_kulut_hoitokausi_yht;
     
@@ -1085,6 +1196,7 @@ BEGIN
             johtojahallinto_val_aika_yht +
             erillishankinnat_val_aika_yht + 
             hjpalkkio_val_aika_yht + 
+            muutostyo_val_aika_yht +
             kaikki_rahavaraukset_val_yht + 
             muut_kulut_val_aika_yht;
 
@@ -1357,6 +1469,10 @@ BEGIN
               hjpalkkio_hoitokausi_yht, hjpalkkio_val_aika_yht,
         -- Hoidonjohto yhteensä
               hoidonjohto_hoitokausi_yht, hoidonjohto_val_aika_yht,
+        -- Muutokset 
+              muutostyo_val_aika_yht,  muutostyo_hoitokausi_yht,
+              muutos_erillis_hoitokausi_yht,  muutos_erillis_val_aika_yht,
+              jjh_muutos_hoitokausi_yht, jjh_muutos_val_aika_yht,
         -- Hankinnat ja Hoidonjohto yhteensä
               hankinnat_ja_hoidon_hk_yht, hankinnat_ja_hoidon_val_yht,
         -- Tavoitehinnat yht.
