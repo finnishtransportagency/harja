@@ -457,31 +457,33 @@
                                             ;; Poistetaan whitespace tai mahdollinen yksinäinen miinusmerkki ennen numeron parsintaa
                                             (let [puhdas (-> syotto
                                                            ;; Poistetaan whitespace stringin kaikista osista
-                                                           (str/replace #"\s" "")
-                                                           ;; Tulkitaan yksinäinen miinusmerkki nollaksi, jotta
-                                                           ;; datan resetointi ei johda ikilooppiin tietyissä tilanteissa
-                                                           (str/replace  #"^-+$" "0"))
+                                                           (str/replace #"\s" ""))
+                                                  negatiivinen-luku-kesken? (= "-" puhdas)
                                                   numero (if kokonaisluku?
                                                            (js/parseInt puhdas)
                                                            (js/parseFloat (str/replace puhdas #"," ".")))]
 
-                                              ;; NOTE: Käytettäessä ulkopuolelta (r/wrap ..:) data-atomin sijasta,
+                                              ;; NOTE: Alla ratkaisuja ikilooppeihin reagentin kanssa
+                                              ;;   Käytettäessä ulkopuolelta (r/wrap ..:) data-atomin sijasta,
                                               ;;   voi reagentissa (>= v1.1.1) esiintyä omituista käytöstä
                                               ;;   monimutkaisemmilla ui-kentillä. Jos esimerkiksi (r/wrap..) arvoksi
                                               ;;   päätyy data atomin ulkopuolelta jokin default arvo, esimerkiksi
                                               ;;   data-atomin saadessa nil arvon, näyttää Reagent päätyvän joissakin
                                               ;;   tilanteissa ikilooppiin ja Maximum call stack size exceeded virheeseen.
                                               ;;   TODO: Nämä harvinaisemmat tilanteet r/wrap suhteen pitäisi tutkia tarkemmin.
-                                              (if (js/isNaN numero)
-                                                ;; Resetoi vain jos data ei ole jo nil, jotta ei synny ikilooppia niin herkästi
-                                                (when (not (nil? @data))
-                                                  (reset! data nil))
 
-                                                ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
-                                                ;; Tällä vältetään ikiloopin mahdollisuutta
-                                                (when (not= numero @data)
-                                                  (reset! data numero)
-                                                  (when toiminta-f (toiminta-f numero))))))))}
+                                              ;; Älä päivitä dataa, jos negatiivinen numero on kesken
+                                              (when-not negatiivinen-luku-kesken?
+                                                (if (js/isNaN numero)
+                                                  ;; Resetoi vain jos data ei ole jo nil, jotta ei synny ikilooppia niin herkästi
+                                                  (when (not (nil? @data))
+                                                    (reset! data nil))
+
+                                                  ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
+                                                  ;; Tällä vältetään ikiloopin mahdollisuutta
+                                                  (when (not= numero @data)
+                                                    (reset! data numero)
+                                                    (when toiminta-f (toiminta-f numero)))))))))}
                      (when data-cy {:data-cy data-cy})
                      (when aria-label {:aria-label aria-label}))]
            (when (and yksikko vayla-tyyli?)
@@ -553,8 +555,8 @@
 
 (defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? placeholder disabled?] :as kentta} data]
   [:input {:class (cond-> nil
-                          lomake? (str "form-control ")
-                          disabled? (str "disabled"))
+                    lomake? (str "form-control ")
+                    disabled? (str "disabled"))
            :type "email"
            :value @data
            :disabled disabled?
