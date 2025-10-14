@@ -338,6 +338,10 @@
                                         n))
             ;; Poistetaan mahd. euromerkki lopusta
             (str/replace #"€$" "")
+            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+            (str/replace #"[−–—]" "-")
 
             ;; Poistetaan ympäröivä whitespace joka tapauksessa
             (str/trim))))
@@ -381,7 +385,9 @@
               nykyinen-teksti (or @teksti
                                 (normalisoi-numero (fmt-fn nykyinen-data) salli-whitespace?)
                                 "")
-              kokonaisluku-re (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
+              kokonaisluku-re (re-pattern (str "[+-−]?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
                                   (contains? kentta :desimaalien-maara) ; Salli nil-arvo
                                   desimaalien-maara
@@ -394,8 +400,10 @@
 
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin eri muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
               desimaaliluku-re (re-pattern (str
-                                             "[+-]?\\d{1,"
+                                             "[+-−]?\\d{1,"
                                              kokonaisosan-maara
                                              "}((\\.|,)\\d{0,"
                                              desimaalien-maara
@@ -437,8 +445,8 @@
                                           (when (and
                                                   (or (nil? validoi-kentta-fn) (validoi-kentta-fn syotto))
                                                   (or
-                                                    ;; Salli tyhjä syöte, jotta käyttäjä voi poistaa arvon
-                                                    (str/blank? syotto)
+                                                    ;; Salli tyhjä syöte (tai pelkkä miinusmerkki), jotta käyttäjä voi poistaa arvon
+                                                    (or (str/blank? syotto) (= "-" syotto))
                                                     ;; Sallitaan joko kokonaisluku tai desimaaliluku
                                                     (re-matches (if kokonaisluku? kokonaisluku-re desimaaliluku-re)
                                                       (str/replace syotto #"\s" ""))))
@@ -446,16 +454,31 @@
                                             ;; Aseta inputin raakateksti aina ensin
                                             (reset! teksti syotto)
 
-                                            ;; Poistetaan whitespace ennen numeron parsintaa
-                                            (let [puhdas (str/replace syotto #"\s" "")
+                                            ;; Poistetaan whitespace tai mahdollinen yksinäinen miinusmerkki ennen numeron parsintaa
+                                            (let [puhdas (-> syotto
+                                                           ;; Poistetaan whitespace stringin kaikista osista
+                                                           (str/replace #"\s" "")
+                                                           ;; Tulkitaan yksinäinen miinusmerkki nollaksi, jotta
+                                                           ;; datan resetointi ei johda ikilooppiin tietyissä tilanteissa
+                                                           (str/replace  #"^-+$" "0"))
                                                   numero (if kokonaisluku?
                                                            (js/parseInt puhdas)
                                                            (js/parseFloat (str/replace puhdas #"," ".")))]
 
+                                              ;; NOTE: Käytettäessä ulkopuolelta (r/wrap ..:) data-atomin sijasta,
+                                              ;;   voi reagentissa (>= v1.1.1) esiintyä omituista käytöstä
+                                              ;;   monimutkaisemmilla ui-kentillä. Jos esimerkiksi (r/wrap..) arvoksi
+                                              ;;   päätyy data atomin ulkopuolelta jokin default arvo, esimerkiksi
+                                              ;;   data-atomin saadessa nil arvon, näyttää Reagent päätyvän joissakin
+                                              ;;   tilanteissa ikilooppiin ja Maximum call stack size exceeded virheeseen.
+                                              ;;   TODO: Nämä harvinaisemmat tilanteet r/wrap suhteen pitäisi tutkia tarkemmin.
                                               (if (js/isNaN numero)
-                                                (reset! data nil)
+                                                ;; Resetoi vain jos data ei ole jo nil, jotta ei synny ikilooppia niin herkästi
+                                                (when (not (nil? @data))
+                                                  (reset! data nil))
 
                                                 ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
+                                                ;; Tällä vältetään ikiloopin mahdollisuutta
                                                 (when (not= numero @data)
                                                   (reset! data numero)
                                                   (when toiminta-f (toiminta-f numero))))))))}
@@ -467,7 +490,7 @@
                                                    :margin-top "10px"}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [jos-tyhja salli-whitespace? yksikko] :as kentta} data]
- (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
+  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
              (normalisoi-numero (fmt @data) salli-whitespace?))
@@ -476,7 +499,7 @@
 
 (defmethod tee-kentta :negatiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-negatiivinen? true
-                            :tyyppi :numero) data])
+                :tyyppi :numero) data])
 
 (defmethod nayta-arvo :negatiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
@@ -484,7 +507,7 @@
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
-                            :tyyppi :numero) data])
+                :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
@@ -513,8 +536,8 @@
         pattern (re-pattern (str "^(\\d+([.,]\\d{0," desimaalien-maara "})?)?$"))]
     (fn [{:keys [lomake? desimaalien-maara disabled?]} data]
       [:input {:class (cond-> nil
-                              lomake? (str "form-control ")
-                              disabled? (str "disabled"))
+                        lomake? (str "form-control ")
+                        disabled? (str "disabled"))
                :placeholder placeholder
                :disabled disabled?
                :type "text"
