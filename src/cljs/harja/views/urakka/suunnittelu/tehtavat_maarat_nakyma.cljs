@@ -6,13 +6,16 @@
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka :as u]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-            [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
+
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot :as tiedot]
+
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
@@ -196,6 +199,14 @@
        [urakka-valinnat/paivittava-urakkavuosi-tuck
         @u/valittu-aikavali
         #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
+     [:div.flex-row
+      [:span "Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla. "
+       [yleiset/linkki "Siirry muutokset-sivulle"
+        #(siirtymat/siirry-annettuun-valilehteen
+           @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+           {:taso1 :urakat
+            :taso2 :mhu-muutokset
+            :taso3 nil})]]]
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?)]
