@@ -24,7 +24,6 @@
 (defn hae-tehtavat-ja-maarat [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (println "hae-tehtavat-ja-maarat :: tiedot" (pr-str tiedot))
     (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id (pvm/vuosi (first (:valittu-hoitokausi tiedot))))))
 
 (defrecord TehtavatJaMaarat []

@@ -20,49 +20,51 @@
 
 (defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
                              tehtavat-ja-maarat kopioi-tuleville-vuosille?]
-  [:div.painikkeet.text-right
-   [:div.grid-status-viestit
-    (cond
-      (and (tiedot/onko-muutoksia?) viimeisin-muokkaus)
-      [:<>
+  [:div.flex-row {:style {:justify-content "right"}}
+   [:div.painikkeet.text-right
+    [:div.grid-status-viestit
+     (cond
+       (and (tiedot/onko-muutoksia?) viimeisin-muokkaus)
+       [:<>
+        [:div.status-viesti.tallennettu
+         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+        [:div.status-viesti.tallentamatta
+         "Tallentamattomia muutoksia"]]
+
+       (tiedot/onko-muutoksia?)
+       [:div.status-viesti.tallentamatta
+        "Tallentamattomia muutoksia"]
+
+       viimeisin-muokkaus
        [:div.status-viesti.tallennettu
         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
-       [:div.status-viesti.tallentamatta
-        "Tallentamattomia muutoksia"]]
 
-      (tiedot/onko-muutoksia?)
-      [:div.status-viesti.tallentamatta
-       "Tallentamattomia muutoksia"]
-
-      viimeisin-muokkaus
-      [:div.status-viesti.tallennettu
-       (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
-
-      :else
-      [:div.status-viesti.ei-muutoksia
-       "Ei tallennettuja muutoksia"])]
+       :else
+       [:div.status-viesti.ei-muutoksia
+        "Ei tallennettuja muutoksia"])]]
 
    (if tallennustila?
-     [:div
+     [:div.painikkeet.text-right.grid-status-viestit
       (when kopioi-tuleville-vuosille?
         [:span {:style {:margin-left "1rem"}}
          [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
           #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat true))
           {:disabled (or tallennus-kesken? false)
            :luokka "ikoni-16"
+           :vayla-tyyli? false
            :ikoni (ikonit/action-copy)}]])
-      [:span {:style {:margin-left "1rem"}}
+      [:span
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
         {:disabled (or tallennus-kesken? false)}]]
-      [:span {:style {:margin-left "1rem"}}
+      [:span
        [napit/yleinen-toissijainen "Peruuta"
         #(e! (tiedot/->PeruutaTallennus))
         {:disabled (or tallennus-kesken? false)}]]]
 
-     [:span {:style {:margin-left "1rem"}}
-      [napit/yleinen-toissijainen "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennusTila))
-       {:vayla-tyyli? true}]])])
+     [:div.painikkeet.text-right.grid-status-viestit
+      [:span {:style {:margin-left "1rem"}}
+       [napit/muokkaa "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennusTila))]]])])
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
@@ -120,17 +122,24 @@
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
-                          "vaalen-tumma-tausta"))
-        sarakkeet [{:otsikko "nro" :leveys "5%"
+                          "vaalen-tumma-tausta korkea"))
+        muutoksen-vaikutus-fn (fn [arvo]
+                                (cond
+                                  (nil? arvo) "-"
+                                  (pos? arvo) (str "+" arvo)
+                                  (neg? arvo) (str "-" arvo)
+                                  :else arvo))
+        sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
                                    (if (:valiotsikko rivi)
                                      (piirra-valiotsikko-caret e! (:valiotsikko rivi) avatut-rivit)
                                      [:span]))
-                    :solun-luokka solun-luokka-fn}
-                   {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :solun-luokka solun-luokka-fn :luokka "muokattava"}
+                    :solun-luokka solun-luokka-fn
+                    :luokka "korkea"}
+                   {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :solun-luokka solun-luokka-fn :luokka "muokattava korkea"}
                    {:otsikko "Tehtävä"
-                    :leveys "30%"
+                    :leveys "44%"
                     :nimi :tehtava
                     :solun-luokka solun-luokka-fn
                     :muokattava? (constantly true)
@@ -139,21 +148,21 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                   {:otsikko "Sopimuksen määrä" :leveys "15%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
+                   {:otsikko "Sopimuksen määrä" :leveys "12.5%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
                     :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muutos Muutokset" :leveys "15%" :nimi :muutos_maaramuutos :tyyppi :numero :tasaa :oikea
+                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%" :nimi :muutos_maaramuutos :tyyppi :numero :tasaa :oikea
+                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
+                    :fmt (fn [arvo]
+                           (muutoksen-vaikutus-fn arvo))}
+                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false) :solun-luokka solun-luokka-fn
                     :fmt (fn [arvo]
                            (if (nil? arvo) "-" arvo))}
-                   {:otsikko "Muuttunut määrä" :leveys "20%" :nimi :yhteensa :tyyppi :numero :tasaa :oikea
-                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
-                    :fmt (fn [arvo]
-                           (if (nil? arvo) "-" arvo))}
-                   {:otsikko "Yksikkö" :leveys "20%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
+                   {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid
@@ -191,8 +200,7 @@
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
     [:div#vayla
      [:div.row
-      [:div.col-xs-12
-       [:h1 "Tehtävät ja määrät"]]]
+      [:h1 "Tehtävät ja määrät"]]
 
      [:div.flex-row {:style {:justify-content "flex-start"}}
       [:div.filtteri {:style {:width "200px"}}
@@ -210,6 +218,7 @@
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?)]
+     [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."]
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
      [debug/debug app]]))
 
