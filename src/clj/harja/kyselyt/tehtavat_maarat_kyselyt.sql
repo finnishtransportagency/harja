@@ -6,7 +6,8 @@ WITH rahavaraustehtava AS
              JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
     WHERE rvu.urakka_id = :urakkaid ),
  muutokset AS (
-    SELECT mmtm.maaramuutos, mmtm.tehtava as tehtavaid
+    SELECT mm.id, mmtm.edellinen_maara, mmtm.maaramuutos, mmtm.uusi_maara, mmtm.tehtava as tehtavaid,
+           mm.voimassa_alkaen, mm.syy
       FROM mhu_muutos mm
            LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
     WHERE mm.urakka = :urakkaid
@@ -15,9 +16,13 @@ WITH rahavaraustehtava AS
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, ut.maara as tarjous_maara,
-       ut.maaramuutos,  (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutos_maaramuutos,
+       ut.maaramuutos,
+       (SELECT array_agg(row(id, ut.maara, maaramuutos, (ut.maara+maaramuutos), tehtavaid, voimassa_alkaen, syy))
+        FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutokset,
+       (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutos_maaramuutos,
        CASE
-           WHEN ut.maara IS NOT NULL OR ut.maaramuutos IS NOT NULL THEN (COALESCE(ut.maara,0) + COALESCE(ut.maaramuutos, 0))
+           WHEN ut.maara IS NOT NULL OR (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) IS NOT NULL
+               THEN (COALESCE(ut.maara,0) + COALESCE((SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id), 0))
            ELSE null
            END AS yhteensa
 FROM tehtavaryhma tr

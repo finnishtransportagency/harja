@@ -1,5 +1,6 @@
 (ns harja.kyselyt.tehtavat-maarat-kyselyt
-  (:require [jeesql.core :refer [defqueries]]))
+  (:require [harja.kyselyt.konversio :as konversio]
+            [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/tehtavat_maarat_kyselyt.sql"
   {:positional? true})
@@ -32,6 +33,20 @@
   [db urakka-id hoitokauden-alkuvuosi]
   (let [tehtavat (hae-maaramitattavat-tehtavat db {:urakkaid urakka-id
                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Mäppää tehtavan tietokantarivit clojure-mapeiksi.
+        tehtavat (mapv
+                        (fn [tehtava]
+                          (-> tehtava
+                            (assoc :muutokset
+                              (if (:muutokset tehtava)
+                                (mapv
+                                  (fn [k]
+                                    (konversio/pgobject->map k :id :long :edellinen_maara :double :maaramuutos :double
+                                      :uusi_maara :double :tehtavaid :long :voimassa_alkaen :date :syy :string))
+                                  (konversio/pgarray->vector (:muutokset tehtava)))
+                                []))))
+                   tehtavat)
+
         ;; Jaotellaan tehtävät tehtävryhmäotsikon alle
         tehtavaryhman-tehtavat (group-by :tehtavaryhmaotsikko tehtavat)
         tehtavaryhman-tehtavat (sort-by :nimi
@@ -60,6 +75,5 @@
                    tehtavat)
         viimeisin-muokkaus (first (hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja db {:urakkaid urakka-id}))]
     {:tehtavat tehtavat
-     :tehtavaryhman-tehtavat tehtavaryhman-tehtavat
      :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
      :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
