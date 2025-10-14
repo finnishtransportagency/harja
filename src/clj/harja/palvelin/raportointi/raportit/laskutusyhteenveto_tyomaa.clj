@@ -92,6 +92,11 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
+                    (= "Muutokset" otsikko)
+                    [(taulukko-rivi data kyseessa-kk-vali? "Muutostyöt (erillisrahoitetut)" :muutos_erillis_hoitokausi_yht :muutos_erillis_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutos_hoitokausi_yht :jjh_muutos_val_aika_yht false)
+                     (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muutostyo_hoitokausi_yht :muutostyo_val_aika_yht true)]
+
                     (= "Rahavaraukset" otsikko)
                     (rahavaraus-rivit data :kaikki_rahavaraukset_hoitokausi_yht :kaikki_rahavaraukset_val_yht kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)
 
@@ -113,7 +118,7 @@
                      ;; Välikatselmuksesta siirretyt kulut edelliseltä hoitovuodelta. Otetaan mukaan osana tavoitehintaisia kuluja.
                      (taulukko-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_hoitokausi_yht :muut_kulut_val_aika_yht true)]
-                    
+
                     ;; Ei- tavoitehintaiset 
                     (and
                       (not tavoitehintainen?)
@@ -247,6 +252,15 @@
                           :laskutettu-teksti laskutettu-teksti
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
+     
+     ;; --------------- ;;
+     ;;    Muutokset    ;;
+     ;; --------------- ;;
+     (taulukko {:data rivitiedot
+                :otsikko "Muutokset"
+                :laskutettu-teksti laskutettu-teksti
+                :laskutetaan-teksti laskutetaan-teksti
+                :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      ;; ------------------------ ;;
      ;;   Rahavaraukset, muut    ;;
