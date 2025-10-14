@@ -30,7 +30,7 @@
         :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")}
 
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet))
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi))
 
      (first (yhteiset/liite-kentta e! app))
 

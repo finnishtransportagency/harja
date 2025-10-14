@@ -1,18 +1,12 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-muutostyo
   "Muutokset välilehden lomakkeet - Muutostyö"
-  (:require [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.ui.grid :as grid]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.navigaatio :as nav]
+  (:require [harja.ui.lomake :as lomake]
             [harja.domain.muutos-domain :as muutos-domain]
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
+            [harja.views.urakka.muutokset.yhteiset :as yhteiset]))
 
 
 (defn lomake-muutostyo
-  [e! {:keys [_valittu-hoitokausi urakan-hoitokaudet] :as app}]
+  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app}]
 
   [(lomake/ryhma {:otsikko "Perustiedot"}
      (lomake/rivi
@@ -25,7 +19,7 @@
         :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
         :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
         :oletusarvo :erillisrahoitus ;; Toistaiseksi vain erillisrahoitus käytössä
-        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; Tämä ei käytössä, eikä ole vielä tarkoitus toteuttaa  
+        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; TODO - tarvitaan poikkeama
         })
 
      (lomake/rivi
@@ -36,12 +30,12 @@
         :salli-kirjoitus? true
         :piilota-checkbox? true
         :piilota-dropdown? true
-        :validoi [#(when (nil? (seq %)) "Kirjoita muutostyön nimi")]
+        :validoi [#(when (nil? (seq %)) "Syötä muutostyön nimi")]
         :aputeksti "Anna muutokselle tunnistettava nimi. Nimeä käytetään kulujen kohdistamiseen."
         ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
+     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
      (yhteiset/+rivi-muutos-tavoitehinta+)
 
      (first (yhteiset/liite-kentta e! app)))])

@@ -140,7 +140,7 @@ end
 $$ language plpgsql;
 
 delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ise ohituskaistat') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
-delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ennalta arvaamattomien kuljetusten avustaminen') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
+delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'); -- Ennalta arvaamattomien kuljetusten avustaminen
 delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Opastustaulun/-viitan uusiminen') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
 
 -- Kaikkia toimenpidekoodeja ei ole migraatiotiedostoja ajettaessa lokaaliympäristöissä.
@@ -152,9 +152,9 @@ UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE 
 WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)';
 
 -- Materiaaleihin mäpättävät tehtavat
-UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
-                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)';
+UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5')
+WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)'; -- Liukkaudentorjunta hiekoituksella (materiaali)
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')
@@ -164,9 +164,13 @@ UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE 
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kelirikkomurske')
 WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa';
 
-UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
-                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
-WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen';
+UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka, liukkaudentorjunta')
+WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be'; -- Ennalta arvaamattomien kuljetusten avustaminen (km)
+
+UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE materiaalityyppi = 'hiekoitushiekka'),
+                   materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka, liukkaudentorjunta')
+WHERE yksiloiva_tunniste = 'ae67d2b5-a9d9-4880-a7ee-b3870737a177'; -- Ennalta arvaamattomien kuljetusten avustaminen (materiaali)
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Reunantäyttömurske')
@@ -205,7 +209,7 @@ BEGIN
     (urakka,"hoitokauden-alkuvuosi",tehtava,maara,poistettu,luotu,luoja,muokattu,muokkaaja,"muuttunut-tarjouksesta?")
   VALUES
     (v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunantäyttö'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
-	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'ae67d2b5-a9d9-4880-a7ee-b3870737a177'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ojitus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Reunapalteen poisto'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden pölynsidonta (jkm)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
@@ -218,7 +222,7 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
-	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ic ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Is ohituskaistat'),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
@@ -364,6 +368,9 @@ BEGIN
 	-- 
 	-- Loput 0
 	--
+	-- Inserteissä käytetyt yksilöivät tunnisteet
+	-- ae67d2b5-a9d9-4880-a7ee-b3870737a177 = Ennalta arvaamattoman kuljetuksen avustaminen (materiaali)
+	-- c3ada25e-70f2-407b-8dff-2c1a303578be = Ennalta arvaamattomien kuljetusten avustaminen (km)
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liikennemerkkien ja opasteiden kunnossapito (oikominen, pesu yms.)'),0,'2025-08-18 08:09:23.872',v_kayttaja_id,p_hoitovuosi),
   	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus T'),0,'2025-08-18 08:09:24.434',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Katupölynsidonta'),0,'2025-08-18 08:09:23.795',v_kayttaja_id,p_hoitovuosi),
@@ -418,7 +425,7 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ic ohituskaistat'),0,'2025-08-18 08:09:24.117',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)'),0,'2025-08-18 08:09:24.123',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen poistaminen'),0,'2025-08-18 08:10:54.542',v_kayttaja_id,p_hoitovuosi),
-	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen'),0,'2025-08-18 08:09:24.128',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be'),0,'2025-08-18 08:09:24.128',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II'),0,'2025-08-18 08:09:24.145',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),0,'2025-08-18 08:09:24.15',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)'),0,'2025-08-18 08:09:24.156',v_kayttaja_id,p_hoitovuosi),
@@ -447,7 +454,7 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Muut päällysteiden paikkaukseen liittyvät työt'),0,'2025-08-18 08:09:24.347',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Tunnelien pienet korjaustyöt ja niiden liikennejärjestelyt'),0,'2025-08-18 08:09:24.353',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Tunneleiden ylläpito'),0,'2025-08-18 08:09:24.36',v_kayttaja_id,p_hoitovuosi),
-	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)'),0,'2025-08-18 08:09:24.367',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'ae67d2b5-a9d9-4880-a7ee-b3870737a177'),0,'2025-08-18 08:09:24.367',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Nopeusnäyttötaulun hankinta'),0,'2025-08-18 08:09:24.373',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden kunnostaminen'),0,'2025-08-18 08:09:24.384',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kaiteiden rakentaminen'),0,'2025-08-18 08:09:24.389',v_kayttaja_id,p_hoitovuosi),
