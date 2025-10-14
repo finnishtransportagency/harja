@@ -267,6 +267,7 @@
                     :puhelin puhelin
                     :organisaatio (:id organisaatio)}
           kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
+          piilota-nimi? (:piilota_nimi kayttaja-kannassa)
           kayttaja-id-kannassa (:id kayttaja-kannassa)
           kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
                                                                     :etunimi
@@ -277,7 +278,10 @@
           kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
           kayttaja-id (or
                         kayttaja-id-kannassa
-                        (:id (q/luo-kayttaja<! db kayttaja)))]
+                        (:id (q/luo-kayttaja<! db kayttaja)))
+          ;; Päivitetään käyttäjätiedot Jarjestelmavastaava :lle, jos nimeä ei ole vielä piilotettu
+          _ (when (and (not piilota-nimi?) (contains? (:roolit roolit) "Jarjestelmavastaava"))
+              (q/piilota-jvh-nimi! db {:id kayttaja-id}))]
       (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
         (q/paivita-kayttaja! db (merge kayttaja
                                   {:id kayttaja-id})))

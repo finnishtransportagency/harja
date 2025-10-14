@@ -186,6 +186,34 @@ DO UPDATE SET
 WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
+-- name: luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<!
+INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
+    versio,
+    muutos,
+    kustannuslaji,
+    toimenpideinstanssi,
+    hoitokauden_alkuvuosi,
+    summa
+  ) VALUES (
+    :versio,
+    :muutos_id,
+    :kustannuslaji::SUUNNITTELU_OSIO,
+    NULL,
+    :hoitokauden_alkuvuosi,
+    :summa
+) ON CONFLICT ( -- Erillisrahoitetuille ei anneta tpitä, joten ideksin käyttö eri
+  muutos,
+  kustannuslaji,
+  hoitokauden_alkuvuosi,
+  COALESCE(toimenpideinstanssi, -1)
+) DO UPDATE SET
+  versio               = EXCLUDED.versio,
+  kustannuslaji        = EXCLUDED.kustannuslaji,
+  toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
+  summa                = EXCLUDED.summa
+WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
+
+
 -- name: luo-muutos-kulu-linkitys<!
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES (:versio, :muutos, :kulu);
@@ -197,6 +225,21 @@ UPDATE mhu_muutos_kulu
        kulu = :uusi-kulu
  WHERE muutos = :muutos
    AND kulu = :vanha-kulu;
+
+-- name: paivita-muutostyo-kulukohdistus!
+UPDATE kulu_kohdistus
+   SET muutos = :muutos
+ WHERE id = :kohdistus-id;
+
+-- name: onko-muutoksella-kuluja-ennen-voimassa-paivaa?
+-- single?: true
+SELECT k.id FROM kulu k 
+	LEFT JOIN kulu_kohdistus kk ON kk.kulu = k.id 
+WHERE 
+	kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE  
+  AND k.erapaiva < :voimassa::DATE
+  AND kk.muutos = :muutos; 
 
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
@@ -374,7 +417,7 @@ SELECT
 FROM toimenpiteet tk
     LEFT JOIN toimenpide tp ON tp.koodi = tk.koodi
     LEFT JOIN toimenpideinstanssi tpi ON tp.id = tpi.toimenpide AND tpi.urakka = :urakka
-    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id AND
+    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id
                                     -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
                                     --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
                                     --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
@@ -382,7 +425,8 @@ FROM toimenpiteet tk
                                     --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
                                     --       silti löydettävissä äiti muutos id:n avulla.
                                     --m.versio = :versio AND
-                                    m.poistettu IS FALSE)
+                                    AND m.poistettu IS FALSE 
+                                    AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI)
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
 GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tp.id, tp.jarjestys
 ORDER BY tp.jarjestys;
@@ -616,3 +660,18 @@ DO UPDATE SET
   syy                                = EXCLUDED.syy,
   muokattu                           = NOW(),
   muokkaaja                          = EXCLUDED.luoja;
+
+
+-- name: hae-urakan-muutostyot
+SELECT  DISTINCT ON (m.id)
+        m.id,
+        m.tyyppi, 
+        m.alityyppi,
+        m.nimi, 
+        m.voimassa_alkaen
+ FROM mhu_muutos m
+WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
+  AND m.urakka =  :urakka
+  AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND m.poistettu IS FALSE 
+ORDER BY m.id DESC;
