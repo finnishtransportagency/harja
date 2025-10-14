@@ -83,6 +83,13 @@
            :on-click #(e! (tiedot/->AvaaRivi valiotsikko))
            :on-key-down #(avaa-tai-sulje-haitari % e! valiotsikko)}]))
 
+(defn muutoksen-vaikutus-fn [arvo]
+  (cond
+    (nil? arvo) "-"
+    (pos? arvo) (str "+" arvo)
+    (neg? arvo) (str "-" arvo)
+    :else arvo))
+
 (defn tehtava-vetolaatikko
   "Näyttää tehtävän muutokset vetolatikossa"
   [tehtava muutokset]
@@ -98,6 +105,7 @@
      [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
       [grid/grid
        {:otsikko ""
+        :tyhja "Ei muutoksia."
         :voi-poistaa? (constantly false)
         :voi-lisata? false
         :piilota-toiminnot? true
@@ -105,14 +113,15 @@
         :jarjesta :voimassa_alkaen
         :tunniste :id
         :voi-kumota? false}
-       [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "15%"}
-        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "15%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "15%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "15%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Lisätieto" :nimi :syy :leveys "40%" :tyyppi :string :tasaa :vasen}]
+       [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
+         :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit viimeksi-klikattu]
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (or
@@ -123,12 +132,6 @@
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
                           "vaalen-tumma-tausta korkea"))
-        muutoksen-vaikutus-fn (fn [arvo]
-                                (cond
-                                  (nil? arvo) "-"
-                                  (pos? arvo) (str "+" arvo)
-                                  (neg? arvo) (str "-" arvo)
-                                  :else arvo))
         sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
