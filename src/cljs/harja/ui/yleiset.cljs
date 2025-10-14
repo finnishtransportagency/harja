@@ -883,6 +883,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                                    (sulje-fn)))}
            [ikonit/sulje]])]))))
 
+(defn nayta-virheet
+  [tyyppi virheet]
+  (assert 
+    (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
+    "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
+  [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
+         :style {:white-space "pre-line"}}
+   [:div.infolaatikon-ikoni
+    (case tyyppi
+      :varoitus (ikonit/livicon-warning-sign)
+      :onnistunut (ikonit/livicon-check)
+      :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
+      :huolto (ikonit/livicon-wrench))]
+   
+   [:div.infolaatikon-teksti
+    [:div {:style {:display "flex"
+                   :flex-direction "column"
+                   :white-space "pre-line" :color +vari-black-default+}}
+     "Lomakkeella virheitä:"
+     (doall (for* [v (distinct virheet)]
+              [:span (str "- " v)]))]]])
+
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
 (defn pitka-teksti

@@ -1,0 +1,2 @@
+ALTER TABLE kayttaja
+ADD COLUMN piilota_nimi BOOLEAN DEFAULT FALSE;
