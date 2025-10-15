@@ -239,7 +239,8 @@ SELECT
                            '=',
                            COALESCE(sampoid, nimi)))
    FROM sopimus s
-   WHERE urakka = u.id)                   AS sopimukset,
+   WHERE urakka = u.id
+     AND s.poistettu = false)           AS sopimukset,
   -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
   CASE
   WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
