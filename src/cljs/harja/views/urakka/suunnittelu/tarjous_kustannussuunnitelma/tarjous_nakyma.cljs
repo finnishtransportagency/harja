@@ -16,7 +16,6 @@
     [tuck.core :as tuck]))
 
 (defonce virheet-atom (atom {}))
-(defonce uusi-toimenkuva-valittavana (atom false))
 
 ;; Määritellään kaikkien kolumnien leveyksiä
 (def nimi-leveys 20)
@@ -82,7 +81,7 @@
                    :fmt fmt/euro-opt})]
     v))
 
-(defn johto-ja-hallintokorvaukset [e! kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat]
+(defn johto-ja-hallintokorvaukset [e! uusi-toimenkuva-valittavana kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat]
   (let [vuositaulukon-otsikot (map-indexed (fn [index rivi]
                                              (merge rivi
                                                {:muokattava? (fn [rivi] (cond
@@ -102,7 +101,7 @@
                            kaikki-toimenkuvat)
 
         ;; Toimenkuvan voi aina lisätä, paitsi jos kaikki toimenkuvat on jo lisätty.
-        voi-lisata? (if (and (> (count muut-toimenkuvat) 0) (not @uusi-toimenkuva-valittavana))
+        voi-lisata? (if (and (> (count muut-toimenkuvat) 0) (not uusi-toimenkuva-valittavana))
                       true false)
         vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
         vuosi-map (zipmap vuosiavaimet (repeat 0))]
@@ -115,7 +114,7 @@
       :voi-poistaa? (constantly false)
       :voi-lisata? voi-lisata?
       :uusi-rivi (fn [rivi]
-                   (reset! uusi-toimenkuva-valittavana true)
+                   (e! (tarjous-tiedot/->ToggleUusiToimenkuvaValittavana true))
                    (merge (assoc rivi :id -1 :nimi "" :jarjestys 99 :yhteensa 0) vuosi-map))
       :voi-kumota? false
       :piilota-toiminnot? false
@@ -158,7 +157,7 @@
                                  (map :nimi toimenkuvat)
                                  (map :nimi muut-toimenkuvat))
                  :aseta (fn [rivi arvo]
-                          (reset! uusi-toimenkuva-valittavana false)
+                          (e! (tarjous-tiedot/->ToggleUusiToimenkuvaValittavana false))
                           (merge
                             (assoc rivi :id -1
                               :nimi arvo
@@ -177,7 +176,7 @@
                  :tyyppi :valinta
                  :valinnat-fn #(map :nimi muut-toimenkuvat)
                  :aseta (fn [rivi arvo]
-                          (reset! uusi-toimenkuva-valittavana false)
+                          (e! (tarjous-tiedot/->ToggleUusiToimenkuvaValittavana false))
                           (merge (assoc rivi :id -1
                                    :nimi arvo
                                    :toimenkuva (str/lower-case arvo)
@@ -392,7 +391,7 @@
      [erillishankinnat-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat]
 
      ;;Johto-ja-hallintokorvaus
-     [johto-ja-hallintokorvaukset e! (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys toimenkuvat]
+     [johto-ja-hallintokorvaukset e! (:uusi-toimenkuva-valittavana app) (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys toimenkuvat]
 
      ;;Hoidonjohtopalkkio
      [hoidonjohtopalkkio-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
