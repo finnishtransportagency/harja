@@ -326,4 +326,3 @@
       :tallenna-urakan-vastuuhenkilot-roolille
       :tallenna-urakan-yleinen-puh-ja-sposti)
     this))
-
