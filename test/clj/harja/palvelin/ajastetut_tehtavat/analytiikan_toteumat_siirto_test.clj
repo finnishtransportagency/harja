@@ -43,7 +43,9 @@
         _ (mapv (fn [paiva]
                   (analytiikan-toteumat/siirra-toteumat testitietokanta (t-coerce/to-sql-time paiva)))
             (pvm/paivat-valissa (pvm/luo-pvm 2015 0 1) (pvm/luo-pvm 2015 11 31)))
-        maarat-lopussa (hae-maarat)]
+        maarat-lopussa (hae-maarat)
+        testitoteuma-luotu-aikaleima (q "SELECT luotu FROM analytiikka_toteumat WHERE toteuma_tunniste_id = '666'")]
+    (is (not (nil? testitoteuma-luotu-aikaleima)))
     (is (> (first maarat-alussa) (second maarat-alussa)))
     (is (= (first maarat-alussa) (first maarat-lopussa)))
     (is (= (first maarat-alussa) (second maarat-lopussa)))))
