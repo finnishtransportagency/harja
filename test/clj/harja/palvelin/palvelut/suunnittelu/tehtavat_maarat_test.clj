@@ -1,19 +1,10 @@
 (ns harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
-            [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
-            [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
-            [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
+  (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tm-palvelu]
-            [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.tehtavat-maarat-kyselyt :as tm-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
-            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]))
+            [harja.kyselyt.tehtavat-maarat-kyselyt :as tm-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma

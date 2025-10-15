@@ -38,7 +38,7 @@
                                                       :valitaso nil
                                                       :noudetaan 0}}
                                 :tehtavat-maarat {:tallennustila? false
-                                                  :avatut-rivit #{"1.0 TALVIHOITO"}}
+                                                  :avatut-tehtavaryhmat #{"1.0 TALVIHOITO"}}
                                 :kustannussuunnitelma kustannussuunnitelma-default
                                 :suolarajoitukset suolarajoitukset-default})
 

@@ -53,7 +53,7 @@
            :luokka "ikoni-16"
            :vayla-tyyli? false
            :ikoni (ikonit/action-copy)}]])
-      [:span
+      [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
         {:disabled (or tallennus-kesken? false)}]]
@@ -70,8 +70,8 @@
   (when (dom/enter-nappain? event)
     (e! (tiedot/->AvaaRivi valiotsikko))))
 
-(defn- piirra-valiotsikko-caret [e! valiotsikko avatut-rivit]
-  (if (contains? avatut-rivit valiotsikko)
+(defn- piirra-valiotsikko-caret [e! valiotsikko avatut-tehtavaryhmat]
+  (if (contains? avatut-tehtavaryhmat valiotsikko)
     [:img {:alt "Expander"
            :src "images/expander-down.svg"
            :tabIndex "0"
@@ -121,12 +121,12 @@
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (or
                                                 (not (nil? (:valiotsikko rivi)))
-                                                (contains? avatut-rivit (:tehtavaryhmaotsikko rivi))))
+                                                (contains? avatut-tehtavaryhmat (:tehtavaryhmaotsikko rivi))))
                              tehtavat-ja-maarat)
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
@@ -136,7 +136,7 @@
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
                                    (if (:valiotsikko rivi)
-                                     (piirra-valiotsikko-caret e! (:valiotsikko rivi) avatut-rivit)
+                                     (piirra-valiotsikko-caret e! (:valiotsikko rivi) avatut-tehtavaryhmat)
                                      [:span]))
                     :solun-luokka solun-luokka-fn
                     :luokka "korkea"}
@@ -173,7 +173,7 @@
         :tyhja "Ei tietoja."
         :luokat ["matala-panel"]
         :data-cy "tehtavat-ja-maarat-grid"
-        :muokkaa-aina true
+        ;:muokkaa-aina true
         :voi-muokata? (or tallennustila? false)
         :voi-poistaa? (constantly false)
         :peruuta false
@@ -197,7 +197,7 @@
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat avatut-rivit] :as app}]
+                         tehtavat-ja-maarat avatut-tehtavaryhmat] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
@@ -222,7 +222,7 @@
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?)]
      [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."]
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-rivit]
+     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
 (defn tehtavat-maarat*

@@ -114,9 +114,9 @@
 
   AvaaRivi
   (process-event [{valiotsikko :valiotsikko} app]
-    (let [app (if (nil? (:avatut-rivit app))
-                (assoc app :avatut-rivit #{})
+    (let [app (if (nil? (:avatut-tehtavaryhmat app))
+                (assoc app :avatut-tehtavaryhmat #{})
                 app)]
-      (if (contains? (:avatut-rivit app) valiotsikko)
-        (assoc app :avatut-rivit (disj (:avatut-rivit app) valiotsikko))
-        (assoc app :avatut-rivit (merge (:avatut-rivit app) valiotsikko))))))
+      (if (contains? (:avatut-tehtavaryhmat app) valiotsikko)
+        (assoc app :avatut-tehtavaryhmat (disj (:avatut-tehtavaryhmat app) valiotsikko))
+        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko))))))

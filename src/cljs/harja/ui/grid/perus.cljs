@@ -281,11 +281,13 @@
                     (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
                     ^{:key (str "avattava-rivi-tila" id)}
                     [avattavat-rivi-tila ohjaus avattavat-rivit id (y/luokat "vetolaatikon-tila"
+                                                                     (when solun-luokka (solun-luokka (get rivi nimi) rivi))
                                                                      (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
 
                     (= :vetolaatikon-tila tyyppi)
                     ^{:key (str "vetolaatikontila" id)}
                     [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                (when solun-luokka (solun-luokka (get rivi nimi) rivi))
                                                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
                     :else
                     ^{:key (str i nimi)}
