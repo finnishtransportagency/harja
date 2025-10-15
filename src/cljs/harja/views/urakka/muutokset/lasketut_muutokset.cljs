@@ -73,8 +73,8 @@
 
 
 (defn lasketut-muutokset [e!
-                           {:keys [tehtava-maaramuutokset
-                                   valittu-modal-tehtava haku-kaynnissa?] :as app}]
+                          {:keys [tehtava-maaramuutokset
+                                  valittu-modal-tehtava haku-kaynnissa?] :as app}]
 
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
@@ -102,15 +102,9 @@
          ;; Tälle passataan valittu rivi / valittu tehtävä 
          [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
 
-         (when haku-kaynnissa?
-           [:div.lasketut-muutokset-grid-haku
-            [ajax-loader-pieni "Haku käynnissä..."]])
-
          ;; Tehtävä ja määrämuutos taulukko 
          [grid/grid
           {:tunniste :id
-           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-           :sivuta 20
            :voi-kumota? false
            :voi-lisata? false
            :piilota-toiminnot? true

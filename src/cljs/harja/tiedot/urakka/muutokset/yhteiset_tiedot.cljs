@@ -13,7 +13,7 @@
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit])) 
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 
 (defonce ^{:private true}
@@ -23,18 +23,20 @@
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
-                     :kirjatut-muutokset nil
                      :aiempien-hoitovuosien-pysyvat-muutokset nil
-                     :tehtava-maaramuutokset nil
-                     :rahavarausten-muutokset nil
+                     ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
+                     ;; Jos haluat että koko sivu wipetään, enabloi nämä. Tällä hetkellä tälle ei ole kuitenkaan syytä.
+                     ;; :kirjatut-muutokset nil
+                     ;; :tehtava-maaramuutokset nil
+                     ;; :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
                      :suunniteltujen-maarien-muutokset nil
                      :budjettitavoitteet nil
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
-                                           :lasketut-muutokset true
-                                           :rahavarausten-muutokset true
-                                           :tavoitehinnan-muutokset true
-                                           :suunniteltujen-maarien-muutokset true}})
+                                           :lasketut-muutokset false
+                                           :rahavarausten-muutokset false
+                                           :tavoitehinnan-muutokset false
+                                           :suunniteltujen-maarien-muutokset false}})
 
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
@@ -229,9 +231,9 @@
           app (-> app
                 ;; Disabloi tallennus, enabloituu itsestään jos lomaketta muutetaan
                 ;; Näytä virheet vasta, kun tallenna nappia painetaan (saavutettavuus)
-                (assoc 
-                  :lomake-virheet nil 
-                  :voi-tallentaa? false 
+                (assoc
+                  :lomake-virheet nil
+                  :voi-tallentaa? false
                   :tallenna-painettu? false)
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
                 ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
@@ -258,8 +260,8 @@
     (let [app (if (some? rivi)
                 (assoc app :viimeksi-valittu rivi :muokattava-muutos rivi)
                 (assoc app :muokattava-muutos rivi))]
-      (assoc app 
-        :lomake-virheet nil 
+      (assoc app
+        :lomake-virheet nil
         :voi-tallentaa? true
         :tallenna-painettu? false)))
 
@@ -322,8 +324,8 @@
     (-> app
       ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
       (assoc :muokattava-muutos nil
-             :tallennus-kesken? false
-             :viimeksi-valittu nil)
+        :tallennus-kesken? false
+        :viimeksi-valittu nil)
       (vastaus-haku-onnistui vastaus)))
 
   TallennaMuutosEpaonnistui

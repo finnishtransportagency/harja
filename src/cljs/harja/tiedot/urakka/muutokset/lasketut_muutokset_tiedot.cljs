@@ -1,15 +1,13 @@
 (ns harja.tiedot.urakka.muutokset.lasketut-muutokset-tiedot
   "Urakan muutosten tiedot - lasketut muutokset."
   (:require
-    [taoensso.timbre :as log]
     [tuck.core :as tuck]
 
-    ;; Tuck efektit ja apurit
-    [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka :as u]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.tyokalut.tuck :as tuck-apurit]
     [harja.ui.viesti :as viesti]
-    [harja.tiedot.urakka.urakka :as tila]))
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 ;; Muutostyypit:
 ;; - Tehtävä- ja määrämuutokset
@@ -36,8 +34,6 @@
   TallennaTehtavaMaaramuutokset
   (process-event [{:keys [rivit]}
                   {:keys [_valittu-rivi] :as app}]
-    (log/debug "TallennaTehtavaMaaramuutokset")
-
     (let [parametrit {:rivit rivit
                       :urakka-id (-> @tila/yleiset :urakka :id)
                       :hoitokaudet @u/valitun-urakan-hoitokaudet
@@ -52,13 +48,10 @@
 
   TallennaTehtavaMaaramuutoksetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (log/debug "TallennaTehtavaMaaramuutoksetOnnistui")
-
     (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-
     (let [app (assoc app
-                :tehtava-maaramuutokset vastaus
-                :haku-kaynnissa? false)]
+                :haku-kaynnissa? false
+                :tehtava-maaramuutokset vastaus)]
 
       ;; TODO: Kannattaa ehkä refaktoroida logiikkaa backend-palvelun puolelle pidemmän päälle, jotta vältämme
       ;;       turhia raskaita kyselyitä.
@@ -67,9 +60,11 @@
       ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
+        {:tuck.effect/type :laukaise-event
+         :event t-yhteiset/->HaeUrakanMuutostiedot}
         {:tuck.effect/type :debounce
-         :event t-yhteiset/->HaeUrakanMuutostiedot
-         :timeout 200})))
+         :event #(t-yhteiset/->ToggleTaulukonNakyvyys :lasketut-muutokset)
+         :timeout 5})))
 
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
@@ -140,9 +135,11 @@
       ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
+        {:tuck.effect/type :laukaise-event
+         :event t-yhteiset/->HaeUrakanMuutostiedot}
         {:tuck.effect/type :debounce
-         :event t-yhteiset/->HaeUrakanMuutostiedot
-         :timeout 200})))
+         :event #(t-yhteiset/->ToggleTaulukonNakyvyys :lasketut-muutokset)
+         :timeout 5})))
 
   TallennaYksikkohintaEpaonnistui
   (process-event [_ app]
