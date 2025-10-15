@@ -21,7 +21,8 @@
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
-                                 tallenna-painettu? lomakkeella-virheita? lomake-virheet] :as _app}]
+                                 tallenna-painettu? lomakkeella-virheita? lomake-virheet
+                                 muutoksen-tiedot-haku-kaynnissa?] :as _app}]
   [:div
    [:hr]
    (when (and
@@ -42,7 +43,7 @@
        (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
     ;; Saavutettavuusmielessä, halutaan näyttää virheet vasta, kun tallenna nappia painettu 
     ;; Tallenna nappi on myös disabled alkutilassa, kun lomaketta ei ole muokattu 
-    {:disabled (if (not voi-tallentaa?)
+    {:disabled (if (or (not voi-tallentaa?) muutoksen-tiedot-haku-kaynnissa?)
                  true
                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
 
