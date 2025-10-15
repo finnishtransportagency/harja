@@ -445,9 +445,11 @@
                                                              :osio "tavoitehintaiset-rahavaraukset"
                                                              :tehtava_id nil
                                                              :tehtavaryhma_id nil
-                                                             :rahavaraus_id (:id rahavaraus)}])))
+                                                             :rahavaraus_id (:id rahavaraus)
+                                                             :jarjestys (:jarjestys rahavaraus)}])))
                            [] puuttuvat-rahavaraukset)
         kustannus-rivit (vec (concat kustannus-rivit puuttuvat-rahavaraukset))
+        kustannus-rivit (sort-by :jarjestys kustannus-rivit)
         kustannus-rivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) kustannus-rivit)
         kustannus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys indeksi)) kustannus-rivit)
         kustannus-rivit (mapv #(muodosta-kustannusrivi % (hae-kustannuksista-rivit-vuodelle :kustannukset tarjous-rivit (:nimi %))) kustannus-rivit)

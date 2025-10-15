@@ -683,9 +683,6 @@
                                                          (and
                                                            (contains? #{:kaikki "Kaikki"} (:nimi (first valinnat)))
                                                            (:valittu? (first valinnat))) "Kaikki valittu"
-                                                         (and
-                                                           (= 0 (:id (first valinnat)))
-                                                           (:valittu? (first valinnat))) "Kaikki valittu"
                                                          (= valittujen-valintojen-maara 1) (or
                                                                                              yksi-valittu-teksti
                                                                                              (str "1" (first teksti)))
