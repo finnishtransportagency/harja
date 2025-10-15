@@ -123,7 +123,8 @@
   (tuck-apurit/post! app :hae-urakan-muutostiedot
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :hoitokaudet @u/valitun-urakan-hoitokaudet
-     :valittu-hoitokausi (:valittu-hoitokausi app)}
+     :valittu-hoitokausi (:valittu-hoitokausi app)
+     :mhu+? (:mhu+? app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
@@ -170,12 +171,15 @@
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [_ app]
-    (hae-urakan-muutostiedot
-      (assoc
-        (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-        :haku-kaynnissa? true
-        :valittu-hoitokausi @u/valittu-hoitokausi
-        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))
+    (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
+          mhu+? (boolean (>= urakan-alkuvuosi 2025))]
+      (hae-urakan-muutostiedot
+        (assoc
+          (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+          :haku-kaynnissa? true
+          :mhu+? mhu+?
+          :valittu-hoitokausi @u/valittu-hoitokausi
+          :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))))
 
 
   HaeUrakanMuutostiedotOnnistui
@@ -282,7 +286,7 @@
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet] :as app}]
+                  {:keys [lomake-virheet mhu+?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
@@ -311,7 +315,8 @@
             {:urakka-id (:id urakka)
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
-             :muutos muutos}
+             :muutos muutos
+             :mhu+? mhu+?}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
              :paasta-virhe-lapi? true})

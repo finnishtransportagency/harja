@@ -62,7 +62,8 @@
                                :alkupvm alkupvm
                                :loppupvm loppupvm
                                :tehtava (or tehtava_id nil)
-                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
+                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                               :uusi-urakka? true}
                        yksikkohinta (->
                                       (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
                                       first :yksikkohinta)]
@@ -80,7 +81,7 @@
 (defn hae-tehtava-maaramuutokset
   [db
    {:keys [id] :as kayttaja}
-   {:keys [urakka-id valittu-hoitokausi hoitokaudet] :as _tiedot}]
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet mhu+?] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -90,7 +91,8 @@
                 :urakka urakka-id
                 :alkupvm alkupvm
                 :loppupvm loppupvm
-                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}
+                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                :uusi-urakka? mhu+?}
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
 
         fn-lisaa-valiotsikot (fn [rivit]
@@ -157,7 +159,9 @@
 
                                        ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
                                        ;; => Yritä hakea yksikköhinta edellisiltä vuosilta 
-                                       kaikki-yksikkohinnat (when tehtavalla-ei-toteumia?
+                                       kaikki-yksikkohinnat (when (and
+                                                                    mhu+?
+                                                                    tehtavalla-ei-toteumia?)
                                                               (hae-hoitovuosien-yksikkohinnat db kayttaja {:urakka-id urakka-id
                                                                                                            :hoitokaudet hoitokaudet
                                                                                                            :tehtava_id (:tehtava_id rivi)}))
@@ -172,7 +176,7 @@
 
                                        ;; Jos ei edellisiä yksikköhintojakaan löytynyt, anna kirjata tavoitehinta manuaalisesti 
                                        anna-kirjata-tavoitehinta? (and
-                                                                    tehtavalla-ei-toteumia?
+                                                                    (or (not mhu+?) tehtavalla-ei-toteumia?)
                                                                     (not loytyi-aikaisemmat-yksikkohinnat?))
 
                                        ;; Hae nykyhetken asetettu hoitokauden yksikköhinta 
@@ -353,7 +357,7 @@
        muutokset))))
 
 (defn hae-urakan-muutostiedot
-  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi] :as tiedot}]
+  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi mhu+?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         kirjatut-muutokset (->
@@ -366,7 +370,7 @@
         rahavarausten-suunnitelmat (map
                                      #(select-keys % [:id :nimi :summa-indeksikorjattu])
                                      (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
-                                                                                                               ;; haetaan vain valitulle hoitovuodelle
+                                                                                                                ;; haetaan vain valitulle hoitovuodelle
                                                                                                                 :alkuvuosi hoitokauden-alkuvuosi
                                                                                                                 :loppuvuosi (inc hoitokauden-alkuvuosi)}))
         rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
@@ -392,7 +396,8 @@
         ;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
         tehtava-ja-maaramuutokset (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
                                                                            :hoitokaudet hoitokaudet
-                                                                           :valittu-hoitokausi valittu-hoitokausi})
+                                                                           :valittu-hoitokausi valittu-hoitokausi
+                                                                           :mhu+? mhu+?})
 
         kirjatut-muutokset-yht (reduce + (map :tavoitehinnan-muutos kirjatut-muutokset))
         aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce +
@@ -401,10 +406,10 @@
                                                         (remove nil?
                                                           (map :tavoitehinnan-muutos-indeksikorjattu aiempien-vuosien-pysyvat-muutokset)))
         toteumiin-perustuvat-muutokset-yht (reduce + 0
-                                               (remove nil?
-                                                 (concat
-                                                   [(:tavoitehinnan-muutos (last rahavaraukset))]
-                                                   (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
+                                             (remove nil?
+                                               (concat
+                                                 [(:tavoitehinnan-muutos (last rahavaraukset))]
+                                                 (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
         muutosten-vaikutus-yht (+
                                  (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
                                  (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
@@ -488,7 +493,7 @@
                                  ;; tähän puuttuvien muutostyyppien lomakehaut...
                                  [{}])
 
-        _ (when (> (count tyyppikohtaiset-tiedot)  1)
+        _ (when (> (count tyyppikohtaiset-tiedot) 1)
             (log/error "Muutoksia palautui lomakkeelle enemmän kuin yksi urakassa " urakka-id)
             (throw (Error. "Muutoksia palautui enemmän kuin yksi, kyseessä on luultavasti ongelmatilanne. Ota yhteys Harja-palautteeseen.")))
         liitteet (when-not (empty? (:liite-idt muutos))
@@ -582,9 +587,9 @@
         lisattavat-liite-idt (set/difference uudet-liite-idt vanhat-liite-idt)]
 
     (log/debug " Vanhojen liitteiden idt: " vanhat-liite-idt
-               " Uusien liitteiden idt: " uudet-liite-idt
-               " Poistettavat liite-idt: " poistettavat-liite-idt
-               " Lisättävät liite-idt: " lisattavat-liite-idt)
+      " Uusien liitteiden idt: " uudet-liite-idt
+      " Poistettavat liite-idt: " poistettavat-liite-idt
+      " Lisättävät liite-idt: " lisattavat-liite-idt)
 
     ;; Poistetaan vanhat liitteiden linkitykset
     (doseq [liite-id poistettavat-liite-idt]
@@ -688,7 +693,7 @@
                              :else nil)
                    :voimassa voimassa-alkaen-sql})
         kuluja-kirjattu? (boolean vastaus)]
-    
+
     (when kuluja-kirjattu?
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
@@ -697,9 +702,8 @@
                                     "Tarkista kulujen päivämäärät.")}]}))))
 
 
-(defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos] :as tiedot}]
+(defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos mhu+?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
@@ -782,7 +786,8 @@
       ;; Palauta päivitetty listaus
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
-                                              :valittu-hoitokausi valittu-hoitokausi}))))
+                                              :valittu-hoitokausi valittu-hoitokausi
+                                              :mhu+? mhu+?}))))
 
 
 (defn hae-urakan-muutostyot
@@ -800,7 +805,7 @@
 
 (defn tallenna-rahavarausmuutosten-syyt
   "Rahavarausmuutosten syiden tallennus on irtallaan mhu_muutos logiikasta, eikä syiden historiaa tallenneta _historia tauluun."
-  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit]}]
+  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit mhu+?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
     (jdbc/with-db-transaction [conn db]
@@ -814,7 +819,8 @@
            :kayttaja (:id kayttaja)}))
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
-                                              :valittu-hoitokausi valittu-hoitokausi}))))
+                                              :valittu-hoitokausi valittu-hoitokausi
+                                              :mhu+? mhu+?}))))
 
 
 (defrecord Muutos [asetukset]
@@ -851,7 +857,7 @@
         :tallenna-muutos
         (fn [kayttaja tiedot]
           (tallenna-muutos (:db this) kayttaja tiedot))
-        
+
         :hae-urakan-muutostyot
         (fn [kayttaja tiedot]
           (hae-urakan-muutostyot (:db this) kayttaja tiedot))

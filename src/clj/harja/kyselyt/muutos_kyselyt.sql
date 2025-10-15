@@ -518,13 +518,14 @@ SELECT
   CASE 
     -- ============================================================
     -- Yksikköhinta puuttuu -> muutos syötetään käsin 
+    -- Myös >2025 urakat syöttävät aina käsin
     -- ============================================================
-    WHEN mmt.lahde = 'puuttuu' 
-      THEN mmt.kasin_syotetty_tavoitehintamuutos
+    WHEN (mmt.lahde = 'puuttuu' OR :uusi-urakka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
     -- ============================================================
     -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
+    -- Ei jatketa myöskään, jos kyseessä vanhempi urakka
     -- ============================================================
-    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+    WHEN (:uusi-urakka? = false OR (SUM(urakan_tehtavat.maara) = 0)) THEN NULL
     -- ============================================================
     -- Tavoitehinta lasketaan itsestään, joten lasketaan se tässä 
     -- ============================================================
@@ -540,32 +541,32 @@ SELECT
     WHEN mmt.lahde = 'valittu' THEN NULL
   END                                             AS tavoitehinnan_muutos
 FROM tehtava tk
-  JOIN tehtavaryhma tr_alataso
-    ON tr_alataso.id = tk.tehtavaryhma
-  JOIN tehtavaryhmaotsikko o
-    ON tr_alataso.tehtavaryhmaotsikko_id = o.id
-    AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+       JOIN tehtavaryhma tr_alataso
+ON tr_alataso.id = tk.tehtavaryhma
+       JOIN tehtavaryhmaotsikko o
+         ON tr_alataso.tehtavaryhmaotsikko_id = o.id
+        AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
   LEFT JOIN urakka_tehtavamaara ut
-    ON ut.urakka = :urakka
-    AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-    AND ut.poistettu IS NOT TRUE
-    AND tk.id = ut.tehtava
-    AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
+         ON ut.urakka = :urakka
+        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+        AND ut.poistettu IS NOT TRUE
+        AND tk.id = ut.tehtava
+        AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
   LEFT JOIN urakan_tehtavat
-    ON tk.id = urakan_tehtavat.toimenpidekoodi
-  JOIN urakka u
-    ON u.id = :urakka
+         ON tk.id = urakan_tehtavat.toimenpidekoodi
+       JOIN urakka u
+         ON u.id = :urakka
   -- --------------------------------------------------------------------
   -- Vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
   -- --------------------------------------------------------------------
   LEFT JOIN LATERAL (
     SELECT mmt.*
-     FROM mhu_muutos_tehtava_tiedot mmt
-    WHERE mmt.urakka = :urakka
-      AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-      AND mmt.tehtava = tk.id
-    ORDER BY mmt.versio DESC
-    LIMIT 1
+      FROM mhu_muutos_tehtava_tiedot mmt
+     WHERE mmt.urakka = :urakka
+       AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND mmt.tehtava = tk.id
+  ORDER BY mmt.versio DESC
+     LIMIT 1
   ) mmt ON TRUE
   -- Hae tehtävän kulut
   LEFT JOIN (
@@ -573,16 +574,15 @@ FROM tehtava tk
       -- Kiinnostaa tässä  vaiheessa vaan summa, ja yhdistetään tehtava_id 
       kk.tehtava       AS tehtava_id,
       SUM(kk.summa)    AS summa
-    FROM kulu k
-      JOIN kulu_kohdistus kk
-        ON k.id = kk.kulu
-        AND kk.poistettu IS NOT TRUE
+     FROM kulu k
+     JOIN kulu_kohdistus kk
+       ON k.id = kk.kulu
+      AND kk.poistettu IS NOT TRUE
     WHERE k.urakka = :urakka
       AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
       AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
       AND k.poistettu IS NOT TRUE
-    GROUP BY kk.tehtava
-  ) kulut ON kulut.tehtava_id = tk.id
+ GROUP BY kk.tehtava) kulut ON kulut.tehtava_id = tk.id
 WHERE
   -- Tärkeä:: halutaan nimenomaan vain määrämitattavat urakan tehtävät 
   tk."maaramitattava?" IS TRUE
