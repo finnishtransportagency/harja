@@ -24,6 +24,7 @@ find_free_port() {
     # Jos kaikki portit varattu, palauta virhe
     echo ""
     return 1
+}
 
 usage() {
     echo "Käyttö: $0 <haara-nimi> [portti]"
@@ -43,7 +44,21 @@ if [ $# -lt 1 ] || [ $# -gt 2 ]; then
 fi
 
 BRANCH_NAME="$1"
-HTTP_PORT="${2:-3001}"
+
+# Jos porttia ei annettu, etsi vapaa portti
+if [ $# -eq 2 ]; then
+    HTTP_PORT="$2"
+else
+    echo -e "${BLUE}Etsitään vapaata porttia rangesta 3001-3020...${NC}"
+    HTTP_PORT=$(find_free_port)
+    if [ -z "$HTTP_PORT" ]; then
+        echo -e "${RED}❌ Ei vapaita portteja rangesta 3001-3020!${NC}"
+        echo -e "${YELLOW}Sulje joitain worktreeja tai määritä portti manuaalisesti.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Löydettiin vapaa portti: $HTTP_PORT${NC}"
+    echo ""
+fi
 
 # Määritä polut - käytä harja_dir.sh apuskriptiä
 # shellcheck source=../harja_dir.sh
@@ -169,84 +184,53 @@ fi
 
 echo ""
 
-# Luo ympäristömuuttuja-tiedosto
-echo -e "${BLUE}⚙️  Luodaan ympäristömuuttujat...${NC}"
+# Luo käynnistysskripti worktreelle
+echo -e "${BLUE}⚙️  Luodaan käynnistysskripti...${NC}"
 
-cat > "$WORKTREE_DIR/worktree-env.sh" << 'EOF'
-#!/bin/bash
-# Ympäristömuuttujat tälle worktreelle
-# Tämä tiedosto sourceaan kaikissa käynnistysskripteissä
-
-# Worktree-spesifiset muuttujat
-export HARJA_HTTP_PORTTI=HTTP_PORT_PLACEHOLDER
-export HARJA_ENV_HARJA_URL="localhost:HTTP_PORT_PLACEHOLDER"
-
-# Dev-ympäristön pakolliset muuttujat (profiles.clj :dev-ymparisto)
-export HARJA_DEV_YMPARISTO=true
-export HARJA_TIETOKANTA_HOST=localhost
-export HARJA_TIETOKANTA_HOST_KAANNOS=localhost
-export HARJA_SALLI_OLETUSKAYTTAJA=true
-export HARJA_DEV_RESOURCES_PATH=dev-resources
-export HARJA_AJA_GATLING_RAPORTTI=false
-export HARJA_NOLOG=false
-export HARJA_ITMF_BROKER_PORT=61616
-export HARJA_ITMF_BROKER_HOST=localhost
-export HARJA_ITMF_BROKER_AI_PORT=61617
-EOF
-
-# Korvaa portti-placeholder oikealla portilla
-sed -i.bak "s/HTTP_PORT_PLACEHOLDER/$HTTP_PORT/g" "$WORKTREE_DIR/worktree-env.sh"
-rm "$WORKTREE_DIR/worktree-env.sh.bak"
-
-chmod +x "$WORKTREE_DIR/worktree-env.sh"
-
-# Luo käynnistysskriptit worktreelle
-echo -e "${BLUE}⚙️  Luodaan käynnistysskriptit...${NC}"
-
-# Automaattinen käynnistys (backend taustalla, frontend interaktiivisesti)
-cat > "$WORKTREE_DIR/kaynnista-kaikki.sh" << 'EOF'
+cat > "$WORKTREE_DIR/kaynnista-kaikki.sh" << EOF
 #!/bin/bash
 set -euo pipefail
 
-WORKTREE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKTREE_DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 
-# Lataa ympäristömuuttujat
-source "$WORKTREE_DIR/worktree-env.sh"
+# Aseta worktree-spesifiset ympäristömuuttujat
+export HARJA_HTTP_PORTTI=$HTTP_PORT
+export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORT"
 
 echo "🚀 Käynnistetään Harja worktree..."
 echo "   Backend käynnistetään taustaprosessina"
 echo "   Frontend käynnistyy tässä terminaalissa"
-echo "   Portti: $HARJA_HTTP_PORTTI"
-echo "   URL: http://localhost:$HARJA_HTTP_PORTTI"
+echo "   Portti: \$HARJA_HTTP_PORTTI"
+echo "   URL: http://localhost:\$HARJA_HTTP_PORTTI"
 echo ""
 
 # Käynnistä backend taustalle
 echo "🔧 Käynnistetään backend taustalle..."
-lein do clean, compile, repl :headless :host 0.0.0.0 > "$WORKTREE_DIR/backend.log" 2>&1 &
-BACKEND_PID=$!
-echo "$BACKEND_PID" > "$WORKTREE_DIR/.backend.pid"
-echo "   Backend PID: $BACKEND_PID"
-echo "   Backend loki: $WORKTREE_DIR/backend.log"
+lein do clean, compile, repl :headless :host 0.0.0.0 > "\$WORKTREE_DIR/backend.log" 2>&1 &
+BACKEND_PID=\$!
+echo "\$BACKEND_PID" > "\$WORKTREE_DIR/.backend.pid"
+echo "   Backend PID: \$BACKEND_PID"
+echo "   Backend loki: \$WORKTREE_DIR/backend.log"
 
 # Odota että backend käynnistyy (tarkista REPL)
 echo "⏳ Odotetaan backendin käynnistymistä..."
 timeout=180
 elapsed=0
-while [ $elapsed -lt $timeout ]; do
-    if grep -q "nREPL server started" "$WORKTREE_DIR/backend.log" 2>/dev/null; then
-        NREPL_PORT=$(grep "nREPL server started" "$WORKTREE_DIR/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+')
+while [ \$elapsed -lt \$timeout ]; do
+    if grep -q "nREPL server started" "\$WORKTREE_DIR/backend.log" 2>/dev/null; then
+        NREPL_PORT=\$(grep "nREPL server started" "\$WORKTREE_DIR/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+')
         echo "✅ Backend käynnistyi!"
-        echo "   nREPL portti: $NREPL_PORT"
-        echo "   Yhdistä editorilla porttiin: $NREPL_PORT"
+        echo "   nREPL portti: \$NREPL_PORT"
+        echo "   Yhdistä editorilla porttiin: \$NREPL_PORT"
         break
     fi
     sleep 2
-    elapsed=$((elapsed + 2))
+    elapsed=\$((elapsed + 2))
 done
 
-if [ $elapsed -ge $timeout ]; then
+if [ \$elapsed -ge \$timeout ]; then
     echo "❌ Backend ei käynnistynyt ajallaan!"
-    echo "   Tarkista loki: tail -f $WORKTREE_DIR/backend.log"
+    echo "   Tarkista loki: tail -f \$WORKTREE_DIR/backend.log"
     exit 1
 fi
 
@@ -256,7 +240,7 @@ echo "   (Backend pyörii taustalla)"
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║  ⚠️  TÄRKEÄÄ: Avaa selain osoitteeseen:                 ║"
-echo "║      http://localhost:$HARJA_HTTP_PORTTI                ║"
+echo "║      http://localhost:\$HARJA_HTTP_PORTTI                ║"
 echo "║                                                          ║"
 echo "║  (EI localhost:3000 tai localhost:3449!)                ║"
 echo "╚══════════════════════════════════════════════════════════╝"
@@ -266,96 +250,17 @@ echo ""
 bash ./kaynnista_harja_front_dev.sh
 
 # Kun frontend lopetetaan, tapa myös backend
-if [ -f "$WORKTREE_DIR/.backend.pid" ]; then
-    BACKEND_PID=$(cat "$WORKTREE_DIR/.backend.pid")
+if [ -f "\$WORKTREE_DIR/.backend.pid" ]; then
+    BACKEND_PID=\$(cat "\$WORKTREE_DIR/.backend.pid")
     echo ""
-    echo "🛑 Pysäytetään backend (PID: $BACKEND_PID)..."
-    kill $BACKEND_PID 2>/dev/null || true
-    rm "$WORKTREE_DIR/.backend.pid"
+    echo "🛑 Pysäytetään backend (PID: \$BACKEND_PID)..."
+    kill \$BACKEND_PID 2>/dev/null || true
+    rm "\$WORKTREE_DIR/.backend.pid"
 fi
 EOF
 
 chmod +x "$WORKTREE_DIR/kaynnista-kaikki.sh"
-
-# Luo README
-cat > "$WORKTREE_DIR/WORKTREE-README.md" << EOF
-# Harja Worktree: $BRANCH_NAME
-
-Tämä on git worktree PR-reviewta varten.
-
-## Tiedot
-- **Haara**: $BRANCH_NAME
-- **HTTP-portti**: $HTTP_PORT
-- **Worktree-polku**: $WORKTREE_DIR
-
-## ⚙️ Ympäristömuuttujat
-Kaikki worktreen ympäristömuuttujat on määritelty tiedostossa:
-\`\`\`
-worktree-env.sh
-\`\`\`
-
-Tämä tiedosto sourceaan automaattisesti kaikissa käynnistysskripteissä.
-Se sisältää:
-- Worktree-spesifiset muuttujat (HARJA_HTTP_PORTTI, HARJA_ENV_HARJA_URL)
-- Dev-ympäristön pakolliset muuttujat (profiles.clj :dev-ymparisto)
-
-**HUOM:** Älä muokkaa tätä tiedostoa suoraan ellei tarvitse muuttaa porttia!
-
-## 🚀 Käynnistys
-
-### Automaattinen käynnistys (SUOSITUS):
-\`\`\`bash
-cd $WORKTREE_DIR
-./kaynnista-kaikki.sh
-\`\`\`
-
-**Mitä tapahtuu:**
-1. Ladataan ympäristömuuttujat \`worktree-env.sh\` tiedostosta
-2. Backend käynnistyy taustaprosessina
-3. Backend-loki: \`backend.log\`
-4. Frontend käynnistyy interaktiivisesti tässä terminaalissa
-5. nREPL-yhteys editorille näkyy käynnistyksen aikana
-
-**Backend-lokin seuranta:**
-\`\`\`bash
-tail -f backend.log
-\`\`\`
-
-**Pysäytä backend erikseen:**
-\`\`\`bash
-./pysayta-backend.sh
-\`\`\`
-
-### Vaihtoehtoinen käynnistys (kaksi terminaalia):
-
-**Backend (terminaali 1):**
-\`\`\`bash
-cd $WORKTREE_DIR
-./kaynnista-backend.sh
-\`\`\`
-
-**Frontend (terminaali 2):**
-\`\`\`bash
-cd $WORKTREE_DIR
-./kaynnista-frontend.sh
-\`\`\`
-
-## 🌐 Pääsy sovellukseen
-⚠️ **TÄRKEÄÄ:** Avaa selaimessa **http://localhost:$HTTP_PORT** 
-
-**HUOM:** EI localhost:3000 tai localhost:3449!
-- Figwheel tarjoaa vain JavaScript-tiedostot portissa 3449
-- Backend (ja sovellus) toimii portissa $HTTP_PORT
-
-## 📂 Yhteinen .harja-kansio
-Tämä worktree jakaa \`.harja\` kansion pääprojektin kanssa.
-
-## 🗑️ Siivous
-\`\`\`bash
-sh/git-worktree/poista-worktree.sh $BRANCH_NAME
-\`\`\`
-EOF
-
+echo -e "${GREEN}✓ Käynnistysskripti luotu${NC}"
 echo ""
 echo -e "${GREEN}✅ Worktree luotu onnistuneesti!${NC}"
 echo ""
@@ -365,12 +270,6 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 echo -e "${GREEN}🚀 SUOSITUS (automaattinen):${NC}"
 echo -e "   cd $WORKTREE_DIR && ./kaynnista-kaikki.sh"
-echo ""
-echo -e "${YELLOW}Tai manuaalisesti kahdessa terminaalissa:${NC}"
-echo -e "   1. Backend:  cd $WORKTREE_DIR && ./kaynnista-backend.sh"
-echo -e "   2. Frontend: cd $WORKTREE_DIR && ./kaynnista-frontend.sh"
-echo ""
-echo -e "${BLUE}Lisätietoja: cat $WORKTREE_DIR/WORKTREE-README.md${NC}"
 echo ""
 
 # Kysy käyttäjältä haluaako käynnistää heti
