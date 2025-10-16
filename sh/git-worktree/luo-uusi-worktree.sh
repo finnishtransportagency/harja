@@ -1,6 +1,44 @@
 #!/bin/bash
 set -euo pipefail
 
+#═══════════════════════════════════════════════════════════════════════════════
+# HARJA GIT WORKTREE - LUO UUSI WORKTREE
+#═══════════════════════════════════════════════════════════════════════════════
+#
+# Tämä skripti luo uuden git worktreen Harja-projektille, joka mahdollistaa
+# useiden haarojen samanaikaisen kehityksen omissa hakemistoissaan.
+#
+# KÄYTTÖ:
+#   sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]
+#
+# ESIMERKIT:
+#   sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus
+#   sh/git-worktree/luo-uusi-worktree.sh feature/login-fix 3005
+#
+# MITÄ SKRIPTI TEKEE:
+#   1. Luo uuden git worktreen annetulle haaralle
+#   2. Asentaa npm-riippuvuudet worktreehen
+#   3. Tarkistaa migraatioiden erot ja varoittaa tarvittaessa
+#   4. Luo käynnistysskriptin (kaynnista-kaikki.sh) worktreehen
+#   5. Tarjoaa mahdollisuuden käynnistää worktree heti
+#
+# WORKTREE SIJAINTI:
+#   ../harja-worktree-<haara-nimi>/
+#
+# HTTP-PORTTI:
+#   - Jos määritetty: käyttää annettua porttia
+#   - Jos haara tukee worktreeta: etsii vapaan portin 3001-3020
+#   - Jos haara ei tue worktreeta: käyttää porttia 3000
+#
+# KÄYNNISTYS:
+#   cd ../harja-worktree-<haara-nimi>
+#   ./kaynnista-kaikki.sh
+#
+# POISTO:
+#   sh/git-worktree/poista-worktree.sh <haara-nimi>
+#
+#═══════════════════════════════════════════════════════════════════════════════
+
 # Värit
 VIHREA='\033[0;32m'
 SININEN='\033[0;34m'
@@ -24,6 +62,24 @@ etsi_vapaa_portti() {
     # Jos kaikki portit varattu, palauta virhe
     echo ""
     return 1
+}
+
+# Funktio kysymään tietokannan uudelleenkäynnistyksestä
+kysy_tietokannan_uudelleenkaynnistys() {
+    echo -e "${KELTAINEN}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä:${EI_VARIA}"
+    echo ""
+    echo -e "${SININEN}   $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
+    echo ""
+    echo -e "${KELTAINEN}Oletko jo ajanut tietokannan uudelleenkäynnistyksen? [y/N]${EI_VARIA}"
+    read -p "" -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${KELTAINEN}💡 Muista ajaa komento ennen worktreen käynnistystä!${EI_VARIA}"
+        echo ""
+    else
+        echo -e "${VIHREA}✓ Hyvä, jatketaan...${EI_VARIA}"
+        echo ""
+    fi
 }
 
 usage() {
@@ -153,34 +209,58 @@ cd "$PROJEKTIN_JUURI"
 echo -e "${SININEN}🔍 Tarkistetaan migraatiot...${EI_VARIA}"
 
 # Laske migraatiotiedostot molemmissa paikoissa
-WORKTREE_MIGRAATIOT=$(find "$WORKTREE_KANSIO/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
-PAAHARAN_MIGRAATIOT=$(find "$PROJEKTIN_JUURI/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
+WORKTREE_MIGRAATIOT=$(find "$WORKTREE_KANSIO/tietokanta/src/main/resources/db/migration" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
+PAAHARAN_MIGRAATIOT=$(find "$PROJEKTIN_JUURI/tietokanta/src/main/resources/db/migration" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
+
+# Hae viimeiset migraatiotiedostot (lajittele numeerisesti version mukaan)
+hae_viimeisin_migraatio() {
+    local polku="$1"
+    local regex="V1_([0-9]+)__.*"
+    local suurin_versio=0
+    local viimeisin_tiedosto=""
+    
+    for tiedosto in $(find "$polku" -type f -name "*.sql" 2>/dev/null); do
+        local nimi=$(basename "$tiedosto")
+        if [[ $nimi =~ $regex ]]; then
+            local versio="${BASH_REMATCH[1]}"
+            if [ "$versio" -gt "$suurin_versio" ]; then
+                suurin_versio=$versio
+                viimeisin_tiedosto=$nimi
+            fi
+        fi
+    done
+    
+    echo "$viimeisin_tiedosto"
+}
+
+WORKTREE_VIIMEINEN=$(hae_viimeisin_migraatio "$WORKTREE_KANSIO/tietokanta/src/main/resources/db/migration")
+PAAHARAN_VIIMEINEN=$(hae_viimeisin_migraatio "$PROJEKTIN_JUURI/tietokanta/src/main/resources/db/migration")
 
 if [ "$WORKTREE_MIGRAATIOT" -gt "$PAAHARAN_MIGRAATIOT" ]; then
     echo -e "${KELTAINEN}⚠️  Huomattu $((WORKTREE_MIGRAATIOT - PAAHARAN_MIGRAATIOT)) uutta migraatiotiedostoa!${EI_VARIA}"
-    echo -e "${KELTAINEN}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä${EI_VARIA}"
+    kysy_tietokannan_uudelleenkaynnistys
+elif [ "$WORKTREE_MIGRAATIOT" -lt "$PAAHARAN_MIGRAATIOT" ]; then
+    echo -e "${KELTAINEN}⚠️  Worktreessä on vähemmän migraatioita kuin päähaarassa!${EI_VARIA}"
+    echo -e "${KELTAINEN}   Worktree: $WORKTREE_MIGRAATIOT, Päähaara: $PAAHARAN_MIGRAATIOT${EI_VARIA}"
+    echo -e "${KELTAINEN}   Viimeinen worktreessä: $WORKTREE_VIIMEINEN${EI_VARIA}"
+    echo -e "${KELTAINEN}   Viimeinen päähaarassa: $PAAHARAN_VIIMEINEN${EI_VARIA}"
     echo ""
-    echo -e "${KELTAINEN}Haluatko uudelleenkäynnistää tietokannan nyt? [y/N]${EI_VARIA}"
-    read -p "" -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${SININEN}🔄 Uudelleenkäynnistetään tietokanta...${EI_VARIA}"
-        if "$PROJEKTIN_JUURI/tietokanta/devdb_restart.sh"; then
-            echo -e "${VIHREA}✓ Tietokanta uudelleenkäynnistetty onnistuneesti${EI_VARIA}"
-        else
-            echo -e "${PUNAINEN}❌ Tietokannan uudelleenkäynnistys epäonnistui${EI_VARIA}"
-            echo -e "${KELTAINEN}Voit yrittää myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
-        fi
+    kysy_tietokannan_uudelleenkaynnistys
+elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRAATIOT" -gt 0 ]; then
+    # Tarkista vielä että viimeiset migraatiot täsmäävät
+    if [ "$WORKTREE_VIIMEINEN" != "$PAAHARAN_VIIMEINEN" ]; then
+        echo -e "${KELTAINEN}⚠️  Migraatioiden määrä sama, mutta viimeiset tiedostot eroavat!${EI_VARIA}"
+        echo -e "${KELTAINEN}   Viimeinen worktreessä: $WORKTREE_VIIMEINEN${EI_VARIA}"
+        echo -e "${KELTAINEN}   Viimeinen päähaarassa: $PAAHARAN_VIIMEINEN${EI_VARIA}"
         echo ""
+        kysy_tietokannan_uudelleenkaynnistys
     else
-        echo -e "${KELTAINEN}💡 Voit ajaa myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
+        echo -e "${VIHREA}✓ Migraatiot täsmäävät${EI_VARIA}"
         echo ""
     fi
-elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRAATIOT" -gt 0 ]; then
-    echo -e "${VIHREA}✓ Ei uusia migraatioita${EI_VARIA}"
-    echo ""
 else
     echo -e "${KELTAINEN}⚠️  Migraatiotiedostoja ei löytynyt${EI_VARIA}"
+    echo -e "${KELTAINEN}   Worktree: $WORKTREE_MIGRAATIOT, Päähaara: $PAAHARAN_MIGRAATIOT${EI_VARIA}"
     echo ""
 fi
 

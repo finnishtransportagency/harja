@@ -1,6 +1,36 @@
 #!/bin/bash
 set -euo pipefail
 
+#═══════════════════════════════════════════════════════════════════════════════
+# HARJA GIT WORKTREE - POISTA WORKTREE
+#═══════════════════════════════════════════════════════════════════════════════
+#
+# Tämä skripti poistaa olemassa olevan git worktreen turvallisesti.
+#
+# KÄYTTÖ:
+#   sh/git-worktree/poista-worktree.sh <haara-nimi>
+#
+# ESIMERKKI:
+#   sh/git-worktree/poista-worktree.sh HAR-1234-uusi-ominaisuus
+#
+# MITÄ SKRIPTI TEKEE:
+#   1. Tarkistaa että worktree on olemassa
+#   2. Kysyy vahvistuksen poistamiselle
+#   3. Pysäyttää kaikki worktreen prosessit (backend, lein, Java)
+#   4. Poistaa worktree-hakemiston
+#   5. Siivoa git worktree -listan
+#
+# VAROITUS:
+#   Kaikki tallentamattomat muutokset worktreessä menetetään!
+#
+# LISTAA WORKTREE:T:
+#   git worktree list
+#
+# LUO UUSI WORKTREE:
+#   sh/git-worktree/luo-uusi-worktree.sh <haara-nimi>
+#
+#═══════════════════════════════════════════════════════════════════════════════
+
 # Värit
 VIHREA='\033[0;32m'
 SININEN='\033[0;34m'
