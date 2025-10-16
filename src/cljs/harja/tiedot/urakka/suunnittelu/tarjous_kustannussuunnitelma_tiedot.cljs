@@ -343,7 +343,8 @@
       (tuck-apurit/post! :tallenna-tarjouksen-tiedot
         muunnettu-tarjous
         {:onnistui ->TallennaTarjouksenTiedotOnnistui
-         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui})
+         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui
+         :paasta-virhe-lapi? true})
       (assoc app :tallennus-kesken? true)))
 
   TallennaTarjouksenTiedotOnnistui
@@ -355,7 +356,7 @@
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (:virhe (:response vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :tallennus-kesken? false))
 
   HaeKustannussuunnitelmanTiedot
