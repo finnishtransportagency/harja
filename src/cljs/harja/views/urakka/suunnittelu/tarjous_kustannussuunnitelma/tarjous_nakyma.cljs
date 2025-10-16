@@ -104,7 +104,8 @@
         voi-lisata? (if (and (> (count muut-toimenkuvat) 0) (not uusi-toimenkuva-valittavana))
                       true false)
         vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
-        vuosi-map (zipmap vuosiavaimet (repeat 0))]
+        vuosi-map (zipmap vuosiavaimet (repeat 0))
+        ohjauskahva (grid/grid-ohjaus)]
     [grid/grid
      {:otsikko ""
       :data-cy "tarjous-toimenkuvat-grid"
@@ -113,9 +114,11 @@
       :muokattava? (constantly true)
       :voi-poistaa? (constantly false)
       :voi-lisata? voi-lisata?
+      :ohjaus ohjauskahva
       :uusi-rivi (fn [rivi]
-                   (e! (tarjous-tiedot/->ToggleUusiToimenkuvaValittavana true))
-                   (merge (assoc rivi :id -1 :nimi "" :jarjestys 99 :yhteensa 0) vuosi-map))
+                   (let [muokkaus-toimenkuvat (vals (grid/hae-muokkaustila ohjauskahva))]
+                     (e! (tarjous-tiedot/->ToggleUusiToimenkuvaValittavana true))
+                     (merge (assoc rivi :id -1 :nimi "" :jarjestys (+ 99 (count muokkaus-toimenkuvat)) :yhteensa 0) vuosi-map)))
       :voi-kumota? false
       :piilota-toiminnot? false
       :tunniste :nimi
