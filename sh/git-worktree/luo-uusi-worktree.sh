@@ -9,14 +9,14 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Funktio vapaan portin etsimiseen
-find_free_port() {
-    local start_port=3001
-    local end_port=3020
+etsi_vapaa_portti() {
+    local alku_portti=3001
+    local loppu_portti=3020
     
-    for port in $(seq $start_port $end_port); do
+    for portti in $(seq $alku_portti $loppu_portti); do
         # Tarkista onko portti vapaana (ei kuuntele mitään)
-        if ! lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-            echo $port
+        if ! lsof -Pi :$portti -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo $portti
             return 0
         fi
     done
@@ -43,53 +43,47 @@ if [ $# -lt 1 ] || [ $# -gt 2 ]; then
     usage
 fi
 
-BRANCH_NAME="$1"
-
-# Jos porttia ei annettu, etsi vapaa portti
-if [ $# -eq 2 ]; then
-    HTTP_PORT="$2"
-else
-    echo -e "${BLUE}Etsitään vapaata porttia rangesta 3001-3020...${NC}"
-    HTTP_PORT=$(find_free_port)
-    if [ -z "$HTTP_PORT" ]; then
-        echo -e "${RED}❌ Ei vapaita portteja rangesta 3001-3020!${NC}"
-        echo -e "${YELLOW}Sulje joitain worktreeja tai määritä portti manuaalisesti.${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ Löydettiin vapaa portti: $HTTP_PORT${NC}"
-    echo ""
-fi
-
 # Määritä polut - käytä harja_dir.sh apuskriptiä
 # shellcheck source=../harja_dir.sh
 source "$( dirname "${BASH_SOURCE[0]}" )/../harja_dir.sh" || exit
+HAARAN_NIMI="$1"
+PROJEKTIN_JUURI="$HARJA_DIR"
+YLAKANSIO="$(dirname "$PROJEKTIN_JUURI")"
 
-PROJECT_ROOT="$HARJA_DIR"
-PARENT_DIR="$(dirname "$PROJECT_ROOT")"
+# Jos portti on annettu, käytä sitä. Muuten päätetään myöhemmin worktreen luonnin jälkeen
+if [ $# -eq 2 ]; then
+    HTTP_PORTTI="$2"
+else
+    HTTP_PORTTI=""  # Päätetään myöhemmin
+fi
+
+
 
 # Sanitoi haaran nimi
-SAFE_BRANCH_NAME=$(echo "$BRANCH_NAME" | sed 's/[\/:]/-/g')
-WORKTREE_DIR="${PARENT_DIR}/harja-worktree-${SAFE_BRANCH_NAME}"
+TURVALLINEN_HAARAN_NIMI=$(echo "$HAARAN_NIMI" | sed 's/[\/:]/-/g')
+WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}  Harja Git Worktree luonti${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "${YELLOW}Haara:${NC}          $BRANCH_NAME"
-echo -e "${YELLOW}Worktree:${NC}       $WORKTREE_DIR"
-echo -e "${YELLOW}HTTP-portti:${NC}    $HTTP_PORT"
+echo -e "${YELLOW}Haara:${NC}          $HAARAN_NIMI"
+echo -e "${YELLOW}Worktree:${NC}       $WORKTREE_KANSIO"
+if [ -n "$HTTP_PORTTI" ]; then
+    echo -e "${YELLOW}HTTP-portti:${NC}    $HTTP_PORTTI"
+fi
 echo ""
 
 # Tarkista onko haara olemassa
-if ! git rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
-    echo -e "${RED}❌ Haaraa '$BRANCH_NAME' ei löydy!${NC}"
+if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
+    echo -e "${RED}❌ Haaraa '$HAARAN_NIMI' ei löydy!${NC}"
     echo -e "${YELLOW}Haetaan remote-haarat...${NC}"
     git fetch --all
     
-    if ! git rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
-        if git rev-parse --verify "origin/$BRANCH_NAME" >/dev/null 2>&1; then
-            echo -e "${BLUE}Löydettiin remote-haara: origin/$BRANCH_NAME${NC}"
-            BRANCH_NAME="origin/$BRANCH_NAME"
+    if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
+        if git rev-parse --verify "origin/$HAARAN_NIMI" >/dev/null 2>&1; then
+            echo -e "${BLUE}Löydettiin remote-haara: origin/$HAARAN_NIMI${NC}"
+            HAARAN_NIMI="origin/$HAARAN_NIMI"
         else
             echo -e "${RED}❌ Haaraa ei löydy edes remotesta!${NC}"
             exit 1
@@ -98,20 +92,46 @@ if ! git rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
 fi
 
 # Tarkista onko worktree jo olemassa
-if [ -d "$WORKTREE_DIR" ]; then
-    echo -e "${RED}❌ Worktree hakemisto on jo olemassa: $WORKTREE_DIR${NC}"
-    echo -e "${YELLOW}Aja ensin: sh/git-worktree/poista-worktree.sh $BRANCH_NAME${NC}"
+if [ -d "$WORKTREE_KANSIO" ]; then
+    echo -e "${RED}❌ Worktree hakemisto on jo olemassa: $WORKTREE_KANSIO${NC}"
+    echo -e "${YELLOW}Aja ensin: sh/git-worktree/poista-worktree.sh $HAARAN_NIMI${NC}"
     exit 1
 fi
 
 # Luo worktree
 echo -e "${BLUE}📁 Luodaan worktree...${NC}"
-git worktree add "$WORKTREE_DIR" "$BRANCH_NAME"
+git worktree add "$WORKTREE_KANSIO" "$HAARAN_NIMI"
+
+# Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
+if [ -z "$HTTP_PORTTI" ]; then
+    if [ -d "$WORKTREE_KANSIO/sh/git-worktree" ]; then
+        # Branch tukee worktreeta, etsi vapaa portti
+        echo -e "${BLUE}Etsitään vapaata porttia rangesta 3001-3020...${NC}"
+        HTTP_PORTTI=$(etsi_vapaa_portti)
+        if [ -z "$HTTP_PORTTI" ]; then
+            echo -e "${RED}❌ Ei vapaita portteja rangesta 3001-3020!${NC}"
+            echo -e "${YELLOW}Sulje joitain worktreeja tai määritä portti manuaalisesti.${NC}"
+            cd "$PROJEKTIN_JUURI"
+            git worktree remove "$WORKTREE_KANSIO" --force
+            exit 1
+        fi
+        echo -e "${GREEN}✓ Löydettiin vapaa portti: $HTTP_PORTTI${NC}"
+    else
+        # Branch ei tue worktreeta, käytä porttia 3000
+        HTTP_PORTTI=3000
+        echo -e "${YELLOW}⚠️  Branch ei tue worktree-toiminnallisuutta${NC}"
+        echo -e "${BLUE}   Käytetään porttia: $HTTP_PORTTI${NC}"
+    fi
+    echo ""
+fi
+
+echo -e "${YELLOW}HTTP-portti:${NC}    $HTTP_PORTTI"
+echo ""
 
 # Asenna npm-riippuvuudet
 echo -e "${BLUE}📦 Asennetaan npm-riippuvuudet (npm ci)...${NC}"
 echo -e "${YELLOW}   Tämä voi kestää hetken...${NC}"
-cd "$WORKTREE_DIR"
+cd "$WORKTREE_KANSIO"
 if npm ci; then
     echo -e "${GREEN}   ✓ npm-riippuvuudet asennettu${NC}"
 else
@@ -122,80 +142,60 @@ else
     else
         echo -e "${RED}❌ npm install epäonnistui!${NC}"
         echo -e "${YELLOW}Puhdistetaan worktree...${NC}"
-        cd "$PROJECT_ROOT"
-        git worktree remove "$WORKTREE_DIR" --force
+        cd "$PROJEKTIN_JUURI"
+        git worktree remove "$WORKTREE_KANSIO" --force
         exit 1
     fi
 fi
-cd "$PROJECT_ROOT"
+cd "$PROJEKTIN_JUURI"
 
-# Patchaa asetukset.edn tukemaan worktree-porttia
-echo -e "${BLUE}⚙️  Varmistetaan että asetukset.edn tukee worktree-porttia...${NC}"
+# Tarkista onko uusia migraatioita ja tarjoa tietokannan uudelleenkäynnistys
+echo -e "${BLUE}🔍 Tarkistetaan migraatiot...${NC}"
 
-ASETUKSET_FILE="$WORKTREE_DIR/asetukset.edn"
+# Laske migraatiotiedostot molemmissa paikoissa
+WORKTREE_MIGRAATIOT=$(find "$WORKTREE_KANSIO/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
+PAAHARAN_MIGRAATIOT=$(find "$PROJEKTIN_JUURI/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
 
-if [ -f "$ASETUKSET_FILE" ]; then
-    # Tarkista onko HARJA_HTTP_PORTTI jo tuettuna
-    if ! grep -q "HARJA_HTTP_PORTTI" "$ASETUKSET_FILE"; then
-        echo -e "${YELLOW}   Lisätään HARJA_HTTP_PORTTI tuki asetukset.edn:ään${NC}"
-        
-        # Tarkista onko :portti rivi olemassa :http-palvelin lohkossa
-        if grep -A 10 ":http-palvelin" "$ASETUKSET_FILE" | grep -q ":portti"; then
-            # Korvaa olemassaoleva :portti rivi
-            sed -i.bak 's/:portti [0-9]*/:portti #=(eval (harja.tyokalut.env\/env "HARJA_HTTP_PORTTI" 3000))/' "$ASETUKSET_FILE"
-            rm "$ASETUKSET_FILE.bak"
-            echo -e "${GREEN}   ✓ HARJA_HTTP_PORTTI tuki lisätty (korvattu)${NC}"
-        elif grep -q ":http-palvelin" "$ASETUKSET_FILE"; then
-            # Lisää :portti rivi :http-palvelin lohkon alkuun
-            sed -i.bak '/:http-palvelin/a\
-                 :portti #=(eval (harja.tyokalut.env\/env "HARJA_HTTP_PORTTI" 3000))' "$ASETUKSET_FILE"
-            rm "$ASETUKSET_FILE.bak"
-            echo -e "${GREEN}   ✓ HARJA_HTTP_PORTTI tuki lisätty (uusi rivi)${NC}"
+if [ "$WORKTREE_MIGRAATIOT" -gt "$PAAHARAN_MIGRAATIOT" ]; then
+    echo -e "${YELLOW}⚠️  Huomattu $((WORKTREE_MIGRAATIOT - PAAHARAN_MIGRAATIOT)) uutta migraatiotiedostoa!${NC}"
+    echo -e "${YELLOW}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä${NC}"
+    echo ""
+    echo -e "${YELLOW}Haluatko uudelleenkäynnistää tietokannan nyt? [y/N]${NC}"
+    read -p "" -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}🔄 Uudelleenkäynnistetään tietokanta...${NC}"
+        if "$PROJEKTIN_JUURI/tietokanta/devdb_restart.sh"; then
+            echo -e "${GREEN}✓ Tietokanta uudelleenkäynnistetty onnistuneesti${NC}"
         else
-            echo -e "${YELLOW}   ⚠️  :http-palvelin ei löytynyt, ohitetaan${NC}"
+            echo -e "${RED}❌ Tietokannan uudelleenkäynnistys epäonnistui${NC}"
+            echo -e "${YELLOW}Voit yrittää myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${NC}"
         fi
+        echo ""
     else
-        echo -e "${GREEN}   ✓ HARJA_HTTP_PORTTI jo tuettuna${NC}"
+        echo -e "${YELLOW}💡 Voit ajaa myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${NC}"
+        echo ""
     fi
-    
-    # Tarkista onko HARJA_ENV_HARJA_URL jo tuettuna
-    if ! grep -q "HARJA_ENV_HARJA_URL" "$ASETUKSET_FILE"; then
-        echo -e "${YELLOW}   Lisätään HARJA_ENV_HARJA_URL tuki asetukset.edn:ään${NC}"
-        
-        # Tarkista onko :harja-url rivi olemassa
-        if grep -q ":harja-url" "$ASETUKSET_FILE"; then
-            # Korvaa olemassaoleva :harja-url rivi
-            sed -i.bak 's/:harja-url "[^"]*"/:harja-url #=(eval (harja.tyokalut.env\/env "HARJA_ENV_HARJA_URL" "localhost:3000"))/' "$ASETUKSET_FILE"
-            rm "$ASETUKSET_FILE.bak"
-            echo -e "${GREEN}   ✓ HARJA_ENV_HARJA_URL tuki lisätty (korvattu)${NC}"
-        else
-            # Lisää :harja-url rivi :http-palvelin lohkon jälkeen
-            sed -i.bak '/:http-palvelin/,/^[[:space:]]*}/a\
- :harja-url #=(eval (harja.tyokalut.env\/env "HARJA_ENV_HARJA_URL" "localhost:3000"))' "$ASETUKSET_FILE"
-            rm "$ASETUKSET_FILE.bak"
-            echo -e "${GREEN}   ✓ HARJA_ENV_HARJA_URL tuki lisätty (uusi rivi)${NC}"
-        fi
-    else
-        echo -e "${GREEN}   ✓ HARJA_ENV_HARJA_URL jo tuettuna${NC}"
-    fi
+elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRAATIOT" -gt 0 ]; then
+    echo -e "${GREEN}✓ Ei uusia migraatioita${NC}"
+    echo ""
 else
-    echo -e "${RED}❌ asetukset.edn ei löydy: $ASETUKSET_FILE${NC}"
+    echo -e "${YELLOW}⚠️  Migraatiotiedostoja ei löytynyt${NC}"
+    echo ""
 fi
-
-echo ""
 
 # Luo käynnistysskripti worktreelle
 echo -e "${BLUE}⚙️  Luodaan käynnistysskripti...${NC}"
 
-cat > "$WORKTREE_DIR/kaynnista-kaikki.sh" << EOF
+cat > "$WORKTREE_KANSIO/kaynnista-kaikki.sh" << EOF
 #!/bin/bash
 set -euo pipefail
 
-WORKTREE_DIR="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+WORKTREE_KANSIO="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 
 # Aseta worktree-spesifiset ympäristömuuttujat
-export HARJA_HTTP_PORTTI=$HTTP_PORT
-export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORT"
+export HARJA_HTTP_PORTTI=$HTTP_PORTTI
+export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORTTI"
 
 echo "🚀 Käynnistetään Harja worktree..."
 echo "   Backend käynnistetään taustaprosessina"
@@ -206,19 +206,19 @@ echo ""
 
 # Käynnistä backend taustalle
 echo "🔧 Käynnistetään backend taustalle..."
-lein do clean, compile, repl :headless :host 0.0.0.0 > "\$WORKTREE_DIR/backend.log" 2>&1 &
+lein do clean, compile, repl :headless :host 0.0.0.0 > "\$WORKTREE_KANSIO/backend.log" 2>&1 &
 BACKEND_PID=\$!
-echo "\$BACKEND_PID" > "\$WORKTREE_DIR/.backend.pid"
+echo "\$BACKEND_PID" > "\$WORKTREE_KANSIO/.backend.pid"
 echo "   Backend PID: \$BACKEND_PID"
-echo "   Backend loki: \$WORKTREE_DIR/backend.log"
+echo "   Backend loki: \$WORKTREE_KANSIO/backend.log"
 
 # Odota että backend käynnistyy (tarkista REPL)
 echo "⏳ Odotetaan backendin käynnistymistä..."
 timeout=180
 elapsed=0
 while [ \$elapsed -lt \$timeout ]; do
-    if grep -q "nREPL server started" "\$WORKTREE_DIR/backend.log" 2>/dev/null; then
-        NREPL_PORT=\$(grep "nREPL server started" "\$WORKTREE_DIR/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+')
+    if grep -q "nREPL server started" "\$WORKTREE_KANSIO/backend.log" 2>/dev/null; then
+        NREPL_PORT=\$(grep "nREPL server started" "\$WORKTREE_KANSIO/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+')
         echo "✅ Backend käynnistyi!"
         echo "   nREPL portti: \$NREPL_PORT"
         echo "   Yhdistä editorilla porttiin: \$NREPL_PORT"
@@ -230,36 +230,30 @@ done
 
 if [ \$elapsed -ge \$timeout ]; then
     echo "❌ Backend ei käynnistynyt ajallaan!"
-    echo "   Tarkista loki: tail -f \$WORKTREE_DIR/backend.log"
+    echo "   Tarkista loki: tail -f \$WORKTREE_KANSIO/backend.log"
     exit 1
 fi
 
 echo ""
 echo "🎨 Käynnistetään frontend..."
 echo "   (Backend pyörii taustalla)"
-echo ""
-echo "╔══════════════════════════════════════════════════════════╗"
-echo "║  ⚠️  TÄRKEÄÄ: Avaa selain osoitteeseen:                 ║"
-echo "║      http://localhost:\$HARJA_HTTP_PORTTI                ║"
-echo "║                                                          ║"
-echo "║  (EI localhost:3000 tai localhost:3449!)                ║"
-echo "╚══════════════════════════════════════════════════════════╝"
-echo ""
+echo "http://localhost:\$HARJA_HTTP_PORTTI "
+
 
 # Käynnistä frontend interaktiivisesti
 bash ./kaynnista_harja_front_dev.sh
 
 # Kun frontend lopetetaan, tapa myös backend
-if [ -f "\$WORKTREE_DIR/.backend.pid" ]; then
-    BACKEND_PID=\$(cat "\$WORKTREE_DIR/.backend.pid")
+if [ -f "\$WORKTREE_KANSIO/.backend.pid" ]; then
+    BACKEND_PID=\$(cat "\$WORKTREE_KANSIO/.backend.pid")
     echo ""
     echo "🛑 Pysäytetään backend (PID: \$BACKEND_PID)..."
     kill \$BACKEND_PID 2>/dev/null || true
-    rm "\$WORKTREE_DIR/.backend.pid"
+    rm "\$WORKTREE_KANSIO/.backend.pid"
 fi
 EOF
 
-chmod +x "$WORKTREE_DIR/kaynnista-kaikki.sh"
+chmod +x "$WORKTREE_KANSIO/kaynnista-kaikki.sh"
 echo -e "${GREEN}✓ Käynnistysskripti luotu${NC}"
 echo ""
 echo -e "${GREEN}✅ Worktree luotu onnistuneesti!${NC}"
@@ -269,7 +263,7 @@ echo -e "${BLUE}  Käynnistä worktree${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "${GREEN}🚀 SUOSITUS (automaattinen):${NC}"
-echo -e "   cd $WORKTREE_DIR && ./kaynnista-kaikki.sh"
+echo -e "   cd $WORKTREE_KANSIO && ./kaynnista-kaikki.sh"
 echo ""
 
 # Kysy käyttäjältä haluaako käynnistää heti
@@ -277,10 +271,10 @@ echo -e "${YELLOW}Haluatko käynnistää worktreen nyt? [y/N]${NC}"
 read -p "" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cd "$WORKTREE_DIR"
+    cd "$WORKTREE_KANSIO"
     echo -e "${GREEN}Käynnistetään...${NC}"
     exec ./kaynnista-kaikki.sh
 else
     echo -e "${BLUE}Voit käynnistää myöhemmin komennolla:${NC}"
-    echo -e "   cd $WORKTREE_DIR && ./kaynnista-kaikki.sh"
+    echo -e "   cd $WORKTREE_KANSIO && ./kaynnista-kaikki.sh"
 fi
