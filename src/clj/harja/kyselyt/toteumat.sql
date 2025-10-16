@@ -1298,11 +1298,9 @@ LIMIT 100000;
 
 -- name: paivita-palauta-analytiikalle-aikaleima
 UPDATE analytiikka_toteumat
-SET palautettu_analytiikalle = current_timestamp,
-    WHERE((t.toteuma_muutostiedot_muokattu IS NOT NULL AND
-           t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-        OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND
-            :loppuaika::TIMESTAMP));
+SET palautettu_analytiikalle = current_timestamp
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP));
 
 -- name: siirra-toteumat-analytiikalle
 select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
