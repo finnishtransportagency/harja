@@ -44,7 +44,7 @@
                                       (map :hoitokauden_alkuvuosi (:tehtavat_ja_maarat rivi))
                                       (map :hoitokauden_alkuvuosi (:kustannusvaikutukset rivi)))))
                           (remove nil?)
-                         (apply max)))]
+                          (apply max)))]
     (< alkuvuosi (or max-alkuvuosi 0))))
 
 (defn muokkaa-toimenpiteen-rivit-pysyva-muutos
@@ -349,28 +349,28 @@
        :paasta-virhe-lapi? true})
     app)
 
-    PeruutaTavoiteJaKattohintaOnnistui
-    (process-event [{hk-alkuvuosi :hk-alkuvuosi vastaus :vastaus } app]
-      (assert (int? hk-alkuvuosi))
+  PeruutaTavoiteJaKattohintaOnnistui
+  (process-event [{hk-alkuvuosi :hk-alkuvuosi vastaus :vastaus} app]
+    (assert (int? hk-alkuvuosi))
 
-      (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
-        (viesti/nayta-toast!
-          "Tavoite- ja kattohinnan peruminen epäonnistui!"
-          :varoitus
-          viesti/viestin-nayttoaika-keskipitka)
-        (viesti/nayta-toast! "Tavoite- ja kattohinnan vahvistus peruttu."))
-
-      ;; Päivitä app-tilaan tieto, että hoitovuoden vahvistukset on purettu
-      (-> app
-        (assoc-in [:budjettitavoitteet :tavoitehinta-indeksikorjattu-per-hoitovuosi hk-alkuvuosi] false)))
-
-    PeruutaTavoiteJaKattohintaEpaonnistui
-    (process-event [_ app]
+    (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
       (viesti/nayta-toast!
-        "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
+        "Tavoite- ja kattohinnan peruminen epäonnistui!"
         :varoitus
         viesti/viestin-nayttoaika-keskipitka)
-      app))
+      (viesti/nayta-toast! "Tavoite- ja kattohinnan vahvistus peruttu."))
+
+    ;; Päivitä app-tilaan tieto, että hoitovuoden vahvistukset on purettu
+    (-> app
+      (assoc-in [:budjettitavoitteet :tavoitehinta-indeksikorjattu-per-hoitovuosi hk-alkuvuosi] false)))
+
+  PeruutaTavoiteJaKattohintaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast!
+      "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
+      :varoitus
+      viesti/viestin-nayttoaika-keskipitka)
+    app))
 
 ;; -- Pysyvät muutokset -- LOPPUU
 

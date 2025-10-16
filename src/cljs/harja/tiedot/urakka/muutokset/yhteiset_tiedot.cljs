@@ -270,7 +270,9 @@
 
   MuokkaaJohtoJaHallintoMuutosta
   (process-event [{:keys [rivi]} app]
-    (assoc-in app [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi))
+    (-> app
+      (assoc :voi-tallentaa? true)
+      (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
@@ -325,9 +327,10 @@
 
     (-> app
       ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
-      (assoc :muokattava-muutos nil
-             :tallennus-kesken? false
-             :viimeksi-valittu nil)
+      (assoc
+        :viimeksi-valittu nil
+        :muokattava-muutos nil
+        :tallennus-kesken? false)
       (vastaus-haku-onnistui vastaus)))
 
   TallennaMuutosEpaonnistui

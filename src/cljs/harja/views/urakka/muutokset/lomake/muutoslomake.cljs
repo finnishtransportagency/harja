@@ -1,22 +1,22 @@
 (ns harja.views.urakka.muutokset.lomake.muutoslomake
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
-  (:require [clojure.string :as str]
-            [taoensso.timbre :as log]
-            [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
-            [harja.ui.napit :as napit]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.komponentti :as komp]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.domain.muutos-domain :as muutos-domain]
-            [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-            [harja.ui.yleiset :as yleiset]
+  (:require
+    [taoensso.timbre :as log]
+    [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
+    [harja.ui.napit :as napit]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.komponentti :as komp]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.domain.muutos-domain :as muutos-domain]
+    [harja.views.urakka.muutokset.yhteiset :as yhteiset]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.ui.yleiset :as yleiset]
 
-            ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
-            [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
-            [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
-            [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
+    ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
+    [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
+    [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
+    [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
 
 (defn- lomakkeen-footer [muutos tyyppi e!
@@ -43,7 +43,10 @@
        (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
     ;; Saavutettavuusmielessä, halutaan näyttää virheet vasta, kun tallenna nappia painettu 
     ;; Tallenna nappi on myös disabled alkutilassa, kun lomaketta ei ole muokattu 
-    {:disabled (if (or (not voi-tallentaa?) muutoksen-tiedot-haku-kaynnissa?)
+    {:disabled (if (or
+                     tallennus-kesken?
+                     (not voi-tallentaa?)
+                     muutoksen-tiedot-haku-kaynnissa?)
                  true
                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
 
