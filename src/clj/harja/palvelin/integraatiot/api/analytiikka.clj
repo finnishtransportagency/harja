@@ -274,7 +274,9 @@
                    {:reittitoteumat
                     (map (fn [toteuma]
                            (konversio/alaviiva->rakenne toteuma))
-                      toteumat)})]
+                      toteumat)})
+        _ (toteuma-kyselyt/paivita-palautettu-analytiikalle-aikaleima! db {:alkuaika alkuaika
+                                                                       :loppuaika loppuaika})]
     toteumat))
 
 (defn palauta-materiaalit

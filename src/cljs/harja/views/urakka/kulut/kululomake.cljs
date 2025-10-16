@@ -1,12 +1,15 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [harja.fmt :as fmt]
-            [reagent.core :as r]
+  (:require [reagent.core :as r]
             [goog.string.format]
+            [goog.string :as gstring]
+            [clojure.string :as str] 
+
+            [harja.fmt :as fmt]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
@@ -14,9 +17,7 @@
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as str] 
             [harja.pvm :as pvm]
-            [goog.string :as gstring]
             [harja.asiakas.kommunikaatio :as k]))
 
 (def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
@@ -84,6 +85,8 @@
     :rahavaraus "Rahavaraukselle kohdistettava kulu"
     :lisatyo "Lisätyö"
     :paatos "Hoitovuoden päätös"
+    :jjh-muutos (:jjh-muutos muutos-domain/+muutos-kulu-tyypit+)
+    :erillisrahoitettu-muutos (:erillisrahoitettu-muutos muutos-domain/+muutos-kulu-tyypit+)
     "Tuntematon"))
 
 (defn- nayta-kohdistuksen-virhe? [lomake nro avain]
@@ -343,14 +346,60 @@
                         :muokattu? true
                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]))
 
-(defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?]
+(defn- erillisrahoitettu-muutostyo-kohdistus [e! lomake urakan-muutostyot kohdistus toimenpiteet nro]
+  (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
+    [:<>
+     [:div.row
+      [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+       [:div.label-ja-alasveto {:style {:width "320px"}}
+        [:span.alasvedon-otsikko "Muutostyö*"]
+        [yleiset/livi-pudotusvalikko {:valinta (:valittu-muutostyo kohdistus)
+                                      :format-fn :nimi
+                                      :vayla-tyyli? true
+                                      :muokattu? true
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :valittu-muutostyo)
+                                      :valitse-fn #(do
+                                                     ;; Erillisrahoitetut muutostyöt ovat tavoitehintaisia 
+                                                     (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
+                                                     (e! (tiedot/->ValitseMuutostyoKohdistukselle % nro)))}
+         (vec 
+           ;; Halutaan näyttää pelkästään erillisrahoitetut
+           (filter #(= "erillisrahoitus" (:alityyppi %)) urakan-muutostyot))]]
+
+       [:div.label-ja-alasveto {:style {:width "320px"}}
+        [:span.alasvedon-otsikko "Toimenpide*"]
+        [yleiset/livi-pudotusvalikko {:valinta (:toimenpide kohdistus)
+                                      :vayla-tyyli? true
+                                      :format-fn :toimenpide
+                                      :muokattu? true
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :toimenpide)
+                                      :valitse-fn #(e! (tiedot/->ValitseToimenpideKohdistukselle % nro))}
+         toimenpiteet]]]]
+     
+     [:div.row
+      [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Lisätieto *"
+         :luokka "poista-label-top-margin"
+         :vayla-tyyli? true
+         :otsikon-luokka ""
+         :arvo-atom (r/wrap lisatyon-lisatieto
+                      #(e! (tiedot/->KohdistuksenLisatieto % nro)))
+         :kentta-params {:tyyppi :text
+                         :palstoja 2
+                         :koko [90 4]
+                         :pituus-max 1000
+                         :uusi-rivi? true
+                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
+
+(defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot]
   (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
         tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
         ;; Kohdistustyypit vaihtelee sen mukaan, onko hoitovuoden päätöstä valittu. Jos on, niin kulun tyyppiä ei voi vaihtaa
         kohdistustyyppit (if (:vuoden-paatos-valittu? lomake)
                            [:paatos]
-                           [:hankintakulu :rahavaraus :lisatyo :muukulu])
+                           [:hankintakulu :rahavaraus :lisatyo :muukulu :erillisrahoitettu-muutos])
         voiko-muokata? (cond
                         ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
                          (= :paatos kohdistustyyppi) false
@@ -389,25 +438,34 @@
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
        :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
-       :jjh-muutos [:<> "Sisältöä ei löytynyt."])
+       :erillisrahoitettu-muutos [erillisrahoitettu-muutostyo-kohdistus e! lomake urakan-muutostyot kohdistus toimenpiteet nro]
+       :jjh-muutos nil
+
+       ;; Default
+       (do
+         ;; Ei blokkaa mitään, mutta halutaan tästä jokin punainen valo heittää
+         (js/console.error (str
+                             "Kohdistustyyppiä " kohdistustyyppi " "
+                             "ei ole käsitelty kululomakkeella."))
+         nil))
 
      ;; Kohdistuksen summa
      [:div.row
       [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
        [:div
         [kentat/tee-otsikollinen-kentta
-           {:otsikko "Määrä € *"
-            :otsikon-tag "span"
-            :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-            :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
-                            :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
-                            :tyyppi :euro
-                            :tyylit {:width "110px" :height "34px"}
-                            :vaadi-negatiivinen? urakoitsija-maksaa?
-                            :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
-                            ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                            :input-luokka "maara-input"
-                            :vayla-tyyli? true}}]]]]]))
+         {:otsikko "Määrä € *"
+          :otsikon-tag "span"
+          :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
+          :kentta-params {:elementin-id (str "kohdistuksen-summa-"nro)
+                          :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
+                          :tyyppi :euro
+                          :tyylit {:width "110px" :height "34px"}
+                          :vaadi-negatiivinen? urakoitsija-maksaa?
+                          :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
+                          ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
+                          :input-luokka "maara-input"
+                          :vayla-tyyli? true}}]]]]]))
 
 (defn testausvalinnat [e! app]
   (when (k/kehitysymparistossa?)
@@ -435,6 +493,7 @@
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
         paatos-tehty? (:paatos-tehty? lomake)
+        urakan-muutostyot (:urakan-muutostyot app)
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
@@ -530,7 +589,7 @@
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
-         [nayta-kohdistus e! lomake index kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa?])
+         [nayta-kohdistus e! lomake index kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot])
        kohdistukset)
 
      (when (not kulu-lukittu?)
