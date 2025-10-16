@@ -1201,7 +1201,7 @@
         maaramuutokset (hae-maaramuutokset-fn {:urakka-id urakka-id
                                                :hoitokaudet hoitokaudet
                                                :valittu-hoitokausi valittu-hoitokausi
-                                               :mhu+? true})
+                                               :uusi-urakka? true})
         ;; Bäkkärissä lisätään gridiin väliotsikot 
         ;; otetaan ne pois, palautetaan raaka data 
         maaramuutokset-ei-valiotsikoita (filter #(not (:valiotsikko %)) maaramuutokset)]
@@ -1220,7 +1220,7 @@
         params {:urakka-id urakka-id
                 :hoitokaudet hoitokaudet
                 :valittu-hoitokausi valittu-hoitokausi
-                :mhu+? true}
+                :uusi-urakka? true}
 
         ;; Testataan molemmant endpointit tällä 
         ;; Ainoa mikä parametreissa muuttuu, on rivi 

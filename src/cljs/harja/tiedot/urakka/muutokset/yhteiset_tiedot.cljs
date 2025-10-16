@@ -124,7 +124,7 @@
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :hoitokaudet @u/valitun-urakan-hoitokaudet
      :valittu-hoitokausi (:valittu-hoitokausi app)
-     :mhu+? (:mhu+? app)}
+     :uusi-urakka? (:uusi-urakka? app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
@@ -172,12 +172,12 @@
   HaeUrakanMuutostiedot
   (process-event [_ app]
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
-          mhu+? (boolean (>= urakan-alkuvuosi 2025))]
+          uusi-urakka? (boolean (>= urakan-alkuvuosi 2025))]
       (hae-urakan-muutostiedot
         (assoc
           (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
           :haku-kaynnissa? true
-          :mhu+? mhu+?
+          :uusi-urakka? uusi-urakka?
           :valittu-hoitokausi @u/valittu-hoitokausi
           :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))))
 
@@ -286,7 +286,7 @@
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet mhu+?] :as app}]
+                  {:keys [lomake-virheet uusi-urakka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
@@ -316,7 +316,7 @@
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
              :muutos muutos
-             :mhu+? mhu+?}
+             :uusi-urakka? uusi-urakka?}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
              :paasta-virhe-lapi? true})

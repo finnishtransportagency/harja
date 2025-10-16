@@ -24,14 +24,14 @@
     (assoc app :rahavarausten-syyt-muokattavana? true))
 
   TallennaRahavarausmuutostenSyyt
-  (process-event [{:keys [rivit mhu+?]} app]
+  (process-event [{:keys [rivit uusi-urakka?]} app]
     (let [urakka (:urakka @urakka-tila/yleiset)]
       (tuck-apurit/post! :tallenna-rahavarausmuutosten-syyt
         {:urakka-id (:id urakka)
          :hoitokaudet @u/valitun-urakan-hoitokaudet
          :valittu-hoitokausi (:valittu-hoitokausi app)
          :rivit (map #(select-keys % [:id :syy]) rivit)
-         :mhu+? mhu+?}
+         :uusi-urakka? uusi-urakka?}
         {:onnistui ->TallennaRahavarausmuutostenSyytOnnistui
          :epaonnistui ->TallennaRahavarausmuutostenSyytEpaonnistui})
       app))
