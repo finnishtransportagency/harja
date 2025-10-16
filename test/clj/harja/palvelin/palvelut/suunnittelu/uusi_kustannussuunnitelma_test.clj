@@ -35,61 +35,6 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(def hankinnat-tietomalli {:toimenpiteet [{:nimi "Talvihoito laaja TPI", :osio "hankintakustannukset" :toimenpideinstanssi-id 90 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "Liikenneympäristön hoito laaja TPI", :osio "hankintakustannukset" :toimenpideinstanssi-id 91 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "Soratien hoito laaja TPI", :osio "hankintakustannukset" :toimenpideinstanssi-id 92 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "Päällysteiden paikkaus (hoidon ylläpito)", :osio "hankintakustannukset" :toimenpideinstanssi-id 93 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "MHU Ylläpito", :osio "hankintakustannukset" :toimenpideinstanssi-id 94 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "MHU Korvausinvestointi", :osio "hankintakustannukset" :toimenpideinstanssi-id 95 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "Yhteensä", :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
-                                           :alkukausi 700 :alkukausi-indeksikorjattu 777 :loppukausi 2100 :loppukausi-indeksikorjattu 2331 :yhteensa 2800 :yhteensa-indeksikorjattu 3108}]})
-
-(def erillishankinnat-tietomalli {:erillishankinnat [{:summa 1000 :summa_indeksikorjattu 1111 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Lokakuu 2024"}
-                                                     {:summa 2000 :summa_indeksikorjattu 2222 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Marraskuu 2024"}
-                                                     {:summa 3000 :summa_indeksikorjattu 3333 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 12 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Joulukuu 2024"}
-                                                     {:summa 4000 :summa_indeksikorjattu 4444 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 1 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Tammikuu 2025"}
-                                                     {:summa 5000 :summa_indeksikorjattu 5555 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 2 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Helmikuu 2025"}
-                                                     {:summa 6000 :summa_indeksikorjattu 6666 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 3 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Maaliskuu 2025"}
-                                                     {:summa 7000 :summa_indeksikorjattu 7777 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 4 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Huhtikuu 2025"}
-                                                     {:summa 8000 :summa_indeksikorjattu 8888 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 5 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Toukokuu 2025"}
-                                                     {:summa 9000 :summa_indeksikorjattu 9999 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 6 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Kesäkuu 2025"}
-                                                     {:summa 10000 :summa_indeksikorjattu 11111 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 7 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Heinäkuu 2025"}
-                                                     {:summa 11000 :summa_indeksikorjattu 12121 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Elokuu 2025"}
-                                                     {:summa 12000 :summa_indeksikorjattu 13333 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Syyskuu 2025"}]})
-
-(def hoidonjohtopalkkiot-tietomalli {:hoidonjohtopalkkiot [{:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Lokakuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Marraskuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 12 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Joulukuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 1 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Tammikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 2 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Helmikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 3 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Maaliskuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 4 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Huhtikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 5 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Toukokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 6 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Kesäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 7 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Heinäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Elokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Syyskuu 2025"}]})
-
-(def johto-ja-hallinto-tietomalli-2019 {:johto-ja-hallintokorvaukset-2019
-                                        [{:id 1 :toimenkuva "sopimusvastaava"
-                                          :kuukaudet [{:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
-                                                      {:toimenkuva-id 1 :toimenkuva "sopimusvastaava" :tunnit 1 :tuntipalkka 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]}]})
 
 (def johto-ja-hallinto-tietomalli-2025 {:johto-ja-hallintokorvaukset-2025 [{:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
                                                                            {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
@@ -104,19 +49,16 @@
                                                                            {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
                                                                            {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]})
 
-(defn poista-yhteenvetorivi [tietomalli]
-  {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
-
 (defn urakkakohtaiset-toimenpideinstanssit-toimenpiteille
   "Tietomallissa toimenpideinstanssi on kovakoodattu. Aseta toimenpideinstanssi-id urakkakohtaisista toimenpiteistä."
-  [hankinnat-tietomalli urakkakohtaiset-toimenpiteet]
-  (assoc hankinnat-tietomalli :toimenpiteet
+  [h-tietomalli urakkakohtaiset-toimenpiteet]
+  (assoc h-tietomalli :toimenpiteet
     (map (fn [toimenpide]
            (let [tpi (first (filter #(= (:nimi %) (:nimi toimenpide)) urakkakohtaiset-toimenpiteet))]
              (if tpi
                (assoc toimenpide :toimenpideinstanssi-id (:toimenpideinstanssi-id tpi))
                toimenpide)))
-      (:toimenpiteet hankinnat-tietomalli))))
+      (:toimenpiteet h-tietomalli))))
 
 (deftest hae-kilpailutettavat-hankinnat-tietokannasta-onnistuneesti
   (testing "Hoitovuosi 2024"
@@ -125,10 +67,10 @@
           toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
           hoitovuoden-alkuvuosi 2024
           ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
-          hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
+          h-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille apurit/hankinnat-tietomalli toimenpiteet)
           ;; Poista yhteenvetorivi ennen tallennusta
-          hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
-          _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+          h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta h-tietomalli)
+          _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
           tiedot {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}
           kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
@@ -157,9 +99,9 @@
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
         ;; Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
-        tietomallin-alkukausisumma (apply + (map :alkukausi (:toimenpiteet hankinnat-tietomalli)))
-        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        tietomallin-alkukausisumma (apply + (map :alkukausi (:toimenpiteet h-tietomalli)))
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
         alkukausi-tietokannasta (q-map (format "SELECT SUM(summa) as summa FROM kiinteahintainen_tyo
                                                   WHERE sopimus = %s
                                                     AND vuosi = %s AND kuukausi IN (10,11,12)"
@@ -183,16 +125,16 @@
         hoitovuoden-alkuvuosi 2024
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
-        hankinnat-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille hankinnat-tietomalli toimenpiteet)
+        h-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille apurit/hankinnat-tietomalli toimenpiteet)
         ;; Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta h-tietomalli)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge
                       {:urakka-id urakka-id
                        :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                        :kopioi-tuleville-vuosille? false}
-                      hankinnat-tietomalli))
+                      h-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -213,14 +155,14 @@
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2021
         ;; Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge
                       {:urakka-id urakka-id
                        :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                        :kopioi-tuleville-vuosille? true}
-                      hankinnat-tietomalli))
+                      h-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -242,14 +184,14 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
-        tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:erillishankinnat apurit/erillishankinnat-tietomalli)))
 
         hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
                                          {:urakka urakka-id
                                           :koodi "23151"})))
 
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id
-            (:erillishankinnat erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
         erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                          FROM kustannusarvioitu_tyo
                                                   WHERE sopimus = %s
@@ -275,7 +217,7 @@
 (deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi2
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-erillishankinnat +kayttaja-jvh+ erillishankinnat-tietomalli)
+                    :tallenna-erillishankinnat +kayttaja-jvh+ apurit/erillishankinnat-tietomalli)
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
@@ -286,10 +228,10 @@
 
 (deftest tallenna-erillishankinnat-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:erillishankinnat apurit/erillishankinnat-tietomalli)))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge erillishankinnat-tietomalli
+                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge apurit/erillishankinnat-tietomalli
                                                                 {:urakka-id urakka-id
                                                                  :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -312,10 +254,10 @@
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db
                               {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
 
-        tietomallin-summa (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:erillishankinnat apurit/erillishankinnat-tietomalli)))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge erillishankinnat-tietomalli
+                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge apurit/erillishankinnat-tietomalli
                                                                 {:urakka-id urakka-id
                                                                  :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                                                                  :kopioi-tuleville-vuosille? true}))
@@ -347,7 +289,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge erillishankinnat-tietomalli
+                    :tallenna-erillishankinnat +kayttaja-jvh+ (merge apurit/erillishankinnat-tietomalli
                                                                 {:urakka-id urakka-id
                                                                  :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -386,9 +328,9 @@
                                          {:urakka urakka-id
                                           :koodi "23151"})))
         hoitovuoden-alkuvuosi 2024
-        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id
-            (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
                                                            WHERE sopimus = %s
@@ -425,12 +367,12 @@
                     (merge {:urakka-id urakka-id
                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                             :kopioi-tuleville-vuosille? false}
-                      hoidonjohtopalkkiot-tietomalli))
+                      apurit/hoidonjohtopalkkiot-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
 
-        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
 
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
@@ -459,12 +401,12 @@
                     (merge {:urakka-id urakka-id
                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                             :kopioi-tuleville-vuosille? true}
-                      hoidonjohtopalkkiot-tietomalli))
+                      apurit/hoidonjohtopalkkiot-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
 
-        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
 
         seuraava-vuosi (inc hoitovuoden-alkuvuosi)
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
@@ -483,7 +425,7 @@
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-ei-toimi2
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ hoidonjohtopalkkiot-tietomalli)
+                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ apurit/hoidonjohtopalkkiot-tietomalli)
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
@@ -494,10 +436,10 @@
 
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
+        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge hoidonjohtopalkkiot-tietomalli
+                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge apurit/hoidonjohtopalkkiot-tietomalli
                                                                    {:urakka-id urakka-id
                                                                     :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -515,7 +457,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge hoidonjohtopalkkiot-tietomalli
+                    :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ (merge apurit/hoidonjohtopalkkiot-tietomalli
                                                                    {:urakka-id urakka-id
                                                                     :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -551,10 +493,10 @@
         tietomallin-summa (apply + (map
                                      (fn [kuukausi]
                                        (* (or (:tunnit kuukausi) 0) (or (:tuntipalkka kuukausi) 0)))
-                                     (flatten (map :kuukaudet (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019)))))
+                                     (flatten (map :kuukaudet (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019)))))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2019
+                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2019
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -574,10 +516,10 @@
         tietomallin-summa (apply + (map
                                      (fn [kuukausi]
                                        (* (or (:tunnit kuukausi) 0) (or (:tuntipalkka kuukausi) 0)))
-                                     (flatten (map :kuukaudet (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019)))))
+                                     (flatten (map :kuukaudet (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019)))))
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2019
+                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2019
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi hoitokauden-alkuvuosi
                                                                                  :kopioi-tuleville-vuosille? true}))
@@ -678,7 +620,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2019
+                    :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2019
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi 2024}))
                   (catch Exception e
@@ -759,18 +701,24 @@
 
         ;; Lisätään ensin kilpailutettavat hankinnat
         ;; ;; Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+            hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
         ;; Lisätään erillishankinnat
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:erillishankinnat erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
         ;; Lisätään hoidonjohtopalkkiot
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
         ;; Lisätään johto- ja hallintokorvaukset
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+
+        ;; Varmista, että kustannussuunnitelmaa ei ole vielä vahvistettu
+        kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+        _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistamaton ennen vahvistusta")
 
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
@@ -796,7 +744,6 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
 
-    ;; Ei voi vahvistaa, koska tietoja puuttuu
     (is (nil? (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])) "Vahvistuksessa ei pitäisi olla virhettä")
     (is (not (nil? (get-in vastaus [:tarjous]))) "Vastauksessa pitäisi olla tarjous")
     (is (not (nil? (get-in vastaus [:kustannussuunnitelma]))) "Vastauksessa pitäisi olla kustannussuunnitelma")
@@ -825,17 +772,17 @@
         loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
 
         ;; Lisätään ensin kilpailutettavat hankinnat - Poista yhteenvetorivi ennen tallennusta
-        hankinnat-tietomalli (poista-yhteenvetorivi hankinnat-tietomalli)
-        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
         ;; Lisätään erillishankinnat
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:erillishankinnat erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
         ;; Lisätään hoidonjohtopalkkiot
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
         ;; Lisätään johto- ja hallintokorvaukset
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
-            (:johto-ja-hallintokorvaukset-2019 johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
 
         ;; Rahavaraukset vaativat tarjouksen täyttämisen.
         kayttaja-id (:id +kayttaja-jvh+)
