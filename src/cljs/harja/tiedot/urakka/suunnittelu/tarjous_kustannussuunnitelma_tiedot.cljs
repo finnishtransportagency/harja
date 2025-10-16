@@ -335,10 +335,9 @@
     [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
     (nollaa-muutokset!)
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
-          kaikki-toimenkuvat (:toimenkuvat app)
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
           muunnetut-tarjousrivit (map #(muunna-vuodet %) kaikki-hankinnat)
-          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) (or toimenkuvat kaikki-toimenkuvat))
+          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) toimenkuvat)
           tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit)
           muunnettu-tarjous {:tarjous tarjous}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
