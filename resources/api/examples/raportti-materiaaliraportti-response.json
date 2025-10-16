@@ -78,10 +78,17 @@
         }
       },
       {
-        "materiaali": "Hiekoitushiekka",
+        "materiaali": "Hiekoitushiekka, liukkaudentorjunta",
         "maara": {
           "yksikko": "t",
-          "maara": 4
+          "maara": 3
+        }
+      },
+      {
+        "materiaali": "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
         }
       },
       {

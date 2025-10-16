@@ -1,26 +1,48 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.set :as clj-set]
+            [clojure.string :as str]
+            [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.pprint :as pprint]
+            [harja.pvm :as pvm]))
+
+(defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
+  (let [tarjous-tiedot (:tarjous tarjous)
+        nollatut-arvot (mapv (fn [osio]
+                               (update osio :hoitovuosittaiset-arvot
+                                 (fn [arvot]
+                                   (mapv #(update % :summa (fn [a] (if (nil? a) 0.00M a))) arvot))))
+                         tarjous-tiedot)]
+    (assoc tarjous :tarjous nollatut-arvot)))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (tarjous-kyselyt/hae-tarjous db urakka-id))
+  (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id)))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
   palauttaa tyhjät tiedot, jotka voidaan täyttää uudelleen."
   [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user (:urakka-id tiedot))
-  (let [tarjous (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot))]
+  (let [tarjous {:urakka-id (:urakka-id tiedot)
+                 :kaikki-toimenkuvat (map #(assoc %
+                                             :toimenkuva (:nimi %)
+                                             :nimi (str/capitalize (:nimi %))) (toimenkuva-kyselyt/hae-toimenkuvat db))
+                 :tarjous (tarjous-kyselyt/luo-default-tarjous db (:urakka-id tiedot))}]
     tarjous))
 
 (defn tallenna-tarjous [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (let [kattohintakerroin 1.1                               ;; Odotellaan vielä urakka_parametrit taulua
-        tarjousdb (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot)]
-    (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot))))
+  (jdbc/with-db-transaction [db db]
+    (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot)]
+      (tarjous-kyselyt/hae-tarjous db (:urakka-id tiedot)))))
 
 
 (defrecord Tarjous []

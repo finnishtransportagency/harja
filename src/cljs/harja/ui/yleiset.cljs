@@ -534,7 +534,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
   :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
   :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)
-  :tietorivi-luokka             Aseta lisäluokka tietoriville"
+  :tietorivi-luokka             Aseta lisäluokka tietoriville
+
+  Otsikon metadata:
+  - Otsikon metadata toimii keinona ujuttaa rivikohtaisia optioita otsikon tietojen yhteydessä.
+  :viiva-rivin-alle?            Hallitse yksittäisen rivin kohdalla viivan piirtämistä
+  :koko-rivin-leveys?           Jos true, tietokenttä vie koko rivin leveyden (oletus false), ja erillinen arvo jätetään pois.
+  :tietorivi-luokka             Aseta lisäluokka koko tietoriville otsikon metadatassa"
   [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
            tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys tietorivi-luokka]} & otsikot-ja-arvot]
   (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
@@ -549,21 +555,25 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:div.tietoja {:class class}
      (keep-indexed
        (fn [i [otsikko arvo]]
-         (when arvo
-           (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
-                                     {:style {:display "auto"}})]
-             ^{:key (str i otsikko)}
-             [:div.tietorivi (merge
-                                   {:class tietorivi-luokka}
-                                   (when-not piirra-viivat?
-                                     {:class (str tietorivi-luokka " tietorivi-ilman-alaviivaa")})
-                                   (when (and kavenna?
-                                           (not (jata-kaventamatta otsikko)))
-                                     {:style {:margin-bottom "0.5em"}}))
-              [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-              [:span.tietoarvo.max-width-3 arvo]
-              (when (tyhja-rivi-otsikon-jalkeen otsikko)
-                [:span [:br] [:br]])])))
+         (let [otsikko-meta (meta otsikko)]
+           (when arvo
+             (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
+                                       {:style {:display "auto"}})
+                   tietorivi-luokka (or (:tietorivi-luokka otsikko-meta) tietorivi-luokka)]
+               ^{:key (str i otsikko)}
+               [:div.tietorivi (merge
+                                 {:class tietorivi-luokka}
+                                 (when-not (or piirra-viivat? (:viiva-rivin-alle? otsikko-meta))
+                                   {:class (str tietorivi-luokka " tietorivi-ilman-alaviivaa")})
+                                 (when (and kavenna?
+                                         (not (jata-kaventamatta otsikko)))
+                                   {:style {:margin-bottom "0.5em"}}))
+                [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
+                ;; Jätetään renderöimättä arvo, jos otsikko vie koko rivin leveyden
+                (when-not (:koko-rivin-leveys? otsikko-meta)
+                  [:span.tietoarvo.max-width-3 arvo])
+                (when (tyhja-rivi-otsikon-jalkeen otsikko)
+                  [:span [:br] [:br]])]))))
        (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
@@ -872,6 +882,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                                  (when sulje-fn
                                    (sulje-fn)))}
            [ikonit/sulje]])]))))
+
+(defn nayta-virheet
+  [tyyppi virheet]
+  (assert 
+    (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
+    "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
+  [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
+         :style {:white-space "pre-line"}}
+   [:div.infolaatikon-ikoni
+    (case tyyppi
+      :varoitus (ikonit/livicon-warning-sign)
+      :onnistunut (ikonit/livicon-check)
+      :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
+      :huolto (ikonit/livicon-wrench))]
+   
+   [:div.infolaatikon-teksti
+    [:div {:style {:display "flex"
+                   :flex-direction "column"
+                   :white-space "pre-line" :color +vari-black-default+}}
+     "Lomakkeella virheitä:"
+     (doall (for* [v (distinct virheet)]
+              [:span (str "- " v)]))]]])
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

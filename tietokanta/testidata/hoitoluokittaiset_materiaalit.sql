@@ -1,13 +1,12 @@
--- Suunnittele hiekoitushiekan käyttöä Oulun urakkaan
-
+-- Suunnittele hiekoitushiekan (Hiekoitushiekka, liukkaudentorjunta) käyttöä Oulun urakkaan
 INSERT INTO materiaalin_kaytto
 (alkupvm, loppupvm, maara, materiaali, urakka, sopimus,luotu, luoja)
 VALUES
-  ('20171001', '20180930', 1000, (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka'),
+  ('20171001', '20180930', 1000, (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'),
    (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null), NOW(),
    (SELECT id FROM kayttaja WHERE kayttajanimi='jvh')),
-  ('20171001', '20180930', 1000, (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka'),
+  ('20171001', '20180930', 1000, (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'),
    (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null), NOW(),
    (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'));
@@ -41,8 +40,8 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma2'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
+        (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus')); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
 
 -- Uudet talvihoitoluokat voimaan 2.7.2018 Tätä dataa tulkittava raporteissa uuden koodiston mukaisesti
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -75,7 +74,8 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurak
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma4'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Hiekoitushiekka'), 1000, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), 1000,
+        (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019')); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
 
 -- Kesäsuola sorateiden pölynsidonta (materiaalitoteuma) Ouluun - Testataan soratiehoitoluokkia
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)

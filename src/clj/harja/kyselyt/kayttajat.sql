@@ -19,6 +19,14 @@ UPDATE kayttaja
        muokattu = NOW()
  WHERE id = :id;
 
+-- name: piilota-jvh-nimi!
+-- Päivittää käyttäjän tietoihin, että hänen nimi piilotetaan käyttöliittymässä. Tämä liittyy
+-- jvh käyttäjiin, kun he joutuvat joskus muokkaamaan urakan tietoja, niin niputetaan kaikki jvh käyttäjät yhdeksi.
+UPDATE kayttaja
+SET piilota_nimi = TRUE,
+    muokattu = NOW()
+WHERE id = :id;
+
 -- name: hae-ely-numerolla
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 SELECT id,nimi,tyyppi FROM organisaatio
@@ -133,7 +141,8 @@ SELECT
    FROM kayttaja_rooli
    WHERE kayttaja = k.id
      AND poistettu = FALSE) AS roolit,
-  k.jarjestelma
+  k.jarjestelma,
+  piilota_nimi
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE

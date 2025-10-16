@@ -299,6 +299,7 @@
    "Soitetaan tienkäyttäjälle"
    "Tilanne ohi"
    "Palaute vastaanotettu" ;; ent. Viesti vastaanotettu
+   "Välitetty eteenpäin vastuutaholle" ;; lisätty lokakuussa 2025, jotta vastuutaholle eteenpäin ohjaamisen voisi ilmaista sen sijaan, että kuittaa vain Palaute vastaanotettu
    "Aurausviitoitus korjataan" ;; lisätty maaliskuussa 2022
    "Jäätyneet rummut aukaistaan"
    "Lumivallit madalletaan"
