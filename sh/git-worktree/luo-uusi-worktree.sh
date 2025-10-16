@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # Värit
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+VIHREA='\033[0;32m'
+SININEN='\033[0;34m'
+KELTAINEN='\033[1;33m'
+PUNAINEN='\033[0;31m'
+EI_VARIA='\033[0m'
 
 # Funktio vapaan portin etsimiseen
 etsi_vapaa_portti() {
@@ -63,29 +63,29 @@ fi
 TURVALLINEN_HAARAN_NIMI=$(echo "$HAARAN_NIMI" | sed 's/[\/:]/-/g')
 WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Harja Git Worktree luonti${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
+echo -e "${SININEN}  Harja Git Worktree luonti${EI_VARIA}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
 echo ""
-echo -e "${YELLOW}Haara:${NC}          $HAARAN_NIMI"
-echo -e "${YELLOW}Worktree:${NC}       $WORKTREE_KANSIO"
+echo -e "${KELTAINEN}Haara:${EI_VARIA}          $HAARAN_NIMI"
+echo -e "${KELTAINEN}Worktree:${EI_VARIA}       $WORKTREE_KANSIO"
 if [ -n "$HTTP_PORTTI" ]; then
-    echo -e "${YELLOW}HTTP-portti:${NC}    $HTTP_PORTTI"
+    echo -e "${KELTAINEN}HTTP-portti:${EI_VARIA}    $HTTP_PORTTI"
 fi
 echo ""
 
 # Tarkista onko haara olemassa
 if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
-    echo -e "${RED}❌ Haaraa '$HAARAN_NIMI' ei löydy!${NC}"
-    echo -e "${YELLOW}Haetaan remote-haarat...${NC}"
+    echo -e "${PUNAINEN}❌ Haaraa '$HAARAN_NIMI' ei löydy!${EI_VARIA}"
+    echo -e "${KELTAINEN}Haetaan remote-haarat...${EI_VARIA}"
     git fetch --all
     
     if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
         if git rev-parse --verify "origin/$HAARAN_NIMI" >/dev/null 2>&1; then
-            echo -e "${BLUE}Löydettiin remote-haara: origin/$HAARAN_NIMI${NC}"
+            echo -e "${SININEN}Löydettiin remote-haara: origin/$HAARAN_NIMI${EI_VARIA}"
             HAARAN_NIMI="origin/$HAARAN_NIMI"
         else
-            echo -e "${RED}❌ Haaraa ei löydy edes remotesta!${NC}"
+            echo -e "${PUNAINEN}❌ Haaraa ei löydy edes remotesta!${EI_VARIA}"
             exit 1
         fi
     fi
@@ -93,55 +93,55 @@ fi
 
 # Tarkista onko worktree jo olemassa
 if [ -d "$WORKTREE_KANSIO" ]; then
-    echo -e "${RED}❌ Worktree hakemisto on jo olemassa: $WORKTREE_KANSIO${NC}"
-    echo -e "${YELLOW}Aja ensin: sh/git-worktree/poista-worktree.sh $HAARAN_NIMI${NC}"
+    echo -e "${PUNAINEN}❌ Worktree hakemisto on jo olemassa: $WORKTREE_KANSIO${EI_VARIA}"
+    echo -e "${KELTAINEN}Aja ensin: sh/git-worktree/poista-worktree.sh $HAARAN_NIMI${EI_VARIA}"
     exit 1
 fi
 
 # Luo worktree
-echo -e "${BLUE}📁 Luodaan worktree...${NC}"
+echo -e "${SININEN}📁 Luodaan worktree...${EI_VARIA}"
 git worktree add "$WORKTREE_KANSIO" "$HAARAN_NIMI"
 
 # Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
 if [ -z "$HTTP_PORTTI" ]; then
     if [ -d "$WORKTREE_KANSIO/sh/git-worktree" ]; then
         # Branch tukee worktreeta, etsi vapaa portti
-        echo -e "${BLUE}Etsitään vapaata porttia rangesta 3001-3020...${NC}"
+        echo -e "${SININEN}Etsitään vapaata porttia rangesta 3001-3020...${EI_VARIA}"
         HTTP_PORTTI=$(etsi_vapaa_portti)
         if [ -z "$HTTP_PORTTI" ]; then
-            echo -e "${RED}❌ Ei vapaita portteja rangesta 3001-3020!${NC}"
-            echo -e "${YELLOW}Sulje joitain worktreeja tai määritä portti manuaalisesti.${NC}"
+            echo -e "${PUNAINEN}❌ Ei vapaita portteja rangesta 3001-3020!${EI_VARIA}"
+            echo -e "${KELTAINEN}Sulje joitain worktreeja tai määritä portti manuaalisesti.${EI_VARIA}"
             cd "$PROJEKTIN_JUURI"
             git worktree remove "$WORKTREE_KANSIO" --force
             exit 1
         fi
-        echo -e "${GREEN}✓ Löydettiin vapaa portti: $HTTP_PORTTI${NC}"
+        echo -e "${VIHREA}✓ Löydettiin vapaa portti: $HTTP_PORTTI${EI_VARIA}"
     else
         # Branch ei tue worktreeta, käytä porttia 3000
         HTTP_PORTTI=3000
-        echo -e "${YELLOW}⚠️  Branch ei tue worktree-toiminnallisuutta${NC}"
-        echo -e "${BLUE}   Käytetään porttia: $HTTP_PORTTI${NC}"
+        echo -e "${KELTAINEN}⚠️  Branch ei tue worktree-toiminnallisuutta${EI_VARIA}"
+        echo -e "${SININEN}   Käytetään porttia: $HTTP_PORTTI${EI_VARIA}"
     fi
     echo ""
 fi
 
-echo -e "${YELLOW}HTTP-portti:${NC}    $HTTP_PORTTI"
+echo -e "${KELTAINEN}HTTP-portti:${EI_VARIA}    $HTTP_PORTTI"
 echo ""
 
 # Asenna npm-riippuvuudet
-echo -e "${BLUE}📦 Asennetaan npm-riippuvuudet (npm ci)...${NC}"
-echo -e "${YELLOW}   Tämä voi kestää hetken...${NC}"
+echo -e "${SININEN}📦 Asennetaan npm-riippuvuudet (npm ci)...${EI_VARIA}"
+echo -e "${KELTAINEN}   Tämä voi kestää hetken...${EI_VARIA}"
 cd "$WORKTREE_KANSIO"
 if npm ci; then
-    echo -e "${GREEN}   ✓ npm-riippuvuudet asennettu${NC}"
+    echo -e "${VIHREA}   ✓ npm-riippuvuudet asennettu${EI_VARIA}"
 else
-    echo -e "${RED}❌ npm ci epäonnistui!${NC}"
-    echo -e "${YELLOW}Yritetään npm install...${NC}"
+    echo -e "${PUNAINEN}❌ npm ci epäonnistui!${EI_VARIA}"
+    echo -e "${KELTAINEN}Yritetään npm install...${EI_VARIA}"
     if npm install; then
-        echo -e "${GREEN}   ✓ npm-riippuvuudet asennettu (npm install)${NC}"
+        echo -e "${VIHREA}   ✓ npm-riippuvuudet asennettu (npm install)${EI_VARIA}"
     else
-        echo -e "${RED}❌ npm install epäonnistui!${NC}"
-        echo -e "${YELLOW}Puhdistetaan worktree...${NC}"
+        echo -e "${PUNAINEN}❌ npm install epäonnistui!${EI_VARIA}"
+        echo -e "${KELTAINEN}Puhdistetaan worktree...${EI_VARIA}"
         cd "$PROJEKTIN_JUURI"
         git worktree remove "$WORKTREE_KANSIO" --force
         exit 1
@@ -150,42 +150,42 @@ fi
 cd "$PROJEKTIN_JUURI"
 
 # Tarkista onko uusia migraatioita ja tarjoa tietokannan uudelleenkäynnistys
-echo -e "${BLUE}🔍 Tarkistetaan migraatiot...${NC}"
+echo -e "${SININEN}🔍 Tarkistetaan migraatiot...${EI_VARIA}"
 
 # Laske migraatiotiedostot molemmissa paikoissa
 WORKTREE_MIGRAATIOT=$(find "$WORKTREE_KANSIO/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
 PAAHARAN_MIGRAATIOT=$(find "$PROJEKTIN_JUURI/tietokanta/src" -type f -name "*.sql" 2>/dev/null | wc -l | tr -d ' ')
 
 if [ "$WORKTREE_MIGRAATIOT" -gt "$PAAHARAN_MIGRAATIOT" ]; then
-    echo -e "${YELLOW}⚠️  Huomattu $((WORKTREE_MIGRAATIOT - PAAHARAN_MIGRAATIOT)) uutta migraatiotiedostoa!${NC}"
-    echo -e "${YELLOW}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä${NC}"
+    echo -e "${KELTAINEN}⚠️  Huomattu $((WORKTREE_MIGRAATIOT - PAAHARAN_MIGRAATIOT)) uutta migraatiotiedostoa!${EI_VARIA}"
+    echo -e "${KELTAINEN}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä${EI_VARIA}"
     echo ""
-    echo -e "${YELLOW}Haluatko uudelleenkäynnistää tietokannan nyt? [y/N]${NC}"
+    echo -e "${KELTAINEN}Haluatko uudelleenkäynnistää tietokannan nyt? [y/N]${EI_VARIA}"
     read -p "" -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${BLUE}🔄 Uudelleenkäynnistetään tietokanta...${NC}"
+        echo -e "${SININEN}🔄 Uudelleenkäynnistetään tietokanta...${EI_VARIA}"
         if "$PROJEKTIN_JUURI/tietokanta/devdb_restart.sh"; then
-            echo -e "${GREEN}✓ Tietokanta uudelleenkäynnistetty onnistuneesti${NC}"
+            echo -e "${VIHREA}✓ Tietokanta uudelleenkäynnistetty onnistuneesti${EI_VARIA}"
         else
-            echo -e "${RED}❌ Tietokannan uudelleenkäynnistys epäonnistui${NC}"
-            echo -e "${YELLOW}Voit yrittää myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${NC}"
+            echo -e "${PUNAINEN}❌ Tietokannan uudelleenkäynnistys epäonnistui${EI_VARIA}"
+            echo -e "${KELTAINEN}Voit yrittää myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
         fi
         echo ""
     else
-        echo -e "${YELLOW}💡 Voit ajaa myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${NC}"
+        echo -e "${KELTAINEN}💡 Voit ajaa myöhemmin: $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
         echo ""
     fi
 elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRAATIOT" -gt 0 ]; then
-    echo -e "${GREEN}✓ Ei uusia migraatioita${NC}"
+    echo -e "${VIHREA}✓ Ei uusia migraatioita${EI_VARIA}"
     echo ""
 else
-    echo -e "${YELLOW}⚠️  Migraatiotiedostoja ei löytynyt${NC}"
+    echo -e "${KELTAINEN}⚠️  Migraatiotiedostoja ei löytynyt${EI_VARIA}"
     echo ""
 fi
 
 # Luo käynnistysskripti worktreelle
-echo -e "${BLUE}⚙️  Luodaan käynnistysskripti...${NC}"
+echo -e "${SININEN}⚙️  Luodaan käynnistysskripti...${EI_VARIA}"
 
 cat > "$WORKTREE_KANSIO/kaynnista-kaikki.sh" << EOF
 #!/bin/bash
@@ -254,27 +254,27 @@ fi
 EOF
 
 chmod +x "$WORKTREE_KANSIO/kaynnista-kaikki.sh"
-echo -e "${GREEN}✓ Käynnistysskripti luotu${NC}"
+echo -e "${VIHREA}✓ Käynnistysskripti luotu${EI_VARIA}"
 echo ""
-echo -e "${GREEN}✅ Worktree luotu onnistuneesti!${NC}"
+echo -e "${VIHREA}✅ Worktree luotu onnistuneesti!${EI_VARIA}"
 echo ""
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Käynnistä worktree${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
+echo -e "${SININEN}  Käynnistä worktree${EI_VARIA}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
 echo ""
-echo -e "${GREEN}🚀 SUOSITUS (automaattinen):${NC}"
+echo -e "${VIHREA}🚀 SUOSITUS (automaattinen):${EI_VARIA}"
 echo -e "   cd $WORKTREE_KANSIO && ./kaynnista-kaikki.sh"
 echo ""
 
 # Kysy käyttäjältä haluaako käynnistää heti
-echo -e "${YELLOW}Haluatko käynnistää worktreen nyt? [y/N]${NC}"
+echo -e "${KELTAINEN}Haluatko käynnistää worktreen nyt? [y/N]${EI_VARIA}"
 read -p "" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     cd "$WORKTREE_KANSIO"
-    echo -e "${GREEN}Käynnistetään...${NC}"
+    echo -e "${VIHREA}Käynnistetään...${EI_VARIA}"
     exec ./kaynnista-kaikki.sh
 else
-    echo -e "${BLUE}Voit käynnistää myöhemmin komennolla:${NC}"
+    echo -e "${SININEN}Voit käynnistää myöhemmin komennolla:${EI_VARIA}"
     echo -e "   cd $WORKTREE_KANSIO && ./kaynnista-kaikki.sh"
 fi

@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # Värit
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+VIHREA='\033[0;32m'
+SININEN='\033[0;34m'
+KELTAINEN='\033[1;33m'
+PUNAINEN='\033[0;31m'
+EI_VARIA='\033[0m'
 
 usage() {
     echo "Käyttö: $0 <haara-nimi>"
@@ -39,58 +39,58 @@ YLAKANSIO="$(dirname "$PROJEKTIN_JUURI")"
 TURVALLINEN_HAARAN_NIMI=$(echo "$HAARAN_NIMI" | sed 's/[\/:]/-/g')
 WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
 
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}  Harja Git Worktree poistaminen${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
+echo -e "${SININEN}  Harja Git Worktree poistaminen${EI_VARIA}"
+echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
 echo ""
-echo -e "${YELLOW}Haara:${NC}          $HAARAN_NIMI"
-echo -e "${YELLOW}Worktree:${NC}       $WORKTREE_KANSIO"
+echo -e "${KELTAINEN}Haara:${EI_VARIA}          $HAARAN_NIMI"
+echo -e "${KELTAINEN}Worktree:${EI_VARIA}       $WORKTREE_KANSIO"
 echo ""
 
 # Tarkista onko worktree olemassa
 if [ ! -d "$WORKTREE_KANSIO" ]; then
-    echo -e "${RED}❌ Worktree hakemistoa ei löydy: $WORKTREE_KANSIO${NC}"
+    echo -e "${PUNAINEN}❌ Worktree hakemistoa ei löydy: $WORKTREE_KANSIO${EI_VARIA}"
     echo ""
-    echo -e "${YELLOW}Olemassa olevat worktree:t:${NC}"
+    echo -e "${KELTAINEN}Olemassa olevat worktree:t:${EI_VARIA}"
     git worktree list
     exit 1
 fi
 
 # Vahvista poisto
-echo -e "${YELLOW}⚠️  Haluatko varmasti poistaa worktreen?${NC}"
-echo -e "${YELLOW}   Tämä poistaa hakemiston ja kaikki tallentamattomat muutokset!${NC}"
+echo -e "${KELTAINEN}⚠️  Haluatko varmasti poistaa worktreen?${EI_VARIA}"
+echo -e "${KELTAINEN}   Tämä poistaa hakemiston ja kaikki tallentamattomat muutokset!${EI_VARIA}"
 echo ""
 read -p "Jatka? [y/N] " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}Peruttu.${NC}"
+    echo -e "${SININEN}Peruttu.${EI_VARIA}"
     exit 0
 fi
 
 echo ""
-echo -e "${BLUE}🛑 Pysäytetään worktreen prosessit...${NC}"
+echo -e "${SININEN}🛑 Pysäytetään worktreen prosessit...${EI_VARIA}"
 
 # 1. Tarkista .backend.pid tiedosto
 if [ -f "$WORKTREE_KANSIO/.backend.pid" ]; then
     BACKEND_PROSESSI_ID=$(cat "$WORKTREE_KANSIO/.backend.pid")
-    echo -e "${YELLOW}   Tapetaan backend PID: $BACKEND_PROSESSI_ID${NC}"
-    kill "$BACKEND_PROSESSI_ID" 2>/dev/null || echo -e "${YELLOW}   (Backend ei ollut enää käynnissä)${NC}"
+    echo -e "${KELTAINEN}   Tapetaan backend PID: $BACKEND_PROSESSI_ID${EI_VARIA}"
+    kill "$BACKEND_PROSESSI_ID" 2>/dev/null || echo -e "${KELTAINEN}   (Backend ei ollut enää käynnissä)${EI_VARIA}"
     rm "$WORKTREE_KANSIO/.backend.pid"
 fi
 
 # 2. Etsi ja tapa kaikki lein-prosessit jotka liittyvät tähän worktreehen
-echo -e "${YELLOW}   Etsitään lein-prosesseja worktree-hakemistossa...${NC}"
+echo -e "${KELTAINEN}   Etsitään lein-prosesseja worktree-hakemistossa...${EI_VARIA}"
 LEIN_PROSESSIT=$(lsof -t +D "$WORKTREE_KANSIO" 2>/dev/null || true)
 if [ -n "$LEIN_PROSESSIT" ]; then
-    echo -e "${YELLOW}   Tapetaan prosessit: $LEIN_PROSESSIT${NC}"
+    echo -e "${KELTAINEN}   Tapetaan prosessit: $LEIN_PROSESSIT${EI_VARIA}"
     echo "$LEIN_PROSESSIT" | xargs kill -9 2>/dev/null || true
 fi
 
 # 3. Etsi Java-prosessit jotka viittaavat worktree-hakemistoon
-echo -e "${YELLOW}   Etsitään Java-prosesseja...${NC}"
+echo -e "${KELTAINEN}   Etsitään Java-prosesseja...${EI_VARIA}"
 JAVA_PROSESSIT=$(ps aux | grep "java.*$WORKTREE_KANSIO" | grep -v grep | awk '{print $2}' || true)
 if [ -n "$JAVA_PROSESSIT" ]; then
-    echo -e "${YELLOW}   Tapetaan Java-prosessit: $JAVA_PROSESSIT${NC}"
+    echo -e "${KELTAINEN}   Tapetaan Java-prosessit: $JAVA_PROSESSIT${EI_VARIA}"
     echo "$JAVA_PROSESSIT" | xargs kill -9 2>/dev/null || true
 fi
 
@@ -100,16 +100,16 @@ sleep 2
 # 5. Vielä yksi tarkistus - onko jotain jäljellä?
 JALJELLA_OLEVAT_PROSESSIT=$(lsof +D "$WORKTREE_KANSIO" 2>/dev/null | grep -v "COMMAND" || true)
 if [ -n "$JALJELLA_OLEVAT_PROSESSIT" ]; then
-    echo -e "${YELLOW}⚠️  Varoitus: Jotkin prosessit käyttävät vielä hakemistoa:${NC}"
+    echo -e "${KELTAINEN}⚠️  Varoitus: Jotkin prosessit käyttävät vielä hakemistoa:${EI_VARIA}"
     echo "$JALJELLA_OLEVAT_PROSESSIT"
     echo ""
-    echo -e "${YELLOW}Yritetään pakottaa poisto...${NC}"
+    echo -e "${KELTAINEN}Yritetään pakottaa poisto...${EI_VARIA}"
 fi
 
 # Poista worktree git:stä
-echo -e "${BLUE}🗑️  Poistetaan worktree...${NC}"
+echo -e "${SININEN}🗑️  Poistetaan worktree...${EI_VARIA}"
 git worktree remove "$WORKTREE_KANSIO" --force 2>/dev/null || {
-    echo -e "${YELLOW}⚠️  Git worktree remove epäonnistui, poistetaan manuaalisesti...${NC}"
+    echo -e "${KELTAINEN}⚠️  Git worktree remove epäonnistui, poistetaan manuaalisesti...${EI_VARIA}"
     
     # Pakota prosessien lopetus jos vielä jotain jäljellä
     fuser -k "$WORKTREE_KANSIO" 2>/dev/null || true
@@ -124,7 +124,7 @@ git worktree remove "$WORKTREE_KANSIO" --force 2>/dev/null || {
 
 # Varmista että hakemisto on poistettu
 if [ -d "$WORKTREE_KANSIO" ]; then
-    echo -e "${RED}❌ Hakemisto on vielä olemassa, pakotetaan poisto...${NC}"
+    echo -e "${PUNAINEN}❌ Hakemisto on vielä olemassa, pakotetaan poisto...${EI_VARIA}"
     
     # Viimeinen yritys - pakota kaikki kiinni
     fuser -k "$WORKTREE_KANSIO" 2>/dev/null || true
@@ -132,8 +132,8 @@ if [ -d "$WORKTREE_KANSIO" ]; then
     
     # Poista raa'asti
     rm -rf "$WORKTREE_KANSIO" || {
-        echo -e "${RED}❌ Hakemiston poisto epäonnistui!${NC}"
-        echo -e "${YELLOW}Kokeile manuaalisesti: sudo rm -rf $WORKTREE_KANSIO${NC}"
+        echo -e "${PUNAINEN}❌ Hakemiston poisto epäonnistui!${EI_VARIA}"
+        echo -e "${KELTAINEN}Kokeile manuaalisesti: sudo rm -rf $WORKTREE_KANSIO${EI_VARIA}"
         exit 1
     }
 fi
@@ -142,8 +142,8 @@ fi
 git worktree prune
 
 echo ""
-echo -e "${GREEN}✅ Worktree poistettu onnistuneesti!${NC}"
+echo -e "${VIHREA}✅ Worktree poistettu onnistuneesti!${EI_VARIA}"
 echo ""
-echo -e "${YELLOW}Olemassa olevat worktree:t:${NC}"
+echo -e "${KELTAINEN}Olemassa olevat worktree:t:${EI_VARIA}"
 git worktree list
 echo ""
