@@ -1296,7 +1296,7 @@ group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
--- name: paivita-palauta-analytiikalle-aikaleima
+-- name: paivita-palautettu-analytiikalle-aikaleima!
 UPDATE analytiikka_toteumat
 SET palautettu_analytiikalle = CURRENT_TIMESTAMP
 WHERE ((toteuma_muutostiedot_muokattu IS NOT NULL AND toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
