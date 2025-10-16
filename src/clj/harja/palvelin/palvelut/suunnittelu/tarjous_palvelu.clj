@@ -33,8 +33,10 @@
     vahvistukset))
 
 (defn koosta-tarjouksen-tiedot [db urakka-id]
-  (let [tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))]
-    (assoc tarjous :kustannussuunnitelman-vahvistukset (kustannussuuunnitelman-vahvistukset db urakka-id))))
+  (let [tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
+        vahvistukset (kustannussuuunnitelman-vahvistukset db urakka-id)]
+    (assoc tarjous :vahvistetut-vuodet (into #{}
+                                         (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset)))))))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)

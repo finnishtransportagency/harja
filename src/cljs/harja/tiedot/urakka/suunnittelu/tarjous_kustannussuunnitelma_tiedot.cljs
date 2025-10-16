@@ -47,9 +47,13 @@
 
 (defn jyvita-eperhoitovuosi-hoitovuosille
   "Jyvittää € / hoitovuosi arvon hoitovuosikohtaisille kentille"
-  [rivi]
+  [rivi vahvistetut-vuodet]
   (let [eperhoitovuosi (:eperhoitovuosi rivi 0)
-        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))]
+        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
+        ;; Vahvistetut vuodet jätetään pois, jotta niihin ei yritetä kirjoittaa
+        vuosiavaimet (remove (fn [avain]
+                               (let [vuosi (js/parseInt (.substring (str avain) 7))]
+                                 (contains? vahvistetut-vuodet vuosi))) vuosiavaimet)]
     (if (> eperhoitovuosi 0)
       (let [jyvitetyt-arvot (zipmap vuosiavaimet (repeat eperhoitovuosi))]
         (merge rivi jyvitetyt-arvot))
@@ -277,6 +281,7 @@
       (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
       (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
       (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
+      (assoc :vahvistetut-vuodet (:vahvistetut-vuodet vastaus))
       (assoc :urakka-id (:urakka-id vastaus)))))
 
 (defn synkronoi-muutokset-atomiin!

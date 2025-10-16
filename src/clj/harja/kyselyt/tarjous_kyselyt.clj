@@ -464,8 +464,7 @@
         ;; Jos on tarve lisätä toimenkuva jonkun kustannussuunnitelman vahvistamisen jälkeen, niin sitä ei löydy välttämättä ensimmäisen tarjouksen tiedoista.
         ;; Joten käydään kaikkien tarjousvuosien toimenkuvat läpi ja yhdistetään ne uniikisti
         uniikit-toimenkuvat (distinct (reduce (fn [kaikki-toimenkuvat tarjous-rivi]
-                                                (let [toimenkuvat (map #(dissoc % :id :summa) (:toimenkuvat tarjous-rivi))
-                                                      _ (println "kaikki-toimenkuvat:" (pr-str kaikki-toimenkuvat))]
+                                                (let [toimenkuvat (map #(dissoc % :id :summa) (:toimenkuvat tarjous-rivi))]
                                                   (concat kaikki-toimenkuvat toimenkuvat)))
                                         [] tarjous-rivit))
         toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) uniikit-toimenkuvat)
