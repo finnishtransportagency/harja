@@ -492,7 +492,7 @@
 
 (deftest muokkaa-tarjouksen-tietoja-kun-kustannussuunnitelma-on-vahvistettu
   (let [db (:db jarjestelma)
-        hoitovuoden-alkuvuosi 2024 ;; Tarvitaan kustannussuunnitelmalle
+        hoitovuoden-alkuvuosi 2021 ;; Tarvitaan kustannussuunnitelmalle
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
@@ -534,7 +534,8 @@
         ;; Varmista, että kustannussuunnitelmaa ei ole vielä vahvistettu
         kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot
                                +kayttaja-jvh+
-                               {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
         _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistamaton ennen vahvistusta")
 
         ;; Muokataan tarjousta
@@ -548,8 +549,7 @@
         _ (is (= tietomalli-rahavaraukset ensivastaus-rahavaraukset))
         _ (is (= tietomalli-toimenkuvat ensivastaus-toimenkuvat))
 
-
-        ;; Vahvisteatan kustannussuuunnitelma
+        ;; Vahvisteatan 2021 vuoden kustannussuuunnitelma
         kustannussuunnitelma-vahvistettu (try
                                            (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ {:urakka-id urakka-id
@@ -560,11 +560,14 @@
                                              {:error (.getMessage e)}))
         _ (is (true? (get-in kustannussuunnitelma-vahvistettu [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistettu.")
 
-        ;; Muokataan tarjousta lisää
-        muokattu-tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] uusi-summa2)
+        ;; Muokataan tarjousta lisää - 2021 vuosi on vahvistettu joten siihen tehdyt muokkaukset eivät mene läpi
+        muokattu-tarjous (-> tarjous
+                           (assoc-in [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] 1234M) ;; Vuodelle 2021
+                           (assoc-in [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa] 1234M)) ;; Vuodelle 2022
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))]
-    (is (= (:error vastaus) "Tarjousta ei voi enää muokata, koska kustannussuunitelma on jo vahvistettu."))))
+    (is (not= (get-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa]) uusi-summa2) "2021 vuoden summaksi asetettin 1234M, mutta se ei mennyt päivityksessä läpi.")
+    (is (not= (get-in tarjous [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa]) 1234M) "2022 summaksi asetettin 1234M.")))
