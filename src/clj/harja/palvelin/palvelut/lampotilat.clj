@@ -31,34 +31,34 @@
         ;; Ei voida hakea 91-20 keskiarvoa ennen vuotta 2021, koska keskiarvoa ei ole muodostettu.
         hoidon-urakoiden-lampotilat-1991-2020 (when (> vuosi 2020)
                                                 (hae-urakoiden-lampotilat url apiavain 1991))
-        hoidon-urakka-ja-alueurakkanro-avaimet
-        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
+        hoidon-urakka-ja-urakkanro-avaimet
+        (urakat/hae-aktiivisten-hoitourakoiden-urakkanumerot db vuosi)
         tulos (into {}
-                    (comp
-                      (map (fn [urakka]
-                             (merge urakka
+                (comp
+                  (map (fn [urakka]
+                         (merge urakka
                                ;; Urakan tiedot löytyvät usein vain toisesta result setistä minkä FMI API palauttaa.
                                ;; Otetaan kaikki kentät siitä mikä löytyy,
                                ;; sekä varmistetaan vielä erikseen että uuden vertailukauden ka on avaimessa :keskilampotila-1981-2010
                                ;; ja vanhan vertailukauden avaimessa :keskilampotila-1971-2000
-                               (or
-                                 (get hoidon-urakoiden-lampotilat-1991-2020
-                                   (:alueurakkanro urakka))
-                                 (get hoidon-urakoiden-lampotilat-1981-2010
-                                   (:alueurakkanro urakka))
-                                 (get hoidon-urakoiden-lampotilat-1971-2000
-                                   (:alueurakkanro urakka)))
-                               {:keskilampotila-1981-2010 (:pitkakeskilampotila
-                                                            (get hoidon-urakoiden-lampotilat-1981-2010
-                                                              (:alueurakkanro urakka)))}
-                               {:keskilampotila-1971-2000 (:pitkakeskilampotila
-                                                            (get hoidon-urakoiden-lampotilat-1971-2000
-                                                              (:alueurakkanro urakka)))}
-                               {:keskilampotila-1991-2020 (:pitkakeskilampotila
-                                                            (get hoidon-urakoiden-lampotilat-1991-2020
-                                                              (:alueurakkanro urakka)))})))
-                      (map (juxt :id identity)))
-                    hoidon-urakka-ja-alueurakkanro-avaimet)]
+                           (or
+                             (get hoidon-urakoiden-lampotilat-1991-2020
+                               (:urakkanro urakka))
+                             (get hoidon-urakoiden-lampotilat-1981-2010
+                               (:urakkanro urakka))
+                             (get hoidon-urakoiden-lampotilat-1971-2000
+                               (:urakkanro urakka)))
+                           {:keskilampotila-1981-2010 (:pitkakeskilampotila
+                                                       (get hoidon-urakoiden-lampotilat-1981-2010
+                                                         (:urakkanro urakka)))}
+                           {:keskilampotila-1971-2000 (:pitkakeskilampotila
+                                                       (get hoidon-urakoiden-lampotilat-1971-2000
+                                                         (:urakkanro urakka)))}
+                           {:keskilampotila-1991-2020 (:pitkakeskilampotila
+                                                       (get hoidon-urakoiden-lampotilat-1991-2020
+                                                         (:urakkanro urakka)))})))
+                  (map (juxt :id identity)))
+                hoidon-urakka-ja-urakkanro-avaimet)]
     (log/debug "VASTAUS: " (pr-str tulos))
     tulos))
 

@@ -44,7 +44,7 @@
                                       (map :hoitokauden_alkuvuosi (:tehtavat_ja_maarat rivi))
                                       (map :hoitokauden_alkuvuosi (:kustannusvaikutukset rivi)))))
                           (remove nil?)
-                         (apply max)))]
+                          (apply max)))]
     (< alkuvuosi (or max-alkuvuosi 0))))
 
 (defn muokkaa-toimenpiteen-rivit-pysyva-muutos
@@ -201,7 +201,7 @@
         {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
          :onnistui-parametrit [valittu-hoitokausi]
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
-    app)
+    (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
@@ -210,6 +210,7 @@
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
     (let [mahdolliset-hoitovuodet (:urakan-hoitokaudet app)]
       (-> app
+        (dissoc :muutoksen-tiedot-haku-kaynnissa?)
         (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
         (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
         (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
@@ -222,7 +223,7 @@
   HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Pysyvän muutoksen taustatietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (dissoc app :muutoksen-tiedot-haku-kaynnissa?))
 
   PaivitaToimenpiteenTehtavamaarat
   (process-event [{toimenpideinstanssi :toimenpideinstanssi
@@ -348,28 +349,28 @@
        :paasta-virhe-lapi? true})
     app)
 
-    PeruutaTavoiteJaKattohintaOnnistui
-    (process-event [{hk-alkuvuosi :hk-alkuvuosi vastaus :vastaus } app]
-      (assert (int? hk-alkuvuosi))
+  PeruutaTavoiteJaKattohintaOnnistui
+  (process-event [{hk-alkuvuosi :hk-alkuvuosi vastaus :vastaus} app]
+    (assert (int? hk-alkuvuosi))
 
-      (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
-        (viesti/nayta-toast!
-          "Tavoite- ja kattohinnan peruminen epäonnistui!"
-          :varoitus
-          viesti/viestin-nayttoaika-keskipitka)
-        (viesti/nayta-toast! "Tavoite- ja kattohinnan vahvistus peruttu."))
-
-      ;; Päivitä app-tilaan tieto, että hoitovuoden vahvistukset on purettu
-      (-> app
-        (assoc-in [:budjettitavoitteet :tavoitehinta-indeksikorjattu-per-hoitovuosi hk-alkuvuosi] false)))
-
-    PeruutaTavoiteJaKattohintaEpaonnistui
-    (process-event [_ app]
+    (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
       (viesti/nayta-toast!
-        "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
+        "Tavoite- ja kattohinnan peruminen epäonnistui!"
         :varoitus
         viesti/viestin-nayttoaika-keskipitka)
-      app))
+      (viesti/nayta-toast! "Tavoite- ja kattohinnan vahvistus peruttu."))
+
+    ;; Päivitä app-tilaan tieto, että hoitovuoden vahvistukset on purettu
+    (-> app
+      (assoc-in [:budjettitavoitteet :tavoitehinta-indeksikorjattu-per-hoitovuosi hk-alkuvuosi] false)))
+
+  PeruutaTavoiteJaKattohintaEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast!
+      "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
+      :varoitus
+      viesti/viestin-nayttoaika-keskipitka)
+    app))
 
 ;; -- Pysyvät muutokset -- LOPPUU
 
