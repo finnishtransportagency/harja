@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/hallintayksikot.sql"
   {:positional? true})
+
+(declare hae-organisaatio)

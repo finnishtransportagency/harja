@@ -65,7 +65,8 @@
                       ::paikkaus/tyomenetelma
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
-                      ::paikkaus/ilmoitettu-virhe)
+                      ::paikkaus/ilmoitettu-virhe
+                      ::paikkaus/pkluokka)
         tyomenetelman-lyhenne (into {}
                                     (map (fn [{:keys [id lyhenne]}]
                                            {id lyhenne})

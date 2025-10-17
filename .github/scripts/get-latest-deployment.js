@@ -10,7 +10,7 @@ module.exports = async ({ github, context, core }) => {
 
     // Tarkasta pakolliset ympäristömuuttujat
     if (!DEPLOYMENT_REF) {
-        core.DEPLOYMENT_REF('ENV DEPLOYMENT_REF is required');
+        core.setFailed('ENV DEPLOYMENT_REF is required');
 
         return;
     }

@@ -6,9 +6,21 @@
 
 ;; Tämä on käytössä, vaikka kondo ei sitä huomaakaan. Sitä käytetään jeesql:ssä.
 (defn muunna-lupaus [lupaus]
-  (update lupaus :kirjaus-kkt konv/pgarray->vector))
+  (-> lupaus
+    (update :kirjaus-kkt konv/pgarray->vector)
+    (update :paatos-kk konv/pgarray->vector)))
 
 (defqueries "harja/kyselyt/lupaus_kyselyt.sql")
 
-(declare hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
-  hae-kaynnissa-olevat-lupaus-urakat)
+(declare
+  tallenna-lopputilanne! hae-urakan-lupaukset
+  hae-lupauksen-kaikki-kustannusennusteet paivita-kustannusennuste-lopulliset-pisteet!
+  hae-lupaus hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
+  hae-kaynnissa-olevat-lupaus-urakat hae-lupauksen-urakkatieto paivita-urakan-luvatut-pisteet<!
+  lisaa-urakan-luvatut-pisteet<! paivita-lupaus-vastaus! hae-lupaus-vastaus lisaa-lupaus-vastaus<!
+  hae-lupaus-vaihtoehto
+  kommentit lisaa-lupaus-kommentti<! poista-kayttajan-oma-kommentti!
+  paivita-kuukausittaiset-pisteet<! tallenna-kuukausittaiset-pisteet<! poista-kuukausittaiset-pisteet<!
+  hae-kuukausivastaus hae-lupauksen-hoitovuoden-kirjauskuukaudet
+  hae-kustannusennuste-id paivita-kustannusennuste<! lisaa-kustannusennuste<! hae-kustannusennuste
+  hae-kustannusennuste-maarapaivat)

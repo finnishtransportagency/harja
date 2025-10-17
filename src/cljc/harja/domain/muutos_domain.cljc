@@ -12,15 +12,21 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistettu?-sarake])
 
+(def +muutostyo-valinnat+ {:erillisrahoitus "Erillisrahoituksella tehtävä muutostyö"
+                           :poikkeama "Poikkeaminen tehtävä- ja määräluettelon määrästä"})
+
+(def +muutos-kulu-tyypit+
+  {:jjh-muutos "Muutos (Johto- ja hallintokorvaus)"
+   :erillisrahoitettu-muutos "Muutostyö (erillisrahoitettu)"})
 
 (def +muutostyypit-lomakkeella+
   "MHU muutosten mahdolliset tyypit. Näiden tulee matchata tietokannassa olevaan custom typeen MHU_MUUTOSTYYPPI"
-  ["erillisrahoitettu"
+  ["pysyva"
    "johto-ja-hallintokorvaus"
-   "maarapoikkeama"
-   "pysyva"
-   "toteutuneet-maarat"])
+   "muutostyo"])
 
+
+;; TODO: Tarkista lomakkeen valinna ja niiden nimitykset
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
    [tyyppi urakan-sopimustyyppi]
@@ -31,7 +37,8 @@
                                  "Johto- ja hallintokorvauksen muutos")
     "erillisrahoitettu" "Erillisrahoitettu"
     "toteutuneet-maarat" "Toteutuneet määrät"
-    "maarapoikkeama" "Määräpoikkeama"} tyyppi))
+    "maarapoikkeama" "Määräpoikkeama"
+    "muutostyo" "Muutostyö"} tyyppi))
 
 (defn jjh-korvaus-muutos-vai-vahennys?
   "Johto- ja hallintokorvauksen muutos on :muutos jos urakka alkanut 1.10.2024 tai aiemmin, muutoin vähennys"
@@ -39,3 +46,8 @@
   (if (pvm/ennen? urakan-alkupvm (pvm/->pvm "5.10.2024"))
     :muutos
     :vahennys))
+
+(defn muutos-voimassa-kesken-hoitokauden?
+  "Muutoksen voimassaolo alkaa kesken hoitovuoden?"
+  [voimassa-alkaen hoitovuosi]
+  (pvm/valissa? voimassa-alkaen (first hoitovuosi) (second hoitovuosi)))
