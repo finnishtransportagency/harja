@@ -115,7 +115,7 @@
                                 :nimi (:materiaali tot-mat)}))
                            [] toteuma-materiaalit)
         ;; Me tiedetään, että kutsussa palautuu Hiekoitushiekkaa, niin varmistetaan, että sen id on oikein
-        odotetut-materiaalitiedot {:id 5, :nimi "Hiekoitushiekka"}]
+        odotetut-materiaalitiedot {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta"}]
     (is (= 200 (:status toteumavastaus)))
     (is (= 200 (:status materiaalivastaus)))
     (is (= odotetut-materiaalitiedot materiaalitiedot))))
@@ -229,8 +229,10 @@
         tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" suolaustehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) tehtava-id talvisuolaraja))
-        ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
-        _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" urakka-id))
+
+        ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
+        ;; Mutta, tämä on nykyisessä testidatassa tehty jo. jätän tämän kommentin, voi olla arvokas 
+        ;; _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" urakka-id))
 
 
         ;; Hae suunnitellut materiaalit
@@ -244,8 +246,8 @@
     (is (not (nil? encoodattu-body)))
     ;(is (= materiaali_id (:materiaali_id ensimmainen-hoitovuosi)))
     (is (nil? (:materiaali (first ensimmainen-hoitovuosi))))
+    (is (= "Hiekoitushiekka, liukkaudentorjunta" (:materiaali (second ensimmainen-hoitovuosi))))
     (is (= "Talvisuola" (:materiaaliluokka (first ensimmainen-hoitovuosi))))
-    (is (= "Hiekoitushiekka" (:materiaali (second ensimmainen-hoitovuosi))))
     (is (= "Kelirikkomurske" (:materiaali (nth ensimmainen-hoitovuosi 2))))
     (is (= "hiekoitushiekka" (:materiaali_tyyppi (second ensimmainen-hoitovuosi))))
     (is (= "murske" (:materiaali_tyyppi (nth ensimmainen-hoitovuosi 2))))
@@ -366,8 +368,9 @@
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) ajkoratatehtava-id ajoratamaara))
 
-        ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
-        _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" urakka-id))
+        ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
+        ;; Mutta, tämä on nykyisessä testidatassa tehty jo. jätän tämän kommentin, voi olla arvokas 
+        ;; _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" urakka-id))
 
         ;; Haetaan apista tulokset
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s" urakka-id)] kayttaja-analytiikka portti)
@@ -423,8 +426,9 @@
                (pvm/vuosi oulu-alkupvm)
                pysakkitehtava-id pysakkimaara))
 
-        ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
-        _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" ii-urakka-id))
+        ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
+        ;; Mutta, tämä on nykyisessä testidatassa tehty jo. jätän tämän kommentin, voi olla arvokas 
+        ;;_ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" ii-urakka-id))
 
         ;; Haetaan apista tulokset
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" haku-alkaa haku-paattyy)] kayttaja-analytiikka portti)

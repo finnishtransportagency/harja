@@ -11,12 +11,9 @@
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
-            [harja.kyselyt.materiaalit :as materiaalit]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as tc]
-            [clojure.string :as str]
             [harja.id :as id]))
 
 (defn hae-materiaalikoodit [db]
@@ -74,15 +71,14 @@
 (defn poista-urakan-materiaalit
   [hoitokaudet hoitokausi tulevat-hoitokaudet-mukana? urakka-id sopimus-id user c]
   (if tulevat-hoitokaudet-mukana?
-    (do
-      (doseq [i hoitokaudet]
-        (if (or
+    (doseq [i hoitokaudet]
+      (when (or
               (t/equal? (c/from-date (first i)) (c/from-date (first hoitokausi)))
               (t/after? (c/from-date (first i)) (c/from-date (first hoitokausi))))
-          (do (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
-              (q/poista-urakan-materiaalinkaytto! c (:id user)
-                                                  urakka-id sopimus-id
-                                                  (konv/sql-date (first i)) (konv/sql-date (second i)))))))
+        (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str i))
+        (q/poista-urakan-materiaalinkaytto! c (:id user)
+          urakka-id sopimus-id
+          (konv/sql-date (first i)) (konv/sql-date (second i)))))
     (do
       (log/debug "Poistetaan materiaalit hoitokaudelta: " (pr-str hoitokausi))
       (q/poista-urakan-materiaalinkaytto! c (:id user)
@@ -138,7 +134,7 @@
               ;; Materiaali on jo kannassa, päivitä, jos muuttunut
               (do (log/debug "TÄMÄ MATSKU ON KANNASSA: " avain)
                   (if (== (:maara materiaali) (:maara materiaali-kannassa))
-                    (do (log/debug "Ei muutosta määrään, ei päivitetä."))
+                    (log/debug "Ei muutosta määrään, ei päivitetä.")
                     (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
                         (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa)))))
 
@@ -169,16 +165,15 @@
         (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
         ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
         (if (id/id-olemassa? tm-id)
-          (do
-            (if (:poistettu tm)
-              (do
-                (log/debug "Poistetaan materiaalitoteuma " tm-id)
-                (q/poista-toteuma-materiaali! c (:id user) tm-id))
-              (do
-                (log/debug "Päivitä materiaalitoteuma "
-                           tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
-                (q/paivita-toteuma-materiaali!
-                  c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id))))
+          (if (:poistettu tm)
+            (do
+              (log/debug "Poistetaan materiaalitoteuma " tm-id)
+              (q/poista-toteuma-materiaali! c (:id user) tm-id))
+            (do
+              (log/debug "Päivitä materiaalitoteuma "
+                tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
+              (q/paivita-toteuma-materiaali!
+                c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id)))
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
             (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
@@ -224,8 +219,8 @@
   (let [toteumat (into []
                        (comp
                          (map konv/alaviiva->rakenne))
-                       (q/hae-suolatoteumien-tarkat-tiedot-materiaalille db {:toteumaidt toteumaidt
-                                                                             :materiaali_id materiaali-id}))]
+                       (q/hae-toteumien-tarkat-tiedot-materiaalille db {:toteumaidt toteumaidt
+                                                                        :materiaali_id materiaali-id}))]
     toteumat))
 
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
@@ -345,19 +340,19 @@
                 ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
                 (when-not (= (:pvm toteuma) toteuman-alkuperainen-pvm)
                   (doseq [sopimus-id urakan-sopimus-idt]
-                    (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                    (q/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
                                                                            :alkupvm toteuman-alkuperainen-pvm
                                                                            :urakkaid urakka-id}))
-                  (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                  (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                      :alkupvm toteuman-alkuperainen-pvm
                                                                                      :loppupvm toteuman-alkuperainen-pvm}))))))
 
         ;; Tässä cachejen päivitys uuden pvm:n osalta
             (doseq [sopimus-id urakan-sopimus-idt]
-              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+              (q/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
                                                                      :alkupvm (:pvm toteuma)
                                                                      :urakkaid urakka-id}))
-            (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+            (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                :alkupvm (:pvm toteuma)
                                                                                :loppupvm (:pvm toteuma)})))
                             true))

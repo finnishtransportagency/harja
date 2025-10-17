@@ -29,6 +29,7 @@
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
 (def +tloik-toimenpideviestijono+ "tloik-toimenpideviestijono")
+
 (defn testi-ilmoitus-sanoma
   ([] (testi-ilmoitus-sanoma ilmoitettu valitetty))
   ([ilmoitettu valitetty]
@@ -55,6 +56,135 @@
   <tienumero>79</tienumero>
   <x>443199</x>
   <y>7377324</y>
+  </sijainti>
+  <ilmoittaja>
+  <etunimi>Matti</etunimi>
+  <sukunimi>Meikäläinen</sukunimi>
+  <matkapuhelin>08023394852</matkapuhelin>
+  <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+  <tyyppi>tienkayttaja</tyyppi>
+  </ilmoittaja>
+  <lahettaja>
+  <etunimi>Pekka</etunimi>
+  <sukunimi>Päivystäjä</sukunimi>
+  <matkapuhelin>929304449282</matkapuhelin>
+  <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+  </lahettaja>
+  <seliteet>
+  <selite>tyomaajarjestelyihinLiittyvaIlmoitus</selite>
+  <selite>kuoppiaTiessa</selite>
+  <selite>kelikysely</selite>
+  <selite>soratienKuntoHuono</selite>
+  <selite>saveaTiella</selite>
+  <selite>liikennettaVaarantavaEsteTiella</selite>
+  <selite>irtokiviaTiella</selite>
+  <selite>kevyenLiikenteenVaylaanLiittyvaIlmoitus</selite>
+  <selite>raivausJaKorjaustoita</selite>
+  <selite>auraustarve</selite>
+  <selite>yliauraus</selite>
+  <selite>kaivonKansiRikki</selite>
+  <selite>kevyenLiikenteenVaylatOvatLiukkaita</selite>
+  <selite>routaheitto</selite>
+  <selite>avattavatPuomit</selite>
+  <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+  <selite>muuKyselyTaiNeuvonta</selite>
+  <selite>soratienTasaustarve</selite>
+  <selite>tieTaiTienReunaOnPainunut</selite>
+  <selite>siltaanLiittyvaIlmoitus</selite>
+  <selite>polynsidontatarve</selite>
+  <selite>liikennevalotEivatToimi</selite>
+  <selite>kunnossapitoJaHoitotyo</selite>
+  <selite>vettaTiella</selite>
+  <selite>aurausvallitNakemaesteena</selite>
+  <selite>ennakoivaVaroitus</selite>
+  <selite>levahdysalueeseenLiittyvaIlmoitus</selite>
+  <selite>sohjonPoisto</selite>
+  <selite>liikennekeskusKuitannutLoppuneeksi</selite>
+  <selite>muuToimenpidetarve</selite>
+  <selite>hiekoitustarve</selite>
+  <selite>tietOvatJaatymassa</selite>
+  <selite>jaatavaaSadetta</selite>
+  <selite>tienvarsilaitteisiinLiittyvaIlmoitus</selite>
+  <selite>oljyaTiella</selite>
+  <selite>sahkojohtoOnPudonnutTielle</selite>
+  <selite>tieOnSortunut</selite>
+  <selite>tievalaistusVioittunut</selite>
+  <selite>testilahetys</selite>
+  <selite>tievalaistuksenLamppujaPimeana</selite>
+  <selite>virkaApupyynto</selite>
+  <selite>tiemerkintoihinLiittyvaIlmoitus</selite>
+  <selite>tulvavesiOnNoussutTielle</selite>
+  <selite>niittotarve</selite>
+  <selite>kuormaOnLevinnytTielle</selite>
+  <selite>tieOnLiukas</selite>
+  <selite>tiellaOnEste</selite>
+  <selite>harjaustarve</selite>
+  <selite>hoylaystarve</selite>
+  <selite>tietyokysely</selite>
+  <selite>paallystevaurio</selite>
+  <selite>rikkoutunutAjoneuvoTiella</selite>
+  <selite>mustaaJaataTiella</selite>
+  <selite>kevyenLiikenteenVaylillaOnLunta</selite>
+  <selite>hirviaitaVaurioitunut</selite>
+  <selite>korvauskysely</selite>
+  <selite>puitaOnKaatunutTielle</selite>
+  <selite>rumpuunLiittyvaIlmoitus</selite>
+  <selite>lasiaTiella</selite>
+  <selite>liukkaudentorjuntatarve</selite>
+  <selite>alikulkukaytavassaVetta</selite>
+  <selite>kevyenliikenteenAlikulkukaytavassaVetta</selite>
+  <selite>tievalaistuksenLamppuPimeana</selite>
+  <selite>kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita</selite>
+  <selite>kuoppa</selite>
+  <selite>toimenpidekysely</selite>
+  <selite>pysakkiinLiittyvaIlmoitus</selite>
+  <selite>nakemaalueenRaivaustarve</selite>
+  <selite>vesakonraivaustarve</selite>
+  <selite>muuttuvatOpasteetEivatToimi</selite>
+  <selite>tievalaistus</selite>
+  <selite>vesiSyovyttanytTienReunaa</selite>
+  <selite>raskasAjoneuvoJumissa</selite>
+  <selite>myrskyvaurioita</selite>
+  <selite>kaidevaurio</selite>
+  <selite>liikennemerkkeihinLiittyvaIlmoitus</selite>
+  <selite>siirrettavaAjoneuvo</selite>
+  <selite>tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta</selite>
+  <selite>tapahtumaOhi</selite>
+  <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
+  <selite>tietOvatjaisiaJamarkia</selite>
+  </seliteet>
+  <luokittelu>
+  <aihe>900</aihe>
+  <tarkenne>9001</tarkenne>
+  </luokittelu>
+  </harja:ilmoitus>")))
+
+(defn testi-ilmoitus-sanoma-oululle
+  ([] (testi-ilmoitus-sanoma-oululle ilmoitettu valitetty))
+  ([ilmoitettu valitetty]
+   ; 2015-09-29T14:49:45
+   (str "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+  <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+  <lahetysaika>" valitetty "</lahetysaika>
+  <ilmoitusId>99887766</ilmoitusId>
+  <emonIlmoitusId>987241</emonIlmoitusId>
+  <tunniste>UV-1509-1a</tunniste>
+  <versionumero>1</versionumero>
+  <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+  <ilmoitettu>" ilmoitettu "</ilmoitettu>
+  <urakkatyyppi>hoito</urakkatyyppi>
+  <otsikko>Korkeat vallit</otsikko>
+  <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
+  <kuvat>
+    <url>https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Minniecat.png/220px-Minniecat.png</url>
+    <url>https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Six_weeks_old_cat_%28aka%29.jpg/390px-Six_weeks_old_cat_%28aka%29.jpg</url>
+  </kuvat>
+  <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
+  <yhteydenottopyynto>false</yhteydenottopyynto>
+  <sijainti>
+  <tienumero>70020</tienumero>
+  <x>437112.75111141487</x>
+  <y>7217443.198686752</y>
   </sijainti>
   <ilmoittaja>
   <etunimi>Matti</etunimi>
@@ -406,6 +536,15 @@
                      (konv/array->set :kuvat)
                      (set/rename-keys {:ilmoitusid :ilmoitus-id}))
                   (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
+    vastaus))
+
+(defn hae-testi-ilmoitukset-ilmoitusidlla [ilmoitusid]
+  (let [vastaus (mapv
+                  #(-> %
+                     (konv/array->set :selitteet)
+                     (konv/array->set :kuvat)
+                     (set/rename-keys {:ilmoitusid :ilmoitus-id}))
+                  (q-map (format "select * from ilmoitus where ilmoitusid = %s;" ilmoitusid)))]
     vastaus))
 
 (defn hae-ilmoitus-ilmoitusidlla-tietokannasta [ilmoitus-id]

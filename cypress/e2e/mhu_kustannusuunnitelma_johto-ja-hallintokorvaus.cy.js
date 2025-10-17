@@ -6,7 +6,7 @@ import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 const indeksit = [];
 
 function alustaIvalonUrakka() {
-    ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
+    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
 }
 
 // --------------------------------------
@@ -20,7 +20,13 @@ describe('Johto- ja hallintokorvaus osio', function () {
 
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('Ivalon MHU testiurakka (uusi)', 'Lappi', indeksit);
+        avaaKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
+
+        // Valitse ensimmäinen hoitovuosi
+        cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('1. hoitovuosi').click();
+        });
     })
 
     describe('Testaa "tuntimäärät ja -palkat" taulukkoa', function () {
@@ -74,10 +80,9 @@ describe('Johto- ja hallintokorvaus osio', function () {
             cy.wait('@tallenna-johto-ja-hallintokorvaukset')
 
             // Disabloi "Suunnittle maksuerät kuukausittain" (seuraavia testejä varten)
+            ks.toggleLaajennaRivi('toimenkuvat-taulukko', 'Vastuunalainen työnjohtaja', true);
             cy.get('#toimenkuvat-taulukko table.grid tbody tr').eq(2).find('td').find('input')
-                // Nyt kun kaikki input laatikot on auki, niin otetaan niistä vain ensimmäinen, eli checkbox
-                .eq(0)
-                .should('be.checked')
+                .eq(0).should('be.checked')
                 .uncheck();
 
             // Sulje "Sopimusvastaava" alitaulukko (seuraavia testejä varten)

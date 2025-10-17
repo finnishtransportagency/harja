@@ -442,3 +442,49 @@ input.kuukausipisteet {
 .sivupalkki-footer-otsikko {
     font-size: 0.74375rem;
 }
+
+/* Lupauskuvaus oikealla oleva overlay*/
+.lupaus-kuvaus-taulukko {
+  font-size: 0.85rem; /*Sivupaneeli on niin kapea, että joudutaan pienentämään fonttia.*/
+  thead {
+    border-top: 1px solid @white-darker;
+    border-bottom: 1px solid @white-darker;
+    border-left: 1px solid @white-darker;
+    border-right: 1px solid @white-darker;
+  }
+  thead td {
+    padding: 8px;
+    vertical-align: top;
+    background-color: @white-dark;
+  }
+  tbody td {
+    border: 1px solid @white-dark;
+    padding: 8px;
+    vertical-align: top;
+  }
+}
+
+/* Kustannusennuste-taulukon tyylit */
+
+.kustannusennuste-taulukko thead th {
+  background-color: @harmaa13;
+  padding: 8px 12px;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+.kustannusennuste-taulukko tbody td {
+  background-color: @white-default;
+}
+
+.kustannusennuste-taulukko thead tr.aliotsikko th:nth-child(2n) {
+  border-right: 1px solid @harmaa9; /* jakaja tuplakolumnien välillä */
+}
+
+.kustannusennuste-taulukko thead tr.paivamaara th {
+  border-right: 1px solid @harmaa9;
+}
+
+.kustannusennuste-taulukko tbody td:nth-child(2n) {
+  border-right: 1px solid @harmaa9; /* jakaja tuplakolumnien välillä */
+}

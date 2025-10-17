@@ -104,7 +104,10 @@
                         :aiheutuneet_seuraukset seuraukset
                         :ilmoittaja_etunimi (:etunimi ilmoittaja)
                         :ilmoittaja_sukunimi (:sukunimi ilmoittaja)
-                        :vaylamuoto vaylamuoto
+                        ;; Turvallisuuspoikkeamat tulevat apin kautta vain sellaisista urakoista, joiden väylämuoto on tie, joten oletusarvo on ok.
+                        ;; Kanavaurakat tallentavat aina turvallisuuspoikkeaman Harjan käyttöliittymän kautta.
+                        ;; Jos tilanne muuttuu, tieto täytyy tehdä rajapinnassa pakolliseksi tai sen voi selvittää urakka-taulusta ennen tallennusta.
+                        :vaylamuoto (or vaylamuoto "tie")
                         :turvallisuuskoordinaattori_etunimi (:etunimi turvallisuuskoordinaattori)
                         :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
                         :laatija (:id kirjaaja)
@@ -174,7 +177,10 @@
        :aiheutuneet_seuraukset seuraukset
        :ilmoittaja_etunimi (:etunimi ilmoittaja)
        :ilmoittaja_sukunimi (:sukunimi ilmoittaja)
-       :vaylamuoto vaylamuoto
+       ;; Turvallisuuspoikkeamat tulevat apin kautta vain sellaisista urakoista, joiden väylämuoto on tie, joten oletusarvo on ok.
+       ;; Kanavaurakat tallentavat aina turvallisuuspoikkeaman Harjan käyttöliittymän kautta.
+       ;; Jos tilanne muuttuu, tieto täytyy tehdä rajapinnassa pakolliseksi tai sen voi selvittää urakka-taulusta ennen tallennusta.
+       :vaylamuoto (or vaylamuoto "tie")
        :turvallisuuskoordinaattori_etunimi (:etunimi turvallisuuskoordinaattori)
        :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
        :laatija (:id kirjaaja)
