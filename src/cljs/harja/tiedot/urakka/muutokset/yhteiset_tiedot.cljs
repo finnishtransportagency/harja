@@ -13,11 +13,12 @@
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit])) 
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 
 (defonce ^{:private true}
   nollatut-valinnat {:haku-kaynnissa? false
+                     :muutoksen-tiedot-haku-kaynnissa? false
                      :tallennus-kesken? false
                      :voi-tallentaa? false
                      :lomakkeella-virheita? false
@@ -194,20 +195,22 @@
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
   HaeMuutoksenTiedot
   (process-event [{:keys [muutos]} app]
-    (when (:id muutos)
-      (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-        (tuck-apurit/post! :hae-muutoksen-tiedot
-          {:urakka-id @nav/valittu-urakka-id
-           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-           :muutos {:id (:id muutos)
-                    :versio (:versio muutos)
-                    :tyyppi (:tyyppi muutos)
-                    :liite-idt (into #{}
-                                 (map :id (:liitteet muutos)))}}
-          {:onnistui ->HaeMuutoksenTiedotOnnistui
-           :onnistui-parametrit [muutos valittu-hoitokausi]
-           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})))
-    app)
+    (if (:id muutos)
+      (do
+        (let [valittu-hoitokausi (:valittu-hoitokausi app)]
+          (tuck-apurit/post! :hae-muutoksen-tiedot
+            {:urakka-id @nav/valittu-urakka-id
+             :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+             :muutos {:id (:id muutos)
+                      :versio (:versio muutos)
+                      :tyyppi (:tyyppi muutos)
+                      :liite-idt (into #{}
+                                   (map :id (:liitteet muutos)))}}
+            {:onnistui ->HaeMuutoksenTiedotOnnistui
+             :onnistui-parametrit [muutos valittu-hoitokausi]
+             :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+        (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
+      app))
 
   HaeMuutoksenTiedotOnnistui
   (process-event [{vastaus :vastaus
@@ -229,10 +232,11 @@
           app (-> app
                 ;; Disabloi tallennus, enabloituu itsestään jos lomaketta muutetaan
                 ;; Näytä virheet vasta, kun tallenna nappia painetaan (saavutettavuus)
-                (assoc 
-                  :lomake-virheet nil 
-                  :voi-tallentaa? false 
+                (assoc
+                  :lomake-virheet nil
+                  :voi-tallentaa? false
                   :tallenna-painettu? false)
+                (dissoc :muutoksen-tiedot-haku-kaynnissa?)
                 (assoc-in [:muokattava-muutos :liitteet] uudet-liitteet)
                 ;; huom: toimenpiteiden tietoja tarvitaan lisäksi  atomissa joka menee muokkausgridille
                 ;; on vielä tutkittava, minne kannattaa säilöä muiden kuin lomakkeella valitun hoitokauden tiedot,
@@ -250,7 +254,7 @@
   HaeMuutoksenTiedotEpaonnistui
   (process-event [_ app]
     (viesti/nayta-toast! "Muutoksen tietojen hakeminen epäonnistui!" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app)
+    (dissoc app :muutoksen-tiedot-haku-kaynnissa?))
 
 
   MuokkaaMuutosta
@@ -258,15 +262,17 @@
     (let [app (if (some? rivi)
                 (assoc app :viimeksi-valittu rivi :muokattava-muutos rivi)
                 (assoc app :muokattava-muutos rivi))]
-      (assoc app 
-        :lomake-virheet nil 
+      (assoc app
+        :lomake-virheet nil
         :voi-tallentaa? true
         :tallenna-painettu? false)))
 
 
   MuokkaaJohtoJaHallintoMuutosta
   (process-event [{:keys [rivi]} app]
-    (assoc-in app [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi))
+    (-> app
+      (assoc :voi-tallentaa? true)
+      (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
@@ -321,9 +327,10 @@
 
     (-> app
       ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
-      (assoc :muokattava-muutos nil
-             :tallennus-kesken? false
-             :viimeksi-valittu nil)
+      (assoc
+        :viimeksi-valittu nil
+        :muokattava-muutos nil
+        :tallennus-kesken? false)
       (vastaus-haku-onnistui vastaus)))
 
   TallennaMuutosEpaonnistui
