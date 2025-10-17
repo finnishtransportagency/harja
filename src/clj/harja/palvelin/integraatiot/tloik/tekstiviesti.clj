@@ -108,18 +108,20 @@
 
       (when (and (= toimenpide "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
         (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
+          +onnistunut-viesti+
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
       (if (= toimenpide "toimenpiteet-kaynnissa")
         (when-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitusid)))]
-          (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [id]))
+          (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [id])
+          +onnistunut-viesti+)
         (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+          +onnistunut-viesti+
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
 
       (when aiheutti-toimenpiteita
-        (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true ilmoitus))
-
-      +onnistunut-viesti+)
+        (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true ilmoitus)
+        +onnistunut-viesti+))
 
     (catch [:type :viestinumero-tai-toimenpide-puuttuu] {}
       (log/error (format "Numerosta: %s vastaanotettua viestiä: %s ei voida käsitellä, toimenpide tai viestinumero puuttuu." puhelinnumero viesti))

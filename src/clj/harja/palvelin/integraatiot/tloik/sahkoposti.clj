@@ -288,19 +288,22 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                          kuittaustyyppi
                          paivystaja
                          "sisaan"
-                         "sahkoposti"))]
+                         "sahkoposti"))
+            kuittaa-onnistuneeksi #(assoc +onnistunut-viesti+
+                                     :otsikko (otsikko {:ilmoitus-id ilmoitus-id
+                                                        :urakka-id urakka
+                                                        :ilmoitustyyppi ilmoitustyyppi}))]
         (when (= kuittaustyyppi :lopetettu)
-          (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita ilmoitus))
+          (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita ilmoitus)
+          (kuittaa-onnistuneeksi))
         (when (and (= kuittaustyyppi :aloitettu) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
           (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
+            (kuittaa-onnistuneeksi)
             (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
         (let [ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
-          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
-        (assoc +onnistunut-viesti+
-          :otsikko (otsikko {:ilmoitus-id ilmoitus-id
-                             :urakka-id urakka
-                             :ilmoitustyyppi ilmoitustyyppi}))))))
+          (kuittaa-onnistuneeksi)
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))))))
 
 (defn- lokita-sahkopostikuittauksen-virhe [kuittaus {:keys [sisalto] :as viesti}]
   "Annetaan errori kolmessa tilanteessa:
