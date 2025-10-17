@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "ANALYTIIKKA_TOTEUMAT.toteumamateriaali",
+  "description": "Skeema tietorakenteen dokumentointia varten. Tietorakenne on käytössä ANALYTIIKKA_TOTEUMAT-taulun sarakkeessa toteumamateriaali.",
+  "default": {},
+  "examples": [
+    {
+      "f1": 5,
+      "f2": "Hiekoitushiekka, liukkaudentorjunta",
+      "f3": 25.3,
+      "f4": "t"
+    }
+  ],
+  "required": [
+    "f1",
+    "f2",
+    "f3",
+    "f4"
+  ],
+  "properties": {
+    "f1": {
+      "$id": "#/properties/f1",
+      "type": "integer",
+      "title": "materiaali-id",
+      "description": "Raportoidun materiaalin id. Viittaa MATERIAALIKOODI.id ja TOTEUMA_MATERIAALI.materiaalikoodi-sarakkeisiin.",
+      "examples": [
+        5
+      ]
+    },
+    "f2": {
+      "$id": "#/properties/f2",
+      "type": "string",
+      "title": "Materiaalin nimi",
+      "description": "Raportoidun materiaalin nimi. Viittaa MATERIAALIKOODI.nimi-sarakkeeseen.",
+      "examples": [
+        "Hiekoitushiekka, liukkaudentorjunta"
+      ]
+    },
+    "f3": {
+      "$id": "#/properties/f3",
+      "type": "number",
+      "title": "Raportoidun materiaalin määrä",
+      "description": "Raportoidun materiaalin nimi. Viittaa MATERIAALI_TOTEUMA.maara-sarakkeeseen.",
+      "examples": [
+        25.3
+      ]
+    },
+    "f4": {
+      "$id": "#/properties/f4",
+      "type": "string",
+      "title": "Materiaalimäärän yksikkö",
+      "description": "Raportoidun materiaalin määrän yksikkö. Viittaa MATERIAALIKOODI.yksikko-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    }
+  },
+  "additionalProperties": true
+}
+

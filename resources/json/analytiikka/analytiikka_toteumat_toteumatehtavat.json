@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "ANALYTIIKKA_TOTEUMAT.toteumatehtava",
+  "description": "Skeema tietorakenteen dokumentointia varten. Tietorakenne on käytössä ANALYTIIKKA_TOTEUMAT-taulun sarakkeessa toteumatehtava.",
+  "default": {},
+  "examples": [
+    {
+      "f1": 1447,
+      "f2": 3.001,
+      "f3": "km",
+      "f4": "Alihankkija Ky",
+      "f5": 1,
+      "f6": 987672,
+      "f7": true
+
+    }
+  ],
+  "required": [
+    "f1",
+    "f2",
+    "f3",
+    "f4",
+    "f5",
+    "f6",
+    "f7"
+  ],
+  "properties": {
+    "f1": {
+      "$id": "#/properties/f1",
+      "type": "integer",
+      "title": "tehtava-id",
+      "description": "Raportoidun tehtavan id. Viittaa TEHTAVA.id ja TOTEUMA_TEHTAVA.toimenpidekoodi-sarakkeisiin.",
+      "examples": [
+        5
+      ]
+    },
+    "f2": {
+      "$id": "#/properties/f2",
+      "type": "number",
+      "title": "Tehtävän määrä",
+      "description": "Raportoidun tehtävän (toimenpiteen) suoritettu määrä. Viittaa TOTEUMA_TEHTAVA.maara-sarakkeeseen.",
+      "examples": [
+        3.001
+      ]
+    },
+    "f3": {
+      "$id": "#/properties/f3",
+      "type": "string",
+      "title": "Tehtävämäärän yksikkö",
+      "description": "Raportoidun tehtävämäärän yksikkö. Viittaa TEHTAVA.yksikko-sarakkeeseen.",
+      "examples": [
+        "km"
+      ]
+    },
+    "f4": {
+      "$id": "#/properties/f4",
+      "type": "string",
+      "title": "Selite",
+      "description": "Raportoituun työhön liittyvä selite. Viittaa TOTEUMA_TEHTAVA.lisatieto-sarakkeeseen.",
+      "examples": [
+        "Alihankkija Ky"
+      ]
+    },
+    "f5": {
+      "$id": "#/properties/f5",
+      "type": "integer",
+      "title": "Tehtäväryhmän id",
+      "description": "Sen tehtäväryhmän id, johon raportoitu toteumatehtävä (f1) kuuluu. Viittaa TEHTAVA.tehtavaryhma ja TEHTAVARYHMA.id-sarakkeeseen.",
+      "examples": [
+        1
+      ]
+    },
+    "f6": {
+      "$id": "#/properties/f6",
+      "type": "integer",
+      "title": "Toteumatehtävän id",
+      "description": "Toteutuneen työn tehtävärivin id. Viittaa TOTEUMA_TEHTAVA.id-sarakkeeseen.",
+      "examples": [
+        987672
+      ]
+    },
+    "f7": {
+      "$id": "#/properties/f7",
+      "type": "boolean",
+      "title": "Poistettu",
+      "description": "True kun toteutunut työ on merkitty poistetuksi. Jos toteuma on merkitty poistetuksi, mutta toteumatehtävää ei, on toteumatehtäväkin tulkittava poistetuksi. Viittaa TOTEUMA_TEHTAVA.poistettu-sarakkeeseen.",
+      "examples": [
+        true
+      ]
+    }
+  },
+  "additionalProperties": true
+}
+
