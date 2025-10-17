@@ -286,6 +286,11 @@
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
+                                            
+                                            (= :erillisrahoitettu-muutos (:tyyppi kohdistus))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :valittu-muutostyo] (:kulut/valittu-muutostyo validoinnit)
+                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
 
                                             ;; Hankintakululla on pakko olla tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
                                             (= :hankintakulu (:tyyppi kohdistus))

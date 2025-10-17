@@ -1,6 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
+            [clojure.edn :as edn]
             [ajax.core :refer [POST ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -128,6 +129,29 @@
 
 (declare kasittele-istunto-vanhentunut)
 
+(defn- kasittele-throw+
+  "Jos paasta-virhe-lapi? on true, parsi myös throw+ virheet, ja reititä virhe käyttöliittmään"
+  [vastaus]
+  (if (and
+        (= (:status vastaus) 500)
+        (get-in vastaus [:parse-error :original-text]))
+    (let [parse-error (get-in vastaus [:parse-error :original-text])
+          saatu-virhe-throw+ (when (str/includes? parse-error "throw+")
+                               (when-let [viesti (-> parse-error
+                                                   (str/replace-first #"^\s*throw\+:\s*" "")
+                                                   (edn/read-string)
+                                                   :virheet first :viesti)]
+                                 {:status 500
+                                  :status-text "Internal Server Error"
+                                  :failure :error
+                                  :response {:virhe viesti}}))
+
+          kasitelty-vastaus (if saatu-virhe-throw+
+                              saatu-virhe-throw+
+                              vastaus)]
+      kasitelty-vastaus)
+    vastaus))
+
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
   (let [cb (fn [[_ vastaus]]
@@ -135,7 +159,7 @@
                (cond
                  (= (:status vastaus) 302)
                  (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
-                     (close! chan))
+                   (close! chan))
 
                  ;; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
                  ;; Käsitellään vain, jos ping-rajapinta palauttaa 403, koska muut rajapinnat
@@ -144,7 +168,7 @@
                    (= palvelu :ping)
                    (= (:status vastaus) 403))
                  (do (kasittele-istunto-vanhentunut)
-                     (close! chan))
+                   (close! chan))
 
                  ;; Yhteysvirhe, jota halutaan yrittää uudelleen jos yrityksiä on vielä jäljellä
                  (and (yhteysvirhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
@@ -156,12 +180,14 @@
                                                        (+ (or timeout 2000) 2000))))
 
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan)) ; Kutsujalle palautuu nil
+                 (do
+                   (kasittele-palvelinvirhe palvelu vastaus)
+                   (close! chan)) ; Kutsujalle palautuu nil
 
                  :default ; Pyyntö onnistui ja vastaus oli ok
-                 (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))))]
+                 (do
+                   (put! chan (if transducer (into [] transducer (kasittele-throw+ vastaus)) (kasittele-throw+ vastaus)))
+                   (close! chan)))))]
     (go
       (when uudelleenyritys-timeout
         (<! (timeout uudelleenyritys-timeout)))
