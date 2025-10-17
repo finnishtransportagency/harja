@@ -9,7 +9,7 @@
    "sanktiot", "ulkopuoliset-rahavaraukset", "lisatyo", "muukulu-tavoitehintainen", "muukulu-eitavoitehintainen"])
 
 (def yhteenvedosta-jatettavat-paaryhmat
-  (set (map #(nth raportin-paaryhmat %) [5 8 9 10 11 12 13 15])))
+  (set (map #(nth raportin-paaryhmat %) [6 9 10 11 12 13 14 16])))
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -38,7 +38,7 @@
     (group-by :tehtava_nimi (concat toteutuneet budjetoidut))))
 
 (defn- summaa-toimenpidetaso
-  "Käytetään seuraaville pääryhmille: hankintakustannukset ja rahavaraukset."
+  "Käytetään seuraaville pääryhmille: hankintakustannukset, muutokset ja rahavaraukset."
   [toimenpiteet paaryhmaotsikko]
   (sort-by :jarjestys
     (mapv
