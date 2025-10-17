@@ -24,18 +24,20 @@
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
-                     :kirjatut-muutokset nil
                      :aiempien-hoitovuosien-pysyvat-muutokset nil
-                     :tehtava-maaramuutokset nil
-                     :rahavarausten-muutokset nil
+                     ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
+                     ;; Jos haluat että koko sivu wipetään, enabloi nämä. Tällä hetkellä tälle ei ole kuitenkaan syytä.
+                     ;; :kirjatut-muutokset nil
+                     ;; :tehtava-maaramuutokset nil
+                     ;; :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
                      :suunniteltujen-maarien-muutokset nil
                      :budjettitavoitteet nil
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
-                                           :lasketut-muutokset true
-                                           :rahavarausten-muutokset true
-                                           :tavoitehinnan-muutokset true
-                                           :suunniteltujen-maarien-muutokset true}})
+                                           :lasketut-muutokset false
+                                           :rahavarausten-muutokset false
+                                           :tavoitehinnan-muutokset false
+                                           :suunniteltujen-maarien-muutokset false}})
 
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
@@ -122,7 +124,8 @@
   (tuck-apurit/post! app :hae-urakan-muutostiedot
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :hoitokaudet @u/valitun-urakan-hoitokaudet
-     :valittu-hoitokausi (:valittu-hoitokausi app)}
+     :valittu-hoitokausi (:valittu-hoitokausi app)
+     :uusi-urakka? (:uusi-urakka? app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
@@ -169,12 +172,15 @@
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [_ app]
+    (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
+          uusi-urakka? (boolean (>= urakan-alkuvuosi 2025))]
     (hae-urakan-muutostiedot
       (assoc
         (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
         :haku-kaynnissa? true
+        :uusi-urakka? uusi-urakka?
         :valittu-hoitokausi @u/valittu-hoitokausi
-        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))
+        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))))
 
 
   HaeUrakanMuutostiedotOnnistui
@@ -286,7 +292,7 @@
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet] :as app}]
+                  {:keys [lomake-virheet uusi-urakka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
@@ -315,6 +321,7 @@
             {:urakka-id (:id urakka)
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
+             :uusi-urakka? uusi-urakka?
              :muutos muutos}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
