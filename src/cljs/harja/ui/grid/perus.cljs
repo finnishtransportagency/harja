@@ -1007,6 +1007,7 @@
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
+        vetolaatikot-resetoitu-maara (atom 0)
         avattavat-rivit-auki (or (:avattavat-rivit-auki opts)
                                (atom #{}))
         validoi-ja-anna-virheet (fn [uudet-tiedot tyyppi]
@@ -1194,7 +1195,10 @@
                                  ;; vaikkei gridin data oleellisesti muuttuisikaan.
                                  (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
-                           (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
+                           ;; Vetolaatikoita ei voi resetoida joka kerta, kun grid keksii, että muokataan jotain. Resetoidaan ne ensimmäisellä kerralla vain.
+                           (when (= 0 @vetolaatikot-resetoitu-maara)
+                             (reset! vetolaatikot-auki #{})) ; sulje vetolaatikot
+                           (swap! vetolaatikot-resetoitu-maara inc)
                            (reset! avattavat-rivit-auki #{}) ; sulje avattavat rivit
                            (nollaa-muokkaustiedot!)
                            (swap! muokkauksessa-olevat-gridit conj komponentti-id)

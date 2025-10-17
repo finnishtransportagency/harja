@@ -173,7 +173,7 @@
         :tyhja "Ei tietoja."
         :luokat ["matala-panel"]
         :data-cy "tehtavat-ja-maarat-grid"
-        ;:muokkaa-aina true
+        :muokkaa-aina true
         :voi-muokata? (or tallennustila? false)
         :voi-poistaa? (constantly false)
         :peruuta false
@@ -227,12 +227,17 @@
 
 (defn tehtavat-maarat*
   [e! _]
-  (komp/luo
-    (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(e! (tiedot/->HaeTehtavatJaMaarat nil)))
-    (fn [e! app]
-      [:div
-       [nakyma e! app]])))
+  (let [{:keys [sisaan ulos]}
+        (nav/luo-muutosten-hallinta
+          :tehtavat-maarat-nakyma/muutokset
+          #(get @tila/suunnittelu-tehtavat-maarat :tallentamattomia-muutoksia?)
+          :beforeunload-viesti "Tehtävät ja määrät -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+    (komp/luo
+         (komp/lippu tiedot/nakymassa?)
+         (komp/sisaan #(e! (tiedot/->HaeTehtavatJaMaarat nil)))
+         (fn [e! app]
+           [:div
+            [nakyma e! app]]))))
 
 (defn tehtavat-maarat []
   (tuck/tuck tila/suunnittelu-tehtavat-maarat tehtavat-maarat*))

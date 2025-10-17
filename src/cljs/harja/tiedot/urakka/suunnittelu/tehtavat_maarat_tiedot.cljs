@@ -10,20 +10,17 @@
 ;; Muutosten seuranta
 (defonce tallentamattomia-muutoksia (atom false))
 
-(defn merkitse-muutos!
-  "Merkitsee että muutoksia on tehty"
-  []
-  (reset! tallentamattomia-muutoksia true))
-
-(defn nollaa-muutokset!
-  "Nollaa muutosten seurannan"
-  []
-  (reset! tallentamattomia-muutoksia false))
-
 (defn onko-muutoksia?
   "Tarkistaa onko tallentamattomia muutoksia"
   []
   @tallentamattomia-muutoksia)
+
+(defn synkronoi-muutokset-muutokset-atomiin!
+  "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
+   Kutsutaan automaattisesti kaikissa eventeissä, jotka muuttavat tilaa."
+  [app]
+  (reset! tallentamattomia-muutoksia (boolean (get app :tallentamattomia-muutoksia? false)))
+  app)
 
 (defrecord HaeTehtavatJaMaarat [parametrit])
 (defrecord HaeTehtavatJaMaaratOnnistui [vastaus parametrit])
@@ -59,7 +56,6 @@
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
-      (assoc :tehtavaryhman-tehtavat (:tehtavaryhman-tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
@@ -84,10 +80,13 @@
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
+
     (-> app
       (assoc :tallennus-kaynnissa? false)
+      (assoc :tallentamattomia-muutoksia? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
-      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (synkronoi-muutokset-muutokset-atomiin!)))
 
   TallennaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -97,11 +96,10 @@
 
   PaivitaTehtavatGrid
   (process-event [{tehtavat :tehtavat} app]
-    (merkitse-muutos!)
-    #_ (js/console.log "PaivitaTehtavatGrid :: tehtavat " (pr-str tehtavat))
     (-> app
-      #_ (assoc :viimeksi-valittu rivi :muokattava-muutos rivi)
-      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))))
+      (assoc :tallentamattomia-muutoksia? true)
+      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))
+      (synkronoi-muutokset-muutokset-atomiin!)))
 
   ToggleTallennusTila
   (process-event [_ app]

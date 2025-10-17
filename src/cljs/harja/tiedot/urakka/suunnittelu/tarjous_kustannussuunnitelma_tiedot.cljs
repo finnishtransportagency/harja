@@ -12,7 +12,6 @@
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
-(defonce grid-toimenkuvat-atom (atom [{}]))
 
 ;; Muutosten seuranta
 (defonce tallentamattomia-muutoksia (atom false))

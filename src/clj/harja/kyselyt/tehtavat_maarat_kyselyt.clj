@@ -73,7 +73,8 @@
         tehtavat (map-indexed (fn [idx rivi]
                                 (assoc rivi :jarjestys (inc idx)))
                    tehtavat)
-        viimeisin-muokkaus (first (hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja db {:urakkaid urakka-id}))]
+        viimeisin-muokkaus (first (hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja db {:urakkaid urakka-id
+                                                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     {:tehtavat tehtavat
      :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
      :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))

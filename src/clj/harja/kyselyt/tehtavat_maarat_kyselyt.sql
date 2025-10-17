@@ -46,13 +46,14 @@ ORDER BY tro.id, t.jarjestys;
 
 -- name: hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
 SELECT GREATEST(ut.muokattu, ut.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM urakka_tehtavamaara ut
          LEFT JOIN kayttaja k ON COALESCE(ut.muokkaaja, ut.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE ut.urakka = :urakkaid
+  AND (ut.luotu IS NOT NULL OR ut.muokattu IS NOT NULL)
+  AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 1;
 
