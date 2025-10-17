@@ -102,10 +102,15 @@
         ;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
         toimenkuvat (remove #(true? (:poistettu %)) toimenkuvat)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-        ;; Rajaa toimenkuvavalinnaksi vain ne, jotka eivät ole vielä käytössä
+        ;; Rajaa toimenkuvavalinnaksi vain ne, jotka eivät ole vielä käytössä - Ja siivotaan talvi- ja kesäkausi pois nimestä, jotta estetään saman toimenkuvan lisääminen uudestaan.
+        siivoa-toimenkuva-nimi (fn [toimenkuva-nimi]
+                                 (-> toimenkuva-nimi
+                                   (str/replace "(kesäkausi)" "")
+                                   (str/replace "(talvikausi)" "")
+                                   (str/trim)))
         muut-toimenkuvat (filter
-                           (fn [toimenkuva]
-                             (not (some #(= (:nimi toimenkuva) (:nimi %)) toimenkuvat)))
+                           (fn [k-toimenkuva]
+                             (not (some #(= (siivoa-toimenkuva-nimi (:nimi k-toimenkuva)) (siivoa-toimenkuva-nimi (:nimi %))) toimenkuvat)))
                            kaikki-toimenkuvat)
 
         ;; Toimenkuvan voi aina lisätä, paitsi jos kaikki toimenkuvat on jo lisätty.
