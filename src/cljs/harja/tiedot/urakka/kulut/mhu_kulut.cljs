@@ -468,7 +468,9 @@
       ;; Haetaan koko hoitovuoden kulut
       (tuck/action!
         (fn [e!]
-          (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
+          ;; TODO 
+          ;; Enabloi kun muutokset viedään tuotantoon
+          #_ (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
                                       :loppupvm loppupvm}))
           (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
                                  :alkupvm alkupvm
