@@ -8,7 +8,7 @@
    "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys",
    "sanktiot", "ulkopuoliset-rahavaraukset", "lisatyo", "muukulu-tavoitehintainen", "muukulu-eitavoitehintainen"])
 
-(def yhteenvedosta-jatettavat-paaryhmat
+(def tavoitehintaan-kuulumattomat-paaryhmat
   (set (map #(nth raportin-paaryhmat %) [6 9 10 11 12 13 14 16])))
 
 (defn- toimenpide-jarjestys [toimenpide]
@@ -302,7 +302,7 @@
         toteutunut #(get taulukon-rivit (keyword (str % "-toteutunut")))
         budjetoitu #(get taulukon-rivit (keyword (str % "-budjetoitu")))
         budjetoitu-indeksikorjattu #(get taulukon-rivit (keyword (str % "-budjetoitu-indeksikorjattu")))
-        rivit (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)
+        rivit (remove #(tavoitehintaan-kuulumattomat-paaryhmat %) raportin-paaryhmat)
 
         ;; Yhteensä tavoitehintaiset
         yhteensa {:toimenpide "Yhteensä"
