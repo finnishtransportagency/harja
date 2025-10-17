@@ -169,6 +169,8 @@
 (defrecord TallennaTarjouksenTiedot [tarjous toimenkuvat])
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
+(defrecord ToggleUusiToimenkuvaValittavana [tila])
+
 
 ;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
 (defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat kopioi-tuleville-vuosille?])
@@ -357,6 +359,10 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :tallennus-kesken? false))
+
+  ToggleUusiToimenkuvaValittavana
+  (process-event [{tila :tila} app]
+    (assoc app :uusi-toimenkuva-valittavana tila))
 
   HaeKustannussuunnitelmanTiedot
   (process-event
