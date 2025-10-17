@@ -1,7 +1,7 @@
 (ns harja.views.urakka.muutokset.lomake.lomake-johto-hallinto
   "Muutokset välilehden lomakkeet - Johto- ja hallintokorvauksen muutos"
   (:require [reagent.core :as r]
-            
+
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
@@ -16,7 +16,8 @@
 
 (defn lomake-johto-ja-hallintokorvaus
   "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
-  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet muokattava-muutos] :as app}]
+  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet muokattava-muutos
+              haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?] :as app}]
   (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
         rivit (:johto-ja-hallintokorvaukset muokattava-muutos)
         summa (reduce + 0 (map :tavoitehinnan-muutos (vec (vals rivit))))
@@ -34,49 +35,55 @@
 
      (first (yhteiset/liite-kentta e! app))
 
-     {:nimi :johto-ja-hallintokorvaus-muutokset
-      :otsikko ""
-      :palstoja 2
-      :tyyppi :komponentti
-      :uusi-rivi? true
-      :komponentti
-      (fn [_e! _]
-        [:span
-         [:hr]
-         [:h3 "Muutokset tavoitehintaan ja kuluihin"]
+     (if muutoksen-tiedot-haku-kaynnissa?
+       {:tyyppi :komponentti
+        :uusi-rivi? true
+        :komponentti (fn [_rivi]
+                       [yleiset/ajax-loader "Haetaan muutoksen tietoja..."])}
 
-         [grid/muokkaus-grid
-          {:tunniste :pvm
-           :luokat ["johto-ja-hallintokorvaus-muutokset-grid"]
-           :piilota-toiminnot? true
-           :voi-lisata? false
-           :voi-kumota? false
-           :voi-poistaa? (constantly false)
-           :muutos #(e! (t-yhteiset/->MuokkaaJohtoJaHallintoMuutosta (grid-protokollat/hae-muokkaustila %)))
-           :voi-muokata? true
-           :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
-                          {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
+       {:nimi :johto-ja-hallintokorvaus-muutokset
+        :otsikko ""
+        :palstoja 2
+        :tyyppi :komponentti
+        :uusi-rivi? true
+        :komponentti
+        (fn [_e! _]
+          [:span
+           [:hr]
+           [:h3 "Muutokset tavoitehintaan ja kuluihin"]
 
-          ;; Taulukon kentät
-          [{:otsikko "Kalenterikuukausi"
-            :nimi :pvm
-            :tyyppi :string
-            :leveys 20
-            :muokattava? (constantly false)
-            :fmt #(when % (pvm/koko-kuukausi-ja-vuosi % true))}
+           [grid/muokkaus-grid
+            {:tunniste :pvm
+             :luokat ["johto-ja-hallintokorvaus-muutokset-grid"]
+             :piilota-toiminnot? true
+             :voi-lisata? false
+             :voi-kumota? false
+             :voi-poistaa? (constantly false)
+             :muutos #(e! (t-yhteiset/->MuokkaaJohtoJaHallintoMuutosta (grid-protokollat/hae-muokkaustila %)))
+             :voi-muokata? true
+             :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
+                            {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
 
-           {:otsikko (if (= muutostapa :muutos)
-                       "Muutos € (+/-)"
-                       "Vähennys (€)")
-            :nimi :tavoitehinnan-muutos
-            :vaadi-negatiivinen? (when (= muutostapa :vahennys) true)
-            :tyyppi :numero
-            :fmt fmt/euro-opt
-            :tasaa :oikea
-            :leveys 8}]
-          rivit-atom]
+            ;; Taulukon kentät
+            [{:otsikko "Kalenterikuukausi"
+              :nimi :pvm
+              :tyyppi :string
+              :leveys 20
+              :muokattava? (constantly false)
+              :fmt #(when % (pvm/koko-kuukausi-ja-vuosi % true))}
 
-         [yleiset/info-laatikko :neutraali
-          "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."
-          nil nil
-          {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])}]))
+             {:otsikko (if (= muutostapa :muutos)
+                         "Muutos € (+/-)"
+                         "Vähennys (€)")
+              :nimi :tavoitehinnan-muutos
+              :vaadi-negatiivinen? (when (= muutostapa :vahennys) true)
+              :tyyppi :numero
+              :fmt fmt/euro-opt
+              :tasaa :oikea
+              :leveys 8}]
+            rivit-atom]
+
+           [yleiset/info-laatikko :neutraali
+            "Harja luo oikaisevat kulut automaattisesti tallentamisen jälkeen."
+            nil nil
+            {:luokka "johto-ja-hallintokorvaus-muutokset-info"}]])})]))
