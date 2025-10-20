@@ -827,7 +827,6 @@
    - disabled?: boolean - ulkoinen disabled-tila (esim. oikeudet)"
   [nykyhetki maarapaiva-pvm tiedot-syotetty-ajoissa? disabled?]
   {:pre [(some? nykyhetki)
-         (boolean? tiedot-syotetty-ajoissa?)
          (boolean? disabled?)]}
   (let [maarapaiva-mennyt-ohi? (and maarapaiva-pvm
                                     (not (pvm/sama-tai-ennen? nykyhetki maarapaiva-pvm)))
