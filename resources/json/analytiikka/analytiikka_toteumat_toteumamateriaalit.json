@@ -10,14 +10,16 @@
       "f1": 5,
       "f2": "Hiekoitushiekka, liukkaudentorjunta",
       "f3": 25.3,
-      "f4": "t"
+      "f4": "t",
+      "f5": 9824626
     }
   ],
   "required": [
     "f1",
     "f2",
     "f3",
-    "f4"
+    "f4",
+    "f5"
   ],
   "properties": {
     "f1": {
@@ -52,6 +54,24 @@
       "type": "string",
       "title": "Materiaalimäärän yksikkö",
       "description": "Raportoidun materiaalin määrän yksikkö. Viittaa MATERIAALIKOODI.yksikko-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    },
+    "f5": {
+      "$id": "#/properties/f5",
+      "type": "integer",
+      "title": "Materiaalirivin id",
+      "description": "Raportoidun materiaalin tietokantarivin id. Viittaa MATERIAALI_TOTEUMA.id-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    },
+    "f6": {
+      "$id": "#/properties/f6",
+      "type": "boolean",
+      "title": "Materiaalirivin poistoteito",
+      "description": "Raportoidun materiaalin tietokantarivin poistettu-tieto. Viittaa MATERIAALI_TOTEUMA.poistettu-sarakkeeseen.",
       "examples": [
         "t"
       ]
