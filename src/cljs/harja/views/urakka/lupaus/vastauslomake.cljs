@@ -20,7 +20,7 @@
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
   (let [listauksessa? false
         valittu? (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi]))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit])]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit]) app]))
 
 (defn- otsikko [e! app]
   (let [lupaus (:vastaus-lomake app)]

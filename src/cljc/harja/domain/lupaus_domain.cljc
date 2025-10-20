@@ -32,6 +32,9 @@
 (defn yksittainen? [lupaus]
   (= "yksittainen" (:lupaustyyppi lupaus)))
 
+(defn kustannusennuste? [lupaus]
+  (= "kustannusennuste" (:lupaustyyppi lupaus)))
+
 (defn hylatyt [vastaukset]
   (filter #(false? (:vastaus %)) vastaukset))
 
