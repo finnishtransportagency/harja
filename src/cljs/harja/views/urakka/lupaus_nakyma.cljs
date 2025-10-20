@@ -327,7 +327,7 @@
    [:span.kentan-otsikko "Aseta nykyhetki"]
    [:div.kentta
     [kentat/tee-kentta
-     {:tyyppi :pvm}
+     {:tyyppi :pvm-aika}
      data]]])
 
 (defn testausvalinnat [e! app]
