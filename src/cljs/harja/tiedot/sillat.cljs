@@ -20,9 +20,13 @@
                   :poistettu      "gainsboro"})
 
 (defn- on-tarkastettu-hoitokautena?
-  [silta]
-  (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
-    (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm))))
+  [silta valittu-vuosi]
+  (if valittu-vuosi
+    (let [hoitokausi-alkupvm (pvm/luo-pvm valittu-vuosi 9 1)
+          hoitokausi-loppupvm (pvm/luo-pvm (inc valittu-vuosi) 8 30)]
+      (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm)))
+    (let [[hoitokausi-alkupvm hoitokausi-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))]
+      (true? (pvm/valissa? (:tarkastusaika silta) hoitokausi-alkupvm hoitokausi-loppupvm)))))
 
 (defn on-poistettu?
   "Silta ei ole enää urakan vastuulla. Se on lakkautettu, purettu tai siirretty kunnan vastuulle. Silta ei ole kokonaan poistettu Harjasta, koska siihen on tehty siltatarkastuksia."
@@ -35,18 +39,18 @@
   (or (on-poistettu? silta)
     (not (:urakan-vastuulla? silta))))
 
-(defn- varita-silta [silta]
-  ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
+(defn- varita-silta [silta valittu-vuosi]
+  ;; Värittää sillan vihreäksi mikäli se on tarkastettu valitun hoitokauden aikana
 
   (-> silta
     (assoc-in [:alue :fill] true)
     (assoc-in [:alue :color] (cond
                                (ei-urakan-vastuulla? silta) (:poistettu silta-varit)
-                               (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
+                               (on-tarkastettu-hoitokautena? silta valittu-vuosi) (:tarkistettu silta-varit)
                                :else (:ei-tarkistettu silta-varit)))
     (assoc-in [:alue :zindex] (cond
                                 (ei-urakan-vastuulla? silta) 4
-                                (on-tarkastettu-hoitokautena? silta) 5
+                                (on-tarkastettu-hoitokautena? silta valittu-vuosi) 5
                                 :else 6))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus valittu-vuosi]
@@ -73,10 +77,10 @@
                           sillat (:sillat vastaus)]
                       (into []
                         (comp (map #(assoc % :type :silta))
-                          (map varita-silta))
+                          (map #(varita-silta % vuosi)))
                         sillat))))))
 
-(defn- skaalaa-sillat-zoom-tason-mukaan [koko sillat]
+(defn- skaalaa-sillat-zoom-tason-mukaan [koko sillat valittu-vuosi]
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
   (when sillat
@@ -87,13 +91,13 @@
                              (map #(assoc % :tyyppi-kartalla :silta)))
                        sillat)
           selitteet (cond-> []
-                            (some on-tarkastettu-hoitokautena? sillat)
+                            (some #(on-tarkastettu-hoitokautena? % valittu-vuosi) sillat)
                             (conj {:vari   (:tarkistettu silta-varit)
                                    :teksti "Silta on tarkastettu kuluvalla hoitokaudella"})
                             (some ei-urakan-vastuulla? sillat)
                             (conj {:vari   (:poistettu silta-varit)
                                    :teksti "Silta ei enää ole urakan vastuulla"})
-                            (some #(and (not (on-tarkastettu-hoitokautena? %))
+                            (some #(and (not (on-tarkastettu-hoitokautena? % valittu-vuosi))
                                         (not (ei-urakan-vastuulla? %)))
                                   sillat)
                             (conj {:vari   (:ei-tarkistettu silta-varit)
@@ -104,7 +108,7 @@
 (def sillat-kartalla
   (reaction-writable
     (skaalaa-sillat-zoom-tason-mukaan
-      @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
+      @nav/kartan-nakyvan-alueen-koko @haetut-sillat @valittu-vuosi)))
 
 
 (defn paivita-silta! [id funktio & args]
