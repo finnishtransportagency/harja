@@ -319,7 +319,7 @@
              (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 4 1 erikoisarvot))))))
 
 
-(deftest maarapaiva-paattely-test
+(deftest kustannusennuste-maarapaiva-paattely-test
   "Testaa määräpäivän päättelylogiikkaa eri ajanhetkinä."
   (let [maarapaiva (pvm/luo-pvm 2025 10 15)
         tiedot-syotetty true
@@ -328,7 +328,7 @@
     
     (testing "Ennen määräpäivää - vastaaminen sallittu, ei read-only"
       (let [nykyhetki (pvm/luo-pvm 2025 10 14)
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä ei ole vielä ohitettu")
         (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
         (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
@@ -336,7 +336,7 @@
     
     (testing "Määräpäivänä - vastaaminen sallittu, ei read-only"
       (let [nykyhetki (pvm/luo-pvm 2025 10 15)
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivänä ei ole vielä ohitettu")
         (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
         (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
@@ -344,7 +344,7 @@
     
     (testing "Määräpäivän jälkeen + tiedot syötetty ajoissa = read-only"
       (let [nykyhetki (pvm/luo-pvm 2025 10 16)
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
         (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
         (is (true? (:kayta-readonly-nakymaa? tulos)) "Käytetään read-only näkymää")
@@ -352,7 +352,7 @@
     
     (testing "Määräpäivän jälkeen + tiedot EI syötetty ajoissa = varoitus"
       (let [nykyhetki (pvm/luo-pvm 2025 10 16)
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-ei-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-ei-syotetty ulkoinen-disabled)]
         (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
         (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
         (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei read-only (tiedot puuttuvat)")
@@ -360,7 +360,7 @@
     
     (testing "Väärässä kuukaudessa - vastaaminen estetty"
       (let [nykyhetki (pvm/luo-pvm 2025 11 15)  ; Marraskuu, mutta määräpäivä oli lokakuussa
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu (lokakuu → marraskuu)")
         (is (true? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on väärä")
         (is (true? (:kayta-readonly-nakymaa? tulos)) "Read-only koska määräpäivä ohitettu JA tiedot syötetty")
@@ -368,10 +368,10 @@
     
     (testing "Ulkoisen disabled-tilan yhdistäminen"
       (let [nykyhetki (pvm/luo-pvm 2025 10 14)
-            tulos (lupaus-domain/maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty true)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty true)]
         (is (true? (:disabled? tulos)) "Ulkoisen disabled-tilan perusteella disabled")))))
 
-(deftest maarapaiva-paattely-eri-paivina-test
+(deftest kustannusennuste-maarapaiva-paattely-eri-paivina-test
   "Testaa että määräpäivä-päivänä vastaaminen on sallittu
    eri kellonaikoina. Kuvaa kellonajan merkitystä - esim. ilta
    15. päivä on edelleen määräpäivä-päivä."
@@ -382,24 +382,24 @@
     
     (testing "Ennen määräpäivää aamulla - vastaaminen sallittu"
       (let [aamu (pvm/luo-pvm-aika 2025 10 14 9 0 0 0)
-            tulos (lupaus-domain/maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (false? (:maarapaiva-mennyt-ohi? tulos)) "14.10. klo 09:00 - määräpäivä ei ole vielä ohitettu")
         (is (false? (:disabled? tulos)) "14.10. klo 09:00 - vastaaminen on sallittu")))
     
     (testing "Määräpäivä-päivänä aamulla - vastaaminen sallittu"
       (let [aamu (pvm/luo-pvm-aika 2025 10 15 8 30 0 0)
-            tulos (lupaus-domain/maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 08:30 - määräpäivä ei ole vielä ohitettu")
         (is (false? (:disabled? tulos)) "15.10. klo 08:30 - vastaaminen on sallittu")))
     
     (testing "Määräpäivä-päivänä illalla - vastaaminen sallittu"
       (let [ilta (pvm/luo-pvm-aika 2025 10 15 23 59 59 999)
-            tulos (lupaus-domain/maarapaiva-paattely ilta maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely ilta maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 23:59:59 - määräpäivä ei ole vielä ohitettu")
         (is (false? (:disabled? tulos)) "15.10. klo 23:59:59 - vastaaminen on sallittu")))
     
     (testing "Seuraavana päivänä aamulla - määräpäivä jo ohitettu"
       (let [seuraava-aamu (pvm/luo-pvm-aika 2025 10 16 0 0 0 1)
-            tulos (lupaus-domain/maarapaiva-paattely seuraava-aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely seuraava-aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (true? (:maarapaiva-mennyt-ohi? tulos)) "16.10. klo 00:00:00 - määräpäivä on ohitettu")
         (is (true? (:disabled? tulos)) "16.10. klo 00:00:00 - vastaaminen on estetty")))))
