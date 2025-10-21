@@ -44,7 +44,7 @@
       "$id": "#/properties/f3",
       "type": "number",
       "title": "Raportoidun materiaalin määrä",
-      "description": "Raportoidun materiaalin nimi. Viittaa MATERIAALI_TOTEUMA.maara-sarakkeeseen.",
+      "description": "Raportoidun materiaalin nimi. Viittaa TOTEUMA_MATERIAALI.maara-sarakkeeseen.",
       "examples": [
         25.3
       ]
@@ -62,7 +62,7 @@
       "$id": "#/properties/f5",
       "type": "integer",
       "title": "Materiaalirivin id",
-      "description": "Raportoidun materiaalin tietokantarivin id. Viittaa MATERIAALI_TOTEUMA.id-sarakkeeseen.",
+      "description": "Raportoidun materiaalin tietokantarivin id. Viittaa TOTEUMA_MATERIAALI.id-sarakkeeseen.",
       "examples": [
         "t"
       ]
@@ -71,7 +71,25 @@
       "$id": "#/properties/f6",
       "type": "boolean",
       "title": "Materiaalirivin poistoteito",
-      "description": "Raportoidun materiaalin tietokantarivin poistettu-tieto. Viittaa MATERIAALI_TOTEUMA.poistettu-sarakkeeseen.",
+      "description": "Raportoidun materiaalin tietokantarivin poistettu-tieto. Viittaa TOTEUMA_MATERIAALI.poistettu-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    },
+    "f7": {
+      "$id": "#/properties/f7",
+      "type": "date-time",
+      "title": "Materiaalirivin luontiaika",
+      "description": "Raportoidun materiaalin tietokantarivin luontiaikaleima. Viittaa TOTEUMA_MATERIAALI.luotu-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    },
+    "f8": {
+      "$id": "#/properties/f8",
+      "type": "date-time",
+      "title": "Materiaalirivin muokkausaika",
+      "description": "Raportoidun materiaalin tietokantarivin viimeisin muokkausaikaleima. Viittaa TOTEUMA_MATERIAALI.muokattu-sarakkeeseen.",
       "examples": [
         "t"
       ]

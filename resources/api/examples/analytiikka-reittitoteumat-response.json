@@ -28,7 +28,9 @@
                 },
                 "selite": "selite",
                 "tehtava-rivi-id": 501,
-                "tehtava-poistettu": false
+                "tehtava-poistettu": false,
+                "tehtava-luotu": "2016-01-30T17:00:00Z",
+                "tehtava-muokattu": null
               }
             ],
             "materiaalit": [
@@ -40,7 +42,9 @@
                   "maara": 0.24
                 },
                 "materiaali-rivi-id": 945,
-                "materiaali-poistettu": false
+                "materiaali-poistettu": false,
+                "materiaali-luotu": "2016-01-30T17:00:00Z",
+                "materiaali-muokattu": null
               }
             ],
             "tiesijainti": {

@@ -89,6 +89,24 @@
       "examples": [
         true
       ]
+    },
+    "f8": {
+      "$id": "#/properties/f8",
+      "type": "date-time",
+      "title": "Tehtävärivin luontiaika",
+      "description": "Raportoidun tehtävän tietokantarivin luontiaikaleima. Viittaa TOTEUMA_TEHTAVA.luotu-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
+    },
+    "f9": {
+      "$id": "#/properties/f9",
+      "type": "date-time",
+      "title": "Tehtävärivin muokkausaika",
+      "description": "Raportoidun tehtävän tietokantarivin viimeisin muokkausaikaleima. Viittaa TOTEUMA_TEHTAVA.muokattu-sarakkeeseen.",
+      "examples": [
+        "t"
+      ]
     }
   },
   "additionalProperties": true
