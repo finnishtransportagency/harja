@@ -106,12 +106,19 @@
     .hoitovuosi-valinta {
       width: @hoitovuosi-valinnan-leveys;
     }
+
     .pysyva-muutos-vihje {
       .vihjeen-sisalto {
         margin: 0;
         padding: 0;
       }
     }
+
+    .pysyva-muutos-vaikutukset-lomake-wrapper {
+      // Pakottaa maksimileveyden jotta sisällä oleva grid ym. ei veny liian leveäksi
+      max-width: 1200px;
+    }
+
     .pysyvan-muutoksen-grid-header {
       display: flex;
       justify-content: space-between;

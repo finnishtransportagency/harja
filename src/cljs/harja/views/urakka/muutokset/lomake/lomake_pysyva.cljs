@@ -118,7 +118,7 @@
                                        (or (= tehtava-id valittu-tehtava)
                                          (not (contains? valitut-tehtavat tehtava-id))))
                                toimenpiteen-tehtavat)))
-            :leveys 20
+            :leveys 25
             :valinta-arvo :tehtava-id
             :valinta-nayta :tehtava}
 
@@ -126,6 +126,7 @@
             :nimi :yksikko
             :tyyppi :string
             :leveys 6
+            :tasaa :oikea
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    ;; Haetaan tieto tehtävän määräyksiköstä toimenpiteiden tehtävistä
@@ -138,6 +139,7 @@
             :nimi :suunniteltu_maara
             :tyyppi :positiivinen-numero
             :leveys 10
+            :tasaa :oikea
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi))}
@@ -145,13 +147,15 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
-            :muokattava? (constantly voi-muokata?)
-            :leveys 20}
+            :tasaa :oikea
+            :leveys 10
+            :muokattava? (constantly voi-muokata?)}
 
            {:otsikko "Muuttunut määrä"
             :nimi :muuttunut-maara
             :tyyppi :numero
-            :leveys 20
+            :tasaa :oikea
+            :leveys 10
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    (+ (or (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi) 0) (:maaramuutos rivi)))}
@@ -218,7 +222,7 @@
                             {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                             {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
-     [{:tyyppi :vetolaatikon-tila :leveys 2}
+     [{:tyyppi :vetolaatikon-tila :leveys 3}
       {:otsikko "Toimenpide"
        :nimi :toimenpide
        :tyyppi :string
@@ -423,18 +427,21 @@
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_]
-                         [:div.perustiedot
-                          [yleiset/info-laatikko :vahva-ilmoitus
-                           "Hoitovuoden alun tavoitehinta on vahvistettu"
-                           [:<>
-                            [:div "Voit perua vahvistuksen lisätäksesi hoitovuodelle pysyvän muutoksen." [:br]
-                             "Muista vahvistaa hoitovuoden tavoitehinta muutoksen tallentamisen jälkeen."]
-                            [:br]
-                            [:div [napit/yleinen-toissijainen "Peru vahvistus"
-                                   #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
-                                          (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
-                           nil
-                           {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
+                         (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                                                (some-> valittu-hoitokausi (first) (pvm/vuosi))
+                                                (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
+                                                false)]
+                           [yleiset/info-laatikko :vahva-ilmoitus
+                            "Hoitovuoden alun tavoitehinta on vahvistettu"
+                            [:<>
+                             [:div hoitovuosi-str " osalta pysyvän muutoksen tavoitehintavaikutukset sisältyät jo vahvistettuun hoitovuoden alun tavoitehintaan." [:br]
+                              "Jos haluat tehdä muutoksia, vahvistus on peruttava ja tehtävä uudelleen."]
+                             [:br]
+                             [:div [napit/yleinen-toissijainen "Peru vahvistus"
+                                    #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
+                                           (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
+                            nil
+                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]))})
 
        (if muutoksen-tiedot-haku-kaynnissa?
          {:tyyppi :komponentti
@@ -447,6 +454,7 @@
            {:otsikko ""
             :uusi-rivi? true
             :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+            :kaariva-luokka "pysyva-muutos-vaikutukset-lomake-wrapper"
             :tyyppi :komponentti
             :komponentti (fn [rivi]
                            [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
