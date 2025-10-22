@@ -24,7 +24,7 @@
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
-                     :aiempien-hoitovuosien-pysyvat-muutokset nil
+                     ; :aiempien-hoitovuosien-pysyvat-muutokset nil
                      ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
                      ;; Jos haluat että koko sivu wipetään, enabloi nämä. Tällä hetkellä tälle ei ole kuitenkaan syytä.
                      ;; :kirjatut-muutokset nil
@@ -174,13 +174,14 @@
   (process-event [_ app]
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
           uusi-urakka? (boolean (>= urakan-alkuvuosi 2025))]
-    (hae-urakan-muutostiedot
-      (assoc
-        (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-        :haku-kaynnissa? true
-        :uusi-urakka? uusi-urakka?
-        :valittu-hoitokausi @u/valittu-hoitokausi
-        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))))
+      (hae-urakan-muutostiedot
+        (->
+          (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
+          (assoc
+            :haku-kaynnissa? true
+            :uusi-urakka? uusi-urakka?
+            :valittu-hoitokausi @u/valittu-hoitokausi
+            :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))))
 
 
   HaeUrakanMuutostiedotOnnistui

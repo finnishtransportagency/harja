@@ -61,11 +61,7 @@
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
         {:tuck.effect/type :laukaise-event
-         :event t-yhteiset/->HaeUrakanMuutostiedot}
-        {:tuck.effect/type :debounce
-         :event #(t-yhteiset/->ToggleTaulukonNakyvyys :lasketut-muutokset)
-         :timeout 5})))
-
+         :event t-yhteiset/->HaeUrakanMuutostiedot})))
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
@@ -136,10 +132,8 @@
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
         {:tuck.effect/type :laukaise-event
-         :event t-yhteiset/->HaeUrakanMuutostiedot}
-        {:tuck.effect/type :debounce
-         :event #(t-yhteiset/->ToggleTaulukonNakyvyys :lasketut-muutokset)
-         :timeout 5})))
+         :event t-yhteiset/->HaeUrakanMuutostiedot})))
+
 
   TallennaYksikkohintaEpaonnistui
   (process-event [_ app]

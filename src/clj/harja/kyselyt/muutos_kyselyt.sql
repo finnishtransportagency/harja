@@ -518,7 +518,7 @@ SELECT
   CASE 
     -- ============================================================
     -- Yksikköhinta puuttuu -> muutos syötetään käsin 
-    -- Myös >2025 urakat syöttävät aina käsin
+    -- Myös ennen 2025 alkaneet urakat syöttävät aina käsin
     -- ============================================================
     WHEN (mmt.lahde = 'puuttuu' OR :uusi-urakka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
     -- ============================================================

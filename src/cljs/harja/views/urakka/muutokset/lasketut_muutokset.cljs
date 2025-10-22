@@ -158,6 +158,8 @@
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
             :tyyppi :numero
+            ;; Näyttää desimaalit vain tarvittaessa
+            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
@@ -165,6 +167,7 @@
            {:otsikko "Kirjattu määrä"
             :nimi :maara
             :tyyppi :numero
+            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
@@ -172,6 +175,7 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
+            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
