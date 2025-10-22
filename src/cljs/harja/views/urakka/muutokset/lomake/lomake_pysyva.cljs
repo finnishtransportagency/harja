@@ -354,7 +354,8 @@
               :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
            (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
-        ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
+        ;; TODO: Salli kopiointi aina, mutta varmista että tietoja ei kopioida lukituille hoitovuosille
+        ;;       Vaatii muutoksia kopioinnin sisäiseen logiikkaan tilanhallinnan puolella.
         :disabled (not voi-muokata?)
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
