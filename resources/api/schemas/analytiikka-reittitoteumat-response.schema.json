@@ -154,8 +154,8 @@
         "selite": {"type": "string"},
         "tehtava-rivi-id": {"type": ["integer", "null"]},
         "tehtava-poistettu": {"type": "boolean"},
-        "tehtava-luotu":  {"type": "date-time"},
-        "tehtava-muokattu":  {"type": "date-time"}
+        "tehtava-luotu":  {"type": "string","format": "date-time"},
+        "tehtava-muokattu":  {"type": "string","format": "date-time"}
       },
       "additionalProperties": true
     },
@@ -167,8 +167,8 @@
         "maara": {"type": "object", "properties": {"yksikko": {"type": "string"}, "maara": {"type": "number"}}, "additionalProperties": false},
         "materiaali-rivi-id": {"type": ["integer", "null"]},
         "materiaali-poistettu": {"type": "boolean"},
-        "materiaali-luotu":  {"type": "date-time"},
-        "materiaali-muokattu":  {"type": "date-time"}
+        "materiaali-luotu":  {"type": "string","format": "date-time"},
+        "materiaali-muokattu":  {"type": "string","format": "date-time"}
       },
       "additionalProperties": true
     }

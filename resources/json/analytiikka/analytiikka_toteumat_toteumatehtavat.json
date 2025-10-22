@@ -13,7 +13,9 @@
       "f4": "Alihankkija Ky",
       "f5": 1,
       "f6": 987672,
-      "f7": true
+      "f7": true,
+      "f8": "2016-01-30T17:00:00Z",
+      "f9": null
 
     }
   ],
@@ -24,7 +26,9 @@
     "f4",
     "f5",
     "f6",
-    "f7"
+    "f7",
+    "f8",
+    "f9"
   ],
   "properties": {
     "f1": {
@@ -87,7 +91,7 @@
       "title": "Poistettu",
       "description": "True kun toteutunut työ on merkitty poistetuksi. Jos toteuma on merkitty poistetuksi, mutta toteumatehtävää ei, on toteumatehtäväkin tulkittava poistetuksi. Viittaa TOTEUMA_TEHTAVA.poistettu-sarakkeeseen.",
       "examples": [
-        true
+        true, false
       ]
     },
     "f8": {
@@ -96,7 +100,7 @@
       "title": "Tehtävärivin luontiaika",
       "description": "Raportoidun tehtävän tietokantarivin luontiaikaleima. Viittaa TOTEUMA_TEHTAVA.luotu-sarakkeeseen.",
       "examples": [
-        "t"
+        "2016-01-30T17:00:00Z"
       ]
     },
     "f9": {
@@ -105,7 +109,7 @@
       "title": "Tehtävärivin muokkausaika",
       "description": "Raportoidun tehtävän tietokantarivin viimeisin muokkausaikaleima. Viittaa TOTEUMA_TEHTAVA.muokattu-sarakkeeseen.",
       "examples": [
-        "t"
+        "2016-01-30T17:00:00Z", null
       ]
     }
   },

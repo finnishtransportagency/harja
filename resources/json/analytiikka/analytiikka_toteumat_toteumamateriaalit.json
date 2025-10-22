@@ -11,7 +11,10 @@
       "f2": "Hiekoitushiekka, liukkaudentorjunta",
       "f3": 25.3,
       "f4": "t",
-      "f5": 9824626
+      "f5": 9824626,
+      "f6": false,
+      "f7": "2016-01-30T17:00:00Z",
+      "f8": "2016-01-31T17:00:00Z"
     }
   ],
   "required": [
@@ -19,7 +22,10 @@
     "f2",
     "f3",
     "f4",
-    "f5"
+    "f5",
+    "f6",
+    "f7",
+    "f8"
   ],
   "properties": {
     "f1": {
@@ -64,7 +70,7 @@
       "title": "Materiaalirivin id",
       "description": "Raportoidun materiaalin tietokantarivin id. Viittaa TOTEUMA_MATERIAALI.id-sarakkeeseen.",
       "examples": [
-        "t"
+        38942614
       ]
     },
     "f6": {
@@ -73,7 +79,7 @@
       "title": "Materiaalirivin poistoteito",
       "description": "Raportoidun materiaalin tietokantarivin poistettu-tieto. Viittaa TOTEUMA_MATERIAALI.poistettu-sarakkeeseen.",
       "examples": [
-        "t"
+        true, false
       ]
     },
     "f7": {
@@ -82,7 +88,7 @@
       "title": "Materiaalirivin luontiaika",
       "description": "Raportoidun materiaalin tietokantarivin luontiaikaleima. Viittaa TOTEUMA_MATERIAALI.luotu-sarakkeeseen.",
       "examples": [
-        "t"
+        "2016-01-30T17:00:00Z"
       ]
     },
     "f8": {
@@ -91,7 +97,7 @@
       "title": "Materiaalirivin muokkausaika",
       "description": "Raportoidun materiaalin tietokantarivin viimeisin muokkausaikaleima. Viittaa TOTEUMA_MATERIAALI.muokattu-sarakkeeseen.",
       "examples": [
-        "t"
+        "2016-01-30T17:00:00Z", null
       ]
     }
   },

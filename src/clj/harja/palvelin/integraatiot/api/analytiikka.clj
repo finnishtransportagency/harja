@@ -125,7 +125,7 @@
    :f5 :materiaali-rivi-id
    :f6 :materiaali-poistettu
    :f7 :materiaali-luotu
-   :f9 :materiaali-muokattu})
+   :f8 :materiaali-muokattu})
 
 ;; Mäpätään json row array tyyppiset elementit (:f<x> muotoiset kolumnien nimet) alaviivarakenteiseksi
 ;; mäpiksi, jotta data saadaan formatoitua skeeman mukaisesti

@@ -2,9 +2,6 @@
 -- toteumat analytiikalle tehtyyn omaan tauluun.
 -- Jos vahingossa siirretään sama toteuma toiseen kertaan, niin luovutaan yrityksestä
 
--- Droppaa aiempien migraatiotiedostojen mahdollisesti tekemät funktiot
-DROP FUNCTION IF EXISTS siirra_toteumat_analytiikalle(TIMESTAMP with time zone);
-DROP FUNCTION IF EXISTS siirra_toteumat_analytiikalle(TIMESTAMP);
 CREATE OR REPLACE FUNCTION siirra_toteumat_analytiikalle(ajankohta TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
 $$
 DECLARE
@@ -23,9 +20,9 @@ BEGIN
                 t.tyyppi::toteumatyyppi                                                                  AS toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
                 t.lisatieto                                                                              AS toteuma_lisatieto,
                 to_json(array_agg(DISTINCT (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma, tt.id,
-                                            tt.poistettu)))                                              AS toteumatehtavat,
+                                            tt.poistettu, tt.luotu, tt.muokattu)))                       AS toteumatehtavat,
                 to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko, tm.id,
-                                            tm.poistettu)))                                              AS toteumamateriaalit,
+                                            tm.poistettu, tm.luotu, tm.muokattu)))                       AS toteumamateriaalit,
                 t.tr_numero                                                                              AS toteuma_tiesijainti_numero,
                 t.tr_alkuosa                                                                             AS toteuma_tiesijainti_aosa,
                 t.tr_alkuetaisyys                                                                        AS toteuma_tiesijainti_aet,
@@ -83,9 +80,9 @@ BEGIN
                         t.lisatieto                                                                                AS toteuma_lisatieto,
                         to_json(array_agg(DISTINCT
                                           (teh.id, tt.maara, teh.yksikko, tt.lisatieto, teh.tehtavaryhma, tt.id,
-                                           tt.poistettu)))                                                         AS toteumatehtavat,
+                                           tt.poistettu, tt.luotu, tt.muokattu)))                                  AS toteumatehtavat,
                         to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko, tm.id,
-                                                    tm.poistettu)))                                                AS toteumamateriaalit,
+                                                    tm.poistettu, tm.luotu, tm.muokattu)))                         AS toteumamateriaalit,
                         t.tr_numero                                                                                AS toteuma_tiesijainti_numero,
                         t.tr_alkuosa                                                                               AS toteuma_tiesijainti_aosa,
                         t.tr_alkuetaisyys                                                                          AS toteuma_tiesijainti_aet,
@@ -115,7 +112,7 @@ $$ LANGUAGE plpgsql;
 -- Jos toteumat pitää siirtää uusiksi kokonaisuudessaan, niin niitä ei kannata siirtää yksi päivä kerrallaan.
 -- Tästä syystä funktiosta on toinen versio, joka siirtää halutun päivämäärävälin
 -- Tässä funktiossa siirto tehdään toteuman aloituspäivämäärän perusteella.
-DROP FUNCTION siirra_toteumat_analytiikalle_pvm_valilta(alku TIMESTAMP, loppu TIMESTAMP);
+DROP FUNCTION IF EXISTS siirra_toteumat_analytiikalle_pvm_valilta(alku TIMESTAMP, loppu TIMESTAMP);
 CREATE OR REPLACE FUNCTION siirra_toteumat_analytiikalle_aloitusajan_mukaan(alku TIMESTAMP, loppu TIMESTAMP)
     RETURNS VOID AS
 $$
@@ -275,16 +272,18 @@ $$ LANGUAGE plpgsql;
 -- Ja aja se tuotantoon suunnilleen seuraavasti (Tarkista ajankohdat):
 -- Ensin poistetaan analytiikka_toteumat taulusta kaikki:
 -- DELETE FROM analytiikka_toteumat;
--- select siirra_toteumat_analytiikalle_pvm_valilta('0001-01-01T00:00:00','2014-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2015-01-01T00:00:00','2015-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2016-01-01T00:00:00','2016-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2017-01-01T00:00:00','2017-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2018-01-01T00:00:00','2018-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2019-01-01T00:00:00','2019-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2020-01-01T00:00:00','2020-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2021-01-01T00:00:00','2021-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2022-01-01T00:00:00','2022-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2023-01-01T00:00:00','2023-12-31T23:59:59');
--- select siirra_toteumat_analytiikalle_pvm_valilta('2024-01-01T00:00:00','2024-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('0001-01-01T00:00:00','2014-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2015-01-01T00:00:00','2015-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2016-01-01T00:00:00','2016-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2017-01-01T00:00:00','2017-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2018-01-01T00:00:00','2018-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2019-01-01T00:00:00','2019-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2020-01-01T00:00:00','2020-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2021-01-01T00:00:00','2021-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2022-01-01T00:00:00','2022-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2023-01-01T00:00:00','2023-12-31T23:59:59');
+-- select siirra_toteumat_analytiikalle_aloitusajan_mukaan('2024-01-01T00:00:00','2024-12-31T23:59:59');
 -- Ja siirron jälkeen on tärkeää saada indeksit ja haku toimimaan nopeasti. REINDEX komentoa ei tarvita:
 --ANALYSE analytiikka_toteumat;
+
+
