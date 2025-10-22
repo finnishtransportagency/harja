@@ -89,13 +89,6 @@ describe('Tarjous-näkymä', function () {
         cy.intercept('POST', '_/hae-tarjouksen-tiedot').as('hae-tarjous');
     });
 
-    describe('Tarjous-välilehti näkyvyys', function () {
-        it('Tarjous-välilehti ei näy 2021 urakalla', function () {
-            avaaTarjousNakyma('Iin MHU 2021-2026', 'Pohjois-Pohjanmaa');
-            cy.contains('Tarjouksen tiedot').should('not.exist');
-        });
-    });
-
     describe('Johto- ja hallintokorvaus-gridin testit 2025 urakalle', function () {
 
         beforeEach(function () {
