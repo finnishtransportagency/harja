@@ -77,6 +77,11 @@
         indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
     indeksikorjaus-vahvistettu?))
 
+(defn jokin-hoitovuosien-indeksikorjaus-vahvistettu?
+  "Palauttaa true, jos jonkin hoitovuoden indeksikorjaus on vahvistettu"
+  [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi] :as budjettitavoitteet}]
+  (some? (some true? (vals tavoitehinta-indeksikorjattu-per-hoitovuosi))))
+
 
 ;; --- Tuck-eventit ja käsittelijät ---
 ;; Hae muutostiedot

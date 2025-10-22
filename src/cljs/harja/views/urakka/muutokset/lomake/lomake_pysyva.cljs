@@ -262,6 +262,41 @@
                   (+ budjetoitu muutos))))}]
      toimenpiteiden-tiedot]))
 
+(defn- pysyva-muutos-hoitovuosi-lukittu?
+  "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
+  Lukittu, jos:
+  - Hoitovuoden vaikutukset sisältyvät kyseisen hoitovuoden tavoitehintaan JA hoitovuoden alun tavoitehinta on vahvistettu
+  - TAI hoitovuoden välikatselmuksen päätöksiä on tehty
+  "
+  [voimassa-alkaen hoitovuosi budjettitavoitteet]
+
+  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
+
+  ;; Mikäli muutos alkaa kesken hoitokauden, sillä ei ole merkitystä kyseisen hoitovuoden alun tavoitehinnan kannalta
+  ;; Eli, muutosta ei ole tarpeen lukita vaikka tavoitehinta olisi vahvistettu
+  (and
+    (not (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
+
+    ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
+    (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)))
+
+(defn- pysyva-muutos-voimassa-alkaen-lukittu?
+  "Palauttaa true, jos voimassa-alkaen kenttä on lukittu muokkaukselta.
+  Lukittu, jos:
+  - Jonkin hoitovuoden alun tavoitehinta on vahvistettu
+  - Pysyvä muutos sisältyy jonkin hoitovuoden vahvistettuun välikatselmuksen päätökseen"
+  [budjettitavoitteet]
+
+  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
+
+  (t-yhteiset/jokin-hoitovuosien-indeksikorjaus-vahvistettu? budjettitavoitteet))
+
+(defn- voimassa-alkaen-hoitovuodella-tai-jalkeen?
+  [voimassa-alkaen hoitovuosi]
+  (or
+    (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
+    (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen)))
+
 (defn- kopioi-tuleville-hoitovuosille! [e! muokattava-muutos]
   (e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
         (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
@@ -271,14 +306,12 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)
+        hoitovuosi-lukittu? (pysyva-muutos-hoitovuosi-lukittu? voimassa-alkaen hoitovuosi budjettitavoitteet)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
-                       (or
-                         (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
-                         (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen))
-                       ;; Voi muokata, jos tavoitehinnan indeksikorjaus ei ole vielä vahvistettu hoitovuodelle
-                       (not indeksikorjaus-vahvistettu?))
+                       (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+                       ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
+                       (not hoitovuosi-lukittu?))
         vetolaatikkorivit (into {}
                             (map (juxt :toimenpideinstanssi
                                    (fn [rivi]
@@ -303,8 +336,7 @@
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
         [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
-                         (if indeksikorjaus-vahvistettu?
-                           "Hoitovuoden alun tavoitehinta on jo vahvistettu."
+                         (when (not (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
@@ -332,8 +364,7 @@
               valittu-hoitokausi] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        hoitovuosi (:hoitovuosi muokattava-muutos)
-        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)]
+        hoitovuosi (:hoitovuosi muokattava-muutos)]
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi false)
@@ -381,7 +412,14 @@
                           "Valitse")
         :valinta-arvo identity}
 
-       (when indeksikorjaus-vahvistettu?
+       (when
+         ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
+         (and
+           (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+           (pysyva-muutos-hoitovuosi-lukittu? voimassa-alkaen hoitovuosi budjettitavoitteet))
+
+         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
+         ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_]
