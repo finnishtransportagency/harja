@@ -372,7 +372,23 @@
         hoitovuosi (:hoitovuosi muokattava-muutos)]
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi false)
+
+       (when
+         (t-yhteiset/jokin-hoitovuosien-indeksikorjaus-vahvistettu? budjettitavoitteet)
+         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
+         ;;       Jos jokin välikatselmus on jonakin vuonna tehty, niin näytetään erilainen info-laatikko, ks. figma
+         {:uusi-rivi? true
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [yleiset/info-laatikko :vahva-ilmoitus
+                          "Hoitovuoden alun tavoitehintoja on vahvistettu"
+                          "Peru vahvistukset muokataksesi voimassa alkaen päivämäärää."
+                          nil
+                          {:ikoni-fn #(ikonit/harja-icon-status-alert)}])})
+
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
+         {:pakota-valittuun-hoitokauteen? false
+          :voi-muokata? (not (pysyva-muutos-voimassa-alkaen-lukittu? budjettitavoitteet))})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)

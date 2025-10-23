@@ -72,6 +72,7 @@
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
 
 (defn hoitovuoden-indeksikorjaus-vahvistettu?
+  "Palauttaa true, jos kyseisen hoitovuoden indeksikorjaus on vahvistettu, eli hoitovuoden alun tavoitehinta on vahvistettu."
   [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi] :as budjettitavoitteet} hoitovuosi]
   (let [hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
         indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
