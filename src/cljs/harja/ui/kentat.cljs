@@ -382,7 +382,9 @@
               nykyinen-teksti (or @teksti
                                 (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
                                 "")
-              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+              ;; ^−? == täsmää miinus arvot myös
+              ;; ref:: https://regex101.com/ 
+              kokonaisluku-re-pattern (re-pattern (str "^−?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
                                   (contains? kentta :desimaalien-maara) ; Salli nil-arvo
                                   desimaalien-maara
@@ -396,7 +398,9 @@
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
               desimaaliluku-re-pattern (re-pattern (str
-                                                     "[+-]?\\d{1,"
+                                                     ;; ^−? == täsmää miinus arvot myös
+                                                     ;; ref:: https://regex101.com/ 
+                                                     "^−?\\d{1,"
                                                      kokonaisosan-maara
                                                      "}((\\.|,)\\d{0,"
                                                      desimaalien-maara
@@ -433,11 +437,13 @@
                                                  (if (= (first v) \-)
                                                    v
                                                    (str "-" v))
-                                                 :default v)]
+                                                 :else v)]
                                          (when (and
-                                                 (or (nil? validoi-kentta-fn)
+                                                 (or
+                                                   (nil? validoi-kentta-fn)
                                                    (validoi-kentta-fn v))
-                                                 (or (= v "")
+                                                 (or
+                                                   (= v "")
                                                    (when-not vaadi-ei-negatiivinen? (= v "-"))
                                                    (re-matches (if kokonaisluku?
                                                                  kokonaisluku-re-pattern
@@ -451,7 +457,11 @@
                                            (let [v (str/replace v #"\s" "")
                                                  numero (if kokonaisluku?
                                                           (js/parseInt v)
-                                                          (js/parseFloat (str/replace v #"," ".")))]
+                                                          (js/parseFloat (-> v
+                                                                           ;; Frontissa käytetään näemmä jotain ascii miinusta, nice
+                                                                           ;; Tämän muuta normaali miinukseksi jotta muokkailu toimii
+                                                                           (str/replace #"−" "-")
+                                                                           (str/replace #"," "."))))]
                                              (if (not (js/isNaN numero))
                                                (reset! data numero)
                                                (reset! data nil))
