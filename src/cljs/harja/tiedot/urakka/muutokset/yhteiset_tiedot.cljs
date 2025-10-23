@@ -119,7 +119,7 @@
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :hoitokaudet @u/valitun-urakan-hoitokaudet
      :valittu-hoitokausi (:valittu-hoitokausi app)
-     :uusi-urakka? (:uusi-urakka? app)}
+     :laskenta-automatiikka? (:laskenta-automatiikka? app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
@@ -169,12 +169,12 @@
     "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
     jos tyyppi annetaan, tämän osion väkänen pysyy auki tallennuksen läpi."
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
-          uusi-urakka? (boolean (>= urakan-alkuvuosi 2025))]
+          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))]
       (hae-urakan-muutostiedot
         (as-> (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat) app
           (assoc app
             :haku-kaynnissa? true
-            :uusi-urakka? uusi-urakka?
+            :laskenta-automatiikka? laskenta-automatiikka?
             :valittu-hoitokausi @u/valittu-hoitokausi
             :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)
 
@@ -298,7 +298,7 @@
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet uusi-urakka?] :as app}]
+                  {:keys [lomake-virheet laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
@@ -327,7 +327,7 @@
             {:urakka-id (:id urakka)
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
-             :uusi-urakka? uusi-urakka?
+             :laskenta-automatiikka? laskenta-automatiikka?
              :muutos muutos}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui

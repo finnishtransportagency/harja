@@ -520,12 +520,12 @@ SELECT
     -- Yksikköhinta puuttuu -> muutos syötetään käsin 
     -- Myös ennen 2025 alkaneet urakat syöttävät aina käsin
     -- ============================================================
-    WHEN (mmt.lahde = 'puuttuu' OR :uusi-urakka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
+    WHEN (mmt.lahde = 'puuttuu' OR :laskenta-automatiikka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
     -- ============================================================
     -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
-    -- Ei jatketa myöskään, jos kyseessä vanhempi urakka
+    -- Ei jatketa myöskään, jos kyseessä vanhempi urakka ilman automatiikkaa
     -- ============================================================
-    WHEN (:uusi-urakka? = false OR (SUM(urakan_tehtavat.maara) = 0)) THEN NULL
+    WHEN (:laskenta-automatiikka? = false OR (SUM(urakan_tehtavat.maara) = 0)) THEN NULL
     -- ============================================================
     -- Tavoitehinta lasketaan itsestään, joten lasketaan se tässä 
     -- ============================================================

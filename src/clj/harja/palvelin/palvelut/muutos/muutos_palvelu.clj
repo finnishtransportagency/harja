@@ -6,7 +6,6 @@
             [slingshot.slingshot :refer [throw+]]
 
             [harja.pvm :as pvm]
-            [harja.kokoelmat :as kokoelmat]
             [harja.domain.mhu :as mhu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -63,7 +62,7 @@
                                :loppupvm loppupvm
                                :tehtava (or tehtava_id nil)
                                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                               :uusi-urakka? true}
+                               :laskenta-automatiikka? true}
                        yksikkohinta (->
                                       (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
                                       first :yksikkohinta)]
@@ -81,7 +80,7 @@
 (defn hae-tehtava-maaramuutokset
   [db
    {:keys [id] :as kayttaja}
-   {:keys [urakka-id valittu-hoitokausi hoitokaudet uusi-urakka?] :as _tiedot}]
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet laskenta-automatiikka?] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -92,7 +91,7 @@
                 :alkupvm alkupvm
                 :loppupvm loppupvm
                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                :uusi-urakka? uusi-urakka?}
+                :laskenta-automatiikka? laskenta-automatiikka?}
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
 
         fn-lisaa-valiotsikot (fn [rivit]
@@ -160,7 +159,7 @@
                                        ;; Jos toteumia ei ole, ei voida yksikköhintaa laskea
                                        ;; => Yritä hakea yksikköhinta edellisiltä vuosilta 
                                        kaikki-yksikkohinnat (when (and
-                                                                    uusi-urakka?
+                                                                    laskenta-automatiikka?
                                                                     tehtavalla-ei-toteumia?)
                                                               (hae-hoitovuosien-yksikkohinnat db kayttaja {:urakka-id urakka-id
                                                                                                            :hoitokaudet hoitokaudet
@@ -176,7 +175,7 @@
 
                                        ;; Jos ei edellisiä yksikköhintojakaan löytynyt, anna kirjata tavoitehinta manuaalisesti 
                                        anna-kirjata-tavoitehinta? (and
-                                                                    (or (not uusi-urakka?) tehtavalla-ei-toteumia?)
+                                                                    (or (not laskenta-automatiikka?) tehtavalla-ei-toteumia?)
                                                                     (not loytyi-aikaisemmat-yksikkohinnat?))
 
                                        ;; Hae nykyhetken asetettu hoitokauden yksikköhinta 
@@ -357,7 +356,7 @@
        muutokset))))
 
 (defn hae-urakan-muutostiedot
-  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi uusi-urakka?] :as tiedot}]
+  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         kirjatut-muutokset (->
@@ -397,7 +396,7 @@
         tehtava-ja-maaramuutokset (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
                                                                            :hoitokaudet hoitokaudet
                                                                            :valittu-hoitokausi valittu-hoitokausi
-                                                                           :uusi-urakka? uusi-urakka?})
+                                                                           :laskenta-automatiikka? laskenta-automatiikka?})
 
         kirjatut-muutokset-yht (reduce + (map :tavoitehinnan-muutos kirjatut-muutokset))
         aiemmat-pysyvat-muutokset-indeksikorjattu-yht (reduce +
@@ -702,7 +701,7 @@
                                     "Tarkista kulujen päivämäärät.")}]}))))
 
 
-(defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos uusi-urakka?] :as tiedot}]
+(defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
@@ -787,7 +786,7 @@
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi
-                                              :uusi-urakka? uusi-urakka?}))))
+                                              :laskenta-automatiikka? laskenta-automatiikka?}))))
 
 
 (defn hae-urakan-muutostyot
@@ -805,7 +804,7 @@
 
 (defn tallenna-rahavarausmuutosten-syyt
   "Rahavarausmuutosten syiden tallennus on irtallaan mhu_muutos logiikasta, eikä syiden historiaa tallenneta _historia tauluun."
-  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit uusi-urakka?]}]
+  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit laskenta-automatiikka?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
     (jdbc/with-db-transaction [conn db]
@@ -820,7 +819,7 @@
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi
-                                              :uusi-urakka? uusi-urakka?}))))
+                                              :laskenta-automatiikka? laskenta-automatiikka?}))))
 
 
 (defrecord Muutos [asetukset]
