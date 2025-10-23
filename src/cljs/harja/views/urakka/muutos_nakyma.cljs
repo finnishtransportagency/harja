@@ -6,6 +6,7 @@
     [harja.tiedot.urakka.siirtymat :as siirtymat]
 
     [harja.fmt :as fmt]
+    [harja.pvm :as pvm]
     [harja.ui.grid :as grid]
     [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
@@ -192,16 +193,27 @@
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
-  [:valinnat-ja-listaus
-   [:h1 "Muutosten hallinta"]
-   [:div.otsikko-ja-hoitokausi
+  (let [nayta-muutokset-sivu? (and
+                                @u/valittu-aikavali
+                                (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))]
 
-    [urakka-valinnat/paivittava-urakkavuosi-tuck
-     @u/valittu-aikavali
-     #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)) haku-kaynnissa? false]]
+    [:div.valinnat-ja-listaus
+     [:h1 "Muutosten hallinta"]
+     [:div.otsikko-ja-hoitokausi
 
-   [muutosten-vaikutus e! app]
-   [muutoslistaus e! app]])
+      [urakka-valinnat/paivittava-urakkavuosi-tuck
+       @u/valittu-aikavali
+       #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)) haku-kaynnissa? false]]
+
+     ;; TODO:  
+     ;; Jos vanhoille hoitovuosille toteutetaan osiot, tämän varoitusviestin voipi poistaa. 
+     (if nayta-muutokset-sivu?
+       [:<>
+        [muutosten-vaikutus e! app]
+        [muutoslistaus e! app]]
+       ;; Tämä näytetään, jos 2025 aikaisempi hoitovuosi valittuna
+       [yleiset/varoitus-vihje
+        "Muutokset ovat käytössä hoitovuodesta 2025 alkaen." nil :alert])]))
 
 
 (defn muutokset-alempi-valilehti*

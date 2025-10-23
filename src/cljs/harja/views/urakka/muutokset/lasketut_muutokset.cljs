@@ -188,7 +188,7 @@
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Yksikkö-hinta (€)"
+           {:otsikko "Yksikköhinta (€)"
             :nimi :yksikkohinta
             :tyyppi :numero
             :fmt fmt/euro-opt
