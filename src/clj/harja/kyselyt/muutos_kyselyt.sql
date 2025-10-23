@@ -501,10 +501,18 @@ SELECT
   COALESCE(SUM(ut.maara), 0)                       AS maaramuutos,
   -- ---------------------------------------------------- --
   -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
+  -- Ei autom. laskentaa -> Tav hinnan muutos / Määrämuutos
   -- ---------------------------------------------------- --
   CASE
+      WHEN mmt.kasin_syotetty_tavoitehintamuutos IS NOT NULL 
+      THEN ROUND( 
+          mmt.kasin_syotetty_tavoitehintamuutos /
+          (COALESCE(SUM(urakan_tehtavat.maara), 0) - COALESCE(SUM(ut.maara), 0)), 
+          2
+        ) 
     -- 
-	  WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu'
+	  WHEN mmt.lahde IS NULL 
+        OR mmt.lahde = 'laskettu'
 	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
     -- 
     -- Yksikköhinta valittu käyttöliittymästä 

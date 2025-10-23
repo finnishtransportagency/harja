@@ -25,7 +25,8 @@
    (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))
 
 #?(:cljs
-   (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL Format))
+   (def euro-number-format (doto
+                             (goog.i18n.NumberFormat. (.-DECIMAL Format))
                              (.setShowTrailingZeros false)
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
@@ -52,7 +53,10 @@
         ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
         ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
         ;; vasta IE11 versiosta lähtien.
-        (let [tulos (.format euro-number-format eur)]
+        (let [tulos (.format euro-number-format eur)
+              ;; Tämä generoi tosi hauskan − merkin joka rikkoo kenttien miinus arvojen muokkauksen
+              ;; Vaihdetaampas tämä takaisin normaali - merkkiin
+              tulos (str/replace tulos #"−" "-")]
           (if (or
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
