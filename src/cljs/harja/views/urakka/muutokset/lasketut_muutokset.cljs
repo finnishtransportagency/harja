@@ -175,7 +175,10 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
-            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
+            :fmt (fn [maaramuutos]
+                   (if (> maaramuutos 0)
+                     (str "+" (fmt/desimaaliluku-opt maaramuutos 0 2))
+                     (fmt/desimaaliluku-opt maaramuutos 0 2)))
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
