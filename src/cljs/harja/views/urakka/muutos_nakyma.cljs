@@ -198,7 +198,7 @@
 
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
-     #(e! (t-yhteiset/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
+     #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)) haku-kaynnissa? false]]
 
    [muutosten-vaikutus e! app]
    [muutoslistaus e! app]])
@@ -208,7 +208,7 @@
   [e! _app]
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
-    (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot)))
+    (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)))
     (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu

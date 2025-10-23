@@ -61,7 +61,7 @@
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
         {:tuck.effect/type :laukaise-event
-         :event t-yhteiset/->HaeUrakanMuutostiedot})))
+         :event #(t-yhteiset/->HaeUrakanMuutostiedot :lasketut-muutokset)})))
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
   (process-event [_ app]
@@ -118,7 +118,7 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Yksikköhinta tallennettu" :onnistui viesti/viestin-nayttoaika-lyhyt)
 
-    (tuck/send-async! t-yhteiset/->HaeUrakanMuutostiedot)
+    (tuck/send-async! #(t-yhteiset/->HaeUrakanMuutostiedot nil))
 
     (let [app (assoc app
                 :haku-kaynnissa? false
@@ -132,7 +132,7 @@
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
         {:tuck.effect/type :laukaise-event
-         :event t-yhteiset/->HaeUrakanMuutostiedot})))
+         :event #(t-yhteiset/->HaeUrakanMuutostiedot nil)})))
 
 
   TallennaYksikkohintaEpaonnistui

@@ -21,8 +21,8 @@
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
-                                 tallenna-painettu? lomakkeella-virheita? lomake-virheet
-                                 muutoksen-tiedot-haku-kaynnissa?] :as _app}]
+                                 tallenna-painettu? lomakkeella-virheita?
+                                 lomake-virheet muutoksen-tiedot-haku-kaynnissa?] :as _app}]
   [:<>
    [:hr]
    (when (and

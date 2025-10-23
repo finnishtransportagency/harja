@@ -24,12 +24,6 @@
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
-                     ; :aiempien-hoitovuosien-pysyvat-muutokset nil
-                     ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
-                     ;; Jos haluat että koko sivu wipetään, enabloi nämä. Tällä hetkellä tälle ei ole kuitenkaan syytä.
-                     ;; :kirjatut-muutokset nil
-                     ;; :tehtava-maaramuutokset nil
-                     ;; :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
                      :suunniteltujen-maarien-muutokset nil
                      :budjettitavoitteet nil
@@ -82,7 +76,7 @@
 
 ;; --- Tuck-eventit ja käsittelijät ---
 ;; Hae muutostiedot
-(defrecord HaeUrakanMuutostiedot [])
+(defrecord HaeUrakanMuutostiedot [tyyppi])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
@@ -171,23 +165,33 @@
 
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
-  (process-event [_ app]
+  (process-event [{:keys [tyyppi]} app]
+    "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
+    jos tyyppi annetaan, tämän osion väkänen pysyy auki tallennuksen läpi."
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
           uusi-urakka? (boolean (>= urakan-alkuvuosi 2025))]
       (hae-urakan-muutostiedot
-        (->
-          (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-          (assoc
+        (as-> (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat) app
+          (assoc app
             :haku-kaynnissa? true
             :uusi-urakka? uusi-urakka?
             :valittu-hoitokausi @u/valittu-hoitokausi
-            :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))))
+            :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)
 
+          (if tyyppi
+            ;; Tyyppi passattiin, pidä tämä väkänen auki
+            ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
+            (assoc-in app [:taulukko-nakyvissa? tyyppi] true)
+            ;; Ei passattu tyyppiä, (esim kun näkymä avataan) -> cleanaa näkymä
+            (assoc app
+              :kirjatut-muutokset nil
+              :tehtava-maaramuutokset nil
+              :rahavarausten-muutokset nil
+              :aiempien-hoitovuosien-pysyvat-muutokset nil))))))
 
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (vastaus-haku-onnistui app vastaus))
-
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
@@ -201,21 +205,21 @@
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
   HaeMuutoksenTiedot
-  (process-event [{:keys [muutos]} app]
+  (process-event [{:keys [muutos]}
+                  {:keys [valittu-hoitokausi] :as app}]
     (if (:id muutos)
       (do
-        (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-          (tuck-apurit/post! :hae-muutoksen-tiedot
-            {:urakka-id @nav/valittu-urakka-id
-             :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-             :muutos {:id (:id muutos)
-                      :versio (:versio muutos)
-                      :tyyppi (:tyyppi muutos)
-                      :liite-idt (into #{}
-                                   (map :id (:liitteet muutos)))}}
-            {:onnistui ->HaeMuutoksenTiedotOnnistui
-             :onnistui-parametrit [muutos valittu-hoitokausi]
-             :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+        (tuck-apurit/post! :hae-muutoksen-tiedot
+          {:urakka-id @nav/valittu-urakka-id
+           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+           :muutos {:id (:id muutos)
+                    :versio (:versio muutos)
+                    :tyyppi (:tyyppi muutos)
+                    :liite-idt (into #{}
+                                 (map :id (:liitteet muutos)))}}
+          {:onnistui ->HaeMuutoksenTiedotOnnistui
+           :onnistui-parametrit [muutos valittu-hoitokausi]
+           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})
         (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
       app))
 
