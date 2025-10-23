@@ -51,29 +51,36 @@
                                                          :kohdistus-id kohdistus-id})))
 
 (defn hae-hoitovuosien-yksikkohinnat
-  [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id] :as _tiedot}]
+  [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id nakyma-valittu-hk] :as _tiedot}]
   (map-indexed (fn [idx valittu-hoitokausi]
                  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-                       alkupvm (str hoitokauden-alkuvuosi "-10-01")
-                       loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
-                       params {:urakka urakka-id
-                               :tehtavaryhma nil
-                               :alkupvm alkupvm
-                               :loppupvm loppupvm
-                               :tehtava (or tehtava_id nil)
-                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                               :laskenta-automatiikka? true}
-                       yksikkohinta (->
-                                      (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
-                                      first :yksikkohinta)]
-                   ;; esim:: 
-                   ;; 7,90 (1. hoitovuoden yksikköhinta)
-                   {:valinta (str
-                               yksikkohinta " "
-                               "(" (inc idx) ". hoitovuoden yksikköhinta)")
-                    :arvo yksikkohinta
-                    :hk-nro (inc idx)
-                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+                       ;; Tarkista, onhan yksikköhinta edelliseltä vuodelta (siihen mikä on valittuna)
+                       yksikkohinta-aiemmalta-vuodelta? (and
+                                                          nakyma-valittu-hk
+                                                          valittu-hoitokausi
+                                                          (> nakyma-valittu-hk (pvm/vuosi (first valittu-hoitokausi))))]
+
+                   (when yksikkohinta-aiemmalta-vuodelta?
+                     (let [alkupvm (str hoitokauden-alkuvuosi "-10-01")
+                           loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
+                           params {:urakka urakka-id
+                                   :tehtavaryhma nil
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm
+                                   :tehtava (or tehtava_id nil)
+                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                   :laskenta-automatiikka? true}
+                           yksikkohinta (->
+                                          (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
+                                          first :yksikkohinta)]
+                       ;; esim:: 
+                       ;; 7,90 (1. hoitovuoden yksikköhinta)
+                       {:valinta (str
+                                   yksikkohinta " "
+                                   "(" (inc idx) ". hoitovuoden yksikköhinta)")
+                        :arvo yksikkohinta
+                        :hk-nro (inc idx)
+                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))))
     hoitokaudet))
 
 
@@ -163,7 +170,8 @@
                                                                     tehtavalla-ei-toteumia?)
                                                               (hae-hoitovuosien-yksikkohinnat db kayttaja {:urakka-id urakka-id
                                                                                                            :hoitokaudet hoitokaudet
-                                                                                                           :tehtava_id (:tehtava_id rivi)}))
+                                                                                                           :tehtava_id (:tehtava_id rivi)
+                                                                                                           :nakyma-valittu-hk hoitokauden-alkuvuosi}))
                                        ;; Jos edellisiltä vuosilta löytyi yksikköhinta, tarjotaan niitä gridiin 
                                        aikaisemmat-yksikkohinnat (filter #(and
                                                                             ;; Vaadi että jokin yksikköhinta saatavilla 
