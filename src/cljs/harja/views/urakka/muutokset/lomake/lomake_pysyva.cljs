@@ -266,54 +266,20 @@
                   (+ budjetoitu muutos))))}]
      toimenpiteiden-tiedot]))
 
-(defn- pysyva-muutos-hoitovuosi-lukittu?
-  "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
-  Lukittu, jos:
-  - Hoitovuoden vaikutukset sisältyvät kyseisen hoitovuoden tavoitehintaan JA hoitovuoden alun tavoitehinta on vahvistettu
-  - TAI hoitovuoden välikatselmuksen päätöksiä on tehty
-  "
-  [voimassa-alkaen hoitovuosi budjettitavoitteet]
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
-
-  ;; Mikäli muutos alkaa kesken hoitokauden, sillä ei ole merkitystä kyseisen hoitovuoden alun tavoitehinnan kannalta
-  ;; Eli, muutosta ei ole tarpeen lukita vaikka tavoitehinta olisi vahvistettu
-  (and
-    (not (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
-
-    ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
-    (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)))
-
-(defn- pysyva-muutos-voimassa-alkaen-lukittu?
-  "Palauttaa true, jos voimassa-alkaen kenttä on lukittu muokkaukselta.
-  Lukittu, jos:
-  - Jonkin hoitovuoden alun tavoitehinta on vahvistettu
-  - Pysyvä muutos sisältyy jonkin hoitovuoden vahvistettuun välikatselmuksen päätökseen"
-  [budjettitavoitteet]
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
-
-  (t-yhteiset/jokin-hoitovuosien-indeksikorjaus-vahvistettu? budjettitavoitteet))
-
-(defn- voimassa-alkaen-hoitovuodella-tai-jalkeen?
-  [voimassa-alkaen hoitovuosi]
-  (or
-    (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
-    (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen)))
-
 (defn- kopioi-tuleville-hoitovuosille! [e! muokattava-muutos]
   (e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
         (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        (:voimassa_alkaen muokattava-muutos)
         (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        hoitovuosi-lukittu? (pysyva-muutos-hoitovuosi-lukittu? voimassa-alkaen hoitovuosi budjettitavoitteet)
+        hoitovuosi-lukittu? (t-kirjatut/pysyva-muutos-hoitovuosi-lukittu? budjettitavoitteet voimassa-alkaen hoitovuosi)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
-                       (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+                       (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
                        ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
                        (not hoitovuosi-lukittu?))
         vetolaatikkorivit (into {}
@@ -340,7 +306,7 @@
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
         [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
-                         (when (not (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
+                         (when (not (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
@@ -354,9 +320,6 @@
               :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
            (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
-        ;; TODO: Salli kopiointi aina, mutta varmista että tietoja ei kopioida lukituille hoitovuosille
-        ;;       Vaatii muutoksia kopioinnin sisäiseen logiikkaan tilanhallinnan puolella.
-        :disabled (not voi-muokata?)
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
@@ -388,7 +351,7 @@
 
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
          {:pakota-valittuun-hoitokauteen? false
-          :voi-muokata? (not (pysyva-muutos-voimassa-alkaen-lukittu? budjettitavoitteet))})
+          :voi-muokata? (not (t-kirjatut/pysyva-muutos-voimassa-alkaen-lukittu? budjettitavoitteet))})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
@@ -436,8 +399,8 @@
        (when
          ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
          (and
-           (voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
-           (pysyva-muutos-hoitovuosi-lukittu? voimassa-alkaen hoitovuosi budjettitavoitteet))
+           (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+           (t-kirjatut/pysyva-muutos-hoitovuosi-lukittu? budjettitavoitteet voimassa-alkaen hoitovuosi))
 
          ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
          ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
