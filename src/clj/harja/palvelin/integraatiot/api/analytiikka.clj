@@ -111,13 +111,21 @@
    :f2 :maara_maara
    :f3 :maara_yksikko
    :f4 :selite
-   :f5 :tehtavaryhmaid})
+   :f5 :tehtavaryhmaid
+   :f6 :tehtava-rivi-id
+   :f7 :tehtava-poistettu
+   :f8 :tehtava-luotu
+   :f9 :tehtava-muokattu})
 
 (def db-materiaalit->avaimet
   {:f1 :id
    :f2 :materiaali
    :f3 :maara_maara
-   :f4 :maara_yksikko})
+   :f4 :maara_yksikko
+   :f5 :materiaali-rivi-id
+   :f6 :materiaali-poistettu
+   :f7 :materiaali-luotu
+   :f8 :materiaali-muokattu})
 
 ;; Mäpätään json row array tyyppiset elementit (:f<x> muotoiset kolumnien nimet) alaviivarakenteiseksi
 ;; mäpiksi, jotta data saadaan formatoitua skeeman mukaisesti
@@ -274,7 +282,9 @@
                    {:reittitoteumat
                     (map (fn [toteuma]
                            (konversio/alaviiva->rakenne toteuma))
-                      toteumat)})]
+                      toteumat)})
+        _ (toteuma-kyselyt/paivita-palautettu-analytiikalle-aikaleima! db {:alkuaika alkuaika
+                                                                       :loppuaika loppuaika})]
     toteumat))
 
 (defn palauta-materiaalit

@@ -291,7 +291,7 @@
                                :varalla :ei-muutosta
                                :varalla-toissijaiset :ei-muutosta})]
     ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
-    (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)
+    (let [mahdolliset-henkilot (filter #(or (contains? rooli (first (:roolinimet %))) (= rooli (first (:roolinimet %)))) kayttajat)
           varalla-toissijaiset (filter :toissijainen-varahenkilo varalla)
           varalla-ensisijainen (first (filter (comp not :toissijainen-varahenkilo) varalla))
           ei-kayttajia? (empty? mahdolliset-henkilot)
@@ -313,7 +313,12 @@
                                                               [uusi-varalla])
                                                             (if (= :ei-muutosta uudet-varalla-toissijaiset)
                                                               varalla-toissijaiset
-                                                              uudet-varalla-toissijaiset))]
+                                                              uudet-varalla-toissijaiset))
+                                            ;;Vaikka Käyttövaltuushallinnasta tulisi käyttäjiä "Tilaajan_Urakanvalvoja"-roolilla, heillekin tallennetaan kantaan "ELY_Urakanvalvoja"-rooli,
+                                            ;;koska URAKANVASTUUHENKILO.rooli ei ole sama asia kuin Käyttövaltuushallinnassa käyttäjälle annettu rooli.
+                                            rooli (case rooli
+                                                    #{"ELY_Urakanvalvoja", "Tilaajan_Urakanvalvoja"} "ELY_Urakanvalvoja"
+                                                    "vastuuhenkilo" "vastuuhenkilo")]
 
                                         (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
@@ -371,10 +376,10 @@
 
 (defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli]
-  (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
+  (let [roolin-henkilot (filter #(or (contains? rooli (:rooli %)) (= rooli (:rooli %))) vastuuhenkilot)
         ensisijainen (first (filter :ensisijainen roolin-henkilot))
         kayttaja-tyyppi (case rooli
-                          ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
+                          #{"ELY_Urakanvalvoja", "Tilaajan_Urakanvalvoja"} "urakanvalvoja"
                           "vastuuhenkilo" "vastuuhenkilö")
         varalla (filter (comp not :ensisijainen) roolin-henkilot)
         varalla-ensisijainen (first (filter (comp not :toissijainen-varahenkilo) varalla))
@@ -382,7 +387,7 @@
         voi-muokata? (and (not (k/virhe? kayttajat))
                        (not (empty? kayttajat))
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
-                       (or (not= rooli "ELY_Urakanvalvoja")
+                       (or (not= #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"} rooli)
                          (= :tilaaja (roolit/osapuoli kayttaja))))]
     [:div.vastuuhenkilo
      [:div
@@ -615,9 +620,7 @@
       "Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
       "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
                          (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
-                         (if (u/vesivaylaurakka? ur)
-                           "Tilaajan_Urakanvalvoja"
-                           "ELY_Urakanvalvoja")]
+                         #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"}]
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!

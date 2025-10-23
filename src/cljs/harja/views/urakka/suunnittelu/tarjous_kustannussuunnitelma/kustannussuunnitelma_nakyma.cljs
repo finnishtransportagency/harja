@@ -563,7 +563,7 @@
   (let [{:keys [sisaan ulos]}
         (nav/luo-muutosten-hallinta
           :uusi-kustannusuunnitelma-nakyma/muutokset
-          #(get @tila/suunnittelu-kustannussuunnitelma :tallentamattomia-muutoksia?)
+          #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
           :beforeunload-viesti "Hoitovuoden alun tavoitehinta -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
       (komp/lippu kust-tiedot/nakymassa?)
