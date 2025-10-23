@@ -624,9 +624,8 @@ ORDER BY
   o.otsikko ASC,
   tk.nimi ASC;
 
--- FIXME Termistö hiukan sekaisin tässä. Tässä oikeastaan pitäisi puhua yksikköhinnan/tavoitehinnan muutoksesta
---       Varsinaisia tehtävien määrämuutoksia tulee pysyvistä muutoksista ja muutostöistä, joten niissä käytetään määrämuutos termiä.
--- name: paivita-tehtava-maaramuutos<!
+
+-- name: paivita-tehtava-tiedot<!
 INSERT INTO mhu_muutos_tehtava_tiedot (
   urakka,
   tehtava,

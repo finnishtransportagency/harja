@@ -136,14 +136,14 @@
                                                   (> maara 0) ;; tälle vuodelle olemassa toteumia 
                                                   yksikkohinnan_alkuvuosi) ;; mutta yksikköhinta asetettu? => päivitä kanta 
                                               (do
-                                                (muutos-kyselyt/paivita-tehtava-maaramuutos<! db {:syy syy
-                                                                                                  :lahde "laskettu"
-                                                                                                  :kayttaja id
-                                                                                                  :urakka urakka-id
-                                                                                                  :tehtava tehtava_id
-                                                                                                  :hk_alkuvousi hoitokauden-alkuvuosi
-                                                                                                  :yksikkohinta_hk_alkuvuosi nil
-                                                                                                  :kasin_syotetty_tavoitehinta nil})
+                                                (muutos-kyselyt/paivita-tehtava-tiedot<! db {:syy syy
+                                                                                             :lahde "laskettu"
+                                                                                             :kayttaja id
+                                                                                             :urakka urakka-id
+                                                                                             :tehtava tehtava_id
+                                                                                             :hk_alkuvousi hoitokauden-alkuvuosi
+                                                                                             :yksikkohinta_hk_alkuvuosi nil
+                                                                                             :kasin_syotetty_tavoitehinta nil})
                                                 (assoc rivi
                                                   :lahde "laskettu"
                                                   :yksikkohinta_hk_alkuvuosi nil
@@ -246,7 +246,7 @@
                       :hk_alkuvousi hoitokauden-alkuvuosi
                       :yksikkohinta_hk_alkuvuosi valitun_yksikkohinnan_hoitokausi
                       :kasin_syotetty_tavoitehinta (when (= lahde "puuttuu") tavoitehinnan_muutos)}]
-          (muutos-kyselyt/paivita-tehtava-maaramuutos<! conn params))))
+          (muutos-kyselyt/paivita-tehtava-tiedot<! conn params))))
 
     (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
                                              :hoitokaudet hoitokaudet
@@ -262,18 +262,20 @@
                 tehtava_id
                 yksikkohinnan_alkuvuosi]} rivi
         ;; Tätä kutsutaan modalista, joten lähde on aina valittu
-        ;; (yksikköhinta on asetettu edellisiltä hoitokausilta)
-        lahde "valittu"
+        ;; (yksikköhinta on asetettu edellisiltä hoitokausilta)>
+        poista-yksikkohinta? (nil? yksikkohinnan_alkuvuosi) ;; Frontissa on valinta "Ei yksikköhintaa"
+        lahde (if poista-yksikkohinta? "puuttuu" "valittu")
         hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         params {:syy syy
                 :lahde lahde
                 :kayttaja id
                 :urakka urakka-id
                 :tehtava tehtava_id
-                :kasin_syotetty_tavoitehinta nil
+                :kasin_syotetty_tavoitehinta (if poista-yksikkohinta? 0 nil)
                 :hk_alkuvousi hoitokauden-alkuvuosi
-                :yksikkohinta_hk_alkuvuosi yksikkohinnan_alkuvuosi}]
-    (muutos-kyselyt/paivita-tehtava-maaramuutos<! db params)
+                :yksikkohinta_hk_alkuvuosi yksikkohinnan_alkuvuosi}
+        _ (muutos-kyselyt/paivita-tehtava-tiedot<! db params)]
+
     (hae-tehtava-maaramuutokset db kayttaja (assoc params
                                               :urakka-id urakka-id
                                               :hoitokaudet hoitokaudet

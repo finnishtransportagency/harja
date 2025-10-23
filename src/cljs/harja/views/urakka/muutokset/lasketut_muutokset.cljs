@@ -51,7 +51,7 @@
           :pakollinen? true
           :vayla-tyyli? true
           ;; Vektori jossa mappeja,  rakenne -> hae-hoitovuosien-yksikkohinnat
-          :valinnat (into [] aikaisemmat-yksikkohinnat)
+          :valinnat (into [{:valinta "Ei yksikköhintaa" :arvo 0.0M}] aikaisemmat-yksikkohinnat)
           ;; Näytä :valinta -> aikaisemmat-yksikkohinnat
           :valinta-nayta #(:valinta %)
           ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
