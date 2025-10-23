@@ -462,6 +462,8 @@ CREATE OR REPLACE FUNCTION maaramitattava_toteuma_testidata_mhu(
     p_vuosi int            -- esim 2025 
 ) RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
+    v_alku int;
+    v_loppu int;
     v_urakka_id int;
     v_sopimus_id int;
     v_kayttaja_id int;
@@ -469,6 +471,15 @@ BEGIN
     SELECT id INTO v_urakka_id FROM urakka WHERE nimi LIKE p_urakka LIMIT 1;
     SELECT id INTO v_sopimus_id FROM sopimus WHERE urakka = v_urakka_id;
     SELECT id INTO v_kayttaja_id FROM kayttaja WHERE kayttajanimi = 'jvh' LIMIT 1;
+    SELECT EXTRACT(YEAR FROM alkupvm), EXTRACT(YEAR FROM loppupvm) INTO v_alku, v_loppu FROM urakka WHERE id = v_urakka_id;
+
+    IF p_vuosi NOT BETWEEN v_alku AND v_loppu THEN
+        RAISE EXCEPTION '%: vuosi % ei ole urakan voimassaoloaikana (%–%)', p_urakka, p_vuosi, v_alku, v_loppu;
+    END IF;
+    
+    IF (p_vuosi - 2) NOT BETWEEN v_alku AND v_loppu THEN
+        RAISE EXCEPTION '%: anna -2 vuoden buffer - vuosi % ei ole urakan voimassaoloaikana (%–%)', p_urakka, (p_vuosi - 2), v_alku, v_loppu;
+    END IF;
 
     IF v_urakka_id IS NULL THEN  
         RAISE EXCEPTION 'Urakkaa ei löydy: %', p_urakka;
@@ -660,6 +671,7 @@ BEGIN
 
 END $$;
 
-
+-- Vuosi pitää osua urakan voimassaoloon
+-- Ei voi olla 2 ensimmäistä hoitokautta
 SELECT maaramitattava_toteuma_testidata_mhu('Iin MHU 2021-%', 2025);
 SELECT maaramitattava_toteuma_testidata_mhu('POP MHU Kajaani 2025-%', 2028);
