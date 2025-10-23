@@ -78,7 +78,6 @@
                        #(e! (t-yhteiset/->MuokkaaMuutosta rivi)) {:disabled poikkeama?}]))}]
    kirjatut-muutokset])
 
-;; TODO: Toteuta loppuun ja testaa
 (defn aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid [e! {:keys [aiempien-hoitovuosien-pysyvat-muutokset] :as app}]
   [grid/grid
    {:tunniste :id
