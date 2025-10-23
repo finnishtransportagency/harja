@@ -271,13 +271,14 @@
                 (assoc app :muokattava-muutos rivi))]
       (assoc app
         :lomake-virheet nil
-        :voi-tallentaa? true
         :tallenna-painettu? false)))
 
 
   MuokkaaJohtoJaHallintoMuutosta
   (process-event [{:keys [rivi]} app]
     (-> app
+      ;; Tarkoituksella asetetaan trueksi
+      ;; tallenna-painettu? sekä lomakevirheet validoivat voidaanko tallentaa (saavutettavuus)
       (assoc :voi-tallentaa? true)
       (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
@@ -287,8 +288,8 @@
           virheita? (empty? (-> lomake ::lomake/virheet vals))]
       (assoc app
         :voi-tallentaa? true
-        :lomakkeella-virheita? (boolean virheita?)
         :lomake-virheet lomake-virheet
+        :lomakkeella-virheita? (boolean virheita?)
         :muokattava-muutos (lomake/ilman-lomaketietoja lomake))))
 
   TallennaMuutos
