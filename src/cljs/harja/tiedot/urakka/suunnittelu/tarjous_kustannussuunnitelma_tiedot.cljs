@@ -14,23 +14,6 @@
 (defonce nakymassa? (atom false))
 (defonce grid-toimenkuvat-atom (atom [{}]))
 
-;; Muutosten seuranta
-(defonce tallentamattomia-muutoksia (atom false))
-
-(defn merkitse-muutos!
-  "Merkitsee että muutoksia on tehty"
-  []
-  (reset! tallentamattomia-muutoksia true))
-
-(defn nollaa-muutokset!
-  "Nollaa muutosten seurannan"
-  []
-  (reset! tallentamattomia-muutoksia false))
-
-(defn onko-muutoksia?
-  "Tarkistaa onko tallentamattomia muutoksia"
-  []
-  @tallentamattomia-muutoksia)
 
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
@@ -279,13 +262,6 @@
       (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
       (assoc :urakka-id (:urakka-id vastaus)))))
 
-(defn synkronoi-muutokset-atomiin!
-  "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
-   Kutsutaan automaattisesti kaikissa eventeissä, jotka muuttavat tilaa."
-  [app]
-  (reset! tallentamattomia-muutoksia (boolean (get app :tallentamattomia-muutoksia? false)))
-  app)
-
 (extend-protocol tuck/Event
 
   HaeTarjouksenTiedot
@@ -322,8 +298,7 @@
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)
-      (synkronoi-muutokset-atomiin!)))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -333,7 +308,6 @@
   TallennaTarjouksenTiedot
   (process-event
     [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
-    (nollaa-muutokset!)
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
           kaikki-toimenkuvat (:toimenkuvat app)
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
@@ -352,8 +326,7 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)
-      (synkronoi-muutokset-atomiin!)))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -382,7 +355,8 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -439,14 +413,14 @@
   TallennaKilpailutettavatHankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Kilpailutettavat hankinnat tallennettiin.")
-    (nollaa-muutokset!)
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
       (assoc :onko-hankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaKilpailutettavatHankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -479,7 +453,6 @@
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
-    (nollaa-muutokset!)
     (-> app
       (assoc :tallennus-kesken? true)
       (assoc :onko-erillishankinnat-muutoksia? false)))
@@ -493,7 +466,8 @@
       (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaErillishankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -550,7 +524,8 @@
       (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaHoidonjohtopalkkiotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -583,7 +558,8 @@
     (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))]
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
-        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet)
+        (assoc :tallentamattomia-muutoksia? true))))
 
   ;; Vanhat toimenkuvat vaativat toimenkuvan kokonaissumman uudelleen laskennan
   PaivitaJohtoJaHallintokorvaukset2019
@@ -593,7 +569,8 @@
           muuttunut (filter #(= (:toimenkuva %) toimenkuva) muuttuneet)]
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
-        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet)
+        (assoc :tallentamattomia-muutoksia? true))))
 
   TallennaJohtoJaHallintokorvaukset
   (process-event
@@ -617,14 +594,14 @@
   TallennaJohtoJaHallintokorvauksetOnnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Johto- ja Hallintokorvaukset tallennettiin.")
-    (nollaa-muutokset!)
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
       (assoc :onko-jjh-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -663,7 +640,6 @@
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
       (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
-      (nollaa-muutokset!)
       (-> app
         (assoc :onko-hankinnat-muutoksia? false)
         (assoc :onko-jjh-muutoksia? false)
@@ -681,7 +657,6 @@
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})
-    (nollaa-muutokset!)
     (-> app
       (assoc :onko-hankinnat-muutoksia? false)
       (assoc :onko-jjh-muutoksia? false)
@@ -734,69 +709,61 @@
   (process-event [{:keys [hankinnat]} app]
     (-> app
       (assoc :hankinnat (sort-by :jarjestys hankinnat))
-      (assoc :tallentamattomia-muutoksia? true)
-      (synkronoi-muutokset-atomiin!)))
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
-    (merkitse-muutos!)
     (-> app
       (assoc :erillishankinnat erillishankinnat)
       (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaToimenkuvatGrid
   (process-event [{:keys [toimenkuvat]} app]
-    (merkitse-muutos!)
     (-> app
       (assoc :toimenkuvat toimenkuvat)
       (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaHoidonjohtopalkkioGrid
   (process-event [{:keys [hoidonjohtopalkkiot]} app]
-    (merkitse-muutos!)
     (-> app
       (assoc :hoidonjohtopalkkiot hoidonjohtopalkkiot)
       (assoc :tallentamattomia-muutoksia? true)))
 
-  NollaaMuutokset
-  (process-event [_ app]
-    (nollaa-muutokset!)
-    app)
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
     (-> app
-      (assoc :vetolaatikon-muokkaus tila)))
+      (assoc :vetolaatikon-muokkaus tila)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   NollaKustannussuunnitelmanMuutokset
   (process-event [_ app]
-    (nollaa-muutokset!)
     (-> app
       (assoc :onko-hankinnat-muutoksia? false)
       (assoc :onko-jjh-muutoksia? false)
       (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
-      (assoc :onko-erillishankinnat-muutoksia? false)))
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :tallentamattomia-muutoksia? false)))
 
   AsetaHankinnatMuutos
   (process-event [_ app]
-    (merkitse-muutos!)
     (-> app
-      (assoc :onko-hankinnat-muutoksia? true)))
+      (assoc :onko-hankinnat-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   AsetaErillishankinnatMuutos
   (process-event [_ app]
-    (merkitse-muutos!)
     (-> app
-      (assoc :onko-erillishankinnat-muutoksia? true)))
+      (assoc :onko-erillishankinnat-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   AsetaJJHMuutos
   (process-event [_ app]
-    (merkitse-muutos!)
     (-> app
       (assoc :onko-jjh-muutoksia? true)))
 
   AsetaHoidonjohtopalkkioMuutos
   (process-event [_ app]
-    (merkitse-muutos!)
     (-> app
-      (assoc :onko-hoidonjohtopalkkio-muutoksia? true))))
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true))))
