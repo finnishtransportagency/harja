@@ -21,7 +21,7 @@
                          tarjous-tiedot)]
     (assoc tarjous :tarjous nollatut-arvot)))
 
-(defn kustannussuuunnitelman-vahvistukset [db urakka-id]
+(defn kustannussuunnitelman-vahvistukset [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot db urakka-id))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         ;; Varmista, että yhtenäkään vuonna koko urakan keston ajalta kustannussuunnitelmaa ei ole vahvistettu. Jos on, niin tarjousta ei voi enää muokata
@@ -34,7 +34,7 @@
 
 (defn koosta-tarjouksen-tiedot [db urakka-id]
   (let [tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
-        vahvistukset (kustannussuuunnitelman-vahvistukset db urakka-id)]
+        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)]
     (assoc tarjous :vahvistetut-vuodet (into #{}
                                          (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset)))))))
 
@@ -63,7 +63,7 @@
                           (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))) ;; Haetaan kaikki urakan vuodet
 
           ;; Varmistetaan, että ei yritetä tallentaa sellaisen vuoden tietoja, jotka on jo vahvistettu
-          vahvistukset (kustannussuuunnitelman-vahvistukset db urakka-id)
+          vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)
           vahvistetut-vuodet (set (map :vuosi (filter :vahvistettu? vahvistukset)))
           kaikki-vahvistettu? (= (count vahvistetut-vuodet) (count urakan-vuodet))
 
