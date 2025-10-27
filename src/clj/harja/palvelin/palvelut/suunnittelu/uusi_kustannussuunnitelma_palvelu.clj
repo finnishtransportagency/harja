@@ -70,11 +70,7 @@
                                   :else hoitovuoden-alkuvuosi)
           viimeinen-hoitovuosi? (boolean (= hoitovuoden-alkuvuosi (dec urakan-loppuvuosi)))
 
-          vahvistukset (suunnitelma-q/indeksikorjaukset-vahvistettu? db
-                         {:urakka-id urakka-id
-                          :alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
-                          :loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))})
-          indeksikorjaukset-vahvistettu? (every? true? (flatten (map vals vahvistukset)))
+          kustannussuunnitelma-vahvistettu? (suunnitelma-q/kustannussuunnitelma-vahvistettu? db urakka-id hoitovuoden-alkuvuosi)
 
           kiinteat (suunnitelma-q/hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           kiinteat (map (fn [tyo]
@@ -83,11 +79,9 @@
                             (assoc :toimenpide-nimi (mhu/toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
                      kiinteat)
           ;; Indeksikerroin
-          indeksikerroin (:indeksikerroin
-                           (first
-                             (filter
-                               #(= hoitovuoden-alkuvuosi (:vuosi %))
-                               (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id urakka-id}))))
+          indeksikertoimet (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)))
+          indeksikerroin (:indeksikerroin indeksikertoimet)
+          indeksikerroin-str (:indeksikerroin-str indeksikertoimet)
 
           ;; Hae tarjouksen tiedot
           tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
@@ -163,8 +157,9 @@
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
+                                    :indeksikerroin-str indeksikerroin-str
                                     :kattohintakerroin kattohintakerroin
-                                    :vahvistettu? indeksikorjaukset-vahvistettu?}}]
+                                    :vahvistettu? kustannussuunnitelma-vahvistettu?}}]
       k)))
 
 (defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
