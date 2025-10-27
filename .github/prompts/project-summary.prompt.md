@@ -1,9 +1,9 @@
 ---
-mode: 'agent'
-
-tools: [ 'list_dir', 'read_file', 'file_search', 'grep_search', 'show_content' ]
-
+title: 'Generate Clojure Project Summary for LLM Assistance'
 description: 'Generate a concise summary of the Clojure project based on its configuration files'
+mode: 'agent'
+model: 'Claude Sonnet 4.5'
+tools: [ 'list_dir', 'read_file', 'file_search', 'grep_search', 'show_content' ]
 ---
 
 OBJECTIVE

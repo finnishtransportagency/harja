@@ -1,8 +1,9 @@
 ---
 status: draft
 title: 'EXPERIMENTAL: Accessibility Audit WCAG 2.1/2.2'
-mode: 'agent'
 description: 'Analyze and review web UI accessibility with WCAG 2.1/2.2 guidelines and provide actionable fixes.'
+mode: 'agent'
+model: 'gpt-5'
 tools: ['playwright-mcp/*', 'chrome-devtools-mcp/*', 'open_file', 'read_file', 'list_dir', 'file_search', 'grep_search']
 ---
 

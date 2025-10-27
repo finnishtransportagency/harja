@@ -1,9 +1,8 @@
 ---
-mode: 'agent'
-
-tools: ['navigate_page','wait_for','evaluate_script','list_console_messages','select_page','navigate_page_history']
-
+title: 'EXPERIMENTAL: Browser-Based Debugging of Harja ClojureScript Tuck Application State'
 description: 'EXPERIMENTAL: Debug Tuck state of the Harja ClojureScript application using browser tools'
+mode: 'agent'
+tools: ['navigate_page','wait_for','evaluate_script','list_console_messages','select_page','navigate_page_history']
 ---
 
 STRICT EXECUTION POLICY

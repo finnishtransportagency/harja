@@ -1,4 +1,7 @@
 ---
+model: 'gpt-5'
+mode: 'agent'
+title: 'Clojure Architectural Guidance'
 description: 'Architectural planning and review assistance for code changes'
 ---
 
