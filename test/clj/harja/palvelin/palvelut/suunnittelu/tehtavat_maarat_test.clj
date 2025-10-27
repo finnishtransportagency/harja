@@ -14,8 +14,8 @@
           :db (luo-testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :tehtavat-maarat (component/using
-                                       (tm-palvelu/->TehtavatJaMaarat)
-                                       [:http-palvelin :db])))))
+                             (tm-palvelu/->TehtavatJaMaarat)
+                             [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -50,24 +50,28 @@
             kayttaja-id (:id +kayttaja-jvh+)
             hoitokauden-alkuvuosi 2024
             tehtavat (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
-            ;; Muokataan muutamia määriä - Tehtävä id:t kovakoodattu. Voivat säkällä muuttua.
-            tehtava-set #{2988 2989 2991} ; Ise 2-ajorat, Ise 1-ajorat, Ise rampit
+            ; Ise 2-ajorat, Ise 1-ajorat, Ise rampit
+            tehtava-idt (map :tehtava_id
+                          (take 3 (filter (fn [tehtava]
+                                            (not (nil? (:tehtava_id tehtava)))) (:tehtavat tehtavat))))
+
+            ;; Muokataan muutamia määriä
             tehtavat (mapv (fn [t]
                              (cond
-                               (= (:tehtava_id t) 2988) (assoc t :tarjous_maara 10) ; Ise 2-ajorat.
-                               (= (:tehtava_id t) 2989) (assoc t :tarjous_maara 20) ; Ise 1-ajorat.
-                               (= (:tehtava_id t) 2991) (assoc t :tarjous_maara 30) ; Ise rampit
+                               (= (:tehtava_id t) (nth tehtava-idt 0)) (assoc t :tarjous_maara 10) ; Ise 2-ajorat.
+                               (= (:tehtava_id t) (nth tehtava-idt 1)) (assoc t :tarjous_maara 20) ; Ise 1-ajorat.
+                               (= (:tehtava_id t) (nth tehtava-idt 2)) (assoc t :tarjous_maara 30) ; Ise rampit
                                :else t))
-                           (:tehtavat tehtavat))]
+                       (:tehtavat tehtavat))]
         (tm-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id kayttaja-id hoitokauden-alkuvuosi tehtavat)
 
         ;; Haetaan talletetut tehtävät ja määrät
         (let [talteenotetut-tehtavat (:tehtavat (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi))
-              talteenotetut-tehtavat (filter #(contains? tehtava-set (:tehtava_id %)) talteenotetut-tehtavat)
-              ise-2-ajorat (first (filter #(= 2988 (:tehtava_id %)) talteenotetut-tehtavat))
-              ise-1-ajorat (first (filter #(= (:tehtava_id %) 2989) talteenotetut-tehtavat))
-              ise-rampit (first (filter #(= (:tehtava_id %) 2991) talteenotetut-tehtavat))]
+              talteenotetut-tehtavat (filter #(contains? (into #{} tehtava-idt) (:tehtava_id %)) talteenotetut-tehtavat)
+              tehtava1 (first (filter #(= (nth tehtava-idt 0) (:tehtava_id %)) talteenotetut-tehtavat))
+              tehtava2 (first (filter #(= (:tehtava_id %) (nth tehtava-idt 1)) talteenotetut-tehtavat))
+              tehtava3 (first (filter #(= (:tehtava_id %) (nth tehtava-idt 2)) talteenotetut-tehtavat))]
 
-          (is (= (:tarjous_maara ise-2-ajorat) 10M) "Ise 2-ajorat määrä on tallennettu oikein")
-          (is (= (:tarjous_maara ise-1-ajorat) 20M) "Ise 1-ajorat määrä on tallennettu oikein")
-          (is (= (:tarjous_maara ise-rampit) 30M) "Ise rampit määrä on tallennettu oikein"))))))
+          (is (= (:tarjous_maara tehtava1) 10M) "Ise 2-ajorat (eli tehtävä1) määrä on tallennettu oikein")
+          (is (= (:tarjous_maara tehtava2) 20M) "Ise 1-ajorat (eli tehtävä2) määrä on tallennettu oikein")
+          (is (= (:tarjous_maara tehtava3) 30M) "Ise rampit (eli tehtävä3) määrä on tallennettu oikein"))))))
