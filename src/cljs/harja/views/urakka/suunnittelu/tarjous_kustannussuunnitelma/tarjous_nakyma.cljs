@@ -440,7 +440,6 @@
            (sisaan)))
       (komp/ulos
         #(do
-           (tarjous-tiedot/nollaa-muutokset!)
            (ulos)))
       (fn [e! app]
         [:div
