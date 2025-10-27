@@ -145,7 +145,6 @@
                     :leveys "44%"
                     :nimi :tehtava
                     :solun-luokka solun-luokka-fn
-                    :muokattava? (constantly true)
                     :tyyppi :komponentti
                     :komponentti (fn [{:keys [tehtava_id nimi valiotsikko]}]
                                    (if tehtava_id
@@ -157,14 +156,23 @@
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%" :nimi :muutos_maaramuutos :tyyppi :numero :tasaa :oikea
-                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
-                    :fmt (fn [arvo]
-                           (muutoksen-vaikutus-fn arvo))}
-                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa :tyyppi :numero :tasaa :oikea
-                    :muokattava? (constantly false) :solun-luokka solun-luokka-fn
-                    :fmt (fn [arvo]
-                           (if (nil? arvo) "-" arvo))}
+                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%"
+                    :nimi :muutos_maaramuutos
+                    :solun-luokka solun-luokka-fn
+                    :tasaa :oikea
+                    :tyyppi :komponentti
+                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos] :as rivi}]
+                                   (if tehtava_id
+                                     [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
+                                     [:span]))}
+                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
+                    :tyyppi :komponentti
+                    :solun-luokka solun-luokka-fn
+                    :tasaa :oikea
+                    :komponentti (fn [{:keys [tehtava_id yhteensa] :as rivi}]
+                                   (if tehtava_id
+                                     [:span yhteensa]
+                                     [:span]))}
                    {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
