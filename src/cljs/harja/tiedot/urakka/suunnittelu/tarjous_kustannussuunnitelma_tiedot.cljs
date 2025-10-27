@@ -1,18 +1,14 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
   (:require [clojure.string :as str]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.tyokalut.yleiset :as tyokalut]
             [tuck.core :as tuck]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
-
 
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
@@ -105,24 +101,6 @@
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
   (siirrin/siirry-elementin-id elementin-id 200))
 
-(defn konvertoi-grid-muotoon [data]
-  (into [] (reduce (fn [rivit tarjous-rivi]
-                     (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                (-> uusi
-                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
-                                                  (assoc :poistettu (:poistettu tarjous-rivi))
-                                                  (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                  (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                  (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                  (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                  (assoc :osio (:osio tarjous-rivi))
-                                                  (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                        {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                           nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                           lopputulos (merge vuosiarvot nimiarvot)]
-                       (concat rivit [lopputulos])))
-             [] data)))
-
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
   UI Grille on oltava jokainen vuosi omassa avaimeessaa tyyliin :vuosi-2023, :vuosi-2024 jne.
@@ -196,10 +174,9 @@
 (defrecord PaivitaErillishankinnatGrid [erillishankinnat])
 (defrecord PaivitaToimenkuvatGrid [toimenkuvat])
 (defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
-(defrecord NollaaMuutokset [])
 
 (defrecord ToggleVetolaatikonMuokkaus [tila])
-(defrecord NollaKustannussuunnitelmanMuutokset [])
+(defrecord NollaaKustannussuunnitelmanMuutokset [])
 (defrecord AsetaHankinnatMuutos [])
 (defrecord AsetaErillishankinnatMuutos [])
 (defrecord AsetaJJHMuutos [])
@@ -740,7 +717,7 @@
       (assoc :vetolaatikon-muokkaus tila)
       (assoc :tallentamattomia-muutoksia? true)))
 
-  NollaKustannussuunnitelmanMuutokset
+  NollaaKustannussuunnitelmanMuutokset
   (process-event [_ app]
     (-> app
       (assoc :onko-hankinnat-muutoksia? false)
