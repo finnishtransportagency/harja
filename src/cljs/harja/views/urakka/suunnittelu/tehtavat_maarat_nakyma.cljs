@@ -230,7 +230,10 @@
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
-     [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."]
+
+     (when tallennustila?
+       [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."])
+
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
