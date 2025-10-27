@@ -225,7 +225,8 @@
            @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
            {:taso1 :urakat
             :taso2 :mhu-muutokset
-            :taso3 nil})]]]
+            :taso3 nil})
+        {:luokka "klikattava alleviivaa"}]]]
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
