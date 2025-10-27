@@ -79,11 +79,9 @@
                             (assoc :toimenpide-nimi (mhu/toimenpide->nimi (mhu/toimenpide->toimenpide-avain (:koodi tyo))))))
                      kiinteat)
           ;; Indeksikerroin
-          indeksikerroin (:indeksikerroin
-                           (first
-                             (filter
-                               #(= hoitovuoden-alkuvuosi (:vuosi %))
-                               (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id urakka-id}))))
+          indeksikertoimet (first (filter #(= hoitovuoden-alkuvuosi (:vuosi %)) (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)))
+          indeksikerroin (:indeksikerroin indeksikertoimet)
+          indeksikerroin-str (:indeksikerroin-str indeksikertoimet)
 
           ;; Hae tarjouksen tiedot
           tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
@@ -159,6 +157,7 @@
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
+                                    :indeksikerroin-str indeksikerroin-str
                                     :kattohintakerroin kattohintakerroin
                                     :vahvistettu? kustannussuunnitelma-vahvistettu?}}]
       k)))
