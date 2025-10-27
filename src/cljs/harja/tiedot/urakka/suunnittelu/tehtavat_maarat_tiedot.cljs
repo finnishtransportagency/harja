@@ -10,11 +10,6 @@
 ;; Muutosten seuranta
 (defonce tallentamattomia-muutoksia (atom false))
 
-(defn onko-muutoksia?
-  "Tarkistaa onko tallentamattomia muutoksia"
-  []
-  @tallentamattomia-muutoksia)
-
 (defn synkronoi-muutokset-muutokset-atomiin!
   "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
    Kutsutaan automaattisesti kaikissa eventeissä, jotka muuttavat tilaa."
@@ -34,8 +29,9 @@
 (defrecord PeruutaTallennus [])
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
+(defrecord NollaaTehtavatJaMaaratMuutokset [])
 
-(defn hae-tetavat-ja-maarat [parametrit]
+(defn hae-tehtavat-ja-maarat [parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
     {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
      :valittu-hoitokausi @u/valittu-hoitokausi}
@@ -48,7 +44,7 @@
   HaeTehtavatJaMaarat
   (process-event [{parametrit :parametrit} app]
     (js/console.log "HaeTehtavatJaMaarat :: parametrit " (pr-str parametrit))
-    (hae-tetavat-ja-maarat parametrit)
+    (hae-tehtavat-ja-maarat parametrit)
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
@@ -107,7 +103,7 @@
 
   PeruutaTallennus
   (process-event [_ app]
-    (hae-tetavat-ja-maarat nil)
+    (hae-tehtavat-ja-maarat nil)
     (assoc app :tallennustila? (not (:tallennustila? app))))
 
   AvaaRivi
@@ -117,4 +113,8 @@
                 app)]
       (if (contains? (:avatut-tehtavaryhmat app) valiotsikko)
         (assoc app :avatut-tehtavaryhmat (disj (:avatut-tehtavaryhmat app) valiotsikko))
-        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko))))))
+        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko)))))
+
+  NollaaTehtavatJaMaaratMuutokset
+  (process-event [_ app]
+    (assoc app :tallentamattomia-muutoksia? false)))

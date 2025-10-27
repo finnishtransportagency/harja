@@ -19,19 +19,19 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                             tehtavat-ja-maarat kopioi-tuleville-vuosille?]
+                             tehtavat-ja-maarat kopioi-tuleville-vuosille? onko-muutoksia?]
   [:div.flex-row {:style {:justify-content "right"}}
    [:div.painikkeet.text-right
     [:div.grid-status-viestit
      (cond
-       (and (tiedot/onko-muutoksia?) viimeisin-muokkaus)
+       (and onko-muutoksia? viimeisin-muokkaus)
        [:<>
         [:div.status-viesti.tallennettu
          (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
         [:div.status-viesti.tallentamatta
          "Tallentamattomia muutoksia"]]
 
-       (tiedot/onko-muutoksia?)
+       onko-muutoksia?
        [:div.status-viesti.tallentamatta
         "Tallentamattomia muutoksia"]
 
@@ -197,7 +197,7 @@
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat avatut-tehtavaryhmat] :as app}]
+                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia?] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
@@ -220,21 +220,26 @@
             :taso3 nil})]]]
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
-      (not onko-viimeinen-vuosi?)]
+      (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
      [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."]
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
-(defn tehtavat-maarat*
-  [e! _]
+(defn tehtavat-maarat* [e! _]
   (let [{:keys [sisaan ulos]}
         (nav/luo-muutosten-hallinta
           :tehtavat-maarat-nakyma/muutokset
           #(get @tila/suunnittelu-tehtavat-maarat :tallentamattomia-muutoksia?)
-          :beforeunload-viesti "Tehtävät ja määrät -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+          :beforeunload-viesti "Tehtävä- ja määräluettelo -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
          (komp/lippu tiedot/nakymassa?)
-         (komp/sisaan #(e! (tiedot/->HaeTehtavatJaMaarat nil)))
+         (komp/sisaan #(do
+                         (e! (tiedot/->HaeTehtavatJaMaarat nil))
+                         (sisaan)))
+      (komp/ulos
+        #(do
+           (e! (tiedot/->NollaaTehtavatJaMaaratMuutokset))
+           (ulos)))
          (fn [e! app]
            [:div
             [nakyma e! app]]))))
