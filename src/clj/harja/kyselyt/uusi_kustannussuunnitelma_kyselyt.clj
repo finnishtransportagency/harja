@@ -962,3 +962,11 @@
                                   :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)
                                  :vuosi hoitovuoden-alkuvuosi})]
     (boolean (some #(true? (:arvoja-tulevilla-hoitovuosilla? %)) tulevaisuudessa-arvoja))))
+
+(defn kustannussuunnitelma-vahvistettu? [db urakka-id hoitovuoden-alkuvuosi]
+  (let [vahvistukset (indeksikorjaukset-vahvistettu? db
+                       {:urakka-id urakka-id
+                        :alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
+                        :loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))})
+        kustannussuunnitelma-vahvistettu? (every? true? (flatten (map vals vahvistukset)))]
+    kustannussuunnitelma-vahvistettu?))
