@@ -99,9 +99,7 @@
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
     [:div
      [:h2 "Muutokset"]
-     [:div.body-text {:style {:margin-top "-15px"}} (str tehtava ", " (fmt/hoitokauden-jarjestysluku-ja-vuodet hoitokauden-alkuvuosi hoitovuodet "Hoitovuosi"))]
-
-
+     [:div.body-text {:style {:margin-top "-15px" :margin-bottom "1rem"}} (str tehtava ", " (fmt/hoitokauden-jarjestysluku-ja-vuodet hoitokauden-alkuvuosi hoitovuodet "Hoitovuosi"))]
      [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :padding-left "18px"}}
       [grid/grid
        {:otsikko ""
@@ -131,7 +129,7 @@
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
-                          "vaalen-tumma-tausta korkea"))
+                          "valiotsikko-tausta korkea"))
         sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
