@@ -9,6 +9,7 @@
     [harja.ui.lomake :as lomake]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.kentat :as kentat]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
     [harja.ui.debug :refer [debug]]
     [harja.domain.muutos-domain :as muutos-domain]
@@ -132,12 +133,6 @@
                                   (:tehtava rivi))
                             (:yksikko %))
                      (:toimenpiteiden-tehtavat muokattava-muutos)))}
-
-           {:otsikko "Hoitovuosi"
-            :nimi :hoitokauden_alkuvuosi
-            :tyyppi :positiivinen-numero
-            :leveys 5
-            :muokattava? (constantly false)}
 
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
@@ -267,6 +262,11 @@
                   (+ budjetoitu muutos))))}]
      toimenpiteiden-tiedot]))
 
+(defn- kopioi-tuleville-hoitovuosille! [e! muokattava-muutos]
+  (e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
+        (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
+
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
@@ -308,9 +308,15 @@
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
-       #(e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
-              (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-              (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos)))
+       (fn []
+         (if (t-kirjatut/pysyvia-muutoksia-tulevilla-hoitovuosilla? hoitovuosi muokattava-muutos)
+           (varmista-kayttajalta/varmista-kayttajalta
+             {:otsikko "Tulevilla hoitovuosilla on jo tietoja"
+              :sisalto [:div "Tulevilla hoitovuosilla on jo tietoja. Ylikirjoitetaanko tiedot valitun hoitovuoden tiedoilla?"
+                        [:div "Ylikirjoitetut tiedot menetetään, kun tallennat lomakkeen."]]
+              :hyvaksy "Ylikirjoita"
+              :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
+           (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
         ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
         :disabled (not voi-muokata?)
@@ -322,21 +328,15 @@
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?
+              valittu-hoitokausi] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
         indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)]
-    [{:tyyppi :komponentti
-      :uusi-rivi? true
-      :komponentti (fn [_rivi]
-                     [:div.perustiedot
-                      [yleiset/info-laatikko :neutraali
-                       "Pysyvä muutos vaikuttaa kaikkiin tuleviin hoitovuosiin."]])}
-
-     (lomake/ryhma {:otsikko "Perustiedot"}
+    [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet)
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi false)
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
@@ -365,8 +365,7 @@
      ;; Jakaja
      {:tyyppi :komponentti
       :uusi-rivi? true
-      :komponentti (fn [_rivi]
-                     [:hr])}
+      :komponentti (fn [_rivi] [:hr])}
 
      ;; --
 
@@ -399,17 +398,23 @@
                            nil
                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
 
-       ;; Taulukko jossa vaikutuksia voidaan syöttää
-       (if hoitovuosi
-         {:otsikko ""
-          :uusi-rivi? true
-          :nimi :taulukko-pysyvan-muutoksen-vaikutukset
-          :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+       (if muutoksen-tiedot-haku-kaynnissa?
          {:tyyppi :komponentti
           :uusi-rivi? true
           :komponentti (fn [_rivi]
-                         [:div.perustiedot
-                          [yleiset/info-laatikko :neutraali
-                           "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])}))]))
+                         [yleiset/ajax-loader "Haetaan muutoksen tietoja..."])}
+
+         (if hoitovuosi
+           ;; Taulukko jossa vaikutuksia voidaan syöttää
+           {:otsikko ""
+            :uusi-rivi? true
+            :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
+           {:tyyppi :komponentti
+            :uusi-rivi? true
+            :komponentti (fn [_rivi]
+                           [:div.perustiedot
+                            [yleiset/info-laatikko :neutraali
+                             "Valitse hoitovuosi, jotta voit tehdä pysyvän muutoksen."]])})))]))

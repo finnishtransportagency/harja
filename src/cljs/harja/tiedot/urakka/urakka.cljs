@@ -31,12 +31,13 @@
                                :lomake [:kopioidaan-tuleville-vuosille? true]
                                :valittu-hoitovuosi kuluva-alkuvuosi})
 
-(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
-                                                                  :nayta-aluetehtavat? true
-                                                                  :nayta-suunniteltavat-tehtavat? true
-                                                                  :toimenpide      nil
-                                                                  :valitaso        nil
-                                                                  :noudetaan       0}}
+(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-tuleville false
+                                                      :nayta-aluetehtavat? true
+                                                      :nayta-suunniteltavat-tehtavat? true
+                                                      :toimenpide nil
+                                                      :valitaso nil
+                                                      :noudetaan 0}}
+                                :tehtavat-maarat {:nayta-muuttuneet-tehtavat true}
                                 :kustannussuunnitelma kustannussuunnitelma-default
                                 :suolarajoitukset suolarajoitukset-default})
 
@@ -285,6 +286,11 @@
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
+                                            
+                                            (= :erillisrahoitettu-muutos (:tyyppi kohdistus))
+                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                             [:kohdistukset i :valittu-muutostyo] (:kulut/valittu-muutostyo validoinnit)
+                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
 
                                             ;; Hankintakululla on pakko olla tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
                                             (= :hankintakulu (:tyyppi kohdistus))
@@ -450,7 +456,8 @@
                                                                    (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
                                            :tarjous nil
                                            :kustannussuunnitelma nil
-                                           :vetolaatikon-muokkaus false})
+                                           :vetolaatikon-muokkaus false
+                                           :uusi-toimenkuva-valittavana false})
 
 (defonce tila (atom {:yleiset {:urakka {}}
                      :hallinta-hairiot {}
@@ -504,6 +511,7 @@
 (defonce yleiset (cursor tila [:yleiset]))
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
+(defonce suunnittelu-tehtavat-maarat (cursor tila [:suunnittelu :tehtavat-maarat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))

@@ -560,10 +560,11 @@
      [debug/debug app]]))
 
 (defn nakyma* [e! _app]
-  (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
-                                :uusi-kustannusuunnitelma-nakyma/muutokset
-                                kust-tiedot/tallentamattomia-muutoksia
-                                :beforeunload-viesti "Hoitovuoden alun tavoitehinta näkymässä on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+  (let [{:keys [sisaan ulos]}
+        (nav/luo-muutosten-hallinta
+          :uusi-kustannusuunnitelma-nakyma/muutokset
+          #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
+          :beforeunload-viesti "Hoitovuoden alun tavoitehinta -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
       (komp/lippu kust-tiedot/nakymassa?)
       (komp/sisaan #(do

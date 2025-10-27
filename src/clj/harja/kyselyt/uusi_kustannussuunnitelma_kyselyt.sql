@@ -17,12 +17,11 @@ WHERE sopimus = :sopimus-id
 
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
        END AS viimeisin_muokkaaja
   FROM kiinteahintainen_tyo kt
        LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-       LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
        JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
        JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.sopimus = :sopimus-id
@@ -105,12 +104,11 @@ WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE kt.sopimus = :sopimus-id
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
@@ -187,12 +185,11 @@ WHERE "toimenkuva-id" = :toimenkuva-id
 
 -- name: hae-viimeisin-muokkaaja-jjh
 SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM johto_ja_hallintokorvaus jjh
      LEFT JOIN kayttaja k ON COALESCE(jjh.muokkaaja, jjh.luoja) = k.id
-     LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE jjh."urakka-id" = :urakka-id
   AND ((jjh.vuosi = :vuosi AND jjh.kuukausi IN (10, 11, 12))
       OR (jjh.vuosi = :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
@@ -245,12 +242,11 @@ WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE kt.sopimus = :sopimus-id
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
@@ -380,7 +376,10 @@ INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu,
 VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
 
 -- name: indeksikorjaukset-vahvistettu?
-SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
+-- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
+-- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,
+-- niin päätellään, että kaikilla on. Logiikka toimii niin.
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kiinteahintainen_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -388,7 +387,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -396,7 +395,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
   AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)

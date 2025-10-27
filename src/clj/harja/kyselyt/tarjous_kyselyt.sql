@@ -112,12 +112,11 @@ WHERE id = :id;
 
 -- name: hae-tarjouksen-viimeisin-muokkaaja
 SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
   FROM tarjous t
          LEFT JOIN kayttaja k ON COALESCE(t.muokkaaja, t.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
  WHERE t.urakka_id = :urakkaid
  ORDER BY viimeisin_muokkaus DESC
  LIMIT 1;
