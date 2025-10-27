@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma
   "Uusi kustannusten suunnittelu"
-  (:require
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
@@ -15,7 +14,6 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]
@@ -446,7 +444,7 @@
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
-               hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin
+               hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin indeksikerroin-str
                kattohintakerroin hoitovuoden-alun-kattohinta
                hoitovuoden-alun-indeksikorjattu-kattohinta vahvistettu?
                vahvistus-virhe]} kustannussuunnitelma
@@ -489,7 +487,7 @@
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true ero-tarjoukseen)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
@@ -497,7 +495,7 @@
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" (fmt/desimaaliluku indeksikerroin nil nil false ) " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
 
      [:div.row {:style {:margin-top "2rem"}}
@@ -572,7 +570,7 @@
                       (sisaan)))
       (komp/ulos
         #(do
-           (e! (kust-tiedot/->NollaKustannussuunnitelmanMuutokset))
+           (e! (kust-tiedot/->NollaaKustannussuunnitelmanMuutokset))
            (ulos)))
       (fn [e! app]
         (if (:haku-kaynnissa? app)
