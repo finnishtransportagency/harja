@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.kyselyt.ajastetut-tehtavat :as ajastetut-tehtavat-kyselyt]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konversio]
@@ -15,7 +16,11 @@
   (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
         annettu-nyt (first args)
         nyt (or annettu-nyt (pvm/nyt))]
-    (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt (konversio/sql-timestamp nyt)})))
+    (try
+        (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt (konversio/sql-timestamp nyt)})
+        (ajastetut-tehtavat-kyselyt/paivita-ajastetun-tehtavan-onnistuminen! db true)
+        (ajastetut-tehtavat-kyselyt/paivita-viimeisin-onnistuminen! db)
+      (catch Exception e (ajastetut-tehtavat-kyselyt/paivita-ajastetun-tehtavan-onnistuminen! db false)))))
 
 (defn- ajasta [db]
   (log/info "Ajastetaan toteumien siirto analytiikan_toteumat tauluun joka päivä.")

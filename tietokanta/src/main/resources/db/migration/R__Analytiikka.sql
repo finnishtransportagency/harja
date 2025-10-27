@@ -42,8 +42,12 @@ BEGIN
                     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                     JOIN urakka u ON t.urakka = u.id
-          WHERE (t.luotu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
-             OR (tm.luotu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
+         WHERE (t.luotu BETWEEN (SELECT COALESCE(suoritusyritys_aika, NOW() - '1 day'::INTERVAL)
+                                 FROM ajastetut_tehtavat
+                                 WHERE nimi = 'siirra_toteumat_analytiikalle') AND ajankohta)
+            OR (tm.luotu BETWEEN (SELECT COALESCE(suoritusyritys_aika, NOW() - '1 day'::INTERVAL)
+                                  FROM ajastetut_tehtavat
+                                  WHERE nimi = 'siirra_toteumat_analytiikalle') AND ajankohta)
           GROUP BY t.id, t.luotu, u.id
           ORDER BY t.luotu ASC)
         ON CONFLICT DO NOTHING;
