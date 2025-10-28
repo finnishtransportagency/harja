@@ -474,11 +474,11 @@ BEGIN
     SELECT EXTRACT(YEAR FROM alkupvm), EXTRACT(YEAR FROM loppupvm) INTO v_alku, v_loppu FROM urakka WHERE id = v_urakka_id;
 
     IF p_vuosi NOT BETWEEN v_alku AND v_loppu THEN
-        RAISE EXCEPTION '%: vuosi % ei ole urakan voimassaoloaikana (%–%)', p_urakka, p_vuosi, v_alku, v_loppu;
+        RAISE EXCEPTION '%: vuosi % ei ole urakan voimassaoloaikana (%-%)', p_urakka, p_vuosi, v_alku, v_loppu;
     END IF;
     
     IF (p_vuosi - 2) NOT BETWEEN v_alku AND v_loppu THEN
-        RAISE EXCEPTION '%: anna -2 vuoden buffer - vuosi % ei ole urakan voimassaoloaikana (%–%)', p_urakka, (p_vuosi - 2), v_alku, v_loppu;
+        RAISE EXCEPTION '%: anna -2 vuoden buffer - vuosi % ei ole urakan voimassaoloaikana (%-%)', p_urakka, (p_vuosi - 2), v_alku, v_loppu;
     END IF;
 
     IF v_urakka_id IS NULL THEN  
