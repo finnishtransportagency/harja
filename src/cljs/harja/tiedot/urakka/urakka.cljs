@@ -31,12 +31,14 @@
                                :lomake [:kopioidaan-tuleville-vuosille? true]
                                :valittu-hoitovuosi kuluva-alkuvuosi})
 
-(def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
-                                                                  :nayta-aluetehtavat? true
-                                                                  :nayta-suunniteltavat-tehtavat? true
-                                                                  :toimenpide      nil
-                                                                  :valitaso        nil
-                                                                  :noudetaan       0}}
+(def suunnittelu-default-arvot {:tehtavat {:valinnat {:samat-tuleville false
+                                                      :nayta-aluetehtavat? true
+                                                      :nayta-suunniteltavat-tehtavat? true
+                                                      :toimenpide nil
+                                                      :valitaso nil
+                                                      :noudetaan 0}}
+                                :tehtavat-maarat {:tallennustila? false
+                                                  :avatut-tehtavaryhmat #{"1.0 TALVIHOITO"}}
                                 :kustannussuunnitelma kustannussuunnitelma-default
                                 :suolarajoitukset suolarajoitukset-default})
 
@@ -510,6 +512,7 @@
 (defonce yleiset (cursor tila [:yleiset]))
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
+(defonce suunnittelu-tehtavat-maarat (cursor tila [:suunnittelu :tehtavat-maarat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))

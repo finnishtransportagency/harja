@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -9,6 +10,7 @@
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]))
 
@@ -22,6 +24,9 @@
           :budjetoidut-tyot (component/using
                               (bs/->Budjettisuunnittelu)
                               [:http-palvelin :db])
+          :uusi-kustannussuunnitelma (component/using
+                                       (kust-palvelu/->UusiKustannussuunnitelmaPalvelu)
+                                       [:http-palvelin :db])
           :tarjous (component/using
                      (tarjous-palvelu/->Tarjous)
                      [:http-palvelin :db])))))
@@ -484,3 +489,85 @@
     ;; Rahavaraukset ovat samat
     (is (= tietomalli-rahavaraukset ensivastaus-rahavaraukset))
     (is (= tietomalli-toimenkuvat ensivastaus-toimenkuvat))))
+
+(deftest muokkaa-tarjouksen-tietoja-kun-kustannussuunnitelma-on-vahvistettu
+  (let [db (:db jarjestelma)
+        hoitovuoden-alkuvuosi 2021 ;; Tarvitaan kustannussuunnitelmalle
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+
+        tarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
+        ;; Lisätään urakalle kuuluvat toimenkuvat ja niille generoidut summat
+        tarjous (merge
+                  {:urakka-id urakka-id}
+                  (lisaa-ja-generoi-toimenkuvat db urakka-id urakan-alkuvuosi tarjous hoitovuosittaiset-arvot))
+        tietomalli-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous tarjous))
+        tietomalli-toimenkuvat (ota-toimenkuvat-ja-poista-id tarjous)
+        uusi-summa 500M ;; Uusi summa vuodelle Kilpailitettaville hankinnoille
+        uusi-summa2 1500M ;; Uusi summa vuodelle Kilpailitettaville hankinnoille
+
+        ;; Tallennetaan tarjous ensin
+        ensivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)
+        ensivastaus-kustannus (first (:tarjous ensivastaus))
+        ensivastaus-rahavaraukset (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus)))
+        ensivastaus-toimenkuvat (ota-toimenkuvat-ja-poista-id ensivastaus)
+
+        ;; Vahvistetaan kustannussuunnitelma
+        ;; Lisätään ensin kilpailutettavat hankinnat
+        ;; ;; Poista yhteenvetorivi ennen tallennusta
+        hankinnat-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+
+        ;; Varmista, että kustannussuunnitelmaa ei ole vielä vahvistettu
+        kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+        _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistamaton ennen vahvistusta")
+
+        ;; Muokataan tarjousta
+        muokattu-tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] uusi-summa)
+        muokkausvastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
+        ;; Tämä onnistuu, koska kustannussuunnitelma ei ole vielä vahvistettu
+        muokkausvastaus-tarjous (first (:tarjous muokkausvastaus))
+        _ (is (= 10.00 (get-in ensivastaus-kustannus [:hoitovuosittaiset-arvot 2 :summa])) "Vuoden 2023 summa on 10")
+        _ (is (= uusi-summa (bigdec (get-in muokkausvastaus-tarjous [:hoitovuosittaiset-arvot 0 :summa]))))
+        ;; Rahavaraukset ovat samat
+        _ (is (= tietomalli-rahavaraukset ensivastaus-rahavaraukset))
+        _ (is (= tietomalli-toimenkuvat ensivastaus-toimenkuvat))
+
+        ;; Vahvisteatan 2021 vuoden kustannussuuunnitelma
+        kustannussuunnitelma-vahvistettu (try
+                                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                                                                                             :vahvista? true})
+                                           (catch Exception e
+                                             (println "Tapahtui virhe:" (.getMessage e))
+                                             {:error (.getMessage e)}))
+        _ (is (true? (get-in kustannussuunnitelma-vahvistettu [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistettu.")
+
+        ;; Muokataan tarjousta lisää - 2021 vuosi on vahvistettu joten siihen tehdyt muokkaukset eivät mene läpi
+        muokattu-tarjous (-> tarjous
+                           (assoc-in [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] 1234M) ;; Vuodelle 2021
+                           (assoc-in [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa] 1234M)) ;; Vuodelle 2022
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+    (is (not= (get-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa]) uusi-summa2) "2021 vuoden summaksi asetettin 1234M, mutta se ei mennyt päivityksessä läpi.")
+    (is (not= (get-in tarjous [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa]) 1234M) "2022 summaksi asetettin 1234M.")))
