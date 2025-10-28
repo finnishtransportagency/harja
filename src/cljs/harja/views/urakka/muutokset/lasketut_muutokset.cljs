@@ -177,8 +177,8 @@
             :tyyppi :numero
             :fmt (fn [maaramuutos]
                    (if (> maaramuutos 0)
-                     (str "+" (fmt/desimaaliluku-opt maaramuutos 0 2))
-                     (fmt/desimaaliluku-opt maaramuutos 0 2)))
+                     (str "+" (fmt/desimaaliluku-opt maaramuutos 0 2 true))
+                     (fmt/desimaaliluku-opt maaramuutos 0 2 true)))
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
