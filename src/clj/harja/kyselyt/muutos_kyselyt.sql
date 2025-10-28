@@ -91,7 +91,8 @@ SELECT m.id,
 
 
 -- name: rahavarausten-toteumat
-SELECT rv.id, SUM(kk.summa) as toteumat
+SELECT rv.id,
+       COALESCE(SUM(kk.summa), 0) as toteumat
   FROM kulu k
            JOIN kulu_kohdistus kk ON k.id = kk.kulu
            JOIN toimenpideinstanssi tpi ON kk.toimenpideinstanssi = tpi.id
@@ -99,8 +100,10 @@ SELECT rv.id, SUM(kk.summa) as toteumat
            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id
            JOIN urakka u ON rvu.urakka_id = u.id AND tpi.urakka = u.id
  WHERE u.id = :urakka
-   AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-     (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+   AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) 
+   AND (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+   AND kk.poistettu IS NOT TRUE 
+   AND k.poistettu IS NOT TRUE 
  GROUP BY rv.id, rv.jarjestys
  ORDER BY rv.jarjestys;
 

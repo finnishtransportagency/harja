@@ -170,7 +170,7 @@ SELECT DISTINCT ON (tr.id) tr.id,
   WITH urakan_alkuvuodet AS (SELECT GENERATE_SERIES(:alkuvuosi::INT, :loppuvuosi::INT - 1) AS year)
 SELECT rv.id,
        COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), rv.nimi) AS nimi,
-       SUM(kt.summa)                                           AS summa,
+       COALESCE(SUM(kt.summa), 0.0)                            AS summa,
        SUM(kt.summa_indeksikorjattu)                           AS "summa-indeksikorjattu",
        kt.indeksikorjaus_vahvistettu                           AS "indeksikorjaus-vahvistettu",
        CASE
