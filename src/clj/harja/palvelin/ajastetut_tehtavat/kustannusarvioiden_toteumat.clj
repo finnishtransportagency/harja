@@ -25,19 +25,12 @@
   [db & args]
   (let [annettu-nyt (first args)
         nyt (or annettu-nyt (pvm/nyt))
-        nyt-paiva (pvm/paiva nyt)
-        onko-kuukauden-ensimmainen-paiva? (= nyt-paiva 1)
-        onko-siirto-tehty? (if onko-kuukauden-ensimmainen-paiva?
-                             ;; Kuukauden ensimmäisenä päivänä tehdään aina siirto
-                             false
-                             ;; Tarkista onko siirto tehty
-                             (onko-toteumat-jo-siirretty? db))]
-    (log/info "Siirretään kustannusarvoitu_tyo taulusta toteutueet_kustannukset tauluun, jos on kuukauden ensimmäinen päivä tai jos siirtoa ei ole vielä tehty.")
+        onko-siirto-tehty? (onko-toteumat-jo-siirretty? db nyt)]
+    (log/info "Siirretään kustannusarvoitu_tyo taulusta toteutueet_kustannukset tauluun kuukauden 10. päivä tai jos siirtoa ei ole vielä tehty.")
     (if (not onko-siirto-tehty?)
       (do
         ;; Siirrä rivit
         (q/siirra-budjetoidut-tyot-toteutumiin db {:pvm nyt})
-
         (println "Siirto valamis!"))
       (log/info "Ei tehdä toista kertaa."))))
 
