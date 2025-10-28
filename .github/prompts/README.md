@@ -29,9 +29,14 @@ Onko ominaisuuden saavutettavuuden vaatimukset otettu huomioon? -> Accessibility
 
 ## Käyttöohje yleisesti
 1. Avaa haluttu prompt slash-komennolla (esim. Copilotissa kirjoita `/project-summary`).
-2. Vastaa promptin kysymyksiin tai anna ne suoraan slash-kommennon kanssa. Älä ohita niitä, niitä tarvitaan parempaan lopputulokseen.
-3. Englannin käyttö keskustelun kielenä toimii usein paremmin ja vaatii vähemmän tokeneja, mutta suomikin käy. Lopputulos käännetään kuitenkin aina suomeksi.
-4. Experimental promptit: Tulosten validointi ja tulkinta vaativat normaalia enemmän kriittistä silmää.
+2. **Valitse Mode:** Agent (useimmiten) tai Ask.
+3. **Valitse Model:** 
+   * GPT-5 (Toimii paremmin jos tehdään suunnitelmaa), tai Gemini Pro (jos saatavilla)
+   * Claude Sonnet 4.5 (jos tehdään toteutusta tai katselmointia)
+   * Tai, muu käytettävissä oleva malli riippuen tarpeesta.
+4. Vastaa promptin kysymyksiin tai anna ne suoraan slash-kommennon kanssa. Älä ohita niitä, niitä tarvitaan parempaan lopputulokseen.
+5. Englannin käyttö keskustelun kielenä toimii usein paremmin ja vaatii vähemmän tokeneja, mutta suomikin käy. Lopputulos käännetään kuitenkin aina suomeksi.
+6. Experimental promptit: Tulosten validointi ja tulkinta vaativat normaalia enemmän kriittistä silmää.
 
 ## Promptien tarkemmat kuvaukset ja esimerkkikäyttö
 
