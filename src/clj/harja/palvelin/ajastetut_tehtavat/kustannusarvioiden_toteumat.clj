@@ -12,8 +12,8 @@
   Oletus on lähtökohtaisesti niin, että jos yksikin siirto on tehty, kaikki siirrot on tehty.
   Joka aiheuttaa sen ongelman, että jos on mahdollista muokata menneisyyden budjetteja, niin niitä ei ikinä
   siirretä toteutuneiksi."
-  [db]
-  (let [siirtamattomat (q/hae-siirtamattomat-kustannukset db)
+  [db pvm]
+  (let [siirtamattomat (q/hae-siirtamattomat-kustannukset db {:pvm pvm})
         _ (log/debug "Näin monta riviä on vielä siirtämättä: " (pr-str siirtamattomat))]
     (if (> siirtamattomat 0)
       false
