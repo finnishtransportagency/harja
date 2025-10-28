@@ -1,6 +1,20 @@
 (ns harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit
-  (:require [harja.pvm :as pvm]
-            [harja.kyselyt.urakat :as urakat-q]))
+  "Apureita uuden kustannussuunnitelman ja tehtävät ja määrät -palveluille."
+  (:require [harja.domain.mhu :as mhu]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
 
 (defn jasenna-tallennettavat-vuodet
   "Jäsentää talletettavat hoitovuodet listaksi.
