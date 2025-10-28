@@ -243,7 +243,7 @@
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
                                        aputeksti regex focus on-focus on-blur lomake?
-                                       toiminta-f disabled? vihje elementin-id muokattu?] :as kentta}
+                                       toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
                                data]
 
   [:input {:class (cond-> nil
@@ -1919,7 +1919,7 @@
 
 (defn tee-otsikko-ja-kentat [{:keys [otsikko luokka kentat otsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")}
-   [:label {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
+   [:label {:class (or otsikon-luokka "kentan-otsikko")}  otsikko]
    [:span
     (for* [{:keys [kentta-params arvo-atom] :as kentta} kentat]
       [:div.kentta
