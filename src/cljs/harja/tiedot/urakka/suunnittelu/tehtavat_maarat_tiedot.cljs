@@ -1,49 +1,120 @@
 (ns harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [harja.tiedot.urakka :as u]
+            [harja.ui.viesti :as viesti]
+            [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]))
 
 (defonce nakymassa? (atom false))
 
+;; Muutosten seuranta
+(defonce tallentamattomia-muutoksia (atom false))
+
+(defn synkronoi-muutokset-muutokset-atomiin!
+  "Synkronoi app-staten :tallentamattomia-muutoksia? atomiin navigaatiota varten.
+   Kutsutaan automaattisesti kaikissa eventeissä, jotka muuttavat tilaa."
+  [app]
+  (reset! tallentamattomia-muutoksia (boolean (get app :tallentamattomia-muutoksia? false)))
+  app)
+
 (defrecord HaeTehtavatJaMaarat [parametrit])
 (defrecord HaeTehtavatJaMaaratOnnistui [vastaus parametrit])
 (defrecord HaeTehtavatJaMaaratEpaonnistui [vastaus parametrit])
 
-(defrecord ToggleMuuttuneetTehtavat [])
+(defrecord TallennaTehtavat [tehtavat kopioi-tuleville-vuosille?])
+(defrecord TallennaTehtavatOnnistui [vastaus])
+(defrecord TallennaTehtavatEpaonnistui [vastaus])
+
+(defrecord ToggleTallennusTila [])
+(defrecord PeruutaTallennus [])
+(defrecord PaivitaTehtavatGrid [tehtavat])
+(defrecord AvaaRivi [valiotsikko])
+(defrecord NollaaTehtavatJaMaaratMuutokset [])
+
+(defn hae-tehtavat-ja-maarat [parametrit]
+  (tuck-apurit/post! :hae-tehtavat-ja-maarat
+    {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+     :valittu-hoitokausi @u/valittu-hoitokausi}
+    {:onnistui ->HaeTehtavatJaMaaratOnnistui
+     :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
+     :paasta-virhe-lapi? true}))
 
 (extend-protocol tuck/Event
 
   HaeTehtavatJaMaarat
   (process-event [{parametrit :parametrit} app]
     (js/console.log "HaeTehtavatJaMaarat :: parametrit " (pr-str parametrit))
-
-    (tuck-apurit/post! :hae-tehtavat-ja-maarat
-      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-       :hoitokauden-alkuvuosi :kaikki}
-      {:onnistui ->HaeTehtavatJaMaaratOnnistui
-       :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
-       :onnistui-parametrit [parametrit]
-       :paasta-virhe-lapi? true})
+    (hae-tehtavat-ja-maarat parametrit)
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
   (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaaratOnnistui :: vastaus" (pr-str vastaus))
-    (js/console.log "HaeTehtavatJaMaaratOnnistui :: parametrit" (pr-str parametrit))
-
     (-> app
       (assoc :haku-kaynnissa? false)
-      (assoc :tehtavat-ja-maarat vastaus)))
+      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaaratEpaonnistui")
+    (viesti/nayta-toast! (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :haku-kaynnissa? false)))
 
-  ToggleMuuttuneetTehtavat
-  (process-event [_ app]
-    (js/console.log "ToggleMuuttuneetTehtavat")
-    (assoc app :nayta-muuttuneet-tehtavat (not (:nayta-muuttuneet-tehtavat app))))
+  TallennaTehtavat
+  (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
+    (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+       :tehtavat tehtavat
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :valittu-hoitokausi @u/valittu-hoitokausi}
+      {:onnistui ->TallennaTehtavatOnnistui
+       :epaonnistui ->TallennaTehtavatEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :tallennus-kaynnissa? true))
 
-    )
+  TallennaTehtavatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
+
+    (-> app
+      (assoc :tallennus-kaynnissa? false)
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (synkronoi-muutokset-muutokset-atomiin!)))
+
+  TallennaTehtavatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (-> app
+      (assoc :tallennus-kaynnissa? false)))
+
+  PaivitaTehtavatGrid
+  (process-event [{tehtavat :tehtavat} app]
+    (-> app
+      (assoc :tallentamattomia-muutoksia? true)
+      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))
+      (synkronoi-muutokset-muutokset-atomiin!)))
+
+  ToggleTallennusTila
+  (process-event [_ app]
+    (assoc app :tallennustila? (not (:tallennustila? app))))
+
+  PeruutaTallennus
+  (process-event [_ app]
+    (hae-tehtavat-ja-maarat nil)
+    (assoc app :tallennustila? (not (:tallennustila? app))))
+
+  AvaaRivi
+  (process-event [{valiotsikko :valiotsikko} app]
+    (let [app (if (nil? (:avatut-tehtavaryhmat app))
+                (assoc app :avatut-tehtavaryhmat #{})
+                app)]
+      (if (contains? (:avatut-tehtavaryhmat app) valiotsikko)
+        (assoc app :avatut-tehtavaryhmat (disj (:avatut-tehtavaryhmat app) valiotsikko))
+        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko)))))
+
+  NollaaTehtavatJaMaaratMuutokset
+  (process-event [_ app]
+    (assoc app :tallentamattomia-muutoksia? false)))

@@ -1,7 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma
   "Uusi kustannusten suunnittelu"
-  (:require
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
@@ -15,7 +14,6 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]
@@ -572,7 +570,7 @@
                       (sisaan)))
       (komp/ulos
         #(do
-           (e! (kust-tiedot/->NollaKustannussuunnitelmanMuutokset))
+           (e! (kust-tiedot/->NollaaKustannussuunnitelmanMuutokset))
            (ulos)))
       (fn [e! app]
         (if (:haku-kaynnissa? app)
