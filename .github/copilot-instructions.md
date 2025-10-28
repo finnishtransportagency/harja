@@ -1,5 +1,5 @@
 GROUND RULES
-IF there IS PROJECT_SUMMARY.md THEN you MUST read it and use it as reference for all future responses in this chat.
+IF there IS PROJECT_SUMMARY.md file THEN YOU MUST read it and use it as reference for all future responses in this chat.
 Use Finnish language for all our code, comments and documentation.
 Use leiningen for managing our Clojure dependencies. Dependencies are defined in files `project.clj` and `profiles.clj`
 in the root of the project.
