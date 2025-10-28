@@ -977,10 +977,7 @@
 (defn- status [ikoni koko]
   [:img {:src (str "images/harja-icons/status/" (name ikoni) ".svg")
          :alt (name ikoni)
-         :width (str (or koko 24) "px")
-         :style (cond
-                  (= ikoni :alert)
-                  {:transform "scale(0.8)"})}])
+         :width (str (or koko 24) "px")}])
 
 (defn nelio-info
   ([]
