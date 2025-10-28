@@ -202,7 +202,10 @@
            {:otsikko "Tavoitehinnan muutos (€)"
             :nimi :tavoitehinnan_muutos
             :tyyppi :euro
-            :fmt (fn [v r] (if (:valiotsikko r) v (fmt/euro-opt v)))
+            :fmt (fn [v r]
+                   (if (:valiotsikko r)
+                     v
+                     (fmt/euro-opt true true v)))
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
             ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
