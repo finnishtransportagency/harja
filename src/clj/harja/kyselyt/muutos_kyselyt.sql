@@ -597,10 +597,6 @@ ON tr_alataso.id = tk.tehtavaryhma
 WHERE
   -- Tärkeä:: halutaan nimenomaan vain määrämitattavat urakan tehtävät 
   tk."maaramitattava?" IS TRUE
-  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-  AND (tk.aluetieto = FALSE OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  -- Rajataan pois ne, jotka eivät ole mhu tehtäviä
-  AND tk."mhu-tehtava?" = TRUE
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
