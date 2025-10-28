@@ -1,8 +1,10 @@
 (ns harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat-siirto-test
   (:require [clojure.test :refer :all]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
+            [harja.kyselyt.toteutuneet-kustannukset :as toteutuneet-kustannukset-kyselyt]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.fim-test :as fim-test]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -32,23 +34,23 @@
 
 (deftest siirra-kustanukset-toimii-idempotentisti
   (let [testitietokanta (:db jarjestelma)
-        hae-maarat (fn []
-                     [(first (first (q "SELECT count(*) FROM kustannusarvioitu_tyo
-                                        WHERE \"siirretty?\" ")))
-                      (first (first
-                               (q "SELECT count(*) FROM johto_ja_hallintokorvaus
-                                   WHERE \"siirretty?\" ")))])
-        merkkaa-kaikki (fn []
-                        (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false;")
-                        (u "UPDATE johto_ja_hallintokorvaus SET \"siirretty?\" = false;"))
-        _ (merkkaa-kaikki)
-        pvm (luo-pvm 2021 7 8)
+        toimiva-vuosi (inc (pvm/vuosi (pvm/nyt)))
+        pvm (luo-pvm toimiva-vuosi 3 8)
+        merkkaa-kaikki-siirtamattomaksi (fn []
+                                          (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false;")
+                                          (u "UPDATE johto_ja_hallintokorvaus SET \"siirretty?\" = false;"))
+        siirtamattomat-aluksi (toteutuneet-kustannukset-kyselyt/hae-siirtamattomat-kustannukset testitietokanta {:pvm pvm})
+        _ (merkkaa-kaikki-siirtamattomaksi)
+        siirtamattomat (toteutuneet-kustannukset-kyselyt/hae-siirtamattomat-kustannukset testitietokanta {:pvm pvm})
         _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
-        maarat-alussa (hae-maarat)
-        _ (merkkaa-kaikki)
-        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
-        maarat-lopussa (hae-maarat)
-        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)
-        maarat-lopussa-toinen-kutsu (hae-maarat)]
-    (is (= maarat-alussa maarat-lopussa maarat-lopussa-toinen-kutsu))))
+        siirtamattomat-siirron-jalkeen (toteutuneet-kustannukset-kyselyt/hae-siirtamattomat-kustannukset testitietokanta {:pvm pvm})
+        uusi-pvm (luo-pvm toimiva-vuosi 6 15)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta uusi-pvm)
+        siirtamattomat-myohemmin (toteutuneet-kustannukset-kyselyt/hae-siirtamattomat-kustannukset testitietokanta {:pvm (luo-pvm toimiva-vuosi 12 15)})
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset testitietokanta pvm)]
+
+    (is (not= siirtamattomat siirtamattomat-aluksi))  ;; Siirron jälkeen siirtämättömien määrä muuttui
+    (is (< 0M siirtamattomat))  ;; Siirretty? = false merkinnän jälkeen siirtämättömiä löytyy
+    ;; Varmistetaan, että kaikkia ei ole siirretty, vaan että päivämäärä valinta toimii
+    (is (< siirtamattomat-siirron-jalkeen siirtamattomat-myohemmin))))
 
