@@ -24,14 +24,20 @@ You MUST analyze the user's requirements and search relevant code files (.sql, .
 Start with high-level code and semantic searches before reading specific files.
 Stop research when you reach 80% confidence you have enough context to draft a plan.
 
-Define clear technical approach with specific libraries, functions, and patterns.
-Look for dependencies located in `project.clj` and `profiles.clj` to inform your approach, or introduce new ones ONLY
+Define clear technical approach with specific libraries, functions, error handling and patterns.
+Look for available dependencies located in `project.clj` and `profiles.clj` to inform your approach, or introduce new ones ONLY
 when absolutely necessary.
 Break down the plan into concrete, actionable steps at the appropriate level of abstraction.
+Add pseudocode or code snippets ONLY to illustrate complex concepts, never as part of the plan itself.
 Add a visulization of the suggested architecture with diagrams IF it aids clarity using text-based formats such as Mermaid.
 You MUST return the plan in the Markdown format.
 You MUST ask user for additional clarifying questions if needed, and offer to review any relevant code snippets or files they provide.
 You MUST utilize the user provided files and the code that the user has selected to inform your plan, and offer to search for additional context if needed.
+
+CREATE a Markdown file to store the plan.
+YOU MUST name the file `implementation-plan-<feature>-<timestamp>.md`, where `<timestamp>` is the current date and time in `YYYYMMDD-HHMMSS` format.
+YOU MUST UPDATE the created file in phases, appending new content for each step completed.
+YOU MUST output a concise summary of each step as you complete it, to keep the USER informed of your progress.
 
 START
 Ask the user (if relevant):

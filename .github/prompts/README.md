@@ -6,21 +6,21 @@ On suositeltavaa, että luet ```*.prompt.md``` tiedoston sisällön ennen ajamis
 
 ## Nopea yhteenveto
 
-| Prompt | Tiedosto | Status | Tarkoitus | Tuotos                                     |
-| ------ | -------- | ------ | --------- |--------------------------------------------|
-| Project Summary | [`project-summary.prompt.md`](project-summary.prompt.md) | Stable | Projektin yhteenvedon generointi / päivitys | `PROJECT_SUMMARY.md` luodaan/päivittyy     |
-| Architectural Help | [`architectural-help.prompt.md`](architectural-help.prompt.md) | Stable | Arkkitehtuurin suunnitelma ennen toteutusta | Toimintasuunnitelma (ei koodia)            |
-| Review Code | [`review-code.prompt.md`](review-code.prompt.md) | Stable | Koodimuutosten katselmointi | Kattava katselmointiraportti               |
-| DB Migration Helper | [`db-migration-helper.prompt.md`](db-migration-helper.prompt.md) | Experimental | Flyway PostgreSQL/PostGIS migraation suunnittelu | Migraatiosuunnitelma + SQL luonnos         |
-| Accessibility Audit | [`accessibility-review.prompt.md`](accessibility-review.prompt.md) | Experimental | WCAG 2.1/2.2 saavutettavuusanalyysi live sivulle | Markdown audit-raportti kuvineen           |
-| Browser Tuck Debug | [`browser-debug_tuck-app-state.prompt.md`](browser-debug_tuck-app-state.prompt.md) | Experimental | CLJS Tuck sovellustilan selaindebug | Konsolianalyysi tilasiirtymistä            |
+| Prompt | Tiedosto | Status | Tarkoitus | Tuotos                                        |
+| ------ | -------- | ------ | --------- |-----------------------------------------------|
+| Project Summary | [`project-summary.prompt.md`](project-summary.prompt.md) | Stable | Projektin yhteenvedon generointi / päivitys | `PROJECT_SUMMARY.md` luodaan/päivittyy        |
+| Architectural Help | [`architectural-help.prompt.md`](architectural-help.prompt.md) | Stable | Arkkitehtuurin suunnitelma ennen toteutusta | Toimintasuunnitelma md-tiedostoon (ei koodia) |
+| Review Code | [`review-code.prompt.md`](review-code.prompt.md) | Stable | Koodimuutosten katselmointi | Kattava katselmointiraportti                  |
+| DB Migration Helper | [`db-migration-helper.prompt.md`](db-migration-helper.prompt.md) | Experimental | Flyway PostgreSQL/PostGIS migraation suunnittelu | Migraatiosuunnitelma + SQL luonnos            |
+| Accessibility Audit | [`accessibility-review.prompt.md`](accessibility-review.prompt.md) | Experimental | WCAG 2.1/2.2 saavutettavuusanalyysi live sivulle | Markdown audit-raportti kuvineen              |
+| Browser Tuck Debug | [`browser-debug_tuck-app-state.prompt.md`](browser-debug_tuck-app-state.prompt.md) | Experimental | CLJS Tuck sovellustilan selaindebug | Konsolianalyysi tilasiirtymistä               |
 
 *Huom!*: ```Experimental = kokeiluasteella```, eli ominaisuudet ja käyttötavat voivat vielä muuttua. Kerro ongelmahavainnot tiimille.
 
 ## Promptin valinta
 ```
 Tarvitset yleiskuvan projektista? -> Project Summary
-Tarvitset arkkitehtuurisen suunnitelmal uudelle ominaisuudelle? -> Architectural Help
+Tarvitset arkkitehtuurisen suunnitelman uudelle ominaisuudelle? -> Architectural Help (luo tiedoston implementation-plan-<feature>-<timestamp>.md)
 Katselmoit juuri tehtyä koodinpätkää (mustattu hiirellä) tai useamman tiedoston muutosta? -> Review Code
 Suunnittelet tietokantamigraatiota? -> DB Migration Helper (Experimental)
 Diagnosoit CLJS frontin Tuck tilan ongelmia? -> Browser Tuck Debug (Experimental)
@@ -59,12 +59,13 @@ Päivitä projektin yhteenveto. Uudet asiat: lisätty ActiveMQ Artemis, uusi foo
 ### 2. Architectural Help (`architectural-help.prompt.md`)
 **Tarkoitus:** Suunnitelma ennen toteutusta. Suunnittelee arkkitehtuurikerrokset, riippuvuudet, tietovirrat ym. Ei koodia.  
 **Syöte**: Kuvaus ominaisuudesta + tekniset vaatimukset (integraatiot, suorituskyky, tietomallit, käyttöoikeudet).  
-**Tuotos**: Suunnitelma (kerrokset, tietovirrat, mahdolliset tekstikaaviot, vaiheistus).
+**Tuotos**: Suunnitelma (kerrokset, tietovirrat, mahdolliset tekstikaaviot, vaiheistus) erilliseen MD-tiedostoon.
 
 **Esimerkki:**
 ```text
 /architectural-help
 ```
+ja vastataan promptin kysymyksiin.
 
 ### 3. Review Code (`review-code.prompt.md`)
 **Tarkoitus:** Katselmoi rajatun koodimuutoksen: laatu, toiminnallisuus, suorituskyky, tietoturva, testit, code smell.  
