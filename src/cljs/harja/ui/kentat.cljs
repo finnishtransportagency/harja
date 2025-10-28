@@ -1,39 +1,38 @@
 (ns harja.ui.kentat
   "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
-  (:require
-    [reagent.core :refer [atom] :as r]
-    [reagent.dom :as rdom]
-    [reagent.ratom :as ratom]
-    [harja.pvm :as pvm]
-    [harja.ui.dom :as dom]
-    [harja.ui.pvm :as pvm-valinta]
-    [harja.ui.protokollat :refer [hae]]
-    [harja.ui.komponentti :as komp]
-    [harja.ui.ikonit :as ikonit]
-    [harja.ui.tierekisteri :as tr]
-    [harja.ui.sijaintivalitsin :as sijaintivalitsin]
-    [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
-    [harja.ui.napit :as napit]
-    [harja.loki :refer [log logt tarkkaile!] :as loki]
-    [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
-    [clojure.string :as str]
-    [cljs.core.async :refer [<! >! chan] :as async]
+  (:require [reagent.core :refer [atom] :as r]
+            [reagent.dom :as rdom]
+            [reagent.ratom :as ratom]
+            [harja.pvm :as pvm]
+            [harja.ui.dom :as dom]
+            [harja.ui.pvm :as pvm-valinta]
+            [harja.ui.protokollat :refer [hae]]
+            [harja.ui.komponentti :as komp]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.tierekisteri :as tr]
+            [harja.ui.sijaintivalitsin :as sijaintivalitsin]
+            [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta valinta-ul-max-korkeus-px] :as yleiset]
+            [harja.ui.napit :as napit]
+            [harja.loki :refer [log logt tarkkaile!] :as loki]
+            [harja.tiedot.sijaintivalitsin :as sijaintivalitsin-tiedot]
+            [clojure.string :as str]
+            [cljs.core.async :refer [<! >! chan] :as async]
 
-    [harja.tiedot.kartta :as kartta]
-    [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
-    [harja.views.kartta.tasot :as tasot]
-    [harja.geo :as geo]
+            [harja.tiedot.kartta :as kartta]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
+            [harja.views.kartta.tasot :as tasot]
+            [harja.geo :as geo]
 
     ;; Tierekisteriosoitteen muuntaminen sijainniksi tarvii tämän
-    [harja.tyokalut.vkm :as vkm]
-    [harja.atom :refer [paivittaja]]
-    [harja.fmt :as fmt]
-    [harja.asiakas.kommunikaatio :as k]
-    [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-    [harja.ui.yleiset :as y]
-    [harja.domain.tierekisteri :as trd]
-    [harja.views.kartta.tasot :as karttatasot]
-    [harja.tyokalut.big :as big])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.atom :refer [paivittaja]]
+            [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
+            [harja.ui.yleiset :as y]
+            [harja.domain.tierekisteri :as trd]
+            [harja.views.kartta.tasot :as karttatasot]
+            [harja.tyokalut.big :as big])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
@@ -339,6 +338,10 @@
                 n))
             ;; Poistetaan mahd. euromerkki lopusta
             (str/replace #"€$" "")
+            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+            (str/replace #"[−–—]" "-")
 
             ;; Poistetaan ympäröivä whitespace joka tapauksessa
             (str/trim))))
@@ -368,7 +371,7 @@
                                        desimaalien-maara min-desimaalit max-desimaalit on-key-down
                                        veda-oikealle? luokka teksti-oikealla data-cy aria-label]
                                 :as kentta} data]
-  (let [fmt (or (numero-fmt kentta) str)
+  (let [fmt-fn (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
         id (or elementin-id (gensym))]
@@ -380,11 +383,11 @@
         (let [yksikko (if-not yksikko teksti-oikealla yksikko)
               nykyinen-data @data
               nykyinen-teksti (or @teksti
-                                (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
+                                (normalisoi-numero (fmt-fn nykyinen-data) salli-whitespace?)
                                 "")
-              ;; ^-? == täsmää miinus arvot myös
-              ;; ref:: https://regex101.com/ 
-              kokonaisluku-re-pattern (re-pattern (str "^-?\\d{1," kokonaisosan-maara "}"))
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
+              kokonaisluku-re (re-pattern (str "[+-−]?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
                                   (contains? kentta :desimaalien-maara) ; Salli nil-arvo
                                   desimaalien-maara
@@ -397,14 +400,14 @@
 
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
-              desimaaliluku-re-pattern (re-pattern (str
-                                                     ;; ^-? == täsmää miinus arvot myös
-                                                     ;; ref:: https://regex101.com/ 
-                                                     "^-?\\d{1,"
-                                                     kokonaisosan-maara
-                                                     "}((\\.|,)\\d{0,"
-                                                     desimaalien-maara
-                                                     "})?"))]
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin eri muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
+              desimaaliluku-re (re-pattern (str
+                                             "[+-−]?\\d{1,"
+                                             kokonaisosan-maara
+                                             "}((\\.|,)\\d{0,"
+                                             desimaalien-maara
+                                             "})?"))]
 
           [:span.numero
            [:input (merge {:id id
@@ -429,42 +432,58 @@
                                          (on-blur %))
                                        (reset! teksti nil))
                            :value nykyinen-teksti
-                           :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
-                                             v (cond
-                                                 vaadi-ei-negatiivinen?
-                                                 (str/replace v #"-" "")
-                                                 vaadi-negatiivinen?
-                                                 (if (= (first v) \-)
-                                                   v
-                                                   (str "-" v))
-                                                 :else v)]
-                                         (when (and
-                                                 (or
-                                                   (nil? validoi-kentta-fn)
-                                                   (validoi-kentta-fn v))
-                                                 (or
-                                                   (= v "")
-                                                   (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                                   (re-matches (if kokonaisluku?
-                                                                 kokonaisluku-re-pattern
-                                                                 desimaaliluku-re-pattern)
-                                                     ;; Matchataan whitespacesta huolimatta
-                                                     (str/replace v #"\s" ""))))
-                                           (reset! teksti v)
+                           :on-change (fn [e]
+                                        (let [syotto (normalisoi-numero (some-> e .-target .-value) salli-whitespace?)
+                                              syotto (cond
+                                                       vaadi-ei-negatiivinen?
+                                                       (str/replace syotto #"-" "")
+                                                       vaadi-negatiivinen?
+                                                       (if (= (first syotto) \-)
+                                                         syotto
+                                                         (str "-" syotto))
+                                                       :else syotto)]
+                                          (when (and
+                                                  (or (nil? validoi-kentta-fn) (validoi-kentta-fn syotto))
+                                                  (or
+                                                    ;; Salli tyhjä syöte (tai pelkkä miinusmerkki), jotta käyttäjä voi poistaa arvon
+                                                    (or (str/blank? syotto) (= "-" syotto))
+                                                    ;; Sallitaan joko kokonaisluku tai desimaaliluku
+                                                    (re-matches (if kokonaisluku? kokonaisluku-re desimaaliluku-re)
+                                                      (str/replace syotto #"\s" ""))))
 
-                                           ;; Numeron parsimista varten pitää poistaa whitespace,
-                                           ;; vaikka haluttaisiin näyttää se.
-                                           (let [v (str/replace v #"\s" "")
-                                                 numero (if kokonaisluku?
-                                                          (js/parseInt v)
-                                                          (js/parseFloat (-> v
-                                                                           (str/replace #"," "."))))]
-                                             (if (not (js/isNaN numero))
-                                               (reset! data numero)
-                                               (reset! data nil))
-                                             (when toiminta-f
-                                               (toiminta-f (when-not (js/isNaN numero)
-                                                             numero))))))}
+                                            ;; Aseta inputin raakateksti aina ensin
+                                            (reset! teksti syotto)
+
+                                            ;; Poistetaan whitespace tai mahdollinen yksinäinen miinusmerkki ennen numeron parsintaa
+                                            (let [puhdas (-> syotto
+                                                           ;; Poistetaan whitespace stringin kaikista osista
+                                                           (str/replace #"\s" ""))
+                                                  negatiivinen-luku-kesken? (= "-" puhdas)
+                                                  numero (if kokonaisluku?
+                                                           (js/parseInt puhdas)
+                                                           (js/parseFloat (str/replace puhdas #"," ".")))]
+
+                                              ;; NOTE: Alla ratkaisuja ikilooppeihin reagentin kanssa
+                                              ;;   Käytettäessä ulkopuolelta (r/wrap ..:) data-atomin sijasta,
+                                              ;;   voi reagentissa (>= v1.1.1) esiintyä omituista käytöstä
+                                              ;;   monimutkaisemmilla ui-kentillä. Jos esimerkiksi (r/wrap..) arvoksi
+                                              ;;   päätyy data atomin ulkopuolelta jokin default arvo, esimerkiksi
+                                              ;;   data-atomin saadessa nil arvon, näyttää Reagent päätyvän joissakin
+                                              ;;   tilanteissa ikilooppiin ja Maximum call stack size exceeded virheeseen.
+                                              ;;   TODO: Nämä harvinaisemmat tilanteet r/wrap suhteen pitäisi tutkia tarkemmin.
+
+                                              ;; Älä päivitä dataa, jos negatiivinen numero on kesken
+                                              (when-not negatiivinen-luku-kesken?
+                                                (if (js/isNaN numero)
+                                                  ;; Resetoi vain jos data ei ole jo nil, jotta ei synny ikilooppia niin herkästi
+                                                  (when (not (nil? @data))
+                                                    (reset! data nil))
+
+                                                  ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
+                                                  ;; Tällä vältetään ikiloopin mahdollisuutta
+                                                  (when (not= numero @data)
+                                                    (reset! data numero)
+                                                    (when toiminta-f (toiminta-f numero)))))))))}
                      (when data-cy {:data-cy data-cy})
                      (when aria-label {:aria-label aria-label}))]
            (when (and yksikko vayla-tyyli?)
