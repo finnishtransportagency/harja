@@ -460,7 +460,14 @@
                                   (assoc rivi :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)
                                   rivi))
                           kustannus-rivit)
-        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) (:toimenkuvat (first tarjous-rivit)))
+
+        ;; Jos on tarve lisätä toimenkuva jonkun kustannussuunnitelman vahvistamisen jälkeen, niin sitä ei löydy välttämättä ensimmäisen tarjouksen tiedoista.
+        ;; Joten käydään kaikkien tarjousvuosien toimenkuvat läpi ja yhdistetään ne uniikisti
+        uniikit-toimenkuvat (distinct (reduce (fn [kaikki-toimenkuvat tarjous-rivi]
+                                                (let [toimenkuvat (map #(dissoc % :id :summa) (:toimenkuvat tarjous-rivi))]
+                                                  (concat kaikki-toimenkuvat toimenkuvat)))
+                                        [] tarjous-rivit))
+        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) uniikit-toimenkuvat)
         toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) toimenkuva-rivit)
 
         ;; Päivitä mahdolliset toimenkuvan nimet, jos kesä ja talvikausi on vaikuttamassa tilanteeseen

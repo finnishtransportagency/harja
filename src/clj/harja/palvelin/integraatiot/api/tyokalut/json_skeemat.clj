@@ -37,33 +37,31 @@
 (def +turvallisuuspoikkeamien-vastaus+ "api/schemas/turvallisuuspoikkeama-vastaus.schema.json")
 
 ;; Analytiikka
-(def +analytiikkaportaali-toteuma-vastaus+ "api/schemas/entities/analytiikkaportaali.schema.json")
-(def analytiikkaportaali-toteuma-vastaus (tee-validaattori +analytiikkaportaali-toteuma-vastaus+))
-
 (def +analytiikka-paallystyskohteiden-haku-vastaus+ "api/schemas/analytiikka-paallystyskohteiden-haku-response.schema.json")
 (def analytiikka-paallystyskohteiden-haku-vastaus (tee-validaattori +analytiikka-paallystyskohteiden-haku-vastaus+))
-
 (def +analytiikka-paallystyskohteiden-aikataulujen-haku-vastaus+ "api/schemas/analytiikka-paallystyskohteiden-aikataulujen-haku-response.schema.json")
 (def +analytiikka-paallystysurakoiden-haku-vastaus+ "api/schemas/analytiikka-paallystysurakoiden-haku-response.schema.json")
 (def +analytiikka-paallystysilmoitusten-haku-vastaus+ "api/schemas/analytiikka-paallystysilmoitusten-haku-response.schema.json")
+
 (def +analytiikka-hoidon-paikkaukset-haku-vastaus+ "api/schemas/analytiikka-hoitourakoiden-paikkausten-haku-response.schema.json")
 (def +analytiikka-paikkauskohteiden-haku-vastaus+ "api/schemas/analytiikka-paikkauskohteiden-haku-response.schema.json")
 (def +analytiikka-paikkausten-haku-vastaus+ "api/schemas/analytiikka-paikkausten-haku-response.schema.json")
 
+(def +analytiikka-toimenpiteet-vastaus+ "api/schemas/analytiikka-toimenpiteet-haku-response.schema.json")
+(def analytiikka-toimenpiteet-vastaus (tee-validaattori +analytiikka-toimenpiteet-vastaus+))
 (def +analytiikka-tehtavat-ja-tehtavaryhmat-vastaus+ "api/schemas/analytiikka-tehtavat-ja-tehtavaryhmat-haku-response.schema.json")
 (def analytiikka-tehtavat-ja-tehtavaryhmat-vastaus (tee-validaattori +analytiikka-tehtavat-ja-tehtavaryhmat-vastaus+))
-
 (def +analytiikka-rahavaraukset-vastaus+ "api/schemas/analytiikka-rahavaraukset-haku-response.schema.json")
 (def analytiikka-rahavaraukset-vastaus (tee-validaattori +analytiikka-rahavaraukset-vastaus+))
 
-(def +analytiikka-toimenpiteet-vastaus+ "api/schemas/analytiikka-toimenpiteet-haku-response.schema.json")
-(def analytiikka-toimenpiteet-vastaus (tee-validaattori +analytiikka-toimenpiteet-vastaus+))
-
 (def +analytiikka-mhu-suunnitellut-kustannukset-vastaus+ "api/schemas/analytiikka-mhu-suunnitellut-kustannukset-haku-response.schema.json")
 (def analytiikka-mhu-suunnitellut-kustannukset-vastaus (tee-validaattori +analytiikka-mhu-suunnitellut-kustannukset-vastaus+))
-
 (def +analytiikka-mhu-toteutuneet-kustannukset-vastaus+ "api/schemas/analytiikka-mhu-toteutuneet-kustannukset-haku-response.schema.json")
 (def analytiikka-mhu-toteutuneet-kustannukset-vastaus (tee-validaattori +analytiikka-mhu-toteutuneet-kustannukset-vastaus+))
+
+(def +analytiikka-mhu-toteumat-vastaus+ "api/schemas/analytiikka-reittitoteumat-response.schema.json")
+(def analytiikka-mhu-toteumat-vastaus (tee-validaattori +analytiikka-mhu-toteumat-vastaus+))
+
 
 ;; Taitorakennerekisteri
 (def +taitorakennerekisteri-siltatarkastukset-haku-vastaus+ "api/schemas/trex-siltatarkastukset-haku-response.schema.json")
