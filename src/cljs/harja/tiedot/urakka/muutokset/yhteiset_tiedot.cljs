@@ -44,6 +44,12 @@
 
 (defonce nakymassa? (atom false))
 
+(defn nayta-muutokset-sivu? []
+  (boolean
+    (and
+      @u/valittu-aikavali
+      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))))
+
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
   [valittu-hoitokausi kulut]

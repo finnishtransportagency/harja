@@ -193,34 +193,33 @@
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
-  (let [nayta-muutokset-sivu? (and
-                                @u/valittu-aikavali
-                                (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))]
+  [:div.valinnat-ja-listaus
+   [:h1 "Muutosten hallinta"]
+   [:div.otsikko-ja-hoitokausi
 
-    [:div.valinnat-ja-listaus
-     [:h1 "Muutosten hallinta"]
-     [:div.otsikko-ja-hoitokausi
+    ;; TODO:  
+    ;; Jos vanhoille hoitovuosille toteutetaan osiot, kaikki nayta-muutokset-sivu? kutsut voi poistaa 
+    [urakka-valinnat/paivittava-urakkavuosi-tuck
+     @u/valittu-aikavali
+     #(when (t-yhteiset/nayta-muutokset-sivu?)
+        ;; Älä tee turhia kutsuja, jos sivua ei näytetä 
+        (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))) haku-kaynnissa? false]]
 
-      [urakka-valinnat/paivittava-urakkavuosi-tuck
-       @u/valittu-aikavali
-       #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)) haku-kaynnissa? false]]
-
-     ;; TODO:  
-     ;; Jos vanhoille hoitovuosille toteutetaan osiot, tämän varoitusviestin voipi poistaa. 
-     (if nayta-muutokset-sivu?
-       [:<>
-        [muutosten-vaikutus e! app]
-        [muutoslistaus e! app]]
-       ;; Tämä näytetään, jos 2025 aikaisempi hoitovuosi valittuna
-       [yleiset/varoitus-vihje
-        "Muutokset ovat käytössä hoitovuodesta 2025 alkaen." nil :alert])]))
+   (if (t-yhteiset/nayta-muutokset-sivu?)
+     [:<>
+      [muutosten-vaikutus e! app]
+      [muutoslistaus e! app]]
+     ;; Tämä näytetään, jos 2025 aikaisempi hoitovuosi valittuna
+     [yleiset/varoitus-vihje
+      "Muutokset ovat käytössä hoitovuodesta 2025 alkaen." nil :alert])])
 
 
 (defn muutokset-alempi-valilehti*
   [e! _app]
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
-    (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot nil)))
+    (komp/sisaan #(when (t-yhteiset/nayta-muutokset-sivu?)
+                    (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))))
     (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu
