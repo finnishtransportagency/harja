@@ -2,7 +2,7 @@
   (:require [jeesql.core :refer [defqueries]]))
 
 (declare onko-ilmoitukselle-vastaanottokuittausta ilmoitus-loytyy-idlla ilmoitus-on-lahetetty-urakalle
-  paivita-ilmoituksen-urakka!)
+  paivita-ilmoituksen-urakka! ilmoitus-aiheutti-toimenpiteita! tallenna-ilmoitusten-toimenpiteiden-aloitukset! hae-id-ilmoitus-idlla)
 
 (defqueries "harja/kyselyt/tieliikenneilmoitukset.sql"
   {:positional? true})
