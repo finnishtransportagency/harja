@@ -976,6 +976,7 @@
       (merkkaa-kaynnistyminen!)
       (kaynnista-pelkastaan-jarjestelma asetukset)
       (merkkaa-kaynnistetyksi!))
+    (log/fatal "Testi slack ilmoitukselle")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
