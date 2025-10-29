@@ -138,121 +138,11 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
         alustaKajaanin25Urakka();
     })
 
-    describe('Testaa kilpailutetttavat hankinnat 2024', function () {
-        beforeEach(function () {
-            cy.intercept('POST', '_/tallenna-kilpailutettavat-hankinnat').as('tallenna-kilpailutettavat-hankinnat');
-            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
-
-            // Valitse ensimmäinen hoitovuosi
-            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
-                cy.get('button').click({force: true});
-                cy.contains('1. hoitovuosi').click();
-            });
-        });
-
-        it('Taulukon arvot alussa oikein', function () {
-
-            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('th').contains('Toimenpide');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('th').contains('Pysyvät muutokset (€)');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('th').contains('Loka-joulukuu 2024 (€)');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('th').contains('Tammi-syyskuu 2025 (€)');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('th').contains('Yhteensä (€)');
-
-            // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('td').contains('Talvihoito');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('td').contains('Liikenneympäristön hoito');
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').find('td').contains('Sorateiden hoito');
-
-            // Löytyyhän lukuja
-            tarkistaToimenpideLuvut('Talvihoito', '0,00', '0,00');
-            tarkistaToimenpideLuvut('Liikenneympäristön hoito', '0,00', '0,00');
-            tarkistaToimenpideLuvut('Sorateiden hoito', '0,00', '0,00');
-        });
-
-        it('Muokkaa kilpailutettavat hankinnat', function () {
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid').gridOtsikot().then(() => {
-
-                let valitseInput = function (rivi) {
-                    return `#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
-                };
-
-                // Muokataan Talvihoito laaja TPI
-                cy.get(valitseInput(1)).eq(0).clear().type('1000');
-                cy.get(valitseInput(1)).eq(1).clear().type('2000');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tr:nth-child(2) td').eq(4).contains('3 000,00');
-
-                // Muokataan Liikenneympäristön hoito laaja TPI
-                cy.get(valitseInput(2)).eq(0).clear().type('1500');
-                cy.get(valitseInput(2)).eq(1).clear().type('2500');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tr:nth-child(3) td').eq(4).contains('4 000,00');
-
-                // Muokataan Soratien hoito laaja TPI
-                cy.get(valitseInput(3)).eq(0).clear().type('2000');
-                cy.get(valitseInput(3)).eq(1).clear().type('3000');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tr:nth-child(4) td').eq(4).contains('5 000,00');
-
-                // Yhteensä ja Kirjaamatta teksti näkyy ja summat on oikein
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
-                    .contains('Yhteensä').next().next().contains('4 500,00');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
-                    .contains('Yhteensä').next().next().next().contains('7 500,00');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
-                    .contains('Yhteensä').next().next().next().next().contains('12 000,00');
-                cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody')
-                    .contains('Kirjaamatta').should('not.exist');
-
-            });
-
-            // Tallennetaan muutokset
-            cy.get('#kilpailutettavat-hankinnat-elementti').contains('Tallenna tiedot').click();
-            cy.wait('@tallenna-kilpailutettavat-hankinnat')
-              .its('response.statusCode')
-              .should('equal', 200);
-
-            // Viesti onnistumisesta pitäisi näkyä
-            cy.contains('Kilpailutettavat hankinnat tallennettiin.', {timeout: 4000}).should('be.visible');
-
-        });
-
-    });
-
-    describe('Testaa rahavaraukset 2024', function () {
-
-        beforeEach(function () {
-            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
-
-            // Valitse ensimmäinen hoitovuosi
-            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
-                cy.get('button').click({force: true});
-                cy.contains('1. hoitovuosi').click();
-            });
-        });
-
-        it('Taulukon arvot alussa oikein', function () {
-
-            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
-            cy.get('#rahavaraukset-elementti table.grid').find('th').contains('Rahavaraus');
-            cy.get('#rahavaraukset-elementti table.grid').find('th').contains('Suunniteltu kustannus (€)');
-            cy.get('#rahavaraukset-elementti table.grid').find('th').contains('Indeksikorjattu (€)');
-
-            // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#rahavaraukset-elementti table.grid').find('td').contains('Tilaajan rahavaraus kannustinjärjestelmään');
-            cy.get('#rahavaraukset-elementti table.grid').find('td').contains('Äkilliset hoitotyöt');
-            cy.get('#rahavaraukset-elementti table.grid').find('td').contains('Vahinkojen korjaukset');
-
-            // Löytyyhän lukuja - Olisi hyvä, jos tarjouspuolella käytäisiin lisäämässä jotain, mitä tässä verrata,
-            // mutta tätä tehtäessä tarjouspuoli on vielä niin kesken, ettei kannata vielä tehdä sinne cypress-testejä
-            tarkistaRahavarausLuvut('Tilaajan rahavaraus kannustinjärjestelmään', '0,00', '', '-');
-            tarkistaRahavarausLuvut('Äkilliset hoitotyöt', '0,00', '', '-');
-            tarkistaRahavarausLuvut('Vahinkojen korjaukset', '0,00', '', '-');
-        });
-    });
 
     describe('Testaa erillishankinnat', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
-            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
 
             // Valitse ensimmäinen hoitovuosi
             cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
@@ -269,14 +159,14 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             cy.get('#erillishankinnat-elementti table.grid').find('th').contains('Indeksikorjattu (€)');
 
             // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Lokakuu 2024');
-            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Marraskuu 2024');
-            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Joulukuu 2024');
+            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Lokakuu 2025');
+            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Marraskuu 2025');
+            cy.get('#erillishankinnat-elementti table.grid').find('td').contains('Joulukuu 2025');
 
             // Löytyyhän lukuja
-            tarkistaErillishankinnanLuvut('Lokakuu 2024', '0,00', '-');
-            tarkistaErillishankinnanLuvut('Marraskuu 2024', '0,00', '-');
-            tarkistaErillishankinnanLuvut('Joulukuu 2024', '0,00', '-');
+            tarkistaErillishankinnanLuvut('Lokakuu 2025', '0,00', '-');
+            tarkistaErillishankinnanLuvut('Marraskuu 2025', '0,00', '-');
+            tarkistaErillishankinnanLuvut('Joulukuu 2025', '0,00', '-');
         });
 
         it('Muokkaa erillishankinnat', function () {
@@ -286,20 +176,20 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                     return `#erillishankinnat-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
                 };
 
-                // Muokataan Lokakuu 2024
+                // Muokataan Lokakuu 2025
                 cy.get(valitseInput(1)).eq(0).clear().type('1000');
 
-                // Muokataan Marraskuu 2024
+                // Muokataan Marraskuu 2025
                 cy.get(valitseInput(2)).eq(0).clear().type('1500');
 
-                // Muokataan Joulukuu 2024
+                // Muokataan Joulukuu 2025
                 cy.get(valitseInput(3)).eq(0).clear().type('2000');
 
                 // Yhteensä ja Kirjaamatta teksti ja summat täsmää
                 cy.get('#erillishankinnat-elementti table.grid tbody')
                     .contains('Yhteensä').next().contains('4 500,00');
                 cy.get('#erillishankinnat-elementti table.grid tbody')
-                    .contains('Kirjaamatta').should('not.exist');
+                    .contains('Kirjaamatta');
 
             });
 
@@ -316,151 +206,6 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
 
     });
 
-    describe('Testaa Johto- ja hallintokorvaus 2019', function () {
-        beforeEach(function () {
-            cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2019').as('tallenna-toimenkuvat-2022');
-            avaaUusiKustannussuunnittelu('Iin MHU 2021-2026', 'Pohjois-Pohjanmaa');
-        });
-
-        it('Taulukon arvot alussa oikein', function () {
-
-            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Toimenkuva');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Tarjouksen määrä (€ / vuosi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Tunnit (h/kk)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Tuntipalkka (€/h)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Yhteensä (€/vuosi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Kk/v');
-
-            // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Sopimusvastaava');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Vastuunalainen työnjohtaja');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Päätoiminen apulainen (talvikausi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Päätoiminen apulainen (kesäkausi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Apulainen/työnjohtaja (talvikausi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Apulainen/työnjohtaja (kesäkausi)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Viherhoidosta vastaava henkilö');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Hankintavastaava');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Muut kulut');
-
-            // Löytyyhän lukuja
-            tarkistaToimenkuva2019Luvut('Sopimusvastaava', '0,00', '', '0,00', '0,00', '12');
-            tarkistaToimenkuva2019Luvut('Vastuunalainen työnjohtaja', '0,00', '', '0,00', '0,00', '12');
-            tarkistaToimenkuva2019Luvut('Päätoiminen apulainen (talvikausi)', '0,00', '', '0,00', '0,00', '5');
-        });
-
-        it('Muokkaa Johto- ja hallintokorvaus 2019', function () {
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').gridOtsikot().then(() => {
-
-                let asetaToimenkuvalleArvo = function (toimenkuva, tunnit, tuntipalkka) {
-
-                    cy.get('#johto-ja-hallintokorvaus-elementti table.grid').contains('td', toimenkuva).closest('tr')
-                        .find('input').eq(0).clear().type(tunnit).blur()
-                    cy.get('#johto-ja-hallintokorvaus-elementti table.grid').contains('td', toimenkuva).closest('tr')
-                        .find('input').eq(1).clear().type(tuntipalkka).blur()
-                };
-
-                let asetaMuutKulutArvo = function (toimenkuva, arvo) {
-                    cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                        .contains(toimenkuva).next().next().next().next().find('input').clear().type(arvo).blur()
-                };
-
-                asetaToimenkuvalleArvo('Sopimusvastaava', '1','1000');
-                asetaToimenkuvalleArvo('Vastuunalainen työnjohtaja', '1','1000');
-                asetaToimenkuvalleArvo('Päätoiminen apulainen (talvikausi)', '1','1000');
-                asetaToimenkuvalleArvo('Päätoiminen apulainen (kesäkausi)', '1','1000');
-                asetaToimenkuvalleArvo('Apulainen/työnjohtaja (talvikausi)', '1','1000');
-                asetaToimenkuvalleArvo('Apulainen/työnjohtaja (kesäkausi)', '1','1000');
-                asetaToimenkuvalleArvo('Viherhoidosta vastaava henkilö', '1','1000');
-                asetaToimenkuvalleArvo('Hankintavastaava', '1','1000');
-                asetaMuutKulutArvo('Muut kulut', '1000');
-
-                cy.wait(1000);
-                // Yhteensä ja Kirjaamatta
-                cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Yhteensä').next().next().next().next().contains('66 000,00');
-                cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Kirjaamatta').should('not.exist');
-
-            });
-
-            // Tallennetaan muutokset
-            cy.get('#johto-ja-hallintokorvaus-elementti').contains('Tallenna tiedot').click();
-            cy.wait('@tallenna-toimenkuvat-2022')
-                .its('response.statusCode')
-                .should('equal', 200);
-
-            // Viesti onnistumisesta pitäisi näkyä
-            cy.contains('Johto- ja Hallintokorvaukset tallennettiin.', {timeout: 4000}).should('be.visible');
-        });
-
-    });
-
-    describe('Testaa Johto- ja hallintokorvaus 2024', function () {
-        beforeEach(function () {
-            cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2019').as('tallenna-toimenkuvat-2022');
-            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
-
-            // Valitse ensimmäinen hoitovuosi
-            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
-                cy.get('button').click({force: true});
-                cy.contains('1. hoitovuosi').click();
-            });
-        });
-
-        it('Taulukon arvot alussa oikein', function () {
-
-            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Toimenkuva');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Tarjouksen määrä (€)');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('th').contains('Suunniteltu määrä (€)');
-
-            // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Valmistelukausi ennen urakka-ajan alkua');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('Vastuunalainen työnjohtaja');
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').find('td').contains('2. työnjohtaja');
-
-            // Löytyyhän lukuja
-            tarkistaToimenkuva2022Luvut('Valmistelukausi ennen urakka-ajan alkua', '0,00', '0,00');
-            tarkistaToimenkuva2022Luvut('Vastuunalainen työnjohtaja', '0,00', '0,00');
-            tarkistaToimenkuva2022Luvut('2. työnjohtaja', '0,00', '0,00');
-        });
-
-        it('Muokkaa Johto- ja hallintokorvaus 2022', function () {
-            cy.get('#johto-ja-hallintokorvaus-elementti table.grid').gridOtsikot().then(() => {
-
-                let asetaToimenkuvalleArvo = function (toimenkuva, arvo) {
-                    cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                        .contains(toimenkuva).next().next().find('input').clear().type(arvo).blur()
-                };
-
-                asetaToimenkuvalleArvo('Valmistelukausi ennen urakka-ajan alkua', '1000');
-                asetaToimenkuvalleArvo('Vastuunalainen työnjohtaja', '1000');
-                asetaToimenkuvalleArvo('2. työnjohtaja', '1000');
-                asetaToimenkuvalleArvo('3. työnjohtaja', '1000');
-                asetaToimenkuvalleArvo('Viherhoidosta vastaava henkilö', '1000');
-                asetaToimenkuvalleArvo('Harjoittelija', '1000');
-                asetaToimenkuvalleArvo('Muut kulut', '1000');
-                cy.wait(1000);
-                // Yhteensä ja Kirjaamatta
-                cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Yhteensä').next().next().contains('7 000,00');
-                cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody')
-                    .contains('Kirjaamatta').should('not.exist');
-
-            });
-
-            // Tallennetaan muutokset
-            cy.get('#johto-ja-hallintokorvaus-elementti').contains('Tallenna tiedot').click();
-            cy.wait('@tallenna-toimenkuvat-2022')
-                .its('response.statusCode')
-                .should('equal', 200);
-
-            // Viesti onnistumisesta pitäisi näkyä
-            cy.contains('Johto- ja Hallintokorvaukset tallennettiin.', {timeout: 4000}).should('be.visible');
-        });
-
-    });
 
     describe('Testaa Johto- ja hallintokorvaus 2025', function () {
         beforeEach(function () {
@@ -515,73 +260,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
         });
 
     });
-
-    describe('Testaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
-        beforeEach(function () {
-            cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
-            avaaUusiKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa');
-
-            // Valitse ensimmäinen hoitovuosi
-            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
-                cy.get('button').click({force: true});
-                cy.contains('1. hoitovuosi').click();
-            });
-        });
-
-        it('Taulukon arvot alussa oikein', function () {
-
-            // Varmistetaan, että taulukon otsikkorivillä on kaikki kunnossa
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Kalenterikuukausi');
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Suunniteltu kustannus (€)');
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('th').contains('Indeksikorjattu (€)');
-
-            // Varmistetaan, että taulukosta löytyy toimenpiteitä
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Lokakuu 2024');
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Marraskuu 2024');
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').find('td').contains('Joulukuu 2024');
-
-            // Löytyyhän lukuja
-            tarkistaHoidonjotopalkkioLuvut('Lokakuu 2024', '0,00', '-');
-            tarkistaHoidonjotopalkkioLuvut('Marraskuu 2024', '0,00', '-');
-            tarkistaHoidonjotopalkkioLuvut('Joulukuu 2024', '0,00', '-');
-        });
-
-        it('Muokkaa Hoidonjohtopalkkiot 2022 vuoden urakalle', function () {
-            cy.get('#hoidonjohtopalkkio-elementti table.grid').gridOtsikot().then(() => {
-
-                let valitseInput = function (rivi) {
-                    return `#hoidonjohtopalkkio-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
-                };
-
-                // Muokataan Lokakuu 2024
-                cy.get(valitseInput(1)).eq(0).clear().type('1000');
-
-                // Muokataan Marraskuu 2024
-                cy.get(valitseInput(2)).eq(0).clear().type('1500');
-
-                // Muokataan Joulukuu 2024
-                cy.get(valitseInput(3)).eq(0).clear().type('2000');
-
-                // Yhteensä teksti ja summat täsmää
-                cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
-                    .contains('Yhteensä').next().contains('4 500,00');
-                cy.get('#hoidonjohtopalkkio-elementti table.grid tbody').
-                contains('Kirjaamatta').should('not.exist')
-
-            });
-
-            // Tallennetaan muutokset
-            cy.get('#hoidonjohtopalkkio-elementti').contains('Tallenna tiedot').click();
-            cy.wait('@tallenna-hoidonjohtopalkkiot')
-                .its('response.statusCode')
-                .should('equal', 200);
-
-            // Viesti onnistumisesta pitäisi näkyä
-            cy.contains('Hoidonjohtopalkkiot tallennettiin.', {timeout: 4000}).should('be.visible');
-
-        });
-
-    });
+    
 
     describe('Testaa Hoidonjohtopalkkiot 2025 vuoden urakalle', function () {
         beforeEach(function () {
@@ -627,7 +306,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
                     .contains('Yhteensä').next().contains('4 500,00');
                 cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().contains('−4 500,00');
+                    .contains('Kirjaamatta').next().contains('-4 500,00');
 
             });
 

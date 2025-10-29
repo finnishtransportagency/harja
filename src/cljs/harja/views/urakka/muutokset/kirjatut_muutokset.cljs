@@ -2,7 +2,6 @@
   "Muutokset välilehden 'Kirjatut muutokset' -osio"
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
@@ -69,16 +68,15 @@
      :komponentti (fn [rivi]
                     (let [poikkeama? (= (:alityyppi rivi) :poikkeama)
                           nimi (if poikkeama? "TODO (poikkeama)" "Muokkaa")]
-                      
+
                       #_[napit/muokkaa "Muokkaa"
                          #(e! (t-yhteiset/->MuokkaaMuutosta rivi))]
-                      
+
                       ;; Voi poistaa kun poikkeama lomake toteutettu
                       [napit/muokkaa nimi
                        #(e! (t-yhteiset/->MuokkaaMuutosta rivi)) {:disabled poikkeama?}]))}]
    kirjatut-muutokset])
 
-;; TODO: Toteuta loppuun ja testaa
 (defn aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid [e! {:keys [aiempien-hoitovuosien-pysyvat-muutokset] :as app}]
   [grid/grid
    {:tunniste :id

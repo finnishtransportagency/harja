@@ -81,7 +81,11 @@
 
   (testing "Päivämäärän parsinta toimii"
     (is (= (pvm/luo-pvm 3000 0 1)
-           (:p (konversio/pgobject->map "(3000-01-01 00:00:00)" :p :date))))))
+           (:p (konversio/pgobject->map "(3000-01-01 00:00:00)" :p :datetime)))))
+
+  (testing "Päivämäärän parsinta toimii"
+    (is (= (pvm/luo-pvm 3000 0 1)
+          (:p (konversio/pgobject->map "(3000-01-01)" :p :date))))))
 
 (deftest sql-date-suomalaiseen-formaattiin-test
   (testing "HappyCase - palautetaan asiallinen vastaus"

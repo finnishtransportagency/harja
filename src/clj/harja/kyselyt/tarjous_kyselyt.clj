@@ -302,11 +302,14 @@
                                                                 ;; Tämä map pyörähtää jokaisena hoitovuonna. Mutta toimenkuvan kannalta riittää
                                                                 ;; että toimenkuvia lisätään vain kerran urakalle
                                                                 ;; Tarkistetaan siis, ettei toimenkuvaa löydy jo tietokannasta
-                                                                (when-not (seq (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:toimenkuva (:toimenkuva toimenkuva)
-                                                                                                                             :urakkaid urakka-id}))
-                                                                  (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:toimenkuva toimenkuva)
-                                                                                                                    :urakkaid urakka-id
-                                                                                                                    :urakkakohtainen-nimi (:nimi toimenkuva)})))
+                                                                (let [toimenkuva-kannasta (first (toimenkuva-kyselyt/hae-urakan-toimenkuva db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                                               :urakkaid urakka-id}))
+                                                                      palautettava-toimenkuva (if (nil? toimenkuva-kannasta)
+                                                                                                (toimenkuva-kyselyt/lisaa-urakan-toimenkuva<! db {:toimenkuva (:toimenkuva toimenkuva)
+                                                                                                                                                  :urakkaid urakka-id
+                                                                                                                                                  :urakkakohtainen-nimi (:nimi toimenkuva)})
+                                                                                                toimenkuva-kannasta)]
+                                                                  palautettava-toimenkuva))
                                            toimenkuvadb (if (:id tarjousdb)
                                                           (first (hae-toimenkuva-tarjoukselle db
                                                                    {:tarjous_id (:id tarjousdb)
@@ -434,18 +437,18 @@
         ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
         kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         puuttuvat-rahavaraukset (filter
-                                (fn [r]
-                                  (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
+                                  (fn [r]
+                                    (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
                                   kaikki-urakan-rahavaraukset)
         puuttuvat-rahavaraukset (reduce (fn [lopulliset rahavaraus]
-                                   (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
-                                                             :summa 0
-                                                             :osio "tavoitehintaiset-rahavaraukset"
-                                                             :tehtava_id nil
-                                                             :tehtavaryhma_id nil
-                                                             :rahavaraus_id (:id rahavaraus)
-                                                             :jarjestys (:jarjestys rahavaraus)}])))
-                           [] puuttuvat-rahavaraukset)
+                                          (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
+                                                                    :summa 0
+                                                                    :osio "tavoitehintaiset-rahavaraukset"
+                                                                    :tehtava_id nil
+                                                                    :tehtavaryhma_id nil
+                                                                    :rahavaraus_id (:id rahavaraus)
+                                                                    :jarjestys (:jarjestys rahavaraus)}])))
+                                  [] puuttuvat-rahavaraukset)
         kustannus-rivit (vec (concat kustannus-rivit puuttuvat-rahavaraukset))
         kustannus-rivit (sort-by :jarjestys kustannus-rivit)
         kustannus-rivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi))) kustannus-rivit)
@@ -457,7 +460,14 @@
                                   (assoc rivi :hoitovuosittaiset-arvot hoitovuosittaiset-arvot)
                                   rivi))
                           kustannus-rivit)
-        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) (:toimenkuvat (first tarjous-rivit)))
+
+        ;; Jos on tarve lisätä toimenkuva jonkun kustannussuunnitelman vahvistamisen jälkeen, niin sitä ei löydy välttämättä ensimmäisen tarjouksen tiedoista.
+        ;; Joten käydään kaikkien tarjousvuosien toimenkuvat läpi ja yhdistetään ne uniikisti
+        uniikit-toimenkuvat (distinct (reduce (fn [kaikki-toimenkuvat tarjous-rivi]
+                                                (let [toimenkuvat (map #(dissoc % :id :summa) (:toimenkuvat tarjous-rivi))]
+                                                  (concat kaikki-toimenkuvat toimenkuvat)))
+                                        [] tarjous-rivit))
+        toimenkuva-rivit (map #(merge % {:toimenkuva (:nimi %)}) uniikit-toimenkuvat)
         toimenkuva-rivit (mapv #(muodosta-toimenkuvarivi % (hae-toimenkuvista-rivit-vuodelle :toimenkuvat tarjous-rivit (:johto_ja_hallintokorvaus_toimenkuva_id %) (:maksukausi %))) toimenkuva-rivit)
 
         ;; Päivitä mahdolliset toimenkuvan nimet, jos kesä ja talvikausi on vaikuttamassa tilanteeseen

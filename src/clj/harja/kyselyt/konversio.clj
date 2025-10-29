@@ -332,7 +332,10 @@
                        (inc new-pos))))))))))
 
 (def ^:private lue-pgobject-date
-  (partial pvm/parsi pvm/pgobject-format))
+  (partial pvm/parsi pvm/pgobject-format-date))
+
+(def ^:private lue-pgobject-date-time
+  (partial pvm/parsi pvm/pgobject-format-datetime))
 
 (defn pgobject->map
   "Muuntaa resultsetissä olevan record tyyppisen arvon (PGobject)
@@ -358,6 +361,7 @@
               :double (when-not (str/blank? arvo) (Double/parseDouble arvo))
               :string arvo
               :date (when-not (str/blank? arvo) (lue-pgobject-date arvo))
+              :datetime (when-not (str/blank? arvo) (lue-pgobject-date-time arvo))
               (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
           kentat
           arvot)))))
