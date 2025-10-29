@@ -306,7 +306,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
                 cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
                     .contains('Yhteensä').next().contains('4 500,00');
                 cy.get('#hoidonjohtopalkkio-elementti table.grid tbody')
-                    .contains('Kirjaamatta').next().contains('−4 500,00');
+                    .contains('Kirjaamatta').next().contains('-4 500,00');
 
             });
 
