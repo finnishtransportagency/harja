@@ -158,7 +158,9 @@
             :leveys 10
             :muokattava? (constantly false)
             :hae (fn [rivi]
-                   (+ (or (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi) 0) (:maaramuutos rivi)))}
+                   (fmt/desimaaliluku
+                     (+ (or (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi) 0) (:maaramuutos rivi))
+                     2))}
 
            ;; Kustomoitu poisto-nappi, joka korvaa gridin oman poisto-toiminnon
            {:otsikko ""

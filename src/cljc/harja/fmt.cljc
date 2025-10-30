@@ -25,7 +25,8 @@
    (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))
 
 #?(:cljs
-   (def euro-number-format (doto (goog.i18n.NumberFormat. (.-DECIMAL Format))
+   (def euro-number-format (doto
+                             (goog.i18n.NumberFormat. (.-DECIMAL Format))
                              (.setShowTrailingZeros false)
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
@@ -47,12 +48,15 @@
   ([nayta-euromerkki nayta-plus eur]
    (if (big/big? eur)
      (str (big/fmt-full eur 2)
-          (when nayta-euromerkki " \u20AC"))
+       (when nayta-euromerkki " \u20AC"))
      #?(:cljs
         ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
         ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
         ;; vasta IE11 versiosta lähtien.
-        (let [tulos (.format euro-number-format eur)]
+        (let [tulos (.format euro-number-format eur)
+              ;; Tämä generoi tosi hauskan − merkin joka rikkoo kenttien miinus arvojen muokkauksen
+              ;; Vaihdetaampas tämä takaisin normaali - merkkiin
+              tulos (str/replace tulos #"−" "-")]
           (if (or
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
@@ -73,9 +77,9 @@
         :clj
         (s/replace (.format
                      (doto
-                         (if nayta-euromerkki
-                           (NumberFormat/getCurrencyInstance)
-                           (NumberFormat/getNumberInstance))
+                       (if nayta-euromerkki
+                         (NumberFormat/getCurrencyInstance)
+                         (NumberFormat/getNumberInstance))
                        (.setMaximumFractionDigits 2)
                        (.setMinimumFractionDigits 2)
                        (.setNegativePrefix "\u002D")) eur) ;; Korvataan "-" sen unicodella. Aiheutti ongelmia pdf-raporteissa.
@@ -96,8 +100,8 @@
 #?(:clj
    (defn formatoi-arvo-raportille [arvo]
      (as-> arvo arvo
-           (clojure.core/bigdec arvo)
-           (. arvo setScale 2 RoundingMode/HALF_UP))))
+       (clojure.core/bigdec arvo)
+       (. arvo setScale 2 RoundingMode/HALF_UP))))
 
 (defn yksikolla
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"
@@ -480,8 +484,8 @@
    (pvm-vali [alku loppu] true))
   ([[alku loppu] nayta-vuosi?]
    (str (pvm/pvm alku {:nayta-vuosi-fn (constantly nayta-vuosi?)})
-        " \u2014 "
-        (pvm/pvm loppu {:nayta-vuosi-fn (constantly nayta-vuosi?)}))))
+     " \u2014 "
+     (pvm/pvm loppu {:nayta-vuosi-fn (constantly nayta-vuosi?)}))))
 
 (defn pvm-vali-opt [vali]
   (if vali
@@ -508,38 +512,38 @@
   ([valittu-hk hoitovuodet vuosi-termi]
    (hoitokauden-jarjestysluku-ja-vuodet valittu-hk hoitovuodet vuosi-termi false))
   ([valittu-hk hoitovuodet vuosi-termi sisaltaa-koko-kauden?]
-  (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
-              (and (int? valittu-hk) (> valittu-hk 0) (< valittu-hk 10) (every? vector? hoitovuodet))
-              (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita. Myös hoitokauden järjestysluku ja vektori ")
-  (when (and (int? valittu-hk) (< valittu-hk 10) (every? vector? hoitovuodet))
-    (assert (<= valittu-hk (count hoitovuodet)) "Indeksi yli rajojen - osoitin suurempi kuin hoitovuosien lukumäärä. "))
+   (assert (or (and (int? valittu-hk) (every? int? hoitovuodet))
+             (and (int? valittu-hk) (> valittu-hk 0) (< valittu-hk 10) (every? vector? hoitovuodet))
+             (and (vector? valittu-hk) (every? vector? hoitovuodet))) "Kaikkien parametrien on oltava joko numeroita tai pvm:n sisältäviä vektoreita. Myös hoitokauden järjestysluku ja vektori ")
+   (when (and (int? valittu-hk) (< valittu-hk 10) (every? vector? hoitovuodet))
+     (assert (<= valittu-hk (count hoitovuodet)) "Indeksi yli rajojen - osoitin suurempi kuin hoitovuosien lukumäärä. "))
 
-  (let [monesko (first (keep-indexed (fn [i hk]
-                                       (if (and (int? valittu-hk)
-                                                (< valittu-hk 10))
-                                         valittu-hk
-                                         (when (= hk valittu-hk)
-                                          (inc (int i)))))
-                                     hoitovuodet))
-        hk-fmt #(cond
-                  ;; valittu-hk on vuosiluku
-                  (and (int? %) (> % 2000))
-                  (str % "\u2014" (inc %))
+   (let [monesko (first (keep-indexed (fn [i hk]
+                                        (if (and (int? valittu-hk)
+                                              (< valittu-hk 10))
+                                          valittu-hk
+                                          (when (= hk valittu-hk)
+                                            (inc (int i)))))
+                          hoitovuodet))
+         hk-fmt #(cond
+                   ;; valittu-hk on vuosiluku
+                   (and (int? %) (> % 2000))
+                   (str % "\u2014" (inc %))
 
-                  ;; valittu-hk on järjestysluku, esim kustannussuunnitelmassa, eli 1, 2, 3, ...
-                  (and (int? %) (< % 10) (get hoitovuodet (dec %)))
-                  (str (pvm/vuosi (first (get hoitovuodet (dec %)))) "\u2014"
-                       (pvm/vuosi (second (get hoitovuodet (dec %)))))
+                   ;; valittu-hk on järjestysluku, esim kustannussuunnitelmassa, eli 1, 2, 3, ...
+                   (and (int? %) (< % 10) (get hoitovuodet (dec %)))
+                   (str (pvm/vuosi (first (get hoitovuodet (dec %)))) "\u2014"
+                     (pvm/vuosi (second (get hoitovuodet (dec %)))))
 
-                  :else ;; valittu-hk on pvm
-                  (let [alkuvuosi (pvm/vuosi (first %))
-                        loppuvuosi (pvm/vuosi (second %))]
-                    ;; jos alku- ja loppuvuosi ovat samat, ei toisteta samaa vuosilukua
-                    (str alkuvuosi (when-not (= alkuvuosi loppuvuosi)
-                                     (str "\u2014" loppuvuosi)))))]
-    (if sisaltaa-koko-kauden? 
-      "Kaikki"
-      (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))))
+                   :else ;; valittu-hk on pvm
+                   (let [alkuvuosi (pvm/vuosi (first %))
+                         loppuvuosi (pvm/vuosi (second %))]
+                     ;; jos alku- ja loppuvuosi ovat samat, ei toisteta samaa vuosilukua
+                     (str alkuvuosi (when-not (= alkuvuosi loppuvuosi)
+                                      (str "\u2014" loppuvuosi)))))]
+     (if sisaltaa-koko-kauden?
+       "Kaikki"
+       (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (hk-fmt valittu-hk) ")")))))
 
 (defn hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
   "Näyttää hoitokauden esim 1.10.2022 - 30.9.2023 formaatissa '2. hoitovuosi (1.10.2022 - 30.9.2023)'.
@@ -582,11 +586,7 @@
             (.setGroupingSeparator \ ))))
 
 (defn desimaaliluku
-  ([luku] (desimaaliluku luku 2 false))
-  ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
-  ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
-  ([luku min-desimaalit max-desimaalit ryhmitelty?]
-   "Formatoi desimaaliluku.
+  "Formatoi desimaaliluku.
    luku: formatoitava luku
    min-desimaalit: monenko desimaalin tarkkuudella luku vähintään näytetään (voi olla nil)
    max-desimaalit: monenko desimaalin tarkkuudella luku korkeintaan näytetään (jos nil, käytetään arvoa oletus-max-desimaalit)
@@ -612,6 +612,10 @@
    => \"7777777777,1234576\" ; väärin
 
    Jos tarvitaan paljon merkitseviä numeroita, niin kannattaa harkita big decimalin käyttämistä."
+  ([luku] (desimaaliluku luku 2 false))
+  ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
+  ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
    #?(:cljs
       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
       (if (= max-desimaalit 0)
@@ -792,37 +796,37 @@
          kuukausi (* viikko 4)
          vuosi (* kuukausi 12)]
      (cond (= paivat 0)
-           ""
+       ""
 
-           (< paivat viikko)
-           (str paivat (if (= paivat 1)
-                         (if lyhenna-yksikot? "pv" " päivä")
-                         (if lyhenna-yksikot? "pv" " päivää")))
+       (< paivat viikko)
+       (str paivat (if (= paivat 1)
+                     (if lyhenna-yksikot? "pv" " päivä")
+                     (if lyhenna-yksikot? "pv" " päivää")))
 
-           (< paivat kuukausi)
-           (let [viikot (int (/ paivat viikko))]
-             (str viikot (if (= viikot 1)
-                           (if lyhenna-yksikot? "vk" " viikko")
-                           (if lyhenna-yksikot? "vk" " viikkoa"))))
+       (< paivat kuukausi)
+       (let [viikot (int (/ paivat viikko))]
+         (str viikot (if (= viikot 1)
+                       (if lyhenna-yksikot? "vk" " viikko")
+                       (if lyhenna-yksikot? "vk" " viikkoa"))))
 
-           (< paivat vuosi)
-           (let [kuukaudet (int (/ paivat kuukausi))]
-             (str kuukaudet (if (= kuukaudet 1)
-                              (if lyhenna-yksikot? "kk" " kuukausi")
-                              (if lyhenna-yksikot? "kk" " kuukautta"))))
+       (< paivat vuosi)
+       (let [kuukaudet (int (/ paivat kuukausi))]
+         (str kuukaudet (if (= kuukaudet 1)
+                          (if lyhenna-yksikot? "kk" " kuukausi")
+                          (if lyhenna-yksikot? "kk" " kuukautta"))))
 
-           (>= paivat vuosi)
-           (let [vuodet (int (/ paivat vuosi))]
-             (str vuodet (if (= vuodet 1)
-                           (if lyhenna-yksikot? "v" " vuosi")
-                           (if lyhenna-yksikot? "v" " vuotta"))))))))
+       (>= paivat vuosi)
+       (let [vuodet (int (/ paivat vuosi))]
+         (str vuodet (if (= vuodet 1)
+                       (if lyhenna-yksikot? "v" " vuosi")
+                       (if lyhenna-yksikot? "v" " vuotta"))))))))
 
 (defn aika [{:keys [tunnit minuutit sekunnit]}]
   (let [p #(left-pad "0" 2 (str %))]
     (str (p tunnit) ":"
-         (p minuutit)
-         (when sekunnit
-           (str ":" (p sekunnit))))))
+      (p minuutit)
+      (when sekunnit
+        (str ":" (p sekunnit))))))
 
 (defn merkkijonon-alku [s max-pituus]
   (when (string? s)
@@ -835,7 +839,7 @@
   (case urakkatyyppi
     (:hoito :valaistus :paikkaus :siltakorjaus) (name urakkatyyppi)
     :paallystys "päällystys"
-    :tiemerkinta  "tiemerkintä"
+    :tiemerkinta "tiemerkintä"
     :tekniset-laitteet "tekniset laitteet"
 
     "Ei vielä formatointia ko. urakkatyypille"))
