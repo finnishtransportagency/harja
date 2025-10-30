@@ -150,21 +150,39 @@
                (let [hoitovuoden-arvot (:hoitovuosittaiset-arvot tarjous-rivi)
                      vuosittaiset-arvot (apply + (mapv
                                                    (fn [vuosisumma]
-                                                     (if (and
-                                                           (not= "yhteensa" (:osio vuosisumma))
-                                                           (= vuosi (:vuosi vuosisumma)))
+                                                     (if (= vuosi (:vuosi vuosisumma))
                                                        (or (:summa vuosisumma) 0) 0))
                                                    hoitovuoden-arvot))]
                  vuosittaiset-arvot))
-             (:tarjous tarjous-tietomalli))))
+             (filter #(not= "yhteensa" (:osio %)) (:tarjous tarjous-tietomalli)))))
 
 (defn tallenna-tarjous-tietokantaan
   "Tarjous koostuu kolmesta kokonaisuudesta: Tarjouksen kokonaissummasta eli Tavoite- ja Kattohinnasta, Johto-ja-hallintokorvauksista (toimenkuvat) sekä
   Hankinnoista (Kilpailutettavat hankinnat, Erillishankinnat, Rahavarauksista, Hoidonjohtopalkkiosta)."
   [db urakka-id kayttaja-id kattohintakerroin tarjous]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot))))
+
+        ;; Ennenkuin tallennetaan mitään, varmistetaan, että annettu kattohinta ei ole pienempi, kuin tarjouksen tavoihinta
+        kasin-syotetty-kattohinta-rivi (first (filter #(= "Yhteensä kattohinta" (:nimi %)) (:tarjous tarjous)))
+        kattohinnat-valideja (if kasin-syotetty-kattohinta-rivi
+                               (mapv
+                                   (fn [vuosi-rivi]
+                                     (let [tavoitehinta (tarjoustietomallista-vuosittaiset-hinnat tarjous (:vuosi vuosi-rivi))
+
+                                           vuosittainen-kattohinta (:summa (first (filter (fn [arvot]
+                                                                                            (when (= (:vuosi vuosi-rivi) (:vuosi arvot))
+                                                                                              arvot))
+                                                                                    (:hoitovuosittaiset-arvot kasin-syotetty-kattohinta-rivi))))
+                                           kattohinta-valid? (> vuosittainen-kattohinta tavoitehinta)]
+                                       kattohinta-valid?))
+                                   vuodet)
+                               [true])
+
+       _ (when-not (every? true? kattohinnat-valideja)
+           (throw (IllegalArgumentException. (str "Tarjoukselle annettu kattohinta ei ole validi."))))
 
         ;; Haetaan urakan mahdolliset aiemmat tarjoushinnat urakka_tavoite -taulusta
         urakan-tavoitteet-tietokannasta (hae-urakan-tarjous-tavoitehinnat db {:urakkaid urakka-id})
@@ -172,11 +190,20 @@
         ;; Muokkaa tietomallin vuosittaiset summat tarjous- ja kattohinnaksi
         vuosittaiset-tarjoushinnat (mapv
                                      (fn [vuosi-rivi]
-                                       (let [summa (tarjoustietomallista-vuosittaiset-hinnat tarjous (:vuosi vuosi-rivi))]
+                                       (let [summa (tarjoustietomallista-vuosittaiset-hinnat tarjous (:vuosi vuosi-rivi))
+                                             kattohinta-rivi (first (filter #(= "Yhteensä kattohinta" (:nimi %)) (:tarjous tarjous)))
+                                             kasin-syotetty-kattohinta (apply + (mapv
+                                                                                  (fn [vuosisumma]
+                                                                                    (if (= (:vuosi vuosi-rivi) (:vuosi vuosisumma))
+                                                                                      (or (:summa vuosisumma) 0) 0))
+                                                                                  (:hoitovuosittaiset-arvot kattohinta-rivi)))
+                                             kattohinta (if (and (nil? kattohintakerroin) (:muokkaa_kattohinta_kasin urakan-parametrit))
+                                                          kasin-syotetty-kattohinta
+                                                          (* summa kattohintakerroin))]
                                          {:hoitokauden_alkuvuosi (:vuosi vuosi-rivi)
                                           :tarjous_tavoitehinta summa
                                           :urakka_id urakka-id,
-                                          :tarjous_kattohinta (* summa kattohintakerroin),
+                                          :tarjous_kattohinta kattohinta
                                           :luoja kayttaja-id}))
                                      vuodet)
         ;; Erota toimenkuvat ja muut kustannukset toisistaan

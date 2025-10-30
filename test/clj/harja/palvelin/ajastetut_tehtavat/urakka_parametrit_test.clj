@@ -57,6 +57,7 @@
         kattohinnan-siirron-prosenttirajoitus-yli-2024 0.03M
         muokkaa-kattohinta-kasin-tasan-alle-2020 true
         muokkaa-kattohinta-kasin-yli-2020 false
+        hoitokauden-lopun-kattohinta-kerroin-tasan-alle-2020 nil
         hoitokauden-lopun-kattohinta-kerroin-tasan-alle-2024 1.1M
         hoitokauden-lopun-kattohinta-kerroin-yli-2024 1.2M
         lisaa-tavoitehintaan-hoitovuodenlopunindeksikorjaus-tasan-alle-2023 false
@@ -80,6 +81,7 @@
         _ (is (= (:muokkaa_kattohinta_kasin kajaani-parametrit) muokkaa-kattohinta-kasin-yli-2020))
         _ (is (= (:hoitokauden_lopun_kattohinta_kerroin kajaani-parametrit) hoitokauden-lopun-kattohinta-kerroin-yli-2024))
         _ (is (= (:hoitokauden_lopun_kattohinta_kerroin ii-parametrit) hoitokauden-lopun-kattohinta-kerroin-tasan-alle-2024))
+        _ (is (= (:hoitokauden_lopun_kattohinta_kerroin kittila-parametrit) hoitokauden-lopun-kattohinta-kerroin-tasan-alle-2020))
         _ (is (= (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus ii-parametrit) lisaa-tavoitehintaan-hoitovuodenlopunindeksikorjaus-tasan-alle-2023))
         _ (is (= (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus kajaani-parametrit) lisaa-tavoitehintaan-hoitovuodenlopunindeksikorjaus-yli-2023))]))
 
