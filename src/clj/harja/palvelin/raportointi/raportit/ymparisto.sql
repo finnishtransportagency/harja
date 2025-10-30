@@ -50,6 +50,7 @@ SELECT
     CASE
         WHEN tk.yksikko = 'tonni'
             THEN 't'
+            ELSE tk.yksikko
         END AS materiaali_yksikko,
     'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
     date_trunc('month', rtmaarat.alkanut) AS kk,
