@@ -21,9 +21,9 @@
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
-                                 tallenna-painettu? lomakkeella-virheita? lomake-virheet
-                                 muutoksen-tiedot-haku-kaynnissa?] :as _app}]
-  [:div
+                                 tallenna-painettu? lomakkeella-virheita?
+                                 lomake-virheet muutoksen-tiedot-haku-kaynnissa?] :as _app}]
+  [:<>
    [:hr]
    (when (and
            tallenna-painettu?
@@ -37,24 +37,30 @@
       nil nil
       {:luokka "perustiedot"}])
 
-   [napit/tallenna "Tallenna"
-    #(do
-       (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
-       (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
-    ;; Saavutettavuusmielessä, halutaan näyttää virheet vasta, kun tallenna nappia painettu 
-    ;; Tallenna nappi on myös disabled alkutilassa, kun lomaketta ei ole muokattu 
-    {:disabled (if (or
-                     tallennus-kesken?
-                     (not voi-tallentaa?)
-                     muutoksen-tiedot-haku-kaynnissa?)
-                 true
-                 (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
+   [:div.muutoslomake-footer-toiminnot
+    [napit/tallenna "Tallenna"
+     #(do
+        (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
+        (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaMuutos muutos))
+     ;; Saavutettavuusmielessä, halutaan näyttää virheet vasta, kun tallenna nappia painettu 
+     ;; Tallenna nappi on myös disabled alkutilassa, kun lomaketta ei ole muokattu 
+     {:disabled (if (or
+                      tallennus-kesken?
+                      (not voi-tallentaa?)
+                      muutoksen-tiedot-haku-kaynnissa?)
+                  true
+                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
 
-   [napit/peruuta "Peruuta"
-    #(do
-       (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
-       (e! (t-yhteiset/->MuokkaaMuutosta nil)))
-    {:disabled tallennus-kesken?}]])
+    [napit/peruuta "Peruuta"
+     #(do
+        (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
+        (e! (t-yhteiset/->MuokkaaMuutosta nil)))
+     {:disabled tallennus-kesken?}]
+
+    (when (or
+            tallennus-kesken?
+            muutoksen-tiedot-haku-kaynnissa?)
+      [yleiset/ajax-loader-pieni "Ladataan..."])]])
 
 (defn- alusta-lomakkeen-pohjatiedot [e! muutostyyppi valittu-hoitokausi rivi]
   (log/debug "Haetaan lomakkeen pohjatiedot muutostyypille:" muutostyyppi)
@@ -113,7 +119,8 @@
                      [yleiset/ajax-loader-pieni])]
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (t-yhteiset/->PaivitaLomake %))
-         :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))}
+         :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))
+         :voi-muokata? (not muutoksen-tiedot-haku-kaynnissa?)}
 
         ;; Tähän lomakkeiden muutostyyppikohtaiset skeemat
         (into []

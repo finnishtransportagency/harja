@@ -675,6 +675,7 @@ UPDATE pot2_alusta
        tr_ajorata = :tr-ajorata,
        tr_kaista = :tr-kaista,
        toimenpide = :toimenpide,
+       lisatty_paksuus = :lisatty-paksuus,
        massamenekki = :massamenekki,
        murske = :murske,
        kasittelysyvyys = :kasittelysyvyys,
@@ -694,7 +695,7 @@ UPDATE pot2_alusta
 -- name: luo-pot2-alusta<!
 INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys,
                          tr_loppuosa, tr_ajorata, tr_kaista, toimenpide,
-                         massamenekki, murske,
+                         lisatty_paksuus, massamenekki, murske,
                          kasittelysyvyys, leveys, pinta_ala,
                          kokonaismassamaara, massa, sideaine,
                          sideainepitoisuus, sideaine2,
@@ -702,7 +703,7 @@ INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyy
                          pot2_id)
 VALUES (:tr-numero, :tr-alkuetaisyys, :tr-alkuosa, :tr-loppuetaisyys,
         :tr-loppuosa, :tr-ajorata, :tr-kaista, :toimenpide,
-        :massamenekki, :murske,
+        :lisatty-paksuus, :massamenekki, :murske,
         :kasittelysyvyys, :leveys, :pinta-ala,
         :kokonaismassamaara, :massa, :sideaine,
         :sideainepitoisuus, :sideaine2,
