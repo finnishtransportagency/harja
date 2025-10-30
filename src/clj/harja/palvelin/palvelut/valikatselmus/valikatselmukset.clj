@@ -10,6 +10,7 @@
     [taoensso.timbre :as log]
     [specql.core :refer [columns]]
     [harja.tyokalut.functor :refer [fmap]]
+    [harja.tyokalut.yleiset :refer [round2]]
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.oikeudet :as oikeudet]
@@ -501,7 +502,7 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
-          validaatio (if (> (:siirrettava_maara paatos) (:ylityksen_maara paatos))
+          validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
                        (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon." ))
                        validaatio)
 
@@ -532,11 +533,11 @@
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :kattohinnan-ylitys (:urakoitsija_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           vastaus (if (seq validaatio)
-              (heita-virhe (str (string/join ", " validaatio)))
-              (do
-                (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
+                    (heita-virhe (str (string/join ", " validaatio)))
+                    (do
+                      (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
                 ;; Hae välikatselmuksen tiedot
-                (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
+                      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
       vastaus)))
 
 (defn poista-kattohinnan-ylityspaatos [db kayttaja paatos]
