@@ -428,8 +428,8 @@
             max-siirrettava-maara (if siirtorajoitus-prosentti
                                     (* siirtorajoitus-prosentti hoitovuoden-lopun-kattohinta) ;; Jos rajoitus on käytössä, niin siirretään max annetun prosentin verran)
                                     ylityksen-maara)
-            ;; Varmisteatan, että maksimi määrä ei koskaan ylitä ylityksen määrää
-            max-siirrettava-maara (min max-siirrettava-maara ylityksen-maara)
+            ;; Pyöristetään kahteen desimaaliin ja varmistetaan, että maksimi määrä ei koskaan ylitä ylityksen määrää
+            max-siirrettava-maara (round2 2 (min max-siirrettava-maara ylityksen-maara))
             ;; Täytetään pakolliset tiedot
             kattohinnan-ylityspaatos (-> kattohinnan-ylityspaatos
                                        (assoc :urakkaid urakkaid)
