@@ -323,8 +323,8 @@
           urakka-id (:urakkaid paatos)
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
-          tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakka-id
+                                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
