@@ -165,6 +165,7 @@
 (defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
 
 ;; Vahvistukset
+(defrecord PaivitaHoitovuodenAlunKattohinta [kattohinta])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohinta [vahvista?])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
@@ -628,13 +629,24 @@
         (assoc :onko-erillishankinnat-muutoksia? false)
         (assoc :haku-kaynnissa? true))))
 
+  PaivitaHoitovuodenAlunKattohinta
+  (process-event
+    [{kattohinta :kattohinta} app]
+    (let [kattohinta (if-not (str/blank? kattohinta)
+                       (js/parseInt kattohinta)
+                       0)]
+      (-> app
+        (assoc :kattohinta-virhe false)
+        (assoc :paivitetty-hoitovuoden-alun-kattohinta kattohinta))))
+
   VahvistaTaiPeruutaTavoiteJaKattohinta
   (process-event
     [{vahvista? :vahvista?} app]
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :vahvista? vahvista?}
+       :vahvista? vahvista?
+       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)}
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})
@@ -662,29 +674,32 @@
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta-toast!
-      "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
-      :varoitus
-      viesti/viestin-nayttoaika-keskipitka)
-    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
-    (-> app
-      (assoc :tallennus-kesken? false)))
+  (process-event [{vastaus :vastaus} app]
+    (let [viesti (if (get-in vastaus [:response :virhe])
+                   (get-in vastaus [:response :virhe])
+                   "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
+          kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
+      (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-keskipitka)
+      (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+      (-> app
+        (assoc :kattohinta-virhe (or kattohinta-virhe? false))
+        (assoc :tallennus-kesken? false)
+        (assoc :haku-kaynnissa? false))))
 
   PoistaToimenkuva
   (process-event [{:keys [rivi]} app]
     (let [toimenkuvat (:toimenkuvat app)
           muokatut-toimenkuvat (map (fn [m]
-                                         (if (= (:nimi m) (:nimi rivi))
-                                           (assoc m :poistettu true)
-                                           m)) toimenkuvat)]
-    (-> app
-      (assoc :toimenkuvat muokatut-toimenkuvat)
-      (update :tarjous
-        #(map (fn [m]
-                (if (= (:nimi m) (:nimi rivi))
-                  (assoc m :poistettu true)
-                  m)) %)))))
+                                      (if (= (:nimi m) (:nimi rivi))
+                                        (assoc m :poistettu true)
+                                        m)) toimenkuvat)]
+      (-> app
+        (assoc :toimenkuvat muokatut-toimenkuvat)
+        (update :tarjous
+          #(map (fn [m]
+                  (if (= (:nimi m) (:nimi rivi))
+                    (assoc m :poistettu true)
+                    m)) %)))))
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
