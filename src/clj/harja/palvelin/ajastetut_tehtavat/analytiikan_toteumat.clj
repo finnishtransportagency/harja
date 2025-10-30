@@ -15,7 +15,7 @@
   [db & args]
   (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
         annettu-nyt (first args)
-        nyt (or annettu-nyt (pvm/nyt))]
+        nyt (or annettu-nyt nil)]
     (try
         (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt (konversio/sql-timestamp nyt)})
         (ajastetut-tehtavat-kyselyt/paivita-ajastetun-tehtavan-onnistuminen! db true "siirra_toteumat_analytiikalle")

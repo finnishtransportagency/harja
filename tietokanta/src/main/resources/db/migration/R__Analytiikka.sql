@@ -42,12 +42,12 @@ BEGIN
                     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                     JOIN urakka u ON t.urakka = u.id
-         WHERE (t.luotu BETWEEN (SELECT COALESCE(suoritusyritys_aika, NOW() - '1 day'::INTERVAL)
+         WHERE (t.luotu BETWEEN (SELECT COALESCE(ajankohta, viimeisin_onnistunut, NOW() - '1 day'::INTERVAL)
                                  FROM ajastetut_tehtavat
-                                 WHERE tyyppi = 'siirra_toteumat_analytiikalle') AND ajankohta)
-            OR (tm.luotu BETWEEN (SELECT COALESCE(suoritusyritys_aika, NOW() - '1 day'::INTERVAL)
+                                 WHERE tyyppi = 'siirra_toteumat_analytiikalle') AND NOW())
+            OR (tm.luotu BETWEEN (SELECT COALESCE(ajankohta, viimeisin_onnistunut, NOW() - '1 day'::INTERVAL)
                                   FROM ajastetut_tehtavat
-                                  WHERE tyyppi = 'siirra_toteumat_analytiikalle') AND ajankohta)
+                                  WHERE tyyppi = 'siirra_toteumat_analytiikalle') AND NOW())
           GROUP BY t.id, t.luotu, u.id
           ORDER BY t.luotu ASC)
         ON CONFLICT DO NOTHING;
