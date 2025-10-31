@@ -1,19 +1,14 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
   (:require [clojure.string :as str]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.tyokalut.yleiset :as tyokalut]
             [tuck.core :as tuck]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
-(defonce grid-toimenkuvat-atom (atom [{}]))
-
 
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
@@ -30,9 +25,13 @@
 
 (defn jyvita-eperhoitovuosi-hoitovuosille
   "Jyvittää € / hoitovuosi arvon hoitovuosikohtaisille kentille"
-  [rivi]
+  [rivi vahvistetut-vuodet]
   (let [eperhoitovuosi (:eperhoitovuosi rivi 0)
-        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))]
+        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
+        ;; Vahvistetut vuodet jätetään pois, jotta niihin ei yritetä kirjoittaa
+        vuosiavaimet (remove (fn [avain]
+                               (let [vuosi (js/parseInt (.substring (str avain) 7))]
+                                 (contains? vahvistetut-vuodet vuosi))) vuosiavaimet)]
     (if (> eperhoitovuosi 0)
       (let [jyvitetyt-arvot (zipmap vuosiavaimet (repeat eperhoitovuosi))]
         (merge rivi jyvitetyt-arvot))
@@ -101,24 +100,6 @@
 (defn scrollaa-muutoksiin [elementin-id]
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
   (siirrin/siirry-elementin-id elementin-id 200))
-
-(defn konvertoi-grid-muotoon [data]
-  (into [] (reduce (fn [rivit tarjous-rivi]
-                     (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                (-> uusi
-                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
-                                                  (assoc :poistettu (:poistettu tarjous-rivi))
-                                                  (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                  (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                  (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                  (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                  (assoc :osio (:osio tarjous-rivi))
-                                                  (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                        {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                           nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                           lopputulos (merge vuosiarvot nimiarvot)]
-                       (concat rivit [lopputulos])))
-             [] data)))
 
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
@@ -193,10 +174,9 @@
 (defrecord PaivitaErillishankinnatGrid [erillishankinnat])
 (defrecord PaivitaToimenkuvatGrid [toimenkuvat])
 (defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
-(defrecord NollaaMuutokset [])
 
 (defrecord ToggleVetolaatikonMuokkaus [tila])
-(defrecord NollaKustannussuunnitelmanMuutokset [])
+(defrecord NollaaKustannussuunnitelmanMuutokset [])
 (defrecord AsetaHankinnatMuutos [])
 (defrecord AsetaErillishankinnatMuutos [])
 (defrecord AsetaJJHMuutos [])
@@ -260,6 +240,7 @@
       (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
       (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
       (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
+      (assoc :vahvistetut-vuodet (:vahvistetut-vuodet vastaus))
       (assoc :urakka-id (:urakka-id vastaus)))))
 
 (extend-protocol tuck/Event
@@ -309,17 +290,17 @@
   (process-event
     [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
-          kaikki-toimenkuvat (:toimenkuvat app)
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
           muunnetut-tarjousrivit (map #(muunna-vuodet %) kaikki-hankinnat)
-          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) (or toimenkuvat kaikki-toimenkuvat))
+          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) toimenkuvat)
           tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit)
           muunnettu-tarjous {:tarjous tarjous}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
       (tuck-apurit/post! :tallenna-tarjouksen-tiedot
         muunnettu-tarjous
         {:onnistui ->TallennaTarjouksenTiedotOnnistui
-         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui})
+         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui
+         :paasta-virhe-lapi? true})
       (assoc app :tallennus-kesken? true)))
 
   TallennaTarjouksenTiedotOnnistui
@@ -330,7 +311,7 @@
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (:virhe (:response vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :tallennus-kesken? false))
 
   ToggleUusiToimenkuvaValittavana
@@ -736,7 +717,7 @@
       (assoc :vetolaatikon-muokkaus tila)
       (assoc :tallentamattomia-muutoksia? true)))
 
-  NollaKustannussuunnitelmanMuutokset
+  NollaaKustannussuunnitelmanMuutokset
   (process-event [_ app]
     (-> app
       (assoc :onko-hankinnat-muutoksia? false)
