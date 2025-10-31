@@ -291,16 +291,19 @@
 
 (defn urakan-tavoitehinnat-indeksikorjattu
   "Palauttaa hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu"
-  [db urakka-id hoitokaudet]
-  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+  [db urakka-id]
+  (assert (int? urakka-id) "Urakka-id tulee olla kokonaisluku")
+
+  (let [urakan-hoitokaudet (q-urakat/hae-urakan-hoitokaudet db urakka-id)
+        tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
     (into {}
       (mapv (fn [hoitokausi]
-              (let [hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
+              (let [hoitokauden-alkuvuosi (pvm/vuosi (:alkupvm hoitokausi))
                     vahvistettu? (boolean (some #(and (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi)
                                                    (:indeksikorjaus-vahvistettu %))
                                             tavoitehintojen-tilat))]
                 [hoitokauden-alkuvuosi vahvistettu?]))
-        hoitokaudet))))
+        urakan-hoitokaudet))))
 
 (defn jokin-hoitovuosien-indeksikorjaus-vahvistettu?
   "Palauttaa true, jos jonkin hoitovuoden indeksikorjaus on vahvistettu"
@@ -416,7 +419,7 @@
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
         ;; Mapataan hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu
-        tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id hoitokaudet)
+        tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id)
 
         ;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
         tehtava-ja-maaramuutokset (hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
@@ -791,7 +794,7 @@
           (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi)
 
           tyyppi-pysyva?
-          (let [tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id hoitokaudet)]
+          (let [tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
             ;; Estä tallennus, mikäli yritetään muuttaa lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
             (when (and
                     (pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
