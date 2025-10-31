@@ -231,7 +231,6 @@ SELECT
     FALSE
  FROM valitavoite v
 WHERE v.urakka = :urakka
-  AND v.poistettu = FALSE
   AND v.valtakunnallinen_valitavoite IS NULL
   AND v.takaraja BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND NOT EXISTS (

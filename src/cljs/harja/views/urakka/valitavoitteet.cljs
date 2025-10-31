@@ -32,6 +32,13 @@
                   (pvm/valissa? takaraja hoitokausi-alku hoitokausi-loppu))
         valitavoitteet))))
 
+(defn onko-tulevia?
+  [urakan-valitavoitteet [hoitokausi-alku hoitokausi-loppu]]
+  (boolean
+    (some (fn [{:keys [takaraja]}]
+            (and takaraja (pos? (compare takaraja hoitokausi-loppu))))
+      urakan-valitavoitteet)))
+
 (defn sarake-yllapitokohde [urakka yllapitokohteet]
   {:otsikko (case (:tyyppi urakka)
               :paallystys "Pääl\u00ADlystys\u00ADkohde"
@@ -279,7 +286,7 @@
             nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)
             ;; Lisää urakka app-tilaan grid-funktioita varten
             app (assoc app :urakka ur)
-            tulevaisuudessa-arvoja? true] 
+            tulevaisuudessa-arvoja? (onko-tulevia? urakan-valitavoitteet valittu-hoitokausi)] 
         
         (if ladataan?
           [:div.valitavoitteet
