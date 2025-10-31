@@ -1,24 +1,25 @@
 (ns harja.views.urakka.valitavoitteet
   "Ylläpidon urakoiden välitavoitteiden näkymä"
   (:require
-   [cljs-time.core :as t]
-   [harja.domain.oikeudet :as oikeudet]
-   [harja.domain.urakka :as u-domain]
-   [harja.domain.valitavoite :as vt-domain]
-   [harja.domain.yllapitokohde :as yllapitokohde-domain]
-   [harja.pvm :as pvm]
-   [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]
-   [harja.tiedot.urakka :as urakka]
-   [harja.tiedot.urakka.valitavoitteet :as tiedot]
-   [harja.tyokalut.tuck :as tuck-apurit]
-   [harja.ui.debug :as debug]
-   [harja.ui.grid :as grid]
-   [harja.ui.komponentti :as komp]
-   [harja.ui.valinnat :as valinnat]
-   [harja.ui.yleiset :as yleiset]
-   [tuck.core :as tuck]))
+    [tuck.core :as tuck]
+    [cljs-time.core :as t]
 
-
+    [harja.pvm :as pvm]
+    [harja.ui.grid :as grid]
+    [harja.ui.napit :as napit]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.yleiset :as yleiset]
+    [harja.ui.komponentti :as komp]
+    [harja.tiedot.urakka :as urakka]
+    [harja.ui.valinnat :as valinnat]
+    [harja.domain.urakka :as u-domain]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.domain.valitavoite :as vt-domain]
+    [harja.tiedot.urakka.valitavoitteet :as tiedot]
+    [harja.domain.yllapitokohde :as yllapitokohde-domain]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+    [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]))
 
 (defn- suodata-valitavoitteet-hoitokaudella
   "Suodattaa välitavoitteet valitun hoitokauden perusteella.
@@ -277,20 +278,40 @@
                                            (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
             nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)
             ;; Lisää urakka app-tilaan grid-funktioita varten
-            app (assoc app :urakka ur)] 
+            app (assoc app :urakka ur)
+            tulevaisuudessa-arvoja? true] 
         
         (if ladataan?
           [:div.valitavoitteet
            [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
           
           [:div.valitavoitteet
-           [:div.flex-row.margin-bottom-16
+           [:div.valinnat.margin-bottom-16
             [valinnat/urakan-hoitokausi-tuck
              valittu-hoitokausi
              urakan-hoitokaudet
              #(e! (tiedot/->HoitokausiVaihdettu %))
              {:wrapper-luokka "label-ja-alasveto hoitokausi"
-              :kaikki-valinta? true}]] 
+              :kaikki-valinta? true}]
+
+            (when nayta-urakkakohtaiset-grid?
+              [napit/yleinen-toissijainen "Kopioi välitavoitteet tuleville hoitovuosille"
+               (fn []
+                 (if tulevaisuudessa-arvoja?
+                   (varmista-kayttajalta/varmista-kayttajalta
+                     {:otsikko "Tulevilla hoitovuosilla on jo tietoja"
+                      :sisalto (str "Tulevilla hoitovuosilla on jo tietoja. Ylikirjoitetaanko tiedot? Ylikirjoitetut tiedot menetetään pysyvästi.")
+                      :hyvaksy "Ylikirjoita"
+                      :toiminto-fn #(do
+                                      ;; 
+                                      ;; (kopioi-tuleville-hoitovuosille-fn)
+                                      (println "\n -> ...")
+                                      )})
+                   ;; (kopioi-tuleville-hoitovuosille-fn)
+                   (println "\n -> ei arvoja")))
+               {:disabled ladataan?
+                :luokka "ikoni-16"
+                :ikoni (ikonit/action-copy)}])]
 
            (when nayta-urakkakohtaiset-grid?
              [urakan-omat-valitavoitteet-grid e! app])
@@ -306,11 +327,8 @@
                               "Järjestelmävastaava hallinnoi listaa valtakunnallisista, määräaikaan mennessä tehtävistä töistä."
                               " "
                               (when voi-muokata?
-                                "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])
-           [debug/debug app]])))))
-
+                                "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])])))))
 
 (defn valitavoitteet [ur]
   [tuck/tuck tiedot/valitavoitteet-app-tila
    (fn [e! app] [valitavoitteet* e! app ur])])
-
