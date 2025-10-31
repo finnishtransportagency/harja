@@ -57,7 +57,7 @@
                              nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
                              lopputulos (merge vuosiarvot nimiarvot)]
                          (concat rivit [lopputulos])))
-               [] (drop-last tarjous-tiedot))))) ; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
+               [] tarjous-tiedot))))
 
 (defn filtteri-hankinnat
   "Filttaa hankinnat-tiedot taulukosta"
@@ -78,6 +78,11 @@
   "Filttaa johto-ja-hallintokorvaus (toimenkuvat) tiedot taulukosta"
   [taulukon-tiedot]
   (into [] (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) taulukon-tiedot)))
+
+(defn filtteri-yhteensa
+  "Filtteröi yhteensa osion taulukosta"
+  [taulukon-tiedot]
+  (into [] (filter #(some #{"yhteensa"} [(:osio %)]) taulukon-tiedot)))
 
 (defn laske-kaikkien-gridien-yhteensa
   "Laskee kaikkien gridien hoitovuosikohtaiset arvot yhteen"
@@ -120,21 +125,27 @@
 (defrecord HaeTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTarjouksenTiedotEpaonnistui [vastaus])
 
-;; Haetaan kustannussuunnitelman tiedot
-(defrecord HaeKustannussuunnitelmanTiedot [])
-(defrecord HaeKustannussuunnitelmanTiedotOnnistui [vastaus])
-(defrecord HaeKustannussuunnitelmanTiedotEpaonnistui [vastaus])
-
 (defrecord HaeTyhjatTarjouksenTiedot [])
 (defrecord HaeTyhjatTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
 
+;; Tarjous Grid-päivitys eventit
+(defrecord PaivitaHankinnatGrid [hankinnat])
+(defrecord PaivitaErillishankinnatGrid [erillishankinnat])
+(defrecord PaivitaToimenkuvatGrid [toimenkuvat])
+(defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
+(defrecord PaivitaTavoiteJaKattohintaGrid [rivit])
+
 ;; Tallennetaan tarjouksen data
-(defrecord TallennaTarjouksenTiedot [tarjous toimenkuvat])
+(defrecord TallennaTarjouksenTiedot [])
 (defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
 (defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
 (defrecord ToggleUusiToimenkuvaValittavana [tila])
 
+;; Haetaan kustannussuunnitelman tiedot
+(defrecord HaeKustannussuunnitelmanTiedot [])
+(defrecord HaeKustannussuunnitelmanTiedotOnnistui [vastaus])
+(defrecord HaeKustannussuunnitelmanTiedotEpaonnistui [vastaus])
 
 ;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
 (defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat kopioi-tuleville-vuosille?])
@@ -164,17 +175,11 @@
 (defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
 (defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
 
-;; Vahvistukset
+;; Kustannusten suunnittelu -  Vahvistukset
 (defrecord PaivitaHoitovuodenAlunKattohinta [kattohinta])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohinta [vahvista?])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
-
-;; Grid-päivitys eventit
-(defrecord PaivitaHankinnatGrid [hankinnat])
-(defrecord PaivitaErillishankinnatGrid [erillishankinnat])
-(defrecord PaivitaToimenkuvatGrid [toimenkuvat])
-(defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
 
 (defrecord ToggleVetolaatikonMuokkaus [tila])
 (defrecord NollaaKustannussuunnitelmanMuutokset [])
@@ -234,6 +239,7 @@
       (assoc :tallennus-kesken? false)
       (assoc :tarjous (:tarjous vastaus))
       (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :muokkaa-kattohinta-kasin (:muokkaa-kattohinta-kasin vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
       (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
@@ -241,6 +247,7 @@
       (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
       (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
       (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
+      (assoc :yhteensa (filtteri-yhteensa taulukon-tiedot))
       (assoc :vahvistetut-vuodet (:vahvistetut-vuodet vastaus))
       (assoc :urakka-id (:urakka-id vastaus)))))
 
@@ -289,12 +296,13 @@
 
   TallennaTarjouksenTiedot
   (process-event
-    [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
+    [_ app]
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
           muunnetut-tarjousrivit (map #(muunna-vuodet %) kaikki-hankinnat)
-          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) toimenkuvat)
-          tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit)
+          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) (:toimenkuvat app))
+          muunnetut-yhteensa-rivit (map #(muunna-vuodet %) (:yhteensa app))
+          tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit muunnetut-yhteensa-rivit)
           muunnettu-tarjous {:tarjous tarjous}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
       (tuck-apurit/post! :tallenna-tarjouksen-tiedot
@@ -547,8 +555,7 @@
   PaivitaJohtoJaHallintokorvaukset2019
   (process-event
     [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset toimenkuva :toimenkuva} app]
-    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))
-          muuttunut (filter #(= (:toimenkuva %) toimenkuva) muuttuneet)]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))]
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet)
@@ -725,6 +732,11 @@
       (assoc :hoidonjohtopalkkiot hoidonjohtopalkkiot)
       (assoc :tallentamattomia-muutoksia? true)))
 
+  PaivitaTavoiteJaKattohintaGrid
+  (process-event [{rivit :rivit} app]
+    (-> app
+      (assoc :yhteensa (map #(dissoc % :fmt :koskematon :muokatava? :eperhoitovuosi) rivit))
+      (assoc :tallentamattomia-muutoksia? true)))
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
