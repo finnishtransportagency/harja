@@ -1424,3 +1424,10 @@ UPDATE urakka SET lyhyt_nimi = 'Oulun lyhyt nimi' WHERE nimi = 'Aktiivinen Oulu 
 
 -- Päivitetään urakka_parametrit
 select aseta_urakka_parametrit();
+
+UPDATE urakka_parametrit
+   SET hoitokauden_lopun_kattohinta_kerroin                = NULL
+    WHERE urakkaid IN (SELECT id
+                        FROM urakka
+                        WHERE alkupvm IN ('2019-10-01', '2020-10-01')
+                          AND tyyppi = 'teiden-hoito');
