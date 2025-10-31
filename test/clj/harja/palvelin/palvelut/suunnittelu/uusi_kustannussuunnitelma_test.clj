@@ -697,7 +697,7 @@
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
-        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"))
+        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"))
 
         _ (u (format "update urakka set indeksi = null WHERE id = %s" urakka-id)) ;; Poistetaan urakan indeksi
         vastaus-indeksi (try
@@ -708,7 +708,7 @@
                             {:error (.getMessage e)}))
 
         _ (is (= (get-in vastaus-indeksi [:kustannussuunnitelma :vahvistus-virhe])
-                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"
+                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"
                   hoitovuoden-alkuvuosi)))]))
 
 (deftest vahvista-ja-kumoa-tavoite-ja-kattohinta-toimii
@@ -746,8 +746,9 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -810,8 +811,9 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -869,8 +871,9 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -917,7 +920,7 @@
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         ;; Lisää käsin kattohinta tarjouksen vuosille
         hoitovuoden-kattohinta 21
-        kattohinta-rivi {:nimi "Yhteensä kattohinta" :osio "yhteensa"
+        kattohinta-rivi {:nimi "Tarjouksen kattohinta" :osio "yhteensa"
                          :hoitovuosittaiset-arvot [{:vuosi 2019 :summa 11}
                                                    {:vuosi 2020 :summa hoitovuoden-kattohinta}
                                                    {:vuosi 2021 :summa 4500}
@@ -927,8 +930,9 @@
         tarjous (update tarjous :tarjous #(conj % kattohinta-rivi))
         ;; 2019-urakoille ei anneta kattohintakerrointa, vaan kattohinta syötetään käsin urakan_parametrit-tauluun
         kattohintakerroin nil
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Varmista suoraan tietokannasta, että tarjous taulun tarjous_kattohinta kolumniin meni oikeat arvot
         tarjous-tietokannasta (first (q-map (format "SELECT tarjous_kattohinta FROM tarjous WHERE urakka_id = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitovuoden-alkuvuosi)))
