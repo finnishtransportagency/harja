@@ -747,6 +747,10 @@
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
     (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
+    (assoc :paallystetyomenetelma (when (and (:paallystetyomenetelma_lyhenne kulutuskerrostoimenpide)
+                                          (:paallystetyomenetelma kulutuskerrostoimenpide))
+                                    (str (:paallystetyomenetelma_lyhenne kulutuskerrostoimenpide) ", "
+                                      (:paallystetyomenetelma kulutuskerrostoimenpide))))
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
@@ -763,6 +767,11 @@
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
     (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
+    (assoc :kasittelymenetelma (when (and (:kasittelymenetelma_lyhenne alustatoimenpide)
+                                       (:kasittelymenetelma alustatoimenpide))
+                                 (str (:kasittelymenetelma_lyhenne alustatoimenpide) ", "
+                                   (:kasittelymenetelma alustatoimenpide))))
+    (dissoc :kasittelymenetelma_lyhenne)
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
                       :verkon-tyyppi :verkkotyyppi
