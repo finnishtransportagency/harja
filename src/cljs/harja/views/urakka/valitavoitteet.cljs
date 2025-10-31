@@ -295,20 +295,15 @@
               :kaikki-valinta? true}]
 
             (when nayta-urakkakohtaiset-grid?
-              [napit/yleinen-toissijainen "Kopioi välitavoitteet tuleville hoitovuosille"
+              [napit/yleinen-toissijainen "Kopioi urakkakohtaiset välitavoitteet tuleville hoitovuosille"
                (fn []
                  (if tulevaisuudessa-arvoja?
                    (varmista-kayttajalta/varmista-kayttajalta
                      {:otsikko "Tulevilla hoitovuosilla on jo tietoja"
                       :sisalto (str "Tulevilla hoitovuosilla on jo tietoja. Ylikirjoitetaanko tiedot? Ylikirjoitetut tiedot menetetään pysyvästi.")
                       :hyvaksy "Ylikirjoita"
-                      :toiminto-fn #(do
-                                      ;; 
-                                      ;; (kopioi-tuleville-hoitovuosille-fn)
-                                      (println "\n -> ...")
-                                      )})
-                   ;; (kopioi-tuleville-hoitovuosille-fn)
-                   (println "\n -> ei arvoja")))
+                      :toiminto-fn #(e! (tiedot/->KopioiValitavoitteet))})
+                   (e! (tiedot/->KopioiValitavoitteet))))
                {:disabled ladataan?
                 :luokka "ikoni-16"
                 :ikoni (ikonit/action-copy)}])]

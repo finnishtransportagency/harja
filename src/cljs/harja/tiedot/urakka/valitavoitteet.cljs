@@ -1,17 +1,15 @@
 (ns harja.tiedot.urakka.valitavoitteet
   "Ylläpidon urakoiden välitavoitteiden tiedot."
   (:require
-   [clojure.core.async :refer [go]]
-   [harja.asiakas.kommunikaatio :as k]
-   [harja.tiedot.navigaatio :as nav]
-   [harja.tiedot.urakka :as u]
-   [harja.tyokalut.tuck :as tuck-apurit]
-   [harja.ui.viesti :as viesti]
-   [reagent.core :refer [atom]]
-   [tuck.core :as tuck]))
+    [tuck.core :as tuck]
+    [reagent.core :refer [atom]]
+    [clojure.core.async :refer [go]]
 
-
-
+    [harja.tiedot.urakka :as u]
+    [harja.ui.viesti :as viesti]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce valitavoitteet-app-tila
   (atom {:valittu-hoitokausi nil
@@ -39,6 +37,10 @@
 (defrecord HaeValitavoitteet [])
 (defrecord HaeValitavoitteetOnnistui [vastaus])
 (defrecord HaeValitavoitteetEpaonnistui [vastaus])
+
+(defrecord KopioiValitavoitteet [])
+(defrecord KopioiValitavoitteetOnnistui [vastaus])
+(defrecord KopioiValitavoitteetEpaonnistui [vastaus])
 
 (defrecord HaeYllapitokohteet [])
 (defrecord HaeYllapitokohteetOnnistui [vastaus])
@@ -68,9 +70,9 @@
 
       (-> app
         (assoc :nakymassa? true)
+        (assoc :ladataan? true)
         (assoc :valittu-hoitokausi hoitokausi)
-        (assoc :urakan-hoitokaudet hoitokaudet)
-        (assoc :ladataan? true))))
+        (assoc :urakan-hoitokaudet hoitokaudet))))
   
   NakymaSuljettu
   (process-event [_ app]
@@ -118,6 +120,28 @@
       (assoc :valitavoitteet nil)
       (assoc :urakan-valitavoitteet nil)
       (assoc :valtakunnalliset-valitavoitteet nil)))
+
+  KopioiValitavoitteet
+  (process-event [_ app]
+    (tuck-apurit/post! app :kopioi-urakan-valitavoitteet-tuleville-hk
+      {:urakka-id (-> @tila/yleiset :urakka :id)
+       :hoitokaudet @u/valitun-urakan-hoitokaudet
+       :valittu-hoitokausi (:valittu-hoitokausi app)}
+      {:onnistui ->KopioiValitavoitteetOnnistui
+       :epaonnistui ->KopioiValitavoitteetEpaonnistui})
+    app)
+
+  KopioiValitavoitteetOnnistui
+  (process-event [{_vastaus :vastaus} app]
+    (viesti/nayta-toast! "Välitavoitteiden kopiointi onnistui" :onnistunut)
+    ((tuck/current-send-function) (->NakymaAvattu)))
+
+  KopioiValitavoitteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Välitavoitteiden kopiointi epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+    (-> app
+      (assoc :virhe vastaus)
+      (assoc :ladataan? false)))
   
   HaeYllapitokohteet
   (process-event [_ app]

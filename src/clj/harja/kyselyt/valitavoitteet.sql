@@ -213,12 +213,12 @@ INSERT INTO valitavoite (
 )
 SELECT
     v.nimi,
-    v.takaraja + make_interval(years => :vuosi_offset),
+    v.takaraja + make_interval(years => (:vuosi_offset)::int),
     v.viikkosakko,
     v.sakko,
     v.urakka,
     NULL,
-    v.aloituspvm + make_interval(years => :vuosi_offset),
+    v.aloituspvm + make_interval(years => (:vuosi_offset)::int),
     NULL, 
     NULL, 
     NULL, 
@@ -239,5 +239,5 @@ WHERE v.urakka = :urakka
      WHERE v2.urakka = v.urakka
        AND v2.valtakunnallinen_valitavoite IS NULL
        AND v2.nimi = v.nimi
-       AND v2.takaraja = v.takaraja + make_interval(years => :vuosi_offset)
+       AND v2.takaraja = v.takaraja + make_interval(years => (:vuosi_offset)::int)
 );

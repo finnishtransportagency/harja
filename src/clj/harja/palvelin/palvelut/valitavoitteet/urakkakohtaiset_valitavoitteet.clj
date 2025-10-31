@@ -29,41 +29,24 @@
     (let [valittu-vuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
           alkupvm (str valittu-vuosi "-10-01")
           loppupvm (str (inc valittu-vuosi) "-09-30")
-          tuleva-hk (filter #(> (some-> % (first) (pvm/vuosi)) valittu-vuosi) hoitokaudet)
-
-          _ (println "\n call..  ")
-          _ (println (str
-                       "\n tuleva:: " tuleva-hk
-                       "\n valittu-vuosi:: " valittu-vuosi
-                       ))
-          ]
+          tuleva-hk (filter #(> (some-> % (first) (pvm/vuosi)) valittu-vuosi) hoitokaudet)]
 
       ;; Merkkaa kaikki tulevaisuuden välitavoitteet poistetuksi (varmistettu käyttäjältä)
-      (q/merkitse-tulevat-valitavoitteet-poistetuiksi!
-        conn {:muokkaaja id
-              :urakka urakka-id
-              :loppupvm loppupvm})
+      (q/merkitse-tulevat-valitavoitteet-poistetuiksi! conn {:muokkaaja id
+                                                             :urakka urakka-id
+                                                             :loppupvm loppupvm})
 
-      (println "\n 1 params:: " {:muokkaaja id
-                                 :urakka urakka-id
-                                 :loppupvm loppupvm})
-      (println "\n")
       ;; Kopioi valitun vuoden välitavoitteet tulevaisuuden hoitovuosille
       (doseq [hk tuleva-hk
               :let [vuosi (pvm/vuosi (first hk))
                     offset (- vuosi valittu-vuosi)]]
-        (q/kopioi-urakkakohtaiset-valitavoitteet-vuodelle<!
-          conn {:muokkaaja id
-                :urakka urakka-id
-                :alkupvm alkupvm
-                :loppupvm loppupvm
-                :vuosi_offset offset})
-        (println "2 params:: " {:muokkaaja id
-                                :urakka urakka-id
-                                :alkupvm alkupvm
-                                :loppupvm loppupvm
-                                :vuosi_offset offset})
-        ))))
+        (q/kopioi-urakkakohtaiset-valitavoitteet-vuodelle<! conn {:muokkaaja id
+                                                                  :urakka urakka-id
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm
+                                                                  :vuosi_offset offset}))))
+
+  (hae-urakan-valitavoitteet db kayttaja urakka-id))
 
 (defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [poistettava (filter :poistettu valitavoitteet)]
