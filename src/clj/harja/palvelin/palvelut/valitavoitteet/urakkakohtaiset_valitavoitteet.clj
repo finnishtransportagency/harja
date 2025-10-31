@@ -1,14 +1,15 @@
 (ns harja.palvelin.palvelut.valitavoitteet.urakkakohtaiset-valitavoitteet
   "Palvelu urakkakohtaisten välitavoitteiden hakemiseksi ja tallentamiseksi."
-  (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.valitavoitteet :as q]
-            [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
-            [harja.id :refer [id-olemassa?]]
-            [harja.domain.oikeudet :as oikeudet]))
+  (:require
+    [taoensso.timbre :as log]
+    [clojure.java.jdbc :as jdbc]
+
+    [harja.pvm :as pvm]
+    [harja.id :refer [id-olemassa?]]
+    [harja.kyselyt.konversio :as konv]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.kyselyt.valitavoitteet :as q]
+    [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]))
 
 (defn hae-urakan-valitavoitteet
   "Hakee urakan välitavoitteet sekä valtakunnalliset välitavoitteet"
@@ -18,6 +19,51 @@
                       (map konv/alaviiva->rakenne)
                       (q/hae-urakan-valitavoitteet db urakka-id))]
     vastaus))
+
+(defn kopioi-urakan-valitavoitteet-tuleville-hk
+  [db
+   {:keys [id] :as kayttaja}
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakka-id)
+  (jdbc/with-db-transaction [conn db]
+    (let [valittu-vuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
+          alkupvm (str valittu-vuosi "-10-01")
+          loppupvm (str (inc valittu-vuosi) "-09-30")
+          tuleva-hk (filter #(> (some-> % (first) (pvm/vuosi)) valittu-vuosi) hoitokaudet)
+
+          _ (println "\n call..  ")
+          _ (println (str
+                       "\n tuleva:: " tuleva-hk
+                       "\n valittu-vuosi:: " valittu-vuosi
+                       ))
+          ]
+
+      ;; Merkkaa kaikki tulevaisuuden välitavoitteet poistetuksi (varmistettu käyttäjältä)
+      (q/merkitse-tulevat-valitavoitteet-poistetuiksi!
+        conn {:muokkaaja id
+              :urakka urakka-id
+              :loppupvm loppupvm})
+
+      (println "\n 1 params:: " {:muokkaaja id
+                                 :urakka urakka-id
+                                 :loppupvm loppupvm})
+      (println "\n")
+      ;; Kopioi valitun vuoden välitavoitteet tulevaisuuden hoitovuosille
+      (doseq [hk tuleva-hk
+              :let [vuosi (pvm/vuosi (first hk))
+                    offset (- vuosi valittu-vuosi)]]
+        (q/kopioi-urakkakohtaiset-valitavoitteet-vuodelle<!
+          conn {:muokkaaja id
+                :urakka urakka-id
+                :alkupvm alkupvm
+                :loppupvm loppupvm
+                :vuosi_offset offset})
+        (println "2 params:: " {:muokkaaja id
+                                :urakka urakka-id
+                                :alkupvm alkupvm
+                                :loppupvm loppupvm
+                                :vuosi_offset offset})
+        ))))
 
 (defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [poistettava (filter :poistettu valitavoitteet)]

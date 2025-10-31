@@ -195,3 +195,49 @@ DELETE FROM valitavoite
 WHERE valtakunnallinen_valitavoite = :id
       AND valmis_pvm IS NULL
       AND muokattu IS NULL;
+
+-- name: merkitse-tulevat-valitavoitteet-poistetuiksi!
+UPDATE valitavoite
+   SET poistettu = TRUE,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+WHERE urakka = :urakka
+  AND poistettu = FALSE
+  AND takaraja > :loppupvm::DATE;
+
+-- name: kopioi-urakkakohtaiset-valitavoitteet-vuodelle<!
+INSERT INTO valitavoite (
+    nimi, takaraja, viikkosakko, sakko, urakka, 
+    valtakunnallinen_valitavoite, aloituspvm, valmis_pvm, valmis_kommentti,
+    valmis_merkitsija, valmis_merkitty, luotu, muokattu, luoja, muokkaaja, yllapitokohde, poistettu
+)
+SELECT
+    v.nimi,
+    v.takaraja + make_interval(years => :vuosi_offset),
+    v.viikkosakko,
+    v.sakko,
+    v.urakka,
+    NULL,
+    v.aloituspvm + make_interval(years => :vuosi_offset),
+    NULL, 
+    NULL, 
+    NULL, 
+    NULL,
+    NOW(), 
+    NULL, 
+    v.luoja,
+    :muokkaaja,
+    v.yllapitokohde,
+    FALSE
+ FROM valitavoite v
+WHERE v.urakka = :urakka
+  AND v.poistettu = FALSE
+  AND v.valtakunnallinen_valitavoite IS NULL
+  AND v.takaraja BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND NOT EXISTS (
+    SELECT 1 FROM valitavoite v2
+     WHERE v2.urakka = v.urakka
+       AND v2.valtakunnallinen_valitavoite IS NULL
+       AND v2.nimi = v.nimi
+       AND v2.takaraja = v.takaraja + make_interval(years => :vuosi_offset)
+);
