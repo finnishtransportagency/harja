@@ -175,7 +175,8 @@
 
     ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
-    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+    (is (= {2021 false 2022 false 2023 false 2024 false 2025 false}
+          (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
 
     (is (= 1374.0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
@@ -206,7 +207,8 @@
     ;; TODO: Hoidetaan testidataan Iin tai Suomussalmen urakalle vahvistettu tavoitehinta, jotta saadaan tämäkin
     ;;       testattua kunnolla (toinen urakka riittää, ei tarvi molempiin), ja UI:ssa näkyisi jotain järkevää suoraan
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
-    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+    (is (= {2024 false 2025 false 2026 false 2027 false 2028 false}
+          (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
     ;; TODO: Eikä urakalla ole myöskään indeksiä vuodelle 2026, joten ei voida laskea indeksikorjauksia
     (is (= 0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
@@ -854,6 +856,86 @@
              :versio 2}]
           historirivit-toisen-updaten-jalkeen) "Historiassa on kaksi riviä toisen updaten jälkeen")))
 
+;; -- Pysyvän muutoksen voimassa_alkaen -päivämäärän lukituksen testit --
+(deftest pysyvan-muutoksen-voimassa-alkaen-kun-hoitovuosi-lukittu-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        hoitokausi-nro 2
+
+        ;; Lisätään urakalle sopiva tavoitehinta valmiiksi vahvsistettuna - Poistetaan olemassa oleva, jos sellaisia on
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))
+        insert-str (format (str
+                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
+                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
+                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id hoitokausi-nro 10 10 10 10)
+        _ (u insert-str)]
+    (testing "Pysyvän muutoksen voimassa_alkaen -päivämäärää ei voi muuttaa, kun jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [;; Haetaan testidatassa oleva pysyvä muutos
+            muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND tyyppi = 'pysyva' AND nimi = 'Päällysteen paikkausmuutos';"))
+            alkuperainen-voimassa-alkaen (ffirst (q "SELECT voimassa_alkaen FROM mhu_muutos WHERE id = " muutos-id ";"))
+
+            _ (println "Alkuperäinen voimassa_alkaen:" alkuperainen-voimassa-alkaen)
+
+            uusi-pvm #inst "2025-11-01T10:00:00.000-00:00"
+            muutos-uusi-pvm {:id muutos-id
+                             :versio 1
+                             :tyyppi "pysyva"
+                             :nimi "Päällysteen paikkausmuutos"
+                             :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."
+                             :voimassa_alkaen uusi-pvm
+                             :kustannusvaikutukset []
+                             :tehtavat_ja_maarat []}
+
+            ;; Tallennuksen pitäisi epäonnistua
+            virhe (try
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-muutos
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :valittu-hoitokausi valittu-hoitokausi
+                       :muutos muutos-uusi-pvm})
+                    (catch Exception e
+                      (println "Virhedata:" (ex-data e))
+                      (ex-data e)))]
+
+        (is (= :harja.palvelin.integraatiot.api.tyokalut.virheet/sisainen-kasittelyvirhe
+              (some-> virhe :virheet first :koodi))
+          "Tallennus epäonnistui sisäisellä käsittelyvirheellä")))
+
+    (testing "Pysyvän muutoksen muita kenttiä voi muuttaa vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [;; Haetaan testidatassa oleva pysyvä muutos
+            muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND tyyppi = 'pysyva' AND nimi = 'Päällysteen paikkausmuutos';"))
+            alkuperainen-voimassa-alkaen (ffirst (q "SELECT voimassa_alkaen FROM mhu_muutos WHERE id = " muutos-id ";"))
+
+            muutos {:id muutos-id
+                    :versio 1
+                    :tyyppi "pysyva"
+                    :nimi "Päällysteen paikkausmuutos"
+                    :syy "Päivitetty syy testissä"
+                    ;; Sama voimassa_alkaen -päivämäärä kuin ennen
+                    :voimassa_alkaen alkuperainen-voimassa-alkaen
+                    :kustannusvaikutukset []
+                    :tehtavat_ja_maarat []}
+
+            ;; Päivitetään muutoksen syytä (ei voimassa_alkaen -päivämäärää)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-muutos
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :valittu-hoitokausi valittu-hoitokausi
+                       :muutos muutos})
+
+            paivitetty-muutos (first (filter #(= muutos-id (:id %)) (:kirjatut-muutokset vastaus)))]
+
+        ;; Tarkistetaan että päivitys onnistui
+        (is (some? paivitetty-muutos) "Muutos löytyy vastauksesta")
+        (is (= (:syy paivitetty-muutos) "Päivitetty syy testissä") "Syy päivittyi")
+        (is (= (:voimassa_alkaen paivitetty-muutos) alkuperainen-voimassa-alkaen)
+          "voimassa_alkaen -päivämäärä pysyi samana")))
+
+    ;; Siivotaan testidatan muutokset
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))))
 
 
 ;; Suomussalmi on urakka, jossa pysyviä muutoksia saadaan useammalle hoitovuodelle 2025-2029
