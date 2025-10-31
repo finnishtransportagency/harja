@@ -45,26 +45,26 @@
   (let [hae (or hae #(get % nimi))
         arvo (hae data)]
     (r/wrap arvo
-            (fn [uusi]
-              ;; Resetoi data, jos uusi data annettu
-              (when (not= uusi arvo)
-                (if aseta
-                  (vaihda! (aseta data uusi))
-                  (vaihda! (assoc data nimi uusi))))))))
+      (fn [uusi]
+        ;; Resetoi data, jos uusi data annettu
+        (when (not= uusi arvo)
+          (if aseta
+            (vaihda! (aseta data uusi))
+            (vaihda! (assoc data nimi uusi))))))))
 
 (defn vain-luku-atomina [arvo]
   (r/wrap arvo
-          #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
+    #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
 
 (defmulti tee-kentta
-          "Tekee muokattavan kentän tyypin perusteella"
-          (fn [t & args] (:tyyppi t)))
+  "Tekee muokattavan kentän tyypin perusteella"
+  (fn [t & args] (:tyyppi t)))
 
 (defmulti nayta-arvo
-          "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella.
-          Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä
-          vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
-          (fn [t & args] (:tyyppi t)))
+  "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella.
+  Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä
+  vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
+  (fn [t & args] (:tyyppi t)))
 
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
@@ -212,28 +212,28 @@
                                             checkbox-label-id (str
                                                                 (when input-id (str input-id "-"))
                                                                 (str "label-id-" i))]
-                                       ^{:key (hash t)}
-                                       [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
-                                                     "harja-alasvetolistaitemi display-flex items-center klikattava"]
-                                             :role "presentation"
-                                             :on-click #(do
-                                                          (.stopPropagation %)
-                                                          (-> (.getElementById js/document checkbox-input-id) .click))}
-                                        [tee-kentta
-                                         {:input-id checkbox-input-id
-                                          :label-id checkbox-label-id
-                                          :tyyppi :checkbox
-                                          :teksti ((or nayta str) t)
-                                          :piilota-checkbox? piilota-checkbox?
-                                          :valitse! #(do
-                                                       (.preventDefault %)
-                                                       (if monivalinta?
-                                                         (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
-                                                         (do
-                                                           (reset! teksti ((or nayta str) (reset! data t)))
-                                                           (reset! tulokset nil)))
-                                                       (when kun-muuttuu (kun-muuttuu nil)))}
-                                         (or (= t @data) (some #{t} @data))]]))
+                                        ^{:key (hash t)}
+                                        [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
+                                                      "harja-alasvetolistaitemi display-flex items-center klikattava"]
+                                              :role "presentation"
+                                              :on-click #(do
+                                                           (.stopPropagation %)
+                                                           (-> (.getElementById js/document checkbox-input-id) .click))}
+                                         [tee-kentta
+                                          {:input-id checkbox-input-id
+                                           :label-id checkbox-label-id
+                                           :tyyppi :checkbox
+                                           :teksti ((or nayta str) t)
+                                           :piilota-checkbox? piilota-checkbox?
+                                           :valitse! #(do
+                                                        (.preventDefault %)
+                                                        (if monivalinta?
+                                                          (reset! teksti (monivalinta-teksti (monivalinta-valitse! t)))
+                                                          (do
+                                                            (reset! teksti ((or nayta str) (reset! data t)))
+                                                            (reset! tulokset nil)))
+                                                        (when kun-muuttuu (kun-muuttuu nil)))}
+                                          (or (= t @data) (some #{t} @data))]]))
                          nykyiset-tulokset))))])]))))
 
 
@@ -288,7 +288,7 @@
                      ;; joka johtaa kentän validoimiseen, estetään käsittely
                      ;; jos teksti on tyhjä ja data on nil
                      (and (empty? teksti)
-                          (nil? @data))
+                       (nil? @data))
                      ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
                      (let [teksti (if (< (count teksti) pituus-max)
                                     teksti
@@ -301,8 +301,8 @@
         {:component-did-update
          (fn [this _]
            (let [n (-> this rdom/dom-node
-                       (.getElementsByTagName "textarea")
-                       (aget 0))
+                     (.getElementsByTagName "textarea")
+                     (aget 0))
                  erotus (- (.-scrollHeight n) (.-clientHeight n))]
              (when (> erotus 1) ;; IE11 näyttää aluksi 24 vs 25
                (swap! rivit + (/ erotus 19)))))})
@@ -335,9 +335,13 @@
             ;; Poistetaan whitespace, jos ei sallittu
             (as-> n n
               (if-not salli-whitespace? (str/replace n #"\s" "")
-                                        n))
+                n))
             ;; Poistetaan mahd. euromerkki lopusta
             (str/replace #"€$" "")
+            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+            (str/replace #"[−–—]" "-")
 
             ;; Poistetaan ympäröivä whitespace joka tapauksessa
             (str/trim))))
@@ -367,7 +371,7 @@
                                        desimaalien-maara min-desimaalit max-desimaalit on-key-down
                                        veda-oikealle? luokka teksti-oikealla data-cy aria-label]
                                 :as kentta} data]
-  (let [fmt (or (numero-fmt kentta) str)
+  (let [fmt-fn (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
         id (or elementin-id (gensym))]
@@ -379,9 +383,11 @@
         (let [yksikko (if-not yksikko teksti-oikealla yksikko)
               nykyinen-data @data
               nykyinen-teksti (or @teksti
-                                  (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
-                                  "")
-              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+                                (normalisoi-numero (fmt-fn nykyinen-data) salli-whitespace?)
+                                "")
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
+              kokonaisluku-re (re-pattern (str "[+-−]?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
                                   (contains? kentta :desimaalien-maara) ; Salli nil-arvo
                                   desimaalien-maara
@@ -394,13 +400,15 @@
 
                                   :else
                                   +desimaalin-oletus-tarkkuus+)
-              desimaaliluku-re-pattern (re-pattern (str
-                                                     "[+-]?\\d{1,"
-                                                     kokonaisosan-maara
-                                                     "}((\\.|,)\\d{0,"
-                                                     desimaalien-maara
-                                                     "})?"))]
-          
+              ;; Luvun edessä voi olla + tai - merkki, tai miinusmerkin eri muoto (U+2212)
+              ;; Luvun formatoinnissa miinusmerkki muutetaan matemaattiseksi miinusmerkiksi (U+2212)
+              desimaaliluku-re (re-pattern (str
+                                             "[+-−]?\\d{1,"
+                                             kokonaisosan-maara
+                                             "}((\\.|,)\\d{0,"
+                                             desimaalien-maara
+                                             "})?"))]
+
           [:span.numero
            [:input (merge {:id id
                            :class (cond-> nil
@@ -424,48 +432,67 @@
                                          (on-blur %))
                                        (reset! teksti nil))
                            :value nykyinen-teksti
-                           :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
-                                             v (cond
-                                                 vaadi-ei-negatiivinen?
-                                                 (str/replace v #"-" "")
-                                                 vaadi-negatiivinen?
-                                                 (if (= (first v) \-)
-                                                   v
-                                                   (str "-" v))
-                                                 :default v)]
-                                         (when (and
-                                                 (or (nil? validoi-kentta-fn)
-                                                   (validoi-kentta-fn v))
-                                                 (or (= v "")
-                                                   (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                                   (re-matches (if kokonaisluku?
-                                                                 kokonaisluku-re-pattern
-                                                                 desimaaliluku-re-pattern)
-                                                     ;; Matchataan whitespacesta huolimatta
-                                                     (str/replace v #"\s" ""))))
-                                           (reset! teksti v)
+                           :on-change (fn [e]
+                                        (let [syotto (normalisoi-numero (some-> e .-target .-value) salli-whitespace?)
+                                              syotto (cond
+                                                       vaadi-ei-negatiivinen?
+                                                       (str/replace syotto #"-" "")
+                                                       vaadi-negatiivinen?
+                                                       (if (= (first syotto) \-)
+                                                         syotto
+                                                         (str "-" syotto))
+                                                       :else syotto)]
+                                          (when (and
+                                                  (or (nil? validoi-kentta-fn) (validoi-kentta-fn syotto))
+                                                  (or
+                                                    ;; Salli tyhjä syöte (tai pelkkä miinusmerkki), jotta käyttäjä voi poistaa arvon
+                                                    (or (str/blank? syotto) (= "-" syotto))
+                                                    ;; Sallitaan joko kokonaisluku tai desimaaliluku
+                                                    (re-matches (if kokonaisluku? kokonaisluku-re desimaaliluku-re)
+                                                      (str/replace syotto #"\s" ""))))
 
-                                           ;; Numeron parsimista varten pitää poistaa whitespace,
-                                           ;; vaikka haluttaisiin näyttää se.
-                                           (let [v (str/replace v #"\s" "")
-                                                 numero (if kokonaisluku?
-                                                          (js/parseInt v)
-                                                          (js/parseFloat (str/replace v #"," ".")))]
-                                             (if (not (js/isNaN numero))
-                                               (reset! data numero)
-                                               (reset! data nil))
-                                             (when toiminta-f
-                                               (toiminta-f (when-not (js/isNaN numero)
-                                                             numero))))))}
+                                            ;; Aseta inputin raakateksti aina ensin
+                                            (reset! teksti syotto)
+
+                                            ;; Poistetaan whitespace tai mahdollinen yksinäinen miinusmerkki ennen numeron parsintaa
+                                            (let [puhdas (-> syotto
+                                                           ;; Poistetaan whitespace stringin kaikista osista
+                                                           (str/replace #"\s" ""))
+                                                  negatiivinen-luku-kesken? (= "-" puhdas)
+                                                  numero (if kokonaisluku?
+                                                           (js/parseInt puhdas)
+                                                           (js/parseFloat (str/replace puhdas #"," ".")))]
+
+                                              ;; NOTE: Alla ratkaisuja ikilooppeihin reagentin kanssa
+                                              ;;   Käytettäessä ulkopuolelta (r/wrap ..:) data-atomin sijasta,
+                                              ;;   voi reagentissa (>= v1.1.1) esiintyä omituista käytöstä
+                                              ;;   monimutkaisemmilla ui-kentillä. Jos esimerkiksi (r/wrap..) arvoksi
+                                              ;;   päätyy data atomin ulkopuolelta jokin default arvo, esimerkiksi
+                                              ;;   data-atomin saadessa nil arvon, näyttää Reagent päätyvän joissakin
+                                              ;;   tilanteissa ikilooppiin ja Maximum call stack size exceeded virheeseen.
+                                              ;;   TODO: Nämä harvinaisemmat tilanteet r/wrap suhteen pitäisi tutkia tarkemmin.
+
+                                              ;; Älä päivitä dataa, jos negatiivinen numero on kesken
+                                              (when-not negatiivinen-luku-kesken?
+                                                (if (js/isNaN numero)
+                                                  ;; Resetoi vain jos data ei ole jo nil, jotta ei synny ikilooppia niin herkästi
+                                                  (when (not (nil? @data))
+                                                    (reset! data nil))
+
+                                                  ;; Tarkasta onko arvo oikeasti muuttunut, ja päivitä data vasta sitten
+                                                  ;; Tällä vältetään ikiloopin mahdollisuutta
+                                                  (when (not= numero @data)
+                                                    (reset! data numero)
+                                                    (when toiminta-f (toiminta-f numero)))))))))}
                      (when data-cy {:data-cy data-cy})
                      (when aria-label {:aria-label aria-label}))]
            (when (and yksikko vayla-tyyli?)
-             [:span.sisainen-label.black-lighter {:style 
+             [:span.sisainen-label.black-lighter {:style
                                                   {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))
                                                    :margin-top "10px"}} yksikko])])))))
 
 (defmethod nayta-arvo :numero [{:keys [jos-tyhja salli-whitespace? yksikko] :as kentta} data]
- (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
+  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
              (normalisoi-numero (fmt @data) salli-whitespace?))
@@ -474,7 +501,7 @@
 
 (defmethod tee-kentta :negatiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-negatiivinen? true
-                            :tyyppi :numero) data])
+                :tyyppi :numero) data])
 
 (defmethod nayta-arvo :negatiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
@@ -482,7 +509,7 @@
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
-                            :tyyppi :numero) data])
+                :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
@@ -512,8 +539,8 @@
         pattern (re-pattern (str "^(\\d+([.,]\\d{0," desimaalien-maara "})?)?$"))]
     (fn [{:keys [lomake? desimaalien-maara disabled?]} data]
       [:input {:class (cond-> nil
-                              lomake? (str "form-control ")
-                              disabled? (str "disabled"))
+                        lomake? (str "form-control ")
+                        disabled? (str "disabled"))
                :placeholder placeholder
                :disabled disabled?
                :type "text"
@@ -529,8 +556,8 @@
 
 (defmethod tee-kentta :email [{:keys [on-focus on-blur lomake? placeholder disabled?] :as kentta} data]
   [:input {:class (cond-> nil
-                          lomake? (str "form-control ")
-                          disabled? (str "disabled"))
+                    lomake? (str "form-control ")
+                    disabled? (str "disabled"))
            :type "email"
            :value @data
            :disabled disabled?
@@ -564,7 +591,7 @@
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
     (if-let [valinta (and (= 1 (count valinnat))
-                          (first valinnat))]
+                       (first valinnat))]
       (let [arvo (arvo valinta)
             valitse #(reset! data arvo)
             label (nayta valinta)]
@@ -591,7 +618,7 @@
                                     :on-change #(reset! data arvo)}]
                            [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
                             otsikko]]))
-                      valinnat))])))
+           valinnat))])))
 
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
@@ -608,15 +635,15 @@
            teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [arvo (or arvo false)
         input-id (or input-id
-                     (gensym "checkbox-input-id-"))
+                   (gensym "checkbox-input-id-"))
         label-id (or label-id
-                     (gensym "checkbox-label-id-"))]
+                   (gensym "checkbox-label-id-"))]
     [:div
      [:input
       {:id input-id
-       :class (y/luokat 
-                (if piilota-checkbox? "piilotettu-checkbox" "vayla-checkbox") 
-                "check" 
+       :class (y/luokat
+                (if piilota-checkbox? "piilotettu-checkbox" "vayla-checkbox")
+                "check"
                 (when lukutila? "lukutila"))
        :type "checkbox"
        :disabled disabled?
@@ -624,8 +651,8 @@
        :on-click #(.stopPropagation %)
        :on-change (wrappaa-prevent-default
                     (or valitse!
-                        #(let [valittu? (-> % .-target .-checked)]
-                           (reset! data valittu?))))}]
+                      #(let [valittu? (-> % .-target .-checked)]
+                         (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
                              :class (y/luokat
@@ -679,7 +706,7 @@
   (assert data)
   (let [palstoja (or palstoja 1)
         vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(str/capitalize (name %)))
+                           #(str/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
                   (partial valittu-fn @data)
@@ -715,14 +742,14 @@
                           [checkbox v]))
            checkboxit-palstoissa (doall
                                    (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
-                                         [:div
-                                          [:div (when (> palstoja 1)
-                                                  {:class (str "col-sm-" coll-luokka)})
-                                           (for [v vaihtoehdot-palsta]
-                                             ^{:key (str "boolean-group-" (name v))}
-                                             [checkbox v])]]))
+                                     [:div
+                                      [:div (when (> palstoja 1)
+                                              {:class (str "col-sm-" coll-luokka)})
+                                       (for [v vaihtoehdot-palsta]
+                                         ^{:key (str "boolean-group-" (name v))}
+                                         [checkbox v])]]))
            muu (when (and muu-vaihtoehto
-                          (valitut muu-vaihtoehto))
+                       (valitut muu-vaihtoehto))
                  [tee-kentta muu-kentta
                   (atomina muu-kentta data-nyt (partial reset! data))])]
        (if nayta-rivina?
@@ -734,7 +761,7 @@
                            [:td (when rivi-solun-tyyli
                                   {:style rivi-solun-tyyli})
                             cb])
-                         checkboxit)
+              checkboxit)
             (when muu
               ^{:key "muu"}
               [:td.muu muu])]]]
@@ -750,7 +777,7 @@
         input-id (or input-id (str "harja-checkbox-" (gensym)))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
                             (set! (.-indeterminate node)
-                                  (= @data ::indeterminate)))]
+                              (= @data ::indeterminate)))]
     (komp/luo
       (when-not boolean-arvo? (komp/piirretty paivita-valitila))
       (when-not boolean-arvo? (komp/kun-muuttui paivita-valitila))
@@ -764,7 +791,7 @@
                                             "14px")}
                          :on-click (when
                                      (and (not disabled?)
-                                          iso-clickalue?)
+                                       iso-clickalue?)
                                      #(do
                                         (.stopPropagation %)
                                         (swap! data not)))}
@@ -797,7 +824,7 @@
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
-(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? 
+(defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu?
                             disabloitu? kaari-flex-row? muutos-fn opts radio-luokka nayta-rivina?]}]
   ;; React-varoitus korjattu: saa olla vain checked vai default-checked, ei molempia
   (let [checked (if oletus-valittu?
@@ -835,13 +862,13 @@
                                             kaari-flex-row? vaihtoehto-opts space-valissa?]}
                                     data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(str/capitalize (name %)))
+                           #(str/capitalize (name %)))
         valittu (or @data nil)]
     ;; Jos oletusarvo on annettu, se sisältyy vaihtoehtoihin, ja mitään ei ole valittu,
     ;; valitaan oletusarvo
     (when (and (nil? valittu)
-               oletusarvo
-               (some (partial = oletusarvo) vaihtoehdot))
+            oletusarvo
+            (some (partial = oletusarvo) vaihtoehdot))
       (reset! data oletusarvo))
     [:div {:style {:flex-shrink 0 :flex-grow 1 :min-width "180px"}}
      (let [group-id (gensym (str "radio-group-"))
@@ -888,7 +915,7 @@
           (map-indexed (fn [i cb]
                          ^{:key (str "radio-button-" i)}
                          [:div {:style {:flex-grow 1}} cb])
-                       radiobuttonit)]
+            radiobuttonit)]
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta
@@ -897,9 +924,9 @@
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?
             pakollinen? tarkenne muokattu? valitse-oletus? data-cy aria-label]} data]
-    ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
-    ;; esim. :id
-    (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
+   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
+   ;; esim. :id
+   (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
 
    (let [nykyinen-arvo (cond
                          (and
@@ -907,51 +934,51 @@
                            valinta-arvo
                            (= 1 (count valinnat)))
                          (valinta-arvo (first valinnat))
-                         
+
                          (and
                            valitse-oletus?
                            (not valinta-arvo)
                            (= 1 (count valinnat)))
                          (first valinnat)
-                         
+
                          :else
                          @data)
          _ (when (and valitse-oletus? (not= nykyinen-arvo @data)) (reset! data nykyinen-arvo))
-          ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
-          valinnat (or valinnat (valinnat-fn rivi))
-          valinta (when valinta-arvo
-                    (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
-          opts (merge
-                 {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
-                           (when (and linkki-fn linkki-icon)
-                             "linkin-vieressa"))
-                  :valinta (if valinta-arvo
-                             valinta
-                             nykyinen-arvo)
-                  :valitse-fn #(reset! data
-                                 (if valinta-arvo
-                                   (valinta-arvo %)
-                                   %))
-                  :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
-                  :nayta-ryhmat nayta-ryhmat
-                  :ryhmittely ryhmittely
-                  :ryhman-otsikko ryhman-otsikko
-                  :virhe? virhe?
-                  :on-focus on-focus
-                  :on-blur on-blur
-                  :format-fn (if (empty? valinnat)
-                               (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                               (or (and valinta-nayta #(valinta-nayta % true)) str))
-                  :disabled disabled?
-                  :muokattu? muokattu?
-                  :pakollinen? pakollinen?
-                  :vayla-tyyli? vayla-tyyli?
-                  :elementin-id elementin-id
-                  :pitka-teksti? pitka-teksti?
-                  :tarkenne tarkenne
-                  :data-cy (or data-cy (str "valinta-" elementin-id))}
-                 (when aria-label
-                   {:aria-label aria-label}))]
+         ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
+         valinnat (or valinnat (valinnat-fn rivi))
+         valinta (when valinta-arvo
+                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
+         opts (merge
+                {:class (y/luokat "alasveto-gridin-kentta" alasveto-luokka (y/tasaus-luokka tasaa)
+                          (when (and linkki-fn linkki-icon)
+                            "linkin-vieressa"))
+                 :valinta (if valinta-arvo
+                            valinta
+                            nykyinen-arvo)
+                 :valitse-fn #(reset! data
+                                (if valinta-arvo
+                                  (valinta-arvo %)
+                                  %))
+                 :fokus-klikin-jalkeen? fokus-klikin-jalkeen?
+                 :nayta-ryhmat nayta-ryhmat
+                 :ryhmittely ryhmittely
+                 :ryhman-otsikko ryhman-otsikko
+                 :virhe? virhe?
+                 :on-focus on-focus
+                 :on-blur on-blur
+                 :format-fn (if (empty? valinnat)
+                              (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
+                              (or (and valinta-nayta #(valinta-nayta % true)) str))
+                 :disabled disabled?
+                 :muokattu? muokattu?
+                 :pakollinen? pakollinen?
+                 :vayla-tyyli? vayla-tyyli?
+                 :elementin-id elementin-id
+                 :pitka-teksti? pitka-teksti?
+                 :tarkenne tarkenne
+                 :data-cy (or data-cy (str "valinta-" elementin-id))}
+                (when aria-label
+                  {:aria-label aria-label}))]
      (if-not (and linkki-fn nykyinen-arvo linkki-icon)
        [livi-pudotusvalikko opts
         valinnat]
@@ -1033,8 +1060,8 @@
       (let [nykyinen-arvo (or @data "")]
         [:div.dropdown {:class (when @auki "open")}
          [:input.kombo {:class (cond-> nil
-                                       lomake? (str "form-control ")
-                                       disabled? (str "disabled"))
+                                 lomake? (str "form-control ")
+                                 disabled? (str "disabled"))
                         :type "text" :value nykyinen-arvo
                         :on-focus on-focus
                         :on-blur on-blur
@@ -1046,7 +1073,7 @@
           (for [v (filter #(not= -1 (.indexOf (.toLowerCase (str %)) (.toLowerCase nykyinen-arvo))) valinnat)]
             ^{:key (hash v)}
             [:li {:role "presentation"} [linkki v #(do (reset! data v)
-                                                       (reset! auki false))]])]]))))
+                                                     (reset! auki false))]])]]))))
 
 (defmethod tee-kentta :aikavalitsin [{:keys [pvm kellonaika plusmiinus] :as asetukset} data]
   [:div {:style {:vertical-align "middle"}}
@@ -1058,8 +1085,8 @@
 
    [:div {:style {:width "65px" :display "inline-block" :margin "5px"}}
     [tee-kentta (assoc kellonaika :tyyppi :valinta
-                                  :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
-                                  :alasveto-luokka "inline-block")
+                  :valinnat (or (:valinnat kellonaika) ["00:00" "06:00" "12:00" "18:00"])
+                  :alasveto-luokka "inline-block")
      (r/wrap
        (:kellonaika @data)
        #(swap! data assoc :kellonaika %))]]
@@ -1120,14 +1147,14 @@
         teksti-paivamaaraksi! (fn [validoi-fn data t]
                                 (let [d (pvm/->pvm t)
                                       eri-pvm? (not (or (pvm/sama-pvm? @data d)
-                                                        (and (nil? d) (nil? @data))))]
+                                                      (and (nil? d) (nil? @data))))]
                                   (when (validoi-fn d)
                                     (reset! teksti t)
                                     (when eri-pvm?
                                       (muuta-data! d)))))
         muuta! (fn [data t]
                  (when (or (re-matches +pvm-regex+ t)
-                           (str/blank? t))
+                         (str/blank? t))
                    (reset! teksti t))
                  (when (str/blank? t)
                    (muuta-data! nil)))]
@@ -1145,7 +1172,7 @@
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
-                            (not muokattu-tassa?))
+                         (not muokattu-tassa?))
                    (reset! teksti (date->teksti nykyinen-pvm)))
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -1159,32 +1186,32 @@
                               elementin-nimi
                               (str (gensym "pvm-input")))
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
-                                                                 (cond
-                                                                   kentan-tyylit (apply str kentan-tyylit)
-                                                                   vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
-                                                                   lomake? "form-control"))
-                                  :placeholder (or placeholder "pp.kk.vvvv")
-                                  :value nykyinen-teksti
-                                  :on-focus #(when on-focus (on-focus))
-                                  :on-change #(muuta! data (-> % .-target .-value))
-                                  ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
-                                  :on-key-down #(do
-                                                  (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                                      (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                                      (reset! auki false))
-                                                  (when (dom/enter-nappain? %)
-                                                    (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                                    (reset! auki (not @auki))))
-                                  :on-blur #(let [arvo (.. % -target -value)
-                                                  pvm (pvm/->pvm arvo)]
-                                            (when on-blur
-                                              (on-blur %))
-                                            (if (and pvm (not (validoi pvm)))
-                                              (do (muuta-data! nil)
-                                                (reset! teksti ""))
-                                              (teksti-paivamaaraksi! validoi data arvo)))
-                                  :aria-label "päiväys"
-                                  :id elementin-id}]]
+                                                   (cond
+                                                     kentan-tyylit (apply str kentan-tyylit)
+                                                     vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
+                                                     lomake? "form-control"))
+                                          :placeholder (or placeholder "pp.kk.vvvv")
+                                          :value nykyinen-teksti
+                                          :on-focus #(when on-focus (on-focus))
+                                          :on-change #(muuta! data (-> % .-target .-value))
+                                          ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
+                                          :on-key-down #(do
+                                                          (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                            (reset! auki false))
+                                                          (when (dom/enter-nappain? %)
+                                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                            (reset! auki (not @auki))))
+                                          :on-blur #(let [arvo (.. % -target -value)
+                                                          pvm (pvm/->pvm arvo)]
+                                                      (when on-blur
+                                                        (on-blur %))
+                                                      (if (and pvm (not (validoi pvm)))
+                                                        (do (muuta-data! nil)
+                                                          (reset! teksti ""))
+                                                        (teksti-paivamaaraksi! validoi data arvo)))
+                                          :aria-label "päiväys"
+                                          :id elementin-id}]]
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
            [:span.pvm-kentta
             {:on-click #(do (.stopPropagation %)
@@ -1348,9 +1375,9 @@
 
             (when @auki
               [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
-                                                               (muuta-pvm! (pvm/pvm %))
-                                                               (koske-pvm!)
-                                                               (aseta! true))
+                                                             (muuta-pvm! (pvm/pvm %))
+                                                             (koske-pvm!)
+                                                             (aseta! true))
                                                  :pvm naytettava-pvm
                                                  :pakota-suunta pakota-suunta
                                                  :sulje-kalenteri #(do
@@ -1359,11 +1386,11 @@
                                                  :input-id elementin-id}])]
            [:div.inline-block
             [:input.aika-input {:class (str (when lomake? "form-control margin-bottom-4")
-                                            (when vayla-tyyli? "input-default")
-                                            (when (and (not (re-matches +validi-aika-regex+
-                                                                        nykyinen-aika-teksti))
-                                                       (pvm/->pvm nykyinen-pvm-teksti))
-                                              " puuttuva-arvo"))
+                                         (when vayla-tyyli? "input-default")
+                                         (when (and (not (re-matches +validi-aika-regex+
+                                                           nykyinen-aika-teksti))
+                                                 (pvm/->pvm nykyinen-pvm-teksti))
+                                           " puuttuva-arvo"))
                                 :placeholder "tt:mm"
                                 :aria-label "kellonaika"
                                 :size 5 :max-length 5
@@ -1616,24 +1643,24 @@
         hae-tr (if avaimet
                  (fn [tr-osoite-ch virheet osoite]
                    (hae-tr tr-osoite-ch virheet
-                           (zipmap tr-osoite-raaka-avaimet
-                                   (map #(when osoite (osoite %)) avaimet))))
+                     (zipmap tr-osoite-raaka-avaimet
+                       (map #(when osoite (osoite %)) avaimet))))
                  hae-tr)
 
         tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
-               (when-let [arvo (<! tr-osoite-ch)]
-                 ;; (log "VKM/TR: " (pr-str arvo))
-                 (reset! @sijainti-atom
-                         (if-not (= arvo :virhe)
-                           (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
-                               (piste-tai-eka arvo))
-                           (do
-                             (tasot/poista-geometria! :tr-valittu-osoite)
-                             nil)))
-                 (recur))))
+        (when-let [arvo (<! tr-osoite-ch)]
+          ;; (log "VKM/TR: " (pr-str arvo))
+          (reset! @sijainti-atom
+            (if-not (= arvo :virhe)
+              (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
+                (piste-tai-eka arvo))
+              (do
+                (tasot/poista-geometria! :tr-valittu-osoite)
+                nil)))
+          (recur))))
 
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
@@ -1649,8 +1676,8 @@
           (if-not sijainti
             (tasot/poista-geometria! :tr-valittu-osoite)
             (do (reset! alkuperainen-sijainti @sijainti)
-                (vreset! sijainti-atom sijainti)
-                (nayta-kartalla @sijainti)))))
+              (vreset! sijainti-atom sijainti)
+              (nayta-kartalla @sijainti)))))
       (when voi-valita-kartalta?
         (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
                                                    (keskita-kartta! @sijainti-atom))))
@@ -1667,8 +1694,8 @@
                    pakollinen? disabled? alaotsikot? piilota-nappi?]} data]
         (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
               _ (assert (= 5 (count avaimet))
-                        (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
-                             (count avaimet)))
+                  (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
+                    (count avaimet)))
               tr-otsikot? (if (nil? tr-otsikot?)
                             true
                             tr-otsikot?)
@@ -1676,12 +1703,12 @@
               avaimet
 
               tierekisterikentat (cond
-                                   (and (not vayla-tyyli?) (= tyyli :rivitetty)) 
+                                   (and (not vayla-tyyli?) (= tyyli :rivitetty))
                                    tierekisterikentat-rivitetty
 
-                                   vayla-tyyli? 
+                                   vayla-tyyli?
                                    tierekisterikentat-flex
-                                   
+
                                    :else tierekisterikentat-table)
 
               osoite @data
@@ -1692,8 +1719,8 @@
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               _tr (swap! data assoc kentta (when (and (not (= "" v))
-                                                                     (re-matches #"\d*" v))
-                                                            (js/parseInt (-> % .-target .-value))))]))
+                                                                   (re-matches #"\d*" v))
+                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
               normalisoi (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
@@ -1705,8 +1732,8 @@
               luokat (if vayla-tyyli? "input-default" "")]
           ;(loki/log "sijainti >" @sijainti avaimet numero alkuosa numero-avain alkuosa-avain)
           [:span {:class (str "tieosoite-kentta "
-                              (when @virheet " sisaltaa-virheen")
-                              (when vayla-tyyli? " vayla"))}
+                           (when @virheet " sisaltaa-virheen")
+                           (when vayla-tyyli? " vayla"))}
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
               [:div {:class "virhe"}
@@ -1718,26 +1745,26 @@
               optiot
               [tr-kentan-elementti lomake? muuta! blur
                "Tie" numero numero-avain (or disabled?
-                                             @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+                                           @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "aosa" alkuosa alkuosa-avain (or disabled?
-                                                @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+                                              @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "aet" alkuetaisyys alkuetaisyys-avain (or disabled?
-                                                         @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+                                                       @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "losa" loppuosa loppuosa-avain (or disabled?
-                                                  @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+                                                @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               [tr-kentan-elementti lomake? muuta! blur
                "let" loppuetaisyys loppuetaisyys-avain (or disabled?
-                                                           @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+                                                         @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
               tr-otsikot?
               (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
                 [napit/poista nil
                  #(do (tasot/poista-geometria! :tr-valittu-osoite)
-                      (reset! data {})
-                      (reset! @sijainti-atom nil)
-                      (reset! virheet nil))
+                    (reset! data {})
+                    (reset! @sijainti-atom nil)
+                    (reset! virheet nil))
                  {:luokka "nappi-tyhjenna"
                   :disabled (empty? @data)}])
 
@@ -1786,9 +1813,9 @@
         karttavalinta-kaynnissa? (atom false)]
     (when paikannus-kaynnissa?-atom
       (add-watch paikannus-kaynnissa?
-                 :paikannus?
-                 (fn [avain ref vanha uusi]
-                   (reset! paikannus-kaynnissa?-atom uusi))))
+        :paikannus?
+        (fn [avain ref vanha uusi]
+          (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do
@@ -1799,35 +1826,35 @@
       (fn [{disabled? :disabled?} data]
         (let [vanha-sijainti (:sijainti @data)
               paikannus-onnistui-fn (or paikannus-onnistui-fn
-                                        (fn [sijainti]
-                                          (let [coords (.-coords sijainti)
-                                                koordinaatit {:x (.-longitude coords)
-                                                              :y (.-latitude coords)}]
-                                            (go (let [piste (<! (k/post! :hae-piste-kartalle koordinaatit))]
-                                                  (if (k/virhe? piste)
-                                                    (reset! data {:virhe "Pisteen haku epäonnistui"})
-                                                    (do (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
-                                                          (reset! data piste)
-                                                          (karttavalinta-tehty-fn piste))
-                                                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti piste}))))))))
+                                      (fn [sijainti]
+                                        (let [coords (.-coords sijainti)
+                                              koordinaatit {:x (.-longitude coords)
+                                                            :y (.-latitude coords)}]
+                                          (go (let [piste (<! (k/post! :hae-piste-kartalle koordinaatit))]
+                                                (if (k/virhe? piste)
+                                                  (reset! data {:virhe "Pisteen haku epäonnistui"})
+                                                  (do (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
+                                                        (reset! data piste)
+                                                        (karttavalinta-tehty-fn piste))
+                                                    (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti piste}))))))))
               paikannus-epaonnistui-fn (or paikannus-epaonnistui-fn
-                                           (fn [virhe]
-                                             (reset! data {:virhe "Paikannus epäonnistui"})))
+                                         (fn [virhe]
+                                           (reset! data {:virhe "Paikannus epäonnistui"})))
               lopeta-paikannus #(reset! paikannus-kaynnissa? false)
               aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
                                  (geo/nykyinen-geolokaatio
                                    #(do (lopeta-paikannus)
-                                        (when (not= vanha-sijainti %)
-                                          (karttatasot/taso-paalle! :sijaintivalitsin))
-                                        (paikannus-onnistui-fn %))
+                                      (when (not= vanha-sijainti %)
+                                        (karttatasot/taso-paalle! :sijaintivalitsin))
+                                      (paikannus-onnistui-fn %))
                                    #(do (lopeta-paikannus)
-                                        (paikannus-epaonnistui-fn %))))
+                                      (paikannus-epaonnistui-fn %))))
               lopeta-karttavalinta #(reset! karttavalinta-kaynnissa? false)
               aloita-karttavalinta (fn []
                                      (reset! karttavalinta-kaynnissa? true))]
           [:div
            (when (and paikannus?
-                      (geo/geolokaatio-tuettu?))
+                   (geo/geolokaatio-tuettu?))
              [napit/yleinen-ensisijainen
               "Paikanna"
               #(when-not @paikannus-kaynnissa?
@@ -1854,10 +1881,10 @@
                                                                     (karttavalinta-tehty-fn
                                                                       {:type :point :coordinates %})))}]))
            (when (and poista-valinta?
-                      (not @karttavalinta-kaynnissa?)
-                      (not @paikannus-kaynnissa?)
-                      (not (nil? @data))
-                      (not (contains? @data :virhe)))
+                   (not @karttavalinta-kaynnissa?)
+                   (not @paikannus-kaynnissa?)
+                   (not (nil? @data))
+                   (not (contains? @data :virhe)))
              [napit/poista
               "Poista valinta"
               (fn [e]
@@ -1896,8 +1923,8 @@
    [:label {:class (or otsikon-luokka "kentan-otsikko")}  otsikko]
    [:span
     (for* [{:keys [kentta-params arvo-atom] :as kentta} kentat]
-          [:div.kentta
-           [tee-kentta kentta-params arvo-atom]])]])
+      [:div.kentta
+       [tee-kentta kentta-params arvo-atom]])]])
 
 (defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
   [:span {:class (str (or luokka "label-ja-kentta") " lukutila-kentta")
@@ -1928,7 +1955,7 @@
 (defmethod tee-kentta :aika [{:keys [placeholder on-focus on-blur lomake?] :as opts} data]
   (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
     [:input {:class (str (when lomake? "form-control")
-                         (when-not (:tunnit @data) " puuttuva-arvo"))
+                      (when-not (:tunnit @data) " puuttuva-arvo"))
              :placeholder placeholder
              :on-change (fn [e]
                           (let [v1 (-> e .-target .-value)
@@ -1937,28 +1964,28 @@
                               (swap! data assoc :keskenerainen (normalisoi-aika-teksti v1))
                               (if (:tunnit aika)
                                 (swap! data
-                                       (fn [aika-nyt]
-                                         (pvm/map->Aika
-                                           (merge aika-nyt
-                                                  (assoc aika :keskenerainen v)))))
+                                  (fn [aika-nyt]
+                                    (pvm/map->Aika
+                                      (merge aika-nyt
+                                        (assoc aika :keskenerainen v)))))
                                 (swap! data assoc
-                                       :tunnit nil
-                                       :minuutit nil
-                                       :sekunnit nil
-                                       :keskenerainen v)))))
+                                  :tunnit nil
+                                  :minuutit nil
+                                  :sekunnit nil
+                                  :keskenerainen v)))))
              :on-focus on-focus
              :on-blur #(do
                          (when on-blur
                            (on-blur %))
                          (when-let [t (:keskenerainen @data)]
                            (when (and (re-matches #"\d+" t)
-                                      (<= 0 (js/parseInt t) 23))
+                                   (<= 0 (js/parseInt t) 23))
                              (reset! data (pvm/->Aika (js/parseInt t) 0 nil)))))
              :value (or keskenerainen (fmt/aika aika))}]))
 
 (defmethod tee-kentta :toggle [{:keys [paalle-teksti pois-teksti toggle!]} data]
   (assert (and paalle-teksti pois-teksti)
-          "Määrittele :paalle-teksti ja :pois-teksti kentät!")
+    "Määrittele :paalle-teksti ja :pois-teksti kentät!")
   (let [arvo-nyt @data]
     [napit/yleinen-toissijainen (if arvo-nyt
                                   pois-teksti

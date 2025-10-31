@@ -80,7 +80,9 @@
           {:otsikko "Toteutunut määrä"
            :nimi :toteumat
            :tyyppi :numero
-           :fmt fmt/euro-opt
+           :fmt #(if %
+                   (fmt/euro-opt %)
+                   (fmt/euro-opt 0))
            :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)}
@@ -88,7 +90,9 @@
           {:otsikko "Tavoitehinnan muutos (€)"
            :nimi :tavoitehinnan-muutos
            :tyyppi :numero
-           :fmt fmt/euro-opt
+           :fmt #(if %
+                   (fmt/euro-opt %)
+                   (fmt/euro-opt 0))
            :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)}
