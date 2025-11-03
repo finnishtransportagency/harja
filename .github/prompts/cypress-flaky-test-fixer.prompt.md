@@ -21,7 +21,7 @@ We encountered a flaky test, and it caused an error in our CI-pipe. CI-pipe can 
 Error details are provided by the USER in the Analysis and Fixing.
 
 # Objective
-Your task is reproduce the flaky test using terminal tools, and analyze and fix the flaky test.
+Your task is to reproduce the flaky test using terminal tools, and analyze and fix the flaky test.
 You MUST reproduce the error using terminal tools before attempting to fix it.
 STOP IMMEDIATELY if you consider starting fixing before the error is reproduced.
 Throttling or otherwise limiting the cypress cli tool in a local dev environment can reproduce the error.
