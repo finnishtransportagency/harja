@@ -305,21 +305,6 @@
                 [hoitokauden-alkuvuosi vahvistettu?]))
         urakan-hoitokaudet))))
 
-(defn jokin-hoitovuosien-indeksikorjaus-vahvistettu?
-  "Palauttaa true, jos jonkin hoitovuoden indeksikorjaus on vahvistettu"
-  [tavoitehinta-indeksikorjattu-per-hoitovuosi]
-  (some? (some true? (vals tavoitehinta-indeksikorjattu-per-hoitovuosi))))
-
-(defn pysyva-muutos-voimassa-alkaen-lukittu?
-  "Palauttaa true, jos voimassa-alkaen kenttä on lukittu muokkaukselta.
-  Lukittu, jos:
-  - Jonkin hoitovuoden alun tavoitehinta on vahvistettu
-  - Pysyvä muutos sisältyy jonkin hoitovuoden vahvistettuun välikatselmuksen päätökseen"
-  [tavoitehinta-indeksikorjattu-per-hoitovuosi]
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
-
-  (jokin-hoitovuosien-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi))
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä.
@@ -797,7 +782,7 @@
           (let [tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
             ;; Estä tallennus, mikäli yritetään muuttaa lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
             (when (and
-                    (pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
+                    (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
                     (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
               (throw+ {:type virheet/+viallinen-kutsu+
                        :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+

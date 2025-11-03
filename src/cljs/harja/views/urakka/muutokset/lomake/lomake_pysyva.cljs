@@ -14,7 +14,6 @@
     [harja.ui.debug :refer [debug]]
     [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
     [harja.ui.yleiset :as yleiset]))
 
@@ -278,10 +277,11 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        hoitovuosi-lukittu? (t-kirjatut/pysyva-muutos-hoitovuosi-lukittu? budjettitavoitteet voimassa-alkaen hoitovuosi)
+        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+        hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
-                       (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+                       (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
                        ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
                        (not hoitovuosi-lukittu?))
         vetolaatikkorivit (into {}
@@ -308,7 +308,7 @@
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
         [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
-                         (when (not (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
+                         (when (not (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
@@ -334,12 +334,13 @@
               valittu-hoitokausi] :as app}]
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        hoitovuosi (:hoitovuosi muokattava-muutos)]
+        hoitovuosi (:hoitovuosi muokattava-muutos)
+        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet]
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
 
        (when
-         (t-yhteiset/jokin-hoitovuosien-indeksikorjaus-vahvistettu? budjettitavoitteet)
+         (muutos-domain/jokin-hoitovuosien-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
          ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
          ;;       Jos jokin välikatselmus on jonakin vuonna tehty, niin näytetään erilainen info-laatikko, ks. figma
          {:uusi-rivi? true
@@ -353,7 +354,7 @@
 
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
          {:pakota-valittuun-hoitokauteen? false
-          :voi-muokata? (not (t-kirjatut/pysyva-muutos-voimassa-alkaen-lukittu? budjettitavoitteet))})
+          :voi-muokata? (not (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi))})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
@@ -401,8 +402,8 @@
        (when
          ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
          (and
-           (t-kirjatut/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
-           (t-kirjatut/pysyva-muutos-hoitovuosi-lukittu? budjettitavoitteet voimassa-alkaen hoitovuosi))
+           (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+           (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi))
 
          ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
          ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma

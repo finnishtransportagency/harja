@@ -17,6 +17,7 @@
     [harja.ui.yleiset :as yleiset]
 
     ;; Osiot / lomake
+    [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
     [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
     [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
@@ -179,8 +180,9 @@
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
   [_e! {:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa?] :as _app}]
-  (let [indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu?
-                                      budjettitavoitteet valittu-hoitokausi)]
+  (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+        indeksikorjaus-vahvistettu? (muutos-domain/hoitovuoden-indeksikorjaus-vahvistettu?
+                                      tavoitehinta-indeksikorjattu-per-hoitovuosi valittu-hoitokausi)]
     [:div.muutosten-vaikutus
      (into []
        (concat

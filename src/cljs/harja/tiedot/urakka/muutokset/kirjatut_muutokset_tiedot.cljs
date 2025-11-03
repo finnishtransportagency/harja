@@ -35,40 +35,6 @@
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
-(defn pysyva-muutos-hoitovuosi-lukittu?
-  "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
-  Lukittu, jos:
-  - Hoitovuoden vaikutukset sisältyvät kyseisen hoitovuoden tavoitehintaan JA hoitovuoden alun tavoitehinta on vahvistettu
-  - TAI hoitovuoden välikatselmuksen päätöksiä on tehty
-  "
-  [budjettitavoitteet voimassa-alkaen hoitovuosi]
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
-
-  ;; Mikäli muutos alkaa kesken hoitokauden, sillä ei ole merkitystä kyseisen hoitovuoden alun tavoitehinnan kannalta
-  ;; Eli, muutosta ei ole tarpeen lukita vaikka tavoitehinta olisi vahvistettu
-  (and
-    (not (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
-
-    ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
-    (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)))
-
-(defn pysyva-muutos-voimassa-alkaen-lukittu?
-  "Palauttaa true, jos voimassa-alkaen kenttä on lukittu muokkaukselta.
-  Lukittu, jos:
-  - Jonkin hoitovuoden alun tavoitehinta on vahvistettu
-  - Pysyvä muutos sisältyy jonkin hoitovuoden vahvistettuun välikatselmuksen päätökseen"
-  [budjettitavoitteet]
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
-
-  (t-yhteiset/jokin-hoitovuosien-indeksikorjaus-vahvistettu? budjettitavoitteet))
-
-(defn voimassa-alkaen-hoitovuodella-tai-jalkeen?
-  [voimassa-alkaen hoitovuosi]
-  (or
-    (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
-    (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen)))
 
 (defn pysyvia-muutoksia-tulevilla-hoitovuosilla?
   "Hakee pysyvän muutoksen tiedoista, onko muutoksia tulevilla hoitovuosilla."
@@ -370,12 +336,12 @@
 
     (viesti/nayta-toast! "Tiedot kopioitu tuleville hoitovuosille lomakkeella.")
 
-    (let [budjettitavoitteet (:budjettitavoitteet app)
+    (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} (:budjettitavoitteet app)
           ;; Filtteröidään pois kohdehoitovuosista ne, joiden muokkaukset on lukittu pysyvässä muutoksessa
           ;; Eli, tavoitehinta on vahvistettu tai välikatselmuksen päätöksiä on tehty ko. hoitovuodelle
           lukitsemattomat-hoitovuodet (filterv
-                                        #(not (pysyva-muutos-hoitovuosi-lukittu?
-                                                budjettitavoitteet voimassa-alkaen %))
+                                        #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                                                tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen %))
                                         urakan-hoitovuodet)
           kohde-hk-alkuvuodet (map #(some-> % first pvm/vuosi) lukitsemattomat-hoitovuodet)]
       (-> app
