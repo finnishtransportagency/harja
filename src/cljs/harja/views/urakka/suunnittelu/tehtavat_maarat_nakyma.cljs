@@ -212,7 +212,7 @@
       [:h1 "Tehtävät ja määrät"]]
 
      [:div.flex-row {:style {:justify-content "flex-start"}}
-      [:div.filtteri {:style {:width "200px"}}
+      [:div.filtteri
        [urakka-valinnat/paivittava-urakkavuosi-tuck
         @u/valittu-aikavali
         #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]

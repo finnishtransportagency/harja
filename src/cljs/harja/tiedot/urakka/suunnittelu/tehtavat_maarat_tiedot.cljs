@@ -79,6 +79,7 @@
 
     (-> app
       (assoc :tallennus-kaynnissa? false)
+      (assoc :tallennustila? false)
       (assoc :tallentamattomia-muutoksia? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
@@ -92,10 +93,17 @@
 
   PaivitaTehtavatGrid
   (process-event [{tehtavat :tehtavat} app]
-    (-> app
-      (assoc :tallentamattomia-muutoksia? true)
-      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))
-      (synkronoi-muutokset-muutokset-atomiin!)))
+    (let [muokatut-tehtavat tehtavat
+          yhdistetyt-tehtavat (reduce (fn [acc alkuperainen-tehtava]
+                                        (let [muokattu-tehtava (first (filter #(= (:nimi %) (:nimi alkuperainen-tehtava)) muokatut-tehtavat))]
+                                          (if muokattu-tehtava
+                                            (conj acc muokattu-tehtava)
+                                            (conj acc alkuperainen-tehtava))))
+                                      [] (:tehtavat-ja-maarat app))]
+      (-> app
+        (assoc :tallentamattomia-muutoksia? true)
+        (assoc :tehtavat-ja-maarat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (synkronoi-muutokset-muutokset-atomiin!))))
 
   ToggleTallennusTila
   (process-event [_ app]
@@ -104,7 +112,9 @@
   PeruutaTallennus
   (process-event [_ app]
     (hae-tehtavat-ja-maarat nil)
-    (assoc app :tallennustila? (not (:tallennustila? app))))
+    (-> app
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tallennustila? (not (:tallennustila? app)))))
 
   AvaaRivi
   (process-event [{valiotsikko :valiotsikko} app]
