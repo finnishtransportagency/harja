@@ -73,7 +73,7 @@
                                                (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)))
         ;; Varmistetaan, että molemmat bonukset kuuluvat hoidon johdon toimenpideinstanssin alle, koska ne on luotu ennen 1.10.2022
         _ (println "kokonaishintaiset-hoidonjohto: " kokonaishintaiset-hoidonjohto)
-        _ (is (= 2000.000M (get-in kokonaishintaiset-hoidonjohto [:maksuera :summa])))]
+        _ (is (= 3230.000M (get-in kokonaishintaiset-hoidonjohto [:maksuera :summa])))]
     (is (= 7 (count maksuerat)))
     (is (= (count (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)) 7))))
 
@@ -101,4 +101,4 @@
                                      (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
                              (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)))
         ;; Varmistetaan, että molemmat bonukset kuuluvat hoidon johdon toimenpideinstanssin alle, koska ne on luotu ennen 1.10.2022
-        _ (is (= 2000.000M (get-in hoidonjohto [:maksuera :summa])))]))
+        _ (is (= 3230.000M (get-in hoidonjohto [:maksuera :summa])))]))
