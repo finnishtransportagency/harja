@@ -49,7 +49,6 @@
 
 (defn mahdolliset-paatokset-urakan-alkuvuodella [urakan-alkuvuosi paatokset]
   (filter (fn [paatos]
-            (println (:nimi paatos) "filtteröi alkuvuodella: " urakan-alkuvuosi " vs " (:urakan_alkuvuosi paatos) "tulos:" (<= (:urakan_alkuvuosi paatos) urakan-alkuvuosi))
             (<= (:urakan_alkuvuosi paatos) urakan-alkuvuosi))
     paatokset))
 
