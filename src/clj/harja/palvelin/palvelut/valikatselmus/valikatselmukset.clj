@@ -711,12 +711,7 @@
 (defn hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset [db urakkaid mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta]
   (let [; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
-        ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
-        mahdolliset-paatokset (->> mahdolliset-paatokset
-                                (group-by :jarjestys)
-                                (map (fn [[_ paatokset]] (first paatokset)))
-                                (into []))
+        mahdolliset-paatokset (paatoskone/filtteroi-paallekaiset-paatokset mahdolliset-paatokset)
         ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
         mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
                                 (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
@@ -749,12 +744,7 @@
 
         ; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
-        ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
-        mahdolliset-paatokset (->> mahdolliset-paatokset
-                                (group-by :paatostyyppi)
-                                (map (fn [[_ paatokset]] (first paatokset)))
-                                (into []))
+        mahdolliset-paatokset (paatoskone/filtteroi-paallekaiset-paatokset mahdolliset-paatokset)
         ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
         mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
                                 (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
