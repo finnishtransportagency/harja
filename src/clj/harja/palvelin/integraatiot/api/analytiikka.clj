@@ -767,10 +767,15 @@
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
     (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
-    (assoc :kasittelymenetelma (when (and (:kasittelymenetelma_lyhenne alustatoimenpide)
-                                       (:kasittelymenetelma alustatoimenpide))
-                                 (str (:kasittelymenetelma_lyhenne alustatoimenpide) ", "
-                                   (:kasittelymenetelma alustatoimenpide))))
+    (assoc :kasittelymenetelma
+      (let [lyhenne (:kasittelymenetelma_lyhenne alustatoimenpide)
+            nimi (:kasittelymenetelma alustatoimenpide)]
+        (cond
+          ;; Jos molemmat on olemassa, yhdistetään ne
+          (and lyhenne nimi) (str lyhenne ", " nimi)
+          ;; Jos vain nimi on olemassa, palautetaan se
+          nimi nimi
+          :else nil)))
     (dissoc :kasittelymenetelma_lyhenne)
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
