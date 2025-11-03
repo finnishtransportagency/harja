@@ -50,6 +50,8 @@
 (defn muutos-voimassa-kesken-hoitokauden?
   "Muutoksen voimassaolo alkaa kesken hoitovuoden?"
   [voimassa-alkaen hoitovuosi]
+  (assert (and (vector? hoitovuosi) (= 2 (count hoitovuosi))) "hoitovuosi tulee olla [alku-pvm loppu-pvm]")
+
   (pvm/valissa? voimassa-alkaen (first hoitovuosi) (second hoitovuosi)))
 
 (defn voimassa-alkaen-hoitovuodella-tai-jalkeen?
