@@ -36,7 +36,7 @@
                                                              :urakka urakka-id
                                                              :loppupvm loppupvm})
 
-      ;; Kopioi valitun vuoden välitavoitteet tulevaisuuden hoitovuosille
+      ;; Kopioi valitun vuoden välitavoitteet tuleville hoitokausille
       (doseq [hk tuleva-hk
               :let [vuosi (pvm/vuosi (first hk))
                     offset (- vuosi valittu-vuosi)]]

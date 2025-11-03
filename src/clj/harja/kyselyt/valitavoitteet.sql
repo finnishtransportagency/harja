@@ -234,9 +234,11 @@ WHERE v.urakka = :urakka
   AND v.valtakunnallinen_valitavoite IS NULL
   AND v.takaraja BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND NOT EXISTS (
+    -- Tarkista, tätä riviä ei ole jo olemassa 
     SELECT 1 FROM valitavoite v2
      WHERE v2.urakka = v.urakka
        AND v2.valtakunnallinen_valitavoite IS NULL
        AND v2.nimi = v.nimi
-       AND v2.takaraja = v.takaraja + make_interval(years => (:vuosi_offset)::int)
+       AND v2.takaraja = v.takaraja + make_interval(years => (:vuosi_offset)::INT)
+       AND v2.poistettu = FALSE
 );
