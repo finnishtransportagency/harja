@@ -9,3 +9,4 @@ CREATE TABLE ajastetut_tehtavat
 );
 
 INSERT INTO ajastetut_tehtavat (tyyppi) VALUES ('siirra_toteumat_analytiikalle');
+
