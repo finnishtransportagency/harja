@@ -45,14 +45,14 @@
   [:div {:style {:color (asioiden-ulkoasu/tilan-vari "hylatty")}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                        {:keys [lupaus-id lupaustyyppi] :as lupaus}
+                        {:keys [lupaus-id lupaustyyppi urakka-id] :as lupaus}
                         {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? 
                                 paattava-kuukausi? maarapaiva-mennyt-ohi? nykyhetkeen-verrattuna vastaus kustannusennuste] :as lupaus-kuukausi}
                         listauksessa?
                         valittu?
                         lupaus->kuukausi->kommentit]
   (let [vastauskuukausi? (lupaus-domain/vastauskuukausi? lupaus-kuukausi)
-        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi lupaustyyppi urakka-id)
         nayta-himmennettyna? (not saa-vastata?)
         nayta-kommentti-ikoni? (and (not listauksessa?)
                                     (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))

@@ -149,7 +149,7 @@
           (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
             (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
             @istunto/kayttaja)
-          (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
+          (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset
             (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
@@ -391,7 +391,6 @@
     (if (= tyyppi :teiden-hoito)
       [bs/tabs
        {:style :tabs :classes "tabs-taso2"
-        ;; huom: avain yhä valitavoitteet, koska Rooli-excel ja oikeudet
         :active (nav/valittu-valilehti-atom :valitavoitteet)}
 
        "Lupaukset" :lupaukset
