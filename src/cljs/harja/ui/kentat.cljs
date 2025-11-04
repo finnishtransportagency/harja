@@ -514,7 +514,7 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen?] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen? virhe?] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
                 :fmt (or fmt (partial fmt/euro-opt false nayta-plus))
@@ -522,7 +522,8 @@
                 :yksikko (when-not ei-yksikkoa? (or teksti-oikealla "€"))
                 :desimaalien-maara 2
                 :veda-oikealle? true
-                :vaadi-ei-negatiivinen? (or vaadi-ei-negatiivinen? false))
+                :vaadi-ei-negatiivinen? (or vaadi-ei-negatiivinen? false)
+                :virhe? virhe?)
    data])
 
 (defmethod nayta-arvo :euro [{:keys [fmt] :as kentta} data]
