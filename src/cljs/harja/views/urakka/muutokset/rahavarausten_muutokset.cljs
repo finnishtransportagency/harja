@@ -28,8 +28,8 @@
       :toiminnot (fn [e! app]
                    [::span
                     [yleiset/vihje (str
-                                     "Harja laskee rahavarausten tavoitehintamuutokset automaattisesti "
-                                     "kustannussuunnitelman ja kulukirjausten perusteella.")]
+                                     "Harja laskee rahavarausten tavoitehintamuutokset "
+                                     "automaattisesti kustannussuunnitelman ja kulukohdistusten perusteella.")]
                     (when suunnittelutiedot-puuttuvat
                       [yleiset/toast-viesti "Suunnittelutiedot puuttuvat tarjouksen tiedoista."])])
       :taulukko
