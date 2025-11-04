@@ -463,7 +463,6 @@
         ero-tarjoukseen (- hoitovuoden-alun-tavoitehinta tarjouksen-maara)
 
         hoitovuoden-alun-kattohinta (or paivitetty-hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta 0)
-        _ (js/console.log "hoitovuoden-alun-kattohinta:" (pr-str hoitovuoden-alun-kattohinta))
         hoitovuoden-alun-indeksikorjattu-kattohinta (or hoitovuoden-alun-indeksikorjattu-kattohinta 0)
         hoitovuoden-alun-kattohinta-atom (r/atom hoitovuoden-alun-kattohinta)]
     [:div#tavoite-ja-kattohinta-elementti.row.kustannussuunnitelma-osio.kapea-osio
