@@ -320,7 +320,7 @@
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (:virhe (:response vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (:virhe (:response vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
 
   ToggleUusiToimenkuvaValittavana
@@ -350,7 +350,7 @@
 
   HaeKustannussuunnitelmanTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :haku-kaynnissa? false))
 
   PaivitaKilpailutettavatHankinnat
@@ -419,7 +419,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -466,7 +466,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -524,7 +524,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -599,7 +599,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -671,7 +671,7 @@
       (viesti/nayta-toast!
         "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
@@ -686,7 +686,7 @@
                    (get-in vastaus [:response :virhe])
                    "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
           kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
-      (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-keskipitka)
+      (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
       (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
       (-> app
         (assoc :kattohinta-virhe (or kattohinta-virhe? false))

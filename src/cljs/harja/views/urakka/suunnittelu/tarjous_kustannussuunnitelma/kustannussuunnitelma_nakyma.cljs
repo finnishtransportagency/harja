@@ -499,10 +499,10 @@
         [:div.col-xs-12.korkea-rivi.bottom-border-text
          [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
-       [:div.row
-        [:div.col-xs-12.korkea-rivi.bottom-border-text {:style {:height "72px"}}
-         [:div.col-xs-7.body-text.text-right.kohdista-teksti]
-         [:div.col-xs-5.body-text.strong.kohdista-teksti.text-right
+       [:div.row.kattohinta
+        [:div.col-xs-12.korkea-rivi.bottom-border-text.kattohinta-input-osio
+
+         [:div.col-xs-12.body-text.strong.kohdista-teksti.text-right
           [:div {:style {:padding-right "10px"}}
            [kentat/tee-otsikollinen-kentta
             {:otsikko "Hoitovuoden alun kattohinta *"
