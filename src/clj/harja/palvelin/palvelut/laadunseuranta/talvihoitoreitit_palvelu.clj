@@ -95,7 +95,8 @@
         tr (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka-id :ulkoinen_id ulkoinenid})
         _ (if tr
             (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id ulkoinenid
-                                                             :urakka_id urakka-id})
+                                                             :urakka_id urakka-id
+                                                             :kayttaja_id (:id user)})
             (throw+ {:type "Error"
                      :virheet [{:koodi "ERROR" :viesti "Ei löydy poistettavaa talvihoitoreittiä. Tarkista tiedot."}]}))]
     {:onnistui "Talvihoitoreitti poistettu onnistuneesti."}))

@@ -480,6 +480,17 @@ INSERT INTO sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) VALUES
 ((SELECT id FROM urakka WHERE nimi LIKE 'Iin MHU 2021-%'), true);
 
 
+-- POP MHU Kajaani 2025-2030
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Kajaani 2025-%', 2025);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Kajaani 2025-%', 2026);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Kajaani 2025-%', 2027);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Kajaani 2025-%', 2028);
+SELECT tehtavamaara_testidata_vuodelle('POP MHU Kajaani 2025-%', 2029);
+
+INSERT INTO sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) VALUES
+    ((SELECT id FROM urakka WHERE nimi LIKE 'POP MHU Kajaani 2025-%'), true);
+
+
 -- Suomussalmen MHU 2024-2029
 SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2024);
 SELECT tehtavamaara_testidata_vuodelle('POP MHU Suomussalmi 2024-%', 2025);

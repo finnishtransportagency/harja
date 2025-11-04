@@ -10,6 +10,7 @@
     [taoensso.timbre :as log]
     [specql.core :refer [columns]]
     [harja.tyokalut.functor :refer [fmap]]
+    [harja.tyokalut.yleiset :refer [round2]]
     [harja.domain.kulut.valikatselmus :as valikatselmus]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.oikeudet :as oikeudet]
@@ -323,8 +324,8 @@
           urakka-id (:urakkaid paatos)
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
-          tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakka-id
+                                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
@@ -501,7 +502,7 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
-          validaatio (if (> (:siirrettava_maara paatos) (:ylityksen_maara paatos))
+          validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
                        (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon." ))
                        validaatio)
 
@@ -532,11 +533,11 @@
                     (paatos-apurit/tallenna-kulu db paatos kayttaja :kattohinnan-ylitys (:urakoitsija_maksaa paatos)))
           paatos (assoc paatos :kulu_id kulu_id)
           vastaus (if (seq validaatio)
-              (heita-virhe (str (string/join ", " validaatio)))
-              (do
-                (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
+                    (heita-virhe (str (string/join ", " validaatio)))
+                    (do
+                      (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
                 ;; Hae välikatselmuksen tiedot
-                (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
+                      (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
       vastaus)))
 
 (defn poista-kattohinnan-ylityspaatos [db kayttaja paatos]
@@ -707,19 +708,12 @@
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
-(defn hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset [db urakkaid mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta]
+(defn hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset [db urakkaid mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi
+                                                         kuluva-hoitovuosi toteutuneet-kustannukset
+                                                         hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
   (let [; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
-        ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
-        mahdolliset-paatokset (->> mahdolliset-paatokset
-                                (group-by :jarjestys)
-                                (map (fn [[_ paatokset]] (first paatokset)))
-                                (into []))
-        ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
-        mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
-                                mahdolliset-paatokset)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
@@ -744,20 +738,13 @@
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
-        kattohinta (:kattohinta-oikaistu budjettitavoite)
+        hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite)
+        hoitovuoden-lopun-tavoitehinta (:hoitovuoden-lopun-tavoitehinta budjettitavoite)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        ;; Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan. Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
-        ;; merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan väin yksi.
-        mahdolliset-paatokset (->> mahdolliset-paatokset
-                                (group-by :paatostyyppi)
-                                (map (fn [[_ paatokset]] (first paatokset)))
-                                (into []))
-        ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
-        mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
-                                mahdolliset-paatokset)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset

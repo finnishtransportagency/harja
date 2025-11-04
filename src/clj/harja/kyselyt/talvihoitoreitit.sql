@@ -57,11 +57,11 @@ SELECT tr.id,
        tr.muokattu,
        tr.muokkaaja,
        tr.luotu,
-       tr.luoja
+       tr.luoja,
+       tr.poistettu
   FROM talvihoitoreitti tr
  WHERE tr.ulkoinen_id = :ulkoinen_id
-   AND tr.urakka_id = :urakka_id
-   AND tr.poistettu = FALSE;
+   AND tr.urakka_id = :urakka_id;
 
 -- name: poista-talvihoitoreitin-sijainnit!
 DELETE
@@ -75,11 +75,15 @@ UPDATE talvihoitoreitti
        ka_maara  = :ka_maara,
        kup_maara = :kup_maara,
        muokattu  = NOW(),
-       muokkaaja = :kayttaja_id
+       muokkaaja = :kayttaja_id,
+       poistettu = FALSE
  WHERE id = :talvihoitoreitti_id;
 
 -- name: poista-talvihoitoreitti!
-UPDATE talvihoitoreitti SET poistettu = TRUE
+UPDATE talvihoitoreitti 
+   SET poistettu = TRUE,
+       muokattu  = NOW(),
+       muokkaaja = :kayttaja_id
  WHERE ulkoinen_id = :ulkoinen_id::TEXT
    AND urakka_id = :urakka_id::INT;
 
