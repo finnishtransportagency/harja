@@ -141,7 +141,7 @@
        t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
        (fmt/euro-opt true true (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))))
 
-   "Kirjatut muutokset"
+   "Kirjallisesti sovitut muutokset"
    (fmt/euro-opt true true (:kirjatut-muutokset-yht budjettitavoitteet))
 
    ^{:viiva-rivin-alle? true}
@@ -186,7 +186,7 @@
        (concat
          [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                            :tietorivi-luokka "padding-8"}
-          [:h2 "Muutosten vaikutus"] ""]
+          [:h2 "Muutosten vaikutus tavoitehintaan"] ""]
          (if haku-kaynnissa?
            [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
            (muutosten-vaikutus-sisalto-rivit* budjettitavoitteet valittu-hoitokausi indeksikorjaus-vahvistettu?))))]))
