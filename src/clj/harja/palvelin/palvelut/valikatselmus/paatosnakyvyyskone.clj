@@ -14,10 +14,10 @@
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :paatostyyppi "indeksikorjaus"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :urakan_loppuvuosi 2028 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :urakan_loppuvuosi 2029 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 4 :paatostyyppi "hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "C" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta-v2"}
+   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "C" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta-v2"}
    {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
    {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
    {:nimi "Tavoitehinnan ylitys" :tyyppi "A" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
@@ -48,11 +48,13 @@
   (filter #(contains? (:hoitotyyppi %) mhu-tyyppi) paatokset))
 
 (defn mahdolliset-paatokset-urakan-alkuvuodella [urakan-alkuvuosi paatokset]
-  (filter #(<= (:urakan_alkuvuosi %) urakan-alkuvuosi) paatokset))
+  (filter (fn [paatos]
+            (<= (:urakan_alkuvuosi paatos) urakan-alkuvuosi))
+    paatokset))
 
-(defn mahdolliset-paatokset-urakan-loppuvuodella [urakan-loppuvuosi paatokset]
-  (filter #(or (nil? (:urakan_loppuvuosi %))
-             (and (:urakan_loppuvuosi %) (>= (:urakan_loppuvuosi %) urakan-loppuvuosi))) paatokset))
+(defn mahdolliset-paatokset-nakyvyys-asti [urakan-alkuvuosi paatokset]
+  (filter #(or (nil? (:nakyvyys_asti %))
+             (and (:nakyvyys_asti %) (>= (:nakyvyys_asti %) urakan-alkuvuosi))) paatokset))
 
 (defn mahdolliset-paatokset-nakyvyys-vuodella [kuluva-vuosi paatokset]
   (filter #(<= (:nakyvyys_alkaen %) kuluva-vuosi) paatokset))
@@ -68,8 +70,8 @@
 (defn kaikki-mahdolliset-paatokset [mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi]
   (let [mahdollset-tyypilla (mahdolliset-paatokset-tyypilla mhu-tyyppi paatostyypit)
         mahdolliset-aloitusvuodella (mahdolliset-paatokset-urakan-alkuvuodella urakan-alkuvuosi mahdollset-tyypilla)
-        mahdolliset-lopetusvuodella (mahdolliset-paatokset-urakan-loppuvuodella urakan-loppuvuosi mahdolliset-aloitusvuodella)
-        mahdolliset-kuluvalle-vuodelle (mahdolliset-paatokset-nakyvyys-vuodella kuluva-hoitovuosi mahdolliset-lopetusvuodella)
+        mahdolliset-nakyvyys-asti (mahdolliset-paatokset-nakyvyys-asti urakan-alkuvuosi mahdolliset-aloitusvuodella)
+        mahdolliset-kuluvalle-vuodelle (mahdolliset-paatokset-nakyvyys-vuodella kuluva-hoitovuosi mahdolliset-nakyvyys-asti)
         paatokset (vain-yksi-paatos-per-tyyppi mahdolliset-kuluvalle-vuodelle)]
     paatokset))
 
@@ -580,3 +582,29 @@
                              (str/replace #"ä" "a")
                              (str/replace #" " "-")
                              (str/replace #"--" "-")))))
+
+(defn filtteroi-mahdolliset-paatokset
+  "Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan.
+  Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
+  merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan vain yksi."
+  [paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
+  (let [;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-kattohinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-kattohinta))
+                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) paatokset)
+                                paatokset)
+
+        ;; Jos toteuma ei ylitä tavoitehintaan, niin poistetaan tavoihinnan ylityspäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
+                                (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan ylitys")) paatokset)
+                                paatokset)
+        ;; Jos toteuma ylittää tavoitehinnan, niin poistetaan tavoihinnan alituspäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (> toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
+                    (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan alitus")) paatokset)
+                    paatokset)
+
+        ;; Ja jos vielä on päätöksiä, joista on useampi samaa tyyppiä, niin otetaan niistä vain yksi
+        paatokset (->> paatokset
+                    (group-by :paatostyyppi)
+                    (map (fn [[_ paatokset]] (first paatokset)))
+                    (into []))]
+    paatokset))
