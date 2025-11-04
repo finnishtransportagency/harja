@@ -69,16 +69,28 @@
           kayttaja_id (konv/konvertoi->int (:id kayttaja))
 
           ;; Varmista, että talvihoitoreittiä ei ole jo olemassa
+          ;; Note:: Tarkistaa myös poistetut 
+          ;; -> jos poistettu talvihoitoreitti tuodaan uudelleen, se merkataan ei-poistetuksi  
           talvihoitoreitti (talvihoitoreitit-q/hae-talvihoitoreitti-ulkoisella-idlla db {:urakka_id urakka_id
                                                                                          :ulkoinen_id (:tunniste data)})
+          poistettu? (boolean
+                       (some-> talvihoitoreitti first :poistettu))
+          
           ;; Validoi talvihoitoreitin päivitys/lisäys http metodin perusteella
           _ (cond
-              (and uusi? (seq talvihoitoreitti))
+
+              (and
+                uusi?
+                (not poistettu?)
+                (seq talvihoitoreitti))
               (throw+
                 {:type virheet/+vaara-http-metodi+
                  :virheet [{:koodi virheet/+vaara-http-metodi+
                             :viesti "Talvihoitoreitti löytyy jo Harjasta. Lähetä päivitys versio HTTP PUT-metodilla."}]})
-              (and (not uusi?) (not (seq talvihoitoreitti)))
+
+              (and
+                (not uusi?)
+                (not (seq talvihoitoreitti)))
               (throw+
                 {:type virheet/+talvihoitoreittia-ei-loydy+
                  :virheet [{:koodi virheet/+talvihoitoreittia-ei-loydy+
@@ -89,8 +101,8 @@
           vastaus (if (empty? virheet)
                     ;; Virheitä ei löytynyt, joten jatketaan
                     (if (and
-                          (not (nil? talvihoitoreitti))
-                          (not (empty? talvihoitoreitti)))
+                          (seq talvihoitoreitti)
+                          (not (nil? talvihoitoreitti)))
                       (paivita-talvihoitoreitti db data kayttaja_id urakka_id)
                       (tallenna-talvihoitoreitti db data kayttaja_id urakka_id))
                     ;; Muodostetaan virhevastus
@@ -107,7 +119,8 @@
           ;; Poista talvihoitoreitit
           _ (doseq [uid ulkoiset_idt]
               (talvihoitoreitit-q/poista-talvihoitoreitti! db {:ulkoinen_id uid
-                                                               :urakka_id urakka_id}))
+                                                               :urakka_id urakka_id
+                                                               :kayttaja_id (:id kayttaja)}))
           vastaus (tee-kirjausvastauksen-body {:ilmoitukset "Talvihoitoreitit poistettu onnistuneesti."})]
       vastaus)))
 

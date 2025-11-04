@@ -340,6 +340,26 @@ WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
 
+-- name: aseta-kasin-syotetty-kattohinta<!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       luotu = NOW(),
+       luoja = :luoja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
+-- name: paivita-kasin-syotetty-kattohinta!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
 -- name: hae-kustannussuunnitelman-osiot
 SELECT *
   FROM suunnittelu_kustannussuunnitelman_tila skt
@@ -376,7 +396,10 @@ INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu,
 VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
 
 -- name: indeksikorjaukset-vahvistettu?
-SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
+-- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
+-- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,
+-- niin päätellään, että kaikilla on. Logiikka toimii niin.
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kiinteahintainen_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -384,7 +407,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -392,7 +415,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
   AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)

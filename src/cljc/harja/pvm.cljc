@@ -456,7 +456,10 @@
 (defn fmt-p-k-v-lyhyt [aika]
   (formatoi (luo-format "d.M.yyyy") aika))
 
-#?(:clj (def pgobject-format
+#?(:clj (def pgobject-format-date
+          (luo-format "yyyy-MM-dd")))
+
+#?(:clj (def pgobject-format-datetime
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
 (defn pvm-aika

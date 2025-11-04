@@ -111,13 +111,21 @@
    :f2 :maara_maara
    :f3 :maara_yksikko
    :f4 :selite
-   :f5 :tehtavaryhmaid})
+   :f5 :tehtavaryhmaid
+   :f6 :tehtava-rivi-id
+   :f7 :tehtava-poistettu
+   :f8 :tehtava-luotu
+   :f9 :tehtava-muokattu})
 
 (def db-materiaalit->avaimet
   {:f1 :id
    :f2 :materiaali
    :f3 :maara_maara
-   :f4 :maara_yksikko})
+   :f4 :maara_yksikko
+   :f5 :materiaali-rivi-id
+   :f6 :materiaali-poistettu
+   :f7 :materiaali-luotu
+   :f8 :materiaali-muokattu})
 
 ;; Mäpätään json row array tyyppiset elementit (:f<x> muotoiset kolumnien nimet) alaviivarakenteiseksi
 ;; mäpiksi, jotta data saadaan formatoitua skeeman mukaisesti
@@ -904,9 +912,12 @@
                                   budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite db {:urakka urakka-id})
                                   ;; Otetaan käytyn hoitovuoden budjetti
                                   budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
-                                  kattohinta (:kattohinta-oikaistu budjettitavoite)
+                                  hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite)
+                                  hoitovuoden-lopun-tavoitehinta (:hoitovuoden-lopun-tavoitehinta budjettitavoite)
                                   vuosittaiset-paatokset (valikatselmus-palvelu/hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset
-                                                           db urakka-id mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta)]
+                                                           db urakka-id mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi
+                                                           kuluva-hoitovuosi toteutuneet-kustannukset hoitovuoden-lopun-kattohinta
+                                                           hoitovuoden-lopun-tavoitehinta)]
                               (concat paatokset vuosittaiset-paatokset)))
                     [] hoitovuodet)
         kulut (map (fn [k]

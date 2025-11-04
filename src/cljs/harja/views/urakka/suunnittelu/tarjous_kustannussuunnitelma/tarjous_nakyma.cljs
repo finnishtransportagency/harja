@@ -48,7 +48,7 @@
      #(e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot))
      {:disabled (or tallennus-kesken? false)}]
     [napit/yleinen-ensisijainen "Tallenna muutokset"
-     #(e! (tarjous-tiedot/->TallennaTarjouksenTiedot hankinnat toimenkuvat))
+     #(e! (tarjous-tiedot/->TallennaTarjouksenTiedot))
      {:disabled (or tallennus-kesken? false)}]]])
 
 (defn- lopullinen-yhteenvetorivi [otsikko rivi]
@@ -81,23 +81,36 @@
                    :fmt fmt/euro-opt})]
     v))
 
-(defn johto-ja-hallintokorvaukset [e! uusi-toimenkuva-valittavana kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat]
-  (let [vuositaulukon-otsikot (map-indexed (fn [index rivi]
+(defn johto-ja-hallintokorvaukset [e! vahvistetut-vuodet uusi-toimenkuva-valittavana kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat]
+  (let [urakan-vuodet (range (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+                        (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
+        vuositaulukon-otsikot (map-indexed (fn [index rivi]
                                              (merge rivi
-                                               {:muokattava? (fn [rivi] (cond
-                                                                          (and (= 0 index) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) true
-                                                                          (and (< 0 index) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) false
-                                                                          (not= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") true
-                                                                          :else true))}))
+                                               {:muokattava? (fn [rivi _]
+                                                               (let [rivi-vuosi (if (> (count urakan-vuodet) index) (nth urakan-vuodet index) (first urakan-vuodet))
+                                                                     salli-muokkaus? (cond
+                                                                                       ;; Valmistelukausi ennen urakka-ajan alkua on sallittu muokata vain, jos se on ensimmäinen vuosi ja kyseistä vuotta ei ole vahvistettu
+                                                                                       (and (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") (= 0 index)) (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
+                                                                                       ;; Valmistelukautta ei saa muokata muulloin
+                                                                                       (and (>= index 1) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) false
+                                                                                       ;; Kaikissa muissa tapauksissa saa muokata, jos vuotta ei ole vahvistettu
+                                                                                       (not= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
+                                                                                       :else false)]
+                                                                 salli-muokkaus?))}))
                                 vuositaulukon-otsikot)
 
         ;; Estetään käyttöliittymässä poistettujen toimenkuvien näkyminen listauksessa, vaikka ei ole vielä tallennettu muutoksia kantaan
         toimenkuvat (remove #(true? (:poistettu %)) toimenkuvat)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-        ;; Rajaa toimenkuvavalinnaksi vain ne, jotka eivät ole vielä käytössä
+        ;; Rajaa toimenkuvavalinnaksi vain ne, jotka eivät ole vielä käytössä - Ja siivotaan talvi- ja kesäkausi pois nimestä, jotta estetään saman toimenkuvan lisääminen uudestaan.
+        siivoa-toimenkuva-nimi (fn [toimenkuva-nimi]
+                                 (-> toimenkuva-nimi
+                                   (str/replace "(kesäkausi)" "")
+                                   (str/replace "(talvikausi)" "")
+                                   (str/trim)))
         muut-toimenkuvat (filter
-                           (fn [toimenkuva]
-                             (not (some #(= (:nimi toimenkuva) (:nimi %)) toimenkuvat)))
+                           (fn [k-toimenkuva]
+                             (not (some #(= (siivoa-toimenkuva-nimi (:nimi k-toimenkuva)) (siivoa-toimenkuva-nimi (:nimi %))) toimenkuvat)))
                            kaikki-toimenkuvat)
 
         ;; Toimenkuvan voi aina lisätä, paitsi jos kaikki toimenkuvat on jo lisätty.
@@ -255,7 +268,7 @@
        :muokattava? (fn [rivi] (if (:yhteensa rivi) false true))}])
    hankinnat])
 
-(defn erillishankinnat-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat]
+(defn erillishankinnat-grid [e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat]
   (let [vuositaulukon-otsikot (map #(merge % {:muokattava? (constantly false)}) vuositaulukon-otsikot)]
     [grid/grid
      {:otsikko ""
@@ -270,7 +283,9 @@
       :tunniste :nimi
       :muutos #(do
                  (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
-                       jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
+                       jyvitetyt-rivit (map (fn [rivi]
+                                              (tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille rivi vahvistetut-vuodet))
+                                         muutetut-rivit)]
                    (e! (tarjous-tiedot/->PaivitaErillishankinnatGrid jyvitetyt-rivit))
                    (reset! virheet-atom (grid/hae-virheet %))))}
      (concat [{:otsikko "Erillishankinnat" :nimi :nimi :tyyppi :string :luokka "yhteensa" :leveys (str nimi-leveys "%") :muokattava? (constantly false)}]
@@ -285,7 +300,7 @@
          :muokattava? (constantly false)}])
      erillishankinnat]))
 
-(defn hoidonjohtopalkkio-grid [e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
+(defn hoidonjohtopalkkio-grid [e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
   (let [vuositaulukon-otsikot (map #(merge % {:muokattava? (constantly false)}) vuositaulukon-otsikot)]
     [grid/grid
      {:otsikko ""
@@ -300,7 +315,9 @@
       :tunniste :nimi
       :muutos #(do
                  (let [muutetut-rivit (vals (grid/hae-muokkaustila %))
-                       jyvitetyt-rivit (map tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille muutetut-rivit)]
+                       jyvitetyt-rivit (map (fn [rivi]
+                                              (tarjous-tiedot/jyvita-eperhoitovuosi-hoitovuosille rivi vahvistetut-vuodet))
+                                         muutetut-rivit)]
                    (e! (tarjous-tiedot/->PaivitaHoidonjohtopalkkioGrid jyvitetyt-rivit))
                    (reset! virheet-atom (grid/hae-virheet %))))
       :rivi-jalkeen-fn nil}
@@ -319,35 +336,53 @@
          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
      hoidonjohtopalkkiot]))
 
-(defn tavoite-ja-kattohinta-grid [vuositaulukon-otsikot nimi-leveys yhteensa-leveys
-                                  {:keys [hankinnat erillishankinnat hoidonjohtopalkkiot toimenkuvat kattohintakerroin] :as app}]
-  (let [gridien-yhteensa (tarjous-tiedot/laske-kaikkien-gridien-yhteensa
+(defn tavoite-ja-kattohinta-grid [e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys yhteensa-leveys
+                                  {:keys [hankinnat erillishankinnat hoidonjohtopalkkiot toimenkuvat
+                                          muokkaa-kattohinta-kasin yhteensa kattohintakerroin] :as app}]
+  (let [urakan-vuodet (range (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+                        (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
+        vuositaulukon-otsikot (map-indexed (fn [index rivi]
+                                             (merge rivi
+                                               {:muokattava? (fn [rivi _]
+                                                               (let [rivi-vuosi (if (> (count urakan-vuodet) index) (nth urakan-vuodet index) (first urakan-vuodet))
+                                                                     salli-muokkaus? (if (= (:nimi rivi) "Tarjouksen kattohinta") (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
+                                                                                       false)]
+                                                                 salli-muokkaus?))}))
+                                vuositaulukon-otsikot)
+
+        gridien-yhteensa (tarjous-tiedot/laske-kaikkien-gridien-yhteensa
                            hankinnat
                            erillishankinnat
                            hoidonjohtopalkkiot
                            toimenkuvat
                            vuositaulukon-otsikot)
-        tavoitehinta-rivi (merge
-                            {:nimi "Tarjouksen tavoitehinta" :fmt (fmt/euro false) :eperhoitovuosi 0}
+        tavoitehinta-rivi (merge (first yhteensa)
                             (:vuosikohtaiset-summat gridien-yhteensa)
                             {:yhteensa (:yhteensa gridien-yhteensa)})
-        kattohinta-rivi (merge
-                          {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)") :fmt (fmt/euro false) :eperhoitovuosi 0}
-                          (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
-                            (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
-                          {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))})]
+        kattohinta-rivi (if muokkaa-kattohinta-kasin
+                          (second yhteensa)
+                          (merge
+                            (second yhteensa)
+                            #_ {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)")}
+                            (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
+                              (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
+                            {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))}))]
     [grid/grid
      {:otsikko ""
       :data-cy "tarjous-tavoite-kattohinta-grid"
-      :muokattava? (constantly false)
+      :muokattava? (if muokkaa-kattohinta-kasin (constantly true) (constantly false))
+      :muokkaa-aina muokkaa-kattohinta-kasin
+      :voi-muokata? muokkaa-kattohinta-kasin
       :voi-poistaa? (constantly false)
       :voi-lisata? false
       :voi-kumota? false
-      :piilota-toiminnot? false
+      :piilota-toiminnot? true
       :tunniste :nimi
       :muutos #(do
+                 (e! (tarjous-tiedot/->PaivitaTavoiteJaKattohintaGrid (vals (grid/hae-muokkaustila %))))
                  (reset! virheet-atom (grid/hae-virheet %)))
       :rivi-jalkeen-fn nil}
+
 
      (concat [{:otsikko "Tavoite- ja kattohinta"
                :nimi :nimi
@@ -362,7 +397,7 @@
      [tavoitehinta-rivi kattohinta-rivi]]))
 
 (defn tarjous-nakyma [e! {:keys [tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat
-                                 hoidonjohtopalkkiot erillishankinnat tallentamattomia-muutoksia?] :as app}]
+                                 hoidonjohtopalkkiot erillishankinnat tallentamattomia-muutoksia? vahvistetut-vuodet] :as app}]
   (let [ensimmainen-rivi-jossa-hoitovuodet (first (:tarjous app))
         ;; Jos ei ole dataa, käytetään oletusarvoja 5 vuodelle
         hoitovuosittaiset-arvot (:hoitovuosittaiset-arvot ensimmainen-rivi-jossa-hoitovuodet)
@@ -380,7 +415,10 @@
                                    :tyyppi :euro
                                    :fmt (partial fmt/euro-opt false)
                                    :leveys (str vuosi-leveys "%")
-                                   :tasaa :oikea})
+                                   :tasaa :oikea
+                                   :muokattava? (if (contains? vahvistetut-vuodet (:vuosi vuosi-rivi))
+                                                  (constantly false)
+                                                  (constantly true))})
                                 hoitovuosittaiset-arvot)]
     [:div
      [:hr]
@@ -391,16 +429,16 @@
      [hankinnat-grid e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys hankinnat]
 
      ;;Erillishankinnat
-     [erillishankinnat-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat]
+     [erillishankinnat-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat]
 
      ;;Johto-ja-hallintokorvaus
-     [johto-ja-hallintokorvaukset e! (:uusi-toimenkuva-valittavana app) (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys toimenkuvat]
+     [johto-ja-hallintokorvaukset e! vahvistetut-vuodet (:uusi-toimenkuva-valittavana app) (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys toimenkuvat]
 
      ;;Hoidonjohtopalkkio
-     [hoidonjohtopalkkio-grid e! vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
+     [hoidonjohtopalkkio-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
 
      ;;Tavoite-ja-kattohinta
-     [tavoite-ja-kattohinta-grid vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
+     [tavoite-ja-kattohinta-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
      [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]]))
@@ -420,7 +458,6 @@
            (sisaan)))
       (komp/ulos
         #(do
-           (tarjous-tiedot/nollaa-muutokset!)
            (ulos)))
       (fn [e! app]
         [:div
