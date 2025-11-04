@@ -708,14 +708,12 @@
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
-(defn hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset [db urakkaid mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta]
+(defn hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset [db urakkaid mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi
+                                                         kuluva-hoitovuosi toteutuneet-kustannukset
+                                                         hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
   (let [; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/filtteroi-paallekaiset-paatokset mahdolliset-paatokset)
-        ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
-        mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
-                                mahdolliset-paatokset)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
@@ -740,15 +738,13 @@
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
-        kattohinta (:kattohinta-oikaistu budjettitavoite)
+        hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite)
+        hoitovuoden-lopun-tavoitehinta (:hoitovuoden-lopun-tavoitehinta budjettitavoite)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/filtteroi-paallekaiset-paatokset mahdolliset-paatokset)
-        ;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
-        mahdolliset-paatokset (if (or (nil? toteutuneet-kustannukset) (nil? kattohinta) (<= toteutuneet-kustannukset kattohinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) mahdolliset-paatokset)
-                                mahdolliset-paatokset)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset

@@ -583,12 +583,26 @@
                              (str/replace #" " "-")
                              (str/replace #"--" "-")))))
 
-(defn filtteroi-paallekaiset-paatokset
+(defn filtteroi-mahdolliset-paatokset
   "Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan.
   Esim Lupauspäätöksiä saadaan kolme, mutta niiden järjestysnumero on kaikilla 1, joka
   merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan vain yksi."
-  [paatokset]
-  (let [
+  [paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
+  (let [;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-kattohinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-kattohinta))
+                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) paatokset)
+                                paatokset)
+
+        ;; Jos toteuma ei ylitä tavoitehintaan, niin poistetaan tavoihinnan ylityspäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
+                                (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan ylitys")) paatokset)
+                                paatokset)
+        ;; Jos toteuma ylittää tavoitehinnan, niin poistetaan tavoihinnan alituspäätös
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (> toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
+                    (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan alitus")) paatokset)
+                    paatokset)
+
+        ;; Ja jos vielä on päätöksiä, joista on useampi samaa tyyppiä, niin otetaan niistä vain yksi
         paatokset (->> paatokset
                     (group-by :paatostyyppi)
                     (map (fn [[_ paatokset]] (first paatokset)))
