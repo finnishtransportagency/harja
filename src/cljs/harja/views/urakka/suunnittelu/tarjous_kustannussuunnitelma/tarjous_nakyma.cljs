@@ -48,7 +48,7 @@
      #(e! (tarjous-tiedot/->HaeTyhjatTarjouksenTiedot))
      {:disabled (or tallennus-kesken? false)}]
     [napit/yleinen-ensisijainen "Tallenna muutokset"
-     #(e! (tarjous-tiedot/->TallennaTarjouksenTiedot hankinnat toimenkuvat))
+     #(e! (tarjous-tiedot/->TallennaTarjouksenTiedot))
      {:disabled (or tallennus-kesken? false)}]]])
 
 (defn- lopullinen-yhteenvetorivi [otsikko rivi]
@@ -83,7 +83,7 @@
 
 (defn johto-ja-hallintokorvaukset [e! vahvistetut-vuodet uusi-toimenkuva-valittavana kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat]
   (let [urakan-vuodet (range (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-                           (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
+                        (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
         vuositaulukon-otsikot (map-indexed (fn [index rivi]
                                              (merge rivi
                                                {:muokattava? (fn [rivi _]
@@ -336,35 +336,53 @@
          :fmt (fn [arvo] (if arvo (fmt/euro false arvo) 0.00)) :leveys (str yhteensa-leveys "%")}])
      hoidonjohtopalkkiot]))
 
-(defn tavoite-ja-kattohinta-grid [vuositaulukon-otsikot nimi-leveys yhteensa-leveys
-                                  {:keys [hankinnat erillishankinnat hoidonjohtopalkkiot toimenkuvat kattohintakerroin] :as app}]
-  (let [gridien-yhteensa (tarjous-tiedot/laske-kaikkien-gridien-yhteensa
+(defn tavoite-ja-kattohinta-grid [e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys yhteensa-leveys
+                                  {:keys [hankinnat erillishankinnat hoidonjohtopalkkiot toimenkuvat
+                                          muokkaa-kattohinta-kasin yhteensa kattohintakerroin] :as app}]
+  (let [urakan-vuodet (range (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+                        (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
+        vuositaulukon-otsikot (map-indexed (fn [index rivi]
+                                             (merge rivi
+                                               {:muokattava? (fn [rivi _]
+                                                               (let [rivi-vuosi (if (> (count urakan-vuodet) index) (nth urakan-vuodet index) (first urakan-vuodet))
+                                                                     salli-muokkaus? (if (= (:nimi rivi) "Tarjouksen kattohinta") (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
+                                                                                       false)]
+                                                                 salli-muokkaus?))}))
+                                vuositaulukon-otsikot)
+
+        gridien-yhteensa (tarjous-tiedot/laske-kaikkien-gridien-yhteensa
                            hankinnat
                            erillishankinnat
                            hoidonjohtopalkkiot
                            toimenkuvat
                            vuositaulukon-otsikot)
-        tavoitehinta-rivi (merge
-                            {:nimi "Tarjouksen tavoitehinta" :fmt (fmt/euro false) :eperhoitovuosi 0}
+        tavoitehinta-rivi (merge (first yhteensa)
                             (:vuosikohtaiset-summat gridien-yhteensa)
                             {:yhteensa (:yhteensa gridien-yhteensa)})
-        kattohinta-rivi (merge
-                          {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)") :fmt (fmt/euro false) :eperhoitovuosi 0}
-                          (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
-                            (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
-                          {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))})]
+        kattohinta-rivi (if muokkaa-kattohinta-kasin
+                          (second yhteensa)
+                          (merge
+                            (second yhteensa)
+                            #_ {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)")}
+                            (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
+                              (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
+                            {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))}))]
     [grid/grid
      {:otsikko ""
       :data-cy "tarjous-tavoite-kattohinta-grid"
-      :muokattava? (constantly false)
+      :muokattava? (if muokkaa-kattohinta-kasin (constantly true) (constantly false))
+      :muokkaa-aina muokkaa-kattohinta-kasin
+      :voi-muokata? muokkaa-kattohinta-kasin
       :voi-poistaa? (constantly false)
       :voi-lisata? false
       :voi-kumota? false
-      :piilota-toiminnot? false
+      :piilota-toiminnot? true
       :tunniste :nimi
       :muutos #(do
+                 (e! (tarjous-tiedot/->PaivitaTavoiteJaKattohintaGrid (vals (grid/hae-muokkaustila %))))
                  (reset! virheet-atom (grid/hae-virheet %)))
       :rivi-jalkeen-fn nil}
+
 
      (concat [{:otsikko "Tavoite- ja kattohinta"
                :nimi :nimi
@@ -420,7 +438,7 @@
      [hoidonjohtopalkkio-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot]
 
      ;;Tavoite-ja-kattohinta
-     [tavoite-ja-kattohinta-grid vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
+     [tavoite-ja-kattohinta-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
      [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]]))
