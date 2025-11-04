@@ -91,18 +91,39 @@
   (let [mhu-tyyppi "MHU"
         urakan-alkuvuosi 2024
         urakan-loppuvuosi (+ urakan-alkuvuosi 5)
-        filtteroidyt-paatokset (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024))
+        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024) nil nil nil)
         lupausmaara (filter #(= "lupaus" (:paatostyyppi %)) filtteroidyt-paatokset)
         ;; Lupauksia on vain yksi
         _ (is (= 1 (count lupausmaara)))
         ;; "Hoitovuoden lopun tavoite- ja kattohinta" - päätöksiä on vain yksi
         hoitovuoden-lopun-hinta-maara (filter #(= "hoitovuoden-lopun-hinta" (:paatostyyppi %)) filtteroidyt-paatokset)
         _ (is (= 1 (count hoitovuoden-lopun-hinta-maara)))]
-    (is (= 8 (count (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024)))))
-    (is (= 8 (count (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)))))
-    (is (= 8 (count (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026)))))
-    (is (= 8 (count (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027)))))
-    (is (= 8 (count (kone/filtteroi-paallekaiset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028)))))))
+    (is (= 6 (count (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024) nil nil nil))))
+    (is (= 6 (count (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025) nil nil nil))))
+    (is (= 6 (count (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026) nil nil nil))))
+    (is (= 6 (count (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027) nil nil nil))))
+    (is (= 6 (count (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028) nil nil nil))))))
+
+(deftest hintapaatosten-filtterointi-toimii
+  (let [mhu-tyyppi "MHU"
+        urakan-alkuvuosi 2024
+        urakan-loppuvuosi (+ urakan-alkuvuosi 7)
+        ;; Toteutuneita kustannuksia, tavoitehintaa tai kattohintaa ei määritellä
+        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024) nil nil nil)
+        kattohintamaara1 (filter #(= "kattohinta" (:paatostyyppi %)) filtteroidyt-paatokset)
+        tavoitehintamaara1 (filter #(= "tavoitehinta" (:paatostyyppi %)) filtteroidyt-paatokset)
+        _ (is (= 0 (count kattohintamaara1)))
+        _ (is (= 0 (count tavoitehintamaara1)))
+        ;; Toteutuneet kustannukset ylittää sekä tavoite että kattohinnan
+        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024) 10 8 9)
+        kattohintamaara2 (filter #(= "kattohinta" (:paatostyyppi %)) filtteroidyt-paatokset)
+        tavoitehintamaara2 (filter #(= "tavoitehinta" (:paatostyyppi %)) filtteroidyt-paatokset)
+        ;; Lupauksia on vain yksi
+        _ (is (= 1 (count kattohintamaara2)))
+        _ (is (= 1 (count tavoitehintamaara2)))
+        ;; "Hoitovuoden lopun tavoite- ja kattohinta" - päätöksiä on vain yksi
+        hoitovuoden-lopun-hinta-maara (filter #(= "hoitovuoden-lopun-hinta" (:paatostyyppi %)) filtteroidyt-paatokset)
+        _ (is (= 1 (count hoitovuoden-lopun-hinta-maara)))]))
 
 (deftest mhu-vuodelle-2024-palautaa-oikein-kun-6v-urakka
   (let [mhu-tyyppi "MHU"
@@ -119,7 +140,7 @@
         urakan-alkuvuosi 2025
         urakan-loppuvuosi (+ urakan-alkuvuosi 5)
         paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)
-        filtteroidyt-paatokset (kone/filtteroi-paallekaiset-paatokset paatokset)
+        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset paatokset nil nil nil)
         hoitovuoden-lopun-hinta-maara (filter #(= "hoitovuoden-lopun-hinta-v2" (:paatostyyppi %)) filtteroidyt-paatokset)
         _ (is (= 1 (count hoitovuoden-lopun-hinta-maara)))]
     (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025))))
