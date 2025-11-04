@@ -340,6 +340,26 @@ WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
 
+-- name: aseta-kasin-syotetty-kattohinta<!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       luotu = NOW(),
+       luoja = :luoja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
+-- name: paivita-kasin-syotetty-kattohinta!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
 -- name: hae-kustannussuunnitelman-osiot
 SELECT *
   FROM suunnittelu_kustannussuunnitelman_tila skt
