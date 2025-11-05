@@ -219,4 +219,20 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.contains('Toteuman tieosoite').should('exist')
     })
+
+    it("Avaa Välikatselmus", function () {
+        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
+        // Asetettu urakka, joka varmasti menee joskus vanhaksi
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
+
+        // Siirry Välikatselmus päätabille
+        cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
+        cy.contains('Välikatselmus').should('exist')
+        cy.contains('Yhteenveto').should('exist')
+        cy.contains('Hoitovuoden lopun tavoitehinta').should('exist')
+        cy.contains('Hoitovuoden lopun kattohinta').should('exist')
+    })
+
 })
