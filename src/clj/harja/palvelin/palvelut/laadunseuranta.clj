@@ -295,7 +295,7 @@
       (laatupoikkeamat-q/liita-kommentti<! db id (:id kommentti)))))
 
 (defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
-  (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
+  (when-let [uusi-liite (:uudet-liitteet laatupoikkeama)]
     (let [liitteet (if (sequential? uusi-liite) uusi-liite [uusi-liite])]
       (doseq [liite liitteet]
         (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
