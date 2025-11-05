@@ -73,13 +73,6 @@
     (< (pvm/vuosi (first valittu-hoitokausi))
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
 
-(defn hoitovuoden-indeksikorjaus-vahvistettu?
-  [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi] :as budjettitavoitteet} hoitovuosi]
-  (let [hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
-        indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
-    indeksikorjaus-vahvistettu?))
-
-
 ;; --- Tuck-eventit ja käsittelijät ---
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [tyyppi])
