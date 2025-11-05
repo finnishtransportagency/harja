@@ -14,7 +14,6 @@
     [harja.ui.debug :refer [debug]]
     [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
     [harja.ui.yleiset :as yleiset]))
 
@@ -118,7 +117,7 @@
                                        (or (= tehtava-id valittu-tehtava)
                                          (not (contains? valitut-tehtavat tehtava-id))))
                                toimenpiteen-tehtavat)))
-            :leveys 20
+            :leveys 25
             :valinta-arvo :tehtava-id
             :valinta-nayta :tehtava}
 
@@ -126,6 +125,7 @@
             :nimi :yksikko
             :tyyppi :string
             :leveys 6
+            :tasaa :oikea
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    ;; Haetaan tieto tehtävän määräyksiköstä toimenpiteiden tehtävistä
@@ -138,6 +138,7 @@
             :nimi :suunniteltu_maara
             :tyyppi :positiivinen-numero
             :leveys 10
+            :tasaa :oikea
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    (hae-tehtavan-suunniteltu-maara muokattava-muutos rivi))}
@@ -145,13 +146,15 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
-            :muokattava? (constantly voi-muokata?)
-            :leveys 20}
+            :tasaa :oikea
+            :leveys 10
+            :muokattava? (constantly voi-muokata?)}
 
            {:otsikko "Muuttunut määrä"
             :nimi :muuttunut-maara
             :tyyppi :numero
-            :leveys 20
+            :tasaa :oikea
+            :leveys 10
             :muokattava? (constantly false)
             :hae (fn [rivi]
                    (fmt/desimaaliluku
@@ -220,7 +223,7 @@
                             {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                             {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
-     [{:tyyppi :vetolaatikon-tila :leveys 2}
+     [{:tyyppi :vetolaatikon-tila :leveys 3}
       {:otsikko "Toimenpide"
        :nimi :toimenpide
        :tyyppi :string
@@ -267,20 +270,20 @@
 (defn- kopioi-tuleville-hoitovuosille! [e! muokattava-muutos]
   (e! (t-kirjatut/->KopioiHoitovuodenMuutoksetTulevilleHoitovuosille
         (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        (:voimassa_alkaen muokattava-muutos)
         (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
-        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)
+        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+        hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
-                       (or
-                         (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
-                         (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen))
-                       ;; Voi muokata, jos tavoitehinnan indeksikorjaus ei ole vielä vahvistettu hoitovuodelle
-                       (not indeksikorjaus-vahvistettu?))
+                       (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+                       ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
+                       (not hoitovuosi-lukittu?))
         vetolaatikkorivit (into {}
                             (map (juxt :toimenpideinstanssi
                                    (fn [rivi]
@@ -305,8 +308,7 @@
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
         [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
-                         (if indeksikorjaus-vahvistettu?
-                           "Hoitovuoden alun tavoitehinta on jo vahvistettu."
+                         (when (not (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
                            "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
@@ -320,8 +322,6 @@
               :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
            (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
-        ;; Disabloi nappi, koska toiminnallisuus ei ole vielä toteutettu
-        :disabled (not voi-muokata?)
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
@@ -335,10 +335,26 @@
 
   (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
-        indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu? budjettitavoitteet hoitovuosi)]
+        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet]
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi false)
+
+       (when
+         (muutos-domain/jokin-hoitovuosien-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
+         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
+         ;;       Jos jokin välikatselmus on jonakin vuonna tehty, niin näytetään erilainen info-laatikko, ks. figma
+         {:uusi-rivi? true
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [yleiset/info-laatikko :vahva-ilmoitus
+                          "Hoitovuoden alun tavoitehintoja on vahvistettu"
+                          "Peru vahvistukset muokataksesi voimassa alkaen päivämäärää."
+                          nil
+                          {:ikoni-fn #(ikonit/harja-icon-status-alert)}])})
+
+       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
+         {:pakota-valittuun-hoitokauteen? false
+          :voi-muokata? (not (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi))})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
@@ -383,22 +399,32 @@
                           "Valitse")
         :valinta-arvo identity}
 
-       (when indeksikorjaus-vahvistettu?
+       (when
+         ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
+         (and
+           (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+           (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi))
+
+         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
+         ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_]
-                         [:div.perustiedot
-                          [yleiset/info-laatikko :vahva-ilmoitus
-                           "Hoitovuoden alun tavoitehinta on vahvistettu"
-                           [:<>
-                            [:div "Voit perua vahvistuksen lisätäksesi hoitovuodelle pysyvän muutoksen." [:br]
-                             "Muista vahvistaa hoitovuoden tavoitehinta muutoksen tallentamisen jälkeen."]
-                            [:br]
-                            [:div [napit/yleinen-toissijainen "Peru vahvistus"
-                                   #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
-                                          (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
-                           nil
-                           {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])})
+                         (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                                                (some-> valittu-hoitokausi (first) (pvm/vuosi))
+                                                (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
+                                                false)]
+                           [yleiset/info-laatikko :vahva-ilmoitus
+                            "Hoitovuoden alun tavoitehinta on vahvistettu"
+                            [:<>
+                             [:div hoitovuosi-str " osalta pysyvän muutoksen tavoitehintavaikutukset sisältyät jo vahvistettuun hoitovuoden alun tavoitehintaan." [:br]
+                              "Jos haluat tehdä muutoksia, vahvistus on peruttava ja tehtävä uudelleen."]
+                             [:br]
+                             [:div [napit/yleinen-toissijainen "Peru vahvistus"
+                                    #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
+                                           (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
+                            nil
+                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]))})
 
        (if muutoksen-tiedot-haku-kaynnissa?
          {:tyyppi :komponentti
@@ -411,6 +437,7 @@
            {:otsikko ""
             :uusi-rivi? true
             :nimi :taulukko-pysyvan-muutoksen-vaikutukset
+            :kaariva-luokka "pysyva-muutos-vaikutukset-lomake-wrapper"
             :tyyppi :komponentti
             :komponentti (fn [rivi]
                            [taulukko-pysyvan-muutoksen-vaikutukset e! app])}
