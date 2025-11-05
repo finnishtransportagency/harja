@@ -129,7 +129,7 @@
        :valittu-hoitokausi (:valittu-hoitokausi app)}
       {:onnistui ->KopioiValitavoitteetOnnistui
        :epaonnistui ->KopioiValitavoitteetEpaonnistui})
-    app)
+    (assoc app :ladataan? true))
 
   KopioiValitavoitteetOnnistui
   (process-event [{_vastaus :vastaus} app]
@@ -157,12 +157,16 @@
 
   HaeYllapitokohteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :yllapitokohteet vastaus))
+    (assoc app
+      :ladataan? false
+      :yllapitokohteet vastaus))
 
   HaeYllapitokohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Ylläpitokohteiden haku epäonnistui" :varoitus)
-    (assoc app :yllapitokohteet nil))
+    (assoc app
+      :ladataan? false
+      :yllapitokohteet nil))
 
   TallennaValitavoitteet
   (process-event [{tiedot :tiedot} app]

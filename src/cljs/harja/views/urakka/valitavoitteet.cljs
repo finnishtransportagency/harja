@@ -66,7 +66,7 @@
                       "Ei kohdetta"))})
 
 (defn urakan-omat-valitavoitteet-grid
-  [e! {:keys [urakka urakan-valitavoitteet valittu-hoitokausi yllapitokohteet] :as app}]
+  [e! {:keys [urakka urakan-valitavoitteet valittu-hoitokausi yllapitokohteet ladataan?] :as app}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
@@ -75,7 +75,9 @@
       [yleiset/ajax-loader "Ladataan..."]
       [grid/grid
        {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
-        :tyhja (if (nil? urakan-valitavoitteet)
+        :tyhja (if (and
+                     ladataan?
+                     (nil? urakan-valitavoitteet))
                  [yleiset/ajax-loader "Tavoitteita haetaan..."]
                  "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
         :tallenna (if voi-muokata?
@@ -120,12 +122,15 @@
 (defn urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [e! {:keys [urakka valittu-hoitokausi yllapitokohteet kaikki-valitavoitteet] :as app}]
+  [e! {:keys [urakka valittu-hoitokausi yllapitokohteet valtakunnalliset-valitavoitteet ladataan?] :as app}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
+
     [grid/grid
      {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
-      :tyhja (if (nil? kaikki-valitavoitteet)
+      :tyhja (if (and
+                   ladataan?
+                   (nil? valtakunnalliset-valitavoitteet))
                [yleiset/ajax-loader "Tavoitteita haetaan..."]
                "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
       :tallenna (if voi-muokata?
@@ -157,7 +162,7 @@
       {:otsikko "Merkit\u00ADsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (suodata-valitavoitteet-hoitokaudella kaikki-valitavoitteet valittu-hoitokausi)]))
+     (suodata-valitavoitteet-hoitokaudella valtakunnalliset-valitavoitteet valittu-hoitokausi)]))
 
 (defn takaraja-poikkeaa-valtakunnallisesta? [{:keys [takaraja valtakunnallinen-takaraja
                                                      valtakunnallinen-takarajan-toistopaiva
@@ -166,21 +171,21 @@
     (or
       ;; Kertaluontoinen takaraja poikkeaa
       (and valtakunnallinen-takaraja
-           (not= takaraja valtakunnallinen-takaraja))
+        (not= takaraja valtakunnallinen-takaraja))
       ;; Toistuva takaraja poikkeaa
       (and valtakunnallinen-takarajan-toistopaiva
-           valtakunnallinen-takarajan-toistokuukausi
-           (or (nil? takaraja)
-               (not= valtakunnallinen-takarajan-toistopaiva
-                     (t/day takaraja))
-               (not= valtakunnallinen-takarajan-toistokuukausi
-                     (t/month takaraja)))))))
+        valtakunnallinen-takarajan-toistokuukausi
+        (or (nil? takaraja)
+          (not= valtakunnallinen-takarajan-toistopaiva
+            (t/day takaraja))
+          (not= valtakunnallinen-takarajan-toistokuukausi
+            (t/month takaraja)))))))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan? [rivit]
   (boolean (some #(or (takaraja-poikkeaa-valtakunnallisesta? %)
-                      ;; Välitavoitteen nimi poikkeaa
-                      (not= (:valtakunnallinen-nimi %) (:nimi %)))
-                 rivit)))
+                    ;; Välitavoitteen nimi poikkeaa
+                    (not= (:valtakunnallinen-nimi %) (:nimi %)))
+             rivit)))
 
 (defn valtakunnalliset-valitavoitteet-grid
   [e! {:keys [urakka valtakunnalliset-valitavoitteet valittu-hoitokausi] :as app}]
@@ -276,7 +281,7 @@
                     (when (urakka/koko-urakkakausi-valittuna?) (urakka/valitse-kuluva-hk!))
                     (e! (tiedot/->NakymaAvattu))))
     (komp/ulos #(e! (tiedot/->NakymaSuljettu)))
-    (fn [e! {:keys [valittu-hoitokausi urakan-hoitokaudet ladataan? 
+    (fn [e! {:keys [valittu-hoitokausi urakan-hoitokaudet ladataan?
                     urakan-valitavoitteet valtakunnalliset-valitavoitteet] :as app} ur]
       (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur))
             nayta-yhdistetty-grid? (and (boolean (#{:tiemerkinta} (:tyyppi ur)))
@@ -286,12 +291,12 @@
             nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)
             ;; Lisää urakka app-tilaan grid-funktioita varten
             app (assoc app :urakka ur)
-            tulevaisuudessa-arvoja? (onko-tulevia? urakan-valitavoitteet valittu-hoitokausi)] 
-        
+            tulevaisuudessa-arvoja? (onko-tulevia? urakan-valitavoitteet valittu-hoitokausi)]
+
         (if ladataan?
           [:div.valitavoitteet
            [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
-          
+
           [:div.valitavoitteet
            [:div.valinnat.margin-bottom-16
             [valinnat/urakan-hoitokausi-tuck
@@ -301,7 +306,11 @@
              {:wrapper-luokka "label-ja-alasveto hoitokausi"
               :kaikki-valinta? true}]
 
-            (when nayta-urakkakohtaiset-grid?
+            (when (and
+                    ;; "Kaikki" ei ole valittuna
+                    valittu-hoitokausi
+                    ;; Älä näytä yhdistetylle - täällä valtakunnallisia tavoitteita
+                    nayta-urakkakohtaiset-grid?)
               [napit/yleinen-toissijainen "Kopioi urakkakohtaiset välitavoitteet tuleville hoitovuosille"
                (fn []
                  (if tulevaisuudessa-arvoja?
@@ -320,7 +329,7 @@
 
            (when nayta-valtakunnalliset-grid?
              [valtakunnalliset-valitavoitteet-grid e! app])
-           
+
            (when nayta-yhdistetty-grid?
              [urakan-omat-ja-valtakunnalliset-valitavoitteet-grid e! app])
 
