@@ -454,14 +454,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :palstoja 2
                  :tyyppi :komponentti
                  :komponentti
-                 (fn [_]
+                 (fn [{:keys [muokkaa-lomaketta]}]
                    [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
-                    {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
-                                              #(swap! laatupoikkeama assoc :uusi-liite %))
+                    {:uusi-liite-atom (r/wrap (:uudet-liitteet @laatupoikkeama)
+                                        (fn [uusi-liite]
+                                          (if (:uudet-liitteet @laatupoikkeama)
+                                            (swap! laatupoikkeama update :uudet-liitteet conj uusi-liite)
+                                            (swap! laatupoikkeama assoc :uudet-liitteet [uusi-liite]))
+                                          (muokkaa-lomaketta @laatupoikkeama)))
                      :uusi-liite-teksti "Lisää liite laatupoikkeamaan"
                      :salli-poistaa-lisatty-liite? true
-                     :poista-lisatty-liite-fn #(swap! laatupoikkeama dissoc :uusi-liite)
+                     :poista-lisatty-liite-fn (fn [liite-id]
+                                                (swap! laatupoikkeama update :uudet-liitteet
+                                                  (fn [uudet] (vec (remove #(= (:id %) liite-id) uudet))))
+                                                (muokkaa-lomaketta @laatupoikkeama))
                      :salli-poistaa-tallennettu-liite? true
+                     :lisaa-usea-liite? true
                      :poista-tallennettu-liite-fn
                      (fn [liite-id]
                        (liitteet/poista-liite-kannasta
@@ -473,7 +481,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                           (swap! laatupoikkeama assoc :liitteet
                                                  (filter (fn [liite]
                                                            (not= (:id liite) liite-id))
-                                                         (:liitteet @laatupoikkeama))))}))}])}
+                                                         (:liitteet @laatupoikkeama)))
+                                          (muokkaa-lomaketta @laatupoikkeama))}))}])}
                 (when-not uusi?
                   (lomake/ryhma
                     "Kommentit"
