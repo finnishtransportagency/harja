@@ -550,17 +550,21 @@
   Olettaa saavansa parametrit kaikki vuosina:
   valittu-hk: vvvv
   hoitovuodet: esim. [2012 2013 2014 2015 2016]"
-  [valittu-hk hoitovuodet vuosi-termi]
-  (assert (and (int? valittu-hk) (every? int? hoitovuodet)) "Valittu-hk ja hoitovuodet pitää olla numeroita.")
+  ([valittu-hk hoitovuodet vuosi-termi]
+   (hoitokauden-jarjestysluku-ja-alku-ja-loppupvm valittu-hk hoitovuodet vuosi-termi true))
+  ([valittu-hk hoitovuodet vuosi-termi nayta-alku-ja-loppu-pvm?]
+   (assert (and (int? valittu-hk) (every? int? hoitovuodet)) "Valittu-hk ja hoitovuodet pitää olla numeroita.")
 
-  (let [monesko (first (keep-indexed (fn [i hk]
-                                       (if (and (int? valittu-hk)
-                                             (< valittu-hk 10))
-                                         valittu-hk
-                                         (when (= hk valittu-hk)
-                                           (inc (int i)))))
-                         hoitovuodet))]
-    (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (pvm/pvm (pvm/hoitokauden-alkupvm valittu-hk)) " \u2212 " (pvm/pvm (pvm/hoitokauden-loppupvm (inc valittu-hk))) ")")))
+   (let [monesko (first (keep-indexed (fn [i hk]
+                                        (if (and (int? valittu-hk)
+                                              (< valittu-hk 10))
+                                          valittu-hk
+                                          (when (= hk valittu-hk)
+                                            (inc (int i)))))
+                          hoitovuodet))]
+     (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi)
+       (when nayta-alku-ja-loppu-pvm?
+         (str " (" (pvm/pvm (pvm/hoitokauden-alkupvm valittu-hk)) " \u2212 " (pvm/pvm (pvm/hoitokauden-loppupvm (inc valittu-hk))) ")"))))))
 
 #?(:cljs
    (def desimaali-fmt
