@@ -275,7 +275,7 @@
   (:exists (first (budjettisuunnittelu-kyselyt/onko-kustannussuunnitelma-vahvistettu db {:urakkaid urakkaid
                                                                                          :hoitovuosinro hoitovuosinro}))))
 
-(defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-loppuvuosi kuluva-hoitovuosi
+(defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
                                              hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset
                                              hoitovuosinro tietokanta-paatokset]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
@@ -299,7 +299,9 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 5)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+      ;; Vaaditaan hoitovuoden lopun tavoite-ja kattohinta vain jos kuluva hoitovuosi on 2024 tai myöemmin
+      ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 5)
 
@@ -341,7 +343,7 @@
       ;; Jos tarvittavia tietoja ei ole, niin poistetaan päätöstyyppi
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Ei lisätä päätöstä." false 5))))
 
-(defn valmistele-tavoitehinnan-ylityspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-loppuvuosi
+(defn valmistele-tavoitehinnan-ylityspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi
                                              kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta kustannukset hoitovuosinro tietokanta-paatokset]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
   ;; -24 vuodesta alkaen lisäksi:
@@ -362,7 +364,9 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 6)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+      ;; Vaaditaan hoitovuoden lopun tavoite-ja kattohinta vain jos kuluva hoitovuosi on 2024 tai myöemmin
+      ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 6)
 
@@ -397,7 +401,7 @@
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan ylitys" "Poistetaan ylityspäätös." false 6))))
 
 (defn valmistele-kattohinnan-paatokset [db validoinnit-kaytossa? urakkaid paatokset hoitovuoden-lopun-kattohinta kustannukset
-                                        kuluva-hoitovuosi urakan-loppuvuosi hoitovuosinro tietokanta-paatokset]
+                                        kuluva-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi hoitovuosinro tietokanta-paatokset]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
   ;; -24 vuodesta alkaen lisäksi:
   ;; Kustannussuunnitelma vahvistettu
@@ -417,7 +421,9 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 7)
 
-      (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
+      ;; Vaaditaan hoitovuoden lopun tavoite-ja kattohinta vain jos kuluva hoitovuosi on 2024 tai myöemmin
+      ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
 
@@ -508,7 +514,7 @@
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "else : Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
-                                                  tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset]
+                                                  tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; Hoitotovuoden pitää olla päättynyt
   ;; Hoitovuoden lopun tavoitehinta tulee olla vahvistettu
@@ -522,7 +528,8 @@
       (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuosi on vielä kesken." true 9)
 
-      (and validoinnit-kaytossa?
+      ;; Hoitovuoden lopun tavoite- ja kattohinta -päätös vaaditaan vain, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 9)
 
