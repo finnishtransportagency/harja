@@ -1095,7 +1095,7 @@
 
     (testing "Uuden pysyvän muutoksen voi tallentaa, vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
       (let [muutos-payload {:tyyppi "pysyva"
-                            ;; Tallennetaan pysyvä muutos voimassa-alkaen vuodelle 2024, ja tarkastellaan lukituksen vaikutusta
+                            ;; Tallennetaan pysyvä muutos voimassa-alkaen vuodelle 2025, ja tarkastellaan lukituksen vaikutusta
                             ;; vain "kokonaisten hoitovuosien" osalta, eli 2025-2026 jne.
                             :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00",
                             :syy "Pysyvä muutos, jokin hoitovuosista on lukittu",
@@ -1125,7 +1125,27 @@
               (catch Exception e
                 (log/error e)
                 (ex-data e)))]
-        (is (= (:nimi vastaus) "Pysyvä muutos Suomussalmelle")) "Pysyvä muutos tallennettiin onnistuneesti"))
+        ;; Varmistetaan että muutos tallentui onnistuneesti
+        (is (= (:nimi vastaus) "Pysyvä muutos Suomussalmelle")
+          "Pysyvä muutos tallennettiin onnistuneesti")
+        ;; Varmistetaan että voimassa_alkaen -päivämäärä tallentui oikein
+        (is (= (:voimassa_alkaen vastaus) #inst "2025-09-30T21:00:00.000-00:00")
+          "voimassa_alkaen -päivämäärä tallentui oikein")
+        ;; Varmistetaan että lukitun vuoden (2025) data suodatettiin pois
+        ;; ja vain lukitsemattomien vuosien (2026, 2027) data tallentui
+        (is (every? #(not= (:hoitokauden_alkuvuosi %) 2025) (:tehtavat_ja_maarat vastaus))
+          "Lukitun vuoden 2025 tehtävä- ja määrätiedot suodatettiin pois")
+        (is (every? #(not= (:hoitokauden_alkuvuosi %) 2025) (:kustannusvaikutukset vastaus))
+          "Lukitun vuoden 2025 kustannusvaikutukset suodatettiin pois")
+        ;; Varmistetaan että lukitsemattomien vuosien data tallentui
+        (is (some #(= (:hoitokauden_alkuvuosi %) 2026) (:tehtavat_ja_maarat vastaus))
+          "Lukitsemattoman vuoden 2026 tehtävä- ja määrätiedot tallennettiin")
+        (is (some #(= (:hoitokauden_alkuvuosi %) 2027) (:tehtavat_ja_maarat vastaus))
+          "Lukitsemattoman vuoden 2027 tehtävä- ja määrätiedot tallennettiin")
+        (is (some #(= (:hoitokauden_alkuvuosi %) 2026) (:kustannusvaikutukset vastaus))
+          "Lukitsemattoman vuoden 2026 kustannusvaikutukset tallennettiin")
+        (is (some #(= (:hoitokauden_alkuvuosi %) 2027) (:kustannusvaikutukset vastaus))
+          "Lukitsemattoman vuoden 2027 kustannusvaikutukset tallennettiin")))
 
     (testing "Pysyvän muutoksen voimassa_alkaen -päivämäärää ei voi muuttaa, kun jonkin hoitovuoden indeksikorjaus on vahvistettu"
       (let [;; Haetaan testidatassa oleva pysyvä muutos
