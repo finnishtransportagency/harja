@@ -1095,8 +1095,6 @@
 
     (testing "Uuden pysyvän muutoksen voi tallentaa, vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
       (let [muutos-payload {:tyyppi "pysyva"
-                            ;; Tallennetaan pysyvä muutos voimassa-alkaen vuodelle 2024, ja tarkastellaan lukituksen vaikutusta
-                            ;; vain "kokonaisten hoitovuosien" osalta, eli 2025-2026 jne.
                             :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00",
                             :syy "Pysyvä muutos, jokin hoitovuosista on lukittu",
                             :nimi "Pysyvä muutos Suomussalmelle"
