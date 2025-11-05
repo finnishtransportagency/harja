@@ -505,11 +505,15 @@
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         hoidonjohtopalkkiot-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) hoidonjohtopalkkiot))
+
+        johto-ja-hallintokorvaukset (hae-johto-ja-hallintokorvaukset-kuukausittain db {:urakka-id urakka-id :vuosi hoitovuoden-alkuvuosi})
+        johto-ja-hallintokorvaukset-yht (apply + (map (fn [rivi] (if (:summa rivi) (:summa rivi) 0)) johto-ja-hallintokorvaukset))
+
         ;; TODO: kun muutokset on valmiita, niin hae tiedot
         pysyvat-muutokset-maara 0
 
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
-        hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht hoidonjohtopalkkiot-yht)
+        hoitovuoden-alun-tavoitehinta (+ hankinnat-yht rahavaraukset-yht erillishankinnat-yht hoidonjohtopalkkiot-yht johto-ja-hallintokorvaukset-yht)
 
         hoitovuoden-alun-kattohinta (or (when kattohintakerroin
                                           (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
