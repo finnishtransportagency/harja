@@ -1232,7 +1232,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.loppupvm > NOW();
 
 -- name: hae-urakan-hoitokaudet
-SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);
+SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id::INTEGER);
 
 -- name: listaa-urakat-analytiikalle-hoitovuosittain
 -- Haetaan kaikki urakat ilman geometriatietoja

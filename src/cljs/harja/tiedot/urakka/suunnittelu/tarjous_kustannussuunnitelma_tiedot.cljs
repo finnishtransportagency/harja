@@ -6,6 +6,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
@@ -188,7 +189,7 @@
 (defrecord AsetaJJHMuutos [])
 (defrecord AsetaHoidonjohtopalkkioMuutos [])
 
-(defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord ValitseHoitokausiKustannussuunnitelmaan [])
 (defrecord PoistaToimenkuva [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
@@ -330,7 +331,7 @@
   HaeKustannussuunnitelmanTiedot
   (process-event
     [_ app]
-    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
+    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first @u/valittu-hoitokausi)))
     (-> app
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? false)
@@ -388,7 +389,7 @@
   (process-event
     [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat
       kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
-    (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi app)))]
+    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
       (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi vuosi
@@ -437,7 +438,7 @@
     [{erillishankinnat :erillishankinnat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-erillishankinnat
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :erillishankinnat erillishankinnat
        :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaErillishankinnatOnnistui
@@ -497,7 +498,7 @@
     [{hoidonjohtopalkkiot :hoidonjohtopalkkiot kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-hoidonjohtopalkkiot
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :hoidonjohtopalkkiot hoidonjohtopalkkiot
        :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
@@ -572,7 +573,7 @@
                   :johto-ja-hallintokorvaukset-2025)]
       (tuck-apurit/post! endpoint
         {:urakka-id (-> @tila/yleiset :urakka :id)
-         :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+         :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
          avain johto-ja-hallintokorvaukset
          :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
@@ -618,12 +619,13 @@
       (assoc-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset)))
 
   ValitseHoitokausiKustannussuunnitelmaan
-  (process-event [{vuosi :vuosi} app]
-    (let [app (-> app
+  (process-event [_ app]
+    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+          _ (js/console.log "ValitseHoitokausiKustannussuunnitelmaan vuosi:" (pr-str vuosi))
+          app (-> app
                 (assoc :valittu-kuukausi nil)
                 ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
-                (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
-                                            (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                (assoc :valittu-hoitokausi @u/valittu-hoitokausi)
                 (assoc :nykyhetki (pvm/nyt))
                 (assoc :haku-kaynnissa? true)
                 (assoc :hoitokauden-alkuvuosi vuosi))]
@@ -651,7 +653,7 @@
     [{vahvista? :vahvista?} app]
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :vahvista? vahvista?
        :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)}
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui

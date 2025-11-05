@@ -164,7 +164,7 @@
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Kirjattu määrä"
+           {:otsikko "Toteutunut määrä"
             :nimi :maara
             :tyyppi :numero
             :fmt #(fmt/desimaaliluku-opt % 0 2 true)
@@ -183,7 +183,7 @@
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Kirjatut kulut (€)"
+           {:otsikko "Kohdistetut kulut (€)"
             :nimi :kirjatut_kulut_summa
             :tyyppi :numero
             :fmt fmt/euro-opt

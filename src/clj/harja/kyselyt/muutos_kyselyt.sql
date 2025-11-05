@@ -667,6 +667,10 @@ DO UPDATE SET
   muokattu                           = NOW(),
   muokkaaja                          = EXCLUDED.luoja;
 
+-- name: hae-muutos
+SELECT *
+  FROM mhu_muutos m
+ WHERE m.id = :id;
 
 -- name: hae-urakan-muutostyot
 SELECT  DISTINCT ON (m.id)
