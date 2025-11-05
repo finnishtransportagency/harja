@@ -120,3 +120,18 @@ SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,
  WHERE t.urakka_id = :urakkaid
  ORDER BY viimeisin_muokkaus DESC
  LIMIT 1;
+
+-- name: paivita-rahavaraus-budjettiin<!
+UPDATE kustannusarvioitu_tyo
+SET summa = :summa,
+    summa_indeksikorjattu = :summa_indeksikorjattu,
+    muokattu = NOW(),
+    muokkaaja = :muokkaaja
+WHERE id = :id;
+
+-- name: lisaa-rahavaraus-budjettiin<!
+INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
+                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
+VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
+        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
+        :luoja, NOW());
