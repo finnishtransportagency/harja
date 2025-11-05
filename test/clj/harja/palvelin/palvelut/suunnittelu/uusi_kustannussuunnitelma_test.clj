@@ -673,8 +673,10 @@
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
 (deftest vahvista-tavoite-ja-kattohinta-ei-onnistu
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
         hoitovuoden-alkuvuosi 2024
         tiedot {:urakka-id urakka-id
                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
@@ -690,6 +692,11 @@
         _ (u (format "DELETE FROM johto_ja_hallintokorvaus WHERE \"urakka-id\" = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
         OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
                urakka-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+
+        ;; Kustisksen vahvistus vaatii tarjouksen tallentamisen, joten tallennetaan alkuun simppeli tarjous, niin ei jää siitä kiinni
+        kattohintakerroin 1.1
+        vahvistetut-vuodet #{}
+        tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019 vahvistetut-vuodet)
 
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -909,7 +916,6 @@
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
-        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2020
         hoitovuosinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
 
@@ -944,6 +950,7 @@
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
 
         ;; Lisätään erillishankinnat
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
@@ -954,13 +961,17 @@
         ;; Lisätään johto- ja hallintokorvaukset
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
             (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+        ;; Tavoitehinta lasketaan erillisellä funktiolla, jos kustsutaan tallennuksia suoraan kyselyfunktioilla eikä rajapinnan kautta
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
+
+
 
         ;; Syötä kattohinta käsin kustannussuuunnitelmalle.
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                 :vahvista? true
-                :paivitetty-kattohinta 5} ;; Bäkkärin pitäisi jättää tämä huomioimatta 2024 urakoilla
+                :paivitetty-kattohinta 5}
 
         virheellinen-vastaus (try
                                (kutsu-palvelua (:http-palvelin jarjestelma)
