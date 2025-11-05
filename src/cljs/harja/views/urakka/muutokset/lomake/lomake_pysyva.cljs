@@ -333,16 +333,19 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?
               valittu-hoitokausi] :as app}]
 
-  (let [voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
+  (let [muokataan? (:id muokattava-muutos)
+        voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
-        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet]
+        {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+        ;; Voimassa-alkaen lukitus tarkastatetaan vain muokkaustilanteessa
+        voimassa-alkaen-lukittu? (if muokataan?
+                                   (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
+                                   false)]
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
 
        (when
-         (muutos-domain/jokin-hoitovuosien-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
-         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
-         ;;       Jos jokin välikatselmus on jonakin vuonna tehty, niin näytetään erilainen info-laatikko, ks. figma
+         voimassa-alkaen-lukittu?
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_]
@@ -354,7 +357,8 @@
 
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
          {:pakota-valittuun-hoitokauteen? false
-          :voi-muokata? (not (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi))})
+
+          :voi-muokata? (not voimassa-alkaen-lukittu?)})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
