@@ -196,14 +196,15 @@ WHERE valtakunnallinen_valitavoite = :id
       AND valmis_pvm IS NULL
       AND muokattu IS NULL;
 
--- name: merkitse-tulevat-valitavoitteet-poistetuiksi!
+-- name: merkitse-tulevat-urakkakohtaiset-valitavoitteet-poistetuiksi!
 UPDATE valitavoite
    SET poistettu = TRUE,
        muokattu = NOW(),
        muokkaaja = :muokkaaja
 WHERE urakka = :urakka
   AND poistettu = FALSE
-  AND takaraja > :loppupvm::DATE;
+  AND takaraja > :loppupvm::DATE
+  AND valtakunnallinen_valitavoite IS NULL;
 
 -- name: kopioi-urakkakohtaiset-valitavoitteet-vuodelle<!
 INSERT INTO valitavoite (
@@ -231,14 +232,16 @@ SELECT
     FALSE
  FROM valitavoite v
 WHERE v.urakka = :urakka
+  -- Kyse vain urakkakohtaisista, ei kosketa valtakunnallisiin 
   AND v.valtakunnallinen_valitavoite IS NULL
   AND v.takaraja BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  -- Tarkista, että tätä riviä ei ole jo olemassa 
   AND NOT EXISTS (
-    -- Tarkista, tätä riviä ei ole jo olemassa 
     SELECT 1 FROM valitavoite v2
      WHERE v2.urakka = v.urakka
        AND v2.valtakunnallinen_valitavoite IS NULL
        AND v2.nimi = v.nimi
        AND v2.takaraja = v.takaraja + make_interval(years => (:vuosi_offset)::INT)
+       -- Ignorataan poistetut 
        AND v2.poistettu = FALSE
 );

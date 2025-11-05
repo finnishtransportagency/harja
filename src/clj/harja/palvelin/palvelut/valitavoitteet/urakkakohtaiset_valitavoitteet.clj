@@ -16,14 +16,13 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (let [vastaus (into []
-                      (map konv/alaviiva->rakenne)
-                      (q/hae-urakan-valitavoitteet db urakka-id))]
+                  (map konv/alaviiva->rakenne)
+                  (q/hae-urakan-valitavoitteet db urakka-id))]
     vastaus))
 
 (defn kopioi-urakan-valitavoitteet-tuleville-hk
-  [db
-   {:keys [id] :as kayttaja}
-   {:keys [urakka-id valittu-hoitokausi hoitokaudet]}]
+  [db kayttaja
+   {:keys [urakka-id valittu-hoitokausi hoitokaudet] :as _tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakka-id)
   (jdbc/with-db-transaction [conn db]
     (let [valittu-vuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
@@ -32,19 +31,19 @@
           tuleva-hk (filter #(> (some-> % (first) (pvm/vuosi)) valittu-vuosi) hoitokaudet)]
 
       ;; Merkkaa kaikki tulevaisuuden välitavoitteet poistetuksi (varmistettu käyttäjältä)
-      (q/merkitse-tulevat-valitavoitteet-poistetuiksi! conn {:muokkaaja id
-                                                             :urakka urakka-id
-                                                             :loppupvm loppupvm})
+      (q/merkitse-tulevat-urakkakohtaiset-valitavoitteet-poistetuiksi! conn {:urakka urakka-id
+                                                                             :loppupvm loppupvm
+                                                                             :muokkaaja (:id kayttaja)})
 
       ;; Kopioi valitun vuoden välitavoitteet tuleville hoitokausille
       (doseq [hk tuleva-hk
               :let [vuosi (pvm/vuosi (first hk))
                     offset (- vuosi valittu-vuosi)]]
-        (q/kopioi-urakkakohtaiset-valitavoitteet-vuodelle<! conn {:muokkaaja id
-                                                                  :urakka urakka-id
+        (q/kopioi-urakkakohtaiset-valitavoitteet-vuodelle<! conn {:urakka urakka-id
                                                                   :alkupvm alkupvm
                                                                   :loppupvm loppupvm
-                                                                  :vuosi_offset offset}))))
+                                                                  :vuosi_offset offset
+                                                                  :muokkaaja (:id kayttaja)}))))
 
   (hae-urakan-valitavoitteet db kayttaja urakka-id))
 
@@ -54,19 +53,19 @@
 
 (defn- merkitse-valitavoite-valmiiksi! [db user urakka-id
                                         {:keys [nimi id valmispvm valmis-kommentti] :as tiedot}]
-    (log/debug "Merkitään välitavoite valmiiksi: " nimi)
-    (q/merkitse-valmiiksi! db
-                           (when valmispvm
-                             (konv/sql-date valmispvm))
-                           (when valmispvm
-                             valmis-kommentti)
-                           (:id user) urakka-id id))
+  (log/debug "Merkitään välitavoite valmiiksi: " nimi)
+  (q/merkitse-valmiiksi! db
+    (when valmispvm
+      (konv/sql-date valmispvm))
+    (when valmispvm
+      valmis-kommentti)
+    (:id user) urakka-id id))
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [{:keys [aloituspvm takaraja nimi yllapitokohde-id] :as valitavoite} (filter
-                                                    #(and (not (id-olemassa? (:id %)))
-                                                          (not (:poistettu %)))
-                                                    valitavoitteet)]
+                                                                                #(and (not (id-olemassa? (:id %)))
+                                                                                   (not (:poistettu %)))
+                                                                                valitavoitteet)]
     (log/debug "Luodaan uusi välitavoite: " nimi)
     (let [lisatty-vt-id (:id (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
                                                                :aloituspvm (konv/sql-date aloituspvm)
@@ -82,17 +81,17 @@
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
     (doseq [{:keys [id takaraja nimi aloituspvm yllapitokohde-id] :as valitavoite}
             (filter #(and (id-olemassa? (:id %))
-                          (not (:poistettu %)))
-                    valitavoitteet)]
+                       (not (:poistettu %)))
+              valitavoitteet)]
       (log/debug "Päivitetään välitavoite: " nimi)
       (q/paivita-urakan-valitavoite! db
-                                     {:nimi nimi
-                                      :takaraja (konv/sql-date takaraja)
-                                      :aloituspvm (konv/sql-date aloituspvm)
-                                      :muokkaaja (:id user)
-                                      :yllapitokohde yllapitokohde-id
-                                      :urakka urakka-id
-                                      :id id})
+        {:nimi nimi
+         :takaraja (konv/sql-date takaraja)
+         :aloituspvm (konv/sql-date aloituspvm)
+         :muokkaaja (:id user)
+         :yllapitokohde yllapitokohde-id
+         :urakka urakka-id
+         :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user urakka-id valitavoite)))))
 
@@ -100,17 +99,17 @@
   (let [valitavoitteet (filter :valtakunnallinen-id valitavoitteet)]
     (doseq [{:keys [id takaraja nimi] :as valitavoite}
             (filter #(and (id-olemassa? (:id %))
-                          (not (:poistettu %)))
-                    valitavoitteet)]
+                       (not (:poistettu %)))
+              valitavoitteet)]
 
       (q/paivita-urakan-valitavoite! db
-                                     {:nimi nimi
-                                      :takaraja (konv/sql-date takaraja)
-                                      :aloituspvm nil
-                                      :yllapitokohde nil
-                                      :muokkaaja (:id user)
-                                      :urakka urakka-id
-                                      :id id})
+        {:nimi nimi
+         :takaraja (konv/sql-date takaraja)
+         :aloituspvm nil
+         :yllapitokohde nil
+         :muokkaaja (:id user)
+         :urakka urakka-id
+         :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user urakka-id valitavoite)))))
 
