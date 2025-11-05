@@ -145,7 +145,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
 
             // Valitse ensimmäinen hoitovuosi
-            cy.get('[data-cy="hoitokausi-valinta"]').eq(0).within(() => {
+            cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
                 cy.get('button').click({force: true});
                 cy.contains('1. hoitovuosi').click();
             });

@@ -11,15 +11,17 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as muutokset-tiedot]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-johto-ja-hallintokorvaus :as jjh]
-            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]
-            [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as muutokset-tiedot]))
+            [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.yhteiset :as yhteiset]))
 
 (defn kilpailutettavat-hankinnat [e! {:keys [tallennus-kesken? valittu-hoitokausi tarjous kustannussuunnitelma
                                              tulevaisuudessa-arvoja? viimeinen-hoitovuosi? onko-hankinnat-muutoksia?] :as app}]
@@ -491,7 +493,7 @@
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true ero-tarjoukseen)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
      ;; Osalla urakoista kattohinta syötetään käsin.
      (if-not muokkaa-kattohinta-kasin
@@ -524,7 +526,7 @@
 
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
 
      [:div.row {:style {:margin-top "2rem"}}
@@ -548,7 +550,7 @@
         [:div.col-xs-12
          [yleiset/info-laatikko :varoitus vahvistus-virhe nil nil {:sulje-nappi-id (gensym)}]]])]))
 
-(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? valittu-hoitokausi] :as app}]
+(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa?	 valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         urakan-kesto-vuosina (- urakan-loppuvuosi urakan-alkuvuosi)
@@ -566,16 +568,11 @@
                  :line-height "2rem"}}]]]
      [:div.row {:style {:margin-top "1rem"}}
       [:div.col-xs-12.col-md-3 {:style {:padding-left "0"}}
-       [:span.caption-small-strong.alasveto-label "Hoitovuosi"]
-       [yleiset/livi-pudotusvalikko {:valinta (pvm/vuosi (first valittu-hoitokausi))
-                                     :vayla-tyyli? true
-                                     :disabled tallennus-kesken?
-                                     :data-cy "hoitokausi-valinta"
-                                     :valitse-fn #(when (nav/varmista-navigointi-fn :hoitovuoden-vaihto)
-                                                    (e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan %)))
-                                     :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitokaudet "Hoitovuosi")
-                                     :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        hoitokaudet]]]
+       [urakka-valinnat/paivittava-urakkavuosi-tuck
+        @u/valittu-aikavali
+        #(when kust-tiedot/nakymassa?
+           ;; Älä tee turhia kutsuja, jos sivua ei näytetä
+           (e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan))) haku-kaynnissa? false]]]
 
      [kilpailutettavat-hankinnat e! app]
      [rahavaraukset e! app]
