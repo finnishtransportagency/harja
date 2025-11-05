@@ -825,7 +825,24 @@
                               (>= urakan-alkuvuosi 2025)
                               (some (fn [x] (not= (:yhteensa-kk x) 0)) johto-ja-hallintokorvaukset)
                               :else (some (fn [x] (not= (:tuntipalkka x) 0)) johto-ja-hallintokorvaukset)))
-                    (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)]
+                    (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)
+
+        ;; Korjaa johto- ja hallinto osion validointi
+        ;; TODO :: 
+        ;;   Katselmoija, halutaanko vaatia jokaiselle kuukaudelle summa?
+        ;;   Tällä hetkellä, tämä tarkistaa vaan että jollain kuukaudella on validi summa
+        jjh-summat-tyhjia? (every? #(or
+                                      (nil? (:summa %))
+                                      (zero? (:summa %))) johto-ja-hallintokorvaukset)
+
+        puuttuvat (if (and
+                        ;; Jos kaikki summat ovat 0,00
+                        jjh-summat-tyhjia?
+                        ;; Jjh ei ole puuttuvissa 
+                        (not-any? #{"Johto-ja-hallintokorvaukset"} puuttuvat))
+                    ;; Lisää jjh puuttuviin
+                    (conj puuttuvat "Johto-ja-hallintokorvaukset")
+                    puuttuvat)]
     puuttuvat))
 
 (defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]
@@ -851,7 +868,7 @@
                                          urakan-indeksit kustannussuunnitelma urakan-parametrit]
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         ;; Varmista ensin, että annettu käsin syötetty kattohinta on suurempi kuin hoitovuoden alun tavoitehinta
-        hoitovuoden-alun-tavoitehinta (or (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta]) 0)      
+        hoitovuoden-alun-tavoitehinta (or (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta]) 0)
         _ (when (and paivitetty-kattohinta (< paivitetty-kattohinta hoitovuoden-alun-tavoitehinta))
             (throw (IllegalArgumentException. (str "Annettu kattohinta " paivitetty-kattohinta " on pienempi, kuin hoitovuoden alun tavoitehinta: " hoitovuoden-alun-tavoitehinta))))
 

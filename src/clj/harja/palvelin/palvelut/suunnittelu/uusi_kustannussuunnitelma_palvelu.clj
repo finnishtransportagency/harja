@@ -172,7 +172,7 @@
           hoitovuoden-tarjous? (first (filter #(= hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %)) (tarjous-kyselyt/hae-tarjouksen-tiedot db urakka-id)))
           virheet (if hoitovuoden-tarjous?
                     virheet
-                    (conj virheet (str "Hoitovuoden " hoitovuoden-alkuvuosi " tarjous puuttuu. Tietoja ei voida vahvistaa.")))
+                    (conj virheet (str "Hoitovuoden " hoitovuoden-alkuvuosi " tarjous puuttuu.")))
 
           ;; Onko indeksit valmiina
           indeksi-olemassa? (boolean (some #(= hoitovuoden-alkuvuosi (:vuosi %)) urakan-indeksit))
