@@ -268,7 +268,7 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
@@ -317,7 +317,7 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
 
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
@@ -432,7 +432,7 @@
                                                                                                      :odottaa-kannanottoa 0
                                                                                                      :merkitsevat-odottaa-kannanottoa 0}})
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))

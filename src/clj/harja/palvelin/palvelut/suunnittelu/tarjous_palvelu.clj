@@ -33,10 +33,13 @@
     vahvistukset))
 
 (defn koosta-tarjouksen-tiedot [db urakka-id]
-  (let [tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
+  (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
         vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)]
-    (assoc tarjous :vahvistetut-vuodet (into #{}
-                                         (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset)))))))
+    (-> tarjous
+      (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))
+      (assoc :vahvistetut-vuodet (into #{}
+                                   (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))))))
 
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -81,7 +84,7 @@
               (throw (IllegalArgumentException. (str "Tarjousta ei voi enää muokata, koska kustannussuunitelmat on jo vahvistettu."))))
           urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
-          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot)]
+          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot vahvistetut-vuodet)]
       (koosta-tarjouksen-tiedot db urakka-id))))
 
 (defrecord Tarjous []
