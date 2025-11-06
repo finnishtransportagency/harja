@@ -32,6 +32,9 @@
 (defn yksittainen? [lupaus]
   (= "yksittainen" (:lupaustyyppi lupaus)))
 
+(defn kustannusennuste? [lupaus]
+  (= "kustannusennuste" (:lupaustyyppi lupaus)))
+
 (defn hylatyt [vastaukset]
   (filter #(false? (:vastaus %)) vastaukset))
 
@@ -816,3 +819,38 @@
         (filter :odottaa-vastausta?)
         first
         boolean))))
+
+(defn kustannusennuste-maarapaiva-paattely
+  "Palauttaa määräpäivän päättelyyn liittyvät boolean-arvot.
+   
+   Parametrit:
+   - nykyhetki: DateTime - vertailtava nykyinen aika
+   - maarapaiva-pvm: DateTime - määräpäivä
+   - tiedot-syotetty-ajoissa?: boolean - onko tiedot syötetty ennen määräpäivää
+   - disabled?: boolean - ulkoinen disabled-tila (esim. oikeudet)"
+  [nykyhetki maarapaiva-pvm tiedot-syotetty-ajoissa? disabled?]
+  {:pre [(some? nykyhetki)
+         (boolean? disabled?)]}
+  (let [maarapaiva-mennyt-ohi? (and maarapaiva-pvm
+                                    (not (pvm/sama-tai-ennen? nykyhetki maarapaiva-pvm)))
+        
+        ;; Tarkista ovatko kuukaudet ja vuodet eri
+        maarapaivan-kuukausi (when maarapaiva-pvm (pvm/kuukausi maarapaiva-pvm))
+        maarapaivan-vuosi (when maarapaiva-pvm (pvm/vuosi maarapaiva-pvm))
+        nykyinen-kuukausi (pvm/kuukausi nykyhetki)
+        nykyinen-vuosi (pvm/vuosi nykyhetki)
+        
+        ei-maarapaivan-kuukausi? (and maarapaivan-kuukausi maarapaivan-vuosi
+                                      (or (not= nykyinen-kuukausi maarapaivan-kuukausi)
+                                          (not= nykyinen-vuosi maarapaivan-vuosi)))
+        
+        ;; Read-only näkymä vain, jos määräpäivä ohitettu JA tiedot syötetty ajoissa
+        kayta-readonly-nakymaa? (and maarapaiva-mennyt-ohi? tiedot-syotetty-ajoissa?)
+        
+        ;; Yhdistetty disabled-tila - estetään jos väärä kuukausi TAI määräpäivä ohitettu
+        disabled? (or disabled? ei-maarapaivan-kuukausi? maarapaiva-mennyt-ohi?)]
+    
+    {:maarapaiva-mennyt-ohi? maarapaiva-mennyt-ohi?
+     :ei-maarapaivan-kuukausi? ei-maarapaivan-kuukausi?
+     :kayta-readonly-nakymaa? kayta-readonly-nakymaa?
+     :disabled? disabled?}))
