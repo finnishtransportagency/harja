@@ -232,8 +232,8 @@
          [:div.margin-top-16.text-left
           [sulje-nappi e! {:luokka "pull-right"}]]]]]
       
-       ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
-      ei-maarapaivan-kuukausi?
+      ;; Jos ei olla määräpäivän kuukaudessa JA tietoja ei ole syötetty
+      (and ei-maarapaivan-kuukausi? (not tiedot-syotetty-ajoissa?))
       [:div.kustannusennuste-vaara-kuukausi
        [:div.row
         [:div.col-xs-12
@@ -250,6 +250,9 @@
           [sulje-nappi e! {:luokka "pull-right"}]]]]]
 
       ;; Muissa tapauksissa näytetään kentät (joko muokattavina tai read-only)
+      ;; Tämä sisältää tapaukset:
+      ;; - Ollaan määräpäivän kuukaudessa
+      ;; - Tiedot on syötetty ajoissa (näytetään read-only)
       :else
       [:div.kustannusennuste-syottokentit
        ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
