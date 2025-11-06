@@ -19,6 +19,7 @@
 
 ;; Osittain duplikaatti, kunnes vanha kustannussuunnitelma poistetaan
 (defn hae-urakan-indeksikertoimet
+  "Jos teet tähän muutoksia, niin tee samat muutokset budjettisuunnittelu/hae-urakan-indeksikertoimet, kunnes vanha kustannussuunnitelma on poistettu."
   [db urakka-id]
   (jdbc/with-db-transaction [db db]
     (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
@@ -52,7 +53,8 @@
                                                    ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
                                                    ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
                                                    ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
-                                                   :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
+                                                   :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)
+                                                   :indeksikerroin-str (format "%.3f" (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
                                          (hae-indeksi db {:nimi indeksi})))
           urakan-indeksien-maara (count indeksiluvut-urakan-aikana)
           urakan-indeksit (if (= urakan-vuosien-maara urakan-indeksien-maara)
