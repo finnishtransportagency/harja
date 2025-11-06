@@ -50,7 +50,7 @@
   (let [listauksessa? true
         valittu? (and (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))
                    (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {}]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {} app]))
 
 (defn- toteuma-tai-ennuste-luokka [{:keys [pisteet-toteuma]}]
   (cond (and pisteet-toteuma (pos? pisteet-toteuma)) "toteuma-pisteet-positiivnen"
@@ -327,7 +327,7 @@
    [:span.kentan-otsikko "Aseta nykyhetki"]
    [:div.kentta
     [kentat/tee-kentta
-     {:tyyppi :pvm}
+     {:tyyppi :pvm-aika}
      data]]])
 
 (defn testausvalinnat [e! app]
