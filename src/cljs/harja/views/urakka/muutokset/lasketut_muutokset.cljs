@@ -51,7 +51,7 @@
           :pakollinen? true
           :vayla-tyyli? true
           ;; Vektori jossa mappeja,  rakenne -> hae-hoitovuosien-yksikkohinnat
-          :valinnat (into [] aikaisemmat-yksikkohinnat)
+          :valinnat (into [{:valinta "Ei yksikköhintaa" :arvo 0.0M}] aikaisemmat-yksikkohinnat)
           ;; Näytä :valinta -> aikaisemmat-yksikkohinnat
           :valinta-nayta #(:valinta %)
           ;; Täsmää :yksikkohinta valintojen kentän :arvo avaimeen 
@@ -73,8 +73,8 @@
 
 
 (defn lasketut-muutokset [e!
-                           {:keys [tehtava-maaramuutokset
-                                   valittu-modal-tehtava haku-kaynnissa?] :as app}]
+                          {:keys [tehtava-maaramuutokset
+                                  valittu-modal-tehtava haku-kaynnissa?] :as app}]
 
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :lasketut-muutokset
@@ -102,15 +102,9 @@
          ;; Tälle passataan valittu rivi / valittu tehtävä 
          [aseta-yksikkohinta-modal e! app valittu-modal-tehtava]
 
-         (when haku-kaynnissa?
-           [:div.lasketut-muutokset-grid-haku
-            [ajax-loader-pieni "Haku käynnissä..."]])
-
          ;; Tehtävä ja määrämuutos taulukko 
          [grid/grid
           {:tunniste :id
-           ;; Annetaan tälle sivutus, voi olla paljon tehtäviä 
-           :sivuta 20
            :voi-kumota? false
            :voi-lisata? false
            :piilota-toiminnot? true
@@ -164,13 +158,16 @@
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
             :tyyppi :numero
+            ;; Näyttää desimaalit vain tarvittaessa
+            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Kirjattu määrä"
+           {:otsikko "Toteutunut määrä"
             :nimi :maara
             :tyyppi :numero
+            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
@@ -178,11 +175,15 @@
            {:otsikko "Määrämuutos (+/-)"
             :nimi :maaramuutos
             :tyyppi :numero
+            :fmt (fn [maaramuutos]
+                   (if (> maaramuutos 0)
+                     (str "+" (fmt/desimaaliluku-opt maaramuutos 0 2 true))
+                     (fmt/desimaaliluku-opt maaramuutos 0 2 true)))
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Kirjatut kulut (€)"
+           {:otsikko "Kohdistetut kulut (€)"
             :nimi :kirjatut_kulut_summa
             :tyyppi :numero
             :fmt fmt/euro-opt
@@ -190,7 +191,7 @@
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Yksikkö-hinta (€)"
+           {:otsikko "Yksikköhinta (€)"
             :nimi :yksikkohinta
             :tyyppi :numero
             :fmt fmt/euro-opt
@@ -201,7 +202,10 @@
            {:otsikko "Tavoitehinnan muutos (€)"
             :nimi :tavoitehinnan_muutos
             :tyyppi :euro
-            :fmt (fn [v r] (if (:valiotsikko r) v (fmt/euro-opt v)))
+            :fmt (fn [v r]
+                   (if (:valiotsikko r)
+                     v
+                     (fmt/euro-opt true true v)))
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
             ;; Annetaanko kirjata tavoitehinta päätellään takapäässä

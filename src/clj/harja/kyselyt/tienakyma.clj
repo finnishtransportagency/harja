@@ -24,7 +24,7 @@
                     (mapv #(konv/pgobject->map %
                                                :id :long
                                                :kuvaus :string
-                                               :suoritettu :date)
+                                               :suoritettu :datetime)
                           korjaavat))))
         #(konv/array->vec % :korjaavattoimenpiteet)))
 

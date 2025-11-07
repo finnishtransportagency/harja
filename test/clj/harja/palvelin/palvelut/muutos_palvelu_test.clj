@@ -3,6 +3,7 @@
             [clojure.test :refer :all]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
 
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
@@ -175,7 +176,8 @@
 
     ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
-    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+    (is (= {2021 false 2022 false 2023 false 2024 false 2025 false}
+          (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
 
     (is (= 1374.0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
@@ -206,7 +208,8 @@
     ;; TODO: Hoidetaan testidataan Iin tai Suomussalmen urakalle vahvistettu tavoitehinta, jotta saadaan tämäkin
     ;;       testattua kunnolla (toinen urakka riittää, ei tarvi molempiin), ja UI:ssa näkyisi jotain järkevää suoraan
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
-    (is (= {} (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
+    (is (= {2024 false 2025 false 2026 false 2027 false 2028 false}
+          (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
     ;; TODO: Eikä urakalla ole myöskään indeksiä vuodelle 2026, joten ei voida laskea indeksikorjauksia
     (is (= 0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
@@ -605,25 +608,19 @@
                 ;; Bumpataan versiota, jotta nähdään asettuuko odotettujen rivien versio samaan versioon kuin äiti-muutoksen
                 :versio 2 :tyyppi "pysyva" :liite-idt #{}}
         ;; Payload muodossa mikä tulisi UI-lomakkeelta osana muuta muutosdataa
-        kustannusvaikutus-payload [{:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1111, :hoitokauden_alkuvuosi 2025}
-                                   {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 2222, :hoitokauden_alkuvuosi 2026}
-                                   {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 3333, :hoitokauden_alkuvuosi 2027}
-                                   {:summa 555, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025}
-                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026}
-                                   {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027}
+        kustannusvaikutus-payload [{:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025}
+                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026}
+                                   {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027}
                                    ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
                                    ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on voimassa jollakin joukolla
                                    ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
-                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2028}]
+                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
-                           {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1111, :hoitokauden_alkuvuosi 2025 :versio 2}
-                           {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 2222, :hoitokauden_alkuvuosi 2026 :versio 2}
-                           {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 3333, :hoitokauden_alkuvuosi 2027 :versio 2}
-                           {:summa 555, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025 :versio 2}
-                           {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026 :versio 2}
-                           {:summa 333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2027 :versio 2}
+                           {:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025, :versio 2}
+                           {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026, :versio 2}
+                           {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027, :versio 2}
                            ;; Tämän rivin pitäisi jäädä ennalleen alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
-                           {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2028 :versio 1})
+                           {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028 :versio 1})
         _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload false)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
@@ -861,6 +858,342 @@
           historirivit-toisen-updaten-jalkeen) "Historiassa on kaksi riviä toisen updaten jälkeen")))
 
 
+;; -- Lukitun hoitovuoden testit --
+
+(deftest pysyvan-muutoksen-tallennus-kun-hoitovuosi-lukittu-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        hoitokausi-nro 2
+
+        muutos-payload {:tyyppi "pysyva"
+                        ;; Tallennetaan pysyvä muutos voimassa-alkaen vuodelle 2024, ja tarkastellaan lukituksen vaikutusta
+                        ;; vain "kokonaisten hoitovuosien" osalta, eli 2025-2026 jne.
+                        :voimassa_alkaen #inst "2024-10-01T10:07:32.000-00:00",
+                        :syy "Alkuperäinen syy",
+                        :nimi "Pysyvä muutos Suomussalmelle"
+                        :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 10, :hoitokauden_alkuvuosi 2025}
+                                             {:tehtava 2988, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
+                                             {:tehtava 2989, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
+                                             {:tehtava 2991, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
+                                             {:tehtava 3117, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
+                                             {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
+                                             {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}],
+                        :kustannusvaikutukset [{:summa 1000, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                               {:summa 1111, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                               {:summa 2222, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                               {:summa 2222, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                               {:summa 3333, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}
+                                               {:summa 333, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}]}
+        max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM mhu_muutos;"))
+
+        ;; Haettava "aiempien hoitovuosien pysyvät muutokset", koska voimassa alkaen on asetettu vuodelle 2024, eli ennen valittua hoitokautta 2025-2026
+        vastaus-tallennuksen-jalkeen
+        (first (filter #(= "Pysyvä muutos Suomussalmelle" (:nimi %))
+                 (:aiempien-hoitovuosien-pysyvat-muutokset
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :tallenna-muutos
+                     +kayttaja-jvh+
+                     {:urakka-id urakka-id
+                      :valittu-hoitokausi valittu-hoitokausi
+                      :muutos muutos-payload}))))
+        odotetut-tallennuksen-jalkeen {:alityyppi nil
+                                       :id (inc max-id-ennen-tallennusta)
+                                       :jjh-muutosten-summa nil
+                                       :kulu_kohdistus nil
+                                       :kustannusvaikutukset (list
+                                                               {:hoitokauden_alkuvuosi 2025
+                                                                :kustannuslaji "hankintakustannukset"
+                                                                :summa 1000
+                                                                :toimenpideinstanssi 129
+                                                                :versio 1}
+                                                               {:hoitokauden_alkuvuosi 2025
+                                                                :kustannuslaji "hankintakustannukset"
+                                                                :summa 1111
+                                                                :toimenpideinstanssi 132
+                                                                :versio 1})
+                                       :liitteet nil
+                                       :luonnos nil
+                                       :nimi "Pysyvä muutos Suomussalmelle"
+                                       :syy "Alkuperäinen syy"
+                                       :tavoitehinnan-muutos 2111
+                                       :tavoitehinnan-muutos-indeksikorjattu 2345.321
+                                       :tehtavat_ja_maarat (list
+                                                             {:edellinen_maara nil
+                                                              :hoitokauden_alkuvuosi 2025
+                                                              :maaramuutos 10
+                                                              :suunniteltu_maara 0
+                                                              :tehtava 1448
+                                                              :uusi_maara nil
+                                                              :versio 1}
+                                                             {:edellinen_maara nil
+                                                              :hoitokauden_alkuvuosi 2025
+                                                              :maaramuutos 111
+                                                              :suunniteltu_maara 0
+                                                              :tehtava 2988
+                                                              :uusi_maara nil
+                                                              :versio 1}
+                                                             {:edellinen_maara nil
+                                                              :hoitokauden_alkuvuosi 2025
+                                                              :maaramuutos 111
+                                                              :suunniteltu_maara 0
+                                                              :tehtava 3117
+                                                              :uusi_maara nil
+                                                              :versio 1})
+                                       :tyyppi "pysyva"
+                                       :urakka 45
+                                       :versio 1
+                                       :voimassa_alkaen #inst"2024-09-30T21:00:00.000-00:00"}
+        ;; - Nyt lukitaan yksi hoitovuosista vahvistamalla sen tavoitehinta - Hoitovuosi 2025-2026
+        ;; Lisätään urakalle sopiva tavoitehinta valmiiksi vahvistettuna - Poistetaan olemassa oleva, jos sellaisia on
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id 2))
+        insert-str (format (str
+                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
+                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
+                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id hoitokausi-nro 10 10 10 10)
+        _ (u insert-str)
+        muutos-update-payload-1 {:id (inc max-id-ennen-tallennusta)
+                                 :tyyppi "pysyva"
+                                 :voimassa_alkaen (:voimassa_alkaen vastaus-tallennuksen-jalkeen),
+                                 :syy "Muokkaus 1, yritetään muokata myös lukittua hoitovuotta 2025",
+                                 :nimi "Pysyvä muutos Suomussalmelle"
+                                 ;; Lukittujen hoitovuosien määrämuutokset ja kustannusvaikutukset pitäisi jättää huomiotta tallentaessa,
+                                 ;; kaikkien muiden hoitovuosien osalta ne tallennetaan normaalisti
+                                 :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 10000, :hoitokauden_alkuvuosi 2025}
+                                                      {:tehtava 2988, :maaramuutos 20000, :hoitokauden_alkuvuosi 2025}
+                                                      {:tehtava 3117, :maaramuutos 30000, :hoitokauden_alkuvuosi 2025}
+                                                      {:tehtava 2989, :maaramuutos 1, :hoitokauden_alkuvuosi 2026}
+                                                      {:tehtava 3117, :maaramuutos 1, :hoitokauden_alkuvuosi 2026}
+                                                      {:tehtava 2991, :maaramuutos 1, :hoitokauden_alkuvuosi 2027}
+                                                      {:tehtava 3117, :maaramuutos 1, :hoitokauden_alkuvuosi 2027}],
+                                 :kustannusvaikutukset [{:summa 10000, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                        {:summa 20000, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                        {:summa 1, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                        {:summa 1, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                        {:summa 1, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}
+                                                        {:summa 1, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}]}
+
+        ;; Yritetään päivittää pysyvää muutosta
+        ;; Haettava "aiempien hoitovuosien pysyvät muutokset", koska voimassa alkaen on asetettu vuodelle 2024, eli ennen valittua hoitokautta 2025-2026
+        vastaus-updaten-jalkeen
+        (first (filter #(= "Pysyvä muutos Suomussalmelle" (:nimi %))
+                 (:aiempien-hoitovuosien-pysyvat-muutokset
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :tallenna-muutos
+                     +kayttaja-jvh+
+                     {:urakka-id urakka-id
+                      :valittu-hoitokausi valittu-hoitokausi
+                      :muutos muutos-update-payload-1}))))
+
+        odotetut-updaten-jalkeen {:alityyppi nil
+                                  :id 11
+                                  :jjh-muutosten-summa nil
+                                  :kulu_kohdistus nil
+                                  :kustannusvaikutukset (list
+                                                          {:hoitokauden_alkuvuosi 2025
+                                                           :kustannuslaji "hankintakustannukset"
+                                                           :summa 1000
+                                                           :toimenpideinstanssi 129
+                                                           :versio 1}
+                                                          {:hoitokauden_alkuvuosi 2025
+                                                           :kustannuslaji "hankintakustannukset"
+                                                           :summa 1111
+                                                           :toimenpideinstanssi 132
+                                                           :versio 1})
+                                  :liitteet nil
+                                  :luonnos nil
+                                  :nimi "Pysyvä muutos Suomussalmelle"
+                                  :syy "Muokkaus 1, yritetään muokata myös lukittua hoitovuotta 2025"
+                                  :tavoitehinnan-muutos 2111
+                                  :tavoitehinnan-muutos-indeksikorjattu 2345.321
+                                  :tehtavat_ja_maarat (list
+                                                        {:edellinen_maara nil
+                                                         :hoitokauden_alkuvuosi 2025
+                                                         :maaramuutos 10
+                                                         :suunniteltu_maara 0
+                                                         :tehtava 1448
+                                                         :uusi_maara nil
+                                                         :versio 1}
+                                                        {:edellinen_maara nil
+                                                         :hoitokauden_alkuvuosi 2025
+                                                         :maaramuutos 111
+                                                         :suunniteltu_maara 0
+                                                         :tehtava 2988
+                                                         :uusi_maara nil
+                                                         :versio 1}
+                                                        {:edellinen_maara nil
+                                                         :hoitokauden_alkuvuosi 2025
+                                                         :maaramuutos 111
+                                                         :suunniteltu_maara 0
+                                                         :tehtava 3117
+                                                         :uusi_maara nil
+                                                         :versio 1})
+                                  :tyyppi "pysyva"
+                                  :urakka 45
+                                  :versio 2
+                                  :voimassa_alkaen #inst"2024-09-30T21:00:00.000-00:00"}
+        vuoden-2026-muutokset (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                       :valittu-hoitokausi [(pvm/->pvm "1.10.2026") (pvm/->pvm "30.09.2027")]})
+        ;; Haettava "aiempien hoitovuosien pysyvät muutokset", koska voimassa alkaen on asetettu vuodelle 2024, eli ennen valittua hoitokautta 2026-2027
+        vuoden-2026-muutokset (first (filter #(= "Pysyvä muutos Suomussalmelle" (:nimi %))
+                                       (:aiempien-hoitovuosien-pysyvat-muutokset
+                                         vuoden-2026-muutokset)))
+        odotetut-vuodella-2026 {:kustannusvaikutukset (list
+                                                        {:hoitokauden_alkuvuosi 2026
+                                                        :kustannuslaji "hankintakustannukset"
+                                                        :summa 1
+                                                        :toimenpideinstanssi 129
+                                                        :versio 2}
+                                                       {:hoitokauden_alkuvuosi 2026
+                                                        :kustannuslaji "hankintakustannukset"
+                                                        :summa 1
+                                                        :toimenpideinstanssi 132
+                                                        :versio 2})
+                                :tavoitehinnan-muutos 2
+                                :tehtavat_ja_maarat (list
+                                                      {:edellinen_maara nil
+                                                      :hoitokauden_alkuvuosi 2026
+                                                      :maaramuutos 1
+                                                      :suunniteltu_maara 0
+                                                      :tehtava 2989
+                                                      :uusi_maara nil
+                                                      :versio 2}
+                                                     {:edellinen_maara nil
+                                                      :hoitokauden_alkuvuosi 2026
+                                                      :maaramuutos 1
+                                                      :suunniteltu_maara 0
+                                                      :tehtava 3117
+                                                      :uusi_maara nil
+                                                      :versio 2})}]
+
+    (is (= vastaus-tallennuksen-jalkeen odotetut-tallennuksen-jalkeen) "Pysyvä muutos tallennuksen jälkeen")
+    (is (= vastaus-updaten-jalkeen odotetut-updaten-jalkeen) "Pysyvä muutos updaten jälkeen, tiedot lukitulla hoitovuodella 2025-2026 eivät saa muuttua")
+    ;; Tarkastetaan, että vuoden 2026 tiedot muuttuvat normaalisti, koska hoitovuosi 2026-2027 ei ole lukittu
+    (is (= (select-keys vuoden-2026-muutokset [:kustannusvaikutukset :tavoitehinnan-muutos :tehtavat_ja_maarat])
+          odotetut-vuodella-2026)
+          "Pysyvä muutos haettuna vuodelle 2026-2027, jossa ei ole lukitusta")
+
+    ;; Siivotaan testidatan muutokset
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))))
+
+;; -- PÄÄTTYY - Lukitun hoitovuoden testit --
+
+;; -- Pysyvän muutoksen voimassa_alkaen -päivämäärän lukituksen testit --
+(deftest pysyvan-muutoksen-voimassa-alkaen-kun-hoitovuosi-lukittu-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        hoitokausi-nro 2
+
+        ;; Lisätään urakalle sopiva tavoitehinta valmiiksi vahvistettuna - Poistetaan olemassa oleva, jos sellaisia on
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))
+        insert-str (format (str
+                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
+                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
+                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id hoitokausi-nro 10 10 10 10)
+        _ (u insert-str)]
+
+    (testing "Uuden pysyvän muutoksen voi tallentaa, vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [muutos-payload {:tyyppi "pysyva"
+                            :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00",
+                            :syy "Pysyvä muutos, jokin hoitovuosista on lukittu",
+                            :nimi "Pysyvä muutos Suomussalmelle"
+                            :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 10, :hoitokauden_alkuvuosi 2025}
+                                                 {:tehtava 2991, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
+                                                 {:tehtava 3117, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
+                                                 {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
+                                                 {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}],
+                            :kustannusvaikutukset [{:summa 1000, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                   {:summa 1111, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                   {:summa 2222, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                   {:summa 2222, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                   {:summa 3333, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}
+                                                   {:summa 333, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}]}
+
+            vastaus
+            (try
+              (first (filter #(= "Pysyvä muutos Suomussalmelle" (:nimi %))
+                       (:kirjatut-muutokset
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-muutos
+                           +kayttaja-jvh+
+                           {:urakka-id urakka-id
+                            :valittu-hoitokausi valittu-hoitokausi
+                            :muutos muutos-payload}))))
+              (catch Exception e
+                (log/error e)
+                (ex-data e)))]
+        (is (= (:nimi vastaus) "Pysyvä muutos Suomussalmelle")) "Pysyvä muutos tallennettiin onnistuneesti"))
+
+    (testing "Pysyvän muutoksen voimassa_alkaen -päivämäärää ei voi muuttaa, kun jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [;; Haetaan testidatassa oleva pysyvä muutos
+            muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND tyyppi = 'pysyva' AND nimi = 'Päällysteen paikkausmuutos';"))
+            alkuperainen-voimassa-alkaen (ffirst (q "SELECT voimassa_alkaen FROM mhu_muutos WHERE id = " muutos-id ";"))
+
+            _ (println "Alkuperäinen voimassa_alkaen:" alkuperainen-voimassa-alkaen)
+
+            uusi-pvm #inst "2025-11-01T10:00:00.000-00:00"
+            muutos-uusi-pvm {:id muutos-id
+                             :versio 1
+                             :tyyppi "pysyva"
+                             :nimi "Päällysteen paikkausmuutos"
+                             :syy "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot."
+                             :voimassa_alkaen uusi-pvm
+                             :kustannusvaikutukset []
+                             :tehtavat_ja_maarat []}
+
+            ;; Tallennuksen pitäisi epäonnistua
+            virhe (try
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-muutos
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :valittu-hoitokausi valittu-hoitokausi
+                       :muutos muutos-uusi-pvm})
+                    (catch Exception e
+                      (println "Virhedata:" (ex-data e))
+                      (ex-data e)))]
+
+        (is (= :harja.palvelin.integraatiot.api.tyokalut.virheet/sisainen-kasittelyvirhe
+              (some-> virhe :virheet first :koodi))
+          "Tallennus epäonnistui sisäisellä käsittelyvirheellä")))
+
+    (testing "Pysyvän muutoksen muita kenttiä voi muuttaa vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [;; Haetaan testidatassa oleva pysyvä muutos
+            muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND tyyppi = 'pysyva' AND nimi = 'Päällysteen paikkausmuutos';"))
+            alkuperainen-voimassa-alkaen (ffirst (q "SELECT voimassa_alkaen FROM mhu_muutos WHERE id = " muutos-id ";"))
+
+            muutos {:id muutos-id
+                    :versio 1
+                    :tyyppi "pysyva"
+                    :nimi "Päällysteen paikkausmuutos"
+                    :syy "Päivitetty syy testissä"
+                    ;; Sama voimassa_alkaen -päivämäärä kuin ennen
+                    :voimassa_alkaen alkuperainen-voimassa-alkaen
+                    :kustannusvaikutukset []
+                    :tehtavat_ja_maarat []}
+
+            ;; Päivitetään muutoksen syytä (ei voimassa_alkaen -päivämäärää)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-muutos
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :valittu-hoitokausi valittu-hoitokausi
+                       :muutos muutos})
+
+            paivitetty-muutos (first (filter #(= muutos-id (:id %)) (:kirjatut-muutokset vastaus)))]
+
+        ;; Tarkistetaan että päivitys onnistui
+        (is (some? paivitetty-muutos) "Muutos löytyy vastauksesta")
+        (is (= (:syy paivitetty-muutos) "Päivitetty syy testissä") "Syy päivittyi")
+        (is (= (:voimassa_alkaen paivitetty-muutos) alkuperainen-voimassa-alkaen)
+          "voimassa_alkaen -päivämäärä pysyi samana")))
+
+    ;; Siivotaan testidatan muutokset
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))))
+
+;; -- PÄÄTTYY - Pysyvän muutoksen voimassa_alkaen -päivämäärän lukituksen testit --
+
 
 ;; Suomussalmi on urakka, jossa pysyviä muutoksia saadaan useammalle hoitovuodelle 2025-2029
 (deftest hae-yksittaisen-muutoksen-tiedot-lomakkeelle-suomussalmi-pysyva-muutos
@@ -915,22 +1248,22 @@
                                                                                {:hoitokauden_alkuvuosi 2025
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :summa 1000
-                                                                                :toimenpideinstanssi 132
+                                                                                :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2026
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :summa 1000
-                                                                                :toimenpideinstanssi 132
+                                                                                :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2027
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :summa 1000
-                                                                                :toimenpideinstanssi 132
+                                                                                :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2028
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :summa 1000
-                                                                                :toimenpideinstanssi 132
+                                                                                :toimenpideinstanssi 125
                                                                                 :versio 1})
                                                        :tehtavat_ja_maarat (list
                                                                              {:edellinen_maara 1000
@@ -1104,30 +1437,30 @@
           max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
           muutos-luonnin-jalkeen (first (filter #(= muutos-nimi-insert (:nimi %))
                                           (:kirjatut-muutokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :tallenna-muutos
+                                                                 :tallenna-muutos
                                                                  +kayttaja-jvh+
-                                          {:urakka-id urakka-id
-                                           :valittu-hoitokausi valittu-hoitokausi
-                                           :muutos muutos-payload}))))
+                                                                 {:urakka-id urakka-id
+                                                                  :valittu-hoitokausi valittu-hoitokausi
+                                                                  :muutos muutos-payload}))))
           odotettu-luonnin-jalkeen {:id 11
-                                :versio 1
-                                :voimassa_alkaen #inst"2025-10-24T21:00:00.000-00:00"
-                                :urakka 45
-                                :tyyppi "muutostyo"
-                                :alityyppi :erillisrahoitus
-                                :jjh-muutosten-summa nil
-                                :kulu_kohdistus nil
-                                :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
-                                                        :kustannuslaji "erillishankinnat"
-                                                        :summa 5000
-                                                        :toimenpideinstanssi nil
-                                                        :versio 1})
-                                :liitteet nil
-                                :luonnos nil
-                                :nimi "Erillisrahoitettu1"
-                                :syy "Erillisrahoitettu testimuutos"
-                                :tavoitehinnan-muutos 5000
-                                :tehtavat_ja_maarat ()}
+                                    :versio 1
+                                    :voimassa_alkaen #inst"2025-10-24T21:00:00.000-00:00"
+                                    :urakka 45
+                                    :tyyppi "muutostyo"
+                                    :alityyppi :erillisrahoitus
+                                    :jjh-muutosten-summa nil
+                                    :kulu_kohdistus nil
+                                    :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
+                                                                 :kustannuslaji "erillishankinnat"
+                                                                 :summa 5000
+                                                                 :toimenpideinstanssi nil
+                                                                 :versio 1})
+                                    :liitteet nil
+                                    :luonnos nil
+                                    :nimi "Erillisrahoitettu1"
+                                    :syy "Erillisrahoitettu testimuutos"
+                                    :tavoitehinnan-muutos 5000
+                                    :tehtavat_ja_maarat ()}
           ;; Sitten päivitetään samaa muutosta, jolloin tulee rivi historiatietoon...
           muutos-syy-update-1 "Erillisrahoitettu testimuutos päivitetty 1"
           muutos-update-payload-1 (assoc muutos-payload
@@ -1180,11 +1513,11 @@
       ;; Heitetään virhe, jos yritetään tallentaa muutostyötä, joka ei kohdistu valittuun hoitokauteen
       (is (thrown? Exception
             (kutsu-palvelua (:http-palvelin jarjestelma)
-                               :tallenna-muutos
-                               +kayttaja-jvh+
-                               {:urakka-id urakka-id
-                                :valittu-hoitokausi valittu-hoitokausi
-                                :muutos muutos-payload}))))))
+              :tallenna-muutos
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :valittu-hoitokausi valittu-hoitokausi
+               :muutos muutos-payload}))))))
 
 ;; ----
 
@@ -1192,13 +1525,13 @@
 ;; -- Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset ----
 
 (defn- hae-maaramuutos-alkutiedot []
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitokaudet (mapv (fn [vuosi]
                             [(pvm/hoitokauden-alkupvm vuosi)
                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
-                      (range 2021 2026))
+                      (range 2025 2030))
 
-        valittu-hoitokausi (last hoitokaudet)
+        valittu-hoitokausi (nth hoitokaudet 3)
         hae-maaramuutokset-fn #(kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-tehtava-maaramuutokset
                                  +kayttaja-jvh+
@@ -1206,7 +1539,8 @@
 
         maaramuutokset (hae-maaramuutokset-fn {:urakka-id urakka-id
                                                :hoitokaudet hoitokaudet
-                                               :valittu-hoitokausi valittu-hoitokausi})
+                                               :valittu-hoitokausi valittu-hoitokausi
+                                               :laskenta-automatiikka? true})
         ;; Bäkkärissä lisätään gridiin väliotsikot 
         ;; otetaan ne pois, palautetaan raaka data 
         maaramuutokset-ei-valiotsikoita (filter #(not (:valiotsikko %)) maaramuutokset)]
@@ -1215,16 +1549,17 @@
 
 
 (defn- tallenna-maaramuutokset [rivi tallenna-yksikkohinta?]
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitokaudet (mapv (fn [vuosi]
                             [(pvm/hoitokauden-alkupvm vuosi)
                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
-                      (range 2021 2026))
-        valittu-hoitokausi (last hoitokaudet)
+                      (range 2025 2030))
+        valittu-hoitokausi (nth hoitokaudet 3)
 
         params {:urakka-id urakka-id
                 :hoitokaudet hoitokaudet
-                :valittu-hoitokausi valittu-hoitokausi}
+                :valittu-hoitokausi valittu-hoitokausi
+                :laskenta-automatiikka? true}
 
         ;; Testataan molemmant endpointit tällä 
         ;; Ainoa mikä parametreissa muuttuu, on rivi 
@@ -1286,11 +1621,11 @@
 
     (testing "Reunapaalujen uusiminen vastaa testidataa"
       (is (= suunniteltu 6M))
-      (is (= kulut 255M))
+      (is (= kulut 355M))
       (is (= toteumat 10M))
       (is (= maaramuutos 4M))
-      (is (= tav-hinta-muutos 102.0M))
-      (is (= yksikkohinta 25.5M)))))
+      (is (= tav-hinta-muutos 142.0M))
+      (is (= yksikkohinta 35.5M)))))
 
 
 (deftest hae-tehtava-maaramuutokset-logiikka-toimii
@@ -1307,8 +1642,8 @@
 
         lisatty-kulu 77777
         lisatty-toteuma 10
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        sopimus-id (hae-kajaani-hoitourakan-2025-2030-sopimus-id)
 
         ;; Lisää toteuma 
         _ (i (format
@@ -1320,7 +1655,7 @@
                 ) 
                 VALUES (
                 %s, 'harja-ui'::lahde, %s, %s, 
-                '2025-11-30 17:00:00.000000', '2025-11-30 17:00:00.000000', '2025-11-30 18:05:00.000000', 
+                '2028-11-30 17:00:00.000000', '2028-11-30 17:00:00.000000', '2028-11-30 18:05:00.000000', 
                 NULL, NULL, 'kokonaishintainen', '[Muutokset] Määrämitattava toteuma 1'
                 );"
                (:id +kayttaja-jvh+) urakka-id sopimus-id))
@@ -1331,7 +1666,7 @@
                 ) 
                 VALUES (
                 %s, (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
-                '2025-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1'
+                '2028-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1'
                 );"
                (:id +kayttaja-jvh+) tehtava_id lisatty-toteuma urakka-id))
 
@@ -1344,13 +1679,13 @@
                 laskun_numero, lisatieto, koontilaskun_kuukausi
                 ) 
                 VALUES ( 
-                %s, '2026-06-01', %s,
-                '2025-09-01 14:18:52.450004', %s, NULL, NULL, false,
-                NULL, '[Muutokset] Määrämitattava', 'kesakuu/5-hoitovuosi'
+                %s, '2029-06-01', %s,
+                '2028-09-01 14:18:52.450004', %s, NULL, NULL, false,
+                NULL, '[Muutokset] Määrämitattava', 'kesakuu/4-hoitovuosi'
                 );"
                lisatty-kulu urakka-id (:id +kayttaja-jvh+)))
 
-        toimenpide-instanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Liikenneympäristön hoito TP")
+        toimenpide-instanssi (hae-toimenpideinstanssi-id-nimella "POP MHU Kajaani 2025-2030 Liikenneympäristön hoito TP")
         tehtavaryhma (ffirst (q "select id from tehtavaryhma where yksiloiva_tunniste = '87a3bd38-ae0a-4c74-ad0d-38a6d5d512ad'"))
 
         _ (i (format
@@ -1361,9 +1696,9 @@
                 lisatyon_lisatieto, rahavaraus_id, tyyppi, tavoitehintainen,tehtava 
                 ) 
                 VALUES ( 
-                0, (SELECT id FROM kulu WHERE kokonaissumma = %s AND erapaiva = '2026-06-01'),
+                0, (SELECT id FROM kulu WHERE kokonaissumma = %s AND erapaiva = '2029-06-01'),
                 %s, %s, %s, 'kokonaishintainen',
-                '2025-09-01 14:18:52.450', %s, NULL, NULL, false,
+                '2028-09-01 14:18:52.450', %s, NULL, NULL, false,
                 NULL, NULL, 'hankintakulu', true, %s
                 );"
                lisatty-kulu lisatty-kulu
@@ -1417,6 +1752,8 @@
         ;; --------------------------------------------------------
         ;; Haetut 
         opastetaulun-uusiminen (second maaramuutokset)
+
+        _ (println "\n opastetaulun-uusiminen :: " opastetaulun-uusiminen)
         suunniteltu (-> opastetaulun-uusiminen :suunniteltu_maara)
         kulut (-> opastetaulun-uusiminen :kirjatut_kulut_summa)
         toteumat (-> opastetaulun-uusiminen :maara)

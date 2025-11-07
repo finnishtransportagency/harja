@@ -210,20 +210,20 @@
         :paivystajat
         (fn [paivystajat]
           (mapv
-            #(konversio/pgobject->map % :aloitus :date :lopetus :date :nimi :string)
+            #(konversio/pgobject->map % :aloitus :datetime :lopetus :datetime :nimi :string)
             (konversio/pgarray->vector paivystajat))))
       (update
         :tyonjohtajat
         (fn [tyonjohtajat]
           (mapv
-            #(konversio/pgobject->map % :aloitus :date :lopetus :date :nimi :string)
+            #(konversio/pgobject->map % :aloitus :datetime :lopetus :datetime :nimi :string)
             (konversio/pgarray->vector tyonjohtajat))))
       (update
         :saa-asemat
         (fn [saasemat]
           (group-by :aseman_tunniste (mapv
                                        #(konversio/pgobject->map %
-                                          :havaintoaika :date :aseman_tunniste :string :aseman_tietojen_paivityshetki :date,
+                                          :havaintoaika :datetime :aseman_tunniste :string :aseman_tietojen_paivityshetki :datetime,
                                           :ilman_lampotila :double, :tien_lampotila :double, :keskituuli :long,
                                           :sateen_olomuoto :double, :sadesumma :long)
                                        (konversio/pgarray->vector saasemat)))))
@@ -231,13 +231,13 @@
         :poikkeussaat
         (fn [poikkeussaat]
           (mapv
-            #(konversio/pgobject->map % :havaintoaika :date :paikka :string :kuvaus :string)
+            #(konversio/pgobject->map % :havaintoaika :datetime :paikka :string :kuvaus :string)
             (konversio/pgarray->vector poikkeussaat))))
       (update
         :kalustot
         (fn [kalustot]
           (mapv
-            #(konversio/pgobject->map % :aloitus :date :lopetus :date :tyokoneiden_lkm :long :lisakaluston_lkm :long)
+            #(konversio/pgobject->map % :aloitus :datetime :lopetus :datetime :tyokoneiden_lkm :long :lisakaluston_lkm :long)
             (konversio/pgarray->vector kalustot))))
       ;; Päivitetään kalustolle vielä mahdolliset tehtävät
       (update

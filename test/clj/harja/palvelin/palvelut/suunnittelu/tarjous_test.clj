@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -9,6 +10,7 @@
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]))
 
@@ -22,6 +24,9 @@
           :budjetoidut-tyot (component/using
                               (bs/->Budjettisuunnittelu)
                               [:http-palvelin :db])
+          :uusi-kustannussuunnitelma (component/using
+                                       (kust-palvelu/->UusiKustannussuunnitelmaPalvelu)
+                                       [:http-palvelin :db])
           :tarjous (component/using
                      (tarjous-palvelu/->Tarjous)
                      [:http-palvelin :db])))))
@@ -57,7 +62,7 @@
         ;; Poistetaan yhteensä rivi
         tarjousrivit (filter #(not= "yhteensa" (:osio %)) tarjousrivit)
         ;; Lisätään uusi yhteensä rivi
-        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit})]
+        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit} false)]
     tarjous))
 
 (defn ota-toimenkuvat-ja-poista-id [tarjous]
@@ -72,7 +77,8 @@
         kayttaja-id (:id +kayttaja-jvh+)
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019)
+        vahvistetut-vuodet #{}
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019 vahvistetut-vuodet)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")]
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))))
 
@@ -88,7 +94,8 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantarahavaraukset (q-map (format "SELECT * from tarjous_kustannukset
                                                  WHERE osio = 'tavoitehintaiset-rahavaraukset'
@@ -110,7 +117,8 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         ;; Tallenna tarjous kantaan
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         ;; Hae tarjous tietokannasta
         tarjousdb (tarjous-kyselyt/hae-tarjous db urakka-id)
         tarjous-rivit-tietokannasta (filter #(contains? #{"tavoitehintaiset-rahavaraukset"} (:osio %)) (:tarjous tarjousdb))]
@@ -140,7 +148,8 @@
                                                    {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
                                                     :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}]))))
         ;; Tallenna tarjous kantaan
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         ;; Hae tarjous tietokannasta
         tarjousdb (tarjous-kyselyt/hae-tarjous db urakka-id)
         tarjoukset-tietokannasta (filter #(contains? #{"tavoitehintaiset-rahavaraukset" "erillishankinnat" "hoidonjohtopalkkio" "hankintakustannukset"} (:osio %)) (:tarjous tarjousdb))]
@@ -175,7 +184,8 @@
                                                           vuodet)})
                             hankinnat)}
 
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantakustannukset (q-map (format "SELECT * from tarjous_kustannukset
                                                  WHERE osio IN ('hankintakustannukset', 'erillishankinnat', 'hoidonjohtopalkkio')
@@ -202,7 +212,8 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (generoi-toimenkuville-vuosisummat johto-ja-hallintokorvaukset vuodet)
 
-        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantajohto-ja-hallintokorvaukset (q-map (format "SELECT * from tarjous_johto_ja_hallintokorvaus
                                                  WHERE osio = 'johto-ja-hallintokorvaus'
@@ -230,8 +241,8 @@
                                     {:nimi "Viherhoidosta vastaava henkilö", :toimenkuva "viherhoidosta vastaava henkilö" :osio "johto-ja-hallintokorvaus" :toimenkuva-id 3 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
 
         tarjous (generoi-toimenkuville-vuosisummat muokattavat-jjh-korvaukset hoitovuosittaiset-arvot)
-
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
 
         ;; Haetaan default toimenkuvat tietokannasta
@@ -256,8 +267,8 @@
         kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
 
         tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
-
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
 
         ;; Haetaan default toimenkuvat tietokannasta
@@ -283,8 +294,8 @@
         kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
 
         tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
-
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
 
         ;; Haetaan default toimenkuvat tietokannasta
@@ -314,7 +325,7 @@
         muokattu-tarjous (vec (concat muokattu-tarjous muokatut-toimenkuvat))
 
         ;; Tallennetaan muokatut toimenkuvat
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous})
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous} vahvistetut-vuodet)
         muokattu-tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
 
         muokatut-toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) muokattu-tarjous-tietokannasta)
@@ -335,8 +346,8 @@
         kaikki-urakan-toimenkuvat (tarjous-kyselyt/hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
 
         tarjous (generoi-toimenkuville-vuosisummat kaikki-urakan-toimenkuvat hoitovuosittaiset-arvot)
-
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
         tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
         toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
         ;; Merkitään yksi poistetuksi
@@ -349,8 +360,7 @@
         muokattu-tarjous (remove #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) tarjous-tietokannasta)
         ;; Päivitä tilalle muokatut
         muokattu-tarjous (vec (concat muokattu-tarjous muokatut-toimenkuvat))
-
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous})
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin {:tarjous muokattu-tarjous} vahvistetut-vuodet)
         muokattu-tarjous-tietokannasta (:tarjous (tarjous-kyselyt/hae-tarjous db urakka-id))
         muokatut-toimenkuvat-tarjouksesta (filter #(contains? #{"johto-ja-hallintokorvaus"} (:osio %)) muokattu-tarjous-tietokannasta)]
 
@@ -484,3 +494,85 @@
     ;; Rahavaraukset ovat samat
     (is (= tietomalli-rahavaraukset ensivastaus-rahavaraukset))
     (is (= tietomalli-toimenkuvat ensivastaus-toimenkuvat))))
+
+(deftest muokkaa-tarjouksen-tietoja-kun-kustannussuunnitelma-on-vahvistettu
+  (let [db (:db jarjestelma)
+        hoitovuoden-alkuvuosi 2021 ;; Tarvitaan kustannussuunnitelmalle
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
+        hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
+
+        tarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
+        ;; Lisätään urakalle kuuluvat toimenkuvat ja niille generoidut summat
+        tarjous (merge
+                  {:urakka-id urakka-id}
+                  (lisaa-ja-generoi-toimenkuvat db urakka-id urakan-alkuvuosi tarjous hoitovuosittaiset-arvot))
+        tietomalli-rahavaraukset (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous tarjous))
+        tietomalli-toimenkuvat (ota-toimenkuvat-ja-poista-id tarjous)
+        uusi-summa 500M ;; Uusi summa vuodelle Kilpailitettaville hankinnoille
+        uusi-summa2 1500M ;; Uusi summa vuodelle Kilpailitettaville hankinnoille
+
+        ;; Tallennetaan tarjous ensin
+        ensivastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ tarjous)
+        ensivastaus-kustannus (first (:tarjous ensivastaus))
+        ensivastaus-rahavaraukset (map #(dissoc % :id :jarjestys) (filter #(= (:osio %) "tavoitehintaiset-rahavaraukset") (:tarjous ensivastaus)))
+        ensivastaus-toimenkuvat (ota-toimenkuvat-ja-poista-id ensivastaus)
+
+        ;; Vahvistetaan kustannussuunnitelma
+        ;; Lisätään ensin kilpailutettavat hankinnat
+        ;; ;; Poista yhteenvetorivi ennen tallennusta
+        hankinnat-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            hoitovuoden-alkuvuosi (:toimenpiteet hankinnat-tietomalli))
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+
+        ;; Varmista, että kustannussuunnitelmaa ei ole vielä vahvistettu
+        kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+        _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistamaton ennen vahvistusta")
+
+        ;; Muokataan tarjousta
+        muokattu-tarjous (assoc-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] uusi-summa)
+        muokkausvastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
+        ;; Tämä onnistuu, koska kustannussuunnitelma ei ole vielä vahvistettu
+        muokkausvastaus-tarjous (first (:tarjous muokkausvastaus))
+        _ (is (= 10.00 (get-in ensivastaus-kustannus [:hoitovuosittaiset-arvot 2 :summa])) "Vuoden 2023 summa on 10")
+        _ (is (= uusi-summa (bigdec (get-in muokkausvastaus-tarjous [:hoitovuosittaiset-arvot 0 :summa]))))
+        ;; Rahavaraukset ovat samat
+        _ (is (= tietomalli-rahavaraukset ensivastaus-rahavaraukset))
+        _ (is (= tietomalli-toimenkuvat ensivastaus-toimenkuvat))
+
+        ;; Vahvisteatan 2021 vuoden kustannussuuunnitelma
+        kustannussuunnitelma-vahvistettu (try
+                                           (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                                                                                             :vahvista? true})
+                                           (catch Exception e
+                                             (println "Tapahtui virhe:" (.getMessage e))
+                                             {:error (.getMessage e)}))
+        _ (is (true? (get-in kustannussuunnitelma-vahvistettu [:kustannussuunnitelma :vahvistettu?])) "Kustannussuunnitelman pitäisi olla vahvistettu.")
+
+        ;; Muokataan tarjousta lisää - 2021 vuosi on vahvistettu joten siihen tehdyt muokkaukset eivät mene läpi
+        muokattu-tarjous (-> tarjous
+                           (assoc-in [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa] 1234M) ;; Vuodelle 2021
+                           (assoc-in [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa] 1234M)) ;; Vuodelle 2022
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-tarjouksen-tiedot +kayttaja-jvh+ muokattu-tarjous)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))]
+    (is (not= (get-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa]) uusi-summa2) "2021 vuoden summaksi asetettin 1234M, mutta se ei mennyt päivityksessä läpi.")
+    (is (not= (get-in tarjous [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa]) 1234M) "2022 summaksi asetettin 1234M.")))

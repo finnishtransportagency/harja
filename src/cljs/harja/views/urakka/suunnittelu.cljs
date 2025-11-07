@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
+            [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -32,20 +33,8 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and
-                                 (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
-                                 (or
-                                   (kommunikaatio/kehitysymparistossa?) ;; Joko kehitysympäristössä
-                                   (and (>= (pvm/vuosi alkupvm) 2025) ;; Tai aloituvuosi on 2025 tai myöhemmin
-                                     (not (kommunikaatio/kehitysymparistossa?)) ;; Ja ei olla kehitysympäristössä
-                                     )))
-    :tarjous (and
-               (= tyyppi :teiden-hoito) ;; Täytyy olla mhu
-               (or
-                 (kommunikaatio/kehitysymparistossa?) ;; Joko kehitysympäristössä
-                 (and (>= (pvm/vuosi alkupvm) 2025) ;; Tai aloituvuosi on 2025 tai myöhemmin
-                   (not (kommunikaatio/kehitysymparistossa?)) ;; Ja ei olla kehitysympäristössä
-                   )))))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
+    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -89,6 +78,15 @@
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "tehtavat"}
             [tehtavat/tehtavat])
+
+          "Tehtävä- ja määräluettelo"
+          :tehtavat-maarat
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (valilehti-mahdollinen? :tehtavat ur)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (istunto/ominaisuus-kaytossa? :tehtavat-maarat))
+            ^{:key "tehtavat"}
+            [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
