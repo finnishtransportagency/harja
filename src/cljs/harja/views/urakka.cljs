@@ -172,7 +172,6 @@
                           ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia tai kustannusten seurantaa. Joten
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
-                          (js/console.log "hae-urakan-tyot:")
                           (when-not (or
                                       (= :paikkaukset-yllapito nykyinen-valilehti)
                                       (= :paikkaukset-hoito nykyinen-valilehti)
@@ -194,7 +193,7 @@
                                     (s/prosessoi-tyorivit ur
                                       (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
 
-    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
+    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä - Tarvitaanko tätä vielä?
     ;@u/valittu-toimenpideinstanssi
 
     ;; HAetaan urakan työt vain, jos ollaan hoito urakoita
