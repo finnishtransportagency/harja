@@ -15,6 +15,7 @@
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]

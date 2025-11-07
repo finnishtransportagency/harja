@@ -27,6 +27,7 @@
             [harja.views.urakka.kustannusten-kirjaus :as kustannusten-kirjaus]
             [harja.views.urakka.tiemerkinta-kustannukset.yhteenveto :as kustannusten-yhteenveto]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
             [harja.views.urakka.valikatselmus.valikatselmus-nakyma :as valikatselmus-nakyma]
             [harja.tiedot.navigaatio :as nav]
@@ -55,6 +56,11 @@
                 (not (urakka/vesivaylaurakkatyyppi? tyyppi))
                 (not= sopimustyyppi :mpu)
                 (not= tyyppi :tiemerkinta))
+    
+    :toimenpiteet (and
+                    (oikeudet/urakat-vesivaylatoimenpiteet id)
+                    (urakka/vesivaylaurakkatyyppi? tyyppi)
+                    (istunto/ominaisuus-kaytossa? :vesivayla))
 
     :tyomaapaivakirja (and
                         (oikeudet/urakat-tyomaapaivakirja id)
@@ -212,6 +218,13 @@
        (when (valilehti-mahdollinen? :mhu-muutokset ur)
          ^{:key "mhu-muutokset"}
          [muutos-nakyma/muutokset-paatason-valilehti ur])
+
+       "Toimenpiteet"
+       :toimenpiteet
+       (when (valilehti-mahdollinen? :toimenpiteet ur)
+         ^{:key "toimenpiteet"}
+         [toimenpiteet/toimenpiteet ur])
+
 
        "Työmaapäiväkirja"
        :tyomaapaivakirja
