@@ -1796,7 +1796,7 @@
       ;; Ensimmäinen integraatioviesti sisältää tiedot haetuista FIM käyttäjistä, joten toisessa pitäisi olla sähköposti, johon viesti lähetettiin
       (is (clojure.string/includes? (:sisalto (second integraatioviestit)) "ELY_Urakanvalvoja@example.com"))
       (is (= (integraatio-kyselyt/integraation-id (:db jarjestelma) "fim" "hae-urakan-kayttajat") (:integraatio (first integraatiotapahtumat))))
-      (is (= (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys") (:integraatio (second integraatiotapahtumat))))))
+      (is (= (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys") (:integraatio (second integraatiotapahtumat))))))
 
       #_ (with-fake-http
         [+testi-fim+ fim-vastaus
