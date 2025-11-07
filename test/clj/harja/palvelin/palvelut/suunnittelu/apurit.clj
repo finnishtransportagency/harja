@@ -1,50 +1,50 @@
 (ns harja.palvelin.palvelut.suunnittelu.apurit)
 
 (def tarjous-tietomalli-2019 {:tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
-                                   ;; Rahavaraukset
-                                   {:nimi "Äkilliset hoitotyöt", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 1
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
-                                   {:nimi "Vahinkojen korjaukset", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 2
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
-                                   {:nimi "Tilaajan rahavaraus kannustinjärjestelmään", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 3
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                        ;; Rahavaraukset
+                                        {:nimi "Äkilliset hoitotyöt", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 1
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                        {:nimi "Vahinkojen korjaukset", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 2
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
+                                        {:nimi "Tilaajan rahavaraus kannustinjärjestelmään", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 3
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
 
-                                   ;; Erillishankinnat
-                                   {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
+                                        ;; Erillishankinnat
+                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
 
-                                   ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
+                                        ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
 
-                                   ;; Hoidonjohtopalkkio
-                                   {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
-                                   ;; Yhteensä rivi
-                                   {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
-                                    :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 90.00} {:vuosi 2024 :summa 180.00} {:vuosi 2029 :summa 270.00}], :yhteensa 540.00}]})
+                                        ;; Hoidonjohtopalkkio
+                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
+                                        ;; Yhteensä rivi
+                                        {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
+                                         :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 90.00} {:vuosi 2024 :summa 180.00} {:vuosi 2029 :summa 270.00}], :yhteensa 540.00}]})
 
 (def tarjous-tietomalli-2025 {:tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
-                                   ;; Rahavaraukset
-                                   {:nimi "Äkilliset hoitotyöt", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 1
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
-                                   {:nimi "Vahinkojen korjaukset", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 2
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
-                                   {:nimi "Tilaajan rahavaraus kannustinjärjestelmään", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 3
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
+                                        ;; Rahavaraukset
+                                        {:nimi "Äkilliset hoitotyöt", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 1
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
+                                        {:nimi "Vahinkojen korjaukset", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 2
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
+                                        {:nimi "Tilaajan rahavaraus kannustinjärjestelmään", :osio "tavoitehintaiset-rahavaraukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id 3
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
 
-                                   ;; Erillishankinnat
-                                   {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
+                                        ;; Erillishankinnat
+                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
 
-                                   ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
+                                        ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
 
-                                   ;; Hoidonjohtopalkkio
-                                   {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
-                                   ;; Yhteensä rivi
-                                   {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
-                                    :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 90.00} {:vuosi 2028 :summa 180.00} {:vuosi 2029 :summa 270.00}], :yhteensa 540.00}]})
+                                        ;; Hoidonjohtopalkkio
+                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
+                                        ;; Yhteensä rivi
+                                        {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
+                                         :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 90.00} {:vuosi 2028 :summa 180.00} {:vuosi 2029 :summa 270.00}], :yhteensa 540.00}]})
 
 (defn muodosta-tarjous-rahavarauksista [rahavaraukset vuodet]
   {:tarjous (mapv
@@ -78,6 +78,22 @@
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
                                           {:nimi "Yhteensä", :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 700 :alkukausi-indeksikorjattu 777 :loppukausi 2100 :loppukausi-indeksikorjattu 2331 :yhteensa 2800 :yhteensa-indeksikorjattu 3108}]})
+
+(defn paivita-hankintojen-toimenpideinstanssi-id
+  "Kovakoodatussa tietomallissa annetaan toimenpideinstanssi-id kovakoodattuna. Se ei täsmää kaikille urakoille.
+  Vaihdetaan siis id sen mukaan, mitä toimenpiteissä on annettu"
+  [hankinnat toimenpiteet]
+  (let [hankintarivit (:toimenpiteet hankinnat)
+        hankintarivit (mapv (fn [hankintarivi]
+                              (let [r (keep
+                                        (fn [toimenpide]
+                                          (if (= (:nimi toimenpide) (:nimi hankintarivi))
+                                            (assoc hankintarivi :toimenpideinstanssi-id (:toimenpideinstanssi-id toimenpide))
+                                            nil))
+                                        toimenpiteet)]
+                                (first r)))
+                        hankintarivit)]
+    {:toimenpiteet hankintarivit}))
 
 (def erillishankinnat-tietomalli {:erillishankinnat [{:summa 1000 :summa_indeksikorjattu 1111 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Lokakuu 2024"}
                                                      {:summa 2000 :summa_indeksikorjattu 2222 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Marraskuu 2024"}

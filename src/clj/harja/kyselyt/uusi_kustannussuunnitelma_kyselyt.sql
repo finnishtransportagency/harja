@@ -284,21 +284,6 @@ SELECT ru.rahavaraus_id                          as rahavaraus_id,
  WHERE ru.urakka_id = :urakkaid
 GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
 
--- name: paivita-rahavaraus<!
-UPDATE kustannusarvioitu_tyo
-SET summa = :summa,
-    summa_indeksikorjattu = :summa_indeksikorjattu,
-    muokattu = NOW(),
-    muokkaaja = :muokkaaja
-WHERE id = :id;
-
--- name: lisaa-rahavaraus<!
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
-VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
-        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
-        :luoja, NOW());
-
 --name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
@@ -339,6 +324,26 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
+
+-- name: aseta-kasin-syotetty-kattohinta<!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       luotu = NOW(),
+       luoja = :luoja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
+-- name: paivita-kasin-syotetty-kattohinta!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
 
 -- name: hae-kustannussuunnitelman-osiot
 SELECT *

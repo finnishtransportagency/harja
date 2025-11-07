@@ -51,3 +51,55 @@
   "Muutoksen voimassaolo alkaa kesken hoitovuoden?"
   [voimassa-alkaen hoitovuosi]
   (pvm/valissa? voimassa-alkaen (first hoitovuosi) (second hoitovuosi)))
+
+(defn voimassa-alkaen-hoitovuodella-tai-jalkeen?
+  [voimassa-alkaen hoitovuosi]
+  (or
+    (muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)
+    (pvm/jalkeen? (second hoitovuosi) voimassa-alkaen)))
+
+;; -- Pysyvän muutoksen lukitukset --
+(defn jokin-hoitovuosien-indeksikorjaus-vahvistettu?
+  "Palauttaa true, jos jonkin hoitovuoden indeksikorjaus on vahvistettu"
+  [tavoitehinta-indeksikorjattu-per-hoitovuosi]
+  (assert (map? tavoitehinta-indeksikorjattu-per-hoitovuosi))
+
+  (some? (some true? (vals tavoitehinta-indeksikorjattu-per-hoitovuosi))))
+
+(defn pysyva-muutos-voimassa-alkaen-lukittu?
+  "Palauttaa true, jos voimassa-alkaen kenttä on lukittu muokkaukselta.
+  Lukittu, jos:
+  - Jonkin hoitovuoden alun tavoitehinta on vahvistettu
+  - Pysyvä muutos sisältyy jonkin hoitovuoden vahvistettuun välikatselmuksen päätökseen"
+  [tavoitehinta-indeksikorjattu-per-hoitovuosi]
+  (assert (map? tavoitehinta-indeksikorjattu-per-hoitovuosi))
+
+  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
+
+  (jokin-hoitovuosien-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi))
+
+(defn hoitovuoden-indeksikorjaus-vahvistettu?
+  "Palauttaa true, jos kyseisen hoitovuoden indeksikorjaus on vahvistettu, eli hoitovuoden alun tavoitehinta on vahvistettu."
+  [tavoitehinta-indeksikorjattu-per-hoitovuosi hoitovuosi]
+  (let [hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
+        indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
+    indeksikorjaus-vahvistettu?))
+
+(defn pysyva-muutos-hoitovuosi-lukittu?
+  "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
+  Lukittu, jos:
+  - Hoitovuoden vaikutukset sisältyvät kyseisen hoitovuoden tavoitehintaan JA hoitovuoden alun tavoitehinta on vahvistettu
+  - TAI hoitovuoden välikatselmuksen päätöksiä on tehty
+  "
+  [tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi]
+  (assert (map? tavoitehinta-indeksikorjattu-per-hoitovuosi))
+
+  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
+
+  ;; Mikäli muutos alkaa kesken hoitokauden, sillä ei ole merkitystä kyseisen hoitovuoden alun tavoitehinnan kannalta
+  ;; Eli, muutosta ei ole tarpeen lukita vaikka tavoitehinta olisi vahvistettu
+  (and
+    (not (muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
+
+    ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
+    (hoitovuoden-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi hoitovuosi)))

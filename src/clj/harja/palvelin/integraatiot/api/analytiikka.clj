@@ -934,9 +934,12 @@
                                   budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite db {:urakka urakka-id})
                                   ;; Otetaan käytyn hoitovuoden budjetti
                                   budjettitavoite (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
-                                  kattohinta (:kattohinta-oikaistu budjettitavoite)
+                                  hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite)
+                                  hoitovuoden-lopun-tavoitehinta (:hoitovuoden-lopun-tavoitehinta budjettitavoite)
                                   vuosittaiset-paatokset (valikatselmus-palvelu/hae-urakan-hintoihin-vaikuttavat-tehdyt-paatokset
-                                                           db urakka-id mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi toteutuneet-kustannukset kattohinta)]
+                                                           db urakka-id mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi
+                                                           kuluva-hoitovuosi toteutuneet-kustannukset hoitovuoden-lopun-kattohinta
+                                                           hoitovuoden-lopun-tavoitehinta)]
                               (concat paatokset vuosittaiset-paatokset)))
                     [] hoitovuodet)
         kulut (map (fn [k]

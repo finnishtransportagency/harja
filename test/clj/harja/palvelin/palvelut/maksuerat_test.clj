@@ -65,14 +65,12 @@
                sopimus-id tpi-hoidonjohto pvm-2021 pvm-2021 bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
         maksuerat (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakan-maksuerat +kayttaja-jvh+ urakka-id)
-        _ (println "maksuerat: " (pr-str maksuerat))
 
         ;; Kokonaishintaiset
         kokonaishintaiset-hoidonjohto (first (filter (fn [rivi]
                                                        (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
                                                (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)))
         ;; Varmistetaan, että molemmat bonukset kuuluvat hoidon johdon toimenpideinstanssin alle, koska ne on luotu ennen 1.10.2022
-        _ (println "kokonaishintaiset-hoidonjohto: " kokonaishintaiset-hoidonjohto)
         _ (is (= 3230.000M (get-in kokonaishintaiset-hoidonjohto [:maksuera :summa])))]
     (is (= 7 (count maksuerat)))
     (is (= (count (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)) 7))))
