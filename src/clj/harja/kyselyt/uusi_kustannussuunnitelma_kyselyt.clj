@@ -797,16 +797,22 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+
+        ;; Tarkistetaan, että hankinnat osio ei ole 0
         puuttuvat (if-not (and (boolean (seq kilpailutettavat-hankinnat))
                             (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
                     (conj puuttuvat "Kilpailutettavat hankinnat") puuttuvat)
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+
+        ;; Tarkistetaan, että erillishankinnat osio ei ole 0
         puuttuvat (if-not (and (boolean (seq erillishankinnat))
                             (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
                     (conj puuttuvat "Erillishankinnat") puuttuvat)
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+
+        ;; Tarkistetaan, että hoidonjohtopalkkio osio ei ole 0
         puuttuvat (if-not (and (boolean (seq hoidonjohtopalkkiot))
                             (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
                     (conj puuttuvat "Hoidonjohtopalkkiot") puuttuvat)
@@ -818,14 +824,27 @@
                                       (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
                                       :else (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
 
-        puuttuvat (if-not (and (boolean (seq johto-ja-hallintokorvaukset))
-                            (cond
-                              (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
-                              (some (fn [x] (not= (:yhteensa-kk x) 0M)) (flatten (map :kuukaudet johto-ja-hallintokorvaukset)))
-                              (>= urakan-alkuvuosi 2025)
-                              (some (fn [x] (not= (:yhteensa-kk x) 0)) johto-ja-hallintokorvaukset)
-                              :else (some (fn [x] (not= (:tuntipalkka x) 0)) johto-ja-hallintokorvaukset)))
-                    (conj puuttuvat "Johto-ja-hallintokorvaukset") puuttuvat)]
+        ;; Tarkistetaan että jotain on kirjattu jjh osioon
+        jjh-summia-olemassa? (cond
+                               ;; Ennen 25 urakoilla oma tietomallinsa
+                               ;;[{:kuukaudet
+                               ;;  [{:yhteensa-kk 0, ...
+                               (<= urakan-alkuvuosi 2024)
+                               (boolean
+                                 (some #(not
+                                          (zero? (or (:yhteensa-kk %) 0)))
+                                   (mapcat :kuukaudet johto-ja-hallintokorvaukset)))
+
+                               ;; 25 sekä jälkeen oma tietomallinsa 
+                               ;; ({:summa 0, :vuosi 2025, :kuukausi 10, ..} 
+                               :else
+                               (boolean
+                                 (some
+                                   #(not (zero? (or (:summa %) 0))) johto-ja-hallintokorvaukset)))
+
+        puuttuvat (if-not jjh-summia-olemassa?
+                    (conj puuttuvat "Johto-ja-hallintokorvaukset")
+                    puuttuvat)]
     puuttuvat))
 
 (defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]
@@ -851,7 +870,7 @@
                                          urakan-indeksit kustannussuunnitelma urakan-parametrit]
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         ;; Varmista ensin, että annettu käsin syötetty kattohinta on suurempi kuin hoitovuoden alun tavoitehinta
-        hoitovuoden-alun-tavoitehinta (or (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta]) 0)      
+        hoitovuoden-alun-tavoitehinta (or (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta]) 0)
         _ (when (and paivitetty-kattohinta (< paivitetty-kattohinta hoitovuoden-alun-tavoitehinta))
             (throw (IllegalArgumentException. (str "Annettu kattohinta " paivitetty-kattohinta " on pienempi, kuin hoitovuoden alun tavoitehinta: " hoitovuoden-alun-tavoitehinta))))
 

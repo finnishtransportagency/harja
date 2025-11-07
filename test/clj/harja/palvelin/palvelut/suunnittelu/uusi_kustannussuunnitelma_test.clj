@@ -704,7 +704,7 @@
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
-        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"))
+        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot, Johto-ja-hallintokorvaukset"))
 
         _ (u (format "update urakka set indeksi = null WHERE id = %s" urakka-id)) ;; Poistetaan urakan indeksi
         vastaus-indeksi (try
@@ -715,7 +715,7 @@
                             {:error (.getMessage e)}))
 
         _ (is (= (get-in vastaus-indeksi [:kustannussuunnitelma :vahvistus-virhe])
-                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"
+                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot, Johto-ja-hallintokorvaukset"
                   hoitovuoden-alkuvuosi)))]))
 
 (deftest vahvista-ja-kumoa-tavoite-ja-kattohinta-toimii
@@ -984,9 +984,9 @@
 
         kasin-paivitetty-kattohinta 1500000M
         tiedot2 {:urakka-id urakka-id
-               :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-               :vahvista? true
-               :paivitetty-kattohinta kasin-paivitetty-kattohinta}
+                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                 :vahvista? true
+                 :paivitetty-kattohinta kasin-paivitetty-kattohinta}
 
         toimiva-vastaus (try
                           (kutsu-palvelua (:http-palvelin jarjestelma)
