@@ -180,7 +180,9 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.18.0"]]
 
-  :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+  :profiles {:uberjar {:aot :all} ;; Pidä uberjar buildaukselle aot päällä, kuten defaulttina olikin
+             :dev {:aot false 
+                   :test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -245,8 +247,15 @@
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
-  :aot :all
-  :main harja.palvelin.main
+  ;; aot == Ahead of time compilation
+  ;; "A technique where the source code is compiled into machine code before the program is run, rather than at runtime"
+  ;;
+  ;; Laitetaan tämä pois päältä harja main replin käynnistykseen
+  ;;   IntelliJ käyttäjille tuttua, että Harja ei käynnisty ensimmäisellä yrityksellä cleanin jälkeen
+  ;;   VSCode / Calva tätä ei välttämättä tapahdu, mutta tässä mahdollisesti fixi 
+  ;; 
+  ;;   Profiileihin annettu {:uberjar {:aot :all}}, joten muutos ei vaikuta tuotantobuildiin
+  :main ^:skip-aot harja.palvelin.main
   :auto-clean false ;; for uberjar
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
