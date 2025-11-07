@@ -449,7 +449,13 @@ WITH osa_toteumat AS
           WHERE t.urakka = :urakka
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
-          GROUP BY tt.toimenpidekoodi)
+          GROUP BY tt.toimenpidekoodi),
+mhu_muutos_tehtava_maara AS
+    (SELECT SUM(maaramuutos)
+     FROM mhu_muutos_tehtava_ja_maaraluetto mmhm
+        LEFT JOIN tehtava t ON t.id = mmhm.tehtava
+            AND
+     WHERE mmhm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND t. )
 SELECT tk.id                                     AS toimenpidekoodi_id,
        o.otsikko                                 AS toimenpide,
        tk.nimi                                   AS tehtava,
