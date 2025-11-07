@@ -45,12 +45,13 @@
   [:div {:style {:color (asioiden-ulkoasu/tilan-vari "hylatty")}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                        {:keys [lupaus-id lupaustyyppi] :as lupaus}
+                        {:keys [lupaus-id] :as lupaus}
                         {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? 
-                                paattava-kuukausi? maarapaiva-mennyt-ohi? nykyhetkeen-verrattuna vastaus kustannusennuste] :as lupaus-kuukausi}
+                                paattava-kuukausi? nykyhetkeen-verrattuna vastaus kustannusennuste] :as lupaus-kuukausi}
                         listauksessa?
                         valittu?
-                        lupaus->kuukausi->kommentit]
+                        lupaus->kuukausi->kommentit
+                        app]
   (let [vastauskuukausi? (lupaus-domain/vastauskuukausi? lupaus-kuukausi)
         saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
         nayta-himmennettyna? (not saa-vastata?)
@@ -60,7 +61,15 @@
         kustannusennuste-syotetty? (and kustannusennuste
                                         (:tavoitehinta kustannusennuste)
                                         (:toteutuneet-kustannukset kustannusennuste))
-        kustannusennuste-lupaus? (= "kustannusennuste" lupaustyyppi)]
+        kustannusennuste-lupaus? (lupaus-domain/kustannusennuste? lupaus) 
+        nykyhetki (or (:nykyhetki app) (pvm/nyt))
+        maarapaiva-data (when (and kustannusennuste-lupaus? (:maarapaiva-pvm lupaus-kuukausi))
+                              (lupaus-domain/kustannusennuste-maarapaiva-paattely 
+                                nykyhetki 
+                                (:maarapaiva-pvm lupaus-kuukausi)
+                                kustannusennuste-syotetty?
+                                false))
+        maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? maarapaiva-data)] 
     [:div.col-xs-1.pallo-ja-kk.ei-sulje-sivupaneelia
      (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
                          (when valittu? " vastaus-kk")

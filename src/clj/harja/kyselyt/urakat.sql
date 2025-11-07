@@ -239,7 +239,8 @@ SELECT
                            '=',
                            COALESCE(sampoid, nimi)))
    FROM sopimus s
-   WHERE urakka = u.id)                   AS sopimukset,
+   WHERE urakka = u.id
+     AND s.poistettu = false)           AS sopimukset,
   -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
   CASE
   WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
@@ -741,13 +742,13 @@ SELECT urakkanro AS alueurakkanro
 FROM urakka
 WHERE id = :id;
 
--- name: hae-aktiivisten-hoitourakoiden-alueurakkanumerot
--- Hakee käynnissäolevien hoitourakoiden alueurakkanumerot
+-- name: hae-aktiivisten-hoitourakoiden-urakkanumerot
+-- Hakee käynnissäolevien hoitourakoiden urakkanumerot
 SELECT
   u.id,
   u.hanke,
   u.nimi,
-  lpad(cast(u.urakkanro AS VARCHAR), 4, '0') AS alueurakkanro
+  u.urakkanro 
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka
@@ -1231,7 +1232,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.loppupvm > NOW();
 
 -- name: hae-urakan-hoitokaudet
-SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);
+SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id::INTEGER);
 
 -- name: listaa-urakat-analytiikalle-hoitovuosittain
 -- Haetaan kaikki urakat ilman geometriatietoja

@@ -1,7 +1,7 @@
 (ns harja.ui.ikonit
   "Kaikki bootstrap ja muut ikonit."
   (:refer-clojure :exclude [remove repeat print list filter sort])
-  (:require-macros [harja.ui.svg-sprite :refer [maarittele-svg-spritet]]) 
+  (:require-macros [harja.ui.svg-sprite :refer [maarittele-svg-spritet]])
   (:require [clojure.string :as str]))
 
 ;; Bootstrap ikonit
@@ -752,7 +752,7 @@
 (defn harja-icon-action-copy [] [:span.harja-icon-action-copy {:title "kopioi" :aria-label "kopioi"}])
 (defn harja-icon-action-current-location [] [:span.harja-icon-action-current-location])
 (defn harja-icon-action-decrease-volume [] [:span.harja-icon-action-decrease-volume])
-(defn harja-icon-action-delete [] [:span.harja-icon-action-delete  {:title "poista" :aria-label "poista"}])
+(defn harja-icon-action-delete [] [:span.harja-icon-action-delete {:title "poista" :aria-label "poista"}])
 (defn harja-icon-action-download [] [:span.harja-icon-action-download {:title "lataa tiedosto"}])
 (defn harja-icon-action-edit [] [:span.harja-icon-action-edit {:title "muokkaa" :aria-label "muokkaa"}])
 (defn harja-icon-action-filter [] [:span.harja-icon-action-filter {:title "suodata" :aria-label "suodata"}])
@@ -971,11 +971,13 @@
     (str "(defn harja-icon-" ikoni-str " [] [:span.harja-icon-" ikoni-str "])"))
 
   (->> harja-icons
-       (map ikoni->funktio)
-       (str/join "\n")))
+    (map ikoni->funktio)
+    (str/join "\n")))
 
 (defn- status [ikoni koko]
-  [:img {:src (str "images/harja-icons/status/" (name ikoni) ".svg") :alt (name ikoni) :width (str (or koko 24) "px")}])
+  [:img {:src (str "images/harja-icons/status/" (name ikoni) ".svg")
+         :alt (name ikoni)
+         :width (str (or koko 24) "px")}])
 
 (defn nelio-info
   ([]

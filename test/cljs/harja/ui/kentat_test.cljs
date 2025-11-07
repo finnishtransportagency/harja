@@ -68,11 +68,12 @@
      (is (= "80" (val)))
      (is (= 80 @data))
 
-     "Keskeneräinen numero ei päivitä dataa"
-     (val! "-")
-     --
-     (is (= "-" (val)))
-     (is (nil? @data))
+      "Keskeneräinen negatiivinen numero ei päivitä dataa"
+      (val! "100")
+      (val! "-")
+      --
+      (is (= "-" (val)))
+      (is (= 100 @data))
 
      "Negatiivinen luku"
      (val! "-42")

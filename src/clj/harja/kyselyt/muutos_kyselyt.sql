@@ -91,7 +91,8 @@ SELECT m.id,
 
 
 -- name: rahavarausten-toteumat
-SELECT rv.id, SUM(kk.summa) as toteumat
+SELECT rv.id,
+       COALESCE(SUM(kk.summa), 0) as toteumat
   FROM kulu k
            JOIN kulu_kohdistus kk ON k.id = kk.kulu
            JOIN toimenpideinstanssi tpi ON kk.toimenpideinstanssi = tpi.id
@@ -99,8 +100,10 @@ SELECT rv.id, SUM(kk.summa) as toteumat
            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id
            JOIN urakka u ON rvu.urakka_id = u.id AND tpi.urakka = u.id
  WHERE u.id = :urakka
-   AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-     (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+   AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) 
+   AND (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+   AND kk.poistettu IS NOT TRUE 
+   AND k.poistettu IS NOT TRUE 
  GROUP BY rv.id, rv.jarjestys
  ORDER BY rv.jarjestys;
 
@@ -186,6 +189,34 @@ DO UPDATE SET
 WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
 
 
+-- name: luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<!
+INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
+    versio,
+    muutos,
+    kustannuslaji,
+    toimenpideinstanssi,
+    hoitokauden_alkuvuosi,
+    summa
+  ) VALUES (
+    :versio,
+    :muutos_id,
+    :kustannuslaji::SUUNNITTELU_OSIO,
+    NULL,
+    :hoitokauden_alkuvuosi,
+    :summa
+) ON CONFLICT ( -- Erillisrahoitetuille ei anneta tpitä, joten ideksin käyttö eri
+  muutos,
+  kustannuslaji,
+  hoitokauden_alkuvuosi,
+  COALESCE(toimenpideinstanssi, -1)
+) DO UPDATE SET
+  versio               = EXCLUDED.versio,
+  kustannuslaji        = EXCLUDED.kustannuslaji,
+  toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
+  summa                = EXCLUDED.summa
+WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
+
+
 -- name: luo-muutos-kulu-linkitys<!
 INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
 VALUES (:versio, :muutos, :kulu);
@@ -197,6 +228,21 @@ UPDATE mhu_muutos_kulu
        kulu = :uusi-kulu
  WHERE muutos = :muutos
    AND kulu = :vanha-kulu;
+
+-- name: paivita-muutostyo-kulukohdistus!
+UPDATE kulu_kohdistus
+   SET muutos = :muutos
+ WHERE id = :kohdistus-id;
+
+-- name: onko-muutoksella-kuluja-ennen-voimassa-paivaa?
+-- single?: true
+SELECT k.id FROM kulu k 
+	LEFT JOIN kulu_kohdistus kk ON kk.kulu = k.id 
+WHERE 
+	kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE  
+  AND k.erapaiva < :voimassa::DATE
+  AND kk.muutos = :muutos; 
 
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
@@ -374,7 +420,7 @@ SELECT
 FROM toimenpiteet tk
     LEFT JOIN toimenpide tp ON tp.koodi = tk.koodi
     LEFT JOIN toimenpideinstanssi tpi ON tp.id = tpi.toimenpide AND tpi.urakka = :urakka
-    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id AND
+    LEFT JOIN ONLY mhu_muutos m ON (m.id = :id
                                     -- FIXME Versiointi ei toimi kunnolla tapauksissa, joissa useita riveja
                                     --       liittyy yhteen muutokseen. Purettava mahdollisesti versiointia
                                     --       ja antaa alitaulujen yksittäisten rivien elää itsenäisemmin elämää historian suhteen
@@ -382,7 +428,8 @@ FROM toimenpiteet tk
                                     --       joka löytyy jostakin lapsitaulun riveistä. Vanhat versiot on
                                     --       silti löydettävissä äiti muutos id:n avulla.
                                     --m.versio = :versio AND
-                                    m.poistettu IS FALSE)
+                                    AND m.poistettu IS FALSE 
+                                    AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI)
     LEFT JOIN summatut_tyot st ON st.toimenpide = tk.nimi
 GROUP BY m.id, tk.nimi, tk.koodi, tpi.id, tp.id, tp.jarjestys
 ORDER BY tp.jarjestys;
@@ -457,10 +504,18 @@ SELECT
   COALESCE(SUM(ut.maara), 0)                       AS maaramuutos,
   -- ---------------------------------------------------- --
   -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
+  -- Ei autom. laskentaa -> Tav hinnan muutos / Määrämuutos
   -- ---------------------------------------------------- --
   CASE
+      WHEN mmt.kasin_syotetty_tavoitehintamuutos IS NOT NULL 
+      THEN ROUND( 
+          mmt.kasin_syotetty_tavoitehintamuutos /
+          (COALESCE(SUM(urakan_tehtavat.maara), 0) - COALESCE(SUM(ut.maara), 0)), 
+          2
+        ) 
     -- 
-	  WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu'
+	  WHEN mmt.lahde IS NULL 
+        OR mmt.lahde = 'laskettu'
 	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
     -- 
     -- Yksikköhinta valittu käyttöliittymästä 
@@ -474,13 +529,14 @@ SELECT
   CASE 
     -- ============================================================
     -- Yksikköhinta puuttuu -> muutos syötetään käsin 
+    -- Myös ennen 2025 alkaneet urakat syöttävät aina käsin
     -- ============================================================
-    WHEN mmt.lahde = 'puuttuu' 
-      THEN mmt.kasin_syotetty_tavoitehintamuutos
+    WHEN (mmt.lahde = 'puuttuu' OR :laskenta-automatiikka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
     -- ============================================================
     -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
+    -- Ei jatketa myöskään, jos kyseessä vanhempi urakka ilman automatiikkaa
     -- ============================================================
-    WHEN SUM(urakan_tehtavat.maara) = 0 THEN NULL
+    WHEN (:laskenta-automatiikka? = false OR (SUM(urakan_tehtavat.maara) = 0)) THEN NULL
     -- ============================================================
     -- Tavoitehinta lasketaan itsestään, joten lasketaan se tässä 
     -- ============================================================
@@ -496,32 +552,32 @@ SELECT
     WHEN mmt.lahde = 'valittu' THEN NULL
   END                                             AS tavoitehinnan_muutos
 FROM tehtava tk
-  JOIN tehtavaryhma tr_alataso
-    ON tr_alataso.id = tk.tehtavaryhma
-  JOIN tehtavaryhmaotsikko o
-    ON tr_alataso.tehtavaryhmaotsikko_id = o.id
-    AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+       JOIN tehtavaryhma tr_alataso
+ON tr_alataso.id = tk.tehtavaryhma
+       JOIN tehtavaryhmaotsikko o
+         ON tr_alataso.tehtavaryhmaotsikko_id = o.id
+        AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
   LEFT JOIN urakka_tehtavamaara ut
-    ON ut.urakka = :urakka
-    AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-    AND ut.poistettu IS NOT TRUE
-    AND tk.id = ut.tehtava
-    AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
+         ON ut.urakka = :urakka
+        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+        AND ut.poistettu IS NOT TRUE
+        AND tk.id = ut.tehtava
+        AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
   LEFT JOIN urakan_tehtavat
-    ON tk.id = urakan_tehtavat.toimenpidekoodi
-  JOIN urakka u
-    ON u.id = :urakka
+         ON tk.id = urakan_tehtavat.toimenpidekoodi
+       JOIN urakka u
+         ON u.id = :urakka
   -- --------------------------------------------------------------------
   -- Vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
   -- --------------------------------------------------------------------
   LEFT JOIN LATERAL (
     SELECT mmt.*
-     FROM mhu_muutos_tehtava_tiedot mmt
-    WHERE mmt.urakka = :urakka
-      AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-      AND mmt.tehtava = tk.id
-    ORDER BY mmt.versio DESC
-    LIMIT 1
+      FROM mhu_muutos_tehtava_tiedot mmt
+     WHERE mmt.urakka = :urakka
+       AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND mmt.tehtava = tk.id
+  ORDER BY mmt.versio DESC
+     LIMIT 1
   ) mmt ON TRUE
   -- Hae tehtävän kulut
   LEFT JOIN (
@@ -529,23 +585,18 @@ FROM tehtava tk
       -- Kiinnostaa tässä  vaiheessa vaan summa, ja yhdistetään tehtava_id 
       kk.tehtava       AS tehtava_id,
       SUM(kk.summa)    AS summa
-    FROM kulu k
-      JOIN kulu_kohdistus kk
-        ON k.id = kk.kulu
-        AND kk.poistettu IS NOT TRUE
+     FROM kulu k
+     JOIN kulu_kohdistus kk
+       ON k.id = kk.kulu
+      AND kk.poistettu IS NOT TRUE
     WHERE k.urakka = :urakka
       AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
       AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
       AND k.poistettu IS NOT TRUE
-    GROUP BY kk.tehtava
-  ) kulut ON kulut.tehtava_id = tk.id
+ GROUP BY kk.tehtava) kulut ON kulut.tehtava_id = tk.id
 WHERE
   -- Tärkeä:: halutaan nimenomaan vain määrämitattavat urakan tehtävät 
   tk."maaramitattava?" IS TRUE
-  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-  AND (tk.aluetieto = FALSE OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
-  -- Rajataan pois ne, jotka eivät ole mhu tehtäviä
-  AND tk."mhu-tehtava?" = TRUE
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
@@ -580,9 +631,8 @@ ORDER BY
   o.otsikko ASC,
   tk.nimi ASC;
 
--- FIXME Termistö hiukan sekaisin tässä. Tässä oikeastaan pitäisi puhua yksikköhinnan/tavoitehinnan muutoksesta
---       Varsinaisia tehtävien määrämuutoksia tulee pysyvistä muutoksista ja muutostöistä, joten niissä käytetään määrämuutos termiä.
--- name: paivita-tehtava-maaramuutos<!
+
+-- name: paivita-tehtava-tiedot<!
 INSERT INTO mhu_muutos_tehtava_tiedot (
   urakka,
   tehtava,
@@ -616,3 +666,22 @@ DO UPDATE SET
   syy                                = EXCLUDED.syy,
   muokattu                           = NOW(),
   muokkaaja                          = EXCLUDED.luoja;
+
+-- name: hae-muutos
+SELECT *
+  FROM mhu_muutos m
+ WHERE m.id = :id;
+
+-- name: hae-urakan-muutostyot
+SELECT  DISTINCT ON (m.id)
+        m.id,
+        m.tyyppi, 
+        m.alityyppi,
+        m.nimi, 
+        m.voimassa_alkaen
+ FROM mhu_muutos m
+WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
+  AND m.urakka =  :urakka
+  AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND m.poistettu IS FALSE 
+ORDER BY m.id DESC;
