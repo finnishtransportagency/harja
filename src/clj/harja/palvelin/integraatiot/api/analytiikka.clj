@@ -746,7 +746,7 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))    
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
@@ -763,12 +763,20 @@
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
     (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (update :murske (fn [murske] (when-not (nil? (:tyyppi murske)) murske)))
+    (dissoc :kasittelymenetelma_lyhenne)
     (set/rename-keys {:pinta-ala :pintaAla
                       :lisatty-paksuus :lisattyPaksuus
                       :verkon-tyyppi :verkkotyyppi
                       :verkon-tarkoitus :verkonTarkoitus
                       :verkon-sijainti :verkonSijainti
                       :massat :massa})))
+
+(defn- yhdista-lyhenne-ja-nimi [lyhenne nimi]
+  (cond
+    (and lyhenne nimi (= lyhenne nimi)) nimi
+    (and lyhenne nimi) (str lyhenne ", " nimi)
+    nimi nimi
+    :else nil))
 
 (defn hae-paallystysilmoitukset [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paallystysilmoitukset :: parametrit" (pr-str parametrit))
@@ -780,6 +788,13 @@
         kulutuskerrostp (as-> (paallystys-kyselyt/hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle db
                                 {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                                  :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}) kktp
+                          (map (fn [k]
+                                 (assoc k :paallystetyomenetelma
+                                   (yhdista-lyhenne-ja-nimi
+                                     (:paallystetyomenetelma_lyhenne k)
+                                     (:paallystetyomenetelma k))))
+                            kktp)
+                          (map #(dissoc % :paallystetyomenetelma_lyhenne) kktp)
                           (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne kktp)
                             {:massa :massat} :alikohde)
                           (map muodosta-kulutuskerrostoimenpide
@@ -788,6 +803,13 @@
         alustatp (as-> (paallystys-kyselyt/hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle db
                          {:alku (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
                           :loppu (pvm/rajapinta-str-aika->sql-timestamp loppuaika)}) atp
+                   (map (fn [a]
+                          (assoc a :kasittelymenetelma
+                            (yhdista-lyhenne-ja-nimi
+                              (:kasittelymenetelma_lyhenne a)
+                              (:kasittelymenetelma a))))
+                        atp)
+                    (map #(dissoc % :kasittelymenetelma_lyhenne) atp)
                    (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne atp)
                      {:massa :massat})
                    (map muodosta-alustatoimenpide atp))

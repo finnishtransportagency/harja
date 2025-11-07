@@ -191,7 +191,9 @@
           vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
           virheet (if suunnitelmat-annettu?
                     virheet
-                    (conj virheet (str "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista " (str/join ", " puuttuvat-suunnitelmat))))]
+                    (conj virheet (str
+                                    (when hoitovuoden-tarjous? "Tietoja ei voitu vahvistaa. ") ;; Jos hoitovuoden tarjousta ei ole, tämä lisätään jo yllä
+                                    "Kustannustietoja puuttuu. Tarkista " (str/join ", " puuttuvat-suunnitelmat))))]
 
       (if-not (empty? virheet)
         (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] (str/join " " virheet))
