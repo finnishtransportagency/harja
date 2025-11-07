@@ -1,5 +1,5 @@
 // asetuksia
-let clickTimeout = 6000;
+let clickTimeout = 12000;
 let potRaportoitava = "POT-raportoitava";
 let uniikkiUlkoinenId = "97978911";
 
