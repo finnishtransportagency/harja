@@ -181,8 +181,7 @@
                          [commons-codec "1.18.0"]]
 
   :profiles {:uberjar {:aot :all} ;; Pidä uberjar buildaukselle aot päällä, kuten defaulttina olikin
-             :dev {:aot false 
-                   :test2junit-run-ant ~(not jenkinsissa?)}}
+             :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -206,7 +205,7 @@
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
-                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                        :source-paths ["src/clj" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
                                        "test/cljs" "test/doo" "test/shared-cljs" "test/cljc"]
                         :compiler {:output-to "target/cljs/test/test.js"
                                    :output-dir "target/cljs/test"
