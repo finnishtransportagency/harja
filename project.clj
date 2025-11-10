@@ -180,7 +180,8 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.18.0"]]
 
-  :profiles {:dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+  :profiles {:uberjar {:aot :all}
+             :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -204,7 +205,7 @@
 
   ;; Näitä cljsbuild tarvitsee testaamista varten doo:n kanssa.
   :cljsbuild {:builds [{:id "test"
-                        :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                        :source-paths ["src/clj" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
                                        "test/cljs" "test/doo" "test/shared-cljs" "test/cljc"]
                         :compiler {:output-to "target/cljs/test/test.js"
                                    :output-dir "target/cljs/test"
@@ -245,8 +246,11 @@
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
-  :aot :all
-  :main harja.palvelin.main
+  ;;     aot == Ahead of time compilation
+  ;;     "..source code is compiled before the program is run, rather than at runtime"
+  ;; Laitetaan tämä pois päältä harja main käynnistykseen
+  ;; Backend ei aina käynnisty ensimmäisellä yrityksellä cleanin jälkeen, tämä korjaa tuon sirpaleisuuden
+  :main ^:skip-aot harja.palvelin.main
   :auto-clean false ;; for uberjar
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
