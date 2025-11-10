@@ -3,6 +3,7 @@
             [clojure.test :refer :all]
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
 
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
@@ -1091,6 +1092,39 @@
                              "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
                      urakka-id hoitokausi-nro 10 10 10 10)
         _ (u insert-str)]
+
+    (testing "Uuden pysyvän muutoksen voi tallentaa, vaikka jonkin hoitovuoden indeksikorjaus on vahvistettu"
+      (let [muutos-payload {:tyyppi "pysyva"
+                            :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00",
+                            :syy "Pysyvä muutos, jokin hoitovuosista on lukittu",
+                            :nimi "Pysyvä muutos Suomussalmelle"
+                            :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 10, :hoitokauden_alkuvuosi 2025}
+                                                 {:tehtava 2991, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}
+                                                 {:tehtava 3117, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
+                                                 {:tehtava 3117, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
+                                                 {:tehtava 3117, :maaramuutos 333, :hoitokauden_alkuvuosi 2027}],
+                            :kustannusvaikutukset [{:summa 1000, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                   {:summa 1111, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2025}
+                                                   {:summa 2222, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                   {:summa 2222, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2026}
+                                                   {:summa 3333, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}
+                                                   {:summa 333, :toimenpideinstanssi 132, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi 2027}]}
+
+            vastaus
+            (try
+              (first (filter #(= "Pysyvä muutos Suomussalmelle" (:nimi %))
+                       (:kirjatut-muutokset
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-muutos
+                           +kayttaja-jvh+
+                           {:urakka-id urakka-id
+                            :valittu-hoitokausi valittu-hoitokausi
+                            :muutos muutos-payload}))))
+              (catch Exception e
+                (log/error e)
+                (ex-data e)))]
+        (is (= (:nimi vastaus) "Pysyvä muutos Suomussalmelle")) "Pysyvä muutos tallennettiin onnistuneesti"))
+
     (testing "Pysyvän muutoksen voimassa_alkaen -päivämäärää ei voi muuttaa, kun jonkin hoitovuoden indeksikorjaus on vahvistettu"
       (let [;; Haetaan testidatassa oleva pysyvä muutos
             muutos-id (ffirst (q "SELECT id FROM mhu_muutos WHERE urakka = " urakka-id " AND tyyppi = 'pysyva' AND nimi = 'Päällysteen paikkausmuutos';"))

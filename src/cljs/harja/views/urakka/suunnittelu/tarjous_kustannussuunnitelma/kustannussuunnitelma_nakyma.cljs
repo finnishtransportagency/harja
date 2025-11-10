@@ -493,7 +493,7 @@
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true ero-tarjoukseen)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
      ;; Osalla urakoista kattohinta syötetään käsin.
      (if-not muokkaa-kattohinta-kasin
@@ -526,7 +526,7 @@
 
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Indeksikorjattu hoitovuoden alun kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
 
      [:div.row {:style {:margin-top "2rem"}}

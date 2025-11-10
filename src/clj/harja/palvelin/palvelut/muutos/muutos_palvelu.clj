@@ -717,7 +717,8 @@
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
-  (let [urakka (first (q-urakat/hae-urakka db urakka-id))
+  (let [paivitetaan? (:id muutos)
+        urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
         hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
@@ -772,7 +773,7 @@
 
     (jdbc/with-db-transaction [conn db]
 
-      (let [vanha-muutos (when (:id muutos)
+      (let [vanha-muutos (when paivitetaan?
                            (first (muutos-kyselyt/hae-muutos conn {:id (:id muutos)})))
             tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
         (cond
@@ -780,8 +781,10 @@
           (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi)
 
           tyyppi-pysyva?
-          ;; Estä tallennus, mikäli yritetään muuttaa lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
+          ;; Estä tallennus, mikäli yritetään muokata lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
           (when (and
+                  ;; Huom, vain muokkaustilanteessa tarkistus
+                  paivitetaan?
                   (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
                   (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
             (throw+ {:type virheet/+viallinen-kutsu+
@@ -790,7 +793,7 @@
 
         ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
         ;; Nämä tiedot saadaan muutos-paluurivistä
-        (let [aiti-muutos-id-ja-versio (if (:id muutos)
+        (let [aiti-muutos-id-ja-versio (if paivitetaan?
                                          (muutos-kyselyt/paivita-muutos<! conn muutos)
                                          (muutos-kyselyt/luo-muutos<! conn muutos))]
 
