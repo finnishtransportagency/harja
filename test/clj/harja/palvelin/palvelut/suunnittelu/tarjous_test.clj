@@ -209,9 +209,9 @@
 
         ;; Muodostetaan johto-ja-hallinto-kustannuksia, joilla voi testata tallennuksia
         ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
-        johto-ja-hallintokorvaukset [{:nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
-                                     {:nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
-                                     {:nimi "Päätoiminen apulainen / työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
+        johto-ja-hallintokorvaukset [{:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                     {:toimenkuva "vastuunalainen työnjohtaja" :nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 2 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
+                                     {:toimenkuva "päätoiminen apulainen / työnjohtaja" :nimi "Päätoiminen apulainen / työnjohtaja", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 4 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}]
 
 
         ;; Vuodet tietomallista
@@ -223,10 +223,11 @@
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantajohto-ja-hallintokorvaukset (q-map (format "SELECT * from tarjous_johto_ja_hallintokorvaus
                                                  WHERE osio = 'johto-ja-hallintokorvaus'
-                                                   AND urakka_id = %s" urakka-id))]
+                                                   AND urakka_id = %s" urakka-id))
+        _ (println "tietokantajohto-ja-hallintokorvaukset:" (pr-str tietokantajohto-ja-hallintokorvaukset))]
 
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
-    (is (= (count tietokantajohto-ja-hallintokorvaukset) (* (count vuodet) (count johto-ja-hallintokorvaukset))) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle.")))
+    (is (= (count tietokantajohto-ja-hallintokorvaukset) 11) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle. Paitsi valmistelukausi ennen urakka-ajan alkua on vain yhdessä vuodessa.")))
 
 (deftest tallenna-ja-hae-johto-ja-hallintokorvaukset-tarjoukselle-2019-onnistuu
   (let [db (:db jarjestelma)
@@ -466,7 +467,6 @@
 
         ;; Generoi summat suodatetuille toimenkuville
         uudet-toimenkuvat (:tarjous (generoi-toimenkuville-vuosisummat uudet-toimenkuvat hoitovuosittaiset-arvot))
-        _ (println "uudet-toimenkuvat: " (pr-str uudet-toimenkuvat))
         ;; Yhdistä tietomallitarjouksen toimenkuvat ja uudistetut toimenkuvat
         tarjousrivit (:tarjous tietomallitarjous)
         tarjousrivit (vec (concat tarjousrivit uudet-toimenkuvat))
