@@ -6,14 +6,15 @@ On suositeltavaa, että luet ```*.prompt.md``` tiedoston sisällön ennen ajamis
 
 ## Nopea yhteenveto
 
-| Prompt | Tiedosto | Status | Tarkoitus | Tuotos                                        |
-| ------ | -------- | ------ | --------- |-----------------------------------------------|
-| Project Summary | [`project-summary.prompt.md`](project-summary.prompt.md) | Stable | Projektin yhteenvedon generointi / päivitys | `PROJECT_SUMMARY.md` luodaan/päivittyy        |
-| Architectural Help | [`architectural-help.prompt.md`](architectural-help.prompt.md) | Stable | Arkkitehtuurin suunnitelma ennen toteutusta | Toimintasuunnitelma md-tiedostoon (ei koodia) |
-| Review Code | [`review-code.prompt.md`](review-code.prompt.md) | Stable | Koodimuutosten katselmointi | Kattava katselmointiraportti                  |
-| DB Migration Helper | [`db-migration-helper.prompt.md`](db-migration-helper.prompt.md) | Experimental | Flyway PostgreSQL/PostGIS migraation suunnittelu | Migraatiosuunnitelma + SQL luonnos            |
-| Accessibility Audit | [`accessibility-review.prompt.md`](accessibility-review.prompt.md) | Experimental | WCAG 2.1/2.2 saavutettavuusanalyysi live sivulle | Markdown audit-raportti kuvineen              |
-| Browser Tuck Debug | [`browser-debug_tuck-app-state.prompt.md`](browser-debug_tuck-app-state.prompt.md) | Experimental | CLJS Tuck sovellustilan selaindebug | Konsolianalyysi tilasiirtymistä               |
+| Prompt                    | Tiedosto                                                                           | Status       | Tarkoitus                                        | Tuotos                                        |
+|---------------------------|------------------------------------------------------------------------------------|--------------|--------------------------------------------------|-----------------------------------------------|
+| Project Summary           | [`project-summary.prompt.md`](project-summary.prompt.md)                           | Stable       | Projektin yhteenvedon generointi / päivitys      | `PROJECT_SUMMARY.md` luodaan/päivittyy        |
+| Architectural Help        | [`architectural-help.prompt.md`](architectural-help.prompt.md)                     | Stable       | Arkkitehtuurin suunnitelma ennen toteutusta      | Toimintasuunnitelma md-tiedostoon (ei koodia) |
+| Review Code               | [`review-code.prompt.md`](review-code.prompt.md)                                   | Stable       | Koodimuutosten katselmointi                      | Kattava katselmointiraportti                  |
+| Cypress Flaky Test Fixer  | [`cypress-flaky-test-fixer.prompt.md`](cypress-flaky-test-debug.prompt.md)         | Experimental | Flaky Cypress E2E testien debug ja korjaus       | Syväanalyysi (RCA) ja korjausehdotukset       |
+| DB Migration Helper       | [`db-migration-helper.prompt.md`](db-migration-helper.prompt.md)                   | Experimental | Flyway PostgreSQL/PostGIS migraation suunnittelu | Migraatiosuunnitelma + SQL luonnos            |
+| Accessibility Audit       | [`accessibility-review.prompt.md`](accessibility-review.prompt.md)                 | Experimental | WCAG 2.1/2.2 saavutettavuusanalyysi live sivulle | Markdown audit-raportti kuvineen              |
+| Browser Tuck Debug        | [`browser-debug_tuck-app-state.prompt.md`](browser-debug_tuck-app-state.prompt.md) | Experimental | CLJS Tuck sovellustilan selaindebug              | Konsolianalyysi tilasiirtymistä               |
 
 *Huom!*: ```Experimental = kokeiluasteella```, eli ominaisuudet ja käyttötavat voivat vielä muuttua. Kerro ongelmahavainnot tiimille.
 
@@ -22,6 +23,7 @@ On suositeltavaa, että luet ```*.prompt.md``` tiedoston sisällön ennen ajamis
 Tarvitset yleiskuvan projektista? -> Project Summary
 Tarvitset arkkitehtuurisen suunnitelman uudelle ominaisuudelle? -> Architectural Help (luo tiedoston implementation-plan-<feature>-<timestamp>.md)
 Katselmoit juuri tehtyä koodinpätkää (mustattu hiirellä) tai useamman tiedoston muutosta? -> Review Code
+Havaitsitko flakyn Cypress-testin ja haluat korjata sen? -> Cypress Flaky Test Fixer (Experimental)
 Suunnittelet tietokantamigraatiota? -> DB Migration Helper (Experimental)
 Diagnosoit CLJS frontin Tuck tilan ongelmia? -> Browser Tuck Debug (Experimental)
 Onko ominaisuuden saavutettavuuden vaatimukset otettu huomioon? -> Accessibility Audit (Experimental)
@@ -80,6 +82,30 @@ Haluamiasi tarkennuksia
 
 ## Experimental promptit
 Seuraavat promptit ovat kokeellisia. Käytä ja anna palautetta.
+
+### Cypress Flaky Test Fixer (`cypress-flaky-test-fixer.prompt.md`)
+**Tarkoitus:** Analysoi ja korjaa flakyt Cypress E2E testit.  
+**Syöte:** Testin nimi + kuvaus flakysta + mahdolliset lokit/virheet.  
+**Tuotos:** Syväanalyysi (RCA) + korjausehdotukset + mahdollinen korjattu testikoodi.
+
+**Esimerkki:**
+```text
+/cypress-flaky-test-fixer
+```
+**Vastaa promptin kysymyksiin ja anna keskustelussa tarvittavat tiedot, esim. stack-trache CI-putkesta:**
+```text
+
+"before each" hook for "Vuosivalinta "Kaikki vuodet" toimii".Välitavoitteet - Perustoiminnallisuus "before each" hook for "Vuosivalinta "Kaikki vuodet" toimii"
+
+Timed out retrying after 10000ms: Expected to find content: 'Oulun MHU 2019-2024' within the selector: '[data-cy=urakat-valitse-urakka] li' but never did.
+
+Because this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `Välitavoitteet - Perustoimi...`
+AssertionError: Timed out retrying after 10000ms: Expected to find content: 'Oulun MHU 2019-2024' within the selector: '[data-cy=urakat-valitse-urakka] li' but never did.
+
+Because this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `Välitavoitteet - Perustoimi...`
+    at avaaValitavoitteet (http://localhost:3000/__cypress/tests?p=cypress/e2e/valitavoitteet.cy.js:121:6)
+    at Context.eval (http://localhost:3000/__cypress/tests?p=cypress/e2e/valitavoitteet.cy.js:160:5)
+```
 
 ### Accessibility Audit (`accessibility-review.prompt.md`)
 **Tarkoitus:** Analysoi web sivun WCAG 2.1/2.2 ongelmat käyttäen Chrome Devtools / Playwright työkaluja.  

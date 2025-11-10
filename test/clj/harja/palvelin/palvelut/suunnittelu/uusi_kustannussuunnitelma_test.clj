@@ -91,13 +91,29 @@
       (is (= 1000 pysyvat-muutokset-maara))
       (is (= {:tavoitehinnan-muutos 1000
               :tavoitehinnan-muutos-indeksikorjattu 1374.0} (select-keys (first pysyvat-muutokset)
-                                                                           [:tavoitehinnan-muutos :tavoitehinnan-muutos-indeksikorjattu]))))))
+                                                              [:tavoitehinnan-muutos :tavoitehinnan-muutos-indeksikorjattu]))))))
 
-(deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti
+(deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti-2021-urakalle
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2024
+        ;; Poista yhteenvetorivi ennen tallennusta
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        tietomallin-alkukausisumma (apply + (map :alkukausi (:toimenpiteet h-tietomalli)))
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        alkukausi-tietokannasta (q-map (format "SELECT SUM(summa) as summa FROM kiinteahintainen_tyo
+                                                  WHERE sopimus = %s
+                                                    AND vuosi = %s AND kuukausi IN (10,11,12)"
+                                         sopimus-id hoitovuoden-alkuvuosi))]
+
+    (is (= (bigdec tietomallin-alkukausisumma) (bigdec (:summa (first alkukausi-tietokannasta)))))))
+
+(deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti-2019-urakalle
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
+        hoitovuoden-alkuvuosi 2020
         ;; Poista yhteenvetorivi ennen tallennusta
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         tietomallin-alkukausisumma (apply + (map :alkukausi (:toimenpiteet h-tietomalli)))
@@ -353,7 +369,7 @@
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :hoidonjohtopalkkiot)")))))
 
-(deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimi
+(deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
@@ -434,7 +450,7 @@
     ;; Urakka-id puuttuu
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)")))))
 
-(deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii
+(deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii-2
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
         vastaus (try
@@ -536,7 +552,7 @@
                                                              AND (
                                                                   (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                                   (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                    urakka-id seuraava-vuosi (inc seuraava-vuosi)))]
+                                            urakka-id seuraava-vuosi (inc seuraava-vuosi)))]
 
     ;; Ei ole erroreita
     (is (nil? (:error vastaus)))
@@ -657,8 +673,10 @@
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
 (deftest vahvista-tavoite-ja-kattohinta-ei-onnistu
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
         hoitovuoden-alkuvuosi 2024
         tiedot {:urakka-id urakka-id
                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
@@ -675,13 +693,18 @@
         OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
                urakka-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
 
+        ;; Kustisksen vahvistus vaatii tarjouksen tallentamisen, joten tallennetaan alkuun simppeli tarjous, niin ei jää siitä kiinni
+        kattohintakerroin 1.1
+        vahvistetut-vuodet #{}
+        tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019 vahvistetut-vuodet)
+
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
-        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"))
+        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) "Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot, Johto-ja-hallintokorvaukset"))
 
         _ (u (format "update urakka set indeksi = null WHERE id = %s" urakka-id)) ;; Poistetaan urakan indeksi
         vastaus-indeksi (try
@@ -692,7 +715,7 @@
                             {:error (.getMessage e)}))
 
         _ (is (= (get-in vastaus-indeksi [:kustannussuunnitelma :vahvistus-virhe])
-                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot"
+                (format "Indeksit puuttuvat hoitovuodelle %s. Indeksit on lisättävä ennen vahvistusta. Tietoja ei voitu vahvistaa. Kustannustietoja puuttuu. Tarkista Kilpailutettavat hankinnat, Erillishankinnat, Hoidonjohtopalkkiot, Johto-ja-hallintokorvaukset"
                   hoitovuoden-alkuvuosi)))]))
 
 (deftest vahvista-ja-kumoa-tavoite-ja-kattohinta-toimii
@@ -730,8 +753,9 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -794,8 +818,9 @@
         ;; Vuodet tietomallista
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous)
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -824,3 +849,157 @@
         ;; Kiinteiden töiden vahvistamisessa on otettava huomioon se, että ihan kaikkia sieltä löytyviä riviä ei vahvisteta. Ainoastaan
         ;; Hankintatoimenpiteet (onko_mhu_hankintatoimenpide(t.koodi) = true).
         _ (is (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) jalkeen-kiinteat-rivit) "Kaikilla kiinteähintaisilla riveillä pitäisi olla indeksi vahvistettu")]))
+
+(deftest testaa-kasin-syotettava-kattohinta-2021-urakalle
+  (let [kayttaja-id (:id +kayttaja-jvh+)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitovuoden-alkuvuosi 2024
+
+        ;; Lisätään ensin kilpailutettavat hankinnat - Poista yhteenvetorivi ennen tallennusta
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+
+        ;; Rahavaraukset vaativat tarjouksen täyttämisen.
+
+        ;; Käytetään kattohintana 1.1 x tavoitehintaa
+        kattohintakerroin 1.1
+
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
+        tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+
+        ;; Vahvistetaan tavoite ja kattohinta
+        tiedot {:urakka-id urakka-id
+                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                :vahvista? true
+                :paivitetty-kattohinta 5} ;; Bäkkärin pitäisi jättää tämä huomioimatta 2024 urakoilla
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
+
+        _ (is (true? (get-in vastaus [:kustannussuunnitelma :vahvistettu?])) "Vahvistettu pitäisi olla true")
+
+        ;; Haetaan kustannussuunnitelma ja tarkistetaan kattohinta
+        kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+
+                               {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+
+        tavoitehinta (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta])
+        kattohinta (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])
+
+        ;; Tarkistetaan että kattohinta on 1.1 x tavoitehinta 2021 alkavalla urakalla
+        _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :muokkaa-kattohinta-kasin])) "2024 urakoilla ei voi muokata kattohintaa käsin")
+        _ (is (< 0 kattohinta) "Kattohinta pitäisi löytyä")
+        odotettu-kattohinta (* kattohintakerroin tavoitehinta)
+        _ (is (= (bigdec (round2 kattohinta 2)) (bigdec (round2 odotettu-kattohinta 2)))
+            (str "Kattohinnan pitäisi olla " kattohintakerroin " x tavoitehinta. Tavoitehinta: " tavoitehinta ", odotettu kattohinta: " odotettu-kattohinta ", todellinen kattohinta: " kattohinta))]))
+
+(deftest testaa-kasin-syotettava-kattohinta-2019-urakalle
+  (let [db (:db jarjestelma)
+        kayttaja-id (:id +kayttaja-jvh+)
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+        hoitovuoden-alkuvuosi 2020
+        hoitovuosinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
+        tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        ;; Lisää käsin kattohinta tarjouksen vuosille
+        hoitovuoden-kattohinta 21
+        kattohinta-rivi {:nimi "Tarjouksen kattohinta" :osio "yhteensa"
+                         :hoitovuosittaiset-arvot [{:vuosi 2019 :summa 11}
+                                                   {:vuosi 2020 :summa hoitovuoden-kattohinta}
+                                                   {:vuosi 2021 :summa 4500}
+                                                   {:vuosi 2022 :summa 3000}
+                                                   {:vuosi 2023 :summa 4000}]
+                         :yhteensa 11532}
+        tarjous (update tarjous :tarjous #(conj % kattohinta-rivi))
+        ;; 2019-urakoille ei anneta kattohintakerrointa, vaan kattohinta syötetään käsin urakan_parametrit-tauluun
+        kattohintakerroin nil
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+
+        ;; Varmista suoraan tietokannasta, että tarjous taulun tarjous_kattohinta kolumniin meni oikeat arvot
+        tarjous-tietokannasta (first (q-map (format "SELECT tarjous_kattohinta FROM tarjous WHERE urakka_id = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitovuoden-alkuvuosi)))
+        _ (is (= (bigdec (round2 2 hoitovuoden-kattohinta)) (:tarjous_kattohinta tarjous-tietokannasta)) (format "Tarjous taulun tarjous_kattohinta pitäisi olla %s" hoitovuoden-kattohinta))
+
+        ;; Mahdollistetaan kustiksen vahvistus
+        ;; Lisätään ensin kilpailutettavat hankinnat - Poista yhteenvetorivi ennen tallennusta
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
+
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
+        ;; Tavoitehinta lasketaan erillisellä funktiolla, jos kustsutaan tallennuksia suoraan kyselyfunktioilla eikä rajapinnan kautta
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
+
+
+
+        ;; Syötä kattohinta käsin kustannussuuunnitelmalle.
+        ;; Vahvistetaan tavoite ja kattohinta
+        tiedot {:urakka-id urakka-id
+                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                :vahvista? true
+                :paivitetty-kattohinta 5}
+
+        virheellinen-vastaus (try
+                               (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
+                               (catch Exception e
+                                 (println "Tapahtui virhe:" e (.getMessage e))
+                                 {:error (.getMessage e)}))
+
+        _ (is (str/includes? virheellinen-vastaus "Annettu kattohinta 5 on pienempi"))
+
+        kasin-paivitetty-kattohinta 1500000M
+        tiedot2 {:urakka-id urakka-id
+                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                 :vahvista? true
+                 :paivitetty-kattohinta kasin-paivitetty-kattohinta}
+
+        toimiva-vastaus (try
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot2)
+                          (catch Exception e
+                            (println "Tapahtui virhe:" e (.getMessage e))
+                            {:error (.getMessage e)}))
+
+
+
+        dbtavoite (first (q-map (format "SELECT * from urakka_tavoite where urakka = %s AND hoitokausi = %s" urakka-id hoitovuosinumero)))]
+    (is (true? (get-in toimiva-vastaus [:kustannussuunnitelma :vahvistettu?])) "Vahvistettu pitäisi olla true")
+    (is (= (:kattohinta dbtavoite) kasin-paivitetty-kattohinta) "urakka_tavoite -taulusta löytyy oikea kattohinta")
+    (is (= kasin-paivitetty-kattohinta (get-in toimiva-vastaus [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])) "Käsin asetettu kattohinta täsmää")))
+
+
