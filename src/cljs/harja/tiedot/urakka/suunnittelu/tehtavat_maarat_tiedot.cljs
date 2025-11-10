@@ -75,7 +75,7 @@
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
+    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
 
     (-> app
       (assoc :tallennus-kaynnissa? false)
