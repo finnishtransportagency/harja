@@ -162,6 +162,53 @@
     ;; Pysyvien muutosten aputietoja
     :toimenpiteiden-tehtavat))
 
+
+(defn validoi-pysyvan-muutoksen-vaikutukset
+  [muokattava-muutos]
+  (let [mahdolliset-hoitovuodet (get-in muokattava-muutos [:mahdolliset-hoitovuodet-lomakkeella])
+        alkuvuodet (mapv #(some-> % (first) (pvm/vuosi)) mahdolliset-hoitovuodet)
+        rivit (:toimenpiteiden-tiedot muokattava-muutos)]
+
+    (assert (vector? alkuvuodet) "Lomakkeen hoitovuodet puuuttuvat")
+
+    ;; Käydään jokainen toimenpideinstanssi läpi joka hoitovuodelta, ja tarkastetaan onko tavoitehinnan muutos tai
+    ;; tehtävän määrämuutos syötetty.
+    ;; Jos molemmat syötetty -> OK
+    ;; Jos vain toinen syötetty -> Virhetila
+    ;; Palautetaan lista virheellisistä toimenpideinstansseista, joista toinen tarpeellinen tieto puuttuu.
+    (mapcat
+      (fn [rivi]
+        (for [alkuvuosi alkuvuodet
+              :let [kv (some
+                         #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) (:kustannusvaikutukset rivi))
+                    tjm (filter
+                          #(and (= alkuvuosi (:hoitokauden_alkuvuosi %)) (not (:poistettu %)))
+                          (:tehtavat_ja_maarat rivi))
+                    kv-syotetty? (and kv (number? (:summa kv)) (not= 0 (:summa kv)))
+                    tjm-syotetty? (some #(and (number? (:maaramuutos %)) (not= 0 (:maaramuutos %))) tjm)
+                    toinen-syotetty? (or kv-syotetty? tjm-syotetty?)
+                    molemmat-ok? (and kv-syotetty? tjm-syotetty?)]
+              ;; Luodaan virhe-map, vain jos toinen vaadituista asioista on syötetty
+              :when (and toinen-syotetty? (not molemmat-ok?))]
+          {:toimenpideinstanssi (:toimenpideinstanssi rivi)
+           :toimenpide (:toimenpide rivi)
+           :alkuvuosi alkuvuosi
+           :puuttuu (if kv-syotetty? :maaramuutos :tavoitehinnan-muutos)}))
+      rivit)))
+
+(defn koosta-pysyvan-muutoksen-lomake-virheet [tpi-vetolaatikoiden-virheet]
+  (mapv
+    (fn [virhe]
+      (str (:alkuvuosi virhe) " / Toimenpide '" (:toimenpide virhe) "': "
+        (case (:puuttuu virhe)
+          :tavoitehinnan-muutos "Tavoitehinnan muutos"
+          :maaramuutos "Vaikutus tehtävämäärään")
+        " puuttuu."))
+    (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
+
+(defn koosta-lomakkeen-validaatio-virheet [lomake]
+  (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %)))))
+
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
@@ -287,24 +334,33 @@
 
   PaivitaLomake
   (process-event [{:keys [lomake]} app]
-    (let [lomake-virheet (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %))))
-          virheita? (empty? (-> lomake ::lomake/virheet vals))]
+    ;; Koostetaan tässä vain 'standardit' validaatiovirheet
+    ;; Pysyvän muutoksen virheitä ei kannata tarkastaa tässä validaation monimutkaisuuden vuoksi
+    (let [lomake-virheet (koosta-lomakkeen-validaatio-virheet lomake)]
       (assoc app
         :voi-tallentaa? true
         :lomake-virheet lomake-virheet
-        :lomakkeella-virheita? (boolean virheita?)
+        :lomakkeella-virheita? (boolean (seq lomake-virheet))
         :muokattava-muutos (lomake/ilman-lomaketietoja lomake))))
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet laskenta-automatiikka?] :as app}]
+                  {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           puuttuvat-pakolliset-kentat (map
                                         #(get pakolliset-kentat-fmt %)
                                         (lomake/puuttuvat-pakolliset-kentat muutos))
-          muutos (-> muutos
-                   (lomake/ilman-lomaketietoja)
-                   (muutos-ilman-ui-tietoja))
+          ;; Pysyvän muutoksen vaikutusten validointi on erikoistapaus
+          ;; Tehdään se erikseen tallentamisen yhteydessä, jotta validointi ei käy liian raskaaksi
+          pysyvan-muutoksen-virheet (if (= (:tyyppi muutos) "pysyva")
+                                      (validoi-pysyvan-muutoksen-vaikutukset muutos)
+                                      [])
+
+          ;; Yhdistetään mahdolliset pysyvän muutoksen virheet lomakkeen omiin validointivirheiseisiin
+          lomake-virheet (concat
+                           (koosta-lomakkeen-validaatio-virheet muutos)
+                           (koosta-pysyvan-muutoksen-lomake-virheet pysyvan-muutoksen-virheet))
+
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
                   (filter #(and
@@ -312,14 +368,19 @@
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
 
-          muutos (assoc muutos :kulut kulut)]
+          muutos (assoc muutos :kulut kulut)
+          ;; Siivotaan lomakeen ylimääräiset tiedot pois ennen lähettämistä backendille
+          muutos-payload (-> muutos
+                           (lomake/ilman-lomaketietoja)
+                           (muutos-ilman-ui-tietoja))]
 
       (if (or
             (some? (vals lomake-virheet))
             (seq puuttuvat-pakolliset-kentat))
         (-> app
-          (assoc :voi-tallentaa? false)
           (assoc :tallenna-painettu? true)
+          (assoc :lomake-virheet lomake-virheet)
+          (assoc :lomakkeella-virheita? (boolean (seq lomake-virheet)))
           (assoc-in [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat))
         (do
           (tuck-apurit/post! :tallenna-muutos
@@ -327,7 +388,7 @@
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
              :laskenta-automatiikka? laskenta-automatiikka?
-             :muutos muutos}
+             :muutos muutos-payload}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
              :paasta-virhe-lapi? true})
