@@ -81,6 +81,7 @@
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
+(defrecord ValidoiLomake [])
 (defrecord PaivitaLomake [lomake])
 
 (defrecord MuokkaaMuutosta [rivi])
@@ -209,6 +210,15 @@
 (defn koosta-lomakkeen-validaatio-virheet [lomake]
   (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %)))))
 
+(defn validoi-lomake [lomake]
+  (let [pysyvan-muutoksen-virheet (if (= (:tyyppi lomake) "pysyva")
+                                    (validoi-pysyvan-muutoksen-vaikutukset lomake)
+                                    [])
+        lomake-virheet (concat
+                         (koosta-lomakkeen-validaatio-virheet lomake)
+                         (koosta-pysyvan-muutoksen-lomake-virheet pysyvan-muutoksen-virheet))]
+    lomake-virheet))
+
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
@@ -332,43 +342,52 @@
       (assoc :voi-tallentaa? true)
       (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
-  PaivitaLomake
-  (process-event [{:keys [lomake]} app]
-    ;; Koostetaan tässä vain 'standardit' validaatiovirheet
-    ;; Pysyvän muutoksen virheitä ei kannata tarkastaa tässä validaation monimutkaisuuden vuoksi
-    (let [lomake-virheet (koosta-lomakkeen-validaatio-virheet lomake)]
+  ValidoiLomake
+  (process-event [_ app]
+    ;; Haetaan viimeisin lomakedata suoraan app-tilasta
+    (let [lomake-virheet (validoi-lomake (:muokattava-muutos app))]
       (assoc app
         :voi-tallentaa? true
         :lomake-virheet lomake-virheet
-        :lomakkeella-virheita? (boolean (seq lomake-virheet))
-        :muokattava-muutos (lomake/ilman-lomaketietoja lomake))))
+        :lomakkeella-virheita? (boolean (seq lomake-virheet)))))
+
+  ;; PäivitäLomake-eventtiä kutsutaan aina, kun lomakkeen peruskenttiä muutetaan tai hoitovuotta vaihdetaan
+  PaivitaLomake
+  (process-event [{:keys [lomake]} app]
+    (tuck/fx
+      (assoc app
+        :voi-tallentaa? true
+        :muokattava-muutos (lomake/ilman-lomaketietoja lomake))
+      ;; Viivästytetään lomakkeen validointia.
+      ;; Ei validoida lomaketa joka näppäimenpainalluksella tai muutoksella.
+      ;; Debounce-timer resetoituu sisäisesti, mikäli uusi muutos tulee ennen timeouttia (kunhan :id määritetty)
+      {:tuck.effect/type :debounce
+       :id :paivita-lomake-validaatio
+       :event #(->ValidoiLomake)
+       :timeout 500}))
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
                   {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
-          puuttuvat-pakolliset-kentat (map
-                                        #(get pakolliset-kentat-fmt %)
-                                        (lomake/puuttuvat-pakolliset-kentat muutos))
-          ;; Pysyvän muutoksen vaikutusten validointi on erikoistapaus
-          ;; Tehdään se erikseen tallentamisen yhteydessä, jotta validointi ei käy liian raskaaksi
-          pysyvan-muutoksen-virheet (if (= (:tyyppi muutos) "pysyva")
-                                      (validoi-pysyvan-muutoksen-vaikutukset muutos)
-                                      [])
-
-          ;; Yhdistetään mahdolliset pysyvän muutoksen virheet lomakkeen omiin validointivirheiseisiin
-          lomake-virheet (concat
-                           (koosta-lomakkeen-validaatio-virheet muutos)
-                           (koosta-pysyvan-muutoksen-lomake-virheet pysyvan-muutoksen-virheet))
-
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
                   (filter #(and
                              (some? (:tavoitehinnan-muutos %))
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
-
           muutos (assoc muutos :kulut kulut)
+
+          puuttuvat-pakolliset-kentat (map
+                                        #(get pakolliset-kentat-fmt %)
+                                        (lomake/puuttuvat-pakolliset-kentat muutos))
+          ;; Pysyvän muutoksen vaikutusten validointi on erikoistapaus, se pitää suorittaa vielä
+          ;; tallennuksen yhteydessä. Tämä siksi, että pysyvän muutoksen grid ym. on irtaallaan lomakkeen
+          ;; normaalista päivityslogiikasta, ja muutoksia tilaan tulee muistakin eventeistä kuin PaivitaLomake-eventistä.
+          ;; Lomakkeen validointia ei kannata viljellä jokaisen pysyvän muutoksen Tuck-eventin yhteyteen, koska
+          ;; se lisää turhaa kompleksisuutta ja fragiiliutta.
+          lomake-virheet (validoi-lomake muutos)
+
           ;; Siivotaan lomakeen ylimääräiset tiedot pois ennen lähettämistä backendille
           muutos-payload (-> muutos
                            (lomake/ilman-lomaketietoja)
