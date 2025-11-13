@@ -186,7 +186,10 @@
                           #(and (= alkuvuosi (:hoitokauden_alkuvuosi %)) (not (:poistettu %)))
                           (:tehtavat_ja_maarat rivi))
                     kv-syotetty? (and kv (number? (:summa kv)) (not= 0 (:summa kv)))
-                    tjm-syotetty? (some #(and (number? (:maaramuutos %)) (not= 0 (:maaramuutos %))) tjm)
+                    tjm-syotetty? (some #(and
+                                           (and (number? (:maaramuutos %)) (number? (:tehtava %)))
+                                           ;; Validi tehtävä-id (> 0) JA määrämuutos pitää olla syötettynä
+                                           (and (pos? (:tehtava %)) (not= 0 (:maaramuutos %)))) tjm)
                     toinen-syotetty? (or kv-syotetty? tjm-syotetty?)
                     molemmat-ok? (and kv-syotetty? tjm-syotetty?)]
               ;; Luodaan virhe-map, vain jos toinen vaadituista asioista on syötetty
