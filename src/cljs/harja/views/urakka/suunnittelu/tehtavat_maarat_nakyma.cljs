@@ -3,6 +3,8 @@
             [harja.ui.dom :as dom]
             [tuck.core :as tuck]
             [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -10,6 +12,7 @@
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.napit :as napit]
 
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
@@ -53,6 +56,15 @@
            :luokka "ikoni-16"
            :vayla-tyyli? false
            :ikoni (ikonit/action-copy)}]])
+      ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
+      (when (and (k/kehitysymparistossa?)
+              (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+        [:span {:style {:margin-left "1rem"}}
+         [napit/tallenna "Pikatäytä arvot kaikille tehtäville"
+          #(when (and (k/kehitysymparistossa?)
+                   (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+             (e! (tiedot/->TestiTallennaKaikkiinTehtaviinArvo)))
+          {:luokka "nappi-ensisijainen"}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
@@ -129,7 +141,7 @@
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
-                          "valiotsikko-tausta korkea"))
+                            "valiotsikko-tausta korkea"))
         sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
@@ -242,17 +254,17 @@
           #(get @tila/suunnittelu-tehtavat-maarat :tallentamattomia-muutoksia?)
           :beforeunload-viesti "Tehtävä- ja määräluettelo -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
     (komp/luo
-         (komp/lippu tiedot/nakymassa?)
-         (komp/sisaan #(do
-                         (e! (tiedot/->HaeTehtavatJaMaarat nil))
-                         (sisaan)))
+      (komp/lippu tiedot/nakymassa?)
+      (komp/sisaan #(do
+                      (e! (tiedot/->HaeTehtavatJaMaarat nil))
+                      (sisaan)))
       (komp/ulos
         #(do
            (e! (tiedot/->NollaaTehtavatJaMaaratMuutokset))
            (ulos)))
-         (fn [e! app]
-           [:div
-            [nakyma e! app]]))))
+      (fn [e! app]
+        [:div
+         [nakyma e! app]]))))
 
 (defn tehtavat-maarat []
   (tuck/tuck tila/suunnittelu-tehtavat-maarat tehtavat-maarat*))
