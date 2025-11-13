@@ -81,7 +81,7 @@
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
-(defrecord ValidoiLomake [])
+(defrecord ValidoiLomake [lomake])
 (defrecord PaivitaLomake [lomake])
 
 (defrecord MuokkaaMuutosta [rivi])
@@ -343,9 +343,9 @@
       (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
   ValidoiLomake
-  (process-event [_ app]
+  (process-event [{:keys [lomake]} app]
     ;; Haetaan viimeisin lomakedata suoraan app-tilasta
-    (let [lomake-virheet (validoi-lomake (:muokattava-muutos app))]
+    (let [lomake-virheet (validoi-lomake lomake)]
       (assoc app
         :voi-tallentaa? true
         :lomake-virheet lomake-virheet
@@ -363,7 +363,7 @@
       ;; Debounce-timer resetoituu sisäisesti, mikäli uusi muutos tulee ennen timeouttia (kunhan :id määritetty)
       {:tuck.effect/type :debounce
        :id :paivita-lomake-validaatio
-       :event #(->ValidoiLomake)
+       :event #(->ValidoiLomake lomake)
        :timeout 500}))
 
   TallennaMuutos
