@@ -59,7 +59,7 @@
 // PERUSTYYLI - Jaetut ominaisuudet
 // ============================================================================
 
-.tabs-modern-base() {
+.tabit-pohja() {
   display: flex;
   align-items: center;
   position: relative;
@@ -115,8 +115,8 @@
 // TYYLI 1: SPACED TABS - Väljä tyyli suurille päävalikko-tabeille
 // ============================================================================
 
-.tabs-spaced {
-  .tabs-modern-base();
+.tabit-valjas {
+  .tabit-pohja();
   border-bottom: 1px solid @tabi-reunan-vari;
   gap: @tabi-vali-iso;
   
@@ -166,9 +166,9 @@
   }
 }
 
-// Kokovaihtoehdot spaced-tabeille
-.tabs-spaced-lg {
-  .tabs-spaced();
+// Kokovaihtoehdot väljiä-tabeille
+.tabit-valjas-iso {
+  .tabit-valjas();
   gap: 0.2rem; // Pieni väli tabien välillä
   
   > li > a {
@@ -178,8 +178,8 @@
   }
 }
 
-.tabs-spaced-md {
-  .tabs-spaced();
+.tabit-valjas-keski {
+  .tabit-valjas();
   gap: @tabi-vali-keski;
   
   > li > a {
@@ -188,8 +188,8 @@
   }
 }
 
-.tabs-spaced-sm {
-  .tabs-spaced();
+.tabit-valjas-pieni {
+  .tabit-valjas();
   gap: @tabi-vali-pieni;
   
   > li > a {
@@ -204,8 +204,8 @@
 // TYYLI 2: COMPACT TABS - Tiivis tyyli alitason tabeille
 // ============================================================================
 
-.tabs-compact {
-  .tabs-modern-base();
+.tabit-tiivis {
+  .tabit-pohja();
   border-bottom: none; // Ei border-bottomia pill-tabeissa
   gap: 0.2rem; // Pieni väli pill-tabien välillä
   margin-top: 0.75rem !important; // 12px väli yläpuolella
@@ -251,9 +251,9 @@
   }
 }
 
-// Kokovaihtoehdot compact-tabeille
-.tabs-compact-lg {
-  .tabs-compact();
+// Kokovaihtoehdot tiiviille tabeille
+.tabit-tiivis-iso {
+  .tabit-tiivis();
   gap: 1rem; // Suurempi gap isommille tabeille
   
   > li > a {
@@ -262,8 +262,8 @@
   }
 }
 
-.tabs-compact-md {
-  .tabs-compact();
+.tabit-tiivis-keski {
+  .tabit-tiivis();
   gap: 0.2rem; // Pieni väli
   
   // Kontainerin tyylit (pill-tabit yleensä kontainerissa)
@@ -278,8 +278,8 @@
   }
 }
 
-.tabs-compact-sm {
-  .tabs-compact();
+.tabit-tiivis-pieni {
+  .tabit-tiivis();
   gap: 0.5rem; // Pienempi gap pienille tabeille
   
   > li > a {
@@ -293,8 +293,8 @@
 // TYYLI 3: PILL TABS - Pyöristetyt pill-tabit pienille alatasoille
 // ============================================================================
 
-.tabs-pill {
-  .tabs-modern-base();
+.tabit-pill {
+  .tabit-pohja();
   border-bottom: none; // Ei border-bottomia pill-tabeissa
   gap: 0.5rem;
   
@@ -329,8 +329,8 @@
 }
 
 // Kokovaihtoehdot pill-tabeille
-.tabs-pill-lg {
-  .tabs-pill();
+.tabit-pill-iso {
+  .tabit-pill();
   gap: 0.75rem;
   
   > li > a {
@@ -339,8 +339,8 @@
   }
 }
 
-.tabs-pill-md {
-  .tabs-pill();
+.tabit-pill-keski {
+  .tabit-pill();
   gap: 0.5rem;
   
   > li > a {
@@ -349,8 +349,8 @@
   }
 }
 
-.tabs-pill-sm {
-  .tabs-pill();
+.tabit-pill-pieni {
+  .tabit-pill();
   gap: 0.375rem;
   
   > li > a {
@@ -364,7 +364,7 @@
 // SCROLLAUS-TUKI
 // ============================================================================
 
-.tabs-scrollable {
+.tabit-vieritettava {
   position: relative;
   
   // Gradient fade vasemmalla
@@ -412,11 +412,11 @@
 
 
 // ============================================================================
-// TABS-UNDERLINE (Alias tabs-spaced - suositeltu käyttöön)
+// TABS-UNDERLINE (Alias tabit-valjas - suositeltu käyttöön)
 // ============================================================================
 
-.tabs-underline-lg {
-  .tabs-spaced-lg();
+.tabit-alaviiva-iso {
+  .tabit-valjas-iso();
   padding-top: 0.25rem;    // Tilaa focus-outlinelle ylhäällä
   padding-bottom: 0.25rem; // Tilaa focus-outlinelle alhaalla
   
@@ -435,12 +435,12 @@
   }
 }
 
-.tabs-underline-md {
-  .tabs-spaced-md();
+.tabit-alaviiva-keski {
+  .tabit-valjas-keski();
 }
 
-.tabs-underline-sm {
-  .tabs-spaced-sm();
+.tabit-alaviiva-pieni {
+  .tabit-valjas-pieni();
 }
 
 
@@ -449,12 +449,11 @@
 // ============================================================================
 
 @media (max-width: 768px) {
-  .tabs-spaced,
-  .tabs-spaced-lg,
-  .tabs-spaced-md,
-  .tabs-underline,
-  .tabs-underline-lg,
-  .tabs-underline-md {
+  .tabit-valjas,
+  .tabit-valjas-iso,
+  .tabit-valjas-keski,
+  .tabit-alaviiva-iso,
+  .tabit-alaviiva-keski {
     gap: 1rem;
     
     > li > a {
@@ -464,12 +463,9 @@
     }
   }
   
-  .tabs-compact,
-  .tabs-compact-lg,
-  .tabs-compact-md,
-  .tabs-boxed,
-  .tabs-boxed-lg,
-  .tabs-boxed-md {
+  .tabit-tiivis,
+  .tabit-tiivis-iso,
+  .tabit-tiivis-keski {
     gap: 0.25rem;
     
     > li > a {
@@ -479,9 +475,9 @@
     }
   }
   
-  .tabs-pill,
-  .tabs-pill-lg,
-  .tabs-pill-md {
+  .tabit-pill,
+  .tabit-pill-iso,
+  .tabit-pill-keski {
     gap: 0.25rem;
     
     > li > a {
@@ -491,3 +487,22 @@
     }
   }
 }
+
+
+// ============================================================================
+// VANHAT LUOKAT (Aliakset taaksepäin yhteensopivuutta varten)
+// ============================================================================
+
+// Pääluokat
+.tabs-underline-lg { .tabit-alaviiva-iso(); }
+.tabs-compact-md { .tabit-tiivis-keski(); }
+
+// Muut luokat (jos tarvitaan)
+.tabs-spaced-lg { .tabit-valjas-iso(); }
+.tabs-spaced-md { .tabit-valjas-keski(); }
+.tabs-spaced-sm { .tabit-valjas-pieni(); }
+.tabs-compact-lg { .tabit-tiivis-iso(); }
+.tabs-compact-sm { .tabit-tiivis-pieni(); }
+.tabs-pill-lg { .tabit-pill-iso(); }
+.tabs-pill-md { .tabit-pill-keski(); }
+.tabs-pill-sm { .tabit-pill-pieni(); }
