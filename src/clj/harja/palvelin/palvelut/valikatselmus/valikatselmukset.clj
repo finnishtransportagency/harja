@@ -156,7 +156,7 @@
     kustannukset-jarjestettyna))
 
 (defn hae-valikatselmuksen-tiedot-hoitovuodelle [db kayttaja {:keys [urakkaid hoitovuosi]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet kayttaja urakkaid)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakka db urakkaid))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
@@ -725,7 +725,7 @@
 (defn onko-paatoksia-tekematta
   "Päätellään onko jokin päätös vielä tekemättä. Esim. raporttipäätös voi olla tekemättä ja tämä palauttaa true."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakkaid)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä

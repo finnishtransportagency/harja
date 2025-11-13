@@ -67,6 +67,7 @@
 ;; Tilaajan käyttäjä
 (def tilaajan-kayttaja {:roolit #{"Tilaajan_Kayttaja"}
                         :urakkaroolit {}
+                        :organisaatioroolit {}
                         :organisaatio livi
                         :organisaation-urakat #{}})
 
@@ -87,6 +88,13 @@
 ;; Tilaajan laadunvalvoja
 (def tilaajan-lv {:roolit #{}
                   :urakkaroolit {1 #{"Tilaajan_laadunvalvoja"}}
+                  :organisaatioroolit {}
+                  :organisaatio livi
+                  :organisaation-urakat #{}})
+
+;; Tilaajan urakanvalvoja
+(def tilaajan-uv {:roolit #{}
+                  :urakkaroolit {1 #{"Tilaajan_Urakanvalvoja"}}
                   :organisaatioroolit {}
                   :organisaatio livi
                   :organisaation-urakat #{}})
@@ -230,3 +238,67 @@
 (deftest jvh-voi-kirjoittaa-suolatoteumat
   (is (oikeudet/voi-lukea? oikeudet/urakat-toteumat-suola 123 jvh))
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola 123 jvh)))
+
+(deftest lupaus-oikeudet-perusteet
+  (testing "JVH saa lukea ja kirjoittaa lupauksia"
+    (is (oikeudet/voi-lukea? oikeudet/urakat-lupaukset 1 jvh))
+    (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 1 jvh)))
+  
+  (testing "ELY urakanvalvoja saa lukea ja kirjoittaa omaan urakkaan"
+    (is (oikeudet/voi-lukea? oikeudet/urakat-lupaukset 1 ely-uv))
+    (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 1 ely-uv)))
+  
+  (testing "Urakoitsija saa lukea ja kirjoittaa omaan urakkaan"
+    (is (oikeudet/voi-lukea? oikeudet/urakat-lupaukset 1 ur-pk))
+    (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 1 ur-pk))
+    (is (oikeudet/voi-lukea? oikeudet/urakat-lupaukset 1 ur-uvh))
+    (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 1 ur-uvh)))
+  
+  (testing "Urakoitsija ei saa kirjoittaa muiden urakoihin"
+    (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 4 ur-pk)))
+    (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset 2 ur-uvh)))))
+
+(deftest lupaus-paatos-erikoisoikeus
+  (testing "JVH voi tehdä päätöksiä"
+    (is (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 jvh)))
+  
+  (testing "ELY urakanvalvoja voi tehdä päätöksiä omaan urakkaan"
+    (is (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 ely-uv))
+    ;; Voi tehdä myös eri ELYn urakkaan jos on nimetty
+    (is (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 4 ely-uv-eri-elyssa)))
+  
+  (testing "Tilaajan urakanvalvoja voi tehdä päätöksiä"
+    (is (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 tilaajan-uv)))
+  
+  (testing "Urakoitsija EI voi tehdä päätöksiä"
+    (is (not (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 ur-pk)))
+    (is (not (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 ur-uvh))))
+  
+  (testing "Tilaajan peruskäyttäjä ei voi tehdä päätöksiä"
+    (is (not (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 tilaajan-kayttaja))))
+  
+  (testing "ELY käyttäjä (ei urakanvalvoja) ei voi tehdä päätöksiä"
+    (is (not (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-lupaukset 1 ely-kayttaja)))))
+
+(deftest lupaus-kustannusennuste-erikoisoikeus
+  (testing "JVH voi syöttää kustannusennusteita"
+    (is (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 jvh)))
+  
+  (testing "ELY urakanvalvoja voi syöttää kustannusennusteita"
+    (is (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ely-uv)))
+  
+  (testing "Tilaajan urakanvalvoja voi syöttää kustannusennusteita"
+    (is (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 tilaajan-uv)))
+  
+  (testing "Urakoitsijan vastuuhenkilö voi syöttää kustannusennusteita kirjauskuukausiin"
+    (is (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ur-uvh)))
+  
+  (testing "Urakoitsijan pääkäyttäjä voi syöttää kustannusennusteita"
+    ;; Excel: Paakayttaja saa kustannusennuste+ oikeuden (organisaation urakat)
+    (is (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ur-pk)))
+  
+  (testing "Tilaajan peruskäyttäjä ei voi syöttää kustannusennusteita"
+    (is (not (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 tilaajan-kayttaja))))
+  
+  (testing "ELY käyttäjä (ei urakanvalvoja) ei voi syöttää kustannusennusteita"
+    (is (not (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ely-kayttaja)))))
