@@ -9,50 +9,50 @@
 // ============================================================================
 
 // Värit
-@tab-primary: #0055A4;                    // Pääväri (sininen)
-@tab-primary-light: #D6E4FF;              // Vaalea sininen
-@tab-primary-hover: #0066CC;              // Hover-sininen
+@tabi-paavari: #0055A4;                    // Pääväri (sininen)
+@tabi-paavari-vaalea: #D6E4FF;            // Vaalea sininen
+@tabi-paavari-hover: #0066CC;             // Hover-sininen
 
-@tab-text-default: #4B5563;               // Ei-aktiivinen teksti (tummempi harmaa, parempi kontrasti)
-@tab-text-hover: #1F2937;                 // Hover-teksti (vielä tummempi)
-@tab-text-active: @tab-primary;           // Aktiivinen teksti (sininen)
+@tabi-teksti-oletus: #4B5563;             // Ei-aktiivinen teksti (tummempi harmaa, parempi kontrasti)
+@tabi-teksti-hover: #1F2937;              // Hover-teksti (vielä tummempi)
+@tabi-teksti-aktiivinen: @tabi-paavari;   // Aktiivinen teksti (sininen)
 
-@tab-border-color: #E5E7EB;               // Pohjan border
-@tab-bg-hover: #F9FAFB;                   // Hover-tausta
-@tab-bg-active-light: @tab-primary-light; // Aktiivisen tausta (pill-tyylissä)
+@tabi-reunan-vari: #E5E7EB;               // Pohjan border
+@tabi-tausta-hover: #F9FAFB;              // Hover-tausta
+@tabi-tausta-aktiivinen-vaalea: @tabi-paavari-vaalea; // Aktiivisen tausta (pill-tyylissä)
 
 // Pill-tabien värit
-@tab-pill-bg-default: #f0f2f5;            // Pill-tabin oletustausta
-@tab-pill-bg-active: #fafafa;             // Pill-tabin aktiivinen tausta
-@tab-pill-border: #f0f2f5;                // Pill-tabin border
-@tab-pill-shadow: #cdcdcd;                // Pill-tabin varjo
-@tab-container-bg: #f0f2f5;               // Kontainerin tausta (tabs-boxed-md)
+@tabi-pill-tausta-oletus: #f0f2f5;        // Pill-tabin oletustausta
+@tabi-pill-tausta-aktiivinen: #fafafa;    // Pill-tabin aktiivinen tausta
+@tabi-pill-reuna: #f0f2f5;                // Pill-tabin border
+@tabi-pill-varjo: #cdcdcd;                // Pill-tabin varjo
+@tabi-kontaineri-tausta: #f0f2f5;         // Kontainerin tausta
 
 // Koot ja spacing
-@tab-padding-lg: 0.75rem 1rem;            // Large padding
-@tab-padding-md: 0.75rem 1rem;            // Medium padding
-@tab-padding-sm: 0.5rem 0.75rem;          // Small padding
-@tab-padding-pill: 0.75rem 1.25rem;       // Pill-tabien padding (12px 20px)
+@tabi-sisennys-iso: 0.75rem 1rem;         // Large padding
+@tabi-sisennys-keski: 0.75rem 1rem;       // Medium padding
+@tabi-sisennys-pieni: 0.5rem 0.75rem;     // Small padding
+@tabi-sisennys-pill: 0.75rem 1.25rem;     // Pill-tabien padding (12px 20px)
 
-@tab-gap-lg: 1rem;                        // Väli tabien välillä (large)
-@tab-gap-md: 1.5rem;                      // Väli tabien välillä (medium)
-@tab-gap-sm: 1rem;                        // Väli tabien välillä (small)
+@tabi-vali-iso: 1rem;                     // Väli tabien välillä (large)
+@tabi-vali-keski: 1.5rem;                 // Väli tabien välillä (medium)
+@tabi-vali-pieni: 1rem;                   // Väli tabien välillä (small)
 
-@tab-indicator-height: 3px;               // Alaviivan korkeus (kaikissa tyyleissä)
+@tabi-indikaattorin-korkeus: 3px;         // Alaviivan korkeus (kaikissa tyyleissä)
 
-@tab-font-weight-default: 600;            // Fontin paino
-@tab-font-weight-active: 700;             // Aktiivisen fontin paino
+@tabi-fontin-paino-oletus: 600;           // Fontin paino
+@tabi-fontin-paino-aktiivinen: 700;       // Aktiivisen fontin paino
 
 // Border ja shadow
-@tab-pill-border-width: 1px;              // Pill-tabin borderin leveys
-@tab-pill-border-radius: 9999px;          // Täysin pyöristetty pill-muoto
-@tab-pill-shadow-active: 0 0 0.25rem @tab-pill-shadow; // Aktiivisen pill-tabin varjo (4px)
-@tab-container-border-radius: 1.875rem;   // Kontainerin pyöristys (30px)
-@tab-container-padding: 0.3125rem;        // Kontainerin padding (5px)
-@tab-container-shadow: inset 0 0 0.125rem @tab-pill-shadow; // Kontainerin sisäinen varjo (2px)
+@tabi-pill-reunan-leveys: 1px;            // Pill-tabin borderin leveys
+@tabi-pill-reunan-pyoristys: 9999px;      // Täysin pyöristetty pill-muoto
+@tabi-pill-varjo-aktiivinen: 0 0 0.25rem @tabi-pill-varjo; // Aktiivisen pill-tabin varjo (4px)
+@tabi-kontaineri-reunan-pyoristys: 1.875rem; // Kontainerin pyöristys (30px)
+@tabi-kontaineri-sisennys: 0.3125rem;     // Kontainerin padding (5px)
+@tabi-kontaineri-varjo: inset 0 0 0.125rem @tabi-pill-varjo; // Kontainerin sisäinen varjo (2px)
 
 // Transitiot
-@tab-transition: all 0.2s ease-in-out;
+@tabi-siirtyma: all 0.2s ease-in-out;
 
 
 // ============================================================================
@@ -84,12 +84,12 @@
     > a {
       display: block;
       text-decoration: none;
-      transition: @tab-transition;
+      transition: @tabi-siirtyma;
       white-space: nowrap;
       cursor: pointer;
       
       &:focus {
-        outline: 2px solid @tab-primary;
+        outline: 2px solid @tabi-paavari;
         outline-offset: 2px;
       }
       
@@ -117,50 +117,50 @@
 
 .tabs-spaced {
   .tabs-modern-base();
-  border-bottom: 1px solid @tab-border-color;
-  gap: @tab-gap-lg;
+  border-bottom: 1px solid @tabi-reunan-vari;
+  gap: @tabi-vali-iso;
   
   > li {
     margin-bottom: -1px; // Overlap border
     
     > a {
-      padding: @tab-padding-lg;
-      padding-bottom: calc(0.75rem - @tab-indicator-height);
-      color: @tab-text-default;
-      font-weight: @tab-font-weight-default;
+      padding: @tabi-sisennys-iso;
+      padding-bottom: calc(0.75rem - @tabi-indikaattorin-korkeus);
+      color: @tabi-teksti-oletus;
+      font-weight: @tabi-fontin-paino-oletus;
       border: none; // Ei borderia
-      border-bottom: @tab-indicator-height solid transparent;
+      border-bottom: @tabi-indikaattorin-korkeus solid transparent;
       background-color: transparent;
       
       &:hover {
-        color: @tab-text-hover !important;
+        color: @tabi-teksti-hover !important;
         background-color: transparent !important;
         text-decoration: none;
         border: none !important; // Ei borderia hover-tilassa
-        border-bottom: @tab-indicator-height solid transparent !important;
+        border-bottom: @tabi-indikaattorin-korkeus solid transparent !important;
       }
     }
     
     &.active > a {
-      color: @tab-text-active;
-      font-weight: @tab-font-weight-active;
+      color: @tabi-teksti-aktiivinen;
+      font-weight: @tabi-fontin-paino-aktiivinen;
       border: none !important; // Ei borderia aktiivisessa tilassa (ylikirjoittaa Bootstrap:n)
-      border-bottom: @tab-indicator-height solid @tab-primary !important; // Vain alaviiva
+      border-bottom: @tabi-indikaattorin-korkeus solid @tabi-paavari !important; // Vain alaviiva
       background-color: transparent !important;
       cursor: default;
       
       &:hover {
-        color: @tab-text-active;
+        color: @tabi-teksti-aktiivinen;
         background-color: transparent !important;
         border: none !important;
-        border-bottom: @tab-indicator-height solid @tab-primary !important;
+        border-bottom: @tabi-indikaattorin-korkeus solid @tabi-paavari !important;
       }
       
       &:focus {
-        color: @tab-text-active;
+        color: @tabi-teksti-aktiivinen;
         background-color: transparent !important;
         border: none !important;
-        border-bottom: @tab-indicator-height solid @tab-primary !important;
+        border-bottom: @tabi-indikaattorin-korkeus solid @tabi-paavari !important;
       }
     }
   }
@@ -172,29 +172,29 @@
   gap: 0.2rem; // Pieni väli tabien välillä
   
   > li > a {
-    padding: @tab-padding-lg;
-    padding-bottom: calc(0.75rem - @tab-indicator-height);
+    padding: @tabi-sisennys-iso;
+    padding-bottom: calc(0.75rem - @tabi-indikaattorin-korkeus);
     font-size: 0.75rem; // 12px
   }
 }
 
 .tabs-spaced-md {
   .tabs-spaced();
-  gap: @tab-gap-md;
+  gap: @tabi-vali-keski;
   
   > li > a {
-    padding: @tab-padding-md;
+    padding: @tabi-sisennys-keski;
     font-size: 0.875rem;
   }
 }
 
 .tabs-spaced-sm {
   .tabs-spaced();
-  gap: @tab-gap-sm;
+  gap: @tabi-vali-pieni;
   
   > li > a {
-    padding: @tab-padding-sm;
-    padding-bottom: calc(0.5rem - @tab-indicator-height);
+    padding: @tabi-sisennys-pieni;
+    padding-bottom: calc(0.5rem - @tabi-indikaattorin-korkeus);
     font-size: 0.8125rem;
   }
 }
@@ -213,39 +213,39 @@
   
   > li {
     > a {
-      padding: @tab-padding-pill;
-      color: @tab-text-default;
-      font-weight: @tab-font-weight-active; // Aina bold
-      border-radius: @tab-pill-border-radius;
-      background-color: @tab-pill-bg-default !important;
-      border: @tab-pill-border-width solid @tab-pill-border !important;
+      padding: @tabi-sisennys-pill;
+      color: @tabi-teksti-oletus;
+      font-weight: @tabi-fontin-paino-aktiivinen; // Aina bold
+      border-radius: @tabi-pill-reunan-pyoristys;
+      background-color: @tabi-pill-tausta-oletus !important;
+      border: @tabi-pill-reunan-leveys solid @tabi-pill-reuna !important;
 
       &:hover {
-        color: @tab-text-hover;
-        background-color: fade(@tab-primary-light, 40%) !important; // Hieman vahvempi hover-tausta
+        color: @tabi-teksti-hover;
+        background-color: fade(@tabi-paavari-vaalea, 40%) !important; // Hieman vahvempi hover-tausta
         text-decoration: none;
-        border: @tab-pill-border-width solid @tab-pill-border !important;
+        border: @tabi-pill-reunan-leveys solid @tabi-pill-reuna !important;
       }
     }
     
     &.active > a {
-      color: @tab-primary; // Sininen teksti
-      font-weight: @tab-font-weight-active;
-      border: @tab-pill-border-width solid @tab-pill-border !important;
-      background-color: @tab-pill-bg-active !important;
+      color: @tabi-paavari; // Sininen teksti
+      font-weight: @tabi-fontin-paino-aktiivinen;
+      border: @tabi-pill-reunan-leveys solid @tabi-pill-reuna !important;
+      background-color: @tabi-pill-tausta-aktiivinen !important;
       cursor: default;
-      box-shadow: @tab-pill-shadow-active;
+      box-shadow: @tabi-pill-varjo-aktiivinen;
       
       &:hover {
-        color: @tab-primary;
-        background-color: @tab-pill-bg-active !important;
+        color: @tabi-paavari;
+        background-color: @tabi-pill-tausta-aktiivinen !important;
         border: none !important;
       }
       
       &:focus {
-        color: @tab-primary;
-        background-color: @tab-pill-bg-active !important;
-        border: @tab-pill-border-width solid @tab-primary !important;
+        color: @tabi-paavari;
+        background-color: @tabi-pill-tausta-aktiivinen !important;
+        border: @tabi-pill-reunan-leveys solid @tabi-paavari !important;
       }
     }
   }
@@ -257,7 +257,7 @@
   gap: 1rem; // Suurempi gap isommille tabeille
   
   > li > a {
-    padding: @tab-padding-lg;
+    padding: @tabi-sisennys-iso;
     font-size: 1rem;
   }
 }
@@ -267,13 +267,13 @@
   gap: 0.2rem; // Pieni väli
   
   // Kontainerin tyylit (pill-tabit yleensä kontainerissa)
-  background: @tab-container-bg;
-  padding: @tab-container-padding;
-  border-radius: @tab-container-border-radius;
-  box-shadow: @tab-container-shadow;
+  background: @tabi-kontaineri-tausta;
+  padding: @tabi-kontaineri-sisennys;
+  border-radius: @tabi-kontaineri-reunan-pyoristys;
+  box-shadow: @tabi-kontaineri-varjo;
   
   > li > a {
-    padding: @tab-padding-md;
+    padding: @tabi-sisennys-keski;
     font-size: 0.75rem; // 12px, sama kuin tabs-spaced-lg
   }
 }
@@ -283,7 +283,7 @@
   gap: 0.5rem; // Pienempi gap pienille tabeille
   
   > li > a {
-    padding: @tab-padding-sm;
+    padding: @tabi-sisennys-pieni;
     font-size: 0.8125rem;
   }
 }
@@ -300,29 +300,29 @@
   
   > li {
     > a {
-      padding: @tab-padding-sm;
-      color: @tab-text-default;
-      font-weight: @tab-font-weight-default;
+      padding: @tabi-sisennys-pieni;
+      color: @tabi-teksti-oletus;
+      font-weight: @tabi-fontin-paino-oletus;
       border-radius: 9999px; // Täysin pyöristetty
       background-color: transparent;
       border-bottom: none;
       
       &:hover {
-        color: @tab-text-hover;
-        background-color: @tab-bg-hover;
+        color: @tabi-teksti-hover;
+        background-color: @tabi-tausta-hover;
         text-decoration: none;
       }
     }
     
     &.active > a {
-      color: @tab-text-active;
-      font-weight: @tab-font-weight-active;
-      background-color: @tab-bg-active-light;
+      color: @tabi-teksti-aktiivinen;
+      font-weight: @tabi-fontin-paino-aktiivinen;
+      background-color: @tabi-tausta-aktiivinen-vaalea;
       cursor: default;
       
       &:hover {
-        color: @tab-text-active;
-        background-color: @tab-bg-active-light;
+        color: @tabi-teksti-aktiivinen;
+        background-color: @tabi-tausta-aktiivinen-vaalea;
       }
     }
   }
@@ -424,12 +424,12 @@
   > li > a {
     &:hover,
     &:focus {
-      color: @tab-text-hover !important;
+      color: @tabi-teksti-hover !important;
       background-color: transparent !important;
       text-decoration: none;
       border: none !important;
       border-color: transparent !important; // Ylikirjoittaa Bootstrap:n border-color
-      border-bottom: @tab-indicator-height solid @tab-primary !important; // Sininen alaviiva hover-tilassa
+      border-bottom: @tabi-indikaattorin-korkeus solid @tabi-paavari !important; // Sininen alaviiva hover-tilassa
       outline-offset: 2px; // Varmista outline-offset
     }
   }
