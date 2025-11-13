@@ -21,7 +21,7 @@
       (let [mhu-urakka? (= :teiden-hoito
                            (:tyyppi @nav/valittu-urakka))]
         [:span.laskutus
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
+         [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                    :active (nav/valittu-valilehti-atom :laskutus)}
           "Kulujen kohdistus"
           :kohdistetut-kulut

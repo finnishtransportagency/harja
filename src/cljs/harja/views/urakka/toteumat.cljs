@@ -30,7 +30,7 @@
                            (nav/vaihda-kartan-koko! :S))
                         #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn [{:keys [id] :as ur}]
-        [bs/tabs {:style :tabs :classes "tabs-taso2"
+        [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                   :active (nav/valittu-valilehti-atom :toteumat)}
 
          "Kokonaishintaiset työt" :kokonaishintaiset-tyot

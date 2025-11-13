@@ -38,7 +38,7 @@
                        @istunto/kayttaja)
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
         [:span.paikkaukset
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
+         [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                    :active (nav/valittu-valilehti-atom :kohdeluettelo-paikkaukset)}
 
           "Paikkauskohteet"

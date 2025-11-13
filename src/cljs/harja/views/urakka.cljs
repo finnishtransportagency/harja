@@ -203,7 +203,7 @@
 
     (hae-urakan-tyot ur)
     (if @u/urakan-tiedot-ladattu?
-      [bs/tabs {:style :tabs :classes "tabs-taso1"
+      [bs/tabs {:style :tabs :classes "tabit-alaviiva-iso"
                 :active (nav/valittu-valilehti-atom :urakat)
                 :on-change #(nav/aseta-valittu-valilehti! :urakat %)}
        "Yleiset"

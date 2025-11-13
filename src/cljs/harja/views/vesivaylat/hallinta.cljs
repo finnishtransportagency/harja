@@ -14,7 +14,7 @@
 
 (defn vesivayla-hallinta
   []
-  [bs/tabs {:style :tabs :classes "tabs-taso2"
+  [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
             :active (nav/valittu-valilehti-atom :vesivayla-hallinta)}
    "Sopimuksien luonti"
    :vesivaylasopimuksien-luonti

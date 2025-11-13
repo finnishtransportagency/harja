@@ -57,13 +57,21 @@ The following keys are supported in the configuration:
                                   :on-click #(vaihda-aktiivinen-tabi keyword %)
                                   :on-key-down #(when (dom/enter-nappain? %)
                                                   (vaihda-aktiivinen-tabi keyword %))}
-                                 (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+                                 (let [;; Tunnista tab-tyyli luokasta (tabit-alaviiva-iso, tabit-tiivis-keski, jne.)
+                                       tabs-class (or (re-find #"tabit-alaviiva-\w+" (str classes))
+                                                      (re-find #"tabit-tiivis-\w+" (str classes))
+                                                      (re-find #"tabit-valjas-\w+" (str classes))
+                                                      (re-find #"tabit-pill-\w+" (str classes))
+                                                      ;; Vanhat luokat (taaksepäin yhteensopivuus)
+                                                      (re-find #"tabs-underline-\w+" (str classes))
+                                                      (re-find #"tabs-compact-\w+" (str classes))
+                                                      (re-find #"tabs-spaced-\w+" (str classes)))
                                        cy-title (-> title
                                                     str
                                                     (clj-str/replace #"ä" "a")
                                                     (clj-str/replace #"ö" "o"))]
-                                   (if tabs-taso
-                                     {:data-cy (str tabs-taso "-" cy-title)}
+                                   (if tabs-class
+                                     {:data-cy (str tabs-class "-" cy-title)}
                                      {:data-cy cy-title})))
                  title]])]
             [:div.valilehti active-component]]))))))

@@ -76,7 +76,7 @@
     (fn [e! {ur :urakka :as app}]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
+         [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                    :active (nav/valittu-valilehti-atom :kohdeluettelo-paallystys)}
 
           "Päällystyskohteet"

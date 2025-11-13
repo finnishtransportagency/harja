@@ -61,7 +61,7 @@
     (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
     (fn [ur]
       [bs/tabs
-       {:style :tabs :classes "tabs-taso2"
+       {:style :tabs :classes "tabit-tiivis-keski"
         :active (nav/valittu-valilehti-atom :laadunseuranta)}
 
        "Tarkastukset" :tarkastukset

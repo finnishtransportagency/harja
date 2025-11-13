@@ -36,13 +36,13 @@
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
-  [bs/tabs {:style :tabs :classes "tabs-taso1"
+  [bs/tabs {:style :tabs :classes "tabit-alaviiva-iso"
             :active (nav/valittu-valilehti-atom :hallinta)}
 
    "Urakkatiedot"
    :hallinta-urakat
    ^{:key "urakoiden-hallinta"}
-   [bs/tabs {:style :tabs :classes "tabs-taso2"
+   [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
              :active (nav/valittu-valilehti-atom :hallinta-urakat)}
 
     "Indeksit"
@@ -142,7 +142,7 @@
    "Seuranta"
    :hallinta-seuranta
    ^{:key "seuranta"}
-   [bs/tabs {:style :tabs :classes "tabs-taso2"
+   [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
              :active (nav/valittu-valilehti-atom :hallinta-seuranta)}
 
     "Integraatiotilanne"
@@ -161,7 +161,7 @@
    "Järjestelmän hallinta"
    :hallinta-jarjestelma
    ^{:key "jarjestelma"}
-   [bs/tabs {:style :tabs :classes "tabs-taso2"
+   [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
              :active (nav/valittu-valilehti-atom :hallinta-jarjestelma)}
 
     "API-järjestelmätunnukset"
@@ -191,7 +191,7 @@
    "Työkalut"
    :hallinta-tyokalut
    ^{:key "tyokalut"}
-   [bs/tabs {:style :tabs :classes "tabs-taso2"
+   [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
              :active (nav/valittu-valilehti-atom :hallinta-tyokalut)}
 
     "Yhteydenpito"

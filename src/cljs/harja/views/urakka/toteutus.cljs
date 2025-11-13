@@ -20,7 +20,7 @@
       (fn [{:keys [id] :as ur}]
 
         [:span.suunnittelu
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
+         [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                    :active (nav/valittu-valilehti-atom :toteutus)}
 
           "Kokonaishintaiset työt"

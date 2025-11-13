@@ -12,7 +12,7 @@
 (defn kustannusten-kirjaus []
   (komp/luo
     (fn []
-       [bs/tabs {:style :tabs :classes "tabs-taso2"
+       [bs/tabs {:style :tabs :classes "tabit-tiivis-keski"
                  :active (nav/valittu-valilehti-atom :kustannusten-kirjaus)}
 
         "Tiemerkintöjen korjaus"

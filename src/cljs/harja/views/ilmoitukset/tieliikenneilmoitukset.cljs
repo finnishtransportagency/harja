@@ -546,7 +546,7 @@
     (if-not (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
       [tuck tiedot/ilmoitukset ilmoitukset*]
       ;; else
-      [bs/tabs {:style :tabs :classes "tabs-taso1"
+      [bs/tabs {:style :tabs :classes "tabit-alaviiva-iso"
                 :active (nav/valittu-valilehti-atom :ilmoitukset)}
 
        "Tieliikenne"

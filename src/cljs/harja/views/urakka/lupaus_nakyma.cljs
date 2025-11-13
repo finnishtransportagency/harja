@@ -390,7 +390,7 @@
     ;; vain MHU-urakoissa halutaan Lupaukset, jolloin alatabit näkyviin. Muutoin suoraan Välitavoitteet sisältö
     (if (= tyyppi :teiden-hoito)
       [bs/tabs
-       {:style :tabs :classes "tabs-taso2"
+       {:style :tabs :classes "tabit-tiivis-keski"
         :active (nav/valittu-valilehti-atom :valitavoitteet)}
 
        "Lupaukset" :lupaukset
