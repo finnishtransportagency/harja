@@ -484,10 +484,11 @@
                              [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) erillishankinnat)))
 
-(defn paivita-tavoite-ja-kattohinta
+#_ (defn paivita-tavoite-ja-kattohinta
   "Jokaisen kustannussuunnitelman muutoksen jälkeen tavoite- ja kattohinta pitää laskea uusiksi."
   [db kayttaja-id urakka-id hoitovuoden-alkuvuosi]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
@@ -529,13 +530,21 @@
                    {:urakka-id urakka-id
                     :hoitokausinumero hoitokausinumero
                     :tavoitehinta hoitovuoden-alun-tavoitehinta
+                    :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa
+                                                    hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
                     :kattohinta hoitovuoden-alun-kattohinta
+                    :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa
+                                                  hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
                     :muokkaaja kayttaja-id})
                  (lisaa-tavoite-ja-kattohinta<! db
                    {:urakka-id urakka-id
                     :hoitokausinumero hoitokausinumero
                     :tavoitehinta hoitovuoden-alun-tavoitehinta
+                    :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa
+                                                    hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
                     :kattohinta hoitovuoden-alun-kattohinta
+                    :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa
+                                                  hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
                     :luoja kayttaja-id}))]
     tiedot))
 
@@ -788,8 +797,9 @@
                          :luoja (:id kayttaja)}))]))]))
 
 (defn puuttuvat-suunnitelmat
-  "Jotta urakan tavoitehinta voidaan vahvistaa, Kustannusten Suunnittelussa pitää olla täydennettynä kaikki tiedot."
-  [db urakka-id hoitovuoden-alkuvuosi]
+  "Jotta urakan tavoitehinta voidaan vahvistaa, Kustannusten Suunnittelussa pitää olla täydennettynä kaikki tiedot ja niiden
+  täytyy vastata samoja arvoja, mitä tarjouksessa on annettu."
+  [db urakka-id hoitovuoden-alkuvuosi hoitovuoden-tarjous]
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
@@ -797,25 +807,48 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        kilpailutettavat-hankinnat-yht (apply + (map :yhteensa kilpailutettavat-hankinnat))
+        tarjous-hankinnat (filter (fn [rivi] (= "hankintakustannukset" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
+        tarjous-hankinnat-yht (:summa (first tarjous-hankinnat))
 
-        ;; Tarkistetaan, että hankinnat osio ei ole 0
-        puuttuvat (if-not (and (boolean (seq kilpailutettavat-hankinnat))
-                            (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
-                    (conj puuttuvat "Kilpailutettavat hankinnat") puuttuvat)
+
+        puuttuvat (cond
+                    ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat
+                    (and (>= urakan-alkuvuosi 2025) (boolean (seq kilpailutettavat-hankinnat)) (= kilpailutettavat-hankinnat-yht tarjous-hankinnat-yht))
+                    puuttuvat
+                    ;; Tarkistetaan, että hankinnat osio ei ole 0 2024 tai aiemmin alkaneilla
+                    (and (<= urakan-alkuvuosi 2024) (boolean (seq kilpailutettavat-hankinnat)) (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))
+                    puuttuvat
+                    :else (conj puuttuvat "Kilpailutettavat hankinnat"))
 
         erillishankinnat (hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        erillishankinnat-yht (apply + (map :summa erillishankinnat))
+        tarjous-erillishankinnat (filter (fn [rivi] (= "erillishankinnat" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
+        tarjous-erillishankinnat-yht (:summa (first tarjous-erillishankinnat))
 
-        ;; Tarkistetaan, että erillishankinnat osio ei ole 0
-        puuttuvat (if-not (and (boolean (seq erillishankinnat))
-                            (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
-                    (conj puuttuvat "Erillishankinnat") puuttuvat)
+        puuttuvat (cond
+                    ;; Tarkistetaan, että hankinnat osio = tarjouksen erillishankinnat
+                    (and (>= urakan-alkuvuosi 2025) (boolean (seq erillishankinnat)) (= erillishankinnat-yht tarjous-erillishankinnat-yht))
+                    puuttuvat
+                    ;; Tarkistetaan, että hankinnat osio ei ole 0 2024 tai aiemmin alkaneilla
+                    (and (<= urakan-alkuvuosi 2024) (boolean (seq erillishankinnat)) (some (fn [x] (not= (:summa x) 0)) erillishankinnat))
+                    puuttuvat
+                    :else (conj puuttuvat "Erillishankinnat"))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
+        hoidonjohtopalkkiot-yht (apply + (map :summa hoidonjohtopalkkiot))
+        tarjous-hoidonjohtopalkkiot (filter (fn [rivi] (= "hoidonjohtopalkkio" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
+        tarjous-hoidonjohtopalkkiot-yht (:summa (first tarjous-hoidonjohtopalkkiot))
 
-        ;; Tarkistetaan, että hoidonjohtopalkkio osio ei ole 0
-        puuttuvat (if-not (and (boolean (seq hoidonjohtopalkkiot))
-                            (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
-                    (conj puuttuvat "Hoidonjohtopalkkiot") puuttuvat)
+
+        puuttuvat (cond
+                    ;; Tarkistetaan, että hoidonjohtopalkkio osio = tarjouksen hoidonjohtopalkkiot
+                    (and (>= urakan-alkuvuosi 2025) (boolean (seq hoidonjohtopalkkiot)) (= hoidonjohtopalkkiot-yht tarjous-hoidonjohtopalkkiot-yht))
+                    puuttuvat
+                    ;; Tarkistetaan, että hoidonjohtopalkkio osio ei ole 0
+                    (and (<= urakan-alkuvuosi 2024) (boolean (seq hoidonjohtopalkkiot)) (some (fn [x] (not= (:summa x) 0)) hoidonjohtopalkkiot))
+                    puuttuvat
+                    :else (conj puuttuvat "Hoidonjohtopalkkiot"))
 
         johto-ja-hallintokorvaukset (cond
                                       (and (>= urakan-alkuvuosi 2019) (<= urakan-alkuvuosi 2024))
@@ -823,6 +856,13 @@
                                       (>= urakan-alkuvuosi 2025)
                                       (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
                                       :else (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
+        johto-ja-hallintokorvaukset-yht (if (<= urakan-alkuvuosi 2024)
+                                          (round2 2 (apply + (map :yhteensa-kk (mapcat :kuukaudet johto-ja-hallintokorvaukset))))
+                                          (apply + (map :summa johto-ja-hallintokorvaukset)))
+
+        tarjous-jjh (filter (fn [rivi] (= "johto-ja-hallintokorvaus" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
+        tarjous-jjh-yht (:summa (first tarjous-jjh))
+
 
         ;; Tarkistetaan että jotain on kirjattu jjh osioon
         jjh-summia-olemassa? (cond
@@ -835,16 +875,20 @@
                                           (zero? (or (:yhteensa-kk %) 0)))
                                    (mapcat :kuukaudet johto-ja-hallintokorvaukset)))
 
-                               ;; 25 sekä jälkeen oma tietomallinsa 
-                               ;; ({:summa 0, :vuosi 2025, :kuukausi 10, ..} 
+                               ;; 25 sekä jälkeen oma tietomallinsa
+                               ;; ({:summa 0, :vuosi 2025, :kuukausi 10, ..}
                                :else
                                (boolean
                                  (some
                                    #(not (zero? (or (:summa %) 0))) johto-ja-hallintokorvaukset)))
 
-        puuttuvat (if-not jjh-summia-olemassa?
-                    (conj puuttuvat "Johto-ja-hallintokorvaukset")
-                    puuttuvat)]
+        puuttuvat (cond
+                    ;; 2025 ja myöhemmin alkavilla urakoilla summien tulee täsmätä tarjouksen kanssa
+                    (and (>= urakan-alkuvuosi 2025) (= johto-ja-hallintokorvaukset-yht tarjous-jjh-yht))
+                    puuttuvat
+                    (and (<= urakan-alkuvuosi 2024) jjh-summia-olemassa?)
+                    puuttuvat
+                    :else (conj puuttuvat "Johto-ja-hallintokorvaukset"))]
     puuttuvat))
 
 (defn paivita-kustannussuunnitelman-tila [db vahvistetut-osiot vahvista? hoitovuoden-nro urakka-id osio kayttaja-id]

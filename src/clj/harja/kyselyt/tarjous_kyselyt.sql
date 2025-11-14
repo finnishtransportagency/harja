@@ -155,3 +155,18 @@ INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu
 VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
         :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
         :luoja, NOW());
+
+-- name: paivita-urakan-tavoite-ja-kattohinta<!
+UPDATE urakka_tavoite
+SET tavoitehinta = :tavoitehinta,
+    tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
+    kattohinta = :kattohinta,
+    kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
+    muokattu = NOW(),
+    muokkaaja = :muokkaaja
+WHERE urakka = :urakka-id
+  AND hoitokausi = :hoitokausinumero;
+
+-- name: lisaa-urakan-tavoite-ja-kattohinta<!
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);

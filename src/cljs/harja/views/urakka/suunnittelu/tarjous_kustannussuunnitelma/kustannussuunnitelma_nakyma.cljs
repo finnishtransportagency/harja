@@ -480,7 +480,7 @@
      (when (>= valittu-vuosi yhteiset/rajavuosi)
        [:div.row
         [:div.col-xs-12.korkea-rivi.bottom-border-text
-         [:div.col-xs-9.body-text.text-right.kohdista-teksti "Pysyvät muutokset"]
+         [:div.col-xs-9.body-text.text-right.kohdista-teksti "Pysyvät muutokset ilman indeksitarkistusta"]
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true pysyvat-muutokset-maara)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text

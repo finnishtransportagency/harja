@@ -33,8 +33,8 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
-    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) true #_ (>= (pvm/vuosi alkupvm) 2025))
+    :tarjous (and (= tyyppi :teiden-hoito) true #_ (>= (pvm/vuosi alkupvm) 2025))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
