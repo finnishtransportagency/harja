@@ -23,7 +23,8 @@
   hae-tarjouksen-tiedot hae-tarjous-vuodella
   hae-kustannus-tarjoukselle hae-rahavaraus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tarjous-tavoitehinnat paivita-urakan-tavoite-tarjous<!
-  lisaa-urakan-tavoite-tarjous<! paivita-rahavaraus-budjettiin<! lisaa-rahavaraus-budjettiin<!)
+  lisaa-urakan-tavoite-tarjous<! paivita-rahavaraus-budjettiin<! lisaa-rahavaraus-budjettiin<!
+  paivita-urakan-tavoite-ja-kattohinta<! lisaa-urakan-tavoite-ja-kattohinta<!)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -173,7 +174,7 @@
                  vuosittaiset-arvot))
              (filter #(not= "yhteensa" (:osio %)) (:tarjous tarjous-tietomalli)))))
 
-(defn tallenna-tarjouksen-kustannukset [db vuositarjous tietokantatarjous kustannuksetlistaus tarjousdb urakka-id kayttaja-id ]
+(defn tallenna-tarjouksen-kustannukset [db vuositarjous tietokantatarjous kustannuksetlistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
         _ (mapv (fn [kustannus]
                   (let [;; Varmistetaan, että käyttäjä antoi summan ennen tallennusta
