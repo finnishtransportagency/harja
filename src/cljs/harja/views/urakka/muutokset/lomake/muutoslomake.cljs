@@ -49,7 +49,7 @@
                       (not voi-tallentaa?)
                       muutoksen-tiedot-haku-kaynnissa?)
                   true
-                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
+                  false)}]
 
     [napit/peruuta "Peruuta"
      #(do
