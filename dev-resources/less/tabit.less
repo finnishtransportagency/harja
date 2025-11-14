@@ -20,6 +20,8 @@
 @tabi-reunan-vari: #E5E7EB;               // Pohjan border
 @tabi-tausta-hover: #F9FAFB;              // Hover-tausta
 @tabi-tausta-aktiivinen-vaalea: @tabi-paavari-vaalea; // Aktiivisen tausta (pill-tyylissä)
+@tabi-teksti-hover-valkoinen: white;      // Valkoinen hover-teksti (pill-tabeissa)
+@tabi-tausta-hover-sininen: #0066cc;      // Sininen hover-tausta (pill-tabeissa)
 
 // Pill-tabien värit
 @tabi-pill-tausta-oletus: #f0f2f5;        // Pill-tabin oletustausta
@@ -39,6 +41,7 @@
 @tabi-vali-pieni: 1rem;                   // Väli tabien välillä (small)
 
 @tabi-indikaattorin-korkeus: 3px;         // Alaviivan korkeus (kaikissa tyyleissä)
+@tabi-alaviiva-padding-bottom: 1px;       // Padding-bottom alaviiva-tabeissa
 
 @tabi-fontin-paino-oletus: 600;           // Fontin paino
 @tabi-fontin-paino-aktiivinen: 700;       // Aktiivisen fontin paino
@@ -221,10 +224,11 @@
       border: @tabi-pill-reunan-leveys solid @tabi-pill-reuna !important;
 
       &:hover {
-        color: @tabi-teksti-hover;
-        background-color: fade(@tabi-paavari-vaalea, 40%) !important; // Hieman vahvempi hover-tausta
+        color: @tabi-teksti-hover-valkoinen;
+        background-color: @tabi-tausta-hover-sininen !important; // Hieman vahvempi hover-tausta
         text-decoration: none;
         border: @tabi-pill-reunan-leveys solid @tabi-pill-reuna !important;
+        box-shadow: @tabi-pill-varjo-aktiivinen;
       }
     }
     
@@ -308,8 +312,8 @@
       border-bottom: none;
       
       &:hover {
-        color: @tabi-teksti-hover;
-        background-color: @tabi-tausta-hover;
+        color: @tabi-teksti-hover-valkoinen;
+        background-color: @tabi-tausta-hover-sininen;
         text-decoration: none;
       }
     }
@@ -418,7 +422,7 @@
 .tabit-alaviiva-iso {
   .tabit-valjas-iso();
   padding-top: 0.25rem;    // Tilaa focus-outlinelle ylhäällä
-  padding-bottom: 0.25rem; // Tilaa focus-outlinelle alhaalla
+  padding-bottom: @tabi-alaviiva-padding-bottom; // Tilaa focus-outlinelle alhaalla
   
   // Varmistetaan että hover-tyylit toimivat (ylikirjoittaa Bootstrap:n)
   > li > a {
