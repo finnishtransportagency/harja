@@ -26,8 +26,14 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet kayttaja urakka-id)
   (jdbc/with-db-transaction [conn db]
     (let [valittu-vuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
-          alkupvm (str valittu-vuosi "-10-01")
-          loppupvm (str (inc valittu-vuosi) "-09-30")
+          valittu-alku-kk (some-> valittu-hoitokausi (first) (pvm/kuukausi))
+          urakkavuosi? (= valittu-alku-kk 1)
+          alkupvm (if urakkavuosi?
+                    (str valittu-vuosi "-01-01")
+                    (str valittu-vuosi "-10-01"))
+          loppupvm (if urakkavuosi?
+                     (str valittu-vuosi "-12-31")
+                     (str (inc valittu-vuosi) "-09-30"))
           tuleva-hk (filter #(> (some-> % (first) (pvm/vuosi)) valittu-vuosi) hoitokaudet)]
 
       ;; Merkkaa kaikki tulevaisuuden välitavoitteet poistetuksi (varmistettu käyttäjältä)

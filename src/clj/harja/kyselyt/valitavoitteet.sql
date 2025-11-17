@@ -203,7 +203,7 @@ UPDATE valitavoite
        muokkaaja = :muokkaaja
 WHERE urakka = :urakka
   AND poistettu = FALSE
-  AND takaraja > :loppupvm::DATE
+  AND takaraja >= :loppupvm::DATE
   AND valtakunnallinen_valitavoite IS NULL;
 
 -- name: kopioi-urakkakohtaiset-valitavoitteet-vuodelle<!
@@ -231,7 +231,8 @@ SELECT
     v.yllapitokohde,
     FALSE
  FROM valitavoite v
-WHERE v.urakka = :urakka
+WHERE v.poistettu IS FALSE  
+  AND v.urakka = :urakka
   -- Kyse vain urakkakohtaisista, ei kosketa valtakunnallisiin 
   AND v.valtakunnallinen_valitavoite IS NULL
   AND v.takaraja BETWEEN :alkupvm::DATE AND :loppupvm::DATE

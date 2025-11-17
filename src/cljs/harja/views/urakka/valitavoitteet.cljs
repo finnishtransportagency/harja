@@ -122,15 +122,21 @@
 (defn urakan-omat-ja-valtakunnalliset-valitavoitteet-grid
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [e! {:keys [urakka valittu-hoitokausi yllapitokohteet valtakunnalliset-valitavoitteet ladataan?] :as app}]
-  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+  [e! {:keys [urakka valittu-hoitokausi yllapitokohteet urakan-valitavoitteet valtakunnalliset-valitavoitteet ladataan?] :as app}]
+  (let [yhdistetyt (into urakan-valitavoitteet valtakunnalliset-valitavoitteet)
+        muokattava-fn (fn [rivi]
+                        (boolean
+                          (not
+                            (some? (:valtakunnallinen-id rivi)))))
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
 
     [grid/grid
      {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
+      :voi-poistaa? muokattava-fn
       :tyhja (if (and
                    ladataan?
-                   (nil? valtakunnalliset-valitavoitteet))
+                   (nil? yhdistetyt))
                [yleiset/ajax-loader "Tavoitteita haetaan..."]
                "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
       :tallenna (if voi-muokata?
@@ -139,30 +145,47 @@
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
-     [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+     [{:otsikko "Nimi"
+       :muokattava? muokattava-fn
+       :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       (when @urakka/yllapitokohdeurakka?
-        (sarake-yllapitokohde urakka yllapitokohteet))
-      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
-                                                                    (pvm/pvm-opt %)
-                                                                    "Ei takarajaa")
+        (merge
+          {:muokattava? muokattava-fn}
+          (sarake-yllapitokohde urakka yllapitokohteet)))
+      {:otsikko "Taka\u00ADraja"
+       :muokattava? muokattava-fn
+       :leveys 20 :nimi :takaraja :fmt #(if %
+                                          (pvm/pvm-opt %)
+                                          "Ei takarajaa")
        :validoi [[:urakan-aikana]]
        :tyyppi :pvm}
-      {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+      {:otsikko "Tila"
+       :muokattava? (constantly false)
+       :leveys 20 :tyyppi :string
        :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
-      {:otsikko "Valmis\u00ADtumis\u00ADpäivä" :leveys 20 :tyyppi :pvm
-       :muokattava? (constantly voi-merkita-valmiiksi?)
+      {:otsikko "Valmis\u00ADtumis\u00ADpäivä"
+       :muokattava? #(and
+                       voi-merkita-valmiiksi?
+                       (boolean
+                         (not (some? (:valtakunnallinen-id %)))))
+       :leveys 20 :tyyppi :pvm
        :nimi :valmispvm
        :fmt #(if %
                (pvm/pvm-opt %)
                "-")}
       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
-       :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
-                                                  (:valmispvm %))
+       :leveys 35 :tyyppi :string
+       :muokattava? #(and
+                       voi-merkita-valmiiksi?
+                       (:valmispvm %)
+                       (boolean
+                         (not (some? (:valtakunnallinen-id %)))))
        :nimi :valmis-kommentti}
-      {:otsikko "Merkit\u00ADsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+      {:otsikko "Merkit\u00ADsijä"
+       :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (suodata-valitavoitteet-hoitokaudella valtakunnalliset-valitavoitteet valittu-hoitokausi)]))
+     (suodata-valitavoitteet-hoitokaudella yhdistetyt valittu-hoitokausi)]))
 
 (defn takaraja-poikkeaa-valtakunnallisesta? [{:keys [takaraja valtakunnallinen-takaraja
                                                      valtakunnallinen-takarajan-toistopaiva
@@ -309,7 +332,7 @@
             (when (and
                     ;; "Kaikki" ei ole valittuna
                     valittu-hoitokausi
-                    ;; Älä näytä yhdistetylle - täällä valtakunnallisia tavoitteita
+                    ;; Älä näytä yhdistetylle
                     nayta-urakkakohtaiset-grid?)
               [napit/yleinen-toissijainen "Kopioi urakkakohtaiset välitavoitteet tuleville hoitovuosille"
                (fn []
