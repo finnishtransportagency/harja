@@ -1,6 +1,7 @@
 (ns harja.domain.lupaus-domain-test
   (:require [clojure.test :refer :all]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [clj-time.coerce :as tc]))
 
@@ -317,3 +318,201 @@
       ;; Huhtikuu on kirjauskuukausissa
       (is (= #{4}
              (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 4 1 erikoisarvot))))))
+
+
+(deftest kayttaja-saa-vastata-test
+  (testing "Kirjauskuukausi - perustason kirjoitusoikeus riittää"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? false}
+          kayttaja-jolla-kirjoitusoikeus {:id 1}
+          kayttaja-ilman-oikeuksia {:id 2}]
+
+      ;; Mockaa voi-kirjoittaa? palauttamaan true käyttäjälle 1
+      (with-redefs [oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 1 (:id kayttaja)))]
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     kayttaja-jolla-kirjoitusoikeus
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Käyttäjä jolla kirjoitusoikeus saa vastata kirjauskuukauteen")
+        
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      kayttaja-ilman-oikeuksia
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Käyttäjä ilman oikeuksia ei saa vastata"))))
+
+  (testing "Päättävä kuukausi - tavallinen lupaus vaatii päätösoikeuden"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa on-muu-oikeus? - tilaajalla on päätösoikeus, urakoitsijalla ei
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))]
+        ;; Tilaaja saa tehdä päätöksen (Excel: W,päätös)
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa tehdä päätöksen")
+
+        ;; Urakoitsija ei saa tehdä päätöstä
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa tehdä päätöstä"))))
+
+  (testing "Päättävä kuukausi - kustannusennuste vaatii kustannusennuste-oikeuden"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa on-muu-oikeus? - tilaajalla on kustannusennuste-oikeus
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "kustannusennuste" oikeus)
+                                                    (= 3 (:id kayttaja))))]
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "kustannusennuste"
+                     123))
+            "Tilaaja saa syöttää kustannusennusteen")
+        
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "kustannusennuste"
+                      123))
+            "Urakoitsija ei saa syöttää kustannusennusteen päättävään kuukauteen"))))
+
+  (testing "Ei kirjaus- eikä päättävä kuukausi - ei saa vastata"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? false}
+          kayttaja {:id 1}]
+
+      ;; Ei tarvita mockausta, koska tämä ei kutsuu oikeusfunktioita
+      (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                    kayttaja
+                    lupaus-kuukausi
+                    "yksittainen"
+                    123))
+          "Ei-vastauskuukauteen ei saa vastata")))
+
+  (testing "Sekä kirjaus- että päättävä kuukausi - päätösoikeus vaaditaan"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa molemmat oikeusfunktiot
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))
+                    oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 4 (:id kayttaja)))]
+        
+        ;; Tilaajalla on päätösoikeus - saa vastata
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa vastata kun on päätösoikeus (vaikka on myös kirjauskuukausi)")
+
+        ;; Urakoitsijalla on vain kirjoitusoikeus, mutta EI päätösoikeutta
+        ;; Koska päättävä-kuukausi tarkistetaan ENSIN, urakoitsija ei saa vastata
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa vastata vaikka on kirjoitusoikeus, koska päätösoikeus puuttuu")))))
+
+(deftest kustannusennuste-maarapaiva-paattely-test
+  "Testaa määräpäivän päättelylogiikkaa eri ajanhetkinä."
+  (let [maarapaiva (pvm/luo-pvm 2025 10 15)
+        tiedot-syotetty true
+        tiedot-ei-syotetty false
+        ulkoinen-disabled false]
+    
+    (testing "Ennen määräpäivää - vastaaminen sallittu, ei read-only"
+      (let [nykyhetki (pvm/luo-pvm 2025 10 14)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä ei ole vielä ohitettu")
+        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
+        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
+        (is (false? (:disabled? tulos)) "Vastaaminen on sallittu")))
+    
+    (testing "Määräpäivänä - vastaaminen sallittu, ei read-only"
+      (let [nykyhetki (pvm/luo-pvm 2025 10 15)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivänä ei ole vielä ohitettu")
+        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
+        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
+        (is (false? (:disabled? tulos)) "Vastaaminen on sallittu")))
+    
+    (testing "Määräpäivän jälkeen + tiedot syötetty ajoissa = read-only"
+      (let [nykyhetki (pvm/luo-pvm 2025 10 16)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
+        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
+        (is (true? (:kayta-readonly-nakymaa? tulos)) "Käytetään read-only näkymää")
+        (is (true? (:disabled? tulos)) "Vastaaminen on estetty")))
+    
+    (testing "Määräpäivän jälkeen + tiedot EI syötetty ajoissa = varoitus"
+      (let [nykyhetki (pvm/luo-pvm 2025 10 16)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-ei-syotetty ulkoinen-disabled)]
+        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
+        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
+        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei read-only (tiedot puuttuvat)")
+        (is (true? (:disabled? tulos)) "Vastaaminen on estetty (määräpäivä ohitettu)")))
+    
+    (testing "Väärässä kuukaudessa - vastaaminen estetty"
+      (let [nykyhetki (pvm/luo-pvm 2025 11 15)  ; Marraskuu, mutta määräpäivä oli lokakuussa
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu (lokakuu → marraskuu)")
+        (is (true? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on väärä")
+        (is (true? (:kayta-readonly-nakymaa? tulos)) "Read-only koska määräpäivä ohitettu JA tiedot syötetty")
+        (is (true? (:disabled? tulos)) "Vastaaminen on estetty")))
+    
+    (testing "Ulkoisen disabled-tilan yhdistäminen"
+      (let [nykyhetki (pvm/luo-pvm 2025 10 14)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty true)]
+        (is (true? (:disabled? tulos)) "Ulkoisen disabled-tilan perusteella disabled")))))
+
+(deftest kustannusennuste-maarapaiva-paattely-eri-paivina-test
+  "Testaa että määräpäivä-päivänä vastaaminen on sallittu
+   eri kellonaikoina. Kuvaa kellonajan merkitystä - esim. ilta
+   15. päivä on edelleen määräpäivä-päivä."
+  (let [;; Määräpäivä on 15. päivä keskipäivällä
+        maarapaiva (pvm/luo-pvm-aika 2025 10 15 12 0 0 0)
+        tiedot-syotetty true
+        ulkoinen-disabled false]
+    
+    (testing "Ennen määräpäivää aamulla - vastaaminen sallittu"
+      (let [aamu (pvm/luo-pvm-aika 2025 10 14 9 0 0 0)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "14.10. klo 09:00 - määräpäivä ei ole vielä ohitettu")
+        (is (false? (:disabled? tulos)) "14.10. klo 09:00 - vastaaminen on sallittu")))
+    
+    (testing "Määräpäivä-päivänä aamulla - vastaaminen sallittu"
+      (let [aamu (pvm/luo-pvm-aika 2025 10 15 8 30 0 0)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 08:30 - määräpäivä ei ole vielä ohitettu")
+        (is (false? (:disabled? tulos)) "15.10. klo 08:30 - vastaaminen on sallittu")))
+    
+    (testing "Määräpäivä-päivänä illalla - vastaaminen sallittu"
+      (let [ilta (pvm/luo-pvm-aika 2025 10 15 23 59 59 999)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely ilta maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 23:59:59 - määräpäivä ei ole vielä ohitettu")
+        (is (false? (:disabled? tulos)) "15.10. klo 23:59:59 - vastaaminen on sallittu")))
+    
+    (testing "Seuraavana päivänä aamulla - määräpäivä jo ohitettu"
+      (let [seuraava-aamu (pvm/luo-pvm-aika 2025 10 16 0 0 0 1)
+            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely seuraava-aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
+        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "16.10. klo 00:00:00 - määräpäivä on ohitettu")
+        (is (true? (:disabled? tulos)) "16.10. klo 00:00:00 - vastaaminen on estetty")))))

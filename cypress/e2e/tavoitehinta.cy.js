@@ -19,6 +19,17 @@ function trimmaaArvo(arvo) {
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
 }
 
+function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uusiArvo) {
+    cy.get(`[data-cy=${taulukonDataCy}]`)
+        .should('be.visible')
+        .contains('tbody tr', rivinTunniste)
+        .find('input')
+        .eq(sarakeIndex)
+        .should('be.visible')
+        .clear()
+        .type(uusiArvo)
+}
+
 describe('Varmista Hoitovuoden alun tavoitehinta', function () {
     beforeEach(function () {
         cy.viewport(1100, 2000)
@@ -34,6 +45,8 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2025').as('tallenna-toimenkuvat-2025');
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
+        cy.intercept('POST', '_/tallenna-tarjouksen-tiedot').as('tallenna-tarjous');
+        cy.intercept('POST', '_/hae-tarjouksen-tiedot').as('hae-tarjous');
 
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
@@ -41,10 +54,24 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: clickTimeout}).click()
 
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
 
-        // Tallenna Kilpailutettavat hankinnat Hoitovuoden alun tavoihinta -näkymään
+        // Tallenna ensimmäisenä tarjoukseen jotain, koska muuten tavoitehinnan vahvistus ei onnistu
+        cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').click();
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+
+        // Tallenna jotain kipailutettaviin hankintoihin
+        muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 10);
+        // Tallenna muutokset
+        cy.contains('button', 'Tallenna muutokset').click();
+
+        // Tarkista että tallennuskutsu tehdään
+        cy.wait('@tallenna-tarjous')
+            .its('response.statusCode')
+            .should('equal', 200);
+        
         // Siirry suunnittelu / Hoitovuoden alun tavoitehinta tabille
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]').click()
+
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 
