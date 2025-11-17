@@ -484,28 +484,27 @@ WITH urakan_tehtavat AS (
        AND t.poistettu = FALSE
   GROUP BY tt.toimenpidekoodi
 ),
-materiaalitehtavat AS (
-    -- Materiaaleina raportoitavat tehtävät
-    -- Näiden toteumay lasketaan materiaalitoteumina 
-    SELECT * FROM (
-    VALUES ('3d5962b4-c7ca-4750-81f1-f589b9c7c52b'::TEXT, 'talvisuola'::TEXT),
-           ('cbb5f9c5-7a06-4cad-bce1-dbcf067d2fa1'::TEXT, 'formiaatti'::TEXT),
-           ('e76fee52-9fbb-4996-8184-c8e02be4b749'::TEXT, 'hiekoitushiekka'::TEXT),
-           ('f51c3d67-d21f-4286-bbb5-9354dcd073d6'::TEXT, '0c991ac5-4221-42e5-8a88-bacddb78b9de'::TEXT)
-  ) v(ryhma_tunniste, materiaali_tunniste)
-),
 materiaalimaara AS (
-    -- Summaa materiaaleina raportoitavat tehtävät 
-    SELECT tk.id         AS tehtava_id,
-           SUM(tm.maara) AS maara
-      FROM tehtava tk
-          JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma
-          JOIN materiaalitehtavat mt ON mt.ryhma_tunniste = tr.yksiloiva_tunniste::TEXT
-          JOIN toteuma_materiaali tm ON tm.urakka_id = :urakka AND tm.poistettu = FALSE
-          JOIN materiaalikoodi mk ON mk.id = tm.materiaalikoodi
-     WHERE mk.materiaalityyppi::text = mt.materiaali_tunniste
-        OR mk.yksiloiva_tunniste::text = mt.materiaali_tunniste
-  GROUP BY tk.id, tr.yksiloiva_tunniste
+     -- Summaa materiaaleina raportoitavat tehtävät 
+    SELECT
+         teh.id          AS tehtava_id,
+         teh.nimi        AS tehtava,
+         SUM(tm.maara)   AS maara,
+         mk.yksikko
+    FROM toteuma_materiaali tm
+              JOIN toteuma t
+                   ON t.id = tm.toteuma AND t.poistettu IS FALSE
+              JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
+              JOIN tehtava teh
+                   ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
+                       AND teh."maaramitattava?" IS TRUE
+                       AND (teh.materiaalikoodi_id = tm.materiaalikoodi
+                           OR teh.materiaalikoodi_id IS NULL)
+    WHERE t.urakka = 36
+      AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= t.alkanut)
+      AND (:loppupvm::DATE IS NULL OR t.paattynyt <= :loppupvm::DATE)
+ GROUP BY teh.id, teh.nimi, mk.yksikko
+ ORDER BY teh.id
 ),
 maaramuutokset AS (
     SELECT
@@ -630,8 +629,7 @@ SELECT
 ORDER BY toimenpide, tehtava; 
 
 
-
-
+-- TODO, poistetaan ennen mergeä, tämä vaan muistina 
 -- name: hae-tehtava-maaramuutokset-vanha 
 WITH urakan_tehtavat AS (
   SELECT
