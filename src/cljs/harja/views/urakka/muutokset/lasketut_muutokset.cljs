@@ -191,7 +191,7 @@
             :muokattava? (constantly false)
             :leveys 15}
 
-           {:otsikko "Yksikköhinta (€)"
+           {:otsikko "Yksikköhinnan keskiarvo (€)"
             :nimi :yksikkohinta
             :tyyppi :numero
             :fmt fmt/euro-opt
@@ -201,11 +201,11 @@
 
            {:otsikko "Tavoitehinnan muutos (€)"
             :nimi :tavoitehinnan_muutos
-            :tyyppi :euro
+            :tyyppi :numero
             :fmt (fn [v r]
                    (if (:valiotsikko r)
                      v
-                     (fmt/euro-opt true true v)))
+                     (fmt/euro-opt v)))
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
             ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
