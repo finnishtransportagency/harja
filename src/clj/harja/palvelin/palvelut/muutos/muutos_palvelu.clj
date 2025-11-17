@@ -119,6 +119,8 @@
         tarkistetut-rivit (map (fn [{:keys [syy
                                             maara
                                             tehtava_id
+                                            talvisuola
+                                            talvisuola_kerroin
                                             suunniteltu_maara
                                             kirjatut_kulut_summa
                                             yksikkohinnan_alkuvuosi] :as rivi}]
@@ -198,7 +200,14 @@
                                        ;; Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
                                        ;; Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
                                        tavoitehinnan_muutos (or (:tavoitehinnan_muutos rivi)
-                                                              (* (- maara suunniteltu_maara) yksikkohinta))]
+                                                              (* (- maara suunniteltu_maara) yksikkohinta))
+
+                                       ;; Lisää talvisuolalle talvisuoran kerroin 
+                                       tavoitehinnan_muutos (if (and
+                                                                  talvisuola
+                                                                  (not (:tavoitehinnan_muutos rivi)))
+                                                              (* tavoitehinnan_muutos talvisuola_kerroin)
+                                                              tavoitehinnan_muutos)]
 
                                    (assoc rivi
                                      :yksikkohinta yksikkohinta
@@ -817,12 +826,12 @@
           (when (pos? (count maaramuutokset))
             (let [maaramuutokset (if tyyppi-pysyva?
                                    ;; Filtteröidään pois maaramuutokset lukituilta hoitovuosilta
-                                         ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
-                                         (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
-                                                          tavoitehinta-indeksikorjattu-per-hoitovuosi
-                                                          (:voimassa_alkaen muutos)
-                                                          (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
-                                           maaramuutokset)
+                                   ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
+                                   (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                                                    tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                                    (:voimassa_alkaen muutos)
+                                                    (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
+                                     maaramuutokset)
                                    maaramuutokset)]
               (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset)))
 

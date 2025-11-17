@@ -523,7 +523,9 @@ maaramuutokset AS (
         COALESCE(MAX(mm.maara), SUM(urakan_tehtavat.maara)) AS toteutunut_maara,
         SUM(ut.maara)                                    AS suunniteltu_maara,
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
-        tk.suunnitteluyksikko                            AS yksikko
+        tk.suunnitteluyksikko                            AS yksikko,
+        tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
+        0.7 AS talvisuola_kerroin -- ;; TODO, tarkista designerilta .. ja onko tälle olemassa jo jokin funktio? 
       FROM tehtava tk
           JOIN tehtavaryhma tr_alataso
             ON tr_alataso.id = tk.tehtavaryhma
@@ -580,7 +582,7 @@ maaramuutokset AS (
 GROUP BY
      tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, 
      tk.suunnitteluyksikko, kulut.summa, mmt.versio, mmt.syy, mmt.lahde, 
-     mmt.valitun_yksikkohinnan_hoitokausi, mmt.kasin_syotetty_tavoitehintamuutos
+     mmt.valitun_yksikkohinnan_hoitokausi, mmt.kasin_syotetty_tavoitehintamuutos, tr_alataso.yksiloiva_tunniste
 )
 SELECT
     id,
@@ -598,6 +600,9 @@ SELECT
     kasin_lisattava_maara,
     yksikko,
     COALESCE(toteutunut_maara, 0) - COALESCE(suunniteltu_maara, 0) AS maaramuutos,
+    tr_tunniste,
+    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola,
+    talvisuola_kerroin,
     CASE
         -- ---------------------------------------------------------
         -- Yksikköhinta = Kirjatut kulut / toteutunut määrä   
@@ -609,7 +614,7 @@ SELECT
             THEN ROUND(COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara, 0), 2)
         WHEN lahde = 'valittu' THEN NULL
         END AS yksikkohinta,
-    CASE
+    (CASE
         -- ---------------------------------------------------------
         -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
         -- Yksikköhinta puuttuu        -> muutos syötetään käsin, myös ennen 2025 alkaneet syöttävät käsin
@@ -624,7 +629,9 @@ SELECT
             THEN (COALESCE(toteutunut_maara,0) - COALESCE(suunniteltu_maara,0))
             * (COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara,0))
         WHEN lahde = 'valittu' THEN NULL
-        END AS tavoitehinnan_muutos
+        END
+    ) * CASE WHEN tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b' THEN talvisuola_kerroin ELSE 1
+    END AS tavoitehinnan_muutos
     FROM maaramuutokset
 ORDER BY toimenpide, tehtava; 
 
