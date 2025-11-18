@@ -401,7 +401,37 @@
                     lupaus-kuukausi
                     "yksittainen"
                     123))
-          "Ei-vastauskuukauteen ei saa vastata"))))
+          "Ei-vastauskuukauteen ei saa vastata")))
+
+  (testing "Sekä kirjaus- että päättävä kuukausi - päätösoikeus vaaditaan"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa molemmat oikeusfunktiot
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))
+                    oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 4 (:id kayttaja)))]
+        
+        ;; Tilaajalla on päätösoikeus - saa vastata
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa vastata kun on päätösoikeus (vaikka on myös kirjauskuukausi)")
+
+        ;; Urakoitsijalla on vain kirjoitusoikeus, mutta EI päätösoikeutta
+        ;; Koska päättävä-kuukausi tarkistetaan ENSIN, urakoitsija ei saa vastata
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa vastata vaikka on kirjoitusoikeus, koska päätösoikeus puuttuu")))))
+
 (deftest kustannusennuste-maarapaiva-paattely-test
   "Testaa määräpäivän päättelylogiikkaa eri ajanhetkinä."
   (let [maarapaiva (pvm/luo-pvm 2025 10 15)
