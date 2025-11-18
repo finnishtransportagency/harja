@@ -8,9 +8,10 @@
   "devDependencies": {
     "cypress": "10.2.0",
     "less": "4.2.0",
-    "less-watch-compiler": "^1.16.3"
+    "nodemon": "^3.1.11"
   },
   "scripts": {
-    "less": "less-watch-compiler dev-resources/less resources/public/css application.less & less-watch-compiler dev-resources/less/laadunseuranta resources/public/css laadunseuranta.less"
+    "build-css": "lessc dev-resources/less/application.less resources/public/css/application.css && lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css",
+    "less": "nodemon --watch dev-resources/less -e less --exec \"npm run build-css\""
   }
 }
