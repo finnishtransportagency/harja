@@ -5,12 +5,23 @@
 ;;; ÄLÄ MUOKKAA TÄTÄ TIEDOSTOA SUORAAN!
 ;;; Muokkaa sen sijaan resources/roolit.xlsx Excel-tiedostoa.
 ;;;
+;;; AUTOMAATTINEN GENEROINTI:
+;;;   - Kehitysympäristössä: Generoidaan automaattisesti käynnistyksessä
+;;;     jos resources/roolit.xlsx on muuttunut (aikaleima-tarkistus)
+;;;   - Manuaalinen generointi: lein run -m harja.tyokalut.oikeudet-edn-export
+;;;
+;;; MUISTA COMMITOIDA:
+;;;   git add resources/roolit.xlsx resources/roolit.edn resources/oikeudet.edn
+;;;   git commit -m "Päivitä oikeudet"
+;;;
+;;; GITHUB ACTIONS:
+;;;   - CI validoi että EDN:t ovat ajan tasalla Excelin kanssa
+;;;   - Jos validointi failaa, käynnistä Harja uudelleen paikallisesti
+;;;     (generoi EDN:t automaattisesti) tai aja manuaalinen komento
+;;;
 ;;; Tämä tiedosto on tarkoitettu:
 ;;;   - Dokumentaatioksi (helppo lukea tekstieditorilla)
 ;;;   - Versionhallinnan helpottamiseksi (Git-diffit näkyvät)
-;;;
-;;; Generoi uudelleen komennolla:
-;;;   lein run -m harja.tyokalut.oikeudet-edn-export
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [{:nimi "ELY_Kayttaja",
