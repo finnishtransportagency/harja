@@ -485,22 +485,28 @@ WITH urakan_tehtavat AS (
   GROUP BY tt.toimenpidekoodi
 ),
 materiaalimaara AS (
-     -- Summaa materiaaleina raportoitavat tehtävät 
+    -- Kohdista materiaaleina raportoitavat tehtävät tehtävätoteumina 
+    -- Suolauksen alle esim talvisuolamateriaalit, ja niiden toteumat 
+    -- Ref:  https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t
     SELECT
          teh.id          AS tehtava_id,
          teh.nimi        AS tehtava,
          SUM(tm.maara)   AS maara,
          mk.yksikko
+    -- toteuma_materiaali taulussa on kaikki urakan materiaalitoteumat 
     FROM toteuma_materiaali tm
               JOIN toteuma t
                    ON t.id = tm.toteuma AND t.poistettu IS FALSE
+              -- Materiaali linkin 'päätaulu' 
               JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
+              -- tehtava taulussa on materiaalin luokka, sekä koodi linkkinä 
               JOIN tehtava teh
                    ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
-                       AND teh."maaramitattava?" IS TRUE
+                       AND teh."maaramitattava?" IS TRUE -- Vain määrämitattavat tehtävät mukaan  
                        AND (teh.materiaalikoodi_id = tm.materiaalikoodi
+                           -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
                            OR teh.materiaalikoodi_id IS NULL)
-    WHERE t.urakka = 36
+    WHERE t.urakka = :urakka 
       AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= t.alkanut)
       AND (:loppupvm::DATE IS NULL OR t.paattynyt <= :loppupvm::DATE)
  GROUP BY teh.id, teh.nimi, mk.yksikko
@@ -525,7 +531,7 @@ maaramuutokset AS (
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
         tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
-        0.7 AS talvisuola_kerroin -- ;; TODO, tarkista designerilta .. ja onko tälle olemassa jo jokin funktio? 
+        0.7 AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun 
       FROM tehtava tk
           JOIN tehtavaryhma tr_alataso
             ON tr_alataso.id = tk.tehtavaryhma
@@ -599,9 +605,10 @@ SELECT
     suunniteltu_maara,
     kasin_lisattava_maara,
     yksikko,
+    -- Määrämuutos = Toteutunut määrä - suunniteltu määrä
     COALESCE(toteutunut_maara, 0) - COALESCE(suunniteltu_maara, 0) AS maaramuutos,
     tr_tunniste,
-    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola,
+    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola, -- = 'Suolaus' - onko kyseessä talvisuola? 
     talvisuola_kerroin,
     CASE
         -- ---------------------------------------------------------
@@ -614,7 +621,7 @@ SELECT
             THEN ROUND(COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara, 0), 2)
         WHEN lahde = 'valittu' THEN NULL
         END AS yksikkohinta,
-    (CASE
+    CASE
         -- ---------------------------------------------------------
         -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
         -- Yksikköhinta puuttuu        -> muutos syötetään käsin, myös ennen 2025 alkaneet syöttävät käsin
@@ -629,9 +636,7 @@ SELECT
             THEN (COALESCE(toteutunut_maara,0) - COALESCE(suunniteltu_maara,0))
             * (COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara,0))
         WHEN lahde = 'valittu' THEN NULL
-        END
-    ) * CASE WHEN tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b' THEN talvisuola_kerroin ELSE 1
-    END AS tavoitehinnan_muutos
+        END AS tavoitehinnan_muutos
     FROM maaramuutokset
 ORDER BY toimenpide, tehtava; 
 

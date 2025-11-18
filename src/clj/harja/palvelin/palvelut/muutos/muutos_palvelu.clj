@@ -120,10 +120,12 @@
                                             maara
                                             tehtava_id
                                             talvisuola
+                                            yksikkohinnan_lahde
                                             talvisuola_kerroin
                                             suunniteltu_maara
                                             kirjatut_kulut_summa
-                                            yksikkohinnan_alkuvuosi] :as rivi}]
+                                            yksikkohinnan_alkuvuosi
+                                            syotetty_tavoitehintamuutos] :as rivi}]
 
                                  (let [tehtavalla-ei-toteumia? (or
                                                                  (not maara)
@@ -141,9 +143,19 @@
 
                                        ;; Jos  yksikköhinta on asetettu, mutta tehtävälle tuleekin toteumia
                                        ;; tilanne täytyy pävittää kantaan jotta harja tietää mitä harjailee 
-                                       rivi (if (and
-                                                  (> maara 0) ;; tälle vuodelle olemassa toteumia 
-                                                  yksikkohinnan_alkuvuosi) ;; mutta yksikköhinta asetettu? => päivitä kanta 
+                                       paivita-laskenta-uusi-urakka? (and
+                                                                       laskenta-automatiikka?
+                                                                       (> maara 0)
+                                                                       (> kirjatut_kulut_summa 0)
+                                                                       ;; Tavhinta muutos on syötetty käsin, mutta toteumia tullut 
+                                                                       syotetty_tavoitehintamuutos)
+
+                                       paivita-laskenta-vanha-urakka? (and
+                                                                        (> maara 0) ;; tälle vuodelle olemassa toteumia 
+                                                                        yksikkohinnan_alkuvuosi) ;; mutta yksikköhinta asetettu? => päivitä kanta 
+                                       rivi (if (or
+                                                  paivita-laskenta-vanha-urakka?
+                                                  paivita-laskenta-uusi-urakka?)
                                               (do
                                                 (muutos-kyselyt/paivita-tehtava-tiedot<! db {:syy syy
                                                                                              :lahde "laskettu"
@@ -202,10 +214,30 @@
                                        tavoitehinnan_muutos (or (:tavoitehinnan_muutos rivi)
                                                               (* (- maara suunniteltu_maara) yksikkohinta))
 
+                                       ;; Vanhemmat urakat 
+                                       kayta-talviuola-kerrointa? (and
+                                                                    ;; Kyseessä talvisuola 
+                                                                    talvisuola
+                                                                    ;; Ei ole käsin syötettyä arvoa
+                                                                    (not (:tavoitehinnan_muutos rivi))
+                                                                    ;; Toteutunut on alle suunnitellun 
+                                                                    (> maara 0M)
+                                                                    (> suunniteltu_maara maara))
+
+                                       ;; Uudemmat urakat (autom. laskenta) 
+                                       kayta-talviuola-kerrointa? (or kayta-talviuola-kerrointa?
+                                                                    (and
+                                                                      talvisuola
+                                                                      laskenta-automatiikka?
+                                                                      (or syotetty_tavoitehintamuutos (not= yksikkohinnan_lahde "puuttuu")) ;; Käsin syötetty, mutta toteumia tullut
+                                                                      ;; Toteutunut on alle suunnitellun 
+                                                                      (> maara 0M)
+                                                                      (> suunniteltu_maara maara)))
+
                                        ;; Lisää talvisuolalle talvisuoran kerroin 
-                                       tavoitehinnan_muutos (if (and
-                                                                  talvisuola
-                                                                  (not (:tavoitehinnan_muutos rivi)))
+                                       ;; Kerroin lisätään, jos toteutunut on alle suunnitellun
+                                       ;; Kerroin on definattu sql kyselyssä name: hae-tehtava-maaramuutokset
+                                       tavoitehinnan_muutos (if kayta-talviuola-kerrointa?
                                                               (* tavoitehinnan_muutos talvisuola_kerroin)
                                                               tavoitehinnan_muutos)]
 
