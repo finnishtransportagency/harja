@@ -32,17 +32,17 @@
 
  :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
               :tietokanta "harja"
-              :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 7777))
+              :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "k2nfB63MRq0A5p40UPH3469vf4BWtW1v"))
+              :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
               :julkaise-tila? true}
  :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
                       :tietokanta "harja"
-                      :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 7777))
+                      :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "k2nfB63MRq0A5p40UPH3469vf4BWtW1v"))
+                      :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
                       :julkaise-tila? true}
  :tarkkailija {:loop-odotus 100}
  :fim {:url
