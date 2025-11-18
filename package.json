@@ -7,6 +7,10 @@
   },
   "devDependencies": {
     "cypress": "10.2.0",
-    "less": "4.2.0"
+    "less": "4.2.0",
+    "less-watch-compiler": "^1.16.3"
+  },
+  "scripts": {
+    "less": "less-watch-compiler dev-resources/less resources/public/css application.less & less-watch-compiler dev-resources/less/laadunseuranta resources/public/css laadunseuranta.less"
   }
 }
