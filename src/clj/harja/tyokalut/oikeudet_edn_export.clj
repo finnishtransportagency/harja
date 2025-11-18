@@ -139,8 +139,6 @@
   (println "Kohde:  resources/roolit.edn (KOPIO - ÄLÄ MUOKKAA)")
   (println "        resources/oikeudet.edn (KOPIO - ÄLÄ MUOKKAA)")
   (println)
-  (println "Hyödynnetään harja.domain.oikeudet.makrot/lue-oikeudet funktiota")
-  (println "(ei koodin duplikaatiota)")
   (println)
   (let [roolit-ok? (generoi-roolit-edn!)
         _ (println)
