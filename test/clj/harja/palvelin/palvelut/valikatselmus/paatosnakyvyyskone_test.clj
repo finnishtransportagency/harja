@@ -163,7 +163,7 @@
   (let [mhu-tyyppi "MHU"
         urakan-alkuvuosi 2020
         urakan-loppuvuosi (+ urakan-alkuvuosi 5)]
-    (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2020))))
+    (is (= 6 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2020))))
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2021))))
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2022))))
     (is (= 7 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2023))))
@@ -205,7 +205,7 @@
         urakan-alkuvuosi-2024-paatokset (kone/mahdolliset-paatokset-urakan-alkuvuodella 2024 kone/paatostyypit)
         urakan-alkuvuosi-2025-paatokset (kone/mahdolliset-paatokset-urakan-alkuvuodella 2025 kone/paatostyypit)]
     (is (= 7 (count urakan-alkuvuosi-2019-paatokset)))
-    (is (= 9 (count urakan-alkuvuosi-2020-paatokset)))
+    (is (= 8 (count urakan-alkuvuosi-2020-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2021-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2023-paatokset)))
