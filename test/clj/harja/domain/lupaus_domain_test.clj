@@ -1,6 +1,7 @@
 (ns harja.domain.lupaus-domain-test
   (:require [clojure.test :refer :all]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [clj-time.coerce :as tc]))
 
@@ -318,6 +319,118 @@
       (is (= #{4}
              (lupaus-domain/vaaditut-vastauskuukaudet-hoitovuodelle kustannusennuste-lupaus 4 1 erikoisarvot))))))
 
+
+(deftest kayttaja-saa-vastata-test
+  (testing "Kirjauskuukausi - perustason kirjoitusoikeus riittää"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? false}
+          kayttaja-jolla-kirjoitusoikeus {:id 1}
+          kayttaja-ilman-oikeuksia {:id 2}]
+
+      ;; Mockaa voi-kirjoittaa? palauttamaan true käyttäjälle 1
+      (with-redefs [oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 1 (:id kayttaja)))]
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     kayttaja-jolla-kirjoitusoikeus
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Käyttäjä jolla kirjoitusoikeus saa vastata kirjauskuukauteen")
+        
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      kayttaja-ilman-oikeuksia
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Käyttäjä ilman oikeuksia ei saa vastata"))))
+
+  (testing "Päättävä kuukausi - tavallinen lupaus vaatii päätösoikeuden"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa on-muu-oikeus? - tilaajalla on päätösoikeus, urakoitsijalla ei
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))]
+        ;; Tilaaja saa tehdä päätöksen (Excel: W,päätös)
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa tehdä päätöksen")
+
+        ;; Urakoitsija ei saa tehdä päätöstä
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa tehdä päätöstä"))))
+
+  (testing "Päättävä kuukausi - kustannusennuste vaatii kustannusennuste-oikeuden"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa on-muu-oikeus? - tilaajalla on kustannusennuste-oikeus
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "kustannusennuste" oikeus)
+                                                    (= 3 (:id kayttaja))))]
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "kustannusennuste"
+                     123))
+            "Tilaaja saa syöttää kustannusennusteen")
+        
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "kustannusennuste"
+                      123))
+            "Urakoitsija ei saa syöttää kustannusennusteen päättävään kuukauteen"))))
+
+  (testing "Ei kirjaus- eikä päättävä kuukausi - ei saa vastata"
+    (let [lupaus-kuukausi {:kirjauskuukausi? false :paattava-kuukausi? false}
+          kayttaja {:id 1}]
+
+      ;; Ei tarvita mockausta, koska tämä ei kutsuu oikeusfunktioita
+      (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                    kayttaja
+                    lupaus-kuukausi
+                    "yksittainen"
+                    123))
+          "Ei-vastauskuukauteen ei saa vastata")))
+
+  (testing "Sekä kirjaus- että päättävä kuukausi - päätösoikeus vaaditaan"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa molemmat oikeusfunktiot
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))
+                    oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 4 (:id kayttaja)))]
+        
+        ;; Tilaajalla on päätösoikeus - saa vastata
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa vastata kun on päätösoikeus (vaikka on myös kirjauskuukausi)")
+
+        ;; Urakoitsijalla on vain kirjoitusoikeus, mutta EI päätösoikeutta
+        ;; Koska päättävä-kuukausi tarkistetaan ENSIN, urakoitsija ei saa vastata
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa vastata vaikka on kirjoitusoikeus, koska päätösoikeus puuttuu")))))
 
 (deftest kustannusennuste-maarapaiva-paattely-test
   "Testaa määräpäivän päättelylogiikkaa eri ajanhetkinä."

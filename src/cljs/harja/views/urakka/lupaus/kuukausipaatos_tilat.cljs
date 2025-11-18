@@ -45,7 +45,7 @@
   [:div {:style {:color (asioiden-ulkoasu/tilan-vari "hylatty")}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                        {:keys [lupaus-id] :as lupaus}
+                        {:keys [lupaus-id lupaustyyppi urakka-id] :as lupaus}
                         {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? 
                                 paattava-kuukausi? nykyhetkeen-verrattuna vastaus kustannusennuste] :as lupaus-kuukausi}
                         listauksessa?
@@ -53,7 +53,7 @@
                         lupaus->kuukausi->kommentit
                         app]
   (let [vastauskuukausi? (lupaus-domain/vastauskuukausi? lupaus-kuukausi)
-        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi lupaustyyppi urakka-id)
         nayta-himmennettyna? (not saa-vastata?)
         nayta-kommentti-ikoni? (and (not listauksessa?)
                                     (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))
@@ -95,9 +95,15 @@
        ;; Kustannusennuste - odottaa syöttöä
        (and kustannusennuste-lupaus? (not kustannusennuste-syotetty?) vastauskuukausi?)
        [odottaa-vastausta]
-
-       (or odottaa-kannanottoa?
-           (and vastauskuukausi? (= :kuluva-kuukausi nykyhetkeen-verrattuna)))
+       
+        ;; Kuluva kuukausi ilman vastausta - näytä kysymysmerkki
+       (and vastauskuukausi? 
+            (= :kuluva-kuukausi nykyhetkeen-verrattuna)
+            (not (lupaus-domain/vastattu? vastaus)))
+       [odottaa-vastausta]
+       
+       ;; Odottaa kannanottoa (menneet kuukaudet ilman vastausta)
+       odottaa-kannanottoa?
        [odottaa-vastausta]
 
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
@@ -114,7 +120,7 @@
 
        ;; Monivalinta vastauksen kuukausi, jossa on pisteet
        (and (:lupaus-vaihtoehto-id vastaus)
-            (:pisteet vastaus))
+         (:pisteet vastaus))
        [:div.kuukausi-pisteet (:pisteet vastaus)]
 
        ;; Joustovara on ylittynyt

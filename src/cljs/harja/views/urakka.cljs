@@ -111,7 +111,10 @@
                         (istunto/ominaisuus-kaytossa? :vesivayla)))
 
     :valitavoitteet (and
-                      (oikeudet/urakat-valitavoitteet id)
+                      ;; MHU-urakoissa tämä välilehti sisältää sekä Lupaukset että Välitavoitteet
+                      ;; Näytä välilehti jos käyttäjällä on jompikumpi oikeus
+                      (or (oikeudet/urakat-lupaukset id)
+                        (oikeudet/urakat-valitavoitteet id))
                       (not (urakka/kanavaurakka? urakka)))
 
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
