@@ -125,6 +125,41 @@ jobs:
         continue-on-error: true
         run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
 
+  # Validoi että oikeudet EDN-tiedostot ovat ajan tasalla
+  validate-oikeudet-edn:
+    name: "Validoi oikeudet EDN-tiedostot"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      - name: Generoi EDN-tiedostot uudelleen
+        run: lein run -m harja.tyokalut.oikeudet-edn-export
+
+      - name: Tarkista että EDN-tiedostot ovat ajan tasalla
+        run: |
+          if ! git diff --quiet resources/roolit.edn resources/oikeudet.edn; then
+            echo "❌ EDN-tiedostot eivät ole ajan tasalla Excelin kanssa!"
+            echo ""
+            echo "Excel-tiedosto resources/roolit.xlsx on muuttunut, mutta"
+            echo "EDN-tiedostot (roolit.edn ja oikeudet.edn) eivät ole päivitetty."
+            echo ""
+            echo "Korjaa ongelma ajamalla paikallisesti:"
+            echo "  lein run -m harja.tyokalut.oikeudet-edn-export"
+            echo "  git add resources/roolit.edn resources/oikeudet.edn"
+            echo ""
+            echo "Muutokset:"
+            git diff resources/roolit.edn resources/oikeudet.edn
+            exit 1
+          fi
+          echo "✅ EDN-tiedostot ovat ajan tasalla"
+
   # Build job
   build-harja:
     if: ${{ inputs.build-harja != 'false' }}
