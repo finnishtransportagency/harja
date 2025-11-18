@@ -1,7 +1,7 @@
--- Korjataan tehtävien materiaaliluokat 
+-- Korjataan tehtävien materiaaliluokat testidataan
 -- https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t 
 
-
+-- Tämä on tuotannossa jo OK, ei haittaa jos ajetaan sinnekin, mutta siellä ei muutu mikään
 -- Liikenteen varmistaminen kelirikkokohteessa (materiaali) 
 UPDATE tehtava
 SET materiaalikoodi_id  = (SELECT id
@@ -16,6 +16,7 @@ WHERE nimi =  'Liikenteen varmistaminen kelirikkokohteessa (materiaali)'; -- Tä
 
 
 -- Ennalta arvaamattomien kuljetusten avustaminen (materiaali)
+-- Tämä on tuotannossa jo OK, ei haittaa jos ajetaan sinnekin, mutta siellä ei muutu mikään
 UPDATE tehtava
 SET materiaalikoodi_id  = (SELECT id
                            FROM materiaalikoodi
@@ -26,3 +27,12 @@ SET materiaalikoodi_id  = (SELECT id
     muokattu            = current_timestamp,
     muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE yksiloiva_tunniste =  'ae67d2b5-a9d9-4880-a7ee-b3870737a177'; -- Ennalta arvaamattomien kuljetusten avustaminen (materiaali)
+
+
+-- Sorastus on määrämitattava
+-- Korjaa tämä testidataan, tuotannossa on jo OK.
+UPDATE tehtava
+SET "maaramitattava?"   = true,
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+WHERE nimi =  'Sorastus'; -- Sorastuksella ei ole yksilöivää tunnistetta 
