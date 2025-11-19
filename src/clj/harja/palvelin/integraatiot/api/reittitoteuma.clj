@@ -226,27 +226,39 @@ maksimi-linnuntien-etaisyys 200)
     ;; ja varmuuden vuoksi päivitettävä silloinkin materiaalicachet
     (when (or materiaaleja-hyotykuormassa? tehtavissa-suolausta?)
       (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
-            ensimmainen-toteuma-alkanut-str (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut])
-            viimeinen-toteuma (last reittitoteumat)
-            viimeinen-toteuma-alkanut-str (get-in viimeinen-toteuma [:reittitoteuma :toteuma :alkanut])
-            ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
-            viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
-            toteumien-eri-pvmt (if (pvm/ennen? ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm) ;; Poikkeustilanteissa toteumat tulevat ajallisesti väärässä järjestyksessä, huomioi se.
-                                     (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)
-                                     (pvm/paivat-aikavalissa viimeinen-toteuman-paattynyt-pvm ensimmainen-toteuman-alkanut-pvm))]
+            toteuma-paivat (reduce (fn [paiva toteuma]
+                                     (let [inst-toteuma (pvm/rajapinta-str-aika->sql-timestamp (get-in toteuma [:reittitoteuma :toteuma :alkanut]))
+                                           alkupvm (if (nil? (:alkupvm paiva))
+                                                     inst-toteuma
+                                                     (:alkupvm paiva))
+                                           alkupvm-aiempi (if (pvm/ennen? alkupvm inst-toteuma)
+                                                            alkupvm
+                                                            inst-toteuma)
+                                           loppupvm (if (nil? (:loppupvm paiva))
+                                                      inst-toteuma
+                                                      (:loppupvm paiva))
+                                           loppupvm-myohempi (if (pvm/ennen? loppupvm inst-toteuma)
+                                                               inst-toteuma
+                                                               loppupvm)]
+                                       (-> paiva
+                                         (assoc :alkupvm alkupvm-aiempi)
+                                         (assoc :loppupvm loppupvm-myohempi))))
+                             {:alkupvm nil :loppupvm nil} reittitoteumat)
+            alku-inst (:alkupvm toteuma-paivat)
+            loppu-inst (:loppupvm toteuma-paivat)
+            toteumien-eri-pvmt (pvm/paivat-aikavalissa alku-inst loppu-inst)]
 
-        ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
-        ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
-
-        (when (materiaalicachen-paivitys-ajettava? (aika-string->java-util-date ensimmainen-toteuma-alkanut-str))
-          (doseq [sopimus-id urakan-sopimus-idt]
-            (doseq [pvm toteumien-eri-pvmt]
-              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (pvm/dateksi pvm)
-                                                                     :urakkaid urakka-id})))
-          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                             :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
-                                                                             :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
+            ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
+            ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
+            (when (or (materiaalicachen-paivitys-ajettava? alku-inst) (materiaalicachen-paivitys-ajettava? loppu-inst))
+              (doseq [sopimus-id urakan-sopimus-idt]
+                (doseq [pvm toteumien-eri-pvmt]
+                  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                         :alkupvm (pvm/dateksi pvm)
+                                                                         :urakkaid urakka-id})))
+              (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                                 :alkupvm alku-inst
+                                                                                 :loppupvm loppu-inst}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (let [reittipisteet-tallennettu-chan (async/chan)
@@ -258,6 +270,7 @@ maksimi-linnuntien-etaisyys 200)
     (async/thread
       (jdbc/with-db-transaction [db db]
         (loop [tallennettujen-maara 0]
+          (log/info "Odotetaan reittipisteiden tallennusta..." tallennettujen-maara "/" reittitoteumien-maara)
           (if (= tallennettujen-maara reittitoteumien-maara)
             (paivita-materiaalicachet! db urakka-id data)
             (let [[v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
