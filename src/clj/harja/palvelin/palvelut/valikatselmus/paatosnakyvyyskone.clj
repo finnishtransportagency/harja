@@ -24,7 +24,7 @@
    {:nimi "Tavoitehinnan ylitys" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
    {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 7 :paatostyyppi "kattohinta"}
    {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 7 :paatostyyppi "kattohinta"}
-   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 8 :paatostyyppi "hoidonjohtopalkkio"}
+   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 8 :paatostyyppi "hoidonjohtopalkkio"}
    {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "hoidonjohtopalkkio"}
    {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 9 :paatostyyppi "raportti"}
    {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 9 :paatostyyppi "raportti"}])
