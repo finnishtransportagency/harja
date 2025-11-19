@@ -2,6 +2,7 @@
   "Toteumatyokalun ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [cljs.core.async :refer [<! >! chan close!]]
@@ -28,6 +29,7 @@
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
                                :lahetysaika (pvm/aika->str-iso8601-UTC (pvm/nyt))
+                               :json-lahetysaika :lomake
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
                                :sopimusid 19
@@ -43,11 +45,12 @@
 (def +mahdolliset-materiaalit+
   [{:id 1 :nimi "Talvisuolaliuos NaCl" :yksikko "t"}
    {:id 6 :nimi "Kaliumformiaattiliuos" :yksikko "t"}
+   {:id 7 :nimi "Talvisuola, rakeinen NaCl" :yksikko "t"}
    {:id 10 :nimi "Kesäsuola sorateiden kevätkunnostus" :yksikko "t"}
    {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
 (defn muodosta-reittipiste [x y app pisteiden-maara index]
- {:reittipiste
+  {:reittipiste
    {:aika (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) index)
     :koordinaatit {:x x
                    :y y}
@@ -69,7 +72,7 @@
                                           :ytunnus "1234567-8"}
                              :sopimusId (get-in app [:toteumatiedot :sopimusid])
                              :alkanut (get-in app [:toteumatiedot :lahetysaika])
-                             :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app))) 
+                             :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app)))
                              :toteumatyyppi "kokonaishintainen"
                              :lisatieto "Normisuolaus"
                              ;; Tähän väliin tehtävät, jos ovat pakollisia
@@ -102,6 +105,9 @@
 (defrecord HaeTROsoitteelleKoordinaatit [toteumatiedot])
 (defrecord HaeTROsoitteelleKoordinaatitOnnistui [vastaus])
 (defrecord HaeTROsoitteelleKoordinaatitEpaonnistui [vastaus])
+(defrecord HaeKoordinaatitJaLaheta [toteumatiedot])
+(defrecord LahetaKoordinaattienKanssa [vastaus])
+
 
 (defrecord Laheta [toteumatiedot])
 (defrecord LahetysOnnistui [vastaus])
@@ -116,6 +122,8 @@
 (defrecord LisaaOikeudetUrakkaan [urakka-id])
 (defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
 (defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
+(defrecord LisaaAPIKirjoitusOnnistui [vastaus])
+(defrecord LisaaAPIKirjoitusEpaonnistui [vastaus])
 
 (defrecord HaeSeuraavaVapaaUlkoinenId [])
 (defrecord HaeSeuraavaVapaaUlkoinenIdOnnistui [vastaus])
@@ -142,12 +150,67 @@
      :epaonnistui ->HaeKayttajanOikeuksiaEpaonnistui
      :paasta-virhe-lapi? true}))
 
+(defn parsi-data-tuotannosta [json-tuotannosta app]
+  (if json-tuotannosta
+    (let [aika-lomakkeesta? (= :lomake (get-in app [:toteumatiedot :json-lahetysaika]))
+          ;; Raapase väärät merkit varalta pois jsonista
+          json-tuotannosta (-> json-tuotannosta
+                             (str/replace #"\\n" "\n")
+                             (str/replace #"\\r" "\r")
+                             (str/replace #"[^\S ]+" "") ; poistaa kaikki whitespace-merkit PAITSI tavallisen välilyönnin
+                             (str/replace #"\s+" " ")) ;; Muuttaa useat välilyönnit yhdeksi välilyönniksi
+          data-tuotannosta (js->clj (js/JSON.parse json-tuotannosta) :keywordize-keys true)
+          data-tuotannosta (assoc-in data-tuotannosta [:otsikko :lahettaja :jarjestelma] (get-in app [:toteumatiedot :valittu-jarjestelma]))
+
+          ;; Varmisetaan, muutetaako lähetysaikaa
+          data-tuotannosta (if aika-lomakkeesta?
+                             (assoc-in data-tuotannosta [:otsikko :lahetysaika] (get-in app [:toteumatiedot :lahetysaika]))
+                             data-tuotannosta)
+          ;; Muokkaa :reittitoteumat - eli kun on monta toteumaa samassa viestissä
+          data-tuotannosta (if (:reittitoteumat data-tuotannosta)
+                             (update-in data-tuotannosta [:reittitoteumat] (fn [reittitoteumat]
+                                                                             (let [r (map (fn [rtoteuma]
+                                                                                            (cond-> rtoteuma
+                                                                                              ;; Jos aika otetaan lomakkeesta, niin muutetaan lähetysajat
+                                                                                              aika-lomakkeesta?
+                                                                                              (assoc-in [:reittitoteuma :toteuma :alkanut] (get-in app [:toteumatiedot :lahetysaika]))
+                                                                                              aika-lomakkeesta?
+                                                                                              (assoc-in [:reittitoteuma :toteuma :paattynyt] (get-in app [:toteumatiedot :lahetysaika]))
+                                                                                              true (update-in [:reittitoteuma :reitti]
+                                                                                                (fn [reitit]
+                                                                                                  (map
+                                                                                                    (fn [r]
+                                                                                                      (if aika-lomakkeesta?
+                                                                                                        (assoc-in r [:reittipiste :aika] (get-in app [:toteumatiedot :lahetysaika]))
+                                                                                                        r))
+                                                                                                    reitit)))))
+                                                                                       reittitoteumat)]
+                                                                               r)))
+                             data-tuotannosta)
+          ;; Muokkaa reittitoteuma - eli kun on vain yksi toteuma viestissä
+          data-tuotannosta (if (:reittitoteuma data-tuotannosta)
+                             (-> data-tuotannosta
+                               (assoc-in [:reittitoteuma :toteuma :alkanut] (get-in app [:toteumatiedot :lahetysaika]))
+                               (assoc-in [:reittitoteuma :toteuma :paattynyt] (get-in app [:toteumatiedot :lahetysaika]))
+                               (assoc-in [:reittitoteuma :toteuma :sopimusId] (get-in app [:toteumatiedot :sopimusid])))
+                             data-tuotannosta)
+          data-tuotannosta (if (:reittitoteuma data-tuotannosta)
+                             (update-in data-tuotannosta [:reittitoteuma :reitti]
+                               (fn [reitit]
+                                 (map
+                                   (fn [r]
+                                     (assoc-in r [:reittipiste :aika] (get-in app [:toteumatiedot :lahetysaika])))
+                                   reitit)))
+                             data-tuotannosta)]
+      data-tuotannosta)
+    nil))
+
 (extend-protocol tuck/Event
 
   Muokkaa
   (process-event [{toteumatiedot :toteumatiedot} app]
     (let [;; Tarkista hallintayksikko
-          toteumatiedot (if (and (not= (get-in app [:toteumatiedot :valittu-hallintayksikko]) (:valittu-hallintayksikko toteumatiedot)))
+          toteumatiedot (if (not= (get-in app [:toteumatiedot :valittu-hallintayksikko]) (:valittu-hallintayksikko toteumatiedot))
                           (do
                             (hae-hallintayksikon-urakat (:valittu-hallintayksikko toteumatiedot))
                             ;; Haetaan urakkahaun yhteydessä aina myös tiedot, että onko käyttäjällä oikeudet lisätä urakkaan API:n kautta toteumia :hae-urakat-lisaoikeusvalintaan
@@ -175,7 +238,9 @@
 
   Laheta
   (process-event [{toteumatiedot :toteumatiedot} app]
-    (let [_ (js/console.log "(clj->js koostettu-data)" (.stringify js/JSON (clj->js (koostettu-data app))))
+    (let [;; Jos käyttäjä kopioi koko jsonin tuotannosta, niin hyödynnetään se. Hae hakusanalla: "yksikko":"t"
+          data-tuotannosta (parsi-data-tuotannosta (:json-tuotannosta toteumatiedot) app)
+
           tulos! (tuck/send-async! ->LahetysOnnistui)
           virhe! (tuck/send-async! ->LahetysEpaonnistui)
           urakkaid (:id (get-in app [:toteumatiedot :valittu-urakka]))]
@@ -184,7 +249,9 @@
           (let [vastaus (<! (http/post (str "api/urakat/"
                                          urakkaid
                                          "/toteumat/reitti")
-                              {:body (.stringify js/JSON (clj->js (koostettu-data app)))
+                              {:body (if data-tuotannosta
+                                       (.stringify js/JSON (clj->js data-tuotannosta))
+                                       (.stringify js/JSON (clj->js (koostettu-data app))))
                                :content-type :json
                                :accept :json
                                ;:headers {"OAM_REMOTE_USER" "ivalo-api"}
@@ -211,29 +278,44 @@
 
   HaeTROsoitteelleKoordinaatit
   (process-event [{toteumatiedot :toteumatiedot} app]
-    (let [_ (js/console.log "HaeTROsoitteelleKoordinaatit :: toteumatiedot" (pr-str (dissoc toteumatiedot :harja.ui.lomake/skeema :valittu-urakka)))
-          _ (tuck-apurit/post! :hae-tr-viivaksi
-              (:tierekisteriosoite toteumatiedot)
-              {:onnistui ->HaeTROsoitteelleKoordinaatitOnnistui
-               :epaonnistui ->HaeTROsoitteelleKoordinaatitEpaonnistui
-               :paasta-virhe-lapi? true})]
-      (assoc app :trhaku-kaynnissa? true)))
+    (tuck-apurit/post! :hae-tr-viivaksi
+      (:tierekisteriosoite toteumatiedot)
+      {:onnistui ->HaeTROsoitteelleKoordinaatitOnnistui
+       :epaonnistui ->HaeTROsoitteelleKoordinaatitEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :trhaku-kaynnissa? true))
+
+  HaeKoordinaatitJaLaheta
+  (process-event [{toteumatiedot :toteumatiedot} app]
+    (tuck-apurit/post! :hae-tr-viivaksi
+      (:tierekisteriosoite toteumatiedot)
+      {:onnistui ->LahetaKoordinaattienKanssa
+       :epaonnistui ->HaeTROsoitteelleKoordinaatitEpaonnistui
+       :paasta-virhe-lapi? true})
+
+    (assoc app :trhaku-kaynnissa? true))
 
   HaeTROsoitteelleKoordinaatitOnnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "HaeTROsoitteelleKoordinaatitOnnistui" :onnistui)
     (let [koordinaatit (first (mapcat (fn [coordinates]
                                         (concat (map :points (:lines coordinates)))) vastaus))
-          _ (js/console.log "HaeTROsoitteelleKoordinaatitOnnistui :: vastaus" (pr-str vastaus))
-          _ (js/console.log "HaeTROsoitteelleKoordinaatitOnnistui :: koordinaatit" (pr-str koordinaatit))
-          _ (js/console.log "koordinaateista reitti: " (pr-str (map-indexed
-                                                                 (fn [index rivi]
-                                                                   (muodosta-reittipiste (first rivi) (second rivi) app (count koordinaatit) index))
-                                                                 koordinaatit)))
           _ (reset! karttataso-tierekisteri koordinaatit)]
       (-> app
         (assoc :koordinaatit koordinaatit)
         (assoc :trhaku-kaynnissa? false))))
+
+  LahetaKoordinaattienKanssa
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "LahetaKoordinaattienKanssa" :onnistui)
+    (let [koordinaatit (first (mapcat (fn [coordinates]
+                                        (concat (map :points (:lines coordinates)))) vastaus))
+          _ (reset! karttataso-tierekisteri koordinaatit)
+          app (-> app
+                (assoc :koordinaatit koordinaatit)
+                (assoc :trhaku-kaynnissa? false))]
+      (tuck/process-event (->Laheta (:toteumatiedot app)) app)
+      app))
 
   HaeTROsoitteelleKoordinaatitEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -279,6 +361,11 @@
               payload
               {:onnistui ->LisaaOikeudetUrakkaanOnnistui
                :epaonnistui ->LisaaOikeudetUrakkaanEpaonnistui
+               :paasta-virhe-lapi? true})
+          _ (tuck-apurit/post! :lisaa-kayttajalle-kirjoitusoikeus
+              payload
+              {:onnistui ->LisaaAPIKirjoitusOnnistui
+               :epaonnistui ->LisaaAPIKirjoitusEpaonnistui
                :paasta-virhe-lapi? true})]
       app))
 
@@ -292,6 +379,18 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+
+  LisaaAPIKirjoitusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaAPIKirjoitusOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "LisaaAPIKirjoitusOnnistui" :onnistui)
+    (hae-kayttajan-kaytto-oikeudet)
+    app)
+
+  LisaaAPIKirjoitusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaAPIKirjoitusEpaonnistui :: vastaus" (pr-str vastaus))
     app)
 
   HaeSeuraavaVapaaUlkoinenId
