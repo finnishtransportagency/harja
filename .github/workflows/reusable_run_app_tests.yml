@@ -47,27 +47,27 @@ on:
         required: false
       backend-tests:
         description: 'Enabloi back-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       slow-tests:
         description: 'Enabloi slow-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       front-end-tests:
         description: 'Enabloi front-end-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       integration-tests:
         description: 'Enabloi integration-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       e2e-tests:
         description: 'Enabloi e2e-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
 
