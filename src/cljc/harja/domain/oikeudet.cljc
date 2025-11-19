@@ -34,6 +34,7 @@
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
   hallinta-indeksit
+  hallinta-api-jarjestelmatunnukset
   urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
