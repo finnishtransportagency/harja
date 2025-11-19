@@ -2,12 +2,14 @@
 set -euo pipefail
 
 clean() {
-  set +e
-  jobs -p | xargs -r kill
+  set +e # Jatka vaikka cleanin aikana tulee virheitä (background prosesseja ei ole)
+  jobs -p | xargs -r kill # Tapa kaikki prosessit, mitä shell aloitti 
 }
 
+# Aja clean, kun tämä prosessi/shell suljetaan 
 trap clean EXIT INT TERM
 
+# Asenna depsut, jos ei ole 
 lein deps
 [ -d node_modules ] || npm ci
 
@@ -23,6 +25,9 @@ source "$( dirname "${BASH_SOURCE[0]}" )/sh/harja_dir.sh" || exit
 
 if [[ "$ENV_PROFILE" = "true" ]]
 then
+  # suorita 2 komentoa :
+  # npm run less               =  aloittaa package.json npm skriptin nimeltä "less", joka on .less tarkkailu
+  # lein trampoline build-dev  =  aloittaa frontti (.cljs) compilauksen 
   npm run less & lein trampoline build-dev
 else
   npm run less & lein trampoline build-dev-no-env
