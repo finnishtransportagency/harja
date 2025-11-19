@@ -15,6 +15,9 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus-kasittely]
+            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
+            [harja.palvelin.integraatiot.tloik.ilmoitukset :as tloik-ilmoitukset]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
@@ -319,6 +322,18 @@
      :pk2 geometriat_pk2
      :pk3 geometriat_pk3}))
 
+(defn ilmoitus-xml
+  "Tallentaa ilmoituksen annetun XML:n perusteella. Tällä simuloidaan tloikista tullutta ilmoitusta.
+  Tätä voi käyttää vain lokaalisti ongelien debuggaamisessa. Ota siis vaikka tuotannosta ilmoitus xml ja aja se tähän
+  ja simuloi, että mitä se tekee."
+  [db tiedot]
+  (log/info "Käsitellään ilmoitus xml")
+  (let [ilmoitus (ilmoitussanoma/lue-viesti (:xml tiedot))
+        urakka (tloik-ilmoitukset/hae-urakka db ilmoitus)
+        ilmoitus (ilmoitus-kasittely/tallenna-ilmoitus db (:id urakka) ilmoitus)]
+    ;; TODO: Vaikka tämä työkalu, niin ongelmissa voisi frontille palauttaa jotain järkevää.
+    "OK"))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -372,7 +387,9 @@
       :debug-hae-yllapitokohteen-geometriat
       (vaadi-jvh! (partial #'hae-yllapitokohteen-geometriat db))
       :debug-hae-pkluokkageometriat
-      (vaadi-jvh! (partial #'hae-pkluokkageometriat db)))
+      (vaadi-jvh! (partial #'hae-pkluokkageometriat db))
+      :debug-ilmoitus-xml
+      (vaadi-jvh! (partial #'ilmoitus-xml db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -394,5 +411,6 @@
       :debug-laheta-tekstiviesti
       :debug-hae-tieturvalliusuus-geometriat
       :debug-hae-yllapitokohteen-geometriat
-      :debug-hae-pkluokkageometriat)
+      :debug-hae-pkluokkageometriat
+      :debug-ilmoitus-xml)
     this))
