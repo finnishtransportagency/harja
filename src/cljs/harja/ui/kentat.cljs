@@ -923,7 +923,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id pitka-teksti?
-            pakollinen? tarkenne muokattu? valitse-oletus? data-cy aria-label]} data]
+            pakollinen? tarkenne muokattu? valitse-oletus? data-cy aria-label nil-valinta]} data]
    ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
    ;; esim. :id
    (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -946,6 +946,10 @@
          _ (when (and valitse-oletus? (not= nykyinen-arvo @data)) (reset! data nykyinen-arvo))
          ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
          valinnat (or valinnat (valinnat-fn rivi))
+         ;; Lisää nil-valinta jos määritelty (voi olla string tai map)
+         valinnat (if nil-valinta
+                    (cons nil-valinta valinnat)
+                    valinnat)
          valinta (when valinta-arvo
                    (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat))
          opts (merge
