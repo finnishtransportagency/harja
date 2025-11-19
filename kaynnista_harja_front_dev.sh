@@ -28,7 +28,11 @@ then
   # suorita 2 komentoa :
   # npm run less               =  aloittaa package.json npm skriptin nimeltä "less", joka on .less tarkkailu
   # lein trampoline build-dev  =  aloittaa frontti (.cljs) compilauksen 
-  npm run less & lein trampoline build-dev
+  #
+  # Aja nämä rinnaikkaisetsti (yhtäaikaa) käyttäen & 
+  npm run less & 
+  lein trampoline build-dev
 else
-  npm run less & lein trampoline build-dev-no-env
+  npm run less & 
+  lein trampoline build-dev-no-env
 fi
