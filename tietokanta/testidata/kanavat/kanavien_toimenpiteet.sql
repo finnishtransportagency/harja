@@ -9,7 +9,7 @@ DECLARE
   kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
   toimenpidekoodi_id_vv_laaja_yksiloimaton INTEGER := (SELECT id FROM tehtava WHERE emo = (SELECT id FROM toimenpide WHERE koodi = '27105') AND nimi = 'Ei yksilöity');
   tpk_id_saimaan_kok_hint_tp INTEGER := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP');
-  tyonjohto_tpk_id INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Henkilöstö: Työnjohto' AND emo =  (SELECT id FROM toimenpide WHERE koodi = '24104'));
+  tyonjohto_tpk_id INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet');
   testitoimenpide_171112_id INTEGER;
   muutosaskare_tpk_id INTEGER;
 BEGIN
