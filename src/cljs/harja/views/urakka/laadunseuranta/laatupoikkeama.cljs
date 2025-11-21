@@ -57,7 +57,6 @@
         (if (k/virhe? tulos)
           ;; Palautetaan virhe, jotta nappi näyttää virheviestin
           tulos
-
           ;; Laatupoikkeama tallennettu onnistuneesti, päivitetään sen tiedot
           (let [uusi-laatupoikkeama tulos
                 aika (:aika uusi-laatupoikkeama)
@@ -342,6 +341,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                (get-in % [:yllapitokohde :id])) (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot yllapitokohteet)
                                              (contains? (:sijainti %) :virhe) (assoc :sijainti nil))]
                                (reset! laatupoikkeama uusi-lp)))
+                :tarkkaile-ulkopuolisia-muutoksia? true
                 :voi-muokata? @laatupoikkeamat/voi-kirjata?
                 :footer-fn (fn [sisalto]
                              (when voi-kirjoittaa?
@@ -366,7 +366,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                                               vesivayla? :vesivayla
                                                                               :default :hoito)))
                                              (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))}]))}
-
+               
                [{:otsikko "Havaittu"
                  :pakollinen? true
                  :muokattava? (constantly muokattava?)
@@ -374,29 +374,29 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :nimi :aika
                  :validoi [[:ei-tyhja "Anna laatupoikkeaman havainnon päivämäärä ja aika"]]
                  :huomauta [[:urakan-aikana-ja-hoitokaudella]]
-                 :palstoja 1}
-
+                 :palstoja 1} 
+                
                 (when yllapitokohdeurakka?
                   {:otsikko "Yllä\u00ADpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
                    :palstoja 1
-                   :pakollinen? true
+                   :pakollinen? false
                    :muokattava? (constantly muokattava?)
                    :valinnat yllapitokohteet
+                   :nil-valinta {:id nil}
                    :jos-tyhja "Ei valittavia kohteita"
                    :valinta-nayta (fn [arvo muokattava?]
-                                    (if arvo
-                                      (yllapitokohde-domain/yllapitokohde-tekstina
-                                        arvo
-                                        {:osoite {:tr-numero (:tr-numero arvo)
-                                                  :tr-alkuosa (:tr-alkuosa arvo)
-                                                  :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
-                                                  :tr-loppuosa (:tr-loppuosa arvo)
-                                                  :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
-                                      (if muokattava?
-                                        "- Valitse kohde -"
-                                        "")))
-                   :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
-
+                                    (cond
+                                      (nil? (:id arvo)) "Ei liity kohteeseen"
+                                      arvo (yllapitokohde-domain/yllapitokohde-tekstina
+                                             arvo
+                                             {:osoite {:tr-numero (:tr-numero arvo)
+                                                       :tr-alkuosa (:tr-alkuosa arvo)
+                                                       :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                                       :tr-loppuosa (:tr-loppuosa arvo) 
+                                                       :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                                      muokattava? "- Valitse kohde -"
+                                      :else ""))})
+                
                 (when (and (not yllapitokohdeurakka?) (not vesivayla?))
                   {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                    :palstoja 1
@@ -416,14 +416,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :palstoja 1
                  :muokattava? (constantly muokattava?)
                  :validoi [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
-
+                
                 (if vesivayla?
                   {:nimi :sijainti
                    :otsikko "Sijainti"
                    :tyyppi :sijaintivalitsin
                    :pakollinen? true
                    :karttavalinta-tehty-fn #(swap! laatupoikkeama assoc :sijainti %)}
-                  {:tyyppi :tierekisteriosoite
+                  {:tyyppi :tierekisteriosoite 
                    :nimi :tr
                    :muokattava? (constantly muokattava?)
                    :sijainti (r/wrap (:sijainti @laatupoikkeama)
@@ -454,14 +454,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :palstoja 2
                  :tyyppi :komponentti
                  :komponentti
-                 (fn [_]
+                 (fn [{:keys [muokkaa-lomaketta]}]
                    [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
-                    {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
-                                              #(swap! laatupoikkeama assoc :uusi-liite %))
+                    {:uusi-liite-atom (r/wrap (:uudet-liitteet @laatupoikkeama)
+                                        (fn [uusi-liite]
+                                          (if (:uudet-liitteet @laatupoikkeama)
+                                            (swap! laatupoikkeama update :uudet-liitteet conj uusi-liite)
+                                            (swap! laatupoikkeama assoc :uudet-liitteet [uusi-liite]))
+                                          (muokkaa-lomaketta @laatupoikkeama)))
                      :uusi-liite-teksti "Lisää liite laatupoikkeamaan"
                      :salli-poistaa-lisatty-liite? true
-                     :poista-lisatty-liite-fn #(swap! laatupoikkeama dissoc :uusi-liite)
+                     :poista-lisatty-liite-fn (fn [liite-id]
+                                                (swap! laatupoikkeama update :uudet-liitteet
+                                                  (fn [uudet] (vec (remove #(= (:id %) liite-id) uudet))))
+                                                (muokkaa-lomaketta @laatupoikkeama))
                      :salli-poistaa-tallennettu-liite? true
+                     :lisaa-usea-liite? true
                      :poista-tallennettu-liite-fn
                      (fn [liite-id]
                        (liitteet/poista-liite-kannasta
@@ -473,7 +481,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                           (swap! laatupoikkeama assoc :liitteet
                                                  (filter (fn [liite]
                                                            (not= (:id liite) liite-id))
-                                                         (:liitteet @laatupoikkeama))))}))}])}
+                                                         (:liitteet @laatupoikkeama)))
+                                          (muokkaa-lomaketta @laatupoikkeama))}))}])}
                 (when-not uusi?
                   (lomake/ryhma
                     "Kommentit"

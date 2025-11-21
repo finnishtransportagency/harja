@@ -20,16 +20,21 @@
 (defn- kuukausivastauksen-status [e! lupaus-kuukausi lupaus app]
   (let [listauksessa? false
         valittu? (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi]))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit])]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit]) app]))
 
 (defn- otsikko [e! app]
-  (let [lupaus (:vastaus-lomake app)]
+  (let [lupaus (:vastaus-lomake app)
+        urakka-id (-> @nav/valittu-urakka-id)]
     [:div
      [:div.row
       (doall
         (for [lupaus-kuukausi (:lupaus-kuukaudet lupaus)]
           ^{:key (str "kk-vastaukset-" (hash lupaus-kuukausi))}
-          [:div (when (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+          [:div (when (lupaus-domain/kayttaja-saa-vastata? 
+                        @istunto/kayttaja 
+                        lupaus-kuukausi
+                        (:lupaustyyppi lupaus)
+                        urakka-id)
                   {:on-click (fn [e]
                                (.preventDefault e)
                                (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi))))})
@@ -195,32 +200,26 @@
                           kohdekuukausi)
         nykyhetki (or (:nykyhetki app) (pvm/nyt)) 
         maarapaiva-pvm (:maarapaiva-pvm lupaus-kuukausi)
-        maarapaiva-mennyt-ohi? (and maarapaiva-pvm
-                                    (pvm/jalkeen? nykyhetki maarapaiva-pvm))
-        maarapaivan-kuukausi (when maarapaiva-pvm (pvm/kuukausi maarapaiva-pvm))
-        maarapaivan-vuosi (when maarapaiva-pvm (pvm/vuosi maarapaiva-pvm))
-        nykyinen-kuukausi (pvm/kuukausi nykyhetki)
-        nykyinen-vuosi (pvm/vuosi nykyhetki)
-        ei-maarapaivan-kuukausi? (and maarapaivan-kuukausi maarapaivan-vuosi
-                                      (or (not= nykyinen-kuukausi maarapaivan-kuukausi)
-                                          (not= nykyinen-vuosi maarapaivan-vuosi)))
         kuukauden-kustannusennuste (:kustannusennuste lupaus-kuukausi)
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         kustannusennuste (if (:kustannusennuste lahetetty-vastaus)
                            (:kustannusennuste lahetetty-vastaus)
                            kuukauden-kustannusennuste)
+        tiedot-syotetty-ajoissa? (and kuukauden-kustannusennuste
+                                   (:tavoitehinta kuukauden-kustannusennuste)
+                                   (:toteutuneet-kustannukset kuukauden-kustannusennuste))
+        maarapaiva-paattely (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva-pvm tiedot-syotetty-ajoissa? disabled?)
+        maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? maarapaiva-paattely)
+        ei-maarapaivan-kuukausi? (:ei-maarapaivan-kuukausi? maarapaiva-paattely)
+        kayta-readonly-nakymaa? (:kayta-readonly-nakymaa? maarapaiva-paattely)
+        maarapaivan-kuukausi (when maarapaiva-pvm (pvm/kuukausi maarapaiva-pvm))
+        maarapaivan-vuosi (when maarapaiva-pvm (pvm/vuosi maarapaiva-pvm))
         pisteet-laskettu? (get-in app [:yhteenveto :kustannusennuste-pisteet-laskettu :kaikki-laskettu])
         tallentaa-kustannusennustetta? (and
                                          (= (get-in app [:lupausta-lahetataan :tyyppi]) :kustannusennuste)
                                          (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi)
                                          (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))
-        ;; Määrittele onko kustannusennuste syötetty ajoissa
-        tiedot-syotetty-ajoissa? (and kuukauden-kustannusennuste
-                                   (:tavoitehinta kuukauden-kustannusennuste)
-                                   (:toteutuneet-kustannukset kuukauden-kustannusennuste))
-        ;; Määrittele käytetäänkö read-only näkymää
-        kayta-readonly-nakymaa? (and maarapaiva-mennyt-ohi? tiedot-syotetty-ajoissa?)
-        disabled? (or disabled? ei-maarapaivan-kuukausi?)]
+        disabled? (:disabled? maarapaiva-paattely)]
 
     (cond 
         ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
@@ -238,8 +237,8 @@
          [:div.margin-top-16.text-left
           [sulje-nappi e! {:luokka "pull-right"}]]]]]
       
-       ;; Jos määräpäivä ohitettu eikä tietoja syötetty ajoissa
-      ei-maarapaivan-kuukausi?
+      ;; Jos ei olla määräpäivän kuukaudessa JA tietoja ei ole syötetty
+      (and ei-maarapaivan-kuukausi? (not tiedot-syotetty-ajoissa?))
       [:div.kustannusennuste-vaara-kuukausi
        [:div.row
         [:div.col-xs-12
@@ -256,6 +255,9 @@
           [sulje-nappi e! {:luokka "pull-right"}]]]]]
 
       ;; Muissa tapauksissa näytetään kentät (joko muokattavina tai read-only)
+      ;; Tämä sisältää tapaukset:
+      ;; - Ollaan määräpäivän kuukaudessa
+      ;; - Tiedot on syötetty ajoissa (näytetään read-only)
       :else
       [:div.kustannusennuste-syottokentit
        ;; Ensimmäinen rivi - Tavoitehinta ja Ennuste
@@ -389,7 +391,11 @@
         ladataan? (and (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi) 
                         (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus))) 
         saa-vastata? (and (not ladataan?)
-                          (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+                          (lupaus-domain/kayttaja-saa-vastata? 
+                            @istunto/kayttaja 
+                            lupaus-kuukausi
+                            (:lupaustyyppi lupaus)
+                            (-> @nav/valittu-urakka-id))
                           (lupaus-domain/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
         disabled? (not saa-vastata?)
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa

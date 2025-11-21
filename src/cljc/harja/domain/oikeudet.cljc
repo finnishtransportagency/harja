@@ -26,6 +26,7 @@
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
+  urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
@@ -41,7 +42,9 @@
   urakat-suunnittelu-yksikkohintaisettyot
   urakat-suunnittelu-muutos-ja-lisatyot
   urakat-suunnittelu-materiaalit
-  urakat-vesivaylasuunnittelu-kiintiot)
+  urakat-vesivaylasuunnittelu-kiintiot
+  urakat-toteumat-materiaalit
+  roolit)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

@@ -82,7 +82,7 @@
   "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
    on lisätty oikea sonja"
   {:pre [(not (nil? *lisattavat-kuuntelijat*))]}
-  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa) )
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa))
 
 (defn circleci? []
   (not (nil? (env/env "CIRCLE_BRANCH"))))
@@ -177,9 +177,9 @@
                              (if (<= i cols)
                                (do
                                  (recur (conj row (.getObject rs i))
-                                        (inc i)))
+                                   (inc i)))
                                row)))
-                 (.next rs)))))))
+            (.next rs)))))))
 
 (defn q-map
   "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
@@ -204,11 +204,11 @@
                              (if (<= i cols)
                                (recur (assoc row
                                         (keyword (-> (.getMetaData rs)
-                                                     (.getColumnName i)))
+                                                   (.getColumnName i)))
                                         (.getObject rs i))
-                                      (inc i))
+                                 (inc i))
                                row)))
-                 (.next rs)))))))
+            (.next rs)))))))
 
 (defn u
   "Päivitä Harjan kantaa yksikkötestauksen yhteydessä"
@@ -240,18 +240,18 @@
 (defn odota-etta-kanta-pystyssa [db]
   (let [timeout-s 10]
     (jdbc/with-db-connection [db db]
-                             (with-open [c (jdbc/get-connection db)
-                                         stmt (jdbc/prepare-statement c
-                                                                      "SELECT 1;"
-                                                                      {:timeout timeout-s
-                                                                       :result-type :forward-only
-                                                                       :concurrency :read-only})
-                                         rs (.executeQuery stmt)]
-                               (let [kanta-ok? (if (.next rs)
-                                                 (= 1 (.getObject rs 1))
-                                                 false)]
-                                 (when-not kanta-ok?
-                                   (log/error (str "Ei saatu kantaan yhteyttä " timeout-s " sekunnin kuluessa"))))))))
+      (with-open [c (jdbc/get-connection db)
+                  stmt (jdbc/prepare-statement c
+                         "SELECT 1;"
+                         {:timeout timeout-s
+                          :result-type :forward-only
+                          :concurrency :read-only})
+                  rs (.executeQuery stmt)]
+        (let [kanta-ok? (if (.next rs)
+                          (= 1 (.getObject rs 1))
+                          false)]
+          (when-not kanta-ok?
+            (log/error (str "Ei saatu kantaan yhteyttä " timeout-s " sekunnin kuluessa"))))))))
 
 (defn- luo-kannat-uudelleen []
   (alter-var-root #'db (fn [_]
@@ -374,51 +374,51 @@
                      (yrita-querya (fn [n-kierros]
                                      (try
                                        (jdbc/with-db-connection [db kanta-asetukset]
-                                                                (with-open [c (jdbc/get-connection db)
-                                                                            ps (.createStatement c)]
-                                                                  (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
-                                                                  (tapa-backend-kannasta ps db-name)
-                                                                  #_(with-open [rs (tapa-backend-kannasta ps db-name)]
-                                                                      (if (.next rs)
-                                                                        (let [tulos (.getObject rs 1)]
-                                                                          (when-not (and (instance? Boolean
-                                                                                                    tulos)
-                                                                                         (= "true" (.toString tulos)))
-                                                                            (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
-                                                                        (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
+                                         (with-open [c (jdbc/get-connection db)
+                                                     ps (.createStatement c)]
+                                           (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
+                                           (tapa-backend-kannasta ps db-name)
+                                           #_(with-open [rs (tapa-backend-kannasta ps db-name)]
+                                               (if (.next rs)
+                                                 (let [tulos (.getObject rs 1)]
+                                                   (when-not (and (instance? Boolean
+                                                                    tulos)
+                                                               (= "true" (.toString tulos)))
+                                                     (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+                                                 (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
                                        (catch Exception e
                                          (when (= n-kierros kierroksia)
                                            (throw e)))))
-                                   kierroksia true true))]
+                       kierroksia true true))]
     (go (let [[arvo _] (async/alts!! [(go (jdbc/with-db-connection [db tmpkanta-asetukset]
-                                                                   (with-open [c (jdbc/get-connection db)
-                                                                               ps (.createStatement c)]
-                                                                     (.executeUpdate ps (str "CREATE USER " testikanta-data-placeholder " WITH SUPERUSER"))))
-                                          (tapa-kanta tmpkanta-asetukset db-name)
-                                          (jdbc/with-db-connection [db {:datasource temppidb}]
-                                                                   (with-open [c (jdbc/get-connection db)
-                                                                               ps (.createStatement c)]
-                                                                     (.executeUpdate ps (str "CREATE DATABASE " testikanta-data-placeholder " OWNER " testikanta-data-placeholder " TEMPLATE " db-name))
-                                                                     (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))
-                                          (async/>! kanava :katkos-kaynnissa)
-                                          ;; Odotetaan, että saadaan laittaa kanta takaisin pystyyn
-                                          (async/<! kanava)
-                                          (println "------------------------------------")
-                                          (println "---> KÄYNNISTEÄÄN UUSIKSI")
-                                          (tapa-kanta tmpkanta-asetukset testikanta-data-placeholder)
-                                          (jdbc/with-db-connection [db tmpkanta-asetukset]
-                                                                   (with-open [c (jdbc/get-connection db)
-                                                                               ps (.createStatement c)]
-                                                                     (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER " db-name " TEMPLATE " testikanta-data-placeholder ""))))
-                                          (println "---> KÄYNNISTETTY"))
+                                            (with-open [c (jdbc/get-connection db)
+                                                        ps (.createStatement c)]
+                                              (.executeUpdate ps (str "CREATE USER " testikanta-data-placeholder " WITH SUPERUSER"))))
+                                        (tapa-kanta tmpkanta-asetukset db-name)
+                                        (jdbc/with-db-connection [db {:datasource temppidb}]
+                                          (with-open [c (jdbc/get-connection db)
+                                                      ps (.createStatement c)]
+                                            (.executeUpdate ps (str "CREATE DATABASE " testikanta-data-placeholder " OWNER " testikanta-data-placeholder " TEMPLATE " db-name))
+                                            (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))
+                                        (async/>! kanava :katkos-kaynnissa)
+                                        ;; Odotetaan, että saadaan laittaa kanta takaisin pystyyn
+                                        (async/<! kanava)
+                                        (println "------------------------------------")
+                                        (println "---> KÄYNNISTEÄÄN UUSIKSI")
+                                        (tapa-kanta tmpkanta-asetukset testikanta-data-placeholder)
+                                        (jdbc/with-db-connection [db tmpkanta-asetukset]
+                                          (with-open [c (jdbc/get-connection db)
+                                                      ps (.createStatement c)]
+                                            (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER " db-name " TEMPLATE " testikanta-data-placeholder ""))))
+                                        (println "---> KÄYNNISTETTY"))
                                       (go (async/<! (async/timeout timeout))
-                                          ::timeout)])]
+                                        ::timeout)])]
           (jdbc/with-db-connection [db kanta-asetukset]
-                                   (with-open [c (jdbc/get-connection db)
-                                               ps (.createStatement c)]
-                                     #_(yrita-querya (fn [] (tapa-backend-kannasta ps testikanta-data-placeholder)) 5 false)
-                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)
-                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP USER IF EXISTS " testikanta-data-placeholder))) 5)))
+            (with-open [c (jdbc/get-connection db)
+                        ps (.createStatement c)]
+              #_(yrita-querya (fn [] (tapa-backend-kannasta ps testikanta-data-placeholder)) 5 false)
+              (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)
+              (yrita-querya (fn [] (.executeUpdate ps (str "DROP USER IF EXISTS " testikanta-data-placeholder))) 5)))
           (println "---> TMP KANTA TAPETTU")
           (async/put! kanava :kanta-uudetaan-kaynnissa)
           (async/close! kanava)
@@ -438,7 +438,7 @@
   (kutsu-karttakuvapalvelua
     ;; POST
     [this nimi kayttaja payload koordinaatti extent])
-  
+
   (kutsu-excel-palvelua
     ;; Palauttaa halutun excelin testiin ennen kuin siitä generoidaan
     ;; oikea excel-tiedosto, eli raporttielementteinä.
@@ -459,31 +459,31 @@
   (= 2 (arg-count f)))
 
 (defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload] (when-not (s/valid? spec payload)
-    (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
+                                                              (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
     Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
     Payload: " payload "
     Spec selitys: " (s/explain-str spec payload))))))
 
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
-        (if kysely-spec
-          (fn [user payload]
-            (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
-            (f user payload))
-          f)
+    (if kysely-spec
+      (fn [user payload]
+        (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
+        (f user payload))
+      f)
 
-        (if vastaus-spec
-          (if (post-kutsu? f)
-            (fn [user payload]
-              (let [v (f user payload)]
-                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
-                v))
+    (if vastaus-spec
+      (if (post-kutsu? f)
+        (fn [user payload]
+          (let [v (f user payload)]
+            (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
+            v))
 
-            (fn [user]
-              (let [v (f user)]
-                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
-                v)))
-          f)))
+        (fn [user]
+          (let [v (f user)]
+            (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
+            v)))
+      f)))
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -496,7 +496,7 @@
       (julkaise-palvelu [_ nimi palvelu-fn optiot]
 
         (swap! palvelut assoc nimi
-               (wrap-validointi nimi palvelu-fn optiot)))
+          (wrap-validointi nimi palvelu-fn optiot)))
       (poista-palvelu [_ nimi]
         (swap! palvelut dissoc nimi))
 
@@ -519,7 +519,7 @@
          {:parametrit (assoc payload "_" nimi)
           :koordinaatti koordinaatti
           :extent (or extent
-                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])}))
+                    [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])}))
 
       (kutsu-excel-palvelua [_ nimi kayttaja payload]
         (with-redefs
@@ -559,29 +559,29 @@
                 muutokset (transduce
                             ;; Jostain syystä pgobject->map ei tykänny :double :long tai :date tyypeistä
                             (comp (map #(konv/pgobject->map %
-                                                            :pvm :string
-                                                            :maara :string
-                                                            :lisatieto :string
-                                                            :id :string
-                                                            :hairiotilanne :string
-                                                            :toimenpide :string
-                                                            :luotu :string))
-                                  ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
-                                  ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
-                                  ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
-                                  (map #(let [tyhja-string->nil (fn [funktio teksti]
-                                                                  (if (= teksti "")
-                                                                    nil (funktio teksti)))]
-                                          (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
-                                                   :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
-                                                   :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
-                                                   :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
-                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))
-                                                   :luotu (tyhja-string->nil pvm/dateksi (:pvm %))))))
+                                          :pvm :string
+                                          :maara :string
+                                          :lisatieto :string
+                                          :id :string
+                                          :hairiotilanne :string
+                                          :toimenpide :string
+                                          :luotu :string))
+                              ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
+                              ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
+                              ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
+                              (map #(let [tyhja-string->nil (fn [funktio teksti]
+                                                              (if (= teksti "")
+                                                                nil (funktio teksti)))]
+                                      (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
+                                        :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
+                                        :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
+                                        :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
+                                        :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))
+                                        :luotu (tyhja-string->nil pvm/dateksi (:pvm %))))))
                             conj [] (first materiaali-vector))
                 nimi (second materiaali-vector)]
             {:muutokset muutokset :nimi nimi}))
-        haku))
+    haku))
 
 
 (defn hae-urakan-id-nimella [nimi]
@@ -740,9 +740,9 @@
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-           (when limit
-             (str " LIMIT " limit))
-           ";"))))
+        (when limit
+          (str " LIMIT " limit))
+        ";"))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
   ([]
@@ -756,9 +756,9 @@
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
                                AND ht.\"toimenpide-id\" NOT IN (" (str/join ", " (mapv first (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla))) ")"
-                       (when (some? hintaryhma?)
-                         (str " AND hintaryhma = " hintaryhma?))
-                       ");"))]
+                    (when (some? hintaryhma?)
+                      (str " AND hintaryhma = " hintaryhma?))
+                    ");"))]
      (ffirst tulos))))
 
 (defn hae-kiintio-id-nimella [nimi]
@@ -774,9 +774,9 @@
                     LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
                     WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND vv_hinta.\"hinnoittelu-id\" IS NULL"
-                   (when (some? hintaryhma?)
-                     (str " AND hintaryhma = " hintaryhma?))
-                   " LIMIT 1")))))
+                (when (some? hintaryhma?)
+                  (str " AND hintaryhma = " hintaryhma?))
+                " LIMIT 1")))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
@@ -891,6 +891,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
+
+(defn hae-kajaani-hoitourakan-2025-2030-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030')"))))
 
 (defn hae-suomussalmen-maanteiden-hoitourakan-2024-2029-id []
   (ffirst (q (str "SELECT id
@@ -1007,7 +1012,7 @@
   (ffirst (q (format "SELECT id
                       FROM   toimenpideinstanssi
                       WHERE  nimi = '%s'"
-                     nimi))))
+               nimi))))
 
 (defn hae-sopimus-id-nimella [nimi]
   (ffirst (q (format "SELECT id
@@ -1162,7 +1167,7 @@
   (u (format "update kayttaja set api_oikeudet = ARRAY['analytiikka'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
 (defn anna-tielupaoikeus [kayttaja]
-    (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
+  (u (format "update kayttaja set api_oikeudet = ARRAY['tielupa'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
 
 (defn anna-taitorakenneoikeus [kayttaja]
   (u (format "update kayttaja set api_oikeudet = ARRAY['taitorakenne'::apioikeus] WHERE kayttajanimi = '%s'" kayttaja)))
@@ -1202,24 +1207,24 @@
 (defn pvm-vali-sql-tekstina
   [sarakkeen-nimi between-str]
   (str " AND " sarakkeen-nimi
-       " BETWEEN " between-str))
+    " BETWEEN " between-str))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
 (defn hae-testi-kayttajan-tiedot [{:keys [etunimi sukunimi roolit urakkaroolit organisaatioroolit]}]
   (let [kayttajan-tiedot (zipmap [:id :etunimi :sukunimi :kayttajanimi :organisaatio :sahkoposti]
-                                 (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio, sahkoposti FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
+                           (first (q (str "SELECT id, etunimi, sukunimi, kayttajanimi, organisaatio, sahkoposti FROM kayttaja WHERE etunimi='" etunimi "' AND sukunimi='" sukunimi "';"))))
         kayttajan-organisaation-tiedot (when (:organisaatio kayttajan-tiedot)
                                          (zipmap [:id :tyyppi :nimi]
-                                                 (first (q (str "SELECT id, tyyppi, nimi FROM organisaatio WHERE id=" (:organisaatio kayttajan-tiedot) ";")))))
+                                           (first (q (str "SELECT id, tyyppi, nimi FROM organisaatio WHERE id=" (:organisaatio kayttajan-tiedot) ";")))))
         organisaation-urakat (when (:organisaatio kayttajan-tiedot)
                                (into #{} (apply concat (q (str "SELECT id FROM urakka WHERE urakoitsija=" (:organisaatio kayttajan-tiedot))))))]
     (assoc kayttajan-tiedot :organisaatio (or kayttajan-organisaation-tiedot {})
-                            :roolit (or roolit #{})
-                            :urakkaroolit (or urakkaroolit {})
-                            :organisaatioroolit (or organisaatioroolit {})
-                            :organisaation-urakat (or organisaation-urakat #{}))))
+      :roolit (or roolit #{})
+      :urakkaroolit (or urakkaroolit {})
+      :organisaatioroolit (or organisaatioroolit {})
+      :organisaation-urakat (or organisaation-urakat #{}))))
 
 (defn hae-paikkauskohde-tyomenetelmat []
   (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
@@ -1233,7 +1238,7 @@
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
 ;; Organisaation 14 = Destian urakoitsija
-(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija" }))
+(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija"}))
 
 (def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"
                                                       :urakkaroolit {(hae-urakan-id-nimella "Oulun alueurakka 2005-2012") #{"vastuuhenkilo"}
@@ -1495,9 +1500,9 @@
                  (first tulos))]
      (every?
        #(let [loytyi? (not= ::ei-loydy
-                            (get-in tulos (if (vector? %)
-                                            %
-                                            [%]) ::ei-loydy))]
+                        (get-in tulos (if (vector? %)
+                                        %
+                                        [%]) ::ei-loydy))]
           (when assertoi-kaikki?
             (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
           loytyi?)
@@ -1542,14 +1547,14 @@
                      vastaus
                      (first vastaus))]
          (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus)
-                    "\nPuuttuvat polut: " (pr-str
-                                            (keep (fn [sarake]
-                                                    (let [sarake (if (vector? sarake)
-                                                                   sarake
-                                                                   [sarake])]
-                                                      (when (= ::ei-loydy
-                                                               (get-in tulos sarake ::ei-loydy))
-                                                        sarake))) sarakkeet)))
+           "\nPuuttuvat polut: " (pr-str
+                                   (keep (fn [sarake]
+                                           (let [sarake (if (vector? sarake)
+                                                          sarake
+                                                          [sarake])]
+                                             (when (= ::ei-loydy
+                                                     (get-in tulos sarake ::ei-loydy))
+                                               sarake))) sarakkeet)))
          false)))))
 
 (def portti nil)
@@ -1563,27 +1568,27 @@
 
 (defn pystyta-harja-tarkkailija! []
   (alter-var-root #'harja-tarkkailija
-                  (fn [tarkkailija]
-                    (when tarkkailija
-                      (component/stop tarkkailija))
-                    (component/start
-                      (component/system-map
-                        :db-event (event-tietokanta/luo-tietokanta testitietokanta)
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
-                                                {:db :db-event})
-                        :tapahtuma (component/using
-                                     (tapahtuma/->Tapahtuma)
-                                     [:klusterin-tapahtumat :rajapinta])
-                        :rajapinta (rajapinta/->Rajapintakasittelija)
-                        :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:itmf {:paivitystiheys-ms (* 1000 10)}}
-                                                                                               (atom nil))
-                                                 (reify component/Lifecycle
-                                                   (start [this]
-                                                     this)
-                                                   (stop [this]
-                                                     this))))))))
+    (fn [tarkkailija]
+      (when tarkkailija
+        (component/stop tarkkailija))
+      (component/start
+        (component/system-map
+          :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+          :klusterin-tapahtumat (component/using
+                                  (tapahtumat/luo-tapahtumat {:loop-odotus 100})
+                                  {:db :db-event})
+          :tapahtuma (component/using
+                       (tapahtuma/->Tapahtuma)
+                       [:klusterin-tapahtumat :rajapinta])
+          :rajapinta (rajapinta/->Rajapintakasittelija)
+          :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
+                                   (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:itmf {:paivitystiheys-ms (* 1000 10)}}
+                                     (atom nil))
+                                   (reify component/Lifecycle
+                                     (start [this]
+                                       this)
+                                     (stop [this]
+                                       this))))))))
 
 (defn jms-kasittely [kuuntelijoiden-lopettajat]
   (when *aloitettavat-jmst*
@@ -1594,22 +1599,22 @@
                                   (*jms-kaynnistetty-fn*)))]
       (if *lisattavia-kuuntelijoita?*
         (reset! sonja-aloitus-go
-                (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
-                                                      (timeout 5000)])
-                          itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
-                      (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
-                        (doseq [[kanava f] itmf-kuuntelijat]
-                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
-                      (jms-kaynnistaminen!))))
+          (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                (timeout 5000)])
+                    itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
+                (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
+                  (doseq [[kanava f] itmf-kuuntelijat]
+                    (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
+                (jms-kaynnistaminen!))))
         (jms-kaynnistaminen!)))))
 
 (defn tietokantakomponentti-fixture [testit]
   #_(pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)))))
   (testit)
   (alter-var-root #'jarjestelma component/stop)
   #_(lopeta-harja-tarkkailija!))
@@ -1624,33 +1629,33 @@
      (pystyta-harja-tarkkailija!)
      (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti :toteumatyokalu) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
-                     (fn [_#]
-                       (component/start
-                         (component/system-map
-                           :db (tietokanta/luo-tietokanta testitietokanta)
-                           :db-replica (tietokanta/luo-tietokanta testitietokanta)
+       (fn [_#]
+         (component/start
+           (component/system-map
+             :db (tietokanta/luo-tietokanta testitietokanta)
+             :db-replica (tietokanta/luo-tietokanta testitietokanta)
 
-                           :todennus (component/using
-                                       (todennus/http-todennus)
-                                       [:db])
-                           :http-palvelin (component/using
-                                            (http/luo-http-palvelin portti true)
-                                            [:db :todennus])
-                           :integraatioloki (component/using
-                                              (integraatioloki/->Integraatioloki nil)
-                                              [:db])
+             :todennus (component/using
+                         (todennus/http-todennus)
+                         [:db])
+             :http-palvelin (component/using
+                              (http/luo-http-palvelin portti true)
+                              [:db :todennus])
+             :integraatioloki (component/using
+                                (integraatioloki/->Integraatioloki nil)
+                                [:db])
 
-                           :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet nil nil nil)
-                                                  [:db])
+             :liitteiden-hallinta (component/using
+                                    (liitteet/->Liitteet nil nil nil)
+                                    [:db])
 
-                           ~@omat))))
+             ~@omat))))
      (when *kaynnistyksen-jalkeen-hook*
        (*kaynnistyksen-jalkeen-hook*))
      (alter-var-root #'urakka
-                     (fn [_#]
-                       (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
-                                       " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
+       (fn [_#]
+         (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
+                      " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
      ;; aloita-sonja palauttaa kanavan.
      (binding [*lisattavat-kuuntelijat* (chan)]
        (let [kuuntelijoiden-lopettajat# (atom [])]
@@ -1687,32 +1692,32 @@
     (cond
       (= saatu-arvo ::ei-olemassa)
       (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
-                     ", odotettiin arvoa: " odotettu-arvo))
+                  ", odotettiin arvoa: " odotettu-arvo))
 
       (and (number? odotettu-arvo) (number? saatu-arvo))
       (is (=marginaalissa? odotettu-arvo saatu-arvo)
-          (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
-               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
-               saatu-arvo " (" (type saatu-arvo) ")"))
+        (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+          odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+          saatu-arvo " (" (type saatu-arvo) ")"))
 
       (instance? java.util.Date odotettu-arvo)
       (is (=ts odotettu-arvo saatu-arvo)
-          (str "Odotettu date arvo avaimelle " k " ei ole millisekunteina sama, odotettu: "
-               odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
-               saatu-arvo " (" (type saatu-arvo) ")"))
+        (str "Odotettu date arvo avaimelle " k " ei ole millisekunteina sama, odotettu: "
+          odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
+          saatu-arvo " (" (type saatu-arvo) ")"))
 
       :default
       (is (= odotettu-arvo saatu-arvo)
-          (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
-               " (" (type odotettu-arvo)
-               "), saatu: " saatu-arvo " (" (type odotettu-arvo) ")")))))
+        (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+          " (" (type odotettu-arvo)
+          "), saatu: " saatu-arvo " (" (type odotettu-arvo) ")")))))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 
 (defn paikallinen-aika [dt]
   (-> dt
-      tc/from-sql-date
-      (t/to-time-zone suomen-aikavyohyke)))
+    tc/from-sql-date
+    (t/to-time-zone suomen-aikavyohyke)))
 
 (defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
   (first (q-map
@@ -1786,7 +1791,7 @@
             opts))]
     (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
     (or (= 0 (:ko yhteenveto))
-        (nil? (:ko yhteenveto)))))
+      (nil? (:ko yhteenveto)))))
 
 (defmacro is->
   [testattava & fn-listat]
@@ -1805,17 +1810,17 @@
                (recur (if msg?#
                         (rest loput_)
                         loput_)
-                      (conj iss# is-lause#))))))))
+                 (conj iss# is-lause#))))))))
 
 (defn onnistunut-sahkopostikuittaus [viesti-id]
   (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
-  <viestiId>"viesti-id"</viestiId>\n
+  <viestiId>" viesti-id "</viestiId>\n
   <aika>2008-09-29T04:49:45</aika>\n
   <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>"))
 
 (defn epaonnistunut-sahkopostikuittaus [viesti-id]
   (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
-  <viestiId>"viesti-id"</viestiId>\n
+  <viestiId>" viesti-id "</viestiId>\n
   <aika>2008-09-29T04:49:45</aika>\n
   <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
 

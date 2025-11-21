@@ -313,7 +313,7 @@
   {:pre [(number? urakka-id) valittu-hoitokausi
          (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
   (log/debug "hae-urakan-lupaustiedot " tiedot)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
   (hae-urakan-lupaustiedot-hoitokaudelle db tiedot))
 
 (defn vaadi-lupaus-sitoutuminen-kuuluu-urakkaan
@@ -328,7 +328,7 @@
 (defn tallenna-urakan-luvatut-pisteet
   [db user {:keys [id urakka-id pisteet valittu-hoitokausi] :as tiedot}]
   (log/debug "tallenna-urakan-luvatut-pisteet tiedot " tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
   (when (not (roolit/tilaajan-kayttaja? user))
     (throw (SecurityException. "Luvattujen pisteiden tallentaminen vaatii tilaajan käyttäjän.")))
   (when id
@@ -454,23 +454,58 @@
       (assert (sallittu-vaihtoehto? db (:id lupaus) lupaus-vaihtoehto-id)))))
 
 (defn- tarkista-lupaus-vastaus
+  "Tarkistaa lupausvastauksen oikeudet ja validiteetin.
+  
+  OIKEUSTARKISTUKSET:
+  Excel (roolit.xlsx) määrittää kaikki oikeudet:
+  - Kustannusennuste: vaatii erikoisoikeuden 'kustannusennuste' (Excel: W,kustannusennuste)
+  - Päätökset: vain tilaajalle
+  - Muut vastaukset: kirjoitusoikeus riittää (Excel: W)
+  
+  Oikeuskoodit:
+  - R = Read (lukuoikeus)
+  - W = Write (kirjoitusoikeus)
+  - W,erikoisoikeus = Kirjoitus + nimetty erikoisoikeus"
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id kustannusennuste] :as tiedot}]
   {:pre [db user tiedot]}
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (when (and paatos (not (roolit/tilaajan-kayttaja? user)))
-    (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
+  
+  ;; Perustarkistus: lukuoikeus riittää katseluun (Excel: R)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
+  
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   ;; HUOM: vastaus/lupaus-vaihtoehto-id saa päivittää nil-arvoon (= ei vastattu)
   (let [{:keys [lupaus-id urakka-id vuosi kuukausi]} (if id
                                                        (first (lupaus-kyselyt/hae-lupaus-vastaus db {:id id}))
                                                        tiedot)
         _ (assert lupaus-id)
-  lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))
-  urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-  urakan-alkupvm (:alkupvm urakan-tiedot)
-  paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
-  hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
-  hoitovuoden-erikoisarvot (first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
+        lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+        paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
+        hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+        hoitovuoden-erikoisarvot (first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
+    
+    ;; OIKEUSTARKISTUKSET - Excel määrittää kuka saa tehdä mitäkin
+    (cond
+      ;; Kustannusennuste: vaatii erikoisoikeuden (Excel: W,kustannusennuste)
+      (and kustannusennuste (= "kustannusennuste" (:lupaustyyppi lupaus)))
+      (oikeudet/vaadi-oikeus "kustannusennuste"
+                             oikeudet/urakat-lupaukset
+                             user
+                             urakka-id)
+      
+      ;; Päätökset: vaatii erikoisoikeuden (Excel: W,päätös)
+      paatos
+      (oikeudet/vaadi-oikeus "päätös"
+                             oikeudet/urakat-lupaukset
+                             user
+                             urakka-id)
+      
+      ;; Muut vastaukset: kirjoitusoikeus riittää (Excel: W)
+      (or vastaus lupaus-vaihtoehto-id)
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id))
+    
+    ;; MUUT VALIDOINNIT
     (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
@@ -478,8 +513,8 @@
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id kustannusennuste)
     (when-not id
       ;; Tarkista, että kirjaus/päätös tulee sallitulle kuukaudelle.
-  (assert (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos hoitovuosi-nro hoitovuoden-erikoisarvot)
-      (str "Kuukausi " kuukausi " ei ole sallittu (paatos=" paatos ") hoitovuodelle " hoitovuosi-nro ".")))))
+      (assert (lupaus-domain/sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos hoitovuosi-nro hoitovuoden-erikoisarvot)
+              (str "Kuukausi " kuukausi " ei ole sallittu (paatos=" paatos ") hoitovuodelle " hoitovuosi-nro ".")))))
 
 (defn- nykyhetki
   "Mahdollistaa nykyhetken lähettämisen parametrina kehitysympäristössä.
@@ -513,7 +548,7 @@
          (inst? (first aikavali)) (inst? (second aikavali))]}
   (log/debug "kommentit" tiedot)
   (let [[alkupvm loppupvm] aikavali]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
     (lupaus-kyselyt/kommentit db {:lupaus-id lupaus-id
                                :urakka-id urakka-id
                                :vuosi-alku (pvm/vuosi alkupvm)
@@ -526,7 +561,7 @@
   {:pre [db user tiedot (number? lupaus-id) (number? urakka-id) (number? kuukausi) (number? vuosi)
          (string? kommentti)]}
   (log/debug "lisaa-kommentti" tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [kommentti (kommentit/luo-kommentti<!
                                               db nil kommentti nil (:id user))
@@ -559,7 +594,7 @@
   {:pre [db user tiedot (number? urakka-id) (number? kuukausi) (number? vuosi) (number? pisteet) (string? tyyppi)
          (number? (:id user))]}
   (log/debug "tallenna-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
   ;; Syyskuuuhun saa vastata vain tilaajan käyttäjä
   (when (and (= 9 kuukausi) (not (roolit/tilaajan-kayttaja? user)))
     (throw (SecurityException. "Lopullisen päätöksen tekeminen vaatii tilaajan käyttäjän.")))
@@ -583,7 +618,7 @@
   [db user {:keys [urakka-id id] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (number? id) (number? (:id user))]}
   (log/debug "poista-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
 
   (let [;; Varmistetaan, että annetun urakan alkuvuosi on 2019 tai 2020.
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
@@ -812,7 +847,7 @@
 (defn hae-kuukausittaiset-pisteet [db user {:keys [urakka-id valittu-hoitokausi nykyhetki] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
   (log/debug "hae-kuukausittaiset-pisteet :: tiedot" tiedot)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
   (hae-kuukausittaiset-pisteet-hoitokaudelle db user tiedot))
 
 (defrecord Lupaus [asetukset]

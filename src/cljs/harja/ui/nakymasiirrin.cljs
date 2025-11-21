@@ -42,3 +42,21 @@
 
 (defn siirry-lapsi-elementissa [kohde-id keskita e]
   (siirry (.getElementById js/document kohde-id) keskita e))
+
+(defn resetoi-scroll
+  "Palauttaa scrollin takaisin sivun yläosaan
+  Parametrit:
+  - y-vali: Etäisyys sivun yläosasta, johon halutaan scrollata (default 0)
+  - siirry-heti?: jos true, scrollataan heti ylös ilman animaatiota"
+  ([] (resetoi-scroll {}))
+  ([{:keys [y-vali siirry-heti?]
+     :or {y-vali 0 siirry-heti? false}}]
+   (let [hyppyjen-maara (if siirry-heti? 1 (/ nopeus liikkumis-intervalli))
+         dokumentin-ylaosa (siirry-ylos)
+         vali (/ (- y-vali dokumentin-ylaosa) hyppyjen-maara)]
+     (doseq [i (range 1 (inc hyppyjen-maara))]
+       (let [hypyn-kohta (* vali i)
+             siirry (+ hypyn-kohta dokumentin-ylaosa)
+             timeout (* liikkumis-intervalli i)]
+         (.setTimeout js/window #(.scrollTo js/window 0 siirry)
+           timeout))))))

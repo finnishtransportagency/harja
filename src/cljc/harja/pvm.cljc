@@ -239,6 +239,31 @@
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj  (Date. (- vuosi 1900) kk pv)))
 
+(defn luo-pvm-aika
+  "Luo päivämäärän kellonajan kanssa.
+  Frontissa palauttaa goog.date.Datetimen
+  Backendissä palauttaa java.util.Daten
+  
+  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index
+  Tunnit, minuutit, sekunnit ja millisekunnit ovat valinnaisia (oletus 0)"
+  ([vuosi kk pv tunnit]
+   (luo-pvm-aika vuosi kk pv tunnit 0 0 0))
+  ([vuosi kk pv tunnit minuutit]
+   (luo-pvm-aika vuosi kk pv tunnit minuutit 0 0))
+  ([vuosi kk pv tunnit minuutit sekunnit]
+   (luo-pvm-aika vuosi kk pv tunnit minuutit sekunnit 0))
+  ([vuosi kk pv tunnit minuutit sekunnit millisekunnit]
+   #?(:cljs (DateTime. vuosi kk pv tunnit minuutit sekunnit millisekunnit)
+      :clj  (let [cal (Calendar/getInstance)]
+              (.set cal Calendar/YEAR vuosi)
+              (.set cal Calendar/MONTH kk)
+              (.set cal Calendar/DAY_OF_MONTH pv)
+              (.set cal Calendar/HOUR_OF_DAY tunnit)
+              (.set cal Calendar/MINUTE minuutit)
+              (.set cal Calendar/SECOND sekunnit)
+              (.set cal Calendar/MILLISECOND millisekunnit)
+              (.getTime cal)))))
+
 (defn luo-pvm-dec-kk
   "Vaihtoehtoinen apuri luo-pvm:lle joka dekrementoi kuukauden automaattisesti.
   Alkuperäisen luo-pvm funktion käytössä helposti unohtuu (dec kk) ja se on turhaa toistoa."
@@ -431,7 +456,10 @@
 (defn fmt-p-k-v-lyhyt [aika]
   (formatoi (luo-format "d.M.yyyy") aika))
 
-#?(:clj (def pgobject-format
+#?(:clj (def pgobject-format-date
+          (luo-format "yyyy-MM-dd")))
+
+#?(:clj (def pgobject-format-datetime
           (luo-format "yyyy-MM-dd HH:mm:ss")))
 
 (defn pvm-aika

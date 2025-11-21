@@ -19,7 +19,7 @@
     (let [urakka (first (urakat-kyselyt/hae-urakka db urakka-id))
           alueurakkanumero (:alueurakkanumero urakka)
           materiaalien-toteumat (when (and urakka-id alkupvm loppupvm)
-                                  (raportit-materiaali/muodosta-materiaaliraportti-urakalle db user
+                                  (raportit-materiaali/muodosta-materiaaliraportti-urakalle db
                                     {:urakka-id urakka-id
                                      :alkupvm (json/pvm-string->java-sql-date alkupvm)
                                      :loppupvm (json/pvm-string->java-sql-date loppupvm)}))

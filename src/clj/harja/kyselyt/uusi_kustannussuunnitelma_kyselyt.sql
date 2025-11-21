@@ -1,5 +1,5 @@
 -- name: hae-urakan-toimenpiteet
-SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id"
+SELECT t.id, t.nimi, t.koodi, tpi.id AS "toimenpideinstanssi-id", t.jarjestys
   FROM toimenpideinstanssi tpi
          JOIN toimenpide t ON tpi.toimenpide = t.id
  WHERE tpi.urakka = :urakkaid
@@ -17,12 +17,11 @@ WHERE sopimus = :sopimus-id
 
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
        END AS viimeisin_muokkaaja
   FROM kiinteahintainen_tyo kt
        LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-       LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
        JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
        JOIN toimenpide t ON tpi.toimenpide = t.id
 WHERE kt.sopimus = :sopimus-id
@@ -105,12 +104,11 @@ WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          LEFT JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE kt.sopimus = :sopimus-id
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
       OR (kt.vuosi = :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
@@ -187,12 +185,11 @@ WHERE "toimenkuva-id" = :toimenkuva-id
 
 -- name: hae-viimeisin-muokkaaja-jjh
 SELECT GREATEST(jjh.muokattu, jjh.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM johto_ja_hallintokorvaus jjh
      LEFT JOIN kayttaja k ON COALESCE(jjh.muokkaaja, jjh.luoja) = k.id
-     LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE jjh."urakka-id" = :urakka-id
   AND ((jjh.vuosi = :vuosi AND jjh.kuukausi IN (10, 11, 12))
       OR (jjh.vuosi = :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
@@ -245,12 +242,11 @@ WHERE id = :id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
-       CASE WHEN kr.rooli = 'jarjestelmavastuuhenkilo' THEN 'Järjestelmävastaava'
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
             ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
            END AS viimeisin_muokkaaja
 FROM kustannusarvioitu_tyo kt
          JOIN kayttaja k ON COALESCE(kt.muokkaaja, kt.luoja) = k.id
-         LEFT JOIN kayttaja_rooli kr ON k.id = kr.kayttaja
 WHERE kt.sopimus = :sopimus-id
   AND ((kt.vuosi = :vuosi AND kt.kuukausi IN (10, 11, 12))
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
@@ -287,21 +283,6 @@ SELECT ru.rahavaraus_id                          as rahavaraus_id,
            LEFT JOIN rahavaraus r on r.id = ru.rahavaraus_id
  WHERE ru.urakka_id = :urakkaid
 GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
-
--- name: paivita-rahavaraus<!
-UPDATE kustannusarvioitu_tyo
-SET summa = :summa,
-    summa_indeksikorjattu = :summa_indeksikorjattu,
-    muokattu = NOW(),
-    muokkaaja = :muokkaaja
-WHERE id = :id;
-
--- name: lisaa-rahavaraus<!
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
-VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
-        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
-        :luoja, NOW());
 
 --name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
@@ -344,6 +325,26 @@ WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
 
+-- name: aseta-kasin-syotetty-kattohinta<!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       luotu = NOW(),
+       luoja = :luoja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
+-- name: paivita-kasin-syotetty-kattohinta!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
 -- name: hae-kustannussuunnitelman-osiot
 SELECT *
   FROM suunnittelu_kustannussuunnitelman_tila skt
@@ -369,18 +370,23 @@ RETURNING id;
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
+    tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
     kattohinta = :kattohinta,
+    kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
 
 -- name: indeksikorjaukset-vahvistettu?
-SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
+-- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
+-- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,
+-- niin päätellään, että kaikilla on. Logiikka toimii niin.
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kiinteahintainen_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -388,7 +394,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -396,7 +402,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
   AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
