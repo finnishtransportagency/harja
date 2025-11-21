@@ -11,13 +11,13 @@
                                          :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
 
                                         ;; Erillishankinnat
-                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 380 :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
 
                                         ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
 
                                         ;; Hoidonjohtopalkkio
-                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 26665 :tehtavaryhma-id nil :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
                                         ;; Yhteensä rivi
                                         {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
@@ -34,13 +34,13 @@
                                          :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}] :yhteensa 60.00}
 
                                         ;; Erillishankinnat
-                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                        {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 380 :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
 
                                         ;; Johto ja hallintokorvaukset eli toimenkuvat - tulevat tietokannasta urakkavuoden mukaan, ei yritetä syöttää tässä
 
                                         ;; Hoidonjohtopalkkio
-                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil
+                                        {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 26665 :tehtavaryhma-id nil :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2025 :summa 0.00} {:vuosi 2026 :summa 0.00} {:vuosi 2027 :summa 10.00} {:vuosi 2028 :summa 20.00} {:vuosi 2029 :summa 30.00}], :yhteensa 60.00}
                                         ;; Yhteensä rivi
                                         {:nimi "Yhteensä tavoitehinta", :osio "yhteensa"
@@ -123,18 +123,18 @@
                                                      {:summa 11000 :summa_indeksikorjattu 12121 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Elokuu 2025"}
                                                      {:summa 12000 :summa_indeksikorjattu 13333 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtavaryhma 28 :kalenterikuukausi "Syyskuu 2025"}]})
 
-(def hoidonjohtopalkkiot-tietomalli {:hoidonjohtopalkkiot [{:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Lokakuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Marraskuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 12 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Joulukuu 2024"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 1 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Tammikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 2 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Helmikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 3 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Maaliskuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 4 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Huhtikuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 5 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Toukokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 6 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Kesäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 7 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Heinäkuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Elokuu 2025"}
-                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 3061 :kalenterikuukausi "Syyskuu 2025"}]})
+(def hoidonjohtopalkkiot-tietomalli {:hoidonjohtopalkkiot [{:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 10 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Lokakuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 11 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Marraskuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2024 :kuukausi 12 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Joulukuu 2024"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 1 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Tammikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 2 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Helmikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 3 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Maaliskuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 4 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Huhtikuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 5 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Toukokuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 6 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Kesäkuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 7 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Heinäkuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 8 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Elokuu 2025"}
+                                                           {:summa 5 :summa_indeksikorjattu 6.5 :toimenpideinstanssi 96 :vuosi 2025 :kuukausi 9 :sopimus 1 :tehtava 26665 :kalenterikuukausi "Syyskuu 2025"}]})
 
 (def johto-ja-hallinto-tietomalli-2019 {:johto-ja-hallintokorvaukset-2019
                                         [{:id 1 :toimenkuva "sopimusvastaava"

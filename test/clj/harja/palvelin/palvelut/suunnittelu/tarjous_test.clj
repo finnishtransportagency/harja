@@ -69,7 +69,10 @@
         ;; Poistetaan yhteensä rivi
         tarjousrivit (filter #(not= "yhteensa" (:osio %)) tarjousrivit)
         ;; Lisätään uusi yhteensä rivi
-        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit} false)]
+        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit} false)
+
+        _ (println "v:: " tarjous)
+        ]
     tarjous))
 
 (defn ota-toimenkuvat-ja-poista-id [tarjous]
@@ -151,7 +154,7 @@
         ;; Lisätään rahavarausten lisäksi myös muita kustannuksia
         tarjous (update tarjous :tarjous (fn [rivit]
                                            (vec (concat rivit
-                                                  [{:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil
+                                                  [{:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 380 :rahavaraus-id nil
                                                     :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}], :yhteensa 60.00}
                                                    {:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                                     :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
@@ -178,7 +181,7 @@
 
         ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
         hankinnat [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
-                   {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 28 :rahavaraus-id nil}
+                   {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 380 :rahavaraus-id nil}
                    {:nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id 3061 :tehtavaryhma-id nil :rahavaraus-id nil}]
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
@@ -479,7 +482,8 @@
 
         ;; Lisätään tarjoukselle uusi toimenkuva, jolla ei ole nimeä
         uudet-toimenkuvat '({:toimenkuva "uusi toimenkuva", :nimi "", :toimenkuva-id -1, :jarjestys 99, :maksukausi "vuosi", :osio "johto-ja-hallintokorvaus",
-                             :hoitovuosittaiset-arvot [{:vuosi 2025, :summa 10.00M} {:vuosi 2026, :summa 20.00M} {:vuosi 2027, :summa 30.00M} {:vuosi 2028, :summa 40.00M} {:vuosi 2029, :summa 50.00M}]})
+                             :hoitovuosittaiset-arvot [{:vuosi 2025, :summa 10.00M} {:vuosi 2026, :summa 20.00M} {:vuosi 2027, :summa 30.00M}
+                                                       {:vuosi 2028, :summa 40.00M} {:vuosi 2029, :summa 50.00M}]})
 
         ;; Generoi summat suodatetuille toimenkuville
         uudet-toimenkuvat (:tarjous (generoi-toimenkuville-vuosisummat uudet-toimenkuvat hoitovuosittaiset-arvot))
