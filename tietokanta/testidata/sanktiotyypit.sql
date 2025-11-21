@@ -1,5 +1,3 @@
--- Luodaan sanktiotyypit
-
 
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (13, 'Ylläpidon sakko', null, 3, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (14, 'Ylläpidon bonus', null, 4, false);
@@ -19,3 +17,8 @@ INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (1, 'Muu tuote', null, 1, true);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (17, 'Ei tarvita sanktiotyyppiä', 601, 0, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (2, 'Talvihoito', 618, 2, true);
+
+SELECT setval(
+  pg_get_serial_sequence('sanktiotyyppi', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM sanktiotyyppi)
+);

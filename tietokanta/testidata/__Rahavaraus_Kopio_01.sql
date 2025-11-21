@@ -88,4 +88,3 @@ INSERT INTO rahavaraus_tehtava(id, rahavaraus_id, tehtava_id, luotu, luoja, muok
 INSERT INTO rahavaraus_tehtava(id, rahavaraus_id, tehtava_id, luotu, luoja, muokattu, muokkaaja) VALUES (264, 48, 28454, '2025-09-29 13:01:40.099488', 1, null, null);
 INSERT INTO rahavaraus_tehtava(id, rahavaraus_id, tehtava_id, luotu, luoja, muokattu, muokkaaja) VALUES (265, 49, 6955, '2025-09-29 16:04:04.917936', 1, null, null);
 INSERT INTO rahavaraus_tehtava(id, rahavaraus_id, tehtava_id, luotu, luoja, muokattu, muokkaaja) VALUES (297, null, 28454, '2025-10-07 04:04:29.465945', 1, null, null);
-

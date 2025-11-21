@@ -29,24 +29,24 @@
         urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         odotettu [{:akillinen-hoitotyo 0.0M
                    :bonus 21000.0M
-                   :indeksi 2046.1943256704972237290000000M
+                   :indeksi 2005.0065862068957647290000000M
                    :kokonaishintainen 42010.0M
-                   :lisatyo 2000.0M
+                   :lisatyo 0.0M
                    :muu 11000.0M
                    :sakko -31526.66600M
                    :tpi_id 4
                    :urakka_id 4
-                   :yksikkohintainen 2000.0M}
-                  {:akillinen-hoitotyo 3000.0M
+                   :yksikkohintainen 0.0M}
+                  {:akillinen-hoitotyo 0.0M
                    :bonus 0.0M
-                   :indeksi 2363.57183908045982945000M
+                   :indeksi 2236.177203065134370450M
                    :kokonaishintainen 0.0M
-                   :lisatyo 10000.0M
-                   :muu 1000.0M
+                   :lisatyo 0.0M
+                   :muu 0.0M
                    :sakko -2434.0M
                    :tpi_id 5
                    :urakka_id 4
-                   :yksikkohintainen 11882.50M}
+                   :yksikkohintainen 7882.50M}
                   {:akillinen-hoitotyo 0.0M
                    :bonus 0.0M
                    :indeksi -1616.36015325670619390000M
