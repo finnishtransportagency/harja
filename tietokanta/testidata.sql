@@ -2,13 +2,15 @@
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
 -- Tuotoannosta otettu data dumppi jotta tehtävien tietomalli täsmää 
--- Nov 20 2025
+-- Nov 20 2025, Marraskuun klooni (1.11)
 \i testidata/__Toimenpide_Kopio_01.sql
 \i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
 \i testidata/__Materiaalikoodi_Kopio_01.sql
 \i testidata/__Tehtava_Kopio_01.sql
+\i testidata/__Rahavaraus_Kopio_01.sql
+
 
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql

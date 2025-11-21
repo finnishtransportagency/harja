@@ -64,39 +64,39 @@
 ;; HUOM: Tämä testi failasi alunperin PostgreSQL versiolla 13, mutta ei versioilla 11 tai 12
 ;;       Testin tuloksia kannattaa seurata. Korjaus tehtiin järjestemällä palautettu vastausvektori tpi_id mukaisesti.
 (deftest hae-urakan-maksueran-summat-mhu-urakalle
-         (let [db (:db jarjestelma)
-               urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-               ;; 48	Oulu MHU Talvihoito TP
-               ;; 49	Oulu MHU Liikenneympäristön hoito TP
-               ;; 50	Oulu MHU Soratien hoito TP
-               ;; 51	Oulu MHU Hallinnolliset toimenpiteet TP
-               ;; 52	Oulu MHU Päällystepaikkaukset TP
-               ;; 53	Oulu MHU MHU Ylläpito TP
-               ;; 54	Oulu MHU MHU Korvausinvestointi TP
-               ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
-               ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
-               odotettu [{:kokonaishintainen 4150.791430M
-                          :tpi_id 45
-                          :urakka_id 35}
-                         {:kokonaishintainen 6251.487630M
-                          :tpi_id 46
-                          :urakka_id 35}
-                         {:kokonaishintainen 8801.94M
-                          :tpi_id 47
-                          :urakka_id 35}
-                         {:kokonaishintainen 5832.654000M
-                          :tpi_id 48
-                          :urakka_id 35}
-                         {:kokonaishintainen 11001.94M
-                          :tpi_id 49
-                          :urakka_id 35}
-                         {:kokonaishintainen 16401.94M
-                          :tpi_id 50
-                          :urakka_id 35}
-                         {:kokonaishintainen 13201.94M
-                          :tpi_id 51
-                          :urakka_id 35}]
-               vastaus (vec
-                         (sort-by :tpi_id
-                           (maksuerat-q/hae-urakan-maksueran-summat db urakka-id)))]
-              (is (= vastaus odotettu))))
+  (let [db (:db jarjestelma)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; 48	Oulu MHU Talvihoito TP
+        ;; 49	Oulu MHU Liikenneympäristön hoito TP
+        ;; 50	Oulu MHU Soratien hoito TP
+        ;; 51	Oulu MHU Hallinnolliset toimenpiteet TP
+        ;; 52	Oulu MHU Päällystepaikkaukset TP
+        ;; 53	Oulu MHU MHU Ylläpito TP
+        ;; 54	Oulu MHU MHU Korvausinvestointi TP
+        ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
+        ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
+        odotettu [{:kokonaishintainen 4150.791430M
+                   :tpi_id 45
+                   :urakka_id 35}
+                  {:kokonaishintainen 6251.487630M
+                   :tpi_id 46
+                   :urakka_id 35}
+                  {:kokonaishintainen 8801.94M
+                   :tpi_id 47
+                   :urakka_id 35}
+                  {:kokonaishintainen 5832.654000M
+                   :tpi_id 48
+                   :urakka_id 35}
+                  {:kokonaishintainen 11001.94M
+                   :tpi_id 49
+                   :urakka_id 35}
+                  {:kokonaishintainen 16401.94M
+                   :tpi_id 50
+                   :urakka_id 35}
+                  {:kokonaishintainen 13201.94M
+                   :tpi_id 51
+                   :urakka_id 35}]
+        vastaus (vec
+                  (sort-by :tpi_id
+                    (maksuerat-q/hae-urakan-maksueran-summat db urakka-id)))]
+    (is (= vastaus odotettu))))
