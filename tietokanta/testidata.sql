@@ -1,9 +1,9 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
--- Tuotoannosta otettu data dumppi jotta tehtävien tietomalli täsmää 
--- Nov 20 2025, Marraskuun klooni (1.11)
-\i testidata/__Toimenpide_Kopio_01.sql
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
+\i testidata/__Toimenpide_Kopio_01.sql -- Älä  vaihda järjestystä 
 \i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql

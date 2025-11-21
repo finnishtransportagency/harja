@@ -1,8 +1,11 @@
 TRUNCATE TABLE public.tehtavaryhmaotsikko ;
 DELETE FROM rahavaraus_tehtava ;
 
--- Kävin yksitelleen läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi 
--- sanktiotyyppi, sekä rahavaraus, rahavaraus_tehtava 
+-- Kävin yksitelleen taulut läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi: 
+--   sanktiotyyppi, rahavaraus, sekä rahavaraus_tehtava. 
+-- 
+-- Nuo yllä olevat on populoitu flyway migraatioissa, ja cleanataan uudelleen tässä.    
+-- Päivitin nämä testidataan ->   sanktiotyypit.sql,   __Rahavaraus_Kopio_01.sql
 -- 
 -- Nämä taulut halutaan clenata:
 -- TRUNCATE TABLE public.tehtavaryhmaotsikko CASCADE;
@@ -11,6 +14,7 @@ DELETE FROM rahavaraus_tehtava ;
 -- TRUNCATE TABLE public.tehtava CASCADE;
 -- TRUNCATE TABLE public.materiaalikoodi CASCADE;
 -- TRUNCATE TABLE public.materiaaliluokka CASCADE;
+-- Alla oleva tekee about saman:
 TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava, 
     muutoshintainen_tyo, vv_tyo, kan_toimenpide, kiinteahintainen_tyo, kustannusarvioitu_tyo, urakka_tehtavamaara,
     kulu_kohdistus, toteutuneet_kustannukset, sopimus_tehtavamaara, rahavaraus_tehtava, tarjous_kustannukset,
