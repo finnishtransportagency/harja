@@ -248,7 +248,6 @@
 
   TallennaKattohinnanOikaisu
   (process-event [{uusi-kattohinta :uusi-kattohinta hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (js/console.log "TallennaKattohinnanOikaisu uusi-kattohinta:" (pr-str uusi-kattohinta) "hoitokauden-alkuvuosi:" (pr-str hoitokauden-alkuvuosi))
     (when uusi-kattohinta
       (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
@@ -346,8 +345,7 @@
   ;; Monta paatosta voi olla avattuna kerrallaan
   AvaaPaatos
   (process-event [{avain :avain} app]
-    (let [_ (js/console.log "AvaaPaatos" avain)
-          app (if (nil? (:avatut-paatokset app))
+    (let [app (if (nil? (:avatut-paatokset app))
                 (assoc app :avatut-paatokset #{})
                 app)]
       (if (contains? (:avatut-paatokset app) avain)
