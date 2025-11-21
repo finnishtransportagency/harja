@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.suunnittelu.tarjous-palvelu
-  (:require [clojure.set :as clj-set]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
