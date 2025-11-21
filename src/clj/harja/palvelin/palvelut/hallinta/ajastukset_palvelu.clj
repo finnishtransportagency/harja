@@ -1,9 +1,9 @@
 (ns harja.palvelin.palvelut.hallinta.ajastukset-palvelu
   (:require [com.stuartsierra.component :as component]
+            [clojure.java.jdbc :as jdbc]
             [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioidut-toteumat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as kasittely-maksuerat]
-            [harja.palvelin.integraatiot.sampo.kasittely.urakat :as kasittely-urakat]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
@@ -33,14 +33,19 @@
   [db kayttaja]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-toteumatyokalu kayttaja)
   (log/debug "aja-kasittele-maksuerat käynnistetty!")
-  (let [;; Normaalisti tämä kutsutaan sampointegraation yhteydessä ja sille ei ole tarvetta
-        _ (kasittely-maksuerat/perusta-maksuerat-hoidon-urakoille db)
-        ;; Lokaalisti on mahdollista, että puutteellisten tietojen takia on luotu maksueriä, joita ei ole linkitetty kustannussuuunnitelmiin.
-        ;; Joten pakotetaan linkitys tässä ajossa.
-        maksuerat-ilman-kustannussuunnitelmaa (maksuerat-kyselyt/maksuearat-ilman-kustannussuunnitelmaa db)
-        _ (doseq [rivi maksuerat-ilman-kustannussuunnitelmaa]
-            (kustannussuunnitelma-kyselyt/luo-kustannussuunnitelma<! db (:numero rivi)))]
-    "OK"))
+  (try
+    (jdbc/with-db-transaction [db db]
+      (let [_ (kasittely-maksuerat/perusta-maksuerat-hoidon-urakoille db)
+            maksuerat-ilman-kustannussuunnitelmaa (maksuerat-kyselyt/maksuearat-ilman-kustannussuunnitelmaa db)
+            luotu-lkm (count maksuerat-ilman-kustannussuunnitelmaa)]
+        (doseq [rivi maksuerat-ilman-kustannussuunnitelmaa]
+          (kustannussuunnitelma-kyselyt/luo-kustannussuunnitelma<! db (:numero rivi)))
+        (log/info "Maksuerien käsittely valmis" {:luotu-kustannussuunnitelmia luotu-lkm})
+        {:status :ok
+         :luotu-kustannussuunnitelmia luotu-lkm}))
+    (catch Exception e
+      (log/error e "Maksuerien käsittelyssä tapahtui virhe")
+      (throw (Exception. "Maksuerien käsittely epäonnistui. Tarkista lokit." e)))))
 
 (defrecord AjastuksetHallinta []
   component/Lifecycle

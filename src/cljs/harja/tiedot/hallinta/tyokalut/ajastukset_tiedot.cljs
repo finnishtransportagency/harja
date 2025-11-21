@@ -52,7 +52,7 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "AjaKasitteleUrakatMaksueriksiOnnistui")
-      (viesti/nayta-toast! "Kustannusarvioidut työt ajettu toteumiksi!" :onnistui)
+      (viesti/nayta-toast! "Maksuerät alustettu!" :onnistui)
       (assoc app :maksuerat-kaynnissa false)))
 
   AjaKasitteleUrakatMaksueriksiEpaonnistui
