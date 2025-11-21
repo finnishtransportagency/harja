@@ -1,46 +1,33 @@
-import {kuluvaHoitokausiAlkuvuosi} from "../support/apurit.js";
-
-
-const ladataanHarjaaTimeout = 3000;
+import {kuluvaHoitokausiAlkuvuosi, ladataanHarjaaTimeout, clickTimeout} from "../support/apurit.js";
 
 function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
+    // Poista urakalta kaikki vuosittaiset suunnitelmat ja tehtävämäärät
     cy.terminaaliKomento().then((terminaaliKomento) => {
-        // Poista urakalta kaikki vuosittaiset suunnitelmat urakka_tehtavamaara taulusta
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM urakka_tehtavamaara ut " +
-            ` WHERE ut.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
-            .then((tulos) => {
-                console.log("Poista urakalta kaikki vuosittaiset suunnitelmat urakka_tehtavamaara taulusta:", tulos)
-            });
-        // Poista tiedot, että onko tarjousta/sopimusta syötetty
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimuksen_tehtavamaarat_tallennettu stt " +
-            ` WHERE stt.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
-            .then((tulos) => {
-                console.log("Poista tiedot, että onko tarjousta/sopimusta syötetty:", tulos)
-            });
+        const sql = `
+            DELETE
+            FROM urakka_tehtavamaara
+            WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');
 
-        // Poista muutamalta tehtävältä tarjoustieto
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ise ohituskaistat') " +
-            ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
-            .then((tulos) => {
-                console.log("Poista tarjoussumma tehtavalta:", tulos)
-            });
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Pysäkkikatosten puhdistus') " +
-            ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
-            .then((tulos) => {
-                console.log("Poista tarjoussumma tehtavalta:", tulos)
-            });
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Opastustaulun/-viitan uusiminen') " +
-            ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
-            .then((tulos) => {
-                console.log("Poista tarjoussumma tehtavalta:", tulos)
-            });
+            DELETE
+            FROM sopimuksen_tehtavamaarat_tallennettu
+            WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');
+
+            DELETE
+            FROM sopimus_tehtavamaara
+            WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}')
+              AND tehtava IN (SELECT id
+                              FROM tehtava
+                              WHERE nimi IN ('Ise ohituskaistat', 'Pysäkkikatosten puhdistus',
+                                             'Opastustaulun/-viitan uusiminen'));
+        `;
+
+        // Poista uudet rivit komennosta, ja pidä yllä oleva query on luettavana
+        cy.exec(`${terminaaliKomento} psql -h localhost -U harja harja -c "${sql.replace(/\n/g, ' ')}"`).then((tulos) => {
+            console.log("Kanta alustettu:", tulos.stdout);
+        });
     });
 }
+
 describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
     let urakanAlkuvuosi = kuluvaHoitokausiAlkuvuosi(-2);
 
@@ -50,15 +37,15 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
         cy.visit("/");
 
         // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
-        cy.contains('.haku-lista-item', 'Lappi', {timeout: 30000}).click();
+        cy.get('.ladataan-harjaa', {timeout: ladataanHarjaaTimeout}).should('not.exist')
+        cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
         cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Pellon MHU testiurakka (3. hoitovuosi)', {timeout: 10000}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Pellon MHU testiurakka (3. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
         // Mene suunnittelu välilehdelle
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: ladataanHarjaaTimeout}).click();
         // Avaa Tehtävä- ja määräluettelo -välilehti
         cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: ladataanHarjaaTimeout}).should('not.exist');
     })
 
     it('Avaa tehtävä- ja määräluettelo', () => {
@@ -86,7 +73,7 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
             .should('equal', 200);
 
         // Viesti onnistumisesta pitäisi näkyä
-        cy.get('div').contains('Tiedot tallennettiin onnistuneesti.', {timeout: 4000}).should('be.visible');
+        cy.get('div').contains('Tiedot tallennettiin onnistuneesti.', {timeout: clickTimeout}).should('be.visible');
 
     });
 

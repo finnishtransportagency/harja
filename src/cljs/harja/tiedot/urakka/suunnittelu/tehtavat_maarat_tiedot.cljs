@@ -44,10 +44,12 @@
 (defn filtteroi-tehtavat
   "Palauttaa tehtavat, joiden nimi sisältää hakuehdon (case insensitive)."
   [hakuehto tehtavat]
-  (filter (fn [tehtava]
-            (str/includes?
-              (str/lower-case (:nimi tehtava))
-              (str/lower-case hakuehto)))
+  (if hakuehto
+    (filter (fn [tehtava]
+              (str/includes?
+                (str/lower-case (:nimi tehtava))
+                (str/lower-case hakuehto)))
+      tehtavat)
     tehtavat))
 
 (extend-protocol tuck/Event
