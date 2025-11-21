@@ -324,15 +324,36 @@
 
 (defn ilmoitus-xml
   "Tallentaa ilmoituksen annetun XML:n perusteella. Tällä simuloidaan tloikista tullutta ilmoitusta.
-  Tätä voi käyttää vain lokaalisti ongelien debuggaamisessa. Ota siis vaikka tuotannosta ilmoitus xml ja aja se tähän
+  Tätä voi käyttää vain lokaalisti ongelmien debuggaamisessa. Ota siis vaikka tuotannosta ilmoitus xml ja aja se tähän
   ja simuloi, että mitä se tekee."
   [db tiedot]
-  (log/info "Käsitellään ilmoitus xml")
-  (let [ilmoitus (ilmoitussanoma/lue-viesti (:xml tiedot))
-        urakka (tloik-ilmoitukset/hae-urakka db ilmoitus)
-        ilmoitus (ilmoitus-kasittely/tallenna-ilmoitus db (:id urakka) ilmoitus)]
-    ;; TODO: Vaikka tämä työkalu, niin ongelmissa voisi frontille palauttaa jotain järkevää.
-    "OK"))
+  (try
+    (log/info "Käsitellään ilmoitus xml")
+    (when-not (:xml tiedot)
+      (throw (ex-info "XML-sisältö puuttuu" {:tiedot tiedot})))
+
+    (let [ilmoitus (ilmoitussanoma/lue-viesti (:xml tiedot))
+          _ (log/debug "Parsittu ilmoitus:" (pr-str ilmoitus))
+          urakka (tloik-ilmoitukset/hae-urakka db ilmoitus)]
+
+      (when-not urakka
+        (throw (ex-info "Urakkaa ei löytynyt ilmoitukselle"
+                 {:ilmoitus-id (:ilmoitus-id ilmoitus)
+                  :sijainti (:sijainti ilmoitus)})))
+
+      (let [ilmoitus-id (ilmoitus-kasittely/tallenna-ilmoitus db (:id urakka) ilmoitus)]
+        (log/info (format "Ilmoitus tallennettu onnistuneesti. Ilmoitus-id: %s, Urakka-id: %s"
+                    ilmoitus-id (:id urakka)))
+        {:status "OK"
+         :ilmoitus-id ilmoitus-id
+         :urakka-id (:id urakka)
+         :urakka-nimi (:nimi urakka)}))
+
+    (catch Exception e
+      (log/error e "Virhe käsiteltäessä debug-ilmoitusta")
+      {:status "VIRHE"
+       :viesti (.getMessage e)
+       :virhe (pr-str e)})))
 
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
