@@ -1,10 +1,30 @@
-TRUNCATE TABLE public.tehtavaryhmaotsikko CASCADE;
-TRUNCATE TABLE public.tehtavaryhma CASCADE;
-TRUNCATE TABLE public.toimenpide CASCADE;
-TRUNCATE TABLE public.tehtava CASCADE;
-TRUNCATE TABLE public.materiaalikoodi CASCADE;
-TRUNCATE TABLE public.materiaaliluokka CASCADE;
+TRUNCATE TABLE public.tehtavaryhmaotsikko ;
+DELETE FROM rahavaraus_tehtava ;
 
+-- Kävin yksitelleen läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi 
+-- sanktiotyyppi, sekä rahavaraus, rahavaraus_tehtava 
+-- 
+-- Nämä taulut halutaan clenata:
+-- TRUNCATE TABLE public.tehtavaryhmaotsikko CASCADE;
+-- TRUNCATE TABLE public.tehtavaryhma CASCADE;
+-- TRUNCATE TABLE public.toimenpide CASCADE;
+-- TRUNCATE TABLE public.tehtava CASCADE;
+-- TRUNCATE TABLE public.materiaalikoodi CASCADE;
+-- TRUNCATE TABLE public.materiaaliluokka CASCADE;
+TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava, 
+    muutoshintainen_tyo, vv_tyo, kan_toimenpide, kiinteahintainen_tyo, kustannusarvioitu_tyo, urakka_tehtavamaara,
+    kulu_kohdistus, toteutuneet_kustannukset, sopimus_tehtavamaara, rahavaraus_tehtava, tarjous_kustannukset,
+    mhu_muutos_tehtava_ja_maaraluettelo, mhu_muutos_tehtava_tiedot, vv_materiaali, kan_hinta,
+    kan_tyo, kan_toimenpide_kommentti, suunnittelu_kustannussuunnitelman_muutos, mhu_muutos,
+    mhu_muutos_kustannusvaikutus, mhu_muutos_liite, mhu_muutos_kulu, toimenpide, toimenpideinstanssi,
+    sanktiotyyppi, tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
+    toimenpideinstanssi_vesivaylat, kustannussuunnitelma, erilliskustannus_liite, paatos_lupaus, rahavaraus,
+    rahavaraus_urakka, mhu_muutos_rahavarausmuutoksen_syy;
+
+TRUNCATE TABLE public.materiaalikoodi, materiaalin_kaytto, toteuma_materiaali, sopimuksen_kaytetty_materiaali,
+    urakan_materiaalin_kaytto_hoitoluokittain;
+TRUNCATE TABLE public.materiaaliluokka ;
+    
 
 INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja, muokkaaja, poistettu, tuotenumero, piilota, jarjestys) VALUES (1, 'Väylänpidon omaisuushallinta (poistettu)', '36000', null, 1, '2025-11-20 11:13:56.705982 +00:00', null, null, null, true, null, true, null);
 INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja, muokkaaja, poistettu, tuotenumero, piilota, jarjestys) VALUES (2, 'Hoito, meri (poistettu)', '24000', null, 1, '2025-11-20 11:13:56.705982 +00:00', null, null, null, true, null, true, null);
