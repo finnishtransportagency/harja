@@ -308,7 +308,7 @@
             "aet": 100
           },
           "kasittelymenetelma": "Muu RP, Muu RP",
-          "massamenekki": 15,
+          "massamenekki": 15.0,
           "poistettu": false,
           "pituus": 550
         }
