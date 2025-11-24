@@ -506,9 +506,8 @@ materiaalimaara AS (
                        AND (teh.materiaalikoodi_id = tm.materiaalikoodi
                            -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
                            OR teh.materiaalikoodi_id IS NULL)
-    WHERE t.urakka = :urakka 
-      AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= t.alkanut)
-      AND (:loppupvm::DATE IS NULL OR t.paattynyt <= :loppupvm::DATE)
+    WHERE t.urakka = :urakka
+      AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
  GROUP BY teh.id, teh.nimi, mk.yksikko
  ORDER BY teh.id
 ),

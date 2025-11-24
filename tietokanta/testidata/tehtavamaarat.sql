@@ -220,7 +220,6 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
-	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Suolaus' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
@@ -307,6 +306,8 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sohjo-ojien teko' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	-- Määrämitattavat 
+	-- Suolaus 
+    (v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	-- Opastetaulut
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen' limit 1),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' limit 1),20,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
@@ -338,6 +339,7 @@ BEGIN
     (urakka,tehtava,maara,muokattu,muokkaaja,hoitovuosi)
   VALUES
 	-- Määrämitattavat 
+    (v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Suolaus'),6,'2025-08-18 08:10:19.324',v_kayttaja_id,p_hoitovuosi),
 	-- Opastetaulut
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen' limit 1),7,'2025-08-18 08:09:23.831',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet' limit 1),14,'2025-08-18 08:09:23.835',v_kayttaja_id,p_hoitovuosi),
@@ -427,7 +429,6 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen poistaminen' limit 1),0,'2025-08-18 08:10:54.542',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be' limit 1),0,'2025-08-18 08:09:24.128',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' limit 1),0,'2025-08-18 08:09:24.145',v_kayttaja_id,p_hoitovuosi),
-	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Suolaus' limit 1),0,'2025-08-18 08:09:24.15',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' limit 1),0,'2025-08-18 08:09:24.156',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' limit 1),0,'2025-08-18 08:09:24.161',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kuumapäällyste' limit 1),0,'2025-08-18 08:09:24.169',v_kayttaja_id,p_hoitovuosi),
