@@ -115,21 +115,21 @@
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
-                 {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                 {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id (:id tehtava) :tehtavaryhma-id nil :rahavaraus-id nil
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                 {:nimi "Tarjouksen tavoitehinta"
-                  :osio "yhteensa"
-                  :yhteensa 0.00
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}
-                 {:nimi (if (:muokkaa_kattohinta_kasin urakan-parametrit) "Tarjouksen kattohinta"
-                          (str "Tarjouksen kattohinta (" (fmt/desimaaliluku (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) nil nil false) " x tarjouksen tavoitehinta)"))
-                  :osio "yhteensa"
-                  :yhteensa 0.00
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
+        tarjousrivit [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
+                      {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
+                      {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id (:id tehtava) :tehtavaryhma-id nil :rahavaraus-id nil
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
+                      {:nimi "Tarjouksen tavoitehinta"
+                       :osio "yhteensa"
+                       :yhteensa 0.00
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}
+                      {:nimi (if (:muokkaa_kattohinta_kasin urakan-parametrit) "Tarjouksen kattohinta"
+                               (str "Tarjouksen kattohinta (" (fmt/desimaaliluku (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) nil nil false) " x tarjouksen tavoitehinta)"))
+                       :osio "yhteensa"
+                       :yhteensa 0.00
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
 
         ; haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -148,13 +148,13 @@
         rahavaraus-rivit (sort-by :jarjestys rahavaraus-rivit)
         rahavaraus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys (+ 1 (inc indeksi)))) rahavaraus-rivit)
         ;; Yhdistetään tarjous ja rahavaraukset
-        tarjous (vec (concat tarjous rahavaraus-rivit))
+        tarjousrivit (vec (concat tarjousrivit rahavaraus-rivit))
         toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        tarjous (vec (concat tarjous toimenkuvat))
-        jarjestetty-tarjous (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
-                              tarjous)]
+        tarjousrivit (vec (concat tarjousrivit toimenkuvat))
+        jarjestetyt-tarjousrivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
+                                   tarjousrivit)]
 
-    jarjestetty-tarjous))
+    jarjestetyt-tarjousrivit))
 
 (defn vuodet-tietomallista [malli]
   (reduce (fn [rivit vuosi-rivi]
@@ -173,7 +173,7 @@
                  vuosittaiset-arvot))
              (filter #(not= "yhteensa" (:osio %)) (:tarjous tarjous-tietomalli)))))
 
-(defn tallenna-tarjouksen-kustannukset [db vuositarjous tietokantatarjous kustannuksetlistaus tarjousdb urakka-id kayttaja-id ]
+(defn tallenna-tarjouksen-kustannukset [db vuositarjous tietokantatarjous kustannuksetlistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-kustannukset (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) kustannuksetlistaus)
         _ (mapv (fn [kustannus]
                   (let [;; Varmistetaan, että käyttäjä antoi summan ennen tallennusta
@@ -193,7 +193,7 @@
                       (tallenna-tarjouskustannus<! db (assoc kustannus :tarjous_id (:id tietokantatarjous))))))
             vuosittaiset-kustannukset)]))
 
-(defn tallenna-tarjouksen-rahavaraukset [db vuositarjous tietokantatarjous rahavarauslistaus tarjousdb urakka-id kayttaja-id ]
+(defn tallenna-tarjouksen-rahavaraukset [db vuositarjous tietokantatarjous rahavarauslistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-rahavaraukset (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) rahavarauslistaus)
         _ (mapv (fn [rahavaraus]
                   (let [;; Varmistetaan, että käyttäjä antoi summan ennen tallennusta
@@ -213,7 +213,7 @@
             vuosittaiset-rahavaraukset)]))
 
 (defn tallanna-rahavaraukset-kustannussuuunnitelmaan [db vuositarjous urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id]
-  (let [   ;; Tallenna rahavaraukset myös kustannusarvioitu_tyo tauluun
+  (let [;; Tallenna rahavaraukset myös kustannusarvioitu_tyo tauluun
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
@@ -267,7 +267,6 @@
 
 (defn tallenna-tarjouksen-toimenkuvat [db vuositarjous tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
-
         ;; Loopataan vuosittaiset toimenkuvat ja lisätään tarvittaessa uudet ja päivitetään olemassaolevat
         _ (mapv
             (fn [toimenkuva]
@@ -396,7 +395,9 @@
                                          (conj kaikki uudet-rivit)))
                                      [] rahavaraukset-tarjouksesta))
 
+        ;; Poista nimettömät toimenkuvat. Jos nimi on tyhjä, käyttäjä on poistanut toimenkuvan, vaikka ei olisikaan painanut "poista" nappia
         toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous))
+        toimenkuvat-tarjouksesta (remove #(= "" (str/trim (:nimi %))) toimenkuvat-tarjouksesta)
 
         ;; Vaihdetut toimenkuvat jättää jälkensä :uusi-nimi arvoon. Haetaan sen nimen perusteella toimenkuvan id
         toimenkuvat-tarjouksesta (mapv
