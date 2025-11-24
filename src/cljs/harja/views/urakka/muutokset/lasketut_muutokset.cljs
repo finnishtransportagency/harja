@@ -143,7 +143,7 @@
             :tyyppi :string
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
-            :leveys 10}
+            :leveys 13}
 
            {:otsikko "Muutoksen syy / lisätieto"
             :nimi :syy
@@ -167,7 +167,7 @@
            {:otsikko "Toteutunut määrä"
             :nimi :maara
             :tyyppi :numero
-            :fmt #(fmt/desimaaliluku-opt % 0 2 true)
+            :fmt #(fmt/desimaaliluku-opt % 0 3 true)
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
             :leveys 15}
