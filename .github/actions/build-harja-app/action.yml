@@ -39,8 +39,8 @@ runs:
         echo "Building frontend"
         
         echo "Building less styles..."
-        npx lessc dev-resources/less/application/application.less resources/public/css/application.css
-        npx lessc dev-resources/less/laadunseuranta/application/laadunseuranta.less resources/public/css/laadunseuranta.css
+        npx lessc dev-resources/less/application.less resources/public/css/application.css
+        npx lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
         echo "Building cljs (with lein default profiles + prod-cljs)..."

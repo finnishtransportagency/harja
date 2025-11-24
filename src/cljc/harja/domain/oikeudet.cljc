@@ -26,6 +26,7 @@
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
+  urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet

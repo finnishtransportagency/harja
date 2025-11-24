@@ -23,13 +23,18 @@
     [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? (get-in app [:kommentit :lupaus->kuukausi->kommentit]) app]))
 
 (defn- otsikko [e! app]
-  (let [lupaus (:vastaus-lomake app)]
+  (let [lupaus (:vastaus-lomake app)
+        urakka-id (-> @nav/valittu-urakka-id)]
     [:div
      [:div.row
       (doall
         (for [lupaus-kuukausi (:lupaus-kuukaudet lupaus)]
           ^{:key (str "kk-vastaukset-" (hash lupaus-kuukausi))}
-          [:div (when (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+          [:div (when (lupaus-domain/kayttaja-saa-vastata? 
+                        @istunto/kayttaja 
+                        lupaus-kuukausi
+                        (:lupaustyyppi lupaus)
+                        urakka-id)
                   {:on-click (fn [e]
                                (.preventDefault e)
                                (e! (lupaus-tiedot/->ValitseVastausKuukausi (:kuukausi lupaus-kuukausi) (:vuosi lupaus-kuukausi))))})
@@ -386,7 +391,11 @@
         ladataan? (and (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi) 
                         (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus))) 
         saa-vastata? (and (not ladataan?)
-                          (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+                          (lupaus-domain/kayttaja-saa-vastata? 
+                            @istunto/kayttaja 
+                            lupaus-kuukausi
+                            (:lupaustyyppi lupaus)
+                            (-> @nav/valittu-urakka-id))
                           (lupaus-domain/ennusteen-tila->saa-vastata? (get-in app [:yhteenveto :ennusteen-tila])))
         disabled? (not saa-vastata?)
         ;; Lisätään vaihtoehtoinin myös "nil" vaihtoehto, jotta vahinkovalinnan voi poistaa

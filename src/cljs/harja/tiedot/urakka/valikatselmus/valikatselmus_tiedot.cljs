@@ -54,7 +54,7 @@
 
 ;; Kattohinnan oikaisut
 (defrecord KattohinnanOikaisuaMuokattu [kattohinta])
-(defrecord TallennaKattohinnanOikaisu [uusi-kattohinta])
+(defrecord TallennaKattohinnanOikaisu [uusi-kattohinta hoitokauden-alkuvuosi])
 (defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
 (defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
 (defrecord PoistaKattohinnanOikaisu [])
@@ -247,10 +247,10 @@
     (assoc-in app [:kattohinnan-oikaisu :uusi-kattohinta] kattohinta))
 
   TallennaKattohinnanOikaisu
-  (process-event [{uusi-kattohinta :uusi-kattohinta} app]
+  (process-event [{uusi-kattohinta :uusi-kattohinta hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (when uusi-kattohinta
       (let [oikaisu {::urakka/id (-> @tila/yleiset :urakka :id)
-                     ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                      ::valikatselmus/uusi-kattohinta uusi-kattohinta}]
         (tuck-apurit/post! :tallenna-kattohinnan-oikaisu
           oikaisu
@@ -345,8 +345,7 @@
   ;; Monta paatosta voi olla avattuna kerrallaan
   AvaaPaatos
   (process-event [{avain :avain} app]
-    (let [_ (js/console.log "AvaaPaatos" avain)
-          app (if (nil? (:avatut-paatokset app))
+    (let [app (if (nil? (:avatut-paatokset app))
                 (assoc app :avatut-paatokset #{})
                 app)]
       (if (contains? (:avatut-paatokset app) avain)

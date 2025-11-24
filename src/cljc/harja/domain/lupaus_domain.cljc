@@ -1,7 +1,9 @@
 (ns harja.domain.lupaus-domain
-  (:require [harja.pvm :as pvm]
-            [clojure.set :as set]
-            [harja.domain.roolit :as roolit]))
+  (:require
+   [clojure.set :as set]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.domain.roolit :as roolit]
+   [harja.pvm :as pvm]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -550,12 +552,35 @@
 
 (defn kayttaja-saa-vastata?
   "Saako käyttäjä vastata annettuun kuukauteen.
-  Tilaajan käyttäjä saa vastata sekä päättäviin että kirjauskuukausiin.
-  Urakoitsijan käyttäjä saa vastata vain kirjauskuukausiin."
-  [kayttaja lupaus-kuukausi]
+  
+  Excel (roolit.xlsx) määrittää kaikki oikeudet - katso dokumentaatio excelistä tai oikeudet.cljc"
+  [kayttaja lupaus-kuukausi lupaustyyppi urakka-id]
   (and (vastauskuukausi? lupaus-kuukausi)
-       (or (:kirjauskuukausi? lupaus-kuukausi)
-           (roolit/tilaajan-kayttaja? kayttaja))))
+    (boolean
+      ;; Ota huomioon että lupaus-kuukausi voi olla sekä päättävä-kuukausi? että kirjauskuukausi?
+      (cond
+        ;; Päättävät kuukaudet: Excel määrittää erikoisoikeudet
+        (:paattava-kuukausi? lupaus-kuukausi)
+        (case lupaustyyppi
+          ;; Kustannusennuste: Excel määrittää kuka saa (W,kustannusennuste)
+          "kustannusennuste"
+          (oikeudet/on-muu-oikeus? "kustannusennuste"
+                                   oikeudet/urakat-lupaukset
+                                   urakka-id
+                                   kayttaja)
+          
+          ;; Muut lupaukset: Excel määrittää kuka saa tehdä päätöksiä (W,päätös)
+          (oikeudet/on-muu-oikeus? "päätös"
+                                   oikeudet/urakat-lupaukset
+                                   urakka-id
+                                   kayttaja))
+        
+        ;; Kirjauskuukaudet: perustason kirjoitusoikeus riittää (Excel: W)
+        (:kirjauskuukausi? lupaus-kuukausi)
+        (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset urakka-id kayttaja)
+        
+        ;; Ei kirjaus- eikä päättävä kuukausi
+        :else false))))
 
 (defn ennusteen-tila->saa-vastata? [ennusteen-tila]
   ;; Vastauksia ei saa enää muuttaa välikatselmuksen jälkeen.

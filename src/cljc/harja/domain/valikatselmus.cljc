@@ -24,7 +24,7 @@
 (s/def ::siirrettava_maara number?)
 (s/def ::siirto #(or (nil? %) (number? %)))
 (s/def ::maksimi_siirrettava_maara number?)
-(s/def ::siirron_maara number?)
+(s/def ::siirron_maara #(or (nil? %) (number? %)))
 (s/def ::siirtorajoitus_prosentti #(or (nil? %) (number? %)))
 (s/def ::tavoitepalkkion_maksuprosentti number?)
 (s/def ::tavoitepalkkion_maksimi_prosentti number?)
