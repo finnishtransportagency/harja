@@ -1,4 +1,10 @@
-import {kuluvaHoitokausiAlkuvuosi, ladataanHarjaaTimeout, clickTimeout} from "../support/apurit.js";
+import {
+    kuluvaHoitokausiAlkuvuosi,
+    ladataanHarjaaTimeout,
+    clickTimeout,
+    avaaHarjaTimeoutilla
+} from "../support/apurit.js";
+
 
 function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
     // Poista urakalta kaikki vuosittaiset suunnitelmat ja tehtävämäärät
@@ -34,10 +40,8 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
     before(() => {
         // Resetoidaan urakan kaikki tehtävämäärät.
         alustaKantaanTehtavatJaMaarat('Pellon MHU testiurakka (3. hoitovuosi)');
-        cy.visit("/");
-
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', {timeout: ladataanHarjaaTimeout}).should('not.exist')
+        avaaHarjaTimeoutilla();
+        
         cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
         cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Pellon MHU testiurakka (3. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
