@@ -770,8 +770,7 @@
                       :massat :massa})))
 
 (defn- yhdista-lyhenne-ja-nimi [lyhenne nimi]
-  (cond
-    (and lyhenne nimi (= lyhenne nimi)) nimi
+  (cond    
     (and lyhenne nimi) (str lyhenne ", " nimi)
     nimi nimi
     :else nil))
