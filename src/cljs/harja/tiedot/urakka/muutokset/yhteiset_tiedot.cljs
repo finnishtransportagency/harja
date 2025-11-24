@@ -3,6 +3,7 @@
   (:require [tuck.core :as tuck]
             [clojure.string :as str]
             [reagent.core :refer [atom]]
+            [taoensso.timbre :as log]
 
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -89,6 +90,10 @@
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosOnnistui [vastaus])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
+(defrecord PoistaMuutos [muutos])
+(defrecord PoistaMuutosOnnistui [vastaus])
+(defrecord PoistaMuutosEpaonnistui [vastaus])
+
 
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
@@ -431,6 +436,37 @@
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
+                           (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :tallennus-kesken? false))
+
+  PoistaMuutos
+  (process-event [{:keys [muutos]} app]
+    (log/debug "Poistetaan muutos id:" (:id muutos))
+
+    (let [muutos-id (:id muutos)]
+      (tuck-apurit/post! :poista-muutos
+        {:valittu-hoitokausi (:valittu-hoitokausi app)
+         :muutos-id muutos-id}
+        {:onnistui ->TallennaMuutosOnnistui
+         :epaonnistui ->TallennaMuutosEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc app :tallennus-kesken? true)))
+
+  PoistaMuutosOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+
+    (-> app
+      ;; Resetoi muutoslomake onnistuneen poistamisen jälkeen, jotta lomake suljetaan
+      (assoc
+        :viimeksi-valittu nil
+        :muokattava-muutos nil
+        :tallennus-kesken? false)
+      (vastaus-haku-onnistui vastaus)))
+
+  PoistaMuutosEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Muutoksen poistaminen epäonnistui! "
                            (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
 
