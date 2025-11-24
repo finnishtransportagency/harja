@@ -3,6 +3,7 @@
   Tähän nimiavaruuteen voi kerätä yleisiä. Yleisesti konversioiden tulee olla funktioita, jotka prosessoivat
   yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia."
   (:require [cheshire.core :as cheshire]
+            [clj-time.coerce :as c]
             [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
@@ -233,6 +234,12 @@
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
 
+(defn joda-datetime->sql-timestamp
+  "Muuntaa annetun org.joda.time.DateTime -olion java.sql.Timestampiksi. Palauttaa nil jos syöte on nil."
+  [^org.joda.time.DateTime joda-dt]
+  (when joda-dt
+    (java.sql.Timestamp. (.getMillis joda-dt))))
+
 (defn java-date
   "Luo java.util.Date objektin annetusta java.sql.Date  objektista."
   [^java.sql.Date dt]
@@ -244,6 +251,13 @@
   [^java.sql.Date dt]
   (let [j-date (java-date dt)]
     (str (pvm/pvm j-date) " " (pvm/aika j-date))))
+
+(defn datetime-string->joda-datetime
+  "Parsii annetusta stringistä Joda DateTime objektin.
+   Oletetaan että stringi on muodossa 'yyyy-MM-dd'T'HH:mm:ss'Z'."
+  [paivamaara]
+  (when paivamaara
+    (c/from-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss'Z'") paivamaara))))
 
 (defn unix-date->java-date
   "Luo java.util.Date objektin annetusta unix-timestampista (sekunteja)."
