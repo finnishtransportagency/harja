@@ -23,4 +23,4 @@
   paivita-kuukausittaiset-pisteet<! tallenna-kuukausittaiset-pisteet<! poista-kuukausittaiset-pisteet<!
   hae-kuukausivastaus hae-lupauksen-hoitovuoden-kirjauskuukaudet
   hae-kustannusennuste-id paivita-kustannusennuste<! lisaa-kustannusennuste<! hae-kustannusennuste
-  hae-kustannusennuste-maarapaivat)
+  hae-kustannusennuste-maarapaivat hae-kustannusennuste-kuukausi-offset)
