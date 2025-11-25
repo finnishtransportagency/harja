@@ -2,6 +2,7 @@
   "Reittitoteuman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE]]
+            [harja.kyselyt.toteumat :as q-toteumat]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
@@ -11,8 +12,7 @@
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json
-             :refer [aika-string->java-sql-date aika-string->java-util-date
-                     pvm-string->joda-date aika-string->java-sql-timestamp]]
+             :refer [aika-string->java-sql-date pvm-string->joda-date]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.konversio :as konversio]
@@ -202,13 +202,18 @@ maksimi-linnuntien-etaisyys 200)
           (async/put! reittipisteet-tallennettu-chan false))))))
 
 (defn- materiaalicachen-paivitys-ajettava?
-  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
+  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä.
+  Osaa käsitellä, jos syötteenä on useampi päivämäärä vektorissa ja yksittäisen päivämäärän."
   [toteuma-alkanut]
-  (not (pvm/tanaan? toteuma-alkanut)))
+  (if (seq? toteuma-alkanut)
+    (some #(not (pvm/tanaan? %)) toteuma-alkanut)
+    (not (pvm/tanaan? toteuma-alkanut))))
 
 (defn- paivita-materiaalicachet!
-  "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain"
-  [db urakka-id data]
+  "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain.
+  Jos toteumaa päivitetään, niin toteuman vanhat toteumapäivät tulee välittää, jotta cachet päivittyvät myös niille päiville, joilta
+  toteuma siirtyy."
+  [db urakka-id data vanhat-toteumapaivat]
   (let [reittitoteumat (if (:reittitoteuma data)
                          [data]
                          (:reittitoteumat data))
@@ -246,22 +251,34 @@ maksimi-linnuntien-etaisyys 200)
                              {:alkupvm nil :loppupvm nil} reittitoteumat)
             alku-inst (:alkupvm toteuma-paivat)
             loppu-inst (:loppupvm toteuma-paivat)
-            toteumien-eri-pvmt (pvm/paivat-aikavalissa alku-inst loppu-inst)]
+            toteumien-eri-pvmt (into #{} (concat (pvm/paivat-aikavalissa alku-inst loppu-inst) vanhat-toteumapaivat))]
 
             ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
             ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
-            (when (or (materiaalicachen-paivitys-ajettava? alku-inst) (materiaalicachen-paivitys-ajettava? loppu-inst))
+            (when (or (materiaalicachen-paivitys-ajettava? alku-inst) (materiaalicachen-paivitys-ajettava? loppu-inst) (materiaalicachen-paivitys-ajettava? vanhat-toteumapaivat) )
               (doseq [sopimus-id urakan-sopimus-idt]
                 (doseq [pvm toteumien-eri-pvmt]
                   (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                         :alkupvm (pvm/dateksi pvm)
+                                                                         :alkupvm (konversio/joda-datetime->sql-timestamp pvm)
                                                                          :urakkaid urakka-id})))
               (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                  :alkupvm alku-inst
                                                                                  :loppupvm loppu-inst}))))))
 
-(defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
-  (let [reittipisteet-tallennettu-chan (async/chan)
+(defn tallenna-kaikki-pyynnon-reittitoteumat
+  "Materiaalicachen päivitys tehdään vasta kun kaikki reittipisteet on tallennettu.
+  Cache päivitetään erillisessä säikeessä, jotta pääsäie ei jää odottamaan pitkään.
+  Cache päivitetään vain niille päiville, joille reittipisteet on tehty.
+  Cache päivitetään kuitenkin toteumien tallennuksen jälkeen, jotta vältetään turhat päivitykset
+  joten tilanteissa, joissa toteuma on lähetetty aiemmin, meidän täytyy ottaa aiemman toteuman päivämäärä huomioon,
+  jotta nekin päivät päivittyvät."
+  [db db-replica urakka-id kirjaaja data]
+  (let [toteumapaivat (if (:reittitoteuma data)
+                         (let [alkanut (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db {:ulkoinen_id (get-in data [:reittitoteuma :toteuma :tunniste :id])})))]
+                           (if alkanut [alkanut] []))
+                         (keep #(:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db {:ulkoinen_id (get-in % [:reittitoteuma :toteuma :tunniste :id])})))
+                           (:reittitoteumat data)))
+        reittipisteet-tallennettu-chan (async/chan)
         reittitoteumien-maara (if (:reittitoteuma data)
                                 1
                                 (count (:reittitoteumat data)))]
@@ -272,7 +289,7 @@ maksimi-linnuntien-etaisyys 200)
         (loop [tallennettujen-maara 0]
           (log/info "Odotetaan reittipisteiden tallennusta..." tallennettujen-maara "/" reittitoteumien-maara)
           (if (= tallennettujen-maara reittitoteumien-maara)
-            (paivita-materiaalicachet! db urakka-id data)
+            (paivita-materiaalicachet! db urakka-id data toteumapaivat)
             (let [[v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
               (log/debug (format "Reittipisteet tallennettu! %s/%s" (inc tallennettujen-maara) reittitoteumien-maara))
               (cond
