@@ -485,9 +485,8 @@
         (is (true? (:disabled? tulos)) "Ulkoisen disabled-tilan perusteella disabled")))))
 
 (deftest kustannusennuste-maarapaiva-paattely-eri-paivina-test
-  "Testaa että määräpäivä-päivänä vastaaminen on sallittu
-   eri kellonaikoina. Kuvaa kellonajan merkitystä - esim. ilta
-   15. päivä on edelleen määräpäivä-päivä."
+  "Testaa, että määräpäivä-päivänä vastaaminen on sallittu eri kellonaikoina.
+   Kuvaa kellonajan merkitystä: esimerkiksi ilta 15. päivä on edelleen määräpäivä-päivä."
   (let [;; Määräpäivä on 15. päivä keskipäivällä
         maarapaiva (pvm/luo-pvm-aika 2025 10 15 12 0 0 0)
         tiedot-syotetty true
@@ -516,3 +515,203 @@
             tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely seuraava-aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
         (is (true? (:maarapaiva-mennyt-ohi? tulos)) "16.10. klo 00:00:00 - määräpäivä on ohitettu")
         (is (true? (:disabled? tulos)) "16.10. klo 00:00:00 - vastaaminen on estetty")))))
+
+
+(deftest laske-pisteytyshoitovuosi-test
+  "Testaa, että kustannusennuste-kuukauden pisteytyshoitovuosi lasketaan oikein.
+   Offset-arvo määrittää siirtymän normaalista hoitovuoden laskennasta."
+  
+  (testing "Normaali pisteytys ilman offsettia (offset=0)"
+    (testing "Lokakuu kuuluu HK1:lle"
+      (is (= 2024 (lupaus-domain/laske-pisteytyshoitovuosi 2024 10 0))
+          "Lokakuu 2024, offset=0 -> hoitovuosi 2024 (HK 2024-2025)"))
+    
+    (testing "Tammikuu kuuluu HK1:lle"
+      (is (= 2024 (lupaus-domain/laske-pisteytyshoitovuosi 2025 1 0))
+          "Tammikuu 2025, offset=0 -> hoitovuosi 2024 (HK 2024-2025)"))
+    
+    (testing "Syyskuu kuuluu HK1:lle"
+      (is (= 2024 (lupaus-domain/laske-pisteytyshoitovuosi 2025 9 0))
+          "Syyskuu 2025, offset=0 -> hoitovuosi 2024 (HK 2024-2025)"))
+    
+    (testing "Huhtikuu kuuluu HK1:lle"
+      (is (= 2024 (lupaus-domain/laske-pisteytyshoitovuosi 2025 4 0))
+          "Huhtikuu 2025, offset=0 -> hoitovuosi 2024 (HK 2024-2025)")))
+  
+  (testing "Pisteytys offsetilla +1 (esim. elokuu pisteytetään seuraavalle HK:lle)"
+    (testing "Elokuu 2024, offset=1 -> pisteytetään HK2:lle (2025)"
+      (is (= 2025 (lupaus-domain/laske-pisteytyshoitovuosi 2024 8 1))
+          "Elokuu 2024, offset=1 -> hoitovuosi 2025 (HK 2025-2026)"))
+    
+    (testing "Lokakuu 2024, offset=1"
+      (is (= 2025 (lupaus-domain/laske-pisteytyshoitovuosi 2024 10 1))
+          "Lokakuu 2024, offset=1 -> hoitovuosi 2025"))
+    
+    (testing "Tammikuu 2025, offset=1"
+      (is (= 2026 (lupaus-domain/laske-pisteytyshoitovuosi 2025 1 1))
+          "Tammikuu 2025, offset=1 -> hoitovuosi 2026")))
+  
+  (testing "Pre-ehdot (validointi)"
+    (testing "Kuukauden tulee olla 1-12"
+      (is (thrown? java.lang.AssertionError (lupaus-domain/laske-pisteytyshoitovuosi 2024 13 0))
+          "Kuukausi 13 ei ole validi")
+      (is (thrown? java.lang.AssertionError (lupaus-domain/laske-pisteytyshoitovuosi 2024 0 0))
+          "Kuukausi 0 ei ole validi"))
+    
+    (testing "Offset tulee olla >= 0"
+      (is (thrown? java.lang.AssertionError (lupaus-domain/laske-pisteytyshoitovuosi 2024 8 -1))
+          "Negatiivinen offset ei ole sallittu"))
+    
+    (testing "Parametrien tulee olla kokonaislukuja"
+      (is (thrown? java.lang.AssertionError (lupaus-domain/laske-pisteytyshoitovuosi "2024" 8 0))
+          "Vuosi String-tyyppi ei ole sallittu")))
+  
+  (testing "Post-ehto (palautusarvo on kokonaisluku)"
+    (is (integer? (lupaus-domain/laske-pisteytyshoitovuosi 2024 10 0))
+        "Palautusarvo on kokonaisluku")
+    (is (integer? (lupaus-domain/laske-pisteytyshoitovuosi 2024 8 1))
+        "Palautusarvo on kokonaisluku myös offsetilla")))
+
+
+(deftest kustannusennuste-toteuma-offset-test
+  "Testaa, että toteuman laskenta huomioi offset-logiikan.
+   Elokuun pisteet kuuluvat seuraavalle hoitokaudelle (HK2), vaikka se
+   kirjataan HK1:llä."
+  
+  (testing "Toteuma lasketaan oikein ilman offsettia"
+    (let [lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}
+                            {:kuukausi 1 :kustannusennuste {:lasketut-pisteet 6 :hoitovuosi 2024}}
+                            {:kuukausi 4 :kustannusennuste {:lasketut-pisteet 10 :hoitovuosi 2024}}]
+          ;; HK1 (hoitovuosi-nro=1, urakan-alkuvuosi=2024) -> alkuvuosi=2024
+          toteuma (lupaus-domain/kustannusennuste->toteuma 
+                    {:lupaus-kuukaudet lupaus-kuukaudet
+                     :hoitovuosi-paattynyt? true
+                     :hoitovuosi-nro 1
+                     :urakan-alkuvuosi 2024})]
+      (is (= 8 toteuma) 
+          "HK1 toteuma = ROUND((8+6+10)/3) = ROUND(8) = 8")))
+  
+  (testing "Toteuma huomioi hoitovuosi-nron perusteella suodatuksen"
+    (let [lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}   ; HK1
+                            {:kuukausi 1 :kustannusennuste {:lasketut-pisteet 6 :hoitovuosi 2024}}    ; HK1
+                            {:kuukausi 8 :kustannusennuste {:lasketut-pisteet 4 :hoitovuosi 2025}}]   ; HK2 (elokuu pisteytetään seuraavalle HK:lle!)
+          ;; Laskettaessa HK2:n toteuma (hoitovuosi-nro=2, urakan-alkuvuosi=2024)
+          ;; HK2:n alkuvuosi = 2024 + (2-1) = 2025
+          toteuma-hk2 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 2
+                         :urakan-alkuvuosi 2024})]
+      (is (= 4 toteuma-hk2) 
+          "HK2 toteuma = 4 (vain elokuun pisteet, jotka pisteytetään HK2:lle)")))
+  
+  (testing "Toteuma lasketaan vain, kun hoitokausi on päättynyt"
+    (let [lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}]
+          ;; hoitovuosi-paattynyt? = false
+          toteuma (lupaus-domain/kustannusennuste->toteuma 
+                    {:lupaus-kuukaudet lupaus-kuukaudet
+                     :hoitovuosi-paattynyt? false
+                     :hoitovuosi-nro 1
+                     :urakan-alkuvuosi 2024})]
+      (is (nil? toteuma)
+          "Toteuma on nil, kun hoitokausi ei ole päättynyt")))
+  
+  (testing "Toteuma on 0 kun ei ole pisteitä"
+    (let [lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:lasketut-pisteet nil :hoitovuosi 2024}}
+                            {:kuukausi 1 :kustannusennuste {:lasketut-pisteet nil :hoitovuosi 2024}}]
+          toteuma (lupaus-domain/kustannusennuste->toteuma 
+                    {:lupaus-kuukaudet lupaus-kuukaudet
+                     :hoitovuosi-paattynyt? true
+                     :hoitovuosi-nro 1
+                     :urakan-alkuvuosi 2024})]
+      (is (= 0 toteuma)
+          "Toteuma on 0, kun ei ole yhtään pisteitä")))
+  
+  (testing "Toteuma pyöristetään oikein"
+    (let [lupaus-kuukaudet [{:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}
+                            {:kuukausi 1 :kustannusennuste {:lasketut-pisteet 7 :hoitovuosi 2024}}]
+          toteuma (lupaus-domain/kustannusennuste->toteuma 
+                    {:lupaus-kuukaudet lupaus-kuukaudet
+                     :hoitovuosi-paattynyt? true
+                     :hoitovuosi-nro 1
+                     :urakan-alkuvuosi 2024})]
+      (is (= 8 toteuma)
+          "ROUND((8+7)/2) = ROUND(7.5) = 8"))))
+
+
+(deftest laske-pisteytyshoitovuosi-suuri-offset-test
+  "Testaa offset-logiikkaa suuremmilla arvoilla."
+  
+  (testing "Offset 2 (skenaario: pisteytetään kahden vuoden päähän)"
+    (is (= 2026 (lupaus-domain/laske-pisteytyshoitovuosi 2024 10 2))
+        "Lokakuu 2024, offset=2 -> hoitovuosi 2026"))
+  
+  (testing "Offset 3"
+    (is (= 2027 (lupaus-domain/laske-pisteytyshoitovuosi 2024 8 3))
+        "Elokuu 2024, offset=3 -> hoitovuosi 2027")))
+
+
+(deftest kustannusennuste-toteuma-useita-hoitovuosia-test
+  "Testaa toteuman laskentaa, kun samassa datassa on sekä HK1:n että HK2:n pisteitä." 
+  (testing "HK1 ja HK2 pisteet samassa datassa - filtteröidään oikein HK2:lle"
+    (let [lupaus-kuukaudet [
+            ;; HK1 pisteet
+            {:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}
+            {:kuukausi 1 :kustannusennuste {:lasketut-pisteet 6 :hoitovuosi 2024}}
+            {:kuukausi 4 :kustannusennuste {:lasketut-pisteet 10 :hoitovuosi 2024}}
+            
+            ;; HK2 pisteet: elokuu offset=1 + muut seuraavalta HK:lta
+            {:kuukausi 8 :kustannusennuste {:lasketut-pisteet 5 :hoitovuosi 2025}}
+            {:kuukausi 10 :kustannusennuste {:lasketut-pisteet 7 :hoitovuosi 2025}}]
+          
+          ;; Laskettaessa HK1
+          toteuma-hk1 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 1
+                         :urakan-alkuvuosi 2024})
+          
+          ;; Laskettaessa HK2
+          toteuma-hk2 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 2
+                         :urakan-alkuvuosi 2024})]
+      
+      (is (= 8 toteuma-hk1)
+          "HK1 toteuma = ROUND((8+6+10)/3) = 8 (ei ota HK2:n pisteitä mukaan)")
+      
+      (is (= 6 toteuma-hk2)
+          "HK2 toteuma = ROUND((5+7)/2) = 6 (vain HK2 pisteet)")))
+  
+  (testing "Useita HK:ita per\u00e4kk\u00e4in"
+    (let [lupaus-kuukaudet [
+            ;; HK1: 2024-2025
+            {:kuukausi 10 :kustannusennuste {:lasketut-pisteet 8 :hoitovuosi 2024}}
+            ;; HK2: 2025-2026 (elokuun offset=1-logiikka)
+            {:kuukausi 8 :kustannusennuste {:lasketut-pisteet 9 :hoitovuosi 2025}}
+            ;; HK3: 2026-2027
+            {:kuukausi 10 :kustannusennuste {:lasketut-pisteet 7 :hoitovuosi 2026}}]
+          
+          toteuma-hk1 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 1
+                         :urakan-alkuvuosi 2024})
+          
+          toteuma-hk2 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 2
+                         :urakan-alkuvuosi 2024})
+          
+          toteuma-hk3 (lupaus-domain/kustannusennuste->toteuma 
+                        {:lupaus-kuukaudet lupaus-kuukaudet
+                         :hoitovuosi-paattynyt? true
+                         :hoitovuosi-nro 3
+                         :urakan-alkuvuosi 2024})]
+      
+      (is (= 8 toteuma-hk1) "HK1: 8")
+      (is (= 9 toteuma-hk2) "HK2: 9")
+      (is (= 7 toteuma-hk3) "HK3: 7"))))
+
