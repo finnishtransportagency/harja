@@ -120,19 +120,29 @@
 
 (defn kustannusennuste->toteuma
   "Laskee kustannusennusteen toteuman kun se on mahdollista.
-   Toteuma = keskiarvo kaikista kustannusennustekuukausista joissa on pisteitä.
+   Toteuma = keskiarvo kaikista kustannusennustekuukausista joissa on lopulliset pisteet.
    Jos ei ole pisteitä ollenkaan, palauttaa 0.
+   
+   Pisteet haetaan :lasketut-pisteet avaimella, joka sisältää välikatselmuksessa
+   lasketut lopulliset pistemäärät per kuukausi.
    
    HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
    Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
-  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt? hoitovuosi-nro]}] 
+  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt? hoitovuosi-nro urakan-alkuvuosi]}] 
     (when hoitovuosi-paattynyt?
-      ;; Hae kaikki kuukaudet joissa on kustannusennusteita ja pisteitä
-      (let [kuukaudet-pisteilla (->> lupaus-kuukaudet
-                                  (filter #(get-in % [:kustannusennuste :pisteet]))
-                                  (filter #(= hoitovuosi-nro
+      ;; Laske mikä hoitovuosi (alkuvuosi) vastaa kyseistä hoitovuosi-nroa
+      ;; Esim. urakan-alkuvuosi=2024, hoitovuosi-nro=1 -> hoitovuosi-alkuvuosi=2024
+      ;; Esim. urakan-alkuvuosi=2024, hoitovuosi-nro=2 -> hoitovuosi-alkuvuosi=2025
+      (let [hoitovuosi-alkuvuosi (+ urakan-alkuvuosi (dec hoitovuosi-nro))
+            
+            ;; Hae kaikki kuukaudet joissa on lopulliset pisteet (laskettu välikatselmuksessa)
+            ;; JA jotka kuuluvat tälle hoitovuodelle
+            kuukaudet-pisteilla (->> lupaus-kuukaudet
+                                  (filter #(get-in % [:kustannusennuste :lasketut-pisteet]))
+                                  ;; Filtteröi hoitovuoden perusteella (ei hoitovuosi-nro)
+                                  (filter #(= hoitovuosi-alkuvuosi
                                               (get-in % [:kustannusennuste :hoitovuosi])))
-                                  (map #(get-in % [:kustannusennuste :pisteet])))]
+                                  (map #(get-in % [:kustannusennuste :lasketut-pisteet])))]
         (if (seq kuukaudet-pisteilla)
           ;; Laske keskiarvo vain niistä kuukausista joissa on pisteitä
           (let [keskiarvo (/ (reduce + kuukaudet-pisteilla) (count kuukaudet-pisteilla))]
