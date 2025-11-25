@@ -220,7 +220,10 @@
                                                                 (get erikoisarvot (:lupaus-id %)) kustannusennusteet maarapaiva-tiedot)))
                   (mapv #(liita-lupaus-vaihtoehdot db %))
                   (mapv #(if (= "kustannusennuste" (:lupaustyyppi %))
-                           (assoc % :hoitovuosi-paattynyt? (:kaikki-laskettu kustannusennuste-pisteet-tila))
+                           (assoc % 
+                             :hoitovuosi-paattynyt? (:kaikki-laskettu kustannusennuste-pisteet-tila)
+                             :urakan-alkuvuosi urakan-alkuvuosi
+                             :hoitovuosi-nro hoitovuosi-nro)
                            %))
                   (mapv lupaus-domain/liita-ennuste-tai-toteuma))
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
@@ -390,10 +393,10 @@
    (let [maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15)
          syotetty-pvm (pvm/nyt)
          
-         pisterajat-offset-arvo (lupaus-kyselyt/hae-kustannusennuste-kuukausi-offset
-                           db {:lupaus-id lupaus-id
-                               :kuukausi kuukausi}) 
-         pisteytys-offset (or pisterajat-offset-arvo 0)
+         pisterajat-offset-tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-offset
+                                   db {:lupaus-id lupaus-id
+                                       :kuukausi kuukausi}) 
+         pisteytys-offset (or (:pisteytys-hoitovuosi-offset pisterajat-offset-tulos) 0)
          hoitovuosi (lupaus-domain/laske-pisteytyshoitovuosi vuosi kuukausi pisteytys-offset)
     
         ;; Tarkista onko kustannusennuste jo olemassa
