@@ -155,7 +155,7 @@
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
-  [e! kattohinta paatos-tehty?]
+  [e! kattohinta paatos-tehty? hoitokauden-alkuvuosi]
   (let [uusi-kattohinta (atom (if kattohinta kattohinta 0))]
     (if (not paatos-tehty?)
       [:<>
@@ -174,7 +174,7 @@
                                                          :input-luokka "kattohinta-muutettu"
                                                          :aria-label "Muuttunut kattohinta"
                                                          :on-blur #(when (not (= kattohinta @uusi-kattohinta))
-                                                                     (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
+                                                                     (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta hoitokauden-alkuvuosi)))}
                                          :arvo-atom uusi-kattohinta}]]]
       [:<>
        [:div.small-caption.lihavoitu.valja "Muuttunut kattohinta"]
@@ -229,7 +229,7 @@
             nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
-          [kattohinnan-oikaisu e! kattohinta paatos-tehty?])
+          [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
         [:hr.paatos-hr]
 
         ;; Päätöksenteko napit

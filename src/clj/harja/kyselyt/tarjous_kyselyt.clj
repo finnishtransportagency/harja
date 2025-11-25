@@ -116,21 +116,21 @@
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
-                 {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                 {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id (:id tehtava) :tehtavaryhma-id nil :rahavaraus-id nil
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
-                 {:nimi "Tarjouksen tavoitehinta"
-                  :osio "yhteensa"
-                  :yhteensa 0.00
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}
-                 {:nimi (if (:muokkaa_kattohinta_kasin urakan-parametrit) "Tarjouksen kattohinta"
-                          (str "Tarjouksen kattohinta (" (fmt/desimaaliluku (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) nil nil false) " x tarjouksen tavoitehinta)"))
-                  :osio "yhteensa"
-                  :yhteensa 0.00
-                  :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
+        tarjousrivit [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
+                      {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
+                      {:nimi "Hoidonjohtopalkkio" :osio "hoidonjohtopalkkio" :toimenkuva-id nil :tehtava-id (:id tehtava) :tehtavaryhma-id nil :rahavaraus-id nil
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
+                      {:nimi "Tarjouksen tavoitehinta"
+                       :osio "yhteensa"
+                       :yhteensa 0.00
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}
+                      {:nimi (if (:muokkaa_kattohinta_kasin urakan-parametrit) "Tarjouksen kattohinta"
+                               (str "Tarjouksen kattohinta (" (fmt/desimaaliluku (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) nil nil false) " x tarjouksen tavoitehinta)"))
+                       :osio "yhteensa"
+                       :yhteensa 0.00
+                       :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
 
         ; haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -149,13 +149,13 @@
         rahavaraus-rivit (sort-by :jarjestys rahavaraus-rivit)
         rahavaraus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys (+ 1 (inc indeksi)))) rahavaraus-rivit)
         ;; Yhdistetään tarjous ja rahavaraukset
-        tarjous (vec (concat tarjous rahavaraus-rivit))
+        tarjousrivit (vec (concat tarjousrivit rahavaraus-rivit))
         toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
-        tarjous (vec (concat tarjous toimenkuvat))
-        jarjestetty-tarjous (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
-                              tarjous)]
+        tarjousrivit (vec (concat tarjousrivit toimenkuvat))
+        jarjestetyt-tarjousrivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
+                                   tarjousrivit)]
 
-    jarjestetty-tarjous))
+    jarjestetyt-tarjousrivit))
 
 (defn vuodet-tietomallista [malli]
   (reduce (fn [rivit vuosi-rivi]
@@ -216,57 +216,60 @@
 (defn tallanna-rahavaraukset-kustannussuuunnitelmaan
   "Rahavaraukset tallennetaan sekä tarjoukseen että kustannussuunnitelmaan."
   [db vuositarjous urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id]
-  (mapv (fn [rahavaraus]
-          (let [rahavaraus-id (:rahavaraus-id rahavaraus)
-                vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
+  (let [;; Tallenna rahavaraukset myös kustannusarvioitu_tyo tauluun
+        _ (mapv (fn [rahavaraus]
+                  (let [rahavaraus-id (:rahavaraus-id rahavaraus)
+                        vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
 
-                ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
-                ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
-                ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
-                ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
-                ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+                        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
+                        ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
+                        ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
+                        ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
+                        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
 
-                ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
-                kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
-                                                                          :vuosi (:hoitokauden_alkuvuosi vuositarjous)
-                                                                          :sopimus_id sopimus-id})
+                        ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
+                        kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
+                                                                                  :vuosi (:hoitokauden_alkuvuosi vuositarjous)
+                                                                                  :sopimus_id sopimus-id})
 
-                db-budjetoitu-rahavaraus (if (seq kt-rahavaraus-kuukaudet)
-                                           (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
-                                             (doseq [r kt-rahavaraus-kuukaudet
-                                                     :let [_ (swap! kk inc)
-                                                           kuukausimaara (count kt-rahavaraus-kuukaudet)
-                                                           kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
-                                                           viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))
-                                                           summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
-                                               ;; Rahavarauksesta ei voi muuttua, kuin summa
-                                               (paivita-rahavaraus-budjettiin<! db {:summa summa
-                                                                                    :summa_indeksikorjattu (when summa
-                                                                                                             (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) summa))
-                                                                                    :muokattu (pvm/nyt)
-                                                                                    :muokkaaja kayttaja-id
-                                                                                    :id (:id r)})))
-                                           (doseq [kk (range 1 13)
-                                                   :let [kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa 12)))
-                                                         viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))
-                                                         vuosi (if (< kk 10) (inc (:hoitokauden_alkuvuosi vuositarjous)) (:hoitokauden_alkuvuosi vuositarjous))
-                                                         summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)]]
-                                             (lisaa-rahavaraus-budjettiin<! db {:vuosi vuosi
-                                                                                :kuukausi kk
-                                                                                :sopimus_id sopimus-id
-                                                                                :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
-                                                                                :tehtava_id nil
-                                                                                :rahavaraus_id rahavaraus-id
-                                                                                :summa summa
-                                                                                :summa_indeksikorjattu (when summa
-                                                                                                         (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) summa))
-                                                                                :luoja kayttaja-id})))]
-            db-budjetoitu-rahavaraus))
-    rahavaraukset-tarjouksesta))
+                        db-budjetoitu-rahavaraus (if (seq kt-rahavaraus-kuukaudet)
+                                                   (let [kk (atom 0)] ;; Lokaalisti voi olla vaikka vain kolmena kuukautena summa, vaikka pitäisi olla 12
+                                                     (doseq [r kt-rahavaraus-kuukaudet
+                                                             :let [_ (swap! kk inc)
+                                                                   kuukausimaara (count kt-rahavaraus-kuukaudet)
+                                                                   kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa kuukausimaara))) ;; Tallenna nil kantaan, jos nil arvo on syötetty
+                                                                   viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* (dec kuukausimaara) kuukausisumma))))
+                                                                   summa (if (and (>= kuukausimaara 9) (= @kk 9)) viimeinen-kuukausisumma kuukausisumma)]]
+                                                       ;; Rahavarauksesta ei voi muuttua, kuin summa
+                                                       (paivita-rahavaraus-budjettiin<! db {:summa summa
+                                                                                            :summa_indeksikorjattu (when summa
+                                                                                                                     (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) summa))
+                                                                                            :muokattu (pvm/nyt)
+                                                                                            :muokkaaja kayttaja-id
+                                                                                            :id (:id r)})))
+                                                   (doseq [kk (range 1 13)
+                                                           :let [kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (/ vuosittainen-summa 12)))
+                                                                 viimeinen-kuukausisumma (when-not (nil? vuosittainen-summa) (round2 2 (- vuosittainen-summa (* 11 kuukausisumma))))
+                                                                 vuosi (if (< kk 10) (inc (:hoitokauden_alkuvuosi vuositarjous)) (:hoitokauden_alkuvuosi vuositarjous))
+                                                                 summa (if (= kk 9) viimeinen-kuukausisumma kuukausisumma)]]
+                                                     (lisaa-rahavaraus-budjettiin<! db {:vuosi vuosi
+                                                                                        :kuukausi kk
+                                                                                        :sopimus_id sopimus-id
+                                                                                        :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                                        :tehtava_id nil
+                                                                                        :rahavaraus_id rahavaraus-id
+                                                                                        :summa summa
+                                                                                        :summa_indeksikorjattu (when summa
+                                                                                                                 (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) summa))
+                                                                                        :luoja kayttaja-id})))]
+                    db-budjetoitu-rahavaraus))
+            rahavaraukset-tarjouksesta)
+
+        ;; Koska kustannusarvioitu_tyo taulu muuttuu, niin lasketaan valitun vuoden tavoitehinta uusiksi.
+        _ (uk-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi vuositarjous))]))
 
 (defn tallenna-tarjouksen-toimenkuvat [db vuositarjous tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)
-
         ;; Loopataan vuosittaiset toimenkuvat ja lisätään tarvittaessa uudet ja päivitetään olemassaolevat
         _ (mapv
             (fn [toimenkuva]
@@ -396,7 +399,9 @@
                                          (conj kaikki uudet-rivit)))
                                      [] rahavaraukset-tarjouksesta))
 
+        ;; Poista nimettömät toimenkuvat. Jos nimi on tyhjä, käyttäjä on poistanut toimenkuvan, vaikka ei olisikaan painanut "poista" nappia
         toimenkuvat-tarjouksesta (filter #(contains? johto-ja-hallintokorvausosiot (:osio %)) (:tarjous tarjous))
+        toimenkuvat-tarjouksesta (remove #(= "" (str/trim (:nimi %))) toimenkuvat-tarjouksesta)
 
         ;; Vaihdetut toimenkuvat jättää jälkensä :uusi-nimi arvoon. Haetaan sen nimen perusteella toimenkuvan id
         toimenkuvat-tarjouksesta (mapv

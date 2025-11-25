@@ -1,9 +1,10 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
+import {avaaHarjaTimeoutilla} from "../support/apurit.js";
 
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
-const ladataanHarjaaTimeout = 30000;
 const urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
+let indeksikorjattuTavoitehinta, indeksikorjattuKattohinta, kattohinta, tavoitehinta;
 
 // Alustetaan yllänimetty urakka Kustannussuunnittelua varten
 function alustaUrakkaKustannussuunnitteluun(nimi) {
@@ -31,22 +32,24 @@ function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uus
 }
 
 describe('Varmista Hoitovuoden alun tavoitehinta', function () {
-    beforeEach(function () {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', {timeout: ladataanHarjaaTimeout}).should('not.exist')
-    })
 
-    it("Urakkavalinta listan kautta toimii", function () {
+    before(function () {
+        // Alustetaan urakka kustannussuunnittelua varten ennen testejä
         alustaUrakkaKustannussuunnitteluun('Rovaniemen MHU testiurakka (1. hoitovuosi)');
+
+        cy.viewport(1100, 2000)
+        avaaHarjaTimeoutilla();
+    });
+
+    it("Tallenna Hoitovuoden alun tavoitehinta", function () {
+
         cy.intercept('POST', '_/tallenna-kilpailutettavat-hankinnat').as('tallenna-kilpailutettavat-hankinnat');
+        cy.intercept('POST', '_/tallenna-tarjouksen-tiedot').as('tallenna-tarjous');
+        cy.intercept('POST', '_/hae-tarjouksen-tiedot').as('hae-tarjous');
         cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
         cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2025').as('tallenna-toimenkuvat-2025');
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
-        cy.intercept('POST', '_/tallenna-tarjouksen-tiedot').as('tallenna-tarjous');
-        cy.intercept('POST', '_/hae-tarjouksen-tiedot').as('hae-tarjous');
 
         cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
@@ -69,7 +72,7 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.wait('@tallenna-tarjous')
             .its('response.statusCode')
             .should('equal', 200);
-        
+
         // Siirry suunnittelu / Hoitovuoden alun tavoitehinta tabille
 
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
@@ -175,53 +178,80 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
             .its('response.statusCode')
             .should('equal', 200);
 
-        // Etsitään hoitovuoden alun tavoitehinta summa
-        let tavoihinta =
+        // Etsitään hoitovuoden alun tavoitehinta ja tallennetaan se muuttujaan
+        tavoitehinta =
             cy.get('div #tavoite-ja-kattohinta-elementti div')
-                .contains('Hoitovuoden alun tavoitehinta').next().then(function(text1){
+                .contains('Hoitovuoden alun tavoitehinta').next().then(function (text1) {
                 return text1.text();
             });
 
-        let indeksikorjattuTavoihinta =
+        kattohinta =
             cy.get('div #tavoite-ja-kattohinta-elementti div')
-                .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function(text1){
-            return text1.text();
-        });
+                .contains('Hoitovuoden alun kattohinta').next().then(function (text1) {
+                return text1.text();
+            });
 
-        // Indeksikorjattu Tavoitehinta muutoksista
+        indeksikorjattuTavoitehinta =
+            cy.get('div #tavoite-ja-kattohinta-elementti div')
+                .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function (text1) {
+                return text1.text();
+            });
+
+        indeksikorjattuKattohinta =
+            cy.get('div #tavoite-ja-kattohinta-elementti div')
+                .contains('Hoitovuoden alun indeksikorjattu kattohinta').next().then(function (text1) {
+                return text1.text();
+            });
+
+    });
+
+    // Indeksikorjattu Tavoitehinta muutoksista
+    it('Tavoitehinta muutoksista', () => {
         cy.get('[data-cy=tabs-taso1-Muutokset]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
         cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span')
-            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function(text1){
+            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function (text1) {
             const trimmattuTodellinen = trimmaaArvo(text1);
-            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoihinta);
+            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
             expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
         });
 
-        // Indeksikorjattu Tavoitehinta välikatselmuksesta
+    });
+
+    // Indeksikorjattu Tavoitehinta välikatselmuksesta
+    it('Tavoitehinta välikatselmuksesta', () => {
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
-        cy.get('div.valikatselmus-yhteenveto div.summa-rivi-ylin span.laskenta-rivi-lukema')
-            .then(function(text1){
-            const trimmattuTodellinen = trimmaaArvo(text1);
-            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoihinta);
-            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-        });
+        cy.get('div.valikatselmus-yhteenveto span').contains('Hoitovuoden lopun kattohinta').next()
+            .then(function (text1) {
+                const trimmattuTodellinen = trimmaaArvo(text1);
+                const trimmattuOdotettu = trimmaaArvo(indeksikorjattuKattohinta);
+                expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
+            });
+    });
 
-        // Tavoitehinta kustannusten seurannassa
+    // Tavoitehinta kustannusten seurannassa
+    it('Tavoitehinta kustannusten seurannassa', () => {
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
-        cy.get('div.yhteenveto div.rivi span').contains('Tavoitehinta (indeksikorjattu)').next().then(function(text1){
-                const trimmattuTodellinen = trimmaaArvo(text1);
-                const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoihinta);
-                expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-            });
+        cy.get('div.yhteenveto div.rivi span').contains('Tavoitehinta (indeksikorjattu)').next().then(function (text1) {
+            const trimmattuTodellinen = trimmaaArvo(text1);
+            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
+            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
+        });
+        cy.get('div.yhteenveto div.rivi span').contains('Kattohinta (indeksikorjattu)').next().then(function (text1) {
+            const trimmattuTodellinen = trimmaaArvo(text1);
+            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuKattohinta);
+            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
+        });
+    });
 
-        // Tavoitehinta Laskutusyhteenvedossa
+    // Tavoitehinta Laskutusyhteenvedossa
+    it('Tavoitehinta Laskutusyhteenvedossa', () => {
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Laskutusyhteenveto"]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
@@ -236,14 +266,11 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         // varmista
         cy.get('span.varillinen-teksti').contains('Tavoitehinta (indeksikorjattu)').parent().parent().parent().next()
             .get('span.arvo')
-            .then(function(text1){
-            const trimmattuTodellinen = trimmaaArvo(text1);
-            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoihinta);
-            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-        });
-
-
-
+            .then(function (text1) {
+                const trimmattuTodellinen = trimmaaArvo(text1);
+                const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
+                expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
+            });
     });
 });
 
