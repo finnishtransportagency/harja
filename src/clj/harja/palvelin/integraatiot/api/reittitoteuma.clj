@@ -251,7 +251,8 @@ maksimi-linnuntien-etaisyys 200)
                              {:alkupvm nil :loppupvm nil} reittitoteumat)
             alku-inst (:alkupvm toteuma-paivat)
             loppu-inst (:loppupvm toteuma-paivat)
-            toteumien-eri-pvmt (into #{} (concat (pvm/paivat-aikavalissa alku-inst loppu-inst) vanhat-toteumapaivat))]
+            eri-paivat (map #(konversio/joda-datetime->sql-timestamp %) (pvm/paivat-aikavalissa alku-inst loppu-inst))
+            toteumien-eri-pvmt (into #{} (concat eri-paivat vanhat-toteumapaivat))]
 
             ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
             ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
@@ -259,24 +260,28 @@ maksimi-linnuntien-etaisyys 200)
               (doseq [sopimus-id urakan-sopimus-idt]
                 (doseq [pvm toteumien-eri-pvmt]
                   (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                         :alkupvm (konversio/joda-datetime->sql-timestamp pvm)
+                                                                         :alkupvm pvm
                                                                          :urakkaid urakka-id})))
               (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                  :alkupvm alku-inst
                                                                                  :loppupvm loppu-inst}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat
-  "Materiaalicachen päivitys tehdään vasta kun kaikki reittipisteet on tallennettu.
+  "Materiaalicachen päivitys tehdään vasta, kun kaikki reittipisteet on tallennettu.
   Cache päivitetään erillisessä säikeessä, jotta pääsäie ei jää odottamaan pitkään.
   Cache päivitetään vain niille päiville, joille reittipisteet on tehty.
-  Cache päivitetään kuitenkin toteumien tallennuksen jälkeen, jotta vältetään turhat päivitykset
-  joten tilanteissa, joissa toteuma on lähetetty aiemmin, meidän täytyy ottaa aiemman toteuman päivämäärä huomioon,
-  jotta nekin päivät päivittyvät."
+  Eli toteuman muokkauksessa toteuman mahdolliset alkuperäiset päivät jäävät päivittymättä. Tästä syystä päivitetään ne
+  ottamalla ne talteen ja välittämällä materiaalicachen päivitykselle."
   [db db-replica urakka-id kirjaaja data]
   (let [toteumapaivat (if (:reittitoteuma data)
-                         (let [alkanut (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db {:ulkoinen_id (get-in data [:reittitoteuma :toteuma :tunniste :id])})))]
+                         (let [tunnisteid (get-in data [:reittitoteuma :toteuma :tunniste :id])
+                               alkanut (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db
+                                                          {:ulkoinen_id tunnisteid})))]
                            (if alkanut [alkanut] []))
-                         (keep #(:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db {:ulkoinen_id (get-in % [:reittitoteuma :toteuma :tunniste :id])})))
+                         (keep (fn [t]
+                                 (let [tunnisteid (get-in t [:reittitoteuma :toteuma :tunniste :id])]
+                                   (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db
+                                                      {:ulkoinen_id tunnisteid})))))
                            (:reittitoteumat data)))
         reittipisteet-tallennettu-chan (async/chan)
         reittitoteumien-maara (if (:reittitoteuma data)
