@@ -16,6 +16,7 @@
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.tyokalut.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.ilmoitustyokalu-nakyma :as ilmoitustyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
@@ -212,6 +213,13 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "toteumatyokalu"}
       [toteumatyokalu-nakyma/simuloi-toteuma])
+
+    "Ilmoitustyökalu"
+    :ilmoitustyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "ilmoitustyokalu"}
+      [ilmoitustyokalu-nakyma/simuloi-ilmoitus])
 
     "Työmaapäiväkirjatyökalu"
     :tyomaapaivakirjatyokalu
