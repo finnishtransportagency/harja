@@ -34,9 +34,8 @@
         (paivita-toimenpide db nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku
                             tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi toimenpide-id)
         toimenpide-id)
-      (do
-        (luo-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku
-                        tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi)))))
+      (luo-toimenpide db sampo-id nimi alkupvm loppupvm vastuuhenkilo-id talousosasto-id talousosasto-polku
+        tuote-id tuote-polku urakka-sampo-id sampo-toimenpidekoodi))))
 
 (defn tarkista-toimenpide [db viesti-id sampo-urakka-id sampo-toimenpide-id sampo-toimenpidekoodi]
   (when (empty? sampo-toimenpidekoodi)
@@ -55,7 +54,7 @@
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Illegal operation code provided.")
              :ei-kriittinen? true
              :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu."}]}))
-  (if (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
+  (when (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
     (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
       (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
                :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus

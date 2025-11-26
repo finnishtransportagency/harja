@@ -6,7 +6,8 @@
   {:positional? true})
 
 (declare tuotenumero-loytyy hae-urakka-maksueranumerolla hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
-  hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat)
+  hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat luo-kustannussuunnitelma<!
+  merkitse-toimenpiteen-kustannussunnitelmat-likaisiksi!)
 
 (defn tuotenumero-loytyy? [db maksueranumero]
   (:exists (first (tuotenumero-loytyy db maksueranumero))))
