@@ -257,6 +257,20 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
              FROM alikohde,
                   paallystysilmoitus,
                   massa
+              UNION ALL
+              SELECT 86,
+                     100,
+                     20,
+                     650,
+                     20,
+                     1,
+                     11,
+                     (SELECT koodi FROM pot2_mk_alusta_toimenpide WHERE nimi = 'Muu RP'),
+                     paallystysilmoitus.id,
+                     15,
+                     massa.id
+             FROM paallystysilmoitus,
+                     massa
              RETURNING *),
      kulutuskerros_mp AS (
          INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
