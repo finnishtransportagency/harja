@@ -424,16 +424,19 @@ WHERE l.lupaustyyppi = 'kustannusennuste'::lupaustyyppi
 -- Tallentaa hoitovuoden lopputilanteen
 INSERT INTO lupaus_hoitovuosi_lopputilanne
        ("urakka-id", hoitovuosi_alkuvuosi, lopullinen_tavoitehinta,
-        lopulliset_kustannukset, valikatselmus_pvm, vahvistaja, vahvistettu)
+        lopulliset_kustannukset, valikatselmus_pvm, vahvistaja, vahvistettu,
+        kustannusennuste_keskiarvo_pisteet)
 VALUES (:urakka-id, :hoitovuosi-alkuvuosi, :lopullinen-tavoitehinta,
-        :lopulliset-kustannukset, :valikatselmus-pvm, :vahvistaja, NOW())
+        :lopulliset-kustannukset, :valikatselmus-pvm, :vahvistaja, NOW(),
+        :kustannusennuste-keskiarvo-pisteet)
     ON CONFLICT ("urakka-id", hoitovuosi_alkuvuosi)
     DO UPDATE SET
-        lopullinen_tavoitehinta = EXCLUDED.lopullinen_tavoitehinta,
-        lopulliset_kustannukset = EXCLUDED.lopulliset_kustannukset,
-        valikatselmus_pvm = EXCLUDED.valikatselmus_pvm,
-        vahvistaja = EXCLUDED.vahvistaja,
-        vahvistettu = NOW();
+                  lopullinen_tavoitehinta            = EXCLUDED.lopullinen_tavoitehinta,
+                  lopulliset_kustannukset            = EXCLUDED.lopulliset_kustannukset,
+                  valikatselmus_pvm                  = EXCLUDED.valikatselmus_pvm,
+                  vahvistaja                         = EXCLUDED.vahvistaja,
+                  vahvistettu                        = NOW(),
+                  kustannusennuste_keskiarvo_pisteet = EXCLUDED.kustannusennuste_keskiarvo_pisteet;
 
 -- name: hae-hoitovuoden-lopputilanne
 -- Hakee hoitovuoden lopputilanteen
@@ -441,7 +444,8 @@ SELECT lopullinen_tavoitehinta,
        lopulliset_kustannukset,
        valikatselmus_pvm,
        vahvistaja,
-       vahvistettu
+       vahvistettu,
+       kustannusennuste_keskiarvo_pisteet
 FROM lupaus_hoitovuosi_lopputilanne
 WHERE "urakka-id" = :urakka-id
   AND hoitovuosi_alkuvuosi = :hoitovuosi-alkuvuosi;
@@ -481,7 +485,72 @@ WHERE ke."urakka-id" = :urakka-id
 SELECT kuukausi, 
        paiva, 
        kuvaus,
-       MAKE_DATE(:hoitokauden-alkuvuosi + CASE WHEN kuukausi >= 10 THEN 0 ELSE 1 END, kuukausi, paiva) AS maarapaiva_pvm
+       (:hoitokauden-alkuvuosi + CASE WHEN kuukausi >= 10 THEN 0 ELSE 1 END)::INTEGER AS vuosi,
+       MAKE_DATE((:hoitokauden-alkuvuosi + CASE WHEN kuukausi >= 10 THEN 0 ELSE 1 END)::INTEGER, kuukausi, paiva) AS maarapaiva_pvm
 FROM lupaus_kustannusennuste_kuukausi_pisteet 
 WHERE "lupaus-id" = :lupaus-id
 ORDER BY kuukausi;
+
+-- name: hae-urakat-joilla-kustannusennuste
+-- Hakee kaikki teiden-hoito urakat joilla on kustannusennuste-lupaus (testaustyökalu)
+SELECT DISTINCT u.id AS "urakka-id",
+       u.nimi AS "urakka-nimi", 
+       u.alkupvm,
+       u.loppupvm
+FROM urakka u
+JOIN lupausryhma_urakka lu ON u.id = lu."urakka_id"
+JOIN lupausryhma r ON lu."lupausryhma_id" = r.id
+JOIN lupaus l ON r.id = l."lupausryhma-id"
+WHERE u.tyyppi = 'teiden-hoito'
+  AND u.poistettu = FALSE
+  AND l.lupaustyyppi = 'kustannusennuste'::lupaustyyppi
+ORDER BY u.nimi;
+
+-- name: hae-urakan-kaikki-kustannusennusteet-testaus
+-- Hakee kaikki kustannusennusteet hoitokaudelle testaustyökalua varten
+-- Sisältää myös pisterajat kuukauden perusteella ja laskentakaavan tiedot
+SELECT ke.id,
+       ke.maarapaiva,
+       ke.ennustettu_tavoitehinta AS "ennustettu_tavoitehinta",
+       ke.ennustetut_kustannukset AS "ennustetut_kustannukset",
+       ke.lasketut_pisteet,
+       ke.tarkkuus_prosentti,
+       (ke.maarapaiva < NOW()) AS "syotetty_ajoissa",
+       kp.pisterajat,
+       EXTRACT(MONTH FROM ke.maarapaiva) AS "kuukausi",
+       ke.laskentakaava_teksti AS "laskentakaava-teksti",
+       ke.laskentakaava_parametrit,
+       ke.laskentakaava_vaiheet
+FROM lupaus_kustannusennuste ke
+LEFT JOIN lupaus_kustannusennuste_kuukausi_pisteet kp 
+  ON ke."lupaus-id" = kp."lupaus-id"
+  AND EXTRACT(MONTH FROM ke.maarapaiva) = kp.kuukausi
+WHERE ke."urakka-id" = :urakka-id
+  AND ke.hoitovuosi = :hoitokauden-alkuvuosi
+ORDER BY ke.maarapaiva;
+
+-- name: hae-poistettavien-kustannusennusteiden-lkm
+-- Laskee kuinka monta kustannusennustetta poistetaan
+SELECT COUNT(*) AS kpl
+FROM lupaus_kustannusennuste
+WHERE "urakka-id" = :urakka-id
+  AND hoitovuosi = :hoitokauden-alkuvuosi;
+
+-- name: poista-urakan-hoitokauden-kustannusennusteet!
+-- Poistaa kaikki urakan hoitokauden kustannusennusteet (testaustyökalu)
+DELETE FROM lupaus_kustannusennuste
+WHERE "urakka-id" = :urakka-id
+  AND hoitovuosi = :hoitokauden-alkuvuosi;
+
+-- name: hae-urakan-kustannusennuste-lupaus-id
+-- single?: true
+-- Hakee urakan ensimmäisen kustannusennuste-lupauksen ID:n (testaustyökalu)
+SELECT l.id AS "lupaus-id"
+FROM lupaus l
+JOIN lupausryhma r ON l."lupausryhma-id" = r.id
+JOIN lupausryhma_urakka lu ON r.id = lu.lupausryhma_id
+WHERE lu."urakka_id" = :urakka-id
+  AND l.lupaustyyppi = 'kustannusennuste'::lupaustyyppi
+ORDER BY l.jarjestys
+LIMIT 1;
+

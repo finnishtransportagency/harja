@@ -1,8 +1,11 @@
 (ns harja.palvelin.palvelut.hallinta.lupaukset-palvelu
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+            [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
 
 (defn- hae-lupausten-linkitykset [db kayttaja]
@@ -25,6 +28,95 @@
   (log/debug "hae-urakan-lupaukset :: urakka-id " urakka-id)
   {:urakan-lupaukset (lupaus-kyselyt/hae-urakan-lupaukset db {:urakka-id urakka-id})})
 
+;; TESTAUSTYÖKALUT
+
+;; Hakee MHU-urakat joilla on kustannusennuste-lupaus
+(defn- hae-urakat-kustannusennuste-testaukseen [db kayttaja]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
+  (let [urakat (lupaus-kyselyt/hae-urakat-joilla-kustannusennuste db)]
+    {:urakat urakat}))
+
+(defn- jsonb-kentta->map
+  "Muuntaa JSONB-kentän mapiksi. Käsittelee sekä PGobject että jo valmiit mapit."
+  [kentta]
+  (cond
+    (nil? kentta) nil
+    (map? kentta) kentta  ; Jo map, palauta sellaisenaan
+    :else (konversio/jsonb->clojuremap kentta)))  ; PGobject, käytä konversiota
+
+(defn- hae-kustannusennuste-testausdata [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
+  (let [lupaus-id (lupaus-kyselyt/hae-urakan-kustannusennuste-lupaus-id
+                    db {:urakka-id urakka-id})
+        kustannusennusteet (lupaus-kyselyt/hae-urakan-kaikki-kustannusennusteet-testaus
+                             db {:urakka-id urakka-id
+                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+    (when-not lupaus-id
+      (log/warn "VAROITUS: Urakalta" urakka-id "ei löytynyt kustannusennuste-lupausta!"))
+    {:lupaus-id lupaus-id
+     :kustannusennusteet (mapv (fn [ke]
+                                 (-> ke
+                                   (update :pisterajat jsonb-kentta->map)
+                                   (update :laskentakaava_parametrit jsonb-kentta->map)
+                                   (update :laskentakaava_vaiheet jsonb-kentta->map)
+                                     ;; Normalisoi avainten nimet väliviivalle
+                                   (clojure.set/rename-keys {:laskentakaava_parametrit :laskentakaava-parametrit
+                                                             :laskentakaava_vaiheet :laskentakaava-vaiheet
+                                                             :laskentakaava_teksti :laskentakaava-teksti})))
+                           kustannusennusteet)
+     :lopputilanne (first (lupaus-kyselyt/hae-hoitovuoden-lopputilanne
+                            db {:urakka-id urakka-id
+                                :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi}))}))
+
+;; Triggeröi kustannusennuste-laskennan - kutsuu lupaus_palvelu/laske-lopullinen-kustannusennuste! joka laskee lopulliset pisteet
+(defn- triggeroi-kustannusennuste-laskenta [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi
+                                                                 toteutunut-tavoitehinta
+                                                                 toteutunut-kustannus]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lupaukset kayttaja)
+  (let [user-id (:id kayttaja)
+        valikatselmus-pvm (pvm/nyt)]
+    ;; Kutsu olemassa olevaa funktiota
+    (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+      db urakka-id hoitokauden-alkuvuosi
+      toteutunut-tavoitehinta toteutunut-kustannus
+      valikatselmus-pvm user-id)
+
+    ;; Palauta päivitetyt tiedot
+    (hae-kustannusennuste-testausdata db kayttaja
+      {:urakka-id urakka-id
+       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+
+;; Hakee kustannusennusteen määräpäivät (kuukaudet) hoitokaudelle
+(defn- hae-kustannusennuste-maarapaivat [db kayttaja {:keys [lupaus-id hoitokauden-alkuvuosi]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
+  {:maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat 
+                  db 
+                  {:lupaus-id lupaus-id
+                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})})
+
+(defn- poista-kustannusennusteet-testaukseen
+  [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi]}]
+  (log/info "Poistetaan testikustannusennusteet urakalta" urakka-id 
+            "hoitokaudelta" hoitokauden-alkuvuosi)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lupaukset kayttaja)
+  
+  ;; Ensin lasketaan kuinka monta kustannusennustetta poistetaan
+  (let [poistetut-result (lupaus-kyselyt/hae-poistettavien-kustannusennusteiden-lkm 
+                          db 
+                          {:urakka-id urakka-id
+                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        poistettu-kpl (:kpl poistetut-result)]
+    
+    ;; Sitten poistetaan ne
+    (lupaus-kyselyt/poista-urakan-hoitokauden-kustannusennusteet! 
+     db 
+     {:urakka-id urakka-id
+      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+    
+    (log/info "Poistettu" poistettu-kpl "kustannusennustetta")
+    {:onnistui true
+     :poistettu-kpl poistettu-kpl}))
+
 (defrecord LupauksetHallinta []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}] 
@@ -40,11 +132,34 @@
     (julkaise-palvelu http-palvelin :hae-urakan-lupaukset
       (fn [kayttaja tiedot]
         (hae-urakan-lupaukset db kayttaja tiedot)))
+    
+    ;; Testaustyökalut
+    (julkaise-palvelu http-palvelin :hae-urakat-kustannusennuste-testaukseen
+      (fn [kayttaja _tiedot]
+        (hae-urakat-kustannusennuste-testaukseen db kayttaja)))
+    (julkaise-palvelu http-palvelin :hae-kustannusennuste-testausdata
+      (fn [kayttaja tiedot]
+        (hae-kustannusennuste-testausdata db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hae-kustannusennuste-maarapaivat
+      (fn [kayttaja tiedot]
+        (hae-kustannusennuste-maarapaivat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :triggeroi-kustannusennuste-laskenta
+      (fn [kayttaja tiedot]
+        (triggeroi-kustannusennuste-laskenta db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :poista-kustannusennusteet-testaukseen
+      (fn [kayttaja tiedot]
+        (poista-kustannusennusteet-testaukseen db kayttaja tiedot)))
     this)
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-lupausten-linkitykset
       :hae-rivin-tunnistin-selitteet
       :hae-kategorian-urakat
-      :hae-urakan-lupaukset)
+      :hae-urakan-lupaukset
+      ;; Testaustyökalut
+      :hae-urakat-kustannusennuste-testaukseen
+      :hae-kustannusennuste-testausdata
+      :hae-kustannusennuste-maarapaivat
+      :triggeroi-kustannusennuste-laskenta
+      :poista-kustannusennusteet-testaukseen)
     this))
