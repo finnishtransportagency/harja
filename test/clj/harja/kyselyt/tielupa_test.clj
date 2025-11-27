@@ -41,6 +41,7 @@
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
    ::tielupa/urakoiden-nimet ["Oulu"]
+   ::tielupa/elinvoimakeskus 9
    ::tielupa/ely 12
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste
