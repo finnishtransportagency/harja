@@ -4,7 +4,8 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql
 
--- Luodaan hallintayksikot (ELY-keskukset)
+-- Luodaan hallintayksikot (elinvoimakeskukset ja ELY-keskukset)
+\i testidata/elinvoimakeskukset.sql
 \i testidata/elyt.sql
 
 -- Luodaan urakoitsijat
