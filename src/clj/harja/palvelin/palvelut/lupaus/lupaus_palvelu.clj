@@ -223,7 +223,10 @@
                            (assoc % 
                              :hoitovuosi-paattynyt? (:kaikki-laskettu kustannusennuste-pisteet-tila)
                              :urakan-alkuvuosi urakan-alkuvuosi
-                             :hoitovuosi-nro hoitovuosi-nro)
+                             :hoitovuosi-nro hoitovuosi-nro
+                             :lopputilanne (first (lupaus-kyselyt/hae-hoitovuoden-lopputilanne
+                                                    db {:urakka-id urakka-id
+                                                        :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi})))
                            %))
                   (mapv lupaus-domain/liita-ennuste-tai-toteuma))
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
@@ -768,27 +771,25 @@
 
     ;; Hae hoitovuoden alun tavoitehinta
     (let [hk-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-          hoitovuoden-alun-tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)]
-
-        ;; Tallenna ensin lopputilanne
-        (lupaus-kyselyt/tallenna-lopputilanne! db {:urakka-id urakka-id
-                                                   :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi
-                                                   :lopullinen-tavoitehinta toteutunut-tavoitehinta
-                                                   :lopulliset-kustannukset toteutunut-kustannus
-                                                   :valikatselmus-pvm valikatselmus-pvm
-                                                   :vahvistaja user-id})
+          hoitovuoden-alun-tavoitehinta (maarita-urakan-tavoitehinta db urakka-id hk-alkupvm)
+          ;; Atom keräämään kaikki lasketut pisteet keskiarvon laskemista varten
+          keraa-pisteet (atom [])]
 
       ;; Hae kaikki kustannusennusteet lupausten kautta
       (let [lupaukset (lupaus-kyselyt/hae-urakan-lupaukset db {:urakka-id urakka-id})
-            kustannusennuste-lupaukset (filter #(= "kustannusennuste" (:lupaustyyppi %)) lupaukset)]
+            _ (log/info "Lupaukset:" lupaukset)
+            kustannusennuste-lupaukset (filter #(= "kustannusennuste" (:lupaustyyppi %)) lupaukset)
+            _ (log/info "Kustannusennuste-lupaukset:" (count kustannusennuste-lupaukset))]
 
         ;; Käy läpi jokainen kustannusennuste-lupaus
         (doseq [lupaus kustannusennuste-lupaukset]
           (let [lupaus-id (:lupaus-id lupaus)
+                _ (log/info "Käsitellään lupaus-id:" lupaus-id)
                 kustannusennusteet (lupaus-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
                                      db {:lupaus-id lupaus-id
                                          :urakka-id urakka-id
-                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                _ (log/info "Löydettiin" (count kustannusennusteet) "kustannusennustetta")]
 
             (doseq [ke kustannusennusteet]
               (let [ennustettu-tavoitehinta (:tavoitehinta ke)
@@ -815,13 +816,16 @@
                                                (pvm/kuukausi maarapaiva)
                                                lupaus-id)]
 
+                      ;; Kerää pisteet keskiarvon laskemista varten
+                      (swap! keraa-pisteet conj lopulliset-pisteet)
+
                       ;; Päivitä lopulliset pisteet tietokantaan
                       (lupaus-kyselyt/paivita-kustannusennuste-lopulliset-pisteet!
                         db {:kustannusennuste-id kustannusennuste-id
                             :ennustettu-tavoitehinta ennustettu-tavoitehinta
                             :ennustetut-kustannukset ennustetut-kustannukset
                             :lasketut-pisteet lopulliset-pisteet
-                            :tarkkuus-prosentti (:tarkkuus-prosentti tarkkuus-tulos)
+                            :tarkkuus-prosentti (double (:tarkkuus-prosentti tarkkuus-tulos))
                             :laskentakaava-versio (:laskentakaava-versio tarkkuus-tulos)
                             :laskentakaava-teksti (:laskentakaava-teksti tarkkuus-tulos)
                             :laskentakaava-parametrit (cheshire/encode (:laskentakaava-parametrit tarkkuus-tulos))
@@ -829,7 +833,7 @@
                             :muokkaaja user-id})
 
                       (log/info (format "Päivitettiin kustannusennuste %s lopulliset pisteet: %s"
-                                  kustannusennuste-id (:pisteet lopulliset-pisteet))))
+                                  kustannusennuste-id lopulliset-pisteet)))
 
                     ;; Arvoja puuttuu - loki varoitus ja jatka seuraavaan
                     (log/error (format "Kustannusennuste %s: Päivitys ohitettiin puuttuvien arvojen takia. Puuttuvat: %s. Arvot: ennustettu-tavoitehinta=%s, ennustetut-kustannukset=%s, hoitovuoden-alun-tavoitehinta=%s"
@@ -837,10 +841,29 @@
                                 (str/join ", " puuttuvat-arvot)
                                 ennustettu-tavoitehinta
                                 ennustetut-kustannukset
-                                hoitovuoden-alun-tavoitehinta)))))))))
+                                hoitovuoden-alun-tavoitehinta)))))))
+
+        ;; Laske keskiarvo kerätyistä pisteistä
+        (let [kaikki-pisteet @keraa-pisteet
+              keskiarvo (when (seq kaikki-pisteet)
+                          (double (/ (reduce + kaikki-pisteet) (count kaikki-pisteet))))]
+
+          (log/info (format "Kustannusennusteen pisteet (yhteensä %s kpl): %s, keskiarvo: %s"
+                      (count kaikki-pisteet)
+                      kaikki-pisteet
+                      keskiarvo))
+
+          ;; Tallenna lopputilanne keskiarvon kanssa
+          (lupaus-kyselyt/tallenna-lopputilanne! db {:urakka-id urakka-id
+                                                     :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi
+                                                     :lopullinen-tavoitehinta toteutunut-tavoitehinta
+                                                     :lopulliset-kustannukset toteutunut-kustannus
+                                                     :valikatselmus-pvm valikatselmus-pvm
+                                                     :vahvistaja user-id
+                                                     :kustannusennuste-keskiarvo-pisteet keskiarvo})))
 
       (log/info (format "Lopulliset kustannusennuste pisteet laskettu urakalle %s hoitokaudelle %s"
-                  urakka-id hoitokauden-alkuvuosi))
+                  urakka-id hoitokauden-alkuvuosi)))
 
     (catch Exception e
       (log/error e (format "Virhe laskettaessa lopullisia kustannusennuste pisteitä urakalle %s: %s"
