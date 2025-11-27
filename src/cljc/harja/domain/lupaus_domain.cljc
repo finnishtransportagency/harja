@@ -119,37 +119,20 @@
     (or viimeisin-pisteet 0)))
 
 (defn kustannusennuste->toteuma
-  "Laskee kustannusennusteen toteuman kun se on mahdollista.
-   Toteuma = keskiarvo kaikista kustannusennustekuukausista joissa on lopulliset pisteet.
-   Jos ei ole pisteitä ollenkaan, palauttaa 0.
+  "Palauttaa kustannusennusteen toteuman, jos se on laskettu.
+   Toteuma haetaan suoraan tietokannasta tallennetusta keskiarvosta.
+   Keskiarvo lasketaan välikatselmuksessa kaikista kustannusennustekuukausista.
    
-   Pisteet haetaan :lasketut-pisteet avaimella, joka sisältää välikatselmuksessa
-   lasketut lopulliset pistemäärät per kuukausi.
+   Parametrit:
+   - lopputilanne: Map joka sisältää :kustannusennuste_keskiarvo_pisteet kentän
    
-   HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
-   Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
-  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt? hoitovuosi-nro urakan-alkuvuosi]}] 
-    (when hoitovuosi-paattynyt?
-      ;; Laske mikä hoitovuosi (alkuvuosi) vastaa kyseistä hoitovuosi-nroa
-      ;; Esim. urakan-alkuvuosi=2024, hoitovuosi-nro=1 -> hoitovuosi-alkuvuosi=2024
-      ;; Esim. urakan-alkuvuosi=2024, hoitovuosi-nro=2 -> hoitovuosi-alkuvuosi=2025
-      (let [hoitovuosi-alkuvuosi (+ urakan-alkuvuosi (dec hoitovuosi-nro))
-            
-            ;; Hae kaikki kuukaudet joissa on lopulliset pisteet (laskettu välikatselmuksessa)
-            ;; JA jotka kuuluvat tälle hoitovuodelle
-            kuukaudet-pisteilla (->> lupaus-kuukaudet
-                                  (filter #(get-in % [:kustannusennuste :lasketut-pisteet]))
-                                  ;; Filtteröi hoitovuoden perusteella (ei hoitovuosi-nro)
-                                  (filter #(= hoitovuosi-alkuvuosi
-                                              (get-in % [:kustannusennuste :hoitovuosi])))
-                                  (map #(get-in % [:kustannusennuste :lasketut-pisteet])))]
-        (if (seq kuukaudet-pisteilla)
-          ;; Laske keskiarvo vain niistä kuukausista joissa on pisteitä
-          (let [keskiarvo (/ (reduce + kuukaudet-pisteilla) (count kuukaudet-pisteilla))]
-            #?(:clj (Math/round (double keskiarvo))
-               :cljs (js/Math.round keskiarvo)))
-          ;; Jos ei ole pisteitä ollenkaan, palauta 0
-          0))))
+   Palauttaa:
+   - Pyöristetyn keskiarvon tai nil jos lopputilannetta ei ole."
+  [{:keys [lopputilanne]}]
+  (when lopputilanne
+    (when-let [keskiarvo (:kustannusennuste_keskiarvo_pisteet lopputilanne)]
+      #?(:clj (Math/round (double keskiarvo))
+         :cljs (js/Math.round keskiarvo)))))
 
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
