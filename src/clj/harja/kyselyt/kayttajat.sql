@@ -32,6 +32,11 @@ WHERE id = :id;
 SELECT id,nimi,tyyppi FROM organisaatio
  WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
 
+-- name: hae-elinvoimakeskus-numerolla-tielupaa-varten
+-- Hakee Elinvoimakeskuksen organisaation numeron perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elinvoimakeskusnumero = :elinvoimakeskusnumero;
+
 -- name: hae-ely-numerolla-tielupaa-varten
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 -- Tielupasanomissa tulee enemmän Ely-arvoja kuin mitä Harjassa muuten käytetään.
