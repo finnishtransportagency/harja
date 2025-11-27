@@ -12,3 +12,9 @@ ALTER TABLE tielupa
 ALTER TABLE organisaatio
     ADD COLUMN elinvoimakeskusnumero INTEGER;
 COMMENT ON COLUMN organisaatio.elinvoimakeskusnumero IS E'Elinvoimakeskusten lyhenteissä on päällekkäisyyttä elyjen kanssa. Erillisen elynumero- ja elinvoimanumerosarakkeen avulla voidaan tunnistaa hallintoyksiköt riittävästi.';
+
+-- Lisätään samalla urakka-tauluun elinvoimakeskussarake, että urakka voidaan kytkeä niihinkin.
+-- Urakka kytkeytyy elyyn hallintoyksikko-sarakkeesta.
+ALTER TABLE urakka
+    ADD COLUMN elinvoimakeskus INTEGER REFERENCES organisaatio(id);
+
