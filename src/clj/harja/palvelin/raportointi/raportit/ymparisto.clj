@@ -108,13 +108,13 @@
 (defn- materiaalin-nimi-ja-selite [nimi]
   (case nimi
     "Talvisuola, rakeinen NaCl" {:arvo "Talvisuola, rakeinen" :selite "NaCl"}
+    "Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta" {:arvo "Talvisuola" :selite "päällystettyjen teiden pölynsidonta"}
     "Talvisuolaliuos CaCl2" {:arvo "Talvisuolaliuos" :selite "CaCl2"}
     "Talvisuolaliuos NaCl" {:arvo "Talvisuolaliuos" :selite "NaCl"}
     "Talvisuolat yhteensä" {:arvo "Talvisuolat yhteensä" :selite "100% kuivatonnia"}
     "Formiaatit yhteensä" {:arvo "Formiaatit yhteensä" :selite "50% kuivatonnia"}
     "Kesäsuola sorateiden pölynsidonta" {:arvo "Kesäsuola" :selite "sorateiden pölynsidonta"}
     "Kesäsuola sorateiden kevätkunnostus" {:arvo "Kesäsuola" :selite "sorateiden kevätkunnostus"}
-    "Kesäsuola päällystettyjen teiden pölynsidonta" {:arvo "Kesäsuola" :selite "päällystettyjen teiden pölynsidonta"}
     "Kesäsuola yhteensä" {:arvo "Kesäsuola yhteensä" :selite "77% kuivatonnia"}
     "Murskeet yhteensä" {:arvo "Murskeet yhteensä" :selite "tonnia"}
 

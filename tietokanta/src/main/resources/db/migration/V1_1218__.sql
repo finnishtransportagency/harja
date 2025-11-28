@@ -36,3 +36,40 @@ SET "maaramitattava?"   = true,
     muokattu            = current_timestamp,
     muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi =  'Sorastus'; -- Sorastuksella ei ole yksilöivää tunnistetta 
+
+
+
+
+UPDATE materiaalikoodi 
+SET nimi  = 'Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta',
+    materiaalityyppi = (SELECT materiaalityyppi FROM materiaaliluokka WHERE nimi = 'Talvisuola'),
+    materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola')
+WHERE nimi = 'Kesäsuola päällystettyjen teiden pölynsidonta';
+
+
+UPDATE tehtava
+SET nimi                = 'Kesäsuola (CaCl2, materiaali) (2018)',
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+WHERE nimi =  'Kesäsuola (CaCl2, materiaali)';
+
+
+UPDATE tehtava
+SET nimi                = 'Kesäsuola (CaCl2, materiaali)',
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+WHERE nimi = 'Sorateiden pölynsidonta (materiaali)';
+
+
+UPDATE tehtava
+SET nimi                = 'Liukkaudentorjunta suolaamalla (materiaali)',
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+WHERE nimi = 'Suolaus';
+
+
+UPDATE tehtava
+SET materiaalikoodi_id  = NULL,
+    muokattu            = current_timestamp,
+    muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+WHERE nimi = 'Kesäsuola (CaCl2, materiaali)';

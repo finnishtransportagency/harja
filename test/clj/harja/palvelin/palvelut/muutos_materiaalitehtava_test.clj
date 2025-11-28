@@ -69,12 +69,12 @@
 
 (deftest materiaalien-kohdistus-tehtaviin-materiaaliluokan-kautta
   (let [maaramuutokset (hae-maaramuutos-alkutiedot)
-        suolaus (filter #(= (:tehtava %) "Suolaus") maaramuutokset)
+        suolaus (filter #(= (:tehtava %) "Liukkaudentorjunta suolaamalla (materiaali)") maaramuutokset)
         suolaus-toteumat-yhteensa (-> suolaus first :maara)
 
         ;; =========
         ;; Suolauksen alla ei ole vielä toteumia
-        _ (is (= suolaus-toteumat-yhteensa 0.0M) "Suolaus toteumia ei ole")
+        _ (is (= suolaus-toteumat-yhteensa 0.0M) "Liukkaudentorjunta suolaamalla (materiaali) toteumia ei ole")
 
         talvisuola-NaCl (first
                           (q (format "SELECT * FROM materiaalikoodi WHERE nimi = '%s';"
@@ -137,7 +137,7 @@
         _ (is (true? vastaus) "Suolan tallennus onnistui")
 
         maaramuutokset (hae-maaramuutos-alkutiedot)
-        suolaus (filter #(= (:tehtava %) "Suolaus") maaramuutokset)
+        suolaus (filter #(= (:tehtava %) "Liukkaudentorjunta suolaamalla (materiaali)") maaramuutokset)
         suolaus-toteumat-yhteensa (-> suolaus first :maara)
 
         ;; =========

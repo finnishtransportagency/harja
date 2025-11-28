@@ -607,7 +607,7 @@ SELECT
     -- Määrämuutos = Toteutunut määrä - suunniteltu määrä
     COALESCE(toteutunut_maara, 0) - COALESCE(suunniteltu_maara, 0) AS maaramuutos,
     tr_tunniste,
-    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola, -- = 'Suolaus' - onko kyseessä talvisuola? 
+    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola, -- = 'Liukkaudentorjunta suolaamalla (materiaali)' - onko kyseessä talvisuola? 
     talvisuola_kerroin,
     CASE
         -- ---------------------------------------------------------
