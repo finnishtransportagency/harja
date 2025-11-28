@@ -7,6 +7,7 @@
    [com.stuartsierra.component :as component]
    [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
    [harja.domain.lupaus-domain :as lupaus-domain]
+   [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.roolit :as roolit]
    [harja.id :refer [id-olemassa?]]
@@ -16,6 +17,7 @@
              [budjettisuunnittelu :as budjetti-q]
              [valikatselmus :as valikatselmus-q]
              [paatos-kyselyt :as paatos-kyselyt]]
+   [harja.kyselyt.lupaus.kustannusennuste-kyselyt :as kustannusennuste-kyselyt]
    [harja.kyselyt.kommentit :as kommentit]
    [harja.kyselyt.konversio :as konversio]
    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu
@@ -112,7 +114,7 @@
   "Tarkistaa onko kaikille kustannusennusteille laskettu lopulliset pisteet"
   [db urakka-id hoitokauden-alkuvuosi]
   (when (and urakka-id hoitokauden-alkuvuosi)
-    (let [tulos (first (lupaus-kyselyt/onko-kustannusennuste-pisteet-laskettu
+    (let [tulos (first (kustannusennuste-kyselyt/onko-kustannusennuste-pisteet-laskettu
                          db {:urakka-id urakka-id
                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
       {:kaikki-laskettu (:kaikki_laskettu tulos)
@@ -124,7 +126,7 @@
   [db lupaus-id urakka-id hoitokauden-alkuvuosi]
   (when (and lupaus-id urakka-id hoitokauden-alkuvuosi)
     ;; Haetaan kaikki kustannusennusteet kerralla
-    (lupaus-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
+    (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
       db {:lupaus-id lupaus-id
           :urakka-id urakka-id
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
@@ -138,7 +140,7 @@
         (do
           (log/warn "Kustannusennuste-lupausta ei löytynyt urakalle" urakka-id)
           {})
-        (let [maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat
+        (let [maarapaivat (kustannusennuste-kyselyt/hae-kustannusennuste-maarapaivat
                             db {:lupaus-id (:lupaus-id kustannusennuste-lupaus)
                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
 
@@ -396,21 +398,21 @@
    (let [maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15)
          syotetty-pvm (pvm/nyt)
          
-         pisterajat-offset-tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-offset
+         pisterajat-offset-tulos (kustannusennuste-kyselyt/hae-kustannusennuste-kuukausi-offset
                                    db {:lupaus-id lupaus-id
                                        :kuukausi kuukausi}) 
          pisteytys-offset (or (:pisteytys-hoitovuosi-offset pisterajat-offset-tulos) 0)
-         hoitovuosi (lupaus-domain/laske-pisteytyshoitovuosi vuosi kuukausi pisteytys-offset)
+         hoitovuosi (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi kuukausi pisteytys-offset)
     
         ;; Tarkista onko kustannusennuste jo olemassa
-         olemassa-oleva-id (lupaus-kyselyt/hae-kustannusennuste-id
+         olemassa-oleva-id (kustannusennuste-kyselyt/hae-kustannusennuste-id
                              db {:lupaus-id lupaus-id
                                  :urakka-id urakka-id
                                  :maarapaiva maarapaiva})]
 
      (if olemassa-oleva-id
       ;; Päivitä olemassa oleva
-       (lupaus-kyselyt/paivita-kustannusennuste<! db
+       (kustannusennuste-kyselyt/paivita-kustannusennuste<! db
          {:id olemassa-oleva-id
           :tavoitehinta (:tavoitehinta kustannusennuste)
           :toteutuneet-kustannukset (:toteutuneet-kustannukset kustannusennuste)
@@ -421,7 +423,7 @@
           :kayttaja (:id user)})
 
       ;; Luo uusi
-       (lupaus-kyselyt/lisaa-kustannusennuste<! db
+       (kustannusennuste-kyselyt/lisaa-kustannusennuste<! db
          {:lupaus-id lupaus-id
           :urakka-id urakka-id
           :maarapaiva maarapaiva
@@ -434,7 +436,7 @@
           :kayttaja (:id user)}))
 
     ;; Palauta kustannusennusteen tiedot
-   (lupaus-kyselyt/hae-kustannusennuste db
+   (kustannusennuste-kyselyt/hae-kustannusennuste db
      {:lupaus-id lupaus-id
       :urakka-id urakka-id
       :maarapaiva maarapaiva})))
@@ -661,7 +663,7 @@
          ;; Koko urakkakauden sitoutumispisteisiin vaikuttaa onko urakalle tehty yhtään välitkaselmusta
          valikatselmus-tehty-urakalle? (valikatselmus-tehty-urakalle? db urakka-id vuosi)
          ;; Hae välikatselmuksen vahvistetut kustannusennusteet
-         vahvistetut-kustannusennusteet (lupaus-kyselyt/hae-valikatselmuksen-vahvistetut-kustannusennusteet db {:urakka-id urakka-id
+         vahvistetut-kustannusennusteet (kustannusennuste-kyselyt/hae-valikatselmuksen-vahvistetut-kustannusennusteet db {:urakka-id urakka-id
                                                                                                               :hoitokauden-alkuvuosi vuosi})
          lopulliset-pisteet (lupaus-domain/kokoa-vastauspisteet kayttaja kuukausipisteet urakka-id
                               valittu-hoitokausi valikatselmus-tehty-hoitokaudelle?
@@ -727,7 +729,7 @@
 (defn- hae-kustannusennuste-pisterajat
   "Hakee kustannusennusteen pisterajat tietokannasta ja konvertoi JSONB:n Clojure-dataksi"
   [db lupaus-id kuukausi]
-  (let [tulos (lupaus-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
+  (let [tulos (kustannusennuste-kyselyt/hae-kustannusennuste-kuukausi-pisterajat
                 db
                 {:lupaus-id lupaus-id
                  :kuukausi kuukausi})]
@@ -785,7 +787,7 @@
         (doseq [lupaus kustannusennuste-lupaukset]
           (let [lupaus-id (:lupaus-id lupaus)
                 _ (log/info "Käsitellään lupaus-id:" lupaus-id)
-                kustannusennusteet (lupaus-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
+                kustannusennusteet (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
                                      db {:lupaus-id lupaus-id
                                          :urakka-id urakka-id
                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
@@ -804,7 +806,7 @@
                 ;; Laske lopulliset pisteet domain-logiikalla
                 (if (empty? puuttuvat-arvot)
                     ;; Kaikki arvot löytyvät - suorita päivitys
-                    (let [tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus
+                    (let [tarkkuus-tulos (kustannusennuste-domain/laske-kustannusennusteen-tarkkuus
                                            {:ennustettu-tavoitehinta ennustettu-tavoitehinta
                                             :ennustettu-kustannus ennustetut-kustannukset
                                             :toteutunut-tavoitehinta toteutunut-tavoitehinta
@@ -820,7 +822,7 @@
                       (swap! keraa-pisteet conj lopulliset-pisteet)
 
                       ;; Päivitä lopulliset pisteet tietokantaan
-                      (lupaus-kyselyt/paivita-kustannusennuste-lopulliset-pisteet!
+                      (kustannusennuste-kyselyt/paivita-kustannusennuste-lopulliset-pisteet!
                         db {:kustannusennuste-id kustannusennuste-id
                             :ennustettu-tavoitehinta ennustettu-tavoitehinta
                             :ennustetut-kustannukset ennustetut-kustannukset

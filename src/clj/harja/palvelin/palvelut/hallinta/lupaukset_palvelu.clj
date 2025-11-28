@@ -1,12 +1,14 @@
 (ns harja.palvelin.palvelut.hallinta.lupaukset-palvelu
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+            [harja.kyselyt.lupaus.kustannusennuste-kyselyt :as kustannusennuste-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.set]))
 
 (defn- hae-lupausten-linkitykset [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
@@ -33,7 +35,7 @@
 ;; Hakee MHU-urakat joilla on kustannusennuste-lupaus
 (defn- hae-urakat-kustannusennuste-testaukseen [db kayttaja]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
-  (let [urakat (lupaus-kyselyt/hae-urakat-joilla-kustannusennuste db)]
+  (let [urakat (kustannusennuste-kyselyt/hae-urakat-joilla-kustannusennuste db)]
     {:urakat urakat}))
 
 (defn- jsonb-kentta->map
@@ -46,9 +48,9 @@
 
 (defn- hae-kustannusennuste-testausdata [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
-  (let [lupaus-id (lupaus-kyselyt/hae-urakan-kustannusennuste-lupaus-id
+  (let [lupaus-id (kustannusennuste-kyselyt/hae-urakan-kustannusennuste-lupaus-id
                     db {:urakka-id urakka-id})
-        kustannusennusteet (lupaus-kyselyt/hae-urakan-kaikki-kustannusennusteet-testaus
+        kustannusennusteet (kustannusennuste-kyselyt/hae-urakan-kaikki-kustannusennusteet-testaus
                              db {:urakka-id urakka-id
                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
     (when-not lupaus-id
@@ -89,7 +91,7 @@
 ;; Hakee kustannusennusteen määräpäivät (kuukaudet) hoitokaudelle
 (defn- hae-kustannusennuste-maarapaivat [db kayttaja {:keys [lupaus-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
-  {:maarapaivat (lupaus-kyselyt/hae-kustannusennuste-maarapaivat 
+  {:maarapaivat (kustannusennuste-kyselyt/hae-kustannusennuste-maarapaivat 
                   db 
                   {:lupaus-id lupaus-id
                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})})
@@ -101,14 +103,14 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lupaukset kayttaja)
   
   ;; Ensin lasketaan kuinka monta kustannusennustetta poistetaan
-  (let [poistetut-result (lupaus-kyselyt/hae-poistettavien-kustannusennusteiden-lkm 
+  (let [poistetut-result (kustannusennuste-kyselyt/hae-poistettavien-kustannusennusteiden-lkm 
                           db 
                           {:urakka-id urakka-id
                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         poistettu-kpl (:kpl poistetut-result)]
     
     ;; Sitten poistetaan ne
-    (lupaus-kyselyt/poista-urakan-hoitokauden-kustannusennusteet! 
+    (kustannusennuste-kyselyt/poista-urakan-hoitokauden-kustannusennusteet! 
      db 
      {:urakka-id urakka-id
       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
