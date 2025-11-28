@@ -1,6 +1,58 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
+\i testidata/__Toimenpide_Kopio_01.sql -- Älä  vaihda järjestystä 
+\i testidata/__Materiaaliluokka_Kopio_01.sql
+\i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
+\i testidata/__Tehtavaryhma_Kopio_01.sql
+\i testidata/__Materiaalikoodi_Kopio_01.sql
+\i testidata/__Tehtava_Kopio_01.sql
+\i testidata/__Rahavaraus_Kopio_01.sql
+
+-- Synkkaa sequenssit, koska ladattiin datat prodin id:illä
+SELECT setval(
+  pg_get_serial_sequence('toimenpide', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM toimenpide)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtava', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtava)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtavaryhma', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtavaryhma)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtavaryhmaotsikko', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtavaryhmaotsikko)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('materiaaliluokka', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM materiaaliluokka)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('materiaalikoodi', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM materiaalikoodi)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('rahavaraus', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM rahavaraus)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('rahavaraus_tehtava', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM rahavaraus_tehtava)
+);
+
+
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql
 
@@ -201,9 +253,6 @@ SELECT paivita_pohjavesialueet();
 
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
-
--- Kulujen muita tarpeita
-\i testidata/kulut/kulutarpeita.sql
 
 -- Tilaajan-konsultti organisaatio
 \i testidata/tilaajan-konsultit.sql
