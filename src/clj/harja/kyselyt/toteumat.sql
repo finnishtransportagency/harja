@@ -450,35 +450,37 @@ WITH osa_toteumat AS
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi),
-mhu_muutos_tehtava_maara AS
-    (SELECT SUM(maaramuutos)
-     FROM mhu_muutos_tehtava_ja_maaraluetto mmhm
-        LEFT JOIN tehtava t ON t.id = mmhm.tehtava
-            AND
-     WHERE mmhm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi AND t. )
-SELECT tk.id                                     AS toimenpidekoodi_id,
-       o.otsikko                                 AS toimenpide,
-       tk.nimi                                   AS tehtava,
-       SUM(ot.maara)                             AS maara,
-       SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.maara)                             AS suunniteltu_maara,
-       tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
-       tk.suunnitteluyksikko                     AS yk,
+     mhu_muutos_tehtava_maara_luettelo AS (SELECT tehtava,
+                                                  SUM(maaramuutos) AS maaramuutossumma
+                                           FROM mhu_muutos_tehtava_ja_maaraluettelo
+                                           WHERE hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                                           GROUP BY tehtava)
+SELECT tk.id                                   AS toimenpidekoodi_id,
+       o.otsikko                               AS toimenpide,
+       tk.nimi                                 AS tehtava,
+       SUM(ot.maara)                           AS maara,
+       SUM(ot.materiaalimaara)                 AS materiaalimaara,
+       SUM(ut.maara)                           AS suunniteltu_maara,
+       tk.kasin_lisattava_maara                AS kasin_lisattava_maara,
+       tk.suunnitteluyksikko                   AS yk,
+       mmtml.maaramuutossumma + SUM(ut.maara)  AS muutossumma,
        CASE
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
-           ELSE 'kokonaishintainen' END          AS tyyppi
-
+           ELSE 'kokonaishintainen'
+           END                  AS tyyppi
 FROM tehtava tk
-     -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
-     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
-     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     JOIN urakka u on u.id = :urakka
-WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-      (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+         -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+         JOIN tehtavaryhmaotsikko o
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+         LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+         LEFT JOIN mhu_muutos_tehtava_maara_luettelo mmtml ON mmtml.tehtava = tk.id
+         JOIN urakka u on u.id = :urakka
+WHERE                          -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -491,7 +493,7 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  'e32341fc-775a-490a-8eab-c98b8849f968',
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi, mmtml.maaramuutossumma
 ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat

@@ -107,7 +107,7 @@
                                         kasin-lisattava? (:kasin_lisattava_maara (first (second rivi)))
                                         toteutunut-maara (reduce big/plus (big/->big 0)
                                                            (keep #(big/->big (or (:materiaalimaara %) (:maara %) 0)) (second rivi)))
-                                        suunniteltu-maara (big/->big (or (:suunniteltu_maara (first (second rivi))) 0))
+                                        suunniteltu-maara (big/->big (or (:muutossumma (first (second rivi))) 0))
                                         fontin-vari (if (big/gt toteutunut-maara suunniteltu-maara)
                                                       "#DD0000" ;red
                                                       "#191919") ;gray25

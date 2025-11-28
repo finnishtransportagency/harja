@@ -15,6 +15,7 @@ WITH rahavaraustehtava AS
       AND mm.poistettu IS NOT TRUE
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
+       ut.maara + (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) AS laskettu_maara,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, ut.maara as tarjous_maara,
        (SELECT array_agg(row(id, ut.maara, maaramuutos, (ut.maara+maaramuutos), tehtavaid, voimassa_alkaen, syy))
         FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutokset,
