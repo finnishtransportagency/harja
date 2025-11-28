@@ -1,13 +1,11 @@
 -- Lisää elivoimakeskustiedolle oma sarake tielupatauluun.
 -- Jatkossa ely- ja elinvoimakeskus-sarakkeet voidaan ehkä yhdistää yhdeksi, organisaatio.id-tauluun
 -- viittaavaksi hallintoyksikko-sarakkeeksi. Siirtymävaiheessa rajapinta vastaanottaa tiedon
--- molemmista organisaatioista.
+-- molemmista organisaatioista. Ely ei voi enää olla pakollinen tielupataulussa, koska tieto jää vähitellen
+-- pois kokonaan.
 ALTER TABLE tielupa
-ADD COLUMN elinvoimakeskus INTEGER REFERENCES organisaatio(id);
-
--- Ely ei voi enää olla pakollinen tielupataulussa.
-ALTER TABLE tielupa
-    ALTER COLUMN ely DROP NOT NULL;
+ADD COLUMN elinvoimakeskus INTEGER REFERENCES organisaatio(id),
+ALTER COLUMN ely DROP NOT NULL;
 
 ALTER TABLE organisaatio
     ADD COLUMN elinvoimakeskusnumero INTEGER;
