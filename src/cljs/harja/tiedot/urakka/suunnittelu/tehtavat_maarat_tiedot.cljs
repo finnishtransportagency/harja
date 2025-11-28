@@ -44,10 +44,12 @@
 (defn filtteroi-tehtavat
   "Palauttaa tehtavat, joiden nimi sisältää hakuehdon (case insensitive)."
   [hakuehto tehtavat]
-  (filter (fn [tehtava]
-            (str/includes?
-              (str/lower-case (:nimi tehtava))
-              (str/lower-case hakuehto)))
+  (if hakuehto
+    (filter (fn [tehtava]
+              (str/includes?
+                (str/lower-case (:nimi tehtava))
+                (str/lower-case hakuehto)))
+      tehtavat)
     tehtavat))
 
 (extend-protocol tuck/Event
@@ -87,10 +89,11 @@
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
+    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
 
     (-> app
       (assoc :tallennus-kaynnissa? false)
+      (assoc :tallennustila? false)
       (assoc :tallentamattomia-muutoksia? false)
       (assoc :tehtavat-ja-maarat (filtteroi-tehtavat (:haku app) (:tehtavat vastaus)))
       (assoc :kaikki-tehtavat (:tehtavat vastaus))
@@ -137,7 +140,9 @@
   PeruutaTallennus
   (process-event [_ app]
     (hae-tehtavat-ja-maarat nil)
-    (assoc app :tallennustila? (not (:tallennustila? app))))
+    (-> app
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tallennustila? (not (:tallennustila? app)))))
 
   AvaaRivi
   (process-event [{valiotsikko :valiotsikko} app]

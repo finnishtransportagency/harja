@@ -577,20 +577,7 @@ VALUES ('yllapidon_sakko'::SANKTIOLAJI, 1500, '2017-01-5 06:06.37', NULL,
                 -- 3, Ylläpidon sakko
           WHERE koodi = 3), TRUE, 2);
 
-INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja,
-                            luotu, muokkaaja, muokattu, poistettu, aika, kasittelyaika, selvitys_pyydetty,
-                            selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys,
-                            sijainti, tr_alkuetaisyys, ulkoinen_id, lahde, yllapitokohde, "sisaltaa-poikkeamaraportin?")
-VALUES (NULL, 'tilaaja', 'kommentit', NULL, 'sanktio', 'Rikkuri', NULL,
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), '2022-06-27 08:42:19.598631',
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), '2022-06-27 08:42:19.598631', FALSE,
-        '2022-06-27 08:42:04.000000', '2022-06-27 08:42:06.000000', FALSE, FALSE,
-        (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka'), 'kohdistamaton sanktio', NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, 'harja-ui', NULL, FALSE);
-INSERT INTO sanktio (maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, muokattu,
-                     muokkaaja, luotu, luoja, ulkoinen_id, vakiofraasi, sakkoryhma, poistettu)
-VALUES (1300, '2022-06-27', NULL, (SELECT id FROM laatupoikkeama WHERE kuvaus = 'kohdistamaton sanktio'), 97, 4, TRUE,
-        NULL, NULL, '2022-06-27 08:42:19.598631', 3, NULL, NULL, 'yllapidon_sakko', FALSE);
+
 
 -----------------------------------------
 -- Vesiväylät
