@@ -5,6 +5,7 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
 (defn jarjestelma-fixture [testit]
@@ -844,7 +845,7 @@
                       :toteutunut-tavoitehinta 1000000M
                       :toteutunut-kustannus 950000M
                       :hoitovuoden-alun-tavoitehinta 1200000M}
-            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)]
+            tarkkuus-tulos (kustannusennuste-domain/laske-kustannusennusteen-tarkkuus syotteet)]
 
         (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
         (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")))))
@@ -1407,23 +1408,596 @@
           elokuu 8]
       
       ;; Lokakuu (offset=0) - menee omalle HK:lle
-      (let [tulos (lupaus-domain/laske-pisteytyshoitovuosi vuosi lokakuu 0)]
+      (let [tulos (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi lokakuu 0)]
         (is (= 2024 tulos) "Lokakuu 2024 offset=0 -> HK 2024-2025"))
       
       ;; Elokuu (offset=1) - menee seuraavalle HK:lle  
-      (let [tulos (lupaus-domain/laske-pisteytyshoitovuosi vuosi elokuu 1)]
+      (let [tulos (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi elokuu 1)]
         (is (= 2025 tulos) "Elokuu 2024 offset=1 -> HK 2025-2026"))))
     
   
   (testing "Offset-logiikka eri vuosilla"
     ;; Testaa, että offset toimii johdonmukaisesti eri kalenterivuosilla
     (let [;; Lokakuu eri vuosina
-          hk-2021-offset-0 (lupaus-domain/laske-pisteytyshoitovuosi 2021 10 0)
-          hk-2021-offset-1 (lupaus-domain/laske-pisteytyshoitovuosi 2021 10 1)
-          hk-2022-offset-0 (lupaus-domain/laske-pisteytyshoitovuosi 2022 10 0)
-          hk-2022-offset-1 (lupaus-domain/laske-pisteytyshoitovuosi 2022 10 1)]
+          hk-2021-offset-0 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2021 10 0)
+          hk-2021-offset-1 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2021 10 1)
+          hk-2022-offset-0 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2022 10 0)
+          hk-2022-offset-1 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2022 10 1)]
       
       (is (= 2021 hk-2021-offset-0) "Loka 2021 + offset 0 = HK 2021")
       (is (= 2022 hk-2021-offset-1) "Loka 2021 + offset 1 = HK 2022")
       (is (= 2022 hk-2022-offset-0) "Loka 2022 + offset 0 = HK 2022")
       (is (= 2023 hk-2022-offset-1) "Loka 2022 + offset 1 = HK 2023"))))
+
+
+;; Testit hae-perustiedot funktiolle
+(deftest hae-perustiedot-test
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        ;; Hoitokausi 2015-2016 (urakan toinen hoitovuosi)
+        valittu-hoitokausi [(pvm/luo-pvm 2015 9 1) (pvm/luo-pvm 2016 8 31)]
+        perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
+    
+    (testing "Palauttaa kaikki vaaditut kentät"
+      (is (contains? perustiedot :urakan-tiedot) "Sisältää :urakan-tiedot")
+      (is (contains? perustiedot :urakan-alkupvm) "Sisältää :urakan-alkupvm")
+      (is (contains? perustiedot :urakan-alkuvuosi) "Sisältää :urakan-alkuvuosi")
+      (is (contains? perustiedot :hoitokauden-alkuvuosi) "Sisältää :hoitokauden-alkuvuosi")
+      (is (contains? perustiedot :hoitovuosi-nro) "Sisältää :hoitovuosi-nro")
+      (is (contains? perustiedot :hk-alkupvm) "Sisältää :hk-alkupvm")
+      (is (contains? perustiedot :hk-loppupvm) "Sisältää :hk-loppupvm"))
+    
+    (testing "Urakan tiedot haetaan oikein"
+      (is (= urakka-id (:id (:urakan-tiedot perustiedot))) "Urakan ID täsmää")
+      (is (inst? (:alkupvm (:urakan-tiedot perustiedot))) "Alkupvm on instant")
+      (is (string? (:nimi (:urakan-tiedot perustiedot))) "Urakalla on nimi"))
+    
+    (testing "Urakan alkupäivämäärä ja -vuosi lasketaan oikein"
+      (is (inst? (:urakan-alkupvm perustiedot)) "Urakan alkupvm on instant")
+      (is (number? (:urakan-alkuvuosi perustiedot)) "Urakan alkuvuosi on numero")
+      (is (= 2014 (:urakan-alkuvuosi perustiedot)) "Oulun alueurakka alkoi 2014"))
+    
+    (testing "Hoitokauden alkuvuosi lasketaan oikein"
+      (is (= 2015 (:hoitokauden-alkuvuosi perustiedot)) "Hoitokauden alkuvuosi on 2015"))
+    
+    (testing "Hoitovuosi-nro lasketaan oikein"
+      (is (number? (:hoitovuosi-nro perustiedot)) "Hoitovuosi-nro on numero")
+      (is (pos? (:hoitovuosi-nro perustiedot)) "Hoitovuosi-nro on positiivinen")
+      ;; Urakka alkoi lokakuussa 2014, joten hoitokausi 2015-2016 on toinen hoitovuosi
+      (is (= 2 (:hoitovuosi-nro perustiedot)) "2015-2016 on toinen hoitovuosi"))
+    
+    (testing "Päivämäärät säilyvät"
+      (is (= (first valittu-hoitokausi) (:hk-alkupvm perustiedot)) "Hoitokauden alkupvm säilyy")
+      (is (= (second valittu-hoitokausi) (:hk-loppupvm perustiedot)) "Hoitokauden loppupvm säilyy"))))
+
+(deftest hae-perustiedot-eri-hoitokausilla-test
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
+    
+    (testing "Ensimmäinen hoitovuosi 2014-2015"
+      (let [valittu-hoitokausi [(pvm/luo-pvm 2014 9 1) (pvm/luo-pvm 2015 8 31)]
+            perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
+        (is (= 2014 (:hoitokauden-alkuvuosi perustiedot)))
+        (is (= 1 (:hoitovuosi-nro perustiedot)) "Ensimmäinen hoitovuosi")))
+    
+    (testing "Kolmas hoitovuosi 2016-2017"
+      (let [valittu-hoitokausi [(pvm/luo-pvm 2016 9 1) (pvm/luo-pvm 2017 8 31)]
+            perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
+        (is (= 2016 (:hoitokauden-alkuvuosi perustiedot)))
+        (is (= 3 (:hoitovuosi-nro perustiedot)) "Kolmas hoitovuosi")))))
+
+(deftest hae-perustiedot-validointi-test
+  (testing "Preconditions validoivat parametrit"
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/hae-perustiedot ds "ei-numero" [(pvm/nyt) (pvm/nyt)]))
+        "Urakka-id täytyy olla numero")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/hae-perustiedot ds 1 "ei-vektori"))
+        "Valittu-hoitokausi täytyy olla vektori")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/hae-perustiedot ds 1 [(pvm/nyt)]))
+        "Valittu-hoitokausi täytyy sisältää 2 päivämäärää")))
+
+;; Testit ylikirjoita-hoitovuosikohtaiset-arvot funktiolle
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-test
+  (let [;; Mock vastaus ilman erikoisarvoja
+        vastaus [{:lupaus-id 1 :lupaustyyppi "yksittainen" :otsikko "Lupaus 1"}
+                 {:lupaus-id 2 :lupaustyyppi "kustannusennuste" :otsikko "Lupaus 2"}
+                 {:lupaus-id 3 :lupaustyyppi "monivalinta" :otsikko "Lupaus 3"}]
+        hoitovuosi-nro 2
+        tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
+    
+    (testing "Palauttaa vektorin"
+      (is (vector? tulos) "Palauttaa vektorin"))
+    
+    (testing "Vastaukset säilyvät"
+      (is (= 3 (count tulos)) "Kaikki vastaukset säilyvät")
+      (is (every? :lupaus-id tulos) "Lupaus-id säilyy kaikilla"))
+    
+    (testing "Alkuperäiset kentät säilyvät"
+      (is (= "yksittainen" (:lupaustyyppi (first tulos))))
+      (is (= "Lupaus 1" (:otsikko (first tulos)))))))
+
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-tyhja-vastaus-test
+  (testing "Tyhjä vastaus käsitellään oikein"
+    (let [vastaus []
+          hoitovuosi-nro 1
+          tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
+      
+      (is (= [] tulos) "Tyhjä vastaus palauttaa tyhjän listan"))))
+
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-nil-hoitovuosi-test
+  (testing "Nil hoitovuosi-nro käsitellään oikein"
+    (let [vastaus [{:lupaus-id 1 :lupaustyyppi "yksittainen"}]
+          hoitovuosi-nro nil
+          tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
+      
+      (is (= 1 (count tulos)) "Vastaus käsitellään vaikka hoitovuosi-nro on nil"))))
+
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-validointi-testvalidointi-test
+  (testing "Preconditions validoivat parametrit"
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds "ei-collection" 1))
+        "Vastaus täytyy olla collection")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds [{:lupaus-id 1}] "ei-numero"))
+        "Hoitovuosi-nro täytyy olla numero tai nil")))
+
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-kentat-ylikirjoitetaan-test
+  (testing "Hoitovuosikohtaiset arvot ylikirjoittavat oletusarvot"
+    ;; Tämä testi vaatisi että tietokannassa on oikeasti erikoisarvoja
+    ;; Tässä testataan vain että funktio toimii ilman erikoisarvoja
+    (let [vastaus [{:lupaus-id 999999 :lupaustyyppi "yksittainen" :kirjaus-kkt [1 2 3]}]
+          hoitovuosi-nro 1
+          tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)
+          vastaus-tulos (first tulos)]
+      
+      ;; Ilman erikoisarvoja, alkuperäiset kentät säilyvät
+      (is (= 999999 (:lupaus-id vastaus-tulos)) "Lupaus-id säilyy")
+      (is (= [1 2 3] (:kirjaus-kkt vastaus-tulos)) "Kirjaus-kkt säilyy ilman ylikirjoitusta"))))
+
+(deftest ylikirjoita-hoitovuosikohtaiset-arvot-funktionaalinen-test
+  (testing "Funktio on puhdas - ei muuta alkuperäistä vastausta"
+    (let [alkuperainen-vastaus [{:lupaus-id 1 :lupaustyyppi "yksittainen"}]
+          vastaus (vec alkuperainen-vastaus) ;; Kopioi
+          hoitovuosi-nro 2
+          _ (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
+      
+      (is (= alkuperainen-vastaus vastaus) 
+          "Alkuperäinen vastaus ei muutu"))))
+
+;; Testit rikasta-lupaus-lisatiedoilla funktiolle
+(deftest rikasta-lupaus-lisatiedoilla-yksittainen-test
+  (testing "Yksittäinen lupaus palautetaan muuttumattomana"
+    (let [lupaus {:lupaustyyppi "yksittainen" :lupaus-id 1 :otsikko "Testi"}
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+                  lupaus ds 1 2021 2020 1)]
+      (is (= lupaus tulos) "Yksittäinen lupaus ei tarvitse rikastusta"))))
+
+(deftest rikasta-lupaus-lisatiedoilla-monivalinta-test
+  (testing "Monivalinta lupaus palautetaan muuttumattomana"
+    (let [lupaus {:lupaustyyppi "monivalinta" :lupaus-id 2 :otsikko "Testi"}
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+                  lupaus ds 1 2021 2020 1)]
+      (is (= lupaus tulos) "Monivalinta lupaus ei tarvitse rikastusta"))))
+
+(deftest rikasta-lupaus-lisatiedoilla-kysely-test
+  (testing "Kysely lupaus palautetaan muuttumattomana"
+    (let [lupaus {:lupaustyyppi "kysely" :lupaus-id 3 :otsikko "Testi"}
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+                  lupaus ds 1 2021 2020 1)]
+      (is (= lupaus tulos) "Kysely lupaus ei tarvitse rikastusta"))))
+
+(deftest rikasta-lupaus-lisatiedoilla-kustannusennuste-test
+  (testing "Kustannusennuste-lupaus rikastetaan lisätiedoilla"
+    (let [lupaus {:lupaustyyppi "kustannusennuste" :lupaus-id 100 :otsikko "Kustannusennuste"}
+          urakka-id 1
+          hoitokauden-alkuvuosi 2021
+          urakan-alkuvuosi 2020
+          hoitovuosi-nro 1
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+                  lupaus ds urakka-id hoitokauden-alkuvuosi urakan-alkuvuosi hoitovuosi-nro)]
+      
+      ;; Tarkista että alkuperäiset kentät säilyvät
+      (is (= "kustannusennuste" (:lupaustyyppi tulos)))
+      (is (= 100 (:lupaus-id tulos)))
+      (is (= "Kustannusennuste" (:otsikko tulos)))
+      
+      ;; Tarkista että uudet kentät lisätään
+      (is (contains? tulos :hoitovuosi-paattynyt?)
+          "Kustannusennusteelle lisätään hoitovuosi-paattynyt? -kenttä")
+      (is (= urakan-alkuvuosi (:urakan-alkuvuosi tulos))
+          "Urakan alkuvuosi lisätään")
+      (is (= hoitovuosi-nro (:hoitovuosi-nro tulos))
+          "Hoitovuosi-nro lisätään")
+      (is (contains? tulos :lopputilanne)
+          "Kustannusennusteelle lisätään lopputilanne-kenttä")
+      (is (contains? tulos :kustannusennusteet)
+          "Kustannusennusteelle lisätään kustannusennusteet-kenttä"))))
+
+(deftest rikasta-lupaus-lisatiedoilla-nil-parametrit-test
+  (testing "Funktio toimii nil-parametreilla"
+    (let [lupaus {:lupaustyyppi "kustannusennuste" :lupaus-id 100}
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+                  lupaus nil nil nil nil nil)]
+      
+      ;; Alkuperäinen lupaus säilyy
+      (is (= 100 (:lupaus-id tulos)))
+      ;; Rikastuskentät lisätään vaikka parametrit olisivat nil
+      (is (contains? tulos :hoitovuosi-paattynyt?)))))
+
+(deftest rikasta-lupaus-lisatiedoilla-funktionaalinen-test
+  (testing "Funktio on puhdas - ei muuta alkuperäistä lupausta"
+    (let [alkuperainen {:lupaustyyppi "yksittainen" :lupaus-id 1}
+          lupaus (into {} alkuperainen)
+          _ (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+             lupaus ds 1 2021 2020 1)]
+      
+      (is (= alkuperainen lupaus) 
+          "Alkuperäinen lupaus ei muutu"))))
+
+;; Testit prosessoi-lupausvastaukset funktiolle
+(deftest prosessoi-lupausvastaukset-test
+  (testing "Palauttaa oikean rakenteen"
+    (let [vastaus []
+          maarapaiva-tiedot {}
+          opts {:db ds
+                :urakka-id 1
+                :urakan-alkuvuosi 2020
+                :hoitokauden-alkuvuosi 2021
+                :hoitovuosi-nro 2
+                :valittu-hoitokausi [2021 2022]
+                :nykyhetki (java.util.Date.)}
+          tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+                  vastaus
+                  maarapaiva-tiedot
+                  opts)]
+      
+      (is (vector? tulos) "Tulos on vektori")
+      (is (empty? tulos) "Tyhjä vastaus palauttaa tyhjän vektorin"))))
+
+(deftest prosessoi-lupausvastaukset-tyhja-test
+  (testing "Tyhjä vastaus käsitellään oikein"
+    (let [tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+                  []
+                  {}
+                  {:db ds
+                   :urakka-id 1
+                   :urakan-alkuvuosi 2020
+                   :hoitokauden-alkuvuosi 2021
+                   :hoitovuosi-nro 1
+                   :valittu-hoitokausi [2021 2022]
+                   :nykyhetki (java.util.Date.)})]
+      (is (= [] tulos) "Tyhjä vastaus palauttaa tyhjän vektorin"))))
+
+(deftest prosessoi-lupausvastaukset-validointi-test
+  (testing "Preconditions validoivat parametrit"
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+            "ei-collection"
+            {}
+            {:db ds
+             :urakka-id 1
+             :urakan-alkuvuosi 2020
+             :hoitokauden-alkuvuosi 2021
+             :hoitovuosi-nro 1
+             :valittu-hoitokausi [2021 2022]
+             :nykyhetki (java.util.Date.)}))
+        "Vastaus täytyy olla collection")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+            []
+            "ei-map"
+            {:db ds
+             :urakka-id 1
+             :urakan-alkuvuosi 2020
+             :hoitokauden-alkuvuosi 2021
+             :hoitovuosi-nro 1
+             :valittu-hoitokausi [2021 2022]
+             :nykyhetki (java.util.Date.)}))
+        "Määräpäivä-tiedot täytyy olla map")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+            []
+            {}
+            "ei-map"))
+        "Options täytyy olla map")))
+
+(deftest prosessoi-lupausvastaukset-options-validointi-test
+  (testing "Options-map validoidaan"
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+            []
+            {}
+            {:urakka-id 1}))
+        "Kaikki pakolliset kentät validoidaan")
+    
+    (is (thrown? AssertionError
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+            []
+            {}
+            {:db ds
+             :urakka-id "ei-numero"
+             :urakan-alkuvuosi 2020
+             :hoitokauden-alkuvuosi 2021
+             :hoitovuosi-nro 1
+             :valittu-hoitokausi [2021 2022]
+             :nykyhetki (java.util.Date.)}))
+        "urakka-id täytyy olla numero")))
+
+(deftest prosessoi-lupausvastaukset-funktionaalinen-test
+  (testing "Funktio on puhdas - ei muuta alkuperäisiä parametrejä"
+    (let [alkuperainen-vastaus []
+          vastaus (vec alkuperainen-vastaus)
+          alkuperaiset-maarapaiva-tiedot {}
+          maarapaiva-tiedot (into {} alkuperaiset-maarapaiva-tiedot)
+          opts {:db ds
+                :urakka-id 1
+                :urakan-alkuvuosi 2020
+                :hoitokauden-alkuvuosi 2021
+                :hoitovuosi-nro 1
+                :valittu-hoitokausi [2021 2022]
+                :nykyhetki (java.util.Date.)}
+          tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset vastaus maarapaiva-tiedot opts)]
+      
+      (is (= alkuperainen-vastaus vastaus) "Alkuperäinen vastaus ei muutu")
+      (is (= alkuperaiset-maarapaiva-tiedot maarapaiva-tiedot) "Alkuperäiset määräpäivä-tiedot eivät muutu")
+      (is (vector? tulos) "Palauttaa vektorin"))))
+
+;; Testit hae-talouslaskelmat funktiolle
+(deftest hae-talouslaskelmat-test
+  (testing "Palauttaa oikean rakenteen"
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+          hk-alkupvm (pvm/luo-pvm 2015 9 1)
+          hk-loppupvm (pvm/luo-pvm 2016 8 31)
+          hoitokauden-alkuvuosi 2015
+          lupaus-sitoutuminen {:pisteet 100}
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
+                  ds 
+                  urakka-id 
+                  hk-alkupvm 
+                  hk-loppupvm
+                  hoitokauden-alkuvuosi
+                  lupaus-sitoutuminen)]
+      
+      (is (map? tulos) "Tulos on map")
+      (is (contains? tulos :tavoitehinta) "Sisältää :tavoitehinta")
+      (is (contains? tulos :oikaistu-tavoitehinta) "Sisältää :oikaistu-tavoitehinta")
+      (is (contains? tulos :oikaistu-toteutuneet-kustannukset) "Sisältää :oikaistu-toteutuneet-kustannukset")
+      (is (contains? tulos :tavoitehinta-puuttuu?) "Sisältää :tavoitehinta-puuttuu?")
+      (is (contains? tulos :luvatut-pisteet-puuttuu?) "Sisältää :luvatut-pisteet-puuttuu?"))))
+
+(deftest hae-talouslaskelmat-nil-alkupvm-test
+  (testing "Nil hoitokauden alkupvm käsitellään oikein"
+    (let [urakka-id 1
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
+                  ds 
+                  urakka-id 
+                  nil 
+                  nil
+                  2021
+                  {:pisteet 100})]
+      
+      (is (map? tulos) "Palauttaa mapin")
+      (is (nil? (:tavoitehinta tulos)) "Tavoitehinta on nil kun alkupvm on nil")
+      (is (nil? (:oikaistu-tavoitehinta tulos)) "Oikaistu tavoitehinta on nil")
+      (is (nil? (:oikaistu-toteutuneet-kustannukset tulos)) "Oikaistu toteutuneet kustannukset on nil"))))
+
+(deftest hae-talouslaskelmat-validointi-test
+  (testing "Tavoitehinta-puuttuu? laskenta"
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+          hk-alkupvm (pvm/luo-pvm 2015 9 1)
+          hk-loppupvm (pvm/luo-pvm 2016 8 31)
+          hoitokauden-alkuvuosi 2015
+          lupaus-sitoutuminen {:pisteet 100}
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
+                  ds 
+                  urakka-id 
+                  hk-alkupvm 
+                  hk-loppupvm
+                  hoitokauden-alkuvuosi
+                  lupaus-sitoutuminen)]
+      
+      (is (boolean? (:tavoitehinta-puuttuu? tulos)) "tavoitehinta-puuttuu? on boolean")))
+  
+  (testing "Luvatut-pisteet-puuttuu? laskenta"
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+          hk-alkupvm (pvm/luo-pvm 2015 9 1)
+          hk-loppupvm (pvm/luo-pvm 2016 8 31)
+          hoitokauden-alkuvuosi 2015]
+      
+      ;; Ilman pisteitä
+      (let [tulos-ilman (#'lupaus-palvelu/hae-talouslaskelmat 
+                          ds 
+                          urakka-id 
+                          hk-alkupvm 
+                          hk-loppupvm
+                          hoitokauden-alkuvuosi
+                          {})]
+        (is (true? (:luvatut-pisteet-puuttuu? tulos-ilman)) "Pisteet puuttuvat"))
+      
+      ;; Pisteillä
+      (let [tulos-pisteilla (#'lupaus-palvelu/hae-talouslaskelmat 
+                              ds 
+                              urakka-id 
+                              hk-alkupvm 
+                              hk-loppupvm
+                              hoitokauden-alkuvuosi
+                              {:pisteet 100})]
+        (is (false? (:luvatut-pisteet-puuttuu? tulos-pisteilla)) "Pisteet löytyvät")))))
+
+
+(deftest muodosta-yhteenveto-test
+  (testing "Yhteenvedon muodostaminen - rakenne ja perustiedot"
+    (let [opts {:piste-maksimi 100
+                :piste-ennuste 80
+                :piste-toteuma 85
+                :bonus-tai-sanktio 5000
+                :tavoitehinta 1000000
+                :oikaistu-tavoitehinta 950000
+                :oikaistu-toteutuneet-kustannukset 900000
+                :kustannusennuste-pisteet-tila true
+                :odottaa-kannanottoa 5
+                :merkitsevat-odottaa-kannanottoa 2
+                :odottaa-urakoitsijan-kannanottoa? true
+                :valikatselmus-tehty? false
+                :tavoitehinta-puuttuu? false
+                :luvatut-pisteet-puuttuu? false
+                :ennusteen-tila :ennuste
+                :tallennettu-paatos nil}
+          tulos (#'lupaus-palvelu/muodosta-yhteenveto opts)]
+      
+      (is (map? tulos) "Yhteenveto on map")
+      (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
+      (is (contains? tulos :pisteet) "Sisältää pisteet")
+      (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
+      (is (contains? tulos :tavoitehinta) "Sisältää tavoitehinta")
+      (is (= :ennuste (:ennusteen-tila tulos)) "Ennusteen tila on :ennuste")
+      (is (= 100 (get-in tulos [:pisteet :maksimi])) "Maksimipisteet oikein")
+      (is (= 80 (get-in tulos [:pisteet :ennuste])) "Ennustepisteet oikein")
+      (is (= 85 (get-in tulos [:pisteet :toteuma])) "Toteumapisteet oikein"))))
+
+(deftest muodosta-yhteenveto-paatos-test
+  (testing "Yhteenveto päätöksellä - näytetään päätöksen tiedot"
+    (let [opts {:piste-maksimi 100
+                :piste-ennuste 80
+                :piste-toteuma 85
+                :bonus-tai-sanktio 5000
+                :tavoitehinta 1000000
+                :oikaistu-tavoitehinta nil
+                :oikaistu-toteutuneet-kustannukset nil
+                :kustannusennuste-pisteet-tila true
+                :odottaa-kannanottoa 0
+                :merkitsevat-odottaa-kannanottoa 0
+                :odottaa-urakoitsijan-kannanottoa? false
+                :valikatselmus-tehty? false
+                :tavoitehinta-puuttuu? false
+                :luvatut-pisteet-puuttuu? false
+                :ennusteen-tila :katselmoitu-toteuma
+                :tallennettu-paatos {:toteutuneet_pisteet 90
+                                     :tavoitehinta 1100000}}
+          tulos (#'lupaus-palvelu/muodosta-yhteenveto opts)]
+      
+      (is (= 90 (get-in tulos [:pisteet :toteuma])) "Näytetään päätöksen pisteet")
+      (is (= 1100000 (:tavoitehinta tulos)) "Näytetään päätöksen tavoitehinta"))))
+
+(deftest muodosta-yhteenveto-ennusteen-tila-test
+  (testing "Ennusteen tilan määrittely"
+    ;; Katselmoitu toteuma
+    (let [opts-katselmoitu {:piste-maksimi 100
+                             :piste-ennuste 80
+                             :piste-toteuma nil
+                             :bonus-tai-sanktio 5000
+                             :tavoitehinta 1000000
+                             :oikaistu-tavoitehinta nil
+                             :oikaistu-toteutuneet-kustannukset nil
+                             :kustannusennuste-pisteet-tila true
+                             :odottaa-kannanottoa 0
+                             :merkitsevat-odottaa-kannanottoa 0
+                             :odottaa-urakoitsijan-kannanottoa? false
+                             :valikatselmus-tehty? false
+                             :tavoitehinta-puuttuu? false
+                             :luvatut-pisteet-puuttuu? false
+                             :ennusteen-tila :katselmoitu-toteuma
+                             :tallennettu-paatos {:toteutuneet_pisteet 90}}]
+      (is (= :katselmoitu-toteuma 
+             (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-katselmoitu)))
+          "Katselmoitu toteuma kun päätös on tallennettu"))
+    
+    ;; Alustava toteuma
+    (let [opts-alustava {:piste-maksimi 100
+                         :piste-ennuste 80
+                         :piste-toteuma 85
+                         :bonus-tai-sanktio 5000
+                         :tavoitehinta 1000000
+                         :oikaistu-tavoitehinta nil
+                         :oikaistu-toteutuneet-kustannukset nil
+                         :kustannusennuste-pisteet-tila true
+                         :odottaa-kannanottoa 0
+                         :merkitsevat-odottaa-kannanottoa 0
+                         :odottaa-urakoitsijan-kannanottoa? false
+                         :valikatselmus-tehty? false
+                         :tavoitehinta-puuttuu? false
+                         :luvatut-pisteet-puuttuu? false
+                         :ennusteen-tila :alustava-toteuma
+                         :tallennettu-paatos nil}]
+      (is (= :alustava-toteuma 
+             (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-alustava)))
+          "Alustava toteuma kun toteumapisteet on olemassa"))))
+
+;; ----- laske-bonus-ja-ennuste testit -----
+
+(deftest laske-bonus-ja-ennuste-test
+  (testing "Bonus ja ennusteen tilan laskenta"
+    (let [opts {:tallennettu-paatos nil
+                :piste-toteuma 85
+                :piste-ennuste 80
+                :lupaus-sitoutuminen {:pisteet 100}
+                :tavoitehinta 1000000
+                :nykyhetki (pvm/luo-pvm 2020 1 15)
+                :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
+      
+      (is (map? tulos) "Palauttaa mapin")
+      (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
+      (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
+      (is (number? (:bonus-tai-sanktio tulos)) "Bonus on numero")
+      (is (keyword? (:ennusteen-tila tulos)) "Ennusteen tila on keyword"))))
+
+(deftest laske-bonus-ja-ennuste-paatos-test
+  (testing "Päätös olemassa - käytetään tallennetun päätöksen bonusta"
+    (let [tallennettu-paatos {:toteutuneet_pisteet 90
+                               :luvatut_pisteet 100
+                               :tavoitehinta 1000000}
+          opts {:tallennettu-paatos tallennettu-paatos
+                :piste-toteuma 85
+                :piste-ennuste 80
+                :lupaus-sitoutuminen {:pisteet 100}
+                :tavoitehinta 1000000
+                :nykyhetki (pvm/luo-pvm 2020 1 15)
+                :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
+      
+      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos)) 
+          "Ennusteen tila on katselmoitu-toteuma kun päätös on"))))
+
+(deftest laske-bonus-ja-ennuste-ennusteen-tila-test
+  (testing "Ennusteen tilan määrittely eri tilanteissa"
+    ;; Alustava toteuma (hoitovuosi valmis)
+    (let [opts-alustava {:tallennettu-paatos nil
+                         :piste-toteuma 85
+                         :piste-ennuste 80
+                         :lupaus-sitoutuminen {:pisteet 100}
+                         :tavoitehinta 1000000
+                         :nykyhetki (pvm/luo-pvm 2020 8 31)
+                         :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos-alustava (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-alustava)]
+      (is (= :alustava-toteuma (:ennusteen-tila tulos-alustava))
+          "Alustava toteuma kun toteuma on olemassa"))
+    
+    ;; Ennuste (hoitokausi alkanut, ei toteumaa)
+    (let [opts-ennuste {:tallennettu-paatos nil
+                        :piste-toteuma nil
+                        :piste-ennuste 80
+                        :lupaus-sitoutuminen {:pisteet 100}
+                        :tavoitehinta 1000000
+                        :nykyhetki (pvm/luo-pvm 2020 5 1)
+                        :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos-ennuste (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ennuste)]
+      (is (= :ennuste (:ennusteen-tila tulos-ennuste))
+          "Ennuste kun hoitokausi on alkanut ja bonus on laskettavissa"))
+    
+    ;; Ei vielä ennustetta
+    (let [opts-ei-ennustetta {:tallennettu-paatos nil
+                               :piste-toteuma nil
+                               :piste-ennuste 80
+                               :lupaus-sitoutuminen {:pisteet 100}
+                               :tavoitehinta 1000000
+                               :nykyhetki (pvm/luo-pvm 2019 8 1)
+                               :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos-ei-ennustetta (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ei-ennustetta)]
+      (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ei-ennustetta))
+          "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))

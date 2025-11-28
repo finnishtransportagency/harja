@@ -21,3 +21,25 @@
   hae-poistettavien-kustannusennusteiden-lkm
   poista-urakan-hoitokauden-kustannusennusteet!
   hae-urakan-kustannusennuste-lupaus-id)
+
+(defn hae-lupauksen-kustannusennusteet
+  "Hakee lupauksen kaikki kustannusennusteet hoitokaudelle.
+   Käytetään lupaus-rikastuksessa ja lupaus-palvelussa."
+  [db lupaus-id urakka-id hoitokauden-alkuvuosi]
+  (when (and lupaus-id urakka-id hoitokauden-alkuvuosi)
+    (hae-lupauksen-kaikki-kustannusennusteet
+      db {:lupaus-id lupaus-id
+          :urakka-id urakka-id
+          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
+
+(defn onko-kustannusennuste-pisteet-laskettu?
+  "Tarkistaa onko kaikille kustannusennusteille laskettu lopulliset pisteet.
+   Käytetään lupaus-rikastuksessa ja lupaus-palvelussa."
+  [db urakka-id hoitokauden-alkuvuosi]
+  (when (and urakka-id hoitokauden-alkuvuosi)
+    (let [tulos (first (onko-kustannusennuste-pisteet-laskettu
+                         db {:urakka-id urakka-id
+                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+      {:kaikki-laskettu (:kaikki_laskettu tulos)
+       :yhteensa (:yhteensa tulos)
+       :laskettu-pisteet (:laskettu_pisteet tulos)})))
