@@ -64,6 +64,9 @@ WHERE nimi = 'Sorateiden pölynsidonta (materiaali)'; -- Tälle tuo ylemmän nim
 
 UPDATE tehtava
 SET materiaalikoodi_id  = NULL,
+    "maaramitattava?"   = true, -- Tämä tehtävä on määrämitattava 
+    yksikko             = 'tonni',
+    suunnitteluyksikko  = 'tonni'
     muokattu            = current_timestamp,
     muokkaaja           = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
 WHERE nimi = 'Kesäsuola (CaCl2, materiaali)'; -- Anna null materiaalikoodi, halutaan kohdistaa kaikki luokan materiaalit  
