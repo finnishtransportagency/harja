@@ -108,9 +108,9 @@
 (defn- materiaalin-nimi-ja-selite [nimi]
   (case nimi
     "Talvisuola, rakeinen NaCl" {:arvo "Talvisuola, rakeinen" :selite "NaCl"}
-    "Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta" {:arvo "Talvisuola" :selite "päällystettyjen teiden pölynsidonta"}
     "Talvisuolaliuos CaCl2" {:arvo "Talvisuolaliuos" :selite "CaCl2"}
     "Talvisuolaliuos NaCl" {:arvo "Talvisuolaliuos" :selite "NaCl"}
+    "Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta" {:arvo "Talvisuolaliuos" :selite "CaCl2 päällystettyjen teiden pölynsidonta"}
     "Talvisuolat yhteensä" {:arvo "Talvisuolat yhteensä" :selite "100% kuivatonnia"}
     "Formiaatit yhteensä" {:arvo "Formiaatit yhteensä" :selite "50% kuivatonnia"}
     "Kesäsuola sorateiden pölynsidonta" {:arvo "Kesäsuola" :selite "sorateiden pölynsidonta"}
@@ -148,12 +148,12 @@
                            (map (comp :arvo second) arvot)))))
 
 (defn- materiaalien-comparator
-  "Järjestää materiaalit ensisijaisesti materiaalin nimen, toissijaisesti urakan nimen perusteella (if any)"
+  "Järjestää materiaalit ensisijaisesti materiaalin tyypin, toissijaisesti urakan nimen perusteella (if any)"
   [x y]
   (let [c (compare (materiaalidomain/materiaalien-jarjestys
-                     (get-in (first y) [:materiaali :nimi]))
+                     (get-in (first y) [:materiaali :tyyppi]))
             (materiaalidomain/materiaalien-jarjestys
-              (get-in (first x) [:materiaali :nimi])))]
+              (get-in (first x) [:materiaali :tyyppi])))]
     (if (not= c 0)
       c
       (let [c (compare (get-in (first y) [:urakka :nimi])
@@ -573,6 +573,8 @@
                                     (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
                                             :materiaali materiaali-kaikki-talvisuola-yhteensa}
                                            [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
+
+        _ (println "\n mk::  " materiaalit-kannasta)
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
