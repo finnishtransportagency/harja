@@ -5,6 +5,7 @@
 -- pois kokonaan.
 ALTER TABLE tielupa
 ADD COLUMN elinvoimakeskus INTEGER REFERENCES organisaatio(id),
+ADD COLUMN "mainoslupa-tiedoksi-elinvoimakeskukselle" BOOLEAN,
 ALTER COLUMN ely DROP NOT NULL;
 
 ALTER TABLE organisaatio
