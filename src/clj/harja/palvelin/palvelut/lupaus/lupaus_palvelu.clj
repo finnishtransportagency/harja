@@ -1015,7 +1015,6 @@
 
                 ;; Laske lopulliset pisteet domain-logiikalla
                 (if (empty? puuttuvat-arvot)
-                    ;; Kaikki arvot löytyvät - suorita päivitys
                     (let [tarkkuus-tulos (kustannusennuste-domain/laske-kustannusennusteen-tarkkuus
                                            {:ennustettu-tavoitehinta ennustettu-tavoitehinta
                                             :ennustettu-kustannus ennustetut-kustannukset
@@ -1047,7 +1046,6 @@
                       (log/info (format "Päivitettiin kustannusennuste %s lopulliset pisteet: %s"
                                   kustannusennuste-id lopulliset-pisteet)))
 
-                    ;; Arvoja puuttuu - loki varoitus ja jatka seuraavaan
                     (log/error (format "Kustannusennuste %s: Päivitys ohitettiin puuttuvien arvojen takia. Puuttuvat: %s. Arvot: ennustettu-tavoitehinta=%s, ennustetut-kustannukset=%s, hoitovuoden-alun-tavoitehinta=%s"
                                 kustannusennuste-id
                                 (str/join ", " puuttuvat-arvot)
@@ -1156,24 +1154,5 @@
                      :poista-kuukausittaiset-pisteet
                      :hae-kuukausittaiset-pisteet)
     this))
-
-
-(comment
-  (def j harja.palvelin.main/harja-jarjestelma)
-  (hae-urakan-lupaustiedot-hoitokaudelle
-    (:db j)
-    {:urakka-id 36,
-     :valittu-hoitokausi [#inst "2023-09-30T21:00:00.000-00:00" #inst "2024-09-30T20:59:59.000-00:00"],
-     :nykyhetki #inst "2024-02-28T13:37:14.992-00:00"}))
-
-
-(comment
-  (def j harja.palvelin.main/harja-jarjestelma)
-  (lupaus-kyselyt/hae-urakan-lupaustiedot 
-    (:db j)
-    {:urakka 36
-     :urakan-alkuvuosi 2021
-     :alkupvm #inst "2023-09-30T21:00:00.000-00:00"
-     :loppupvm #inst "2024-09-30T20:59:59.000-00:00"}))
 
 
