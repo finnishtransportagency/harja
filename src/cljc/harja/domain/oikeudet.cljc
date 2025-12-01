@@ -45,6 +45,7 @@
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
+  urakat-kulut-maksuerat
   roolit)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])

@@ -43,11 +43,11 @@
   jarjestelma-fixture)
 
 
-(def ^{:private true}  +urakka+      (hae-urakan-id-nimella "Iin MHU 2021-2026"))
-(def ^{:private true}  +tpi+         (hae-toimenpideinstanssi-id +urakka+ "14301"))
-(def ^{:private true}  +hoitokaudet+ (mapv (fn [vuosi]
-                                             [(pvm/hoitokauden-alkupvm vuosi)
-                                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2021 2026)))
+(def ^{:private true} +urakka+ (hae-urakan-id-nimella "Iin MHU 2021-2026"))
+(def ^{:private true} +tpi+ (hae-toimenpideinstanssi-id +urakka+ "14301"))
+(def ^{:private true} +hoitokaudet+ (mapv (fn [vuosi]
+                                            [(pvm/hoitokauden-alkupvm vuosi)
+                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2021 2026)))
 
 
 (defn- hae-muutostyot []
@@ -115,8 +115,8 @@
           kulu-vastaus (kutsu-palvelua
                          (:http-palvelin jarjestelma)
                          :tallenna-kulu +kayttaja-jvh+
-                         {:urakka-id             +urakka+
-                          :kulu-kohdistuksineen  kulu})
+                         {:urakka-id +urakka+
+                          :kulu-kohdistuksineen kulu})
 
           kustannusten-seuranta (hae-kustannusten-seuranta {:urakka +urakka+
                                                             :alkupvm "2025-10-01"
@@ -129,12 +129,12 @@
       (is (= 250M (:kokonaissumma kulu-vastaus)) "Kulu tallentui kantaan")
 
       (is (= "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
-             (:muutostyo_syy e)) "Syyn pitää näkyä seurannassa")
+            (:muutostyo_syy e)) "Syyn pitää näkyä seurannassa")
 
       (is (= "kokonaishintainen" (:maksutyyppi e)))
       (is (= "erillisrahoitettu-muutos" (:kulu_tyyppi e)))
       (is (= "muutokset" (:paaryhma e)) "Pääryhmä täytyy olla muutokset")
-      (is (= "MHU Korvausinvestointi" (:tehtava_nimi e)))
+      (is (= "KORVAUSINVESTOINTI" (:tehtava_nimi e)))
       (is (= "toteutunut" (:toteutunut e)))
       (is (= 3000M (:budjetoitu_summa e)))
       (is (= "hankinta" (:toimenpideryhma e)))
@@ -214,14 +214,14 @@
 
 
     (testing "Muutostyön kulun kirjaus toimii, sama voimassa alkaen ja eräpäivä -> OK"
-      (let [muutostyo-voimassa "2025-10-02"        ;; <- sama kun eräpäivä
+      (let [muutostyo-voimassa "2025-10-02" ;; <- sama kun eräpäivä
             kulu-erapaiva (pvm/->pvm "02.10.2025") ;; <- sama kun voimassa
             muutos-voimassa-inst (pvm/->pvm "02.10.2025")
             uusi-muutos-kulu (paivita-erapaivat-fn muutostyo-voimassa kulu-erapaiva)
             vastaus (kutsu-palvelua
                       (:http-palvelin jarjestelma)
                       :tallenna-kulu +kayttaja-jvh+
-                      {:urakka-id     +urakka+
+                      {:urakka-id +urakka+
                        :kulu-kohdistuksineen uusi-muutos-kulu})]
         ;; Tarkista, että kulu palautuu validina
         (tarkista-muutos-kulu-on-validi vastaus kulu-erapaiva muutos-voimassa-inst)))
@@ -230,12 +230,12 @@
     (testing "Muutostyön kulun kirjaus toimii, eräpäivä on voimassa alkaen jälkeen -> OK"
       (let [muutostyo-voimassa "2025-10-01"
             muutos-voimassa-inst (pvm/->pvm "01.10.2025")
-            kulu-erapaiva (pvm/->pvm "03.10.2025")        ;; <- voimassa alkaen jälkeen - OK
+            kulu-erapaiva (pvm/->pvm "03.10.2025") ;; <- voimassa alkaen jälkeen - OK
             uusi-muutos-kulu (paivita-erapaivat-fn muutostyo-voimassa kulu-erapaiva)
             vastaus (kutsu-palvelua
                       (:http-palvelin jarjestelma)
                       :tallenna-kulu +kayttaja-jvh+
-                      {:urakka-id     +urakka+
+                      {:urakka-id +urakka+
                        :kulu-kohdistuksineen uusi-muutos-kulu})]
         ;; Tarkista, että kulu palautuu validina
         (tarkista-muutos-kulu-on-validi vastaus kulu-erapaiva muutos-voimassa-inst)))
@@ -243,7 +243,7 @@
 
     (testing "Muutostyön kulun kirjaus heittää virheen, eräpäivä on voimassa alkaen ennen -> VIRHE"
       (let [muutostyo-voimassa "2025-10-03"
-            kulu-erapaiva (pvm/->pvm "01.10.2025")         ;; <- voimassa alkaen ennen -> ERROR
+            kulu-erapaiva (pvm/->pvm "01.10.2025") ;; <- voimassa alkaen ennen -> ERROR
             uusi-muutos-kulu (paivita-erapaivat-fn muutostyo-voimassa kulu-erapaiva)
             odotettu-poikkeus "Tallennus epäonnistui. Muutostyö ei ole voimassa laskun päivämääränä."
 
@@ -252,7 +252,7 @@
                       (kutsu-palvelua
                         (:http-palvelin jarjestelma)
                         :tallenna-kulu +kayttaja-jvh+
-                        {:urakka-id     +urakka+
+                        {:urakka-id +urakka+
                          :kulu-kohdistuksineen uusi-muutos-kulu})
                       (catch Exception e e))]
 
@@ -268,7 +268,7 @@
             uusi-muutos-kulu (paivita-erapaivat-fn muutostyo-voimassa kulu-erapaiva)
 
             ;; Aseta muutostyölle aikaisemman hoitokauden voimassa alkaen
-            vanha-voimassa-alkaen (pvm/->pvm "01.10.2023")         ;; <- erillä hoitokaudella -> ERROR
+            vanha-voimassa-alkaen (pvm/->pvm "01.10.2023") ;; <- erillä hoitokaudella -> ERROR
             uusi-muutos-kulu (-> uusi-muutos-kulu
                                (assoc :erapaiva kulu-erapaiva)
                                (update :kohdistukset #(assoc-in % [0 :valittu-muutostyo :voimassa_alkaen] vanha-voimassa-alkaen)))
@@ -278,7 +278,7 @@
             vastaus (try
                       (kutsu-palvelua
                         (:http-palvelin jarjestelma)
-                        :tallenna-kulu +kayttaja-jvh+ {:urakka-id     +urakka+
+                        :tallenna-kulu +kayttaja-jvh+ {:urakka-id +urakka+
                                                        :kulu-kohdistuksineen uusi-muutos-kulu})
                       (catch Exception e e))]
         (is
@@ -305,7 +305,7 @@
             vastaus (try
                       (kutsu-palvelua
                         (:http-palvelin jarjestelma)
-                        :tallenna-muutos  +kayttaja-jvh+  payload)
+                        :tallenna-muutos +kayttaja-jvh+ payload)
                       (catch Exception e e))]
         (is
           (true? (str/includes? vastaus odotettu-poikkeus))

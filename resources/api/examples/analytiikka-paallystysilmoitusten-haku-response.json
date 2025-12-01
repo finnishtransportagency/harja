@@ -266,6 +266,51 @@
           "massamenekki": 0.10,
           "poistettu": false,
           "pituus": 650
+        },
+        {
+          "massa": {
+            "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 1.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 100.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 11,
+            "aosa": 20,
+            "let": 650,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 100
+          },
+          "kasittelymenetelma": "Muu RP, Muu RP",
+          "massamenekki": 15.0,
+          "poistettu": false,
+          "pituus": 550
         }
       ],
       "toteutunutHinta": 98900,
