@@ -8,11 +8,11 @@ declare
     _toimenpideinstanssi_id_paall_paikk INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20107') AND urakka = urakka_id); -- Päällystepaikkaukset
     _toimenpideinstanssi_id_sorateiden_hoito INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23124') AND urakka = urakka_id); -- Sorateiden hoito
     _toimenpideinstanssi_id_mhu_yllapito INTEGER := (SELECT id FROM toimenpideinstanssi WHERE toimenpide = (SELECT id FROM toimenpide WHERE koodi = '20191') AND urakka = urakka_id); -- MHU Ylläpito
-    _toimenpideinstassi_id_hoidon_johto INTEGER := (SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_id AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151'));
+    _toimenpideinstassi_id_hoidon_johto INTEGER := (SELECT id FROM toimenpideinstanssi WHERE urakka = urakka_id AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151' limit 1));
     _johto_ja_hallintokorvaus_tehtavaryhma_id INTEGER := (SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus');
-    _tehtava_id_ab_paikkaus INTEGER := (SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä');
-    _tehtava_id_soratien_rummut_alle_600mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø <= 600 mm');
-    _tehtava_id_soratien_rummut_600_1000mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Rumpujen korjaus ja uusiminen  600 - 1000 mm');
+    _tehtava_id_ab_paikkaus INTEGER := (SELECT id FROM tehtava WHERE nimi = 'AB-paikkaus levittäjällä' limit 1);
+    _tehtava_id_soratien_rummut_alle_600mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Soratien rumpujen korjaus ja uusiminen  Ø <= 600 mm' limit 1);
+    _tehtava_id_soratien_rummut_600_1000mm INTEGER := (SELECT id FROM tehtava WHERE nimi = 'Rumpujen korjaus ja uusiminen  600 - 1000 mm' limit 1);
     -- jotta ao. logiikka toimii, alkaen_pvm oltava tammi-syyskuun aikana
     ensimmainen_tayden_hkn_alkuvuosi INTEGER := (SELECT EXTRACT(YEAR FROM alkaen_pvm) :: INTEGER);
     viimeinen_tayden_hkn_alkuvuosi INTEGER := (SELECT EXTRACT(YEAR FROM (SELECT loppupvm FROM urakka WHERE id = urakka_id)) :: INTEGER - 1);
@@ -256,7 +256,7 @@ BEGIN
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,
          NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen'));
+         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen' limit 1));
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -274,7 +274,7 @@ BEGIN
          tehtavaryhma_liikennemerkit,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'));
+         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' limit 1));
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -292,7 +292,7 @@ BEGIN
          tehtavaryhma_liikennemerkit,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'));
+         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' limit 1));
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -310,7 +310,7 @@ BEGIN
          tehtavaryhma_liikennemerkit,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'));
+         (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' limit 1));
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -330,7 +330,7 @@ BEGIN
          tehtavaryhma_puun_poisto,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Runkopuiden poisto'));
+         (SELECT id FROM tehtava WHERE nimi = 'Runkopuiden poisto' limit 1));
     
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -350,7 +350,7 @@ BEGIN
          tehtavaryhma_soratie,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'));
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto' limit 1));
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -368,7 +368,7 @@ BEGIN
          tehtavaryhma_soratie,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'));
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto' limit 1));
     
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,7 +388,7 @@ BEGIN
          tehtava_soratie,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'));
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto' limit 1));
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -408,7 +408,7 @@ BEGIN
          tehtavaryhma_rummut,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen  Ø> 600  <= 800 mm'));
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen  Ø> 600  <= 800 mm' limit 1));
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -426,7 +426,7 @@ BEGIN
          tehtavaryhma_rummut,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm'));
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm' limit 1));
     
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     INSERT INTO kulu (kokonaissumma,erapaiva,urakka,luotu,luoja,muokattu,muokkaaja,poistettu,laskun_numero,lisatieto,koontilaskun_kuukausi) VALUES
@@ -444,7 +444,7 @@ BEGIN
          tehtavaryhma_rummut,'kokonaishintainen',
          to_timestamp(p_vuosi::text || '-09-01 14:18:52.450', 'YYYY-MM-DD HH24:MI:SS.US'),
          kayttaja_id,NULL,NULL,false,NULL,NULL,'hankintakulu',true,
-         (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet'));
+         (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet' limit 1));
 
 END $$;
 
@@ -604,7 +604,7 @@ BEGIN
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 6 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm'),
+         (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm' limit 1),
          38, v_urakka_id,
          '[Muutokset] Määrämitattava toteuma 6');
 
@@ -624,7 +624,7 @@ BEGIN
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 7 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-         (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet'),
+         (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet' limit 1),
          15, v_urakka_id,
          '[Muutokset] Määrämitattava toteuma 7');
 
@@ -644,7 +644,7 @@ BEGIN
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 8 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-         (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet'),
+         (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet' limit 1),
          2450, v_urakka_id,
          '[Muutokset] Määrämitattava toteuma 8');
 
@@ -664,7 +664,7 @@ BEGIN
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 9 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
-         (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)'),
+         (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)' limit 1),
          3854, v_urakka_id,
          '[Muutokset] Määrämitattava toteuma 9');
 

@@ -1,4 +1,6 @@
--- Kumpaankaan kolumniin ei voida lisätä defaulttina mitään, koska vanhoilla riveillä ei ole arvoa.
-ALTER TABLE toimenpideinstanssi
-    ADD COLUMN luotu    TIMESTAMP,
-    ADD COLUMN muokattu TIMESTAMP;
+-- Korjaa reunapalteen poiston yksikkö vastaamaan tehtävä- ja määräluettelon yksikköä
+UPDATE tehtava
+SET yksikko            = 'jm',
+    suunnitteluyksikko = 'jm'
+WHERE nimi = 'Reunapalteen poisto'
+  AND emo = (select id from toimenpide where koodi = '23116'); -- Liikenneympäristön hoito
