@@ -900,10 +900,6 @@
                     :epaonnistui))]
       (is (= :onnistui tulos) "Tilaaja saa tehdä päätöksen"))))
 
-;; =============================================================================
-;; Offset-logiikka 
-;; =============================================================================
-
 (deftest tallenna-kustannusennuste-hoitovuosi-offset-test
   "Testaa että kustannusennuste tallentuu oikealle hoitovuodelle 
    offset-logiikan perusteella. Elokuun offset on 1 (seuraava HK),
@@ -937,10 +933,6 @@
           (let [[hoitovuosi] (first tallennetut)]
             (is (or (= 2019 hoitovuosi) (nil? hoitovuosi))
                 "Lokakuun ennuste tallentuu oikealle hoitovuodelle")))))))
-
-;; =============================================================================
-;; Kustannusennuste kriittiset integraatiotestit
-;; =============================================================================
 
 (deftest hae-kustannusennuste-kuukausi-offset-test
   "Testaa että offset-arvo haetaan oikein tietokannasta eri kuukausille.
@@ -1126,11 +1118,6 @@
                       urakan-alkupvm (pvm/vuosi hk2-pvm))]
         (is (= 1 hk1-nro) "Ensimmäinen hoitokausi on numero 1")
         (is (= 2 hk2-nro) "Toinen hoitokausi on numero 2")))))
-
-
-;; ========================================
-;; Virheenkäsittely ja reunatapaukset
-;; ========================================
 
 (deftest laske-lopullinen-kustannusennuste-puuttuvat-arvot-test
   "Testaa, että funktio käsittelee puuttuvat ja virheelliset arvot turvallisesti.
@@ -1429,8 +1416,6 @@
       (is (= 2022 hk-2022-offset-0) "Loka 2022 + offset 0 = HK 2022")
       (is (= 2023 hk-2022-offset-1) "Loka 2022 + offset 1 = HK 2023"))))
 
-
-;; Testit hae-perustiedot funktiolle
 (deftest hae-perustiedot-test
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         ;; Hoitokausi 2015-2016 (urakan toinen hoitovuosi)
@@ -1927,8 +1912,6 @@
       (is (= :alustava-toteuma 
              (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-alustava)))
           "Alustava toteuma kun toteumapisteet on olemassa"))))
-
-;; ----- laske-bonus-ja-ennuste testit -----
 
 (deftest laske-bonus-ja-ennuste-test
   (testing "Bonus ja ennusteen tilan laskenta"
