@@ -7,6 +7,11 @@
   },
   "devDependencies": {
     "cypress": "10.2.0",
-    "less": "4.2.0"
+    "less": "4.2.0",
+    "nodemon": "^3.1.11"
+  },
+  "scripts": {
+    "build-css": "lessc dev-resources/less/application.less resources/public/css/application.css && lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css",
+    "less": "nodemon --watch dev-resources/less -e less --exec \"npm run build-css\""
   }
 }

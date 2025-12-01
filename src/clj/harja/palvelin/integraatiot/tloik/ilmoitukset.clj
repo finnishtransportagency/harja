@@ -44,7 +44,9 @@
     ;; Jos varsinaiselle urakalle ei löydy yhtään päivystäjää, haetaan oletuksena hoidon urakka
     (if (yhteyshenkilot/onko-urakalla-paivystajia? db (:id urakka))
       urakka
-      (hae-urakka "hoito"))))
+      (do
+        (log/warn "Urakalle " (:id urakka) " ei löydy päivystäjiä, haetaan hoidon urakka.")
+        (hae-urakka "hoito")))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")

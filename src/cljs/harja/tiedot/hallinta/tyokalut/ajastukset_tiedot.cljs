@@ -11,6 +11,10 @@
 (defrecord AjaKustannusarvioidutTyotToteumiksiOnnistui [vastaus])
 (defrecord AjaKustannusarvioidutTyotToteumiksiEpaonnistui [vastaus])
 
+(defrecord AjaKasitteleUrakatMaksueriksi [])
+(defrecord AjaKasitteleUrakatMaksueriksiOnnistui [vastaus])
+(defrecord AjaKasitteleUrakatMaksueriksiEpaonnistui [vastaus])
+
 (extend-protocol tuck/Event
 
   AjaKustannusarvioidutTyotToteumiksi
@@ -25,13 +29,34 @@
 
   AjaKustannusarvioidutTyotToteumiksiOnnistui
   (process-event [{vastaus :vastaus} app]
-    (do
-      (js/console.log "AjaKustannusarvioidutTyotToteumiksiOnnistui")
-      (viesti/nayta-toast! "Kustannusarvioidut työt ajettu toteumiksi!" :onnistui)
-      (assoc app :kustannusarvioidut-tyot-toteumiksi-kaynnissa false)))
+    (js/console.log "AjaKustannusarvioidutTyotToteumiksiOnnistui")
+    (viesti/nayta-toast! "Kustannusarvioidut työt ajettu toteumiksi!" :onnistui)
+    (assoc app :kustannusarvioidut-tyot-toteumiksi-kaynnissa false))
 
   AjaKustannusarvioidutTyotToteumiksiEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Ajo epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :kustannusarvioidut-tyot-toteumiksi-kaynnissa false))
+
+  AjaKasitteleUrakatMaksueriksi
+  (process-event [_ app]
+    (js/console.log "AjaKasitteleUrakatMaksueriksi")
+    (tuck-apurit/post! :aja-kasittele-maksuerat
+      {}
+      {:onnistui ->AjaKasitteleUrakatMaksueriksiOnnistui
+       :epaonnistui ->AjaKasitteleUrakatMaksueriksiEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :maksuerat-kaynnissa true))
+
+  AjaKasitteleUrakatMaksueriksiOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.log "AjaKasitteleUrakatMaksueriksiOnnistui")
+      (viesti/nayta-toast! "Maksuerät alustettu!" :onnistui)
+      (assoc app :maksuerat-kaynnissa false)))
+
+  AjaKasitteleUrakatMaksueriksiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Ajo epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
-      (assoc app :kustannusarvioidut-tyot-toteumiksi-kaynnissa false))))
+      (assoc app :maksuerat-kaynnissa false))))

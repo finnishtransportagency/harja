@@ -68,7 +68,7 @@ GROUP BY tpi_id;
 -- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain yksi (kokonaishintainen).
 SELECT tpi_id,
        :urakka_id                       as urakka_id,
-       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden viimeisenä päivänä.
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden 10. päivä.
 FROM (SELECT
           SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu) AS kokonaishintaisten_summa,
           lyht.alkupvm,
@@ -422,4 +422,9 @@ SELECT
 
 FROM toimenpideinstanssi tpi
 WHERE tpi.urakka = :urakka
-GROUP BY tpi.id
+GROUP BY tpi.id;
+
+-- name: maksuearat-ilman-kustannussuunnitelmaa
+SELECT m.numero
+  FROM maksuera m
+ WHERE m.numero not in (SELECT DISTINCT maksuera FROM kustannussuunnitelma);

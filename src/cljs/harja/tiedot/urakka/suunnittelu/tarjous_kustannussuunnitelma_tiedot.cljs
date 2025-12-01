@@ -317,7 +317,8 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)))
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :uusi-toimenkuva-valittavana false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]

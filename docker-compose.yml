@@ -166,7 +166,11 @@ services:
       fi
 
       echo 'Aloitetaan LESS kääntäminen'
-      sh/tarkkaile_less.sh $${LEIN_PROFILES} > /var/log/harja_less.log 2>&1
+      # Asenna depsut jos puuttuu 
+      [ -d node_modules ] || npm ci
+      # Less tarkkailu ajaa kompilen käynnistyessään
+      npm run less > /var/log/harja_less.log 2>&1 &
+      
       disown
       echo 'Luodaan .edn filut figwheeliä varten'
       mkdir -p figwheel_conf/luodut
