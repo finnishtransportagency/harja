@@ -163,6 +163,13 @@ UPDATE mhu_muutos
  WHERE id = :id
 RETURNING id, versio;
 
+-- name: poista-muutos!
+UPDATE mhu_muutos
+   SET muokattu  = NOW(),
+       muokkaaja = :kayttaja,
+       poistettu = TRUE
+ WHERE id = :id
+RETURNING id, versio;
 
 -- name: luo-tai-paivita-muutos-kustannusvaikutus<!
 INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
@@ -268,14 +275,6 @@ SELECT m.id,
    AND m.versio = :versio
    AND m.urakka = :urakka
  GROUP BY m.id, m.versio ;
-
--- name: poista-muutos!
-UPDATE mhu_muutos
-   SET poistettu = TRUE,
-       muokkaaja = :kayttaja,
-       muokattu = NOW()
- WHERE id = :id
-   AND versio = :versio;
 
 -- name: linkita-muutos-ja-liite<!
 INSERT INTO mhu_muutos_liite (muutos, liite, versio)

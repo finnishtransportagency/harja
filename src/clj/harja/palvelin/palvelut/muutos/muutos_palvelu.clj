@@ -582,15 +582,6 @@
       (poista-vanhat-kulutiedot! db kayttaja rivi))))
 
 
-(defn- poista-muutos
-  "Poistaa muutoksen."
-  ;; Hox: tätä ei vielä käytetä. Jossain kohti tulee varmasti lomakkeelle poistaminen mahdolliseksi
-  [db kayttaja muutos]
-  (when (and (:id muutos) (:versio muutos))
-    (muutos-kyselyt/poista-muutos! db {:id (:id muutos)
-                                       :versio (:versio muutos)
-                                       :kayttaja (:id kayttaja)})))
-
 (defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
   (let [{muutos-id :id uusi-muutos-versio :versio} aiti-muutos-id-ja-versio
         vanhat-liite-idt (set (map :liite
@@ -837,6 +828,23 @@
                                               :valittu-hoitokausi valittu-hoitokausi
                                               :laskenta-automatiikka? laskenta-automatiikka?}))))
 
+(defn- poista-muutos
+  "Poistaa muutoksen ja tarvittaessa muutokseen liittyvät tiedot muutoksen tyypistä riippuen"
+  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos-id laskenta-automatiikka?] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  (jdbc/with-db-transaction [conn db]
+    (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
+          _ (when-not muutos
+              (throw+ {:type virheet/+viallinen-kutsu+
+                       :virheet [{:virhe "Muutosta ei löydy"}]}))]
+      (muutos-kyselyt/poista-muutos! db {:id muutos-id
+                                         :kayttaja (:id kayttaja)}))
+
+    (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
+                                            :hoitokaudet hoitokaudet
+                                            :valittu-hoitokausi valittu-hoitokausi
+                                            :laskenta-automatiikka? laskenta-automatiikka?})))
 
 (defn hae-urakan-muutostyot
   "Hakee kululomakkeeseen laaditut muutostyöt, jotta näille voi kirjata kuluja"
@@ -878,6 +886,14 @@
       (julkaise-palvelut
         (:http-palvelin this)
 
+        :tallenna-muutos
+        (fn [kayttaja tiedot]
+          (tallenna-muutos (:db this) kayttaja tiedot))
+
+        :poista-muutos
+        (fn [kayttaja tiedot]
+          (poista-muutos (:db this) kayttaja tiedot))
+
         :hae-urakan-muutostiedot
         (fn [kayttaja tiedot]
           (hae-urakan-muutostiedot (:db this) kayttaja tiedot))
@@ -902,10 +918,6 @@
         (fn [kayttaja tiedot]
           (tallenna-maaramuutos-yksikkohinta (:db this) kayttaja tiedot))
 
-        :tallenna-muutos
-        (fn [kayttaja tiedot]
-          (tallenna-muutos (:db this) kayttaja tiedot))
-
         :hae-urakan-muutostyot
         (fn [kayttaja tiedot]
           (hae-urakan-muutostyot (:db this) kayttaja tiedot))
@@ -918,6 +930,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :tallenna-muutos
+      :poista-muutos
       :hae-muutoksen-tiedot
       :hae-urakan-muutostyot
       :hae-urakan-muutostiedot

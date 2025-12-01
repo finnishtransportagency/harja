@@ -440,15 +440,18 @@
     (assoc app :tallennus-kesken? false))
 
   PoistaMuutos
-  (process-event [{:keys [muutos]} app]
-    (log/debug "Poistetaan muutos id:" (:id muutos))
-
-    (let [muutos-id (:id muutos)]
+  (process-event [{:keys [muutos]}
+                  {:keys [laskenta-automatiikka?] :as app}]
+    (let [muutos-id (:id muutos)
+          urakka (:urakka @tila/yleiset)]
       (tuck-apurit/post! :poista-muutos
-        {:valittu-hoitokausi (:valittu-hoitokausi app)
-         :muutos-id muutos-id}
-        {:onnistui ->TallennaMuutosOnnistui
-         :epaonnistui ->TallennaMuutosEpaonnistui
+        {:muutos-id muutos-id
+         :urakka-id (:id urakka)
+         :valittu-hoitokausi (:valittu-hoitokausi app)
+         :hoitokaudet @u/valitun-urakan-hoitokaudet
+         :laskenta-automatiikka? laskenta-automatiikka?}
+        {:onnistui ->PoistaMuutosOnnistui
+         :epaonnistui ->PoistaMuutosEpaonnistui
          :paasta-virhe-lapi? true})
       (assoc app :tallennus-kesken? true)))
 
