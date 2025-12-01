@@ -9,7 +9,8 @@
   hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko hae-id-sampoidlla aseta-urakan-toimenkuvat
   hae-urakan-alkuvuosi onko-olemassa onko-urakalla-tehtavaa hae-urakka-sijainnilla listaa-kaikki-urakat-analytiikalle
   listaa-urakat-analytiikalle-hoitovuosittain hae-paallystysurakat-analytiikalle
-  hae-urakkatiedot-laskutusyhteenvetoon)
+  hae-urakkatiedot-laskutusyhteenvetoon perustettu-harjassa? paivita-hankkeen-tiedot-urakalle!
+  paivita-urakka-alueiden-nakyma luo-urakka<! paivita-urakka!)
 
 (defn onko-olemassa? [db id]
   (:exists (first (onko-olemassa db id))))

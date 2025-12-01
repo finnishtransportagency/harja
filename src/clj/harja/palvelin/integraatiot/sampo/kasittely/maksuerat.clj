@@ -1,15 +1,11 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.maksuerat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [hiccup.core :refer [html]]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
             [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
-            [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.vayla-rest.sampo-lahetys :as sampo-lahetys]
             [clojure.string :as str])
@@ -65,20 +61,20 @@
 ;; likaisiksi, jotta ne lähetetään uudelleen Sampoon. Tämä sen varalta, että toimenpideinstansissa on merkitsevä muutos (esim. tuotepolku).
 (defn paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi
   [db tpi-id]
-  (maksuerat/merkitse-toimenpiteen-maksuerat-likaisiksi! db tpi-id)
+  (qm/merkitse-toimenpiteen-maksuerat-likaisiksi! db tpi-id)
   (kustannussuunnitelmat/merkitse-toimenpiteen-kustannussunnitelmat-likaisiksi! db tpi-id))
 
 (defn perusta-maksuerat-hoidon-urakoille [db]
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
   (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
-    (if (empty? maksuerattomat-tpit)
+    (when (empty? maksuerattomat-tpit)
       (log/debug "Kaikki maksuerät on jo perustettu urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
       (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "teiden-hoito")
                                maksueratyypit-maanteidenhoidon-urakoissa
                                maksueratyypit)]
         (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi (:urakkatyyppi tpi))
-              maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
+              maksueranumero (:numero (qm/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
 (defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
@@ -115,7 +111,7 @@
       (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
 (defn laheta-api-maksuera [db api-sampo-asetukset integraatioloki numero summat]
-  (if (maksuerat/onko-olemassa? db numero)
+  (if (qm/onko-olemassa? db numero)
     (try
       (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
       (if (lukitse-maksuera db numero)
