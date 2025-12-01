@@ -1927,14 +1927,20 @@
       (is (map? tulos) "Palauttaa mapin")
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
-      (is (number? (:bonus-tai-sanktio tulos)) "Bonus on numero")
+      (is (map? (:bonus-tai-sanktio tulos)) "Bonus on map")
+      (is (or (contains? (:bonus-tai-sanktio tulos) :sanktio)
+              (contains? (:bonus-tai-sanktio tulos) :bonus)
+              (contains? (:bonus-tai-sanktio tulos) :tavoite-taytetty))
+          "Bonus-tai-sanktio sisältää joko :bonus, :sanktio tai :tavoite-taytetty")
       (is (keyword? (:ennusteen-tila tulos)) "Ennusteen tila on keyword"))))
 
 (deftest laske-bonus-ja-ennuste-paatos-test
   (testing "Päätös olemassa - käytetään tallennetun päätöksen bonusta"
     (let [tallennettu-paatos {:toteutuneet_pisteet 90
                                :luvatut_pisteet 100
-                               :tavoitehinta 1000000}
+                               :tavoitehinta 1000000
+                               :tyyppi "sanktio"
+                               :lupaussanktio -10000M}
           opts {:tallennettu-paatos tallennettu-paatos
                 :piste-toteuma 85
                 :piste-ennuste 80
