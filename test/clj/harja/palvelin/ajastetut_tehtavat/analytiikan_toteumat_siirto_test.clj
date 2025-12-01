@@ -45,7 +45,7 @@
                   (analytiikan-toteumat/siirra-toteumat testitietokanta (t-coerce/to-sql-time paiva)))
             (pvm/paivat-valissa (pvm/luo-pvm 2015 0 1) (pvm/luo-pvm 2015 11 31)))
         maarat-lopussa (hae-maarat)
-        siirretty (first (q "SELECT luotu, toteumatehtavat, toteumamateriaalit FROM analytiikka_toteumat WHERE toteuma_tunniste_id = '1117'"))
+        siirretty (first (q "SELECT luotu, toteumatehtavat, toteumamateriaalit FROM analytiikka_toteumat WHERE toteuma_tunniste_id = '1112'"))
         siirron-luotu-aikaleima (first siirretty)
         toteumatehtavat (first (konversio/jsonb->clojuremap (second siirretty)))
         toteumamateriaalit (first (konversio/jsonb->clojuremap (last siirretty)))]
