@@ -112,7 +112,12 @@
 
 (defn laske-maarapaiva-tiedot
   [db lupaukset urakka-id urakan-tiedot hoitokauden-alkuvuosi nykyhetki]
-  {:pre [(coll? lupaukset) (number? urakka-id) (map? urakan-tiedot) (number? hoitokauden-alkuvuosi)]}
+  {:pre [(some? db)
+         (coll? lupaukset)
+         (number? urakka-id)
+         (map? urakan-tiedot)
+         (number? hoitokauden-alkuvuosi)
+         (inst? nykyhetki)]}
   (try
     (let [kustannusennuste-lupaus (first (filter #(= (:lupaustyyppi %) "kustannusennuste") lupaukset))]
       (if-not kustannusennuste-lupaus
@@ -977,6 +982,13 @@
   "Laskee lopulliset pisteet kustannusennusteille kun välikatselmus on saatavilla.
    Kutsutaan välikatselmuksen päätöksestä."
   [db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta toteutunut-kustannus valikatselmus-pvm user-id]
+  {:pre [(some? db)
+         (number? urakka-id)
+         (number? hoitokauden-alkuvuosi)
+         (number? toteutunut-tavoitehinta)
+         (number? toteutunut-kustannus)
+         (inst? valikatselmus-pvm)
+         (number? user-id)]}
   (try
     (log/info (format "Lasketaan lopulliset kustannusennuste pisteet urakalle %s hoitokaudelle %s"
                 urakka-id hoitokauden-alkuvuosi))
@@ -1015,6 +1027,7 @@
 
                 ;; Laske lopulliset pisteet domain-logiikalla
                 (if (empty? puuttuvat-arvot)
+                  (try
                     (let [tarkkuus-tulos (kustannusennuste-domain/laske-kustannusennusteen-tarkkuus
                                            {:ennustettu-tavoitehinta ennustettu-tavoitehinta
                                             :ennustettu-kustannus ennustetut-kustannukset
@@ -1045,13 +1058,16 @@
 
                       (log/info (format "Päivitettiin kustannusennuste %s lopulliset pisteet: %s"
                                   kustannusennuste-id lopulliset-pisteet)))
+                    (catch Exception e
+                      (log/error e (format "Virhe laskettaessa pisteitä kustannusennusteelle %s: %s"
+                                     kustannusennuste-id (.getMessage e)))))
 
-                    (log/error (format "Kustannusennuste %s: Päivitys ohitettiin puuttuvien arvojen takia. Puuttuvat: %s. Arvot: ennustettu-tavoitehinta=%s, ennustetut-kustannukset=%s, hoitovuoden-alun-tavoitehinta=%s"
-                                kustannusennuste-id
-                                (str/join ", " puuttuvat-arvot)
-                                ennustettu-tavoitehinta
-                                ennustetut-kustannukset
-                                hoitovuoden-alun-tavoitehinta)))))))
+                  (log/warn (format "Kustannusennuste %s: Päivitys ohitettiin puuttuvien arvojen takia. Puuttuvat: %s. Arvot: ennustettu-tavoitehinta=%s, ennustetut-kustannukset=%s, hoitovuoden-alun-tavoitehinta=%s"
+                              kustannusennuste-id
+                              (str/join ", " puuttuvat-arvot)
+                              ennustettu-tavoitehinta
+                              ennustetut-kustannukset
+                              hoitovuoden-alun-tavoitehinta)))))))
 
         ;; Laske keskiarvo kerätyistä pisteistä
         (let [kaikki-pisteet @keraa-pisteet
