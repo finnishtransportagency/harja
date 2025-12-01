@@ -20,16 +20,17 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn toimenpide-otsikko
-  [auki? toimenpiteet tpi summa erapaiva maksuera]
+  [auki? toimenpiteet tpi summa erapaiva maksuera maksuera-alias]
   [:tr.table-default-strong.klikattava
    {:on-click #(swap! auki? not)}
    [:td.col-xs-1 (str (pvm/pvm erapaiva))]
    [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (str maksuera-alias)]
    [:td.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
-   [:td.col-xs-4 
+   [:td.col-xs-4
     [:span.col-xs-6  "Yhteensä"]
-    [:span.col-xs-6  
-     (if @auki? 
+    [:span.col-xs-6
+     (if @auki?
        [ikonit/harja-icon-navigation-up]
        [ikonit/harja-icon-navigation-down])]]
    [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
@@ -51,13 +52,14 @@
    [:td {:colSpan "6"} (str erapaiva)]])
 
 (defn kulu-rivi 
-  [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
+  [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera maksuera-alias liitteet summa erapaiva]}]
   [:tr.klikattava 
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
    [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
    [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (str maksuera-alias)]
    [:td.col-xs-4 toimenpide-nimi]
-   [:td.col-xs-4 tehtavaryhma-nimi]
+   [:td.col-xs-3 tehtavaryhma-nimi]
    [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
    [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
 
@@ -70,7 +72,7 @@
            [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) (-> rivit first :maksuera-numero)] 
            (when @auki? 
              (into [:<>] 
-                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa maksuera-numero] :as rivi} & loput] rivit
+                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa maksuera-numero maksuera-alias] :as rivi} & loput] rivit
                           odd? false
                           elementit []]  
                      (if (nil? rivi) 
@@ -83,6 +85,7 @@
                                                {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
                                                 :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
                                                 :maksuera maksuera-numero
+                                                :maksuera-alias maksuera-alias
                                                 :summa summa
                                                 :liitteet liitteet
                                                 :erapaiva nil
@@ -130,8 +133,9 @@
        [:tr
         [:th.col-xs-1 "Pvm"]
         [:th.col-xs-1 "Maksuerä"]
+        [:th.col-xs-1 "Maksuerä-alias"]
         [:th.col-xs-4 "Toimenpide"]
-        [:th.col-xs-4 "Tehtäväryhmä"]
+        [:th.col-xs-3 "Tehtäväryhmä"]
         [:th.col-xs-1.tasaa-oikealle "Määrä"]
         [:th.col-xs-1 ""]]]
       [:tbody
