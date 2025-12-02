@@ -135,25 +135,19 @@
         {
           "massa": {
             "litteyslukuluokka": "FI15",
-            "kuulamyllyluokka": "AN7",
-            "massatyyppi": "SMA, Kivimastiksiasfaltti",
+            "kuulamyllyluokka": "AN10",
+            "massatyyppi": "AB, Asfalttibetoni",
             "runkoaineet": [
               {
                 "fillerityyppi": "Kalkkifilleri (KF)",
                 "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
-                "massaprosentti": 5.0
+                "massaprosentti": 1.0
               },
               {
                 "litteysluku": 20.0,
                 "kuulamyllyarvo": 10.0,
                 "runkoainetyyppi": "Kiviaines",
-                "massaprosentti": 85.0
-              },
-              {
-                "litteysluku": 20.0,
-                "kuulamyllyarvo": 10.0,
-                "runkoainetyyppi": "Asfalttirouhe",
-                "massaprosentti": 10.0
+                "massaprosentti": 100.0
               }
             ],
             "lisaaineet": [
@@ -173,16 +167,15 @@
             "ajorata": 1,
             "kaista": 1,
             "aosa": 20,
-            "let": 1300,
+            "let": 300,
             "losa": 20,
             "tienumero": 86,
-            "aet": 650
+            "aet": 0
           },
-          "kasittelymenetelma": "REM-TAS, REMIX-tasaus",
-          "massamenekki": 20.1,
+          "kasittelymenetelma": "TAS, Massatasaus",
+          "massamenekki": 0.10,
           "poistettu": false,
-          "rc%": 82,
-          "pituus": 650
+          "pituus": 300
         },
         {
           "massa": {
@@ -232,19 +225,25 @@
         {
           "massa": {
             "litteyslukuluokka": "FI15",
-            "kuulamyllyluokka": "AN10",
-            "massatyyppi": "AB, Asfalttibetoni",
+            "kuulamyllyluokka": "AN7",
+            "massatyyppi": "SMA, Kivimastiksiasfaltti",
             "runkoaineet": [
               {
                 "fillerityyppi": "Kalkkifilleri (KF)",
                 "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
-                "massaprosentti": 1.0
+                "massaprosentti": 5.0
               },
               {
                 "litteysluku": 20.0,
                 "kuulamyllyarvo": 10.0,
                 "runkoainetyyppi": "Kiviaines",
-                "massaprosentti": 100.0
+                "massaprosentti": 85.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Asfalttirouhe",
+                "massaprosentti": 10.0
               }
             ],
             "lisaaineet": [
@@ -264,15 +263,16 @@
             "ajorata": 1,
             "kaista": 1,
             "aosa": 20,
-            "let": 300,
+            "let": 1300,
             "losa": 20,
             "tienumero": 86,
-            "aet": 0
+            "aet": 650
           },
-          "kasittelymenetelma": "TAS, Massatasaus",
-          "massamenekki": 0.10,
+          "kasittelymenetelma": "REM-TAS, REMIX-tasaus",
+          "massamenekki": 20.1,
           "poistettu": false,
-          "pituus": 300
+          "rc%": 82,
+          "pituus": 650
         },
         {
           "massa": {
