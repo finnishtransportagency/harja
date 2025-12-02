@@ -160,7 +160,6 @@
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
-                     ;; TODO: Kun viet tuontatoon, enabloi myös mhu_kulut.cljs -> (e! (->HaeUrakanMuutostyot 
                      (k/kehitysymparistossa?)
                      (= tyyppi :teiden-hoito))
     false))
