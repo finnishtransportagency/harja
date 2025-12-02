@@ -32,10 +32,11 @@ WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssi<!
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm, luotu)
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm, luoja, luotu)
 VALUES (:urakka_id, :nimi, (SELECT id
                             FROM toimenpide
-                            WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm, NOW());
+                            WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'), NOW());
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
 INSERT INTO toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id", vaylatyyppi)
