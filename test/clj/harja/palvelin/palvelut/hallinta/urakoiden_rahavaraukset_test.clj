@@ -24,7 +24,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-kaikki-rahavaraukset
-  (let [tietokantaan-lisatty-maara 13
+  (let [tietokantaan-lisatty-maara 15
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})
         rahavaraukset (:rahavaraukset tulos)]
@@ -65,10 +65,10 @@
                                         LIMIT 1"))
 
         rahavaraukset-tehtavineen2 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :tallenna-rahavarauksen-tehtava +kayttaja-jvh+
-                                    {:vanha-tehtava-id 0
-                                     :uusi-tehtava tehtava
-                                     :rahavaraus-id rahavaraus-id})
+                                     :tallenna-rahavarauksen-tehtava +kayttaja-jvh+
+                                     {:vanha-tehtava-id 0
+                                      :uusi-tehtava tehtava
+                                      :rahavaraus-id rahavaraus-id})
 
         akillisten-tehtavat2 (:tehtavat (first (filter #(= rahavaraus-id (:id %)) rahavaraukset-tehtavineen2)))]
 
