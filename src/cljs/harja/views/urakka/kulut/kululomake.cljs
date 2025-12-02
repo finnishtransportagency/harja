@@ -355,7 +355,8 @@
        [:div.label-ja-alasveto {:style {:width "320px"}}
         [:span.alasvedon-otsikko "Muutostyö*"]
         [yleiset/livi-pudotusvalikko {:valinta (:valittu-muutostyo kohdistus)
-                                      :format-fn :nimi
+                                      ;; Jos muutostöitä ei urakalle ole ollenkaan tehty, näytä "Ei muutostöitä."
+                                      :format-fn #(if (seq urakan-muutostyot) (:nimi %) "Ei muutostöitä.")
                                       :vayla-tyyli? true
                                       :muokattu? true
                                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :valittu-muutostyo)
