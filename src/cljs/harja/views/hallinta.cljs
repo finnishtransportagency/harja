@@ -251,13 +251,10 @@
 
     "Raporttityökalut"
     :raportittityokalut
-    (do
-      (js/console.log "***** Tarkistetaan raporttityökalujen näyttöoikeudet" (istunto/ominaisuus-kaytossa? :toteumatyokalu))
-      (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
-                (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
-          ^{:key "raporttityokalut"}
-          (js/console.log "Näytetään raporttityökalut")
-          [raporttityokalu-nakyma/nayta-raporttityokalut]))
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "raporttityokalut"}
+      [raporttityokalu-nakyma/nayta-raporttityokalut])
 
     "Viestitestaus"
     :viestitestaus
