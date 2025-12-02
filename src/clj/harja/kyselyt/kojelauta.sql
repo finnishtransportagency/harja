@@ -30,19 +30,19 @@ SELECT u.id,
          WHERE p.urakkaid = u.id
            AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
            AND p.poistettu IS FALSE
-           AND p.tyyppi IN ('bonus', 'sanktio')) AS lupauspaatos,
+           AND p.tyyppi IN ('bonus', 'sanktio', 'taytetty')) AS lupauspaatos,
        (SELECT p.luvatut_pisteet
         FROM paatos_lupaus p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
-          AND p.tyyppi IN ('bonus', 'sanktio')) AS luvatut_pisteet,
+          AND p.tyyppi IN ('bonus', 'sanktio', 'taytetty')) AS luvatut_pisteet,
        (SELECT p.toteutuneet_pisteet
         FROM paatos_lupaus p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
-          AND p.tyyppi IN ('bonus', 'sanktio')) AS toteutuneet_pisteet,
+          AND p.tyyppi IN ('bonus', 'sanktio', 'taytetty')) AS toteutuneet_pisteet,
 
        (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
            lp.aika BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
