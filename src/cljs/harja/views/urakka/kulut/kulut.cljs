@@ -39,7 +39,7 @@
 (defn koontilasku-otsikko 
   [nro summa]
   [:tr.table-default-thin.valiotsikko.table-default-strong
-   [:td {:colSpan "4"}
+   [:td {:colSpan "5"}
     (str (if (zero? nro)
            "Kulut ilman koontilaskun nroa"
            (str "Koontilasku nro " nro)) " yhteensä")] 
@@ -49,7 +49,7 @@
 (defn laskun-erapaiva-otsikko
   [erapaiva]
   [:tr.table-default-thin.valiotsikko.table-default-strong
-   [:td {:colSpan "6"} (str erapaiva)]])
+   [:td {:colSpan "7"} (str erapaiva)]])
 
 (defn kulu-rivi 
   [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera maksuera-alias liitteet summa erapaiva]}]
@@ -69,7 +69,7 @@
     (fn [[_ tpi summa rivit] {:keys [e!]}]
       (if (> (count rivit) 1)
           [:<>
-           [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) (-> rivit first :maksuera-numero)] 
+           [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) (-> rivit first :maksuera-numero) (-> rivit first :maksuera-alias)] 
            (when @auki? 
              (into [:<>] 
                    (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa maksuera-numero maksuera-alias] :as rivi} & loput] rivit
@@ -90,12 +90,13 @@
                                                 :liitteet liitteet
                                                 :erapaiva nil
                                                 :id id}]))))))]
-        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva maksuera-numero]} (first rivit)] 
+        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva maksuera-numero maksuera-alias]} (first rivit)] 
           [kulu-rivi 
            {:e! e! :odd? false} 
            {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
             :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
             :maksuera maksuera-numero
+            :maksuera-alias maksuera-alias
             :summa summa
             :liitteet liitteet
             :erapaiva erapaiva
