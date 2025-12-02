@@ -58,7 +58,10 @@
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
   urakat-kulut-maksuerat
-  roolit)
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
