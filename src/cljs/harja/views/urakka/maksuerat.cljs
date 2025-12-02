@@ -194,7 +194,9 @@
            :tunniste :numero}
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
             :hae (fn [rivi] (:numero rivi)) :tasaa :oikea}
-           {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16
+           {:otsikko "Maksuerä-alias" :nimi :maksuera_alias :tyyppi :string :leveys "9%" :pituus 16
+            :hae (fn [rivi] (:alias (:maksuera rivi))) :tasaa :oikea}
+           {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "24%" :pituus 16
             :hae (fn [rivi] (:nimi (:maksuera rivi)))}
            {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "16%"
             :fmt fmt/euro-opt :hae (fn [rivi] (:summa (:kustannussuunnitelma rivi))) :tasaa :oikea}
