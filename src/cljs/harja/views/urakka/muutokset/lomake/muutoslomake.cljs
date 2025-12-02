@@ -58,20 +58,21 @@
         (e! (t-yhteiset/->MuokkaaMuutosta nil)))
      {:disabled tallennus-kesken?}]
 
-    [napit/poista "Poista muutos"
-     #(do
-        (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
-        (varmista-kayttajalta/varmista-kayttajalta
-           {:otsikko "Muutoksen poistaminen"
-            :sisalto [:div "Haluatko varmasti poistaa muutoksen?"]
-            :hyvaksy "Poista"
-            :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}))
-     ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
-     ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
-     ;;       On siis tarpeen erotella nämä kaksi tilannetta
-     {:disabled (or
-                  tallennus-kesken?
-                  muutoksen-tiedot-haku-kaynnissa?)}]
+    (when (:id muutos)
+      [napit/poista "Poista muutos"
+       #(do
+          (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
+          (varmista-kayttajalta/varmista-kayttajalta
+            {:otsikko "Muutoksen poistaminen"
+             :sisalto [:div "Haluatko varmasti poistaa muutoksen?"]
+             :hyvaksy "Poista"
+             :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}))
+       ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
+       ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
+       ;;       On siis tarpeen erotella nämä kaksi tilannetta
+       {:disabled (or
+                    tallennus-kesken?
+                    muutoksen-tiedot-haku-kaynnissa?)}])
 
     (when (or
             tallennus-kesken?
