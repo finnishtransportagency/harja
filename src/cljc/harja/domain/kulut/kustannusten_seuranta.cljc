@@ -325,5 +325,6 @@
     "lupaussanktio" "Lupaussanktio"
     "bonus" "Lupausbonus"
     "sanktio" "Lupaussanktio"
+    "taytetty" "Lupaus täytetty"
 
     "tuntematon tyyppi"))

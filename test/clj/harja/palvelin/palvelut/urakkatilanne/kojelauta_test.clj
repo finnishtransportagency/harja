@@ -30,20 +30,19 @@
                       urakkatieto-fixture))
 
 ;; Helpperit
-(defn tallenna-lupauspaatos [urakka-id]
+(defn tallenna-lupauspaatos [urakka-id tyyppi luvatut-pisteet toteutuneet-pisteet]
   (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         indeksi (:indeksi urakan-tiedot)
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tyyppi "bonus"
         tavoitehinta 5M
         tarjous-tavoitehinta 5M
-        luvatut-pisteet 76
-        toteutuneet-pisteet 92
-        lupausbonus 100M
+        lupausbonus (if (> toteutuneet-pisteet luvatut-pisteet) 100M nil)
+        lupaussanktio (if (> toteutuneet-pisteet luvatut-pisteet) nil 100M)
         paatos-pvm (pvm/->pvm "12.05.2024")
-        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakka-id paatos-pvm indeksi lupausbonus false)
+        indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakka-id
+                         paatos-pvm indeksi (if lupausbonus lupausbonus lupaussanktio) false)
         lupaussanktio nil
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
@@ -240,7 +239,6 @@
 
 (deftest valikatselmus-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kayttaja-id (:id +kayttaja-jvh+)
         hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
@@ -284,7 +282,7 @@
 
         _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
         ;; 3. lupausbonus
-        _ (tallenna-lupauspaatos urakka-id)
+        _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
 
         vastaus (first
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -304,13 +302,13 @@
     (is (= "tavoitehinnan-ylitus" (get-in vastaus [:tavoitehintaylityspaatos])) "Rahapäätökset")
     (is (= "bonus" (get-in vastaus [:lupauspaatos])) "Lupauspäätökset")))
 
-(deftest lupauspiusteet-nousee-oikein-kojelautaan-iin-urakassa
+(deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         lapin-hallintayksikko-id (hae-organisaatio-id-nimella "Lappi")
 
         ;; Tallenna lupauspäätös kantaan
-        _ (tallenna-lupauspaatos urakka-id)
+        _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
 
         vastaus (first
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -335,13 +333,32 @@
     (is (= lapin-hallintayksikko-id (get-in vastaus-jossa-tei-avoitepisteita [:ely_id])) "Lapin ELY")
     (is (nil? (get-in vastaus-jossa-tei-avoitepisteita [:luvatut_pisteet])) "luvatut_pisteet")))
 
+(deftest taytetty-nousee-oikein-kojelautaan-iin-urakassa
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        ;; Tallenna lupauspäätös kantaan
+        _ (tallenna-lupauspaatos urakka-id "taytetty" 76 76)
+
+        vastaus (first
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                            :hoitokauden-alkuvuosi 2024
+                                                            :urakka-idt [urakka-id]
+                                                            :ely-idt #{}}))
+        _ (println "vastaus: " (pr-str vastaus))]
+    (is (= urakka-id (get-in vastaus [:id])) "Urakka")
+    (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
+    (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")
+    (is (= 76 (get-in vastaus [:toteutuneet_pisteet])) "luvatut_pisteet")
+    (is (= "taytetty" (get-in vastaus [:lupauspaatos])) "Lupauksen pitäisi olla täytetty")))
+
 (deftest poikkeamat-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
         kayttaja-id (:id +kayttaja-jvh+)
 
         ;; Tallenna lupauspäätös kantaan
-        _ (tallenna-lupauspaatos urakka-id)
+        _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
 
         ;; lisää laatupoikkeama hoitokauden alkuun
         _ (i (format "INSERT INTO laatupoikkeama (kohde, tekija, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, tr_alkuetaisyys,
