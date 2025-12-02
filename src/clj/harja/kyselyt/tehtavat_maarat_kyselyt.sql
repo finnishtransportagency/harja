@@ -11,19 +11,16 @@ WITH rahavaraustehtava AS
       FROM mhu_muutos mm
            LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
     WHERE mm.urakka = :urakkaid
-      AND extract(YEAR from mm.voimassa_alkaen) <= :hoitokauden-alkuvuosi
+      AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       AND mm.poistettu IS NOT TRUE
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
-       tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, ut.maara as tarjous_maara,
-       (SELECT array_agg(row(id, ut.maara, maaramuutos, (ut.maara+maaramuutos), tehtavaid, voimassa_alkaen, syy))
+       tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, 
+       v.tarjous_maara,
+       (SELECT array_agg(row(id, v.tarjous_maara, maaramuutos, (v.tarjous_maara+maaramuutos), tehtavaid, voimassa_alkaen, syy))
         FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutokset,
-       (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutos_maaramuutos,
-       CASE
-           WHEN ut.maara IS NOT NULL OR (SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id) IS NOT NULL
-               THEN (COALESCE(ut.maara,0) + COALESCE((SELECT SUM(maaramuutos) FROM muutokset WHERE muutokset.tehtavaid = t.id), 0))
-           ELSE null
-           END AS yhteensa
+       v.muutossumma AS muutos_maaramuutos,
+       v.laskettu_maara AS yhteensa
 FROM tehtavaryhma tr
       JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
       JOIN tehtava t ON tr.id = t.tehtavaryhma
@@ -31,7 +28,7 @@ FROM tehtavaryhma tr
             AND t.poistettu IS NOT TRUE
             AND t.piilota IS NOT TRUE
       JOIN toimenpide tp ON t.emo = tp.id
-      LEFT JOIN urakka_tehtavamaara ut ON ut.tehtava = t.id AND ut.urakka = :urakkaid AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
+      LEFT JOIN urakka_tehtavamaara_yhteenveto v ON v.tehtava = t.id AND v.urakka = :urakkaid AND v.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       JOIN urakka u ON u.id = :urakkaid
 WHERE  (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)

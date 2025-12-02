@@ -34,14 +34,13 @@ with urakat as (select u.id, u.hallintayksikko
                          case when :urakka::integer is not null then rtm.urakka_id = :urakka else true end
                      AND (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
                    GROUP by rtm.toimenpidekoodi, rtm.urakka_id),
-     suunnitelmat as (select sum(ut.maara) as "maara",
-                             ut.tehtava,
-                             ut.urakka
-                      from urakka_tehtavamaara ut
-                      where ut.urakka in (select id from urakat)
-                        and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-                        and ut.poistettu is not true
-                      group by ut.urakka, ut.tehtava)
+     suunnitelmat as (select sum(v.laskettu_maara) as "maara",
+                             v.tehtava,
+                             v.urakka
+                      from urakka_tehtavamaara_yhteenveto v
+                      where v.urakka in (select id from urakat)
+                        and v.hoitokauden_alkuvuosi in (:hoitokausi)
+                      group by v.urakka, v.tehtava)
 select tpk.nimi                 as "nimi", --tehtävän nimi
        tpk.jarjestys            as "jarjestys",
        suunnitelmat.maara       as "suunniteltu",
@@ -215,12 +214,12 @@ DELETE
                  JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
        WHERE rvu.urakka_id = :urakka
   )
-SELECT ut.urakka                    AS "urakka",
-       ut."hoitokauden-alkuvuosi"   AS "hoitokauden-alkuvuosi",
+SELECT v.urakka                    AS "urakka",
+       v.hoitokauden_alkuvuosi   AS "hoitokauden-alkuvuosi",
        t.jarjestys               AS "jarjestys",
        t.id                      AS "tehtava-id",
-       ut.maara                     AS "suunniteltu-maara",
-       ut."muuttunut-tarjouksesta?" AS "muuttunut-tarjouksesta?",
+       v.laskettu_maara             AS "suunniteltu-maara",
+       NULL AS "muuttunut-tarjouksesta?",
        o.otsikko                    AS "otsikko",
        tp.nimi                    AS "Toimenpide",
        tp.koodi                   AS "Toimenpidekoodi",
@@ -243,9 +242,9 @@ FROM tehtavaryhma tr
                                 AND t.poistettu is not true 
                                 AND t.piilota is not true 
        JOIN toimenpide tp ON t.emo = tp.id
-       LEFT OUTER JOIN urakka_tehtavamaara ut ON t.id = ut.tehtava
-                                                     AND ut.urakka = :urakka
-                                                     AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR t.aluetieto IS TRUE)
+       LEFT OUTER JOIN urakka_tehtavamaara_yhteenveto v ON t.id = v.tehtava
+                                                     AND v.urakka = :urakka
+                                                     AND (v.hoitokauden_alkuvuosi in (:hoitokausi) OR t.aluetieto IS TRUE)
        LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp ON sp.urakka = :urakka
        JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id,
      urakka u
@@ -282,22 +281,22 @@ SELECT
     ml.yksikko AS materiaaliluokka_yksikko,
     ml.materiaalityyppi AS materiaaliluokka_tyyppi,
     NULL AS "hoito-materiaalimaara-id",
-    ut.id AS "mhu-materiaalimaara-id",
+    v.id AS "mhu-materiaalimaara-id",
     NULL AS "suolaraja-id",
-    ut.tehtava AS "tehtava-id",
-    ut."hoitokauden-alkuvuosi",
-    SUM(ut.maara) as maara,
-    ut.muokattu,
-    ut.luotu
-FROM urakka_tehtavamaara ut
-         JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+    v.tehtava AS "tehtava-id",
+    v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+    SUM(v.laskettu_maara) as maara,
+    MAX(ut.muokattu) as muokattu,
+    MAX(ut.luotu) as luotu
+FROM urakka_tehtavamaara_yhteenveto v
+         JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
+         JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
          JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
-WHERE ut.poistettu IS NOT TRUE
-  AND u.id = :urakka
-GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu, ut.id, ut.tehtava;
+         LEFT JOIN urakka_tehtavamaara ut ON v.id = ut.id
+WHERE u.id = :urakka
+GROUP BY v.hoitokauden_alkuvuosi, mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.id, v.tehtava;
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
 select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "mhu-tehtavamaara-id", yt.id as "hoito-tehtavamaara-id", MAX(yt.luotu) as luotu,
@@ -320,18 +319,18 @@ group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi";
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
 SELECT
-    SUM(ut.maara) as maara,
+    SUM(v.laskettu_maara) as maara,
     tk.nimi as tehtava,
     tk.id as "tehtava-id",
-    ut.id as "mhu-tehtavamaara-id",
+    v.id as "mhu-tehtavamaara-id",
     NULL AS "hoito-tehtavamaara-id",
-    ut."hoitokauden-alkuvuosi",
-    ut.muokattu,
-    ut.luotu
-FROM urakka_tehtavamaara ut
-         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
-         JOIN sopimuksen_tehtavamaarat_tallennettu stt on ut.urakka = stt.urakka AND stt.tallennettu IS TRUE
-WHERE ut.poistettu IS NOT TRUE
-  AND ut.urakka = :urakka-id
-  AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
-GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu, ut.id;
+    v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+    MAX(ut.muokattu) as muokattu,
+    MAX(ut.luotu) as luotu
+FROM urakka_tehtavamaara_yhteenveto v
+         JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
+         JOIN sopimuksen_tehtavamaarat_tallennettu stt on v.urakka = stt.urakka AND stt.tallennettu IS TRUE
+         LEFT JOIN urakka_tehtavamaara ut ON v.id = ut.id
+WHERE v.urakka = :urakka-id
+  AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
+GROUP BY v.hoitokauden_alkuvuosi, tk.id, v.id;

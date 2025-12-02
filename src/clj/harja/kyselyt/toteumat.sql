@@ -455,7 +455,7 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
        tk.nimi                                   AS tehtava,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.maara)                             AS suunniteltu_maara,
+       SUM(ut.laskettu_maara)                    AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
        tk.suunnitteluyksikko                     AS yk,
        CASE
@@ -467,8 +467,8 @@ FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
      JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+     LEFT JOIN urakka_tehtavamaara_yhteenveto ut ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                    AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
      JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
