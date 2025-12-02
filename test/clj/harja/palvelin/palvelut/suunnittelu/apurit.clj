@@ -1,4 +1,5 @@
-(ns harja.palvelin.palvelut.suunnittelu.apurit)
+(ns harja.palvelin.palvelut.suunnittelu.apurit
+  (:require [clojure.string :as str]))
 
 (def tarjous-tietomalli-2019 {:tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
@@ -79,19 +80,19 @@
 (defn poista-yhteenvetorivi-toimenpiteilta [tietomalli]
   {:toimenpiteet (filter #(not= (:nimi %) "Yhteensä") (:toimenpiteet tietomalli))})
 
-(def hankinnat-tietomalli {:toimenpiteet [{:nimi "TALVIHOITO", :osio "hankintakustannukset" :toimenpideinstanssi-id 90 :pysyvat-muutokset "Ei muutoksia"
+(def hankinnat-tietomalli {:toimenpiteet [{:nimi "TALVIHOITO" :apunimi "talvi" :osio "hankintakustannukset" :toimenpideinstanssi-id 90 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "LIIKENNEYMPÄRISTÖN HOITO", :osio "hankintakustannukset" :toimenpideinstanssi-id 91 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "LIIKENNEYMPÄRISTÖN HOITO" :apunimi "ympäristö" :osio "hankintakustannukset" :toimenpideinstanssi-id 91 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "SORATEIDEN HOITO", :osio "hankintakustannukset" :toimenpideinstanssi-id 92 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "SORATEIDEN HOITO" :apunimi "sora" :osio "hankintakustannukset" :toimenpideinstanssi-id 92 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "PÄÄLLYSTEIDEN PAIKKAUS", :osio "hankintakustannukset" :toimenpideinstanssi-id 93 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "PÄÄLLYSTEIDEN PAIKKAUS" :apunimi "paikkaus" :osio "hankintakustannukset" :toimenpideinstanssi-id 93 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "YLLÄPITO", :osio "hankintakustannukset" :toimenpideinstanssi-id 94 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "YLLÄPITO" :apunimi "mhu ylläpito" :osio "hankintakustannukset" :toimenpideinstanssi-id 94 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "KORVAUSINVESTOINTI", :osio "hankintakustannukset" :toimenpideinstanssi-id 95 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "KORVAUSINVESTOINTI" :apunimi "korvaus" :osio "hankintakustannukset" :toimenpideinstanssi-id 95 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 100 :alkukausi-indeksikorjattu 111 :loppukausi 300 :loppukausi-indeksikorjattu 333 :yhteensa 400 :yhteensa-indeksikorjattu 444}
-                                          {:nimi "Yhteensä", :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
+                                          {:nimi "Yhteensä" :apunimi "yhteensä" :osio "hankintakustannukset" :toimenpideinstanssi-id 0 :pysyvat-muutokset "Ei muutoksia"
                                            :alkukausi 700 :alkukausi-indeksikorjattu 777 :loppukausi 2100 :loppukausi-indeksikorjattu 2331 :yhteensa 2800 :yhteensa-indeksikorjattu 3108}]})
 
 (defn paivita-hankintojen-toimenpideinstanssi-id
@@ -99,10 +100,10 @@
   Vaihdetaan siis id sen mukaan, mitä toimenpiteissä on annettu"
   [hankinnat toimenpiteet]
   (let [hankintarivit (:toimenpiteet hankinnat)
-        hankintarivit (mapv (fn [hankintarivi]
+        hankintarivit (keep (fn [hankintarivi]
                               (let [r (keep
                                         (fn [toimenpide]
-                                          (if (= (:nimi toimenpide) (:nimi hankintarivi))
+                                          (if (str/includes? (str/lower-case (:nimi toimenpide)) (str/lower-case (:apunimi hankintarivi)))
                                             (assoc hankintarivi :toimenpideinstanssi-id (:toimenpideinstanssi-id toimenpide))
                                             nil))
                                         toimenpiteet)]
