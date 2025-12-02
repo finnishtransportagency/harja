@@ -838,8 +838,8 @@
           _ (when-not muutos
               (throw+ {:type virheet/+viallinen-kutsu+
                        :virheet [{:virhe "Muutosta ei löydy"}]}))]
-      (muutos-kyselyt/poista-muutos! db {:id muutos-id
-                                         :kayttaja (:id kayttaja)}))
+      (muutos-kyselyt/poista-muutos! conn {:id muutos-id
+                                           :kayttaja (:id kayttaja)}))
 
     (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                             :hoitokaudet hoitokaudet
