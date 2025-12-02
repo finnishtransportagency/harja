@@ -25,18 +25,9 @@
           :liitteiden-hallinta (component/using
                                  (liitteet-komponentti/->Liitteet nil nil nil)
                                  [:db])
-          :hae-urakan-muutostiedot (component/using
-                                     (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                     [:http-palvelin :db])
-          :hae-muutoksen-tiedot (component/using
-                                  (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                  [:http-palvelin :db])
-          :tallenna-muutos (component/using
-                             (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                             [:http-palvelin :db])
-          :tallenna-rahavarausmuutosten-syyt (component/using
-                                               (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                               [:http-palvelin :db])))))
+          :muutokset (component/using
+                       (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                       [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
