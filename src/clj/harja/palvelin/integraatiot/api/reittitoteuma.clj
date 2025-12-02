@@ -205,7 +205,7 @@ maksimi-linnuntien-etaisyys 200)
   "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä.
   Osaa käsitellä, jos syötteenä on useampi päivämäärä vektorissa ja yksittäisen päivämäärän."
   [toteuma-alkanut]
-  (if (seq? toteuma-alkanut)
+  (if (sequential? toteuma-alkanut)
     (some #(not (pvm/tanaan? %)) toteuma-alkanut)
     (not (pvm/tanaan? toteuma-alkanut))))
 
