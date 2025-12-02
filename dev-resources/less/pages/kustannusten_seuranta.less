@@ -1,6 +1,21 @@
 @import "../yleiset";
 
 div.kustannusten-seuranta {
+
+  .livi-reunaviiva {
+    display: flex;
+    align-items: center;
+    
+    width: 100%;
+    height: 40px;
+    padding: 2px;
+    border-left: 3px solid @sininen4;
+
+    span {
+      display: block;
+    }
+  }
+
   .filtterit-container {
     padding-top: 24px;
     display: flex;
@@ -26,6 +41,7 @@ div.kustannusten-seuranta {
 
   .sivuelementti {
     padding-top: 24px;
+    padding-bottom: @valistys-32;
   }
 
   span.taso2 {

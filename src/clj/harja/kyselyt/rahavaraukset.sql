@@ -20,7 +20,7 @@ SELECT rv.id,
            JOIN toimenpide tp ON t.emo = tp.id
            JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :id
  GROUP BY rv.id, rvu.urakkakohtainen_nimi, rv.nimi, rv.jarjestys
- ORDER BY rv.jarjestys ASC;
+ ORDER BY rv.jarjestys;
 
 -- name: hae-urakoiden-rahavaraukset
 SELECT u.id                     AS "urakka-id",
@@ -167,7 +167,7 @@ SELECT DISTINCT ON (tr.id) tr.id,
 -- name: hae-urakan-suunnitellut-rahavarausten-kustannukset
 -- Haetaan rahavaraukset ja tarkistetaan onko kustannusarvioitu_tyo taulussa niille suunniteltu kustannuksia.
 -- Haussa ei ole vuosikohtaisuutta parametrisoitu, mutta tulokset summaroidaan vuosikohtaisesti.
-  WITH urakan_alkuvuodet AS (SELECT GENERATE_SERIES(:alkuvuosi::INT, :loppuvuosi::INT - 1) AS year)
+WITH urakan_alkuvuodet AS (SELECT GENERATE_SERIES(:alkuvuosi::INT, :loppuvuosi::INT - 1) AS year)
 SELECT rv.id,
        COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), rv.nimi) AS nimi,
        SUM(kt.summa)                                           AS summa,

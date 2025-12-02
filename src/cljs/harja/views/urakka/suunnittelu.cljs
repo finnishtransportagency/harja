@@ -1,12 +1,13 @@
 (ns harja.views.urakka.suunnittelu
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.bootstrap :as bs]
+  (:require [harja.ui.bootstrap :as bs]
+            [harja.pvm :as pvm]
+            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
+            [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -16,31 +17,24 @@
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.tarjous-nakyma :as tarjous-nakyma]
             [harja.views.urakka.suunnittelu.tarjous-kustannussuunnitelma.kustannussuunnitelma-nakyma :as kustannussuunitelma-nakyma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
-            [harja.loki :refer [log]]
-            [harja.ui.debug :as debug]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.domain.urakka :as ur]
-            [tuck.core :as tuck])
+            [harja.domain.urakka :as ur]))
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
-
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
-      (case valilehti
-            :materiaalit (and (not (#{ :teiden-hoito  :paallystys :tiemerkinta} tyyppi))
-                              (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-            :tehtavat (= tyyppi  :teiden-hoito )
-            :suola (#{:hoito  :teiden-hoito } tyyppi)
-            :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
-                            (not= tyyppi :teiden-hoito))
-            :kiintiot (= tyyppi :vesivayla-hoito)
-            :kokonaishintaiset (not= tyyppi  :teiden-hoito )
-            :yksikkohintaiset (not= tyyppi  :teiden-hoito )
-            :kustannussuunnitelma (= tyyppi  :teiden-hoito )
-            :uusi-kustannussuunnitelma (= tyyppi  :teiden-hoito )
-            :tarjous (= tyyppi  :teiden-hoito )))
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm]}]
+  (case valilehti
+    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+                   (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+    :tehtavat (= tyyppi :teiden-hoito)
+    :suola (#{:hoito :teiden-hoito} tyyppi)
+    :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+            (not= tyyppi :teiden-hoito))
+    :kiintiot (= tyyppi :vesivayla-hoito)
+    :kokonaishintaiset (not= tyyppi :teiden-hoito)
+    :yksikkohintaiset (not= tyyppi :teiden-hoito)
+    :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
+    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -60,7 +54,7 @@
                   (istunto/ominaisuus-kaytossa? :mhu-urakka))
             [tarjous-nakyma/tarjous])
 
-          "Uusi Kustannussuunnitelma"
+          "Hoitovuoden alun tavoitehinta"
           :uusi-kustannussuunnitelma
           (when (and
                   (valilehti-mahdollinen? :uusi-kustannussuunnitelma ur)
@@ -84,6 +78,15 @@
                      (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "tehtavat"}
             [tehtavat/tehtavat])
+
+          "Tehtävä- ja määräluettelo"
+          :tehtavat-maarat
+          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (valilehti-mahdollinen? :tehtavat ur)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (istunto/ominaisuus-kaytossa? :tehtavat-maarat))
+            ^{:key "tehtavat"}
+            [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset

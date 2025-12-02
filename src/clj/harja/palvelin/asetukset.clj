@@ -35,6 +35,7 @@
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
    :tietokanta-replica Tietokanta
+   (s/optional-key :harja-url) s/Str
    :tarkkailija {:loop-odotus s/Int}
    :fim {:url s/Str
          (s/optional-key :tiedosto) s/Str
@@ -214,7 +215,7 @@
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
-  (merge-with #(if (map? %1)
+  (merge-with #(if (and (map? %1) (map? %2))
                  (merge %1 %2)
                  %2)
     oletukset asetukset))

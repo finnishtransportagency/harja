@@ -7,7 +7,6 @@
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
 
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -134,30 +133,47 @@
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
-  (let [kajaani-tiedot {:urakka-id @kajaanin-maanteiden-hoitourakan-2025-2030-id
-                        :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                             #inst "2028-09-30T20:59:59.000-00:00"]
-                        :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        suomussalmi-tiedot {:urakka-id @suomussalmen-maanteiden-hoitourakan-2024-2029-id
-                            :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                                 #inst "2028-09-30T20:59:59.000-00:00"]
-                            :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+  (let [kajaaniid (hae-urakan-id-nimella "Aktiivinen Kajaani Testi")
+        kajaanin-tiedot {:urakka-id kajaaniid
+                         :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                              #inst "2025-09-30T20:59:59.000-00:00"]
+                         :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        oulunid (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+        oulu-tiedot {:urakka-id oulunid
+                     :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                          #inst "2025-09-30T20:59:59.000-00:00"]
+                     :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
         kajaani-vastaus (hae-urakan-lupaustiedot
                           +kayttaja-jvh+
-                          kajaani-tiedot)
-        suomussalmi-vastaus (hae-urakan-lupaustiedot
+                          kajaanin-tiedot)
+        oulu-vastaus (hae-urakan-lupaustiedot
                               +kayttaja-jvh+
-                              suomussalmi-tiedot)
+                       oulu-tiedot)
         kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
-        suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
-        kajaani-lupaus-1 (etsi-lupaus kajaani-vastaus 1)
-        suomussalmi-lupaus-1 (etsi-lupaus suomussalmi-vastaus 15)
-        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat)) 
-        suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))]
-    (is (= (list 1 2 3 4 5) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= (list 6 7 8 9 10) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= 1 (:lupaus-id kajaani-lupaus-1)) "Kajaanilla on lupaus 1 ryhmasta 1")
-    (is (= 15 (:lupaus-id suomussalmi-lupaus-1)) "Suomussalmella on lupaus 15 ryhmasta 6")))
+        oulu-ryhmat (:lupausryhmat oulu-vastaus)
+        kajaani-lupaus-44 (etsi-lupaus kajaani-vastaus 44)
+        oulu-lupaus-68 (etsi-lupaus oulu-vastaus 68)
+        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat))
+        oulu-ryhma-idt (sort (map :id oulu-ryhmat))]
+    (is (= (list 17 19 21 23 25) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 16 18 20 22 24) oulu-ryhma-idt) "Oulun ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (not= kajaani-ryhma-idt oulu-ryhma-idt) "Ryhmät pitää olla erit, koska Kajaani simuloi erittäin vaativaa urakkaa tässä testissä.")
+    (is (= 44 (:lupaus-id kajaani-lupaus-44)) "Kajaanilla on lupaus 44 ryhmasta 1")
+    (is (= 68 (:lupaus-id oulu-lupaus-68)) "Oululla on lupaus 13 ryhmasta 5")))
+
+
+(deftest urakan-2025-lupaustiedot-toimii
+  (let [kajaani-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        kajaani-tiedot {:urakka-id kajaani-id
+                       :valittu-hoitokausi [#inst "2025-09-30T21:00:00.000-00:00"
+                                            #inst "2026-09-30T20:59:59.000-00:00"]
+                       :nykyhetki #inst "2025-10-01T21:00:00.000-00:00"}
+        kajaani-vastaus (hae-urakan-lupaustiedot +kayttaja-jvh+ kajaani-tiedot)
+
+        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
+        kajaani-lupaus-83 (etsi-lupaus kajaani-vastaus 83)]
+
+    (is (= 83 (:lupaus-id kajaani-lupaus-83)) "Kajaanilla on lupaus 83 ryhmasta 5")))
 
 (deftest urakan-lupaustietojen-vaihtoehtojen-haku-toimii
   (let [tiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -205,7 +221,7 @@
     (is (= 1 (:odottaa-kannanottoa ryhma-1)))
 
     (is (= 10 (get-in vastaus [:yhteenveto :odottaa-kannanottoa]))
-      "Yhteensä 10 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
+      "Yhteensä 11 lupausta odottaa kannanottoa tammikuussa: kaikki paitsi 1, 2, 12 ja 14")
     (is (= 4 (get-in vastaus [:yhteenveto :merkitsevat-odottaa-kannanottoa]))
       "Yhteensä 4 lupausta odottaa merkitsevää kannanottoa tammikuussa: 4, 8, 11 ja 13")))
 
@@ -793,3 +809,92 @@
     (is (thrown? Exception (tallenna-kk-pisteet +kayttaja-uuno+ urakka-id vuosi kuukausi pisteet tyyppi)))
     (is (thrown? Exception (poista-kuukausittaiset-pisteet +kayttaja-uuno+ {:urakka-id urakka-id
                                                                             :id (:id poistettava)})))))
+
+(deftest laske-lopullinen-kustannusennuste-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoitokauden-alkuvuosi 2019
+        toteutunut-tavoitehinta 1000000M
+        toteutunut-kustannus 950000M
+        valikatselmus-pvm (pvm/luo-pvm 2020 6 15)
+        user-id (:id +kayttaja-jvh+)]
+
+    (testing "Funktio suorittuu oikeilla parametreilla"
+      ;; Funktio ei palauta mitään - se tekee vain tietokantaoperaatioita
+      (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+                  (:db jarjestelma) urakka-id hoitokauden-alkuvuosi
+                  toteutunut-tavoitehinta toteutunut-kustannus
+                  valikatselmus-pvm user-id))
+        "Funktio suorittuu onnistuneesti")
+
+      ;; Tarkista että lopputilanne tallentui tietokantaan
+      (let [lopputilanteen-rivit (q (str "SELECT lopullinen_tavoitehinta, lopulliset_kustannukset "
+                                      "FROM lupaus_hoitovuosi_lopputilanne "
+                                      "WHERE \"urakka-id\" = " urakka-id
+                                      " AND hoitovuosi_alkuvuosi = " hoitokauden-alkuvuosi))]
+        (is (seq lopputilanteen-rivit) "Lopputilanne tallentui tietokantaan")
+        (when (seq lopputilanteen-rivit)
+          (let [[tavoite kustannus] (first lopputilanteen-rivit)]
+            (is (= toteutunut-tavoitehinta tavoite) "Tavoitehinta tallentui oikein")
+            (is (= toteutunut-kustannus kustannus) "Kustannukset tallentuivat oikein")))))
+
+    (testing "Domain-funktioiden integraatio"
+      ;; Testaa että domain-funktiot toimivat odotetulla tavalla
+      (let [syotteet {:ennustettu-tavoitehinta 1000000M
+                      :ennustettu-kustannus 950000M
+                      :toteutunut-tavoitehinta 1000000M
+                      :toteutunut-kustannus 950000M
+                      :hoitovuoden-alun-tavoitehinta 1200000M}
+            tarkkuus-tulos (lupaus-domain/laske-kustannusennusteen-tarkkuus syotteet)]
+
+        (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
+        (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")))))
+
+(deftest vastaa-lupaukseen-oikeustarkistus
+  (testing "Urakoitsija voi vastata kirjauskuukauteen"
+    (let [vastaus {:lupaus-id 6
+                   :kuukausi 7  ; Heinäkuu 2022 - kirjauskuukausi lupaus 6:lle
+                   :vuosi 2022
+                   :vastaus true
+                   :paatos false  ; Kirjauskuukausi, ei päätös
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+          tulos (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :vastaa-lupaukseen
+                                  +kayttaja-yit_uuvh+
+                                  vastaus)
+                  :onnistui
+                  (catch Exception e
+                    :epaonnistui))]
+      (is (= :onnistui tulos) "Urakoitsija saa vastata kirjauskuukauteen")))
+
+  (testing "Urakoitsija ei voi vastata päättävään kuukauteen"
+    (let [vastaus {:lupaus-id 4
+                   :kuukausi 1  ; Tammikuu - Päättävä kuukausi lupaus 4:lle
+                   :vuosi 2022
+                   :paatos true
+                   :vastaus false
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}]
+      ;; Tämän pitäisi heittää poikkeus
+      (is (thrown? Exception
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :vastaa-lupaukseen
+                            +kayttaja-yit_uuvh+
+                            vastaus))
+          "Urakoitsija ei saa vastata päättävään kuukauteen")))
+
+  (testing "Tilaaja voi tehdä päätöksen"
+    (let [vastaus {:lupaus-id 4
+                   :kuukausi 2  ; Helmikuu - Päättävä kuukausi lupaus 4:lle
+                   :vuosi 2022
+                   :paatos true
+                   :vastaus false
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+          tulos (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :vastaa-lupaukseen
+                                  +kayttaja-jvh+
+                                  vastaus)
+                  :onnistui
+                  (catch Exception e
+                    :epaonnistui))]
+      (is (= :onnistui tulos) "Tilaaja saa tehdä päätöksen"))))

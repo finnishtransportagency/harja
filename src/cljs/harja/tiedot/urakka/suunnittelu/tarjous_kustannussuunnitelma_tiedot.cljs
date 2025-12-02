@@ -1,34 +1,15 @@
 (ns harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot
   (:require [clojure.string :as str]
-            [harja.tyokalut.yleiset :as tyokalut]
             [tuck.core :as tuck]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
+            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakka :as tila]))
 
 (defonce nakymassa? (atom false))
-(defonce grid-toimenkuvat-atom (atom [{}]))
-
-;; Muutosten seuranta
-(defonce tallentamattomia-muutoksia (atom false))
-
-(defn merkitse-muutos!
-  "Merkitsee että muutoksia on tehty"
-  []
-  (reset! tallentamattomia-muutoksia true))
-
-(defn nollaa-muutokset!
-  "Nollaa muutosten seurannan"
-  []
-  (reset! tallentamattomia-muutoksia false))
-
-(defn onko-muutoksia?
-  "Tarkistaa onko tallentamattomia muutoksia"
-  []
-  @tallentamattomia-muutoksia)
 
 (defn laske-rivit-yhteen [rivi]
   (let [vuosikohtaiset-avaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
@@ -45,9 +26,13 @@
 
 (defn jyvita-eperhoitovuosi-hoitovuosille
   "Jyvittää € / hoitovuosi arvon hoitovuosikohtaisille kentille"
-  [rivi]
+  [rivi vahvistetut-vuodet]
   (let [eperhoitovuosi (:eperhoitovuosi rivi 0)
-        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))]
+        vuosiavaimet (filter #(str/starts-with? (name %) "vuosi-") (keys rivi))
+        ;; Vahvistetut vuodet jätetään pois, jotta niihin ei yritetä kirjoittaa
+        vuosiavaimet (remove (fn [avain]
+                               (let [vuosi (js/parseInt (.substring (str avain) 7))]
+                                 (contains? vahvistetut-vuodet vuosi))) vuosiavaimet)]
     (if (> eperhoitovuosi 0)
       (let [jyvitetyt-arvot (zipmap vuosiavaimet (repeat eperhoitovuosi))]
         (merge rivi jyvitetyt-arvot))
@@ -60,6 +45,8 @@
     (into [] (reduce (fn [rivit tarjous-rivi]
                        (let [vuosiarvot (reduce (fn [uusi rivi]
                                                   (-> uusi
+                                                    (assoc :jarjestys (:jarjestys tarjous-rivi))
+                                                    (assoc :maksukausi (:maksukausi tarjous-rivi))
                                                     (assoc :poistettu (:poistettu tarjous-rivi))
                                                     (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
                                                     (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
@@ -71,7 +58,7 @@
                              nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
                              lopputulos (merge vuosiarvot nimiarvot)]
                          (concat rivit [lopputulos])))
-               [] (drop-last tarjous-tiedot))))) ; Jätetään viimeinen rivi pois, koska se on yhteenvetorivi
+               [] tarjous-tiedot))))
 
 (defn filtteri-hankinnat
   "Filttaa hankinnat-tiedot taulukosta"
@@ -92,6 +79,11 @@
   "Filttaa johto-ja-hallintokorvaus (toimenkuvat) tiedot taulukosta"
   [taulukon-tiedot]
   (into [] (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) taulukon-tiedot)))
+
+(defn filtteri-yhteensa
+  "Filtteröi yhteensa osion taulukosta"
+  [taulukon-tiedot]
+  (into [] (filter #(some #{"yhteensa"} [(:osio %)]) taulukon-tiedot)))
 
 (defn laske-kaikkien-gridien-yhteensa
   "Laskee kaikkien gridien hoitovuosikohtaiset arvot yhteen"
@@ -115,24 +107,6 @@
   ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
   (siirrin/siirry-elementin-id elementin-id 200))
 
-(defn konvertoi-grid-muotoon [data]
-  (into [] (reduce (fn [rivit tarjous-rivi]
-                     (let [vuosiarvot (reduce (fn [uusi rivi]
-                                                (-> uusi
-                                                  (assoc :maksukausi (:maksukausi tarjous-rivi))
-                                                  (assoc :poistettu (:poistettu tarjous-rivi))
-                                                  (assoc :rahavaraus-id (:rahavaraus-id tarjous-rivi))
-                                                  (assoc :toimenkuva-id (:toimenkuva-id tarjous-rivi))
-                                                  (assoc :tehtava-id (:tehtava-id tarjous-rivi))
-                                                  (assoc :tehtavaryhma-id (:tehtavaryhma-id tarjous-rivi))
-                                                  (assoc :osio (:osio tarjous-rivi))
-                                                  (assoc (keyword (str "vuosi-" (:vuosi rivi))) (:summa rivi))))
-                                        {} (:hoitovuosittaiset-arvot tarjous-rivi))
-                           nimiarvot {:nimi (:nimi tarjous-rivi) :yhteensa (:yhteensa tarjous-rivi)}
-                           lopputulos (merge vuosiarvot nimiarvot)]
-                       (concat rivit [lopputulos])))
-             [] data)))
-
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
   UI Grille on oltava jokainen vuosi omassa avaimeessaa tyyliin :vuosi-2023, :vuosi-2024 jne.
@@ -152,35 +126,43 @@
 (defrecord HaeTarjouksenTiedotOnnistui [vastaus])
 (defrecord HaeTarjouksenTiedotEpaonnistui [vastaus])
 
+(defrecord HaeTyhjatTarjouksenTiedot [])
+(defrecord HaeTyhjatTarjouksenTiedotOnnistui [vastaus])
+(defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
+
+;; Tarjous Grid-päivitys eventit
+(defrecord PaivitaHankinnatGrid [hankinnat])
+(defrecord PaivitaErillishankinnatGrid [erillishankinnat])
+(defrecord PaivitaToimenkuvatGrid [toimenkuvat])
+(defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
+(defrecord PaivitaTavoiteJaKattohintaGrid [rivit])
+
+;; Tallennetaan tarjouksen data
+(defrecord TallennaTarjouksenTiedot [])
+(defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
+(defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
+(defrecord ToggleUusiToimenkuvaValittavana [tila])
+
 ;; Haetaan kustannussuunnitelman tiedot
 (defrecord HaeKustannussuunnitelmanTiedot [])
 (defrecord HaeKustannussuunnitelmanTiedotOnnistui [vastaus])
 (defrecord HaeKustannussuunnitelmanTiedotEpaonnistui [vastaus])
 
-(defrecord HaeTyhjatTarjouksenTiedot [])
-(defrecord HaeTyhjatTarjouksenTiedotOnnistui [vastaus])
-(defrecord HaeTyhjatTarjouksenTiedotEpaonnistui [vastaus])
-
-;; Tallennetaan tarjouksen data
-(defrecord TallennaTarjouksenTiedot [tarjous toimenkuvat])
-(defrecord TallennaTarjouksenTiedotOnnistui [vastaus])
-(defrecord TallennaTarjouksenTiedotEpaonnistui [vastaus])
-
 ;; Tallennetaan kilpailutettavat hankinnat kustannussuunnitelmaan
-(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
+(defrecord TallennaKilpailutettavatHankinnat [kilpailutettavat-hankinnat kopioi-tuleville-vuosille?])
 (defrecord PaivitaKilpailutettavatHankinnat [kilpailutettavat-hankinnat])
 (defrecord TallennaKilpailutettavatHankinnatOnnistui [vastaus])
 (defrecord TallennaKilpailutettavatHankinnatEpaonnistui [vastaus])
 
 ;; Tallenna erillishankinnat
-(defrecord TallennaErillishankinnat [erillishankinnat])
+(defrecord TallennaErillishankinnat [erillishankinnat kopioi-tuleville-vuosille?])
 (defrecord PaivitaErillishankinnat [erillishankinnat])
 (defrecord TallennaErillishankinnatOnnistui [vastaus])
 (defrecord TallennaErillishankinnatEpaonnistui [vastaus])
 (defrecord JaaErillishankinnatTasan [summa elementti])
 
 ;; Johto-ja-hallintokorvaus-käsittelyt
-(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset urakan-alkuvuosi])
+(defrecord TallennaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset urakan-alkuvuosi kopioi-tuleville-vuosille?])
 (defrecord PaivitaJohtoJaHallintokorvaukset [johto-ja-hallintokorvaukset])
 (defrecord PaivitaJohtoJaHallintokorvaukset2019 [johto-ja-hallintokorvaukset toimenkuva])
 (defrecord TallennaJohtoJaHallintokorvauksetOnnistui [vastaus])
@@ -188,27 +170,26 @@
 (defrecord JaaJohtoJaHallintokorvauksetTasan [summa johto-ja-hallintokorvaukset-elementti])
 
 ;; Hoidonjohtopalkkio-käsittelyt
-(defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
+(defrecord TallennaHoidonjohtopalkkiot [hoidonjohtopalkkiot kopioi-tuleville-vuosille?])
 (defrecord PaivitaHoidonjohtopalkkiot [hoidonjohtopalkkiot])
 (defrecord TallennaHoidonjohtopalkkiotOnnistui [vastaus])
 (defrecord TallennaHoidonjohtopalkkiotEpaonnistui [vastaus])
 (defrecord JaaHoidonjohtopalkkiotTasan [summa hoidonjohtopalkkio-elementti])
 
-;; Vahvistukset
+;; Kustannusten suunnittelu -  Vahvistukset
+(defrecord PaivitaHoitovuodenAlunKattohinta [kattohinta])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohinta [vahvista?])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui [vastaus])
 (defrecord VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui [vastaus])
 
-;; Grid-päivitys eventit
-(defrecord PaivitaHankinnatGrid [hankinnat])
-(defrecord PaivitaErillishankinnatGrid [erillishankinnat])
-(defrecord PaivitaToimenkuvatGrid [toimenkuvat])
-(defrecord PaivitaHoidonjohtopalkkioGrid [hoidonjohtopalkkiot])
-(defrecord NollaaMuutokset [])
-
 (defrecord ToggleVetolaatikonMuokkaus [tila])
+(defrecord NollaaKustannussuunnitelmanMuutokset [])
+(defrecord AsetaHankinnatMuutos [])
+(defrecord AsetaErillishankinnatMuutos [])
+(defrecord AsetaJJHMuutos [])
+(defrecord AsetaHoidonjohtopalkkioMuutos [])
 
-(defrecord ValitseHoitokausiKustannussuunnitelmaan [vuosi])
+(defrecord ValitseHoitokausiKustannussuunnitelmaan [])
 (defrecord PoistaToimenkuva [rivi])
 
 (defn hae-kustannussuunnitelman-tiedot
@@ -251,6 +232,26 @@
         rivin-nimi (:kalenterikuukausi johto-ja-hallintokorvaus)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
+(defn kasittele-tarjouksen-vastaus [vastaus app]
+  (let [tarjous-tiedot (:tarjous vastaus)
+        taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tallennus-kesken? false)
+      (assoc :tarjous (:tarjous vastaus))
+      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
+      (assoc :muokkaa-kattohinta-kasin (:muokkaa-kattohinta-kasin vastaus))
+      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
+      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
+      (assoc :kattohintakerroin (:kattohintakerroin vastaus))
+      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
+      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
+      (assoc :toimenkuvat (filtteri-toimenkuvat taulukon-tiedot))
+      (assoc :yhteensa (filtteri-yhteensa taulukon-tiedot))
+      (assoc :vahvistetut-vuodet (:vahvistetut-vuodet vastaus))
+      (assoc :urakka-id (:urakka-id vastaus)))))
+
 (extend-protocol tuck/Event
 
   HaeTarjouksenTiedot
@@ -266,19 +267,7 @@
 
   HaeTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [tarjous-tiedot (:tarjous vastaus)
-          taulukon-tiedot (muunna-tarjous-data tarjous-tiedot)]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tarjous (:tarjous vastaus))
-      (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
-      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))
-      (assoc :hankinnat (filtteri-hankinnat taulukon-tiedot))
-      (assoc :kattohintakerroin (:kattohintakerroin vastaus))
-      (assoc :erillishankinnat (filtteri-erillishankinnat taulukon-tiedot))
-      (assoc :hoidonjohtopalkkiot (filtteri-hoidonjohtopalkkiot taulukon-tiedot))
-      (assoc :urakka-id (:urakka-id vastaus)))))
+    (kasittele-tarjouksen-vastaus vastaus app))
 
   HaeTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -288,7 +277,6 @@
   HaeTyhjatTarjouksenTiedot
   (process-event
     [_ app]
-    (nollaa-muutokset!)
     (tuck-apurit/post! :hae-tyhjat-tarjouksen-tiedot
       {:urakka-id (-> @tila/yleiset :urakka :id)}
       {:onnistui ->HaeTyhjatTarjouksenTiedotOnnistui
@@ -299,15 +287,8 @@
 
   HaeTyhjatTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [toimenkuvat (filter #(some #{"johto-ja-hallintokorvaus"} [(:osio %)]) (:tarjous vastaus))
-          toimenkuva-rivit (konvertoi-grid-muotoon toimenkuvat)
-          ;; Asetetaan tyhjät tiedot grid atomeihin
-          _ (reset! grid-toimenkuvat-atom toimenkuva-rivit)]
-
-      (-> app
-        (assoc :haku-kaynnissa? false)
-        (assoc :kaikki-toimenkuvat (:kaikki-toimenkuvat vastaus))
-        (assoc :tarjous (:tarjous vastaus)))))
+    (-> (kasittele-tarjouksen-vastaus vastaus app)
+      (assoc :tallentamattomia-muutoksia? false)))
 
   HaeTyhjatTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -316,37 +297,42 @@
 
   TallennaTarjouksenTiedot
   (process-event
-    [{tarjous :tarjous toimenkuvat :toimenkuvat} app]
-    (nollaa-muutokset!)
+    [_ app]
     (let [kaikki-hankinnat (concat (:hankinnat app) (:erillishankinnat app) (:hoidonjohtopalkkiot app))
-          kaikki-toimenkuvat (:toimenkuvat app)
           ;; Muutetaan formilta saatu tarjous oikeaan muotoon
           muunnetut-tarjousrivit (map #(muunna-vuodet %) kaikki-hankinnat)
-          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) (or toimenkuvat kaikki-toimenkuvat))
-          tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit)
+          muunnetut-toimenkuvarivit (map #(muunna-vuodet %) (:toimenkuvat app))
+          muunnetut-yhteensa-rivit (map #(muunna-vuodet %) (:yhteensa app))
+          tarjous (concat muunnetut-tarjousrivit muunnetut-toimenkuvarivit muunnetut-yhteensa-rivit)
           muunnettu-tarjous {:tarjous tarjous}
           muunnettu-tarjous (assoc muunnettu-tarjous :urakka-id (-> @tila/yleiset :urakka :id))]
       (tuck-apurit/post! :tallenna-tarjouksen-tiedot
         muunnettu-tarjous
         {:onnistui ->TallennaTarjouksenTiedotOnnistui
-         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui})
+         :epaonnistui ->TallennaTarjouksenTiedotEpaonnistui
+         :paasta-virhe-lapi? true})
       (assoc app :tallennus-kesken? true)))
 
   TallennaTarjouksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (-> app
-      (assoc :tallennus-kesken? false)
-      (assoc :tarjous (:tarjous vastaus))))
+    (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
+    (-> (kasittele-tarjouksen-vastaus vastaus app)
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :uusi-toimenkuva-valittavana false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (:virhe (:response vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
+
+  ToggleUusiToimenkuvaValittavana
+  (process-event [{tila :tila} app]
+    (assoc app :uusi-toimenkuva-valittavana tila))
 
   HaeKustannussuunnitelmanTiedot
   (process-event
     [_ app]
-    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first (:valittu-hoitokausi app))))
+    (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) (pvm/vuosi (first @u/valittu-hoitokausi)))
     (-> app
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? false)
@@ -359,11 +345,14 @@
       (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
       (assoc :valittu-hoitokausi (:valittu-hoitokausi vastaus))
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
+      (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :haku-kaynnissa? false))
 
   PaivitaKilpailutettavatHankinnat
@@ -399,16 +388,19 @@
 
   TallennaKilpailutettavatHankinnat
   (process-event
-    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat} app]
-    (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi app)))]
+    [{kilpailutettavat-hankinnat :kilpailutettavat-hankinnat
+      kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
+    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
       (tuck-apurit/post! :tallenna-kilpailutettavat-hankinnat
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi vuosi
-         :toimenpiteet kilpailutettavat-hankinnat}
+         :toimenpiteet kilpailutettavat-hankinnat
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
          :paasta-virhe-lapi? true})
-      (assoc app :tallennus-kesken? true)))
+      (-> app
+        (assoc :tallennus-kesken? true))))
 
   TallennaKilpailutettavatHankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -416,9 +408,11 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-hankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaKilpailutettavatHankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -427,7 +421,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -442,15 +436,18 @@
 
   TallennaErillishankinnat
   (process-event
-    [{erillishankinnat :erillishankinnat} app]
+    [{erillishankinnat :erillishankinnat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-erillishankinnat
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :erillishankinnat erillishankinnat}
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+       :erillishankinnat erillishankinnat
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
+    (-> app
+      (assoc :tallennus-kesken? true)
+      (assoc :onko-erillishankinnat-muutoksia? false)))
 
   TallennaErillishankinnatOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -458,9 +455,11 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaErillishankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -469,7 +468,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :erillishankinnat-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -497,11 +496,12 @@
 
   TallennaHoidonjohtopalkkiot
   (process-event
-    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot} app]
+    [{hoidonjohtopalkkiot :hoidonjohtopalkkiot kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
     (tuck-apurit/post! :tallenna-hoidonjohtopalkkiot
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :hoidonjohtopalkkiot hoidonjohtopalkkiot}
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+       :hoidonjohtopalkkiot hoidonjohtopalkkiot
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
        :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
        :paasta-virhe-lapi? true})
@@ -513,9 +513,11 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaHoidonjohtopalkkiotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -524,7 +526,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -548,21 +550,22 @@
     (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))]
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
-        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet)
+        (assoc :tallentamattomia-muutoksia? true))))
 
   ;; Vanhat toimenkuvat vaativat toimenkuvan kokonaissumman uudelleen laskennan
   PaivitaJohtoJaHallintokorvaukset2019
   (process-event
     [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset toimenkuva :toimenkuva} app]
-    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))
-          muuttunut (filter #(= (:toimenkuva %) toimenkuva) muuttuneet)]
+    (let [muuttuneet (sort-by (juxt :vuosi :kuukausi) (vec johto-ja-hallintokorvaukset))]
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
-        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet))))
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] muuttuneet)
+        (assoc :tallentamattomia-muutoksia? true))))
 
   TallennaJohtoJaHallintokorvaukset
   (process-event
-    [{johto-ja-hallintokorvaukset :johto-ja-hallintokorvaukset urakan-alkuvuosi :urakan-alkuvuosi} app]
+    [{:keys [johto-ja-hallintokorvaukset urakan-alkuvuosi kopioi-tuleville-vuosille?]} app]
     (let [endpoint (if (<= urakan-alkuvuosi 2024)
                      :tallenna-johto-ja-hallintokorvaukset-2019
                      :tallenna-johto-ja-hallintokorvaukset-2025)
@@ -571,8 +574,9 @@
                   :johto-ja-hallintokorvaukset-2025)]
       (tuck-apurit/post! endpoint
         {:urakka-id (-> @tila/yleiset :urakka :id)
-         :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-         avain johto-ja-hallintokorvaukset}
+         :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+         avain johto-ja-hallintokorvaukset
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
          :paasta-virhe-lapi? true})
@@ -584,9 +588,11 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -595,7 +601,7 @@
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] parsitut-virheet)
         (assoc :tallennus-kesken? false))))
@@ -614,30 +620,51 @@
       (assoc-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset)))
 
   ValitseHoitokausiKustannussuunnitelmaan
-  (process-event [{vuosi :vuosi} app]
-    (let [app (-> app
+  (process-event [_ app]
+    (let [vuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+          _ (js/console.log "ValitseHoitokausiKustannussuunnitelmaan vuosi:" (pr-str vuosi))
+          app (-> app
                 (assoc :valittu-kuukausi nil)
                 ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
-                (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
-                                            (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                (assoc :valittu-hoitokausi @u/valittu-hoitokausi)
                 (assoc :nykyhetki (pvm/nyt))
                 (assoc :haku-kaynnissa? true)
                 (assoc :hoitokauden-alkuvuosi vuosi))]
       ;; Haetaan kaikki välikatselmuksessa tarvittavat tiedot
       (hae-kustannussuunnitelman-tiedot (-> @tila/yleiset :urakka :id) vuosi)
-      (assoc app :haku-kaynnissa? true)))
+      (-> app
+        (assoc :onko-hankinnat-muutoksia? false)
+        (assoc :onko-jjh-muutoksia? false)
+        (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+        (assoc :onko-erillishankinnat-muutoksia? false)
+        (assoc :haku-kaynnissa? true))))
+
+  PaivitaHoitovuodenAlunKattohinta
+  (process-event
+    [{kattohinta :kattohinta} app]
+    (let [kattohinta (if-not (str/blank? kattohinta)
+                       (js/parseInt kattohinta)
+                       0)]
+      (-> app
+        (assoc :kattohinta-virhe false)
+        (assoc :paivitetty-hoitovuoden-alun-kattohinta kattohinta))))
 
   VahvistaTaiPeruutaTavoiteJaKattohinta
   (process-event
     [{vahvista? :vahvista?} app]
     (tuck-apurit/post! :vahvista-tavoite-ja-kattohinta
       {:urakka-id (-> @tila/yleiset :urakka :id)
-       :hoitovuoden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi app)))
-       :vahvista? vahvista?}
+       :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+       :vahvista? vahvista?
+       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)}
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})
     (-> app
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? true)
       (assoc :tallennus-kesken? true)))
 
@@ -647,7 +674,7 @@
       (viesti/nayta-toast!
         "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
         :varoitus
-        viesti/viestin-nayttoaika-keskipitka)
+        viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
     (-> app
@@ -657,56 +684,97 @@
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
 
   VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
-  (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast!
-      "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
-      :varoitus
-      viesti/viestin-nayttoaika-keskipitka)
-    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
-    (-> app
-      (assoc :tallennus-kesken? false)))
+  (process-event [{vastaus :vastaus} app]
+    (let [viesti (if (get-in vastaus [:response :virhe])
+                   (get-in vastaus [:response :virhe])
+                   "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
+          kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
+      (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
+      (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+      (-> app
+        (assoc :kattohinta-virhe (or kattohinta-virhe? false))
+        (assoc :tallennus-kesken? false)
+        (assoc :haku-kaynnissa? false))))
 
   PoistaToimenkuva
   (process-event [{:keys [rivi]} app]
     (let [toimenkuvat (:toimenkuvat app)
           muokatut-toimenkuvat (map (fn [m]
-                                         (if (= (:nimi m) (:nimi rivi))
-                                           (assoc m :poistettu true)
-                                           m)) toimenkuvat)]
-    (-> app
-      (assoc :toimenkuvat muokatut-toimenkuvat)
-      (update :tarjous
-        #(map (fn [m]
-                (if (= (:nimi m) (:nimi rivi))
-                  (assoc m :poistettu true)
-                  m)) %)))))
+                                      (if (= (:nimi m) (:nimi rivi))
+                                        (assoc m :poistettu true)
+                                        m)) toimenkuvat)]
+      (-> app
+        (assoc :toimenkuvat muokatut-toimenkuvat)
+        (update :tarjous
+          #(map (fn [m]
+                  (if (= (:nimi m) (:nimi rivi))
+                    (assoc m :poistettu true)
+                    m)) %)))))
 
   PaivitaHankinnatGrid
   (process-event [{:keys [hankinnat]} app]
-    (merkitse-muutos!)
-    (assoc app :hankinnat hankinnat))
+    (-> app
+      (assoc :hankinnat (sort-by :jarjestys hankinnat))
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaErillishankinnatGrid
   (process-event [{:keys [erillishankinnat]} app]
-    (merkitse-muutos!)
-    (assoc app :erillishankinnat erillishankinnat))
+    (-> app
+      (assoc :erillishankinnat erillishankinnat)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaToimenkuvatGrid
   (process-event [{:keys [toimenkuvat]} app]
-    (merkitse-muutos!)
-    (assoc app :toimenkuvat toimenkuvat))
+    (-> app
+      (assoc :toimenkuvat toimenkuvat)
+      (assoc :tallentamattomia-muutoksia? true)))
 
   PaivitaHoidonjohtopalkkioGrid
   (process-event [{:keys [hoidonjohtopalkkiot]} app]
-    (merkitse-muutos!)
-    (assoc app :hoidonjohtopalkkiot hoidonjohtopalkkiot))
+    (-> app
+      (assoc :hoidonjohtopalkkiot hoidonjohtopalkkiot)
+      (assoc :tallentamattomia-muutoksia? true)))
 
-  NollaaMuutokset
-  (process-event [_ app]
-    (nollaa-muutokset!)
-    app)
+  PaivitaTavoiteJaKattohintaGrid
+  (process-event [{rivit :rivit} app]
+    (-> app
+      (assoc :yhteensa (map #(dissoc % :fmt :koskematon :muokatava? :eperhoitovuosi) rivit))
+      (assoc :tallentamattomia-muutoksia? true)))
 
   ToggleVetolaatikonMuokkaus
   (process-event [{:keys [tila]} app]
     (-> app
-      (assoc :vetolaatikon-muokkaus tila))))
+      (assoc :vetolaatikon-muokkaus tila)
+      (assoc :tallentamattomia-muutoksia? true)))
+
+  NollaaKustannussuunnitelmanMuutokset
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :tallentamattomia-muutoksia? false)))
+
+  AsetaHankinnatMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hankinnat-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true)))
+
+  AsetaErillishankinnatMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-erillishankinnat-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true)))
+
+  AsetaJJHMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-jjh-muutoksia? true)))
+
+  AsetaHoidonjohtopalkkioMuutos
+  (process-event [_ app]
+    (-> app
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? true)
+      (assoc :tallentamattomia-muutoksia? true))))

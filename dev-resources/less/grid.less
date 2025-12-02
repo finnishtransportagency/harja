@@ -16,7 +16,7 @@
 }
 
 .vaalen-tumma-tausta {
-  background: @white-dark
+  background: @white-dark;
 }
 
 @livitaulukon-input-korkeus: @input-korkeus;
@@ -201,7 +201,7 @@
 
   td.vetolaatikon-tila {
     // Siirretään padding td:stä buttoniin, jotta siihen on helpompi osua
-    padding: 0;
+    padding: 0 @valistys-24;
 
     button.vetolaatikon-sailio {
       text-align: right;
@@ -472,6 +472,9 @@
       }
       &.korkea {
         height: @valistys-48;
+      }
+      &.valiotsikko-tausta {
+        background-color: @white-dark;
       }
       .alasveto-gridin-kentta {
         &.tasaa-oikealle .nappi-alasveto {

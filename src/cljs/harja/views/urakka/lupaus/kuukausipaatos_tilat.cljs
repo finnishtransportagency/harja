@@ -45,16 +45,31 @@
   [:div {:style {:color (asioiden-ulkoasu/tilan-vari "hylatty")}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
-                        {:keys [lupaus-id] :as lupaus}
-                        {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? paattava-kuukausi? nykyhetkeen-verrattuna vastaus] :as lupaus-kuukausi}
+                        {:keys [lupaus-id lupaustyyppi urakka-id] :as lupaus}
+                        {:keys [kuukausi vuosi odottaa-kannanottoa? paatos-hylatty? 
+                                paattava-kuukausi? nykyhetkeen-verrattuna vastaus kustannusennuste] :as lupaus-kuukausi}
                         listauksessa?
                         valittu?
-                        lupaus->kuukausi->kommentit]
+                        lupaus->kuukausi->kommentit
+                        app]
   (let [vastauskuukausi? (lupaus-domain/vastauskuukausi? lupaus-kuukausi)
-        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi)
+        saa-vastata? (lupaus-domain/kayttaja-saa-vastata? @istunto/kayttaja lupaus-kuukausi lupaustyyppi urakka-id)
         nayta-himmennettyna? (not saa-vastata?)
         nayta-kommentti-ikoni? (and (not listauksessa?)
-                                    (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))]
+                                    (seq (get-in lupaus->kuukausi->kommentit [lupaus-id kuukausi])))
+        ;; Kustannusennusteen tilan määrittely
+        kustannusennuste-syotetty? (and kustannusennuste
+                                        (:tavoitehinta kustannusennuste)
+                                        (:toteutuneet-kustannukset kustannusennuste))
+        kustannusennuste-lupaus? (lupaus-domain/kustannusennuste? lupaus) 
+        nykyhetki (or (:nykyhetki app) (pvm/nyt))
+        maarapaiva-data (when (and kustannusennuste-lupaus? (:maarapaiva-pvm lupaus-kuukausi))
+                              (lupaus-domain/kustannusennuste-maarapaiva-paattely 
+                                nykyhetki 
+                                (:maarapaiva-pvm lupaus-kuukausi)
+                                kustannusennuste-syotetty?
+                                false))
+        maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? maarapaiva-data)] 
     [:div.col-xs-1.pallo-ja-kk.ei-sulje-sivupaneelia
      (merge {:class (str (when paattava-kuukausi? " paatoskuukausi")
                          (when valittu? " vastaus-kk")
@@ -65,8 +80,30 @@
                              (.preventDefault e)
                              (e! (lupaus-tiedot/->AvaaLupausvastaus lupaus kuukausi vuosi))))}))
      (cond
-       (or odottaa-kannanottoa?
-           (and vastauskuukausi? (= :kuluva-kuukausi nykyhetkeen-verrattuna)))
+       ;; Kustannusennuste - määräpäivä ohitettu ja ei syötetty ajoissa  
+       (and kustannusennuste-lupaus? maarapaiva-mennyt-ohi? (not kustannusennuste-syotetty?))
+       [:div {:style {:color "#FF6B6B"}} [ikonit/harja-icon-status-help]]
+
+       ;; Kustannusennuste - määräpäivä ohitettu mutta syötetty ajoissa (read-only)
+       (and kustannusennuste-lupaus? maarapaiva-mennyt-ohi? kustannusennuste-syotetty?)
+       [:div {:style {:color "#28A745"}} [ikonit/harja-icon-status-selected]]
+
+       ;; Kustannusennuste - kustannusennuste syötetty (normaali tila)
+       (and kustannusennuste-lupaus? kustannusennuste-syotetty?)
+       [:div {:style {:color "#28A745"}} [ikonit/harja-icon-status-selected]]
+
+       ;; Kustannusennuste - odottaa syöttöä
+       (and kustannusennuste-lupaus? (not kustannusennuste-syotetty?) vastauskuukausi?)
+       [odottaa-vastausta]
+       
+        ;; Kuluva kuukausi ilman vastausta - näytä kysymysmerkki
+       (and vastauskuukausi? 
+            (= :kuluva-kuukausi nykyhetkeen-verrattuna)
+            (not (lupaus-domain/vastattu? vastaus)))
+       [odottaa-vastausta]
+       
+       ;; Odottaa kannanottoa (menneet kuukaudet ilman vastausta)
+       odottaa-kannanottoa?
        [odottaa-vastausta]
 
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
@@ -83,7 +120,7 @@
 
        ;; Monivalinta vastauksen kuukausi, jossa on pisteet
        (and (:lupaus-vaihtoehto-id vastaus)
-            (:pisteet vastaus))
+         (:pisteet vastaus))
        [:div.kuukausi-pisteet (:pisteet vastaus)]
 
        ;; Joustovara on ylittynyt

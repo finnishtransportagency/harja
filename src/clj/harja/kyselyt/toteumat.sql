@@ -1256,6 +1256,13 @@ SELECT alkanut
   FROM toteuma
  WHERE id = :id;
 
+-- name: hae-toteuman-perustiedot-ulkoisella-idlla
+SELECT id, urakka, sopimus, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, lisatieto,
+       tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+       tyyppi, luotu, luoja, muokattu, muokkaaja
+  FROM toteuma
+ WHERE ulkoinen_id = :ulkoinen_id;
+
 -- name: hae-reittitoteumat-analytiikalle
 SELECT t.toteuma_tunniste_id,
        t.toteuma_sopimus_id,
@@ -1295,6 +1302,12 @@ WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_m
 group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
+
+-- name: paivita-palautettu-analytiikalle-aikaleima!
+UPDATE analytiikka_toteumat
+SET palautettu_analytiikalle = CURRENT_TIMESTAMP
+WHERE ((toteuma_muutostiedot_muokattu IS NOT NULL AND toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+    OR (toteuma_muutostiedot_muokattu IS NULL AND toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP));
 
 -- name: siirra-toteumat-analytiikalle
 select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);

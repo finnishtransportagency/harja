@@ -97,12 +97,12 @@
   (is (nil? (validoi json-skeemat/talvihoitoreitti-poisto-request json-esimerkit/+talvihoitoreitti-poisto-request+)))
 
   ;; Analytiikka
-  (is (nil? (validoi json-skeemat/analytiikkaportaali-toteuma-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-paallystyskohteiden-haku-vastaus json-esimerkit/+analytiikka-paallystyskohteiden-haku-vastaus+)))
+  (is (nil? (validoi json-skeemat/analytiikka-toimenpiteet-vastaus json-esimerkit/+analytiikka-toimenpiteet-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-tehtavat-ja-tehtavaryhmat-vastaus json-esimerkit/+analytiikka-tehtavat-ja-tehtavaryhmat-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-rahavaraukset-vastaus json-esimerkit/+analytiikka-rahavaraukset-haku-response+)))
-  (is (nil? (validoi json-skeemat/analytiikka-toimenpiteet-vastaus json-esimerkit/+analytiikka-toimenpiteet-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-mhu-suunnitellut-kustannukset-vastaus json-esimerkit/+analytiikka-mhu-suunnitellut-kustannukset-haku-response+)))
   (is (nil? (validoi json-skeemat/analytiikka-mhu-toteutuneet-kustannukset-vastaus json-esimerkit/+analytiikka-mhu-toteutuneet-kustannukset-haku-response+))))
+  (is (nil? (validoi json-skeemat/analytiikka-mhu-toteumat-vastaus json-esimerkit/+analytiikka-reittitoteumat-response+)))
 
 

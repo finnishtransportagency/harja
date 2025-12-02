@@ -73,13 +73,27 @@ runs:
 #      with:
 #        #lein: 2.9.8
 
+
+    - name: Prepare nodejs
+      if: ${{ inputs.install-node-deps == 'true' }}
+      uses: actions/setup-node@v6
+      with:
+        # Haetaan nodejs versio package.json "engines" kentästä
+        node-version-file: 'package.json'
+        # Halutaan täysi kontrolli cachettamista, joten ei käytetä actionin omaa cachetusta
+        package-manager-cache: false
+        #cache: 'npm'
+
     # https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
     - name: Cache NPM packages
       id: cache-npm
       uses: actions/cache@v4
       if: ${{ inputs.install-node-deps == 'true' }}
       with:
-        path: ~/.npm
+        # Cypress cachettaa binaryn omaan pathiin, https://docs.cypress.io/app/references/advanced-installation#Binary-cache
+        path: | 
+          ~/.npm
+          ~/.cache/Cypress
         key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
         # TODO: Testaa onko "restore-keys" enää tarpeen. Kommentoitu pois toistaiseksi.
         #       Halutaan, että uusi cache tallennetaan mikäli package-lock.json muuttuu, ja nyt sellaista ei

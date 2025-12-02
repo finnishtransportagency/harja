@@ -1,7 +1,8 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
+import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
-const ladataanHarjaaTimeout = 30000;
 const urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
 
 // Alustetaan yllänimetty urakka Kustannussuunnittelua varten
@@ -12,9 +13,7 @@ function alustaUrakkaKustannussuunnitteluun() {
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
         cy.viewport(1100, 2000)
-        cy.visit("/")
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+        avaaHarjaTimeoutilla();
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
@@ -72,9 +71,7 @@ describe('Päänäkymien avaamiset', function () {
 describe('MH-Urakan näkymien avaamiset', function () {
     beforeEach(function () {
         cy.viewport(1100, 2000)
-        cy.visit("/")
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+        avaaHarjaTimeoutilla();
     })
 
     it("Avaa Yleiset, Työmaapäiväkirja Turvallisuus", function () {
@@ -219,4 +216,20 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.contains('Toteuman tieosoite').should('exist')
     })
+
+    it("Avaa Välikatselmus", function () {
+        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
+        // Asetettu urakka, joka varmasti menee joskus vanhaksi
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
+
+        // Siirry Välikatselmus päätabille
+        cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
+        cy.contains('Välikatselmus').should('exist')
+        cy.contains('Yhteenveto').should('exist')
+        cy.contains('Hoitovuoden lopun tavoitehinta').should('exist')
+        cy.contains('Hoitovuoden lopun kattohinta').should('exist')
+    })
+
 })

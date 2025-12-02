@@ -25,6 +25,8 @@
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
                      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
+  ;; Alustatoimenpiteet näkyvät päällystysilmoituksessa koosteena Toimenpiteen tiedot-sarakkeessa.
+  ;; :lisatty-paksuus on poistettu koosteesta lokakuussa 2025
    :massamenekki {:nimi :massamenekki :otsikko "Massamenekki" :yksikko "kg/m²"
                   :tyyppi :positiivinen-numero :desimaalien-maara 1
                   :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
@@ -87,8 +89,9 @@
 
   Kenttä :a tulee olemaan vain jos kenttä :b ei ole nil."
   [alusta]
+  ;; Lisätty paksuus poistettu näkyvistä lokakuussa 2025
   (let [alusta-toimenpidespesifit-lisaavaimet {1            ;; MV
-                                               [:kasittelysyvyys :lisatty-paksuus :murske]
+                                               [:kasittelysyvyys :murske]
                                                2            ;; AB
                                                [:massa :pinta-ala :kokonaismassamaara :massamenekki]
                                                3            ;; Verkko

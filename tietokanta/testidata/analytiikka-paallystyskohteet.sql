@@ -240,7 +240,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     0.5
              FROM massa2
                 ),
-     alusta_tas AS (
+     alusta AS (
          INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata,
                                   tr_kaista, toimenpide, pot2_id, massamenekki, massa)
              SELECT tr_numero,
@@ -254,14 +254,11 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     paallystysilmoitus.id,
                     0.1,
                     massa.id
-            FROM alikohde,
-                 paallystysilmoitus,
-                 massa
-            WHERE tr_alkuetaisyys = 0
-            RETURNING *),
-     alusta_tas2 AS (
-         INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata,
-                                 tr_kaista, toimenpide, pot2_id, massamenekki, massa)
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa
+               WHERE tr_alkuetaisyys = 0
+             UNION ALL
              SELECT tr_numero,
                     tr_alkuetaisyys,
                     tr_alkuosa,
@@ -273,14 +270,11 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     paallystysilmoitus.id,
                     0.1,
                     massa.id
-             FROM alikohde,
-                  paallystysilmoitus,
-                  massa
-            WHERE tr_alkuetaisyys = 300
-            RETURNING *),
-     alusta_remtas AS (
-         INSERT INTO pot2_alusta (tr_numero, tr_alkuetaisyys, tr_alkuosa, tr_loppuetaisyys, tr_loppuosa, tr_ajorata,
-                                 tr_kaista, toimenpide, pot2_id, massamenekki, massa)
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa
+               WHERE tr_alkuetaisyys = 300
+             UNION ALL
              SELECT tr_numero,
                     tr_alkuetaisyys,
                     tr_alkuosa,
@@ -292,11 +286,25 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     paallystysilmoitus.id,
                     20.1,
                     massa2.id
-             FROM alikohde,
-                  paallystysilmoitus,
-                  massa2
-             WHERE tr_alkuetaisyys = 650
-             RETURNING *),
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa2
+               WHERE tr_alkuetaisyys = 650
+             UNION ALL
+             SELECT 86,
+                    100,
+                    20,
+                    650,
+                    20,
+                    1,
+                    11,
+                    (SELECT koodi FROM pot2_mk_alusta_toimenpide WHERE nimi = 'Muu RP'),
+                    paallystysilmoitus.id,
+                    15,
+                    massa.id
+             FROM paallystysilmoitus,
+                  massa
+            RETURNING *),        
      kulutuskerros_mp AS (
          INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
                                            piennar, pot2_id, massamenekki)

@@ -29,16 +29,20 @@
       {:onnistui ->HaeTarjoushinnatOnnistui
        :epaonnistui ->HaeTarjoushinnatEpaonnistui
        :paasta-virhe-lapi? true})
-    app)
+    (assoc app :haku-kaynnissa? true))
 
   HaeTarjoushinnatOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app :tarjoushinnat vastaus))
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjoushinnat vastaus)))
 
   HaeTarjoushinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjoushintojen haku epäonnistui" :varoitus)
-    app)
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tarjoushinnat nil)))
 
   PaivitaTarjoushinnat
   (process-event [{:keys [tiedot paluukanava]} app]

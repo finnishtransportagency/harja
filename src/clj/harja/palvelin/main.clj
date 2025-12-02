@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tehtavat-maarat-palvelu]
     [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
@@ -78,6 +79,7 @@
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
     [harja.palvelin.palvelut.hallinta.ajastukset-palvelu :as ajastukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.raporttityokalu-palvelu :as raporttityokalu-hallinta]
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
@@ -489,6 +491,9 @@
       :uusi-kustannussuunnitelma (component/using
                                    (uusi-kustannussuunnitelma-palvelu/->UusiKustannussuunnitelmaPalvelu)
                                    [:http-palvelin :db])
+      :tehtavat-maarat (component/using
+                 (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
+                 [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -754,7 +759,8 @@
                               [:http-palvelin :db :integraatioloki])
       
       :api-taitorakennerekisteri (component/using
-                                   (taitorakennerekisteri/->Taitorakennerekisteri)
+                                   (taitorakennerekisteri/->Taitorakennerekisteri 
+                                     (:harja-url asetukset))
                                    [:http-palvelin :db :integraatioloki])
 
       :tieluvat (component/using
@@ -855,6 +861,11 @@
       :ajastukset-hallinta
       (component/using
         (ajastukset-hallinta/->AjastuksetHallinta)
+        [:http-palvelin :db])
+
+      :raporttityokalu-hallinta
+      (component/using
+        (raporttityokalu-hallinta/->RaporttityokaluHallinta)
         [:http-palvelin :db])
       
       :paallystysilmoitukset-hallinta

@@ -23,23 +23,23 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :karttakuvat (component/using
-                                       (karttakuvat/luo-karttakuvat)
-                                       [:http-palvelin :db])
-                        :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
-                        :fim (component/using
-                               (fim/->FIM {:url +testi-fim+})
-                               [:db :integraatioloki])
-                        :tilannekuva (component/using
-                                       (->Tilannekuva)
-                                       [:http-palvelin :db :karttakuvat :fim])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :karttakuvat (component/using
+                         (karttakuvat/luo-karttakuvat)
+                         [:http-palvelin :db])
+          :integraatioloki (component/using
+                             (integraatioloki/->Integraatioloki nil)
+                             [:db])
+          :fim (component/using
+                 (fim/->FIM {:url +testi-fim+})
+                 [:db :integraatioloki])
+          :tilannekuva (component/using
+                         (->Tilannekuva)
+                         [:http-palvelin :db :karttakuvat :fim])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -124,42 +124,42 @@
 
 (defn hae-urakat-tilannekuvaan [kayttaja parametrit]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakat-tilannekuvaan kayttaja
-                  {:nykytilanne? (:nykytilanne? parametrit)
-                   :alku (:alku parametrit)
-                   :loppu (:loppu parametrit)
-                   :urakoitsija (:urakoitsija parametrit)
-                   :urakkatyyppi (:urakkatyyppi parametrit)}))
+    :hae-urakat-tilannekuvaan kayttaja
+    {:nykytilanne? (:nykytilanne? parametrit)
+     :alku (:alku parametrit)
+     :loppu (:loppu parametrit)
+     :urakoitsija (:urakoitsija parametrit)
+     :urakkatyyppi (:urakkatyyppi parametrit)}))
 
 (defn hae-tk
   ([hakuargumentit] (hae-tk +kayttaja-jvh+ hakuargumentit nil))
   ([kayttaja hakuargumentit] (hae-tk kayttaja hakuargumentit nil))
   ([kayttaja hakuargumentit urakka-idt]
    (let [haun-urakka-idt (or urakka-idt
-                             (mapcat
-                               (fn [aluekokonaisuus]
-                                 (map :id (:urakat aluekokonaisuus)))
-                               (hae-urakat-tilannekuvaan kayttaja hakuargumentit)))]
+                           (mapcat
+                             (fn [aluekokonaisuus]
+                               (map :id (:urakat aluekokonaisuus)))
+                             (hae-urakat-tilannekuvaan kayttaja hakuargumentit)))]
      (kutsu-palvelua (:http-palvelin jarjestelma)
-                     :hae-tilannekuvaan kayttaja
-                     (tk/valitut-suodattimet (assoc hakuargumentit
-                                               :urakat (set haun-urakka-idt)))))))
+       :hae-tilannekuvaan kayttaja
+       (tk/valitut-suodattimet (assoc hakuargumentit
+                                 :urakat (set haun-urakka-idt)))))))
 
 (defn hae-klikkaus
   ([koordinaatti taso suodattimet] (hae-klikkaus +kayttaja-jvh+ koordinaatti taso suodattimet))
   ([kayttaja [x y] taso suodattimet]
    (let [extent 350]
      (kutsu-palvelua (:http-palvelin jarjestelma) :karttakuva-klikkaus kayttaja
-                     {:koordinaatti [x y]
-                      :extent [(- x extent) (- y extent) (+ x extent) (+ y extent)]
-                      :parametrit {"ind" "1"
-                                   "_" (name taso)
-                                   "tk" (-> suodattimet
-                                            transit/clj->transit
-                                            (java.net.URLEncoder/encode))}}))))
+       {:koordinaatti [x y]
+        :extent [(- x extent) (- y extent) (+ x extent) (+ y extent)]
+        :parametrit {"ind" "1"
+                     "_" (name taso)
+                     "tk" (-> suodattimet
+                            transit/clj->transit
+                            (java.net.URLEncoder/encode))}}))))
 
 (deftest hae-tietyoilmoitukset
-  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]    
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
     (is (= (count (:tietyoilmoitukset vastaus)) 4))))
 
@@ -170,7 +170,7 @@
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (= (count (:laatupoikkeamat vastaus)) 53))
+    (is (= (count (:laatupoikkeamat vastaus)) 52))
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 18))
     (is (= (count (:ilmoitukset vastaus)) 53))
@@ -184,8 +184,8 @@
 
 (deftest ala-hae-toteumia
   (let [parametrit (-> hakuargumentit-laaja-historia
-                       (aseta-filtterit-falseksi :kesa)
-                       (aseta-filtterit-falseksi :talvi))
+                     (aseta-filtterit-falseksi :kesa)
+                     (aseta-filtterit-falseksi :talvi))
         vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
@@ -195,7 +195,7 @@
         vastaus (hae-tk hakuargumentit-laaja-historia)
         vastaus-paallystys (hae-tk parametrit-paallystys)]
     (is (= (set (:selitteet (:toteumat vastaus)))
-           (set (:selitteet (:toteumat vastaus-paallystys)))))))
+          (set (:selitteet (:toteumat vastaus-paallystys)))))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tarkastukset)
@@ -227,11 +227,11 @@
 (deftest loyda-vahemman-asioita-tiukalla-aikavalilla
   (let [vastaus-pitka-aikavali (hae-tk hakuargumentit-laaja-historia)
         parametrit (-> hakuargumentit-laaja-historia
-                       (assoc :alku (c/to-date (t/local-date 2005 1 1)))
-                       (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
+                     (assoc :alku (c/to-date (t/local-date 2005 1 1)))
+                     (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
         vastaus-lyhyt-aikavali (hae-tk parametrit)]
     (is (< (count (:selitteet (:toteumat vastaus-lyhyt-aikavali)))
-           (count (:selitteet (:toteumat vastaus-pitka-aikavali)))))))
+          (count (:selitteet (:toteumat vastaus-pitka-aikavali)))))))
 
 (deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc hakuargumentit-laaja-historia :nykytilanne? true)
@@ -249,11 +249,11 @@
 
 (deftest ala-hae-tyokoneita-liian-lahelle-zoomatussa-nykytilannenakymassa
   (let [parametrit (-> hakuargumentit-laaja-historia
-                       (assoc :alue {:xmin 0,
-                                     :ymin 0,
-                                     :xmax 1,
-                                     :ymax 1})
-                       (assoc :nykytilanne? true))
+                     (assoc :alue {:xmin 0,
+                                   :ymin 0,
+                                   :xmax 1,
+                                   :ymax 1})
+                     (assoc :nykytilanne? true))
         vastaus (hae-tk parametrit)]
     (is (empty? (:tehtavat (:tyokoneet vastaus))))))
 
@@ -261,11 +261,11 @@
   (let [x 523892
         y 7229981
         sql (str "INSERT INTO tyokonehavainto "
-                 "(tyokoneid, jarjestelma, organisaatio, viestitunniste,lahetysaika,tyokonetyyppi,"
-                 "sijainti,urakkaid,tehtavat) "
-                 "VALUES (666, 'yksikkötesti', " organisaatio ",666,NOW(),'yksikkötesti',"
-                 "ST_MakePoint(" x ", " y ")::GEOMETRY, "
-                 (if urakka urakka "NULL") ", '{harjaus}')")]
+              "(tyokoneid, jarjestelma, organisaatio, viestitunniste,lahetysaika,tyokonetyyppi,"
+              "sijainti,urakkaid,tehtavat) "
+              "VALUES (666, 'yksikkötesti', " organisaatio ",666,NOW(),'yksikkötesti',"
+              "ST_MakePoint(" x ", " y ")::GEOMETRY, "
+              (if urakka urakka "NULL") ", '{harjaus}')")]
     (u sql)))
 
 
@@ -368,20 +368,20 @@
   (let [urakat (set (map :id (q-map "SELECT id FROM urakka")))
         ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
         ei-loydy-vastaus (hae-klikkaus ei-loydy-koordinaatti :tilannekuva-paallystys
-                                       (assoc hakuargumentit-laaja-historia
-                                         :urakat urakat))
+                           (assoc hakuargumentit-laaja-historia
+                             :urakat urakat))
         loytyy-koordinaatti [445582.99999998405 7224316.998934508]
         loytyy-vastaus (hae-klikkaus loytyy-koordinaatti :tilannekuva-paallystys
-                                     (assoc hakuargumentit-laaja-historia
-                                       :urakat urakat))]
+                         (assoc hakuargumentit-laaja-historia
+                           :urakat urakat))]
 
     (is (= [] ei-loydy-vastaus) "Ahvenanmaan keskeltä ei löydy päällystyskohteita")
 
     (is (= 2 (count loytyy-vastaus)) "Yksi kohde löytyy pisteelle")
 
     (let [oulun-ohitusramppi (first (filter #(= "Oulun ohitusramppi" (get-in % [:yllapitokohde :nimi])) loytyy-vastaus))]
-      (is (= "Oulun ohitusramppi" (get-in  oulun-ohitusramppi [:yllapitokohde :nimi] )))
-      (is (= "308a" (get-in  oulun-ohitusramppi [:yllapitokohde :kohdenumero])))
+      (is (= "Oulun ohitusramppi" (get-in oulun-ohitusramppi [:yllapitokohde :nimi])))
+      (is (= "308a" (get-in oulun-ohitusramppi [:yllapitokohde :kohdenumero])))
       (is (= "Oulun kohdeosa" (:nimi oulun-ohitusramppi))))
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
@@ -394,7 +394,7 @@
       (assoc aluekokonaisuus
         :urakat (map (fn [u]
                        (dissoc u :alue :id))
-                     (:urakat aluekokonaisuus))))
+                  (:urakat aluekokonaisuus))))
     aluekokonaisuudet))
 
 (deftest hae-urakat-tilannekuvaan-jvh
@@ -445,12 +445,12 @@
                                             :urakkanro "1267"}
                                            {:nimi "Oulun MHU 2019-2024"
                                             :urakkanro "1238"}
+                                           {:nimi "Raahen MHU 2023-2028"
+                                            :urakkanro "1259"}
                                            {:nimi "Aktiivinen Oulu Testi"
-                                            :urakkanro "12501"}
+                                            :urakkanro "1250"}
                                            {:nimi "Kajaanin alueurakka 2014-2019"
                                             :urakkanro "1236"}
-                                           {:nimi "Raahen MHU 2023-2028"
-                                            :urakkanro "1649"}
                                            {:nimi "Pudasjärven alueurakka 2007-2012"
                                             :urakkanro "1229"})}
                                  {:hallintayksikko {:elynumero 12
@@ -509,18 +509,18 @@
                                                     :id 13
                                                     :nimi "Lappi"}
                                   :tyyppi :hoito
-                                  :urakat ({:nimi "Kittilän MHU 2019-2024"
-                                            :urakkanro "1436"}
-                                           {:nimi "Ivalon MHU testiurakka (uusi)"
-                                            :urakkanro "13374"}
+                                  :urakat ({:nimi "Ivalon MHU testiurakka (uusi)"
+                                            :urakkanro "PR00054012"}
                                            {:nimi "Kemin MHU testiurakka (5. hoitovuosi)"
-                                            :urakkanro "13373"}
-                                           {:nimi "Pellon MHU testiurakka (3. hoitovuosi)"
-                                            :urakkanro "13372"}
+                                            :urakkanro "1440"}
                                            {:nimi "Kittilän MHU 2025-2030"
-                                            :urakkanro "1437"}
+                                            :urakkanro "1444"}
                                            {:nimi "Rovaniemen MHU testiurakka (1. hoitovuosi)"
-                                            :urakkanro "13371"})}
+                                            :urakkanro "1443"}
+                                           {:nimi "Pellon MHU testiurakka (3. hoitovuosi)"
+                                            :urakkanro "1442"}
+                                           {:nimi "Kittilän MHU 2019-2024"
+                                            :urakkanro "1444"})}
                                  {:hallintayksikko {:elynumero nil
                                                     :id 3
                                                     :nimi "Meriväylät"}
@@ -607,71 +607,71 @@
     (is (= (count elynumerot) 0))))
 
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
-    ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
-    ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
-    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
-          elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
-          eka-ely (first elynumerot)]
+  ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
+  ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
+  (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        eka-ely (first elynumerot)]
 
-      (is (= eka-ely 12))
-      (is (every? #(= % eka-ely) elynumerot)
-          "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+    (is (= eka-ely 12))
+    (is (every? #(= % eka-ely) elynumerot)
+      "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
 
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
-    ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
-    (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-      (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
-        (is (every?
-              (fn [hy]
-                (every?
-                  (fn [u] (some? (:alue u)))
-                  (:urakat hy)))
-              vastaus))
-        (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
-               [{:tyyppi :hoito
-                 :hallintayksikko {:id 12
-                                   :nimi "Pohjois-Pohjanmaa"
-                                   :elynumero 12}
-                 :urakat #{{:id 4
-                            :nimi "Oulun alueurakka 2014-2019"
-                            :urakkanro "1238"
-                            :alue nil}}}])))))
+  ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
+  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+      (is (every?
+            (fn [hy]
+              (every?
+                (fn [u] (some? (:alue u)))
+                (:urakat hy)))
+            vastaus))
+      (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
+            [{:tyyppi :hoito
+              :hallintayksikko {:id 12
+                                :nimi "Pohjois-Pohjanmaa"
+                                :elynumero 12}
+              :urakat #{{:id 4
+                         :nimi "Oulun alueurakka 2014-2019"
+                         :urakkanro "1238"
+                         :alue nil}}}])))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
-    (let [urakat-ilman-lisaoikeutta
+  (let [urakat-ilman-lisaoikeutta
+        ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
+        (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+          (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
+        urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+        (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
+
+    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
+
+    (is (> (count urakat-lisaoikeudella) (count urakat-ilman-lisaoikeutta))
+      "Lisäoikeudella pitää löytyä enemmän urakkavaihtoehtoja")
+
+    (let [vastaus-ilman-lisaoikeutta
           ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
           (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-            (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
-          urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
-          (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
+            (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
+          vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
 
-      ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
-
-      (is (> (count urakat-lisaoikeudella) (count urakat-ilman-lisaoikeutta))
-          "Lisäoikeudella pitää löytyä enemmän urakkavaihtoehtoja")
-
-      (let [vastaus-ilman-lisaoikeutta
-            ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
-            (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-              (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
-            vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
-            (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
-
-        (is (> (reduce + 0 (map (comp count val) vastaus-lisaoikeudella))
-               (reduce + 0 (map (comp count val) vastaus-ilman-lisaoikeutta)))))))
+      (is (> (reduce + 0 (map (comp count val) vastaus-lisaoikeudella))
+            (reduce + 0 (map (comp count val) vastaus-ilman-lisaoikeutta)))))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-liikaa-urakoita
   ;; Pyydetään hakemaan asiat tilannekuvaan kaikista urakoista, mutta saamme saman vastauksen kuin
   ;; haettaessa vain niistä urakoista, joihin käyttäjällä on hakuoikeus.
   ;; Tällä osoitetaan, että palvelu rajaa haettavat urakat vain niihin, joilla käyttäjällä on oikeus.
   (let [hyokkaus-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava)
-                                 hakuargumentit-laaja-historia
-                                 (map :id (q-map "SELECT id FROM urakka")))
+                           hakuargumentit-laaja-historia
+                           (map :id (q-map "SELECT id FROM urakka")))
         normaali-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia
-                                 (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))]
+                           (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))]
 
     (is (= (reduce + 0 (map (comp count val) hyokkaus-vastaus))
-           (reduce + 0 (map (comp count val) normaali-vastaus))))))
+          (reduce + 0 (map (comp count val) normaali-vastaus))))))
 
 (deftest hae-tilaajan-laadunvalvonta
   (let [vastaus-tilaajalle
@@ -679,33 +679,33 @@
         vastaus-urakoitsijalle
         (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-nykytilanne)]
     (is (contains? (get-in vastaus-tilaajalle [:tyokoneet :tehtavat])
-                   #{"tilaajan laadunvalvonta"}))
+          #{"tilaajan laadunvalvonta"}))
     (is (not (contains? (get-in vastaus-urakoitsijalle [:tyokoneet :tehtavat])
-                        #{"tilaajan laadunvalvonta"})))))
+               #{"tilaajan laadunvalvonta"})))))
 
 
 ;; tuotannossa (ja singletonia vasten) tuotti bugin ERROR: Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
 ;                                     Hint: Change argument 2: 'GEOMETRYCOLLECTION(POINT(449110.781 6788879.145))'
 #_(def haku-params-lwgeomcollection
-  {:kuva [256.0 256.0], :extent [440848.0 6787072.0 454944.0 6882976.0], :resoluutio 16.0, :parametrit {:aikavalinta 504, "ind" "n1587995345871", :ilmoitukset {}, :yllapito #{17}, :urakat #{275 65 377 281 363 314 313 258 125 158 378 14 326 147 362}, :nykytilanne? true}})
+    {:kuva [256.0 256.0], :extent [440848.0 6787072.0 454944.0 6882976.0], :resoluutio 16.0, :parametrit {:aikavalinta 504, "ind" "n1587995345871", :ilmoitukset {}, :yllapito #{17}, :urakat #{275 65 377 281 363 314 313 258 125 158 378 14 326 147 362}, :nykytilanne? true}})
 
 ;; Ei ole tarkoituskaan ajaa CI:ssä, vaan voi todeta ettei enää tule poikkeusta db-singletonia vasten
 #_(deftest hae-paallystysten-reitit-kartalle-test
-  (let [vastaus (<!! (hae-paallystysten-sijainnit-kartalle (:db harja.palvelin.main/harja-jarjestelma)
-                                                           +kayttaja-jvh+
-                                                           haku-params-lwgeomcollection))]))
+    (let [vastaus (<!! (hae-paallystysten-sijainnit-kartalle (:db harja.palvelin.main/harja-jarjestelma)
+                         +kayttaja-jvh+
+                         haku-params-lwgeomcollection))]))
 
 
 (deftest laatupoikkeama-ei-saa-nakya-eri-urakoitsijalle
   (let [laatupoikkeaman-kuvaus "Sanktion sisältävä laatupoikkeama Iin MHU"
         laatupoikkeama-id (ffirst (q (str (format "Select id FROM laatupoikkeama where kuvaus = '%s';" laatupoikkeaman-kuvaus))))
         parametrit (merge parametrit-laaja-nykytilanne
-                          {:alku (pvm/->pvm "6.9.2022")
-                           :loppu (pvm/->pvm "10.9.2022")})
+                     {:alku (pvm/->pvm "6.9.2022")
+                      :loppu (pvm/->pvm "10.9.2022")})
         lpt-iin-urakoitsijan-vastuuhenkilo (:laatupoikkeamat (hae-tk (iin-2021-urakan-urakoitsijan-urakkavastaava) parametrit))
         lpt-iin-urakoitsijan-paakayttaja (:laatupoikkeamat (hae-tk (iin-2021-urakan-urakoitsijan-paakayttaja) parametrit))
         lpt-raahen-urakoitsija (:laatupoikkeamat (hae-tk (raahen-2023-urakan-urakoitsijan-urakkavastaava) parametrit))
-        lpt-raahen-rakennuttajakonsultti  (:laatupoikkeamat (hae-tk (raahen-2023-urakan-rakennuttajakonsultti) parametrit))
+        lpt-raahen-rakennuttajakonsultti (:laatupoikkeamat (hae-tk (raahen-2023-urakan-rakennuttajakonsultti) parametrit))
         lpt-raahen-urakanvalvoja (:laatupoikkeamat (hae-tk (raahen-2023-urakan-tilaajan-urakanvalvoja) parametrit))
         lpt-jvh (:laatupoikkeamat (hae-tk +kayttaja-jvh+ parametrit))]
     (is (= (:id (first lpt-iin-urakoitsijan-vastuuhenkilo)) laatupoikkeama-id) "Oikea laatupoikkeama palautuu")
@@ -720,11 +720,11 @@
 (deftest urakkaroolin-lukuoikeus-toimii-vaikka-org-olisi-eri
   (let [urakka-id-jossa-lukuoikeudellinen_rooli (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakka-id-jossa-ei-roolia (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
-        kayttaja  {:organisaation-urakat #{}, :sahkoposti "eri.kayttaja@example.org", :kayttajanimi "LX1234567", :puhelin "0501234567",
-                   :sukunimi "Sukunimi", :roolit #{}, :organisaatioroolit {}, :id 123, :etunimi "Etunimi",
-                   ;; keksitty organisaatio, joka ei varmuudella ole ko. urakan urakoitsija
-                   :organisaatio {:id 25354, :nimi "Ei tämän urakan urakoitsija", :tyyppi "urakoitsija"},
-                   :urakkaroolit {urakka-id-jossa-lukuoikeudellinen_rooli #{"Laadunvalvoja"}}}
+        kayttaja {:organisaation-urakat #{}, :sahkoposti "eri.kayttaja@example.org", :kayttajanimi "LX1234567", :puhelin "0501234567",
+                  :sukunimi "Sukunimi", :roolit #{}, :organisaatioroolit {}, :id 123, :etunimi "Etunimi",
+                  ;; keksitty organisaatio, joka ei varmuudella ole ko. urakan urakoitsija
+                  :organisaatio {:id 25354, :nimi "Ei tämän urakan urakoitsija", :tyyppi "urakoitsija"},
+                  :urakkaroolit {urakka-id-jossa-lukuoikeudellinen_rooli #{"Laadunvalvoja"}}}
         hakuargumentit {:urakat #{urakka-id-jossa-lukuoikeudellinen_rooli 123 432 423}, :nykytilanne? true, :alue {:xmin 383991.5, :ymin 6691575, :xmax 507255.5, :ymax 6731511},
                         :talvi #{59 58 60 27 31 40 41 61 29 28 26 30 42}, :ilmoitukset {},
                         :alku #inst "2023-10-17T07:12:30.000-00:00", :loppu #inst "2023-10-20T07:12:30.000-00:00"}

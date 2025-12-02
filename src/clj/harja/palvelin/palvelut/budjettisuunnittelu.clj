@@ -302,19 +302,23 @@
                                                                            ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
                                                                            ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
                                                                            ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
-                                                                           :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)})))
+                                                                           :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)
+                                                                           ;; Käyttöliittymässä halutaan näyttää indeksiluvut aina kolmella desimaalilla. Lukuina ei tule aina kolmea desimaalia. Luku voi olla vaikka 1.0
+                                                                           ;; ja sitä ei voida tarkentaa lisäämällä siihen enemmän nollia. Niinpä tehdään erillinen tekstimuotoinen esitys.
+                                                                           :indeksikerroin-str (format "%.3f" (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
                                                                  (i-q/hae-indeksi db {:nimi indeksi})))
-                                  urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
-                              (if (= urakan-vuosien-maara urakan-indeksien-maara)
-                                (vec indeksiluvut-urakan-aikana)
-                                (mapv (fn [index]
-                                        (if (empty? indeksiluvut-urakan-aikana)
-                                          ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
-                                          nil
-                                          ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
-                                          ;; Lopuille hoitovuosille nil.
-                                          (nth indeksiluvut-urakan-aikana index nil)))
-                                      (range 0 urakan-vuosien-maara))))))
+                                  urakan-indeksien-maara (count indeksiluvut-urakan-aikana)
+                                  indeksikertoimet (if (= urakan-vuosien-maara urakan-indeksien-maara)
+                                                     (vec indeksiluvut-urakan-aikana)
+                                                     (mapv (fn [index]
+                                                             (if (empty? indeksiluvut-urakan-aikana)
+                                                               ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
+                                                               nil
+                                                               ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
+                                                               ;; Lopuille hoitovuosille nil.
+                                                               (nth indeksiluvut-urakan-aikana index nil)))
+                                                       (range 0 urakan-vuosien-maara)))]
+                              indeksikertoimet)))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.

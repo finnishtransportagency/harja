@@ -29,9 +29,9 @@ DO $$
         INSERT INTO urakka_tavoite(urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
         VALUES (urakkaid, 3, 90000, 100000, 110000, testidata_indeksikorjaa(100000, (2 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (2 + alkuvuosi), 10, urakkaid), NOW());
         INSERT INTO urakka_tavoite(urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta,tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
-        VALUES (urakkaid, 4, 90000, 100000, 110000, testidata_indeksikorjaa(100000, (3 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (3 + alkuvuosi), 10, urakkaid), NOW());
+        VALUES (urakkaid, 4, 90000, 120000, 132000, testidata_indeksikorjaa(120000, (3 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (3 + alkuvuosi), 10, urakkaid), NOW());
         INSERT INTO urakka_tavoite(urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu)
-        VALUES (urakkaid, 5, 90000, 100000, 110000, testidata_indeksikorjaa(100000, (4 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (4 + alkuvuosi), 10, urakkaid), NOW());
+        VALUES (urakkaid, 5, 90000, 264000, 290400, testidata_indeksikorjaa(240000, (4 + alkuvuosi), 10, urakkaid), testidata_indeksikorjaa(110000, (4 + alkuvuosi), 10, urakkaid), NOW());
     END
 $$ LANGUAGE plpgsql;
 
@@ -44,41 +44,66 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta - Kajaani MHU ja MHU Suomussalmi
--- Linkitys myös Iin urakkaan - Iin MHU 2021-2026
+-- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta: Aktiivinen Kajaani Testi, Aktiivinen Oulu Testi
+-- Tehään Lupauksien kannalta Aktiivinen Kajaani Testi urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
+
+-- Linkitetään Kajaani
 DO $$
     DECLARE
-        urakkaid_kajaani INTEGER;
-        urakkaid_suomussalmi INTEGER;
-        urakkaid_ii INTEGER;
+        tarkistus_lapaisty BOOLEAN;
+        urakka_id_kajaani INTEGER;
+
     BEGIN
-        urakkaid_kajaani = (SELECT id FROM urakka where nimi = 'POP MHU Kajaani 2025-2030');
-        urakkaid_suomussalmi = (SELECT id FROM urakka where nimi = 'POP MHU Suomussalmi 2024-2029');
-        urakkaid_ii = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026'); 
-        INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
-        VALUES
-            (1, urakkaid_kajaani),
-            (2, urakkaid_kajaani),
-            (3, urakkaid_kajaani),
-            (4, urakkaid_kajaani),
-            (5, urakkaid_kajaani),
-            (6, urakkaid_suomussalmi),
-            (7, urakkaid_suomussalmi),
-            (8, urakkaid_suomussalmi),
-            (9, urakkaid_suomussalmi),
-            (10, urakkaid_suomussalmi),
-            (1, urakkaid_ii),
-            (2, urakkaid_ii),
-            (3, urakkaid_ii),
-            (4, urakkaid_ii),
-            (5, urakkaid_ii);
-    END
-$$ LANGUAGE plpgsql;
+        urakka_id_kajaani = (SELECT id FROM urakka WHERE nimi = 'Aktiivinen Kajaani Testi' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
+
+        -- Tarkista löytyykö ympäristöstä
+        IF urakka_id_kajaani IS NULL THEN
+            RAISE EXCEPTION 'Kajaanin urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
+            tarkistus_lapaisty := FALSE;
+        ELSE
+            RAISE NOTICE 'Kajaanin urakka linkitetty lupauksiin!';
+            tarkistus_lapaisty := TRUE;
+        END IF;
+
+        IF tarkistus_lapaisty THEN
+            INSERT INTO lupausryhma_urakka(lupausryhma_id, urakka_id) VALUES
+-- Suomussalmi
+((SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_kajaani),
+-- Suomussalmi
+((SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_kajaani),
+-- Suomussalmi
+((SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_kajaani),
+-- Suomussalmi
+((SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_kajaani),
+-- Suomussalmi
+((SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
+ urakka_id_kajaani);
+        END IF;
+    END $$;
+
+-- Linkitetään kaikki muut 2024 paitsi Kajaani
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" = 2024
+  AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen'
+  AND urakka.nimi NOT LIKE 'Aktiivinen Kajaani Testi';
+
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" BETWEEN 2020 AND 2023;
 
 INSERT INTO lupaus (jarjestys, "lupausryhma-id", "urakka-id", lupaustyyppi, "pisteet", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", kuvaus, sisalto, "urakan-alkuvuosi") VALUES
 
 -- A. Kannustavat alihankintasopimukset
-(1, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, '{10}', 6, 0,
+(1, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, '{10}', '{6}', 0,
  'Talvihoidon kannustinjärjestelmä',
  'Kehitämme yhdessä tilaajan kanssa talvihoidon alihankkijoiden kannustinjärjestelmän, joka on
 käytössä vähintään kahdessa alihankintasopimuksessamme. Lupaus täyttyy myös
@@ -87,7 +112,7 @@ järjestelmä on edelleen käytössä. Tilaaja on varannut vuosittain 5 000 € 
 € tämän lupauksen kannustinjärjestelmään. Tilaajan ja meidän rahavarauksemme yhdistetään
 ja tätä summaa käytetään samassa suhteessa maksettaessa mahdollisia yksittäisiä kannusteita.',
  2019),
-(2, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, '{10}', 9, 0,
+(2, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, '{10}', '{9}', 0,
  'Kesähoidon kannustinjärjestelmä',
  'Kehitämme yhdessä tilaajan kanssa kesähoidon alihankkijoiden kannustinjärjestelmän, joka on
 käytössä vähintään kahdessa alihankintasopimuksessamme. Lupaus täyttyy myös
@@ -96,14 +121,14 @@ järjestelmä on edelleen käytössä. Tilaaja on varannut vuosittain 5 000 € 
 € tämän lupauksen kannustinjärjestelmään. Tilaajan ja meidän rahavarauksemme yhdistetään
 ja tätä summaa käytetään samassa suhteessa maksettaessa mahdollisia yksittäisiä kannusteita.',
  2019),
-(3, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'kysely', 14, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+(3, (SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset'  AND "urakan-alkuvuosi" = 2019), null, 'kysely', 14, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', '{9}', 0,
  'Kyselytutkimus alihankkijoille',
  'Kyselytutkimus alihankkijoille (6 sisäistä pistevaihtoehtoa). Tarjoaja antaa lupauksen
 tarjoamansa hoitourakan kyselytutkimuksen keskiarvosta.',
  2019),
 
 -- B. Toiminnan suunnitelmallisuus
-(4, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 10, null, 0, 1,
+(4, (SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 10, null, '{0}', 1,
  'Kuukausittainen töiden suunnittelu',
  'Suunnittelemme yhdessä tilaajan ja alihankkijoiden kanssa urakan töitä vähintään kerran
 kuukaudessa. Töitä voidaan suunnitella esimerkiksi palaverein tai sähköisin menettelyin.
@@ -112,19 +137,19 @@ läpikäynnissä tulee olla mukana ne alihankkijatahot, jotka tulevat tekemään
 seuraavan kuukauden aikana.',
  2019),
 -- C. Laadunvarmistus ja reagointikyky
-(5, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'monivalinta', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+(5, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'monivalinta', 10, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', '{9}', 0,
  'Kunnossapitoilmoitukset',
  'Toimenpiteitä aiheuttaneiden ilmoitusten (urakoitsijaviestien) %-osuus talvihoitoon ja sorateiden
 kunnossapitoon liittyvistä ilmoituksista. (6 sisäistä pistevaihtoehtoa).',
  2019),
-(6, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+(6, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', '{9}', 0,
  'Luovutuksen menettely',
  'Meillä (pääurakoitsijalla) on käytössä itselle luovutuksen menettely määräaikaan sidotuista töistä
 / työkokonaisuuksista, varusteiden ja laitteiden lisäämisestä ja uusimisesta, sorateiden ja siltojen
 hoidosta sekä ojituksesta. Alihankkijamme tekevät itselle luovutuksen vastaavista omista
 töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttamista.',
  2019),
-(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5}', 6, 0,
+(7, (SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, '{10, 11, 12, 1, 2, 3, 4, 5}', '{6}', 0,
  'Talvihoidon pistokokeet',
  'Teemme urakassa muuttuvissa keliolosuhteissa laadunseurantaa myös pistokokeina ≥ 6 kertaa
  talvessa (esim. toimenpideajassa pysyminen, työn jälki, työmenetelmä, reagointikyky ja
@@ -134,14 +159,14 @@ töistään / työkokonaisuuksista, jotka tarkastamme ennen tilaajalle luovuttam
  2019),
 
 -- D. Turvallisuus ja osaamisen kehittäminen
-(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, null, 0, 0,
+(8, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5, null, '{0}', 0,
  'Työturvallisuuden raportointi',
  'Seuraamme urakassa systemaattisesti työturvallisuutta vaarantavia läheltä piti -tilanteita ja
 teemme korjaavia toimenpiteitä ko. tilanteiden vähentämiseksi. Raportoimme em. tilanteet sekä
 niihin liittyvät suunnitellut ja/tai tehdyt toimenpiteet tilaajalle työmaakokouksien yhteydessä.',
  2019),
 (9, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5,
- '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+ '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', '{9}', 0,
  'Turvallisuuden teemakokoukset',
  'Pidämme vähintään 80 %:lle alihankkijoiden operatiivisesta henkilöstöstä vuosittain
 työlajikohtaiset tai synergisesti yli työlajien nivoutuvat turvallisuuden teemakokoukset.
@@ -149,7 +174,7 @@ Kokouksien ohjelmat ja osallistujalistat todetaan viimeistään kokousta seuraav
 työmaakokouksessa',
  2019),
 (10, (SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 5,
- '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', 9, 0,
+ '{10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8}', '{9}', 0,
  'Koulutukset',
  'Järjestämme urakassa koulutuksia, joiden aiheita voivat olla esim. menetelmätieto,
 laatutietoisuus, raportointi, seurantalaitteiden käyttö ja työturvallisuus. Järjestämäämme
@@ -158,11 +183,11 @@ sopimussuhteessa olevalta alihankkijalta. Osallistumisvelvollisuus on kirjattu
 alihankintasopimuksiimme.',
  2019),
 -- E. Viestintä ja tienkäyttäjäasiakkaan palvelu
-(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 2, null, 0, 0,
+(11, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 2, null, '{0}', 0,
  'Tilanne- ja ennakkotiedotus',
  'Toteutamme tilanne- ja ennakkotiedotusta vähintään 4 kertaa kuukaudessa.',
  2019),
-(12, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 12, null, 9, 0,
+(12, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 12, null, '{9}', 0,
  'Viestintä sidosryhmien kanssa',
  'Tunnistamme urakka-alueen tärkeimmät sidosryhmät (esim. Vapo, metsäyhtiöt, linja-autoyhtiöt,
 koululaiskuljetukset, yms.). Sovimme hoitovuosittain heidän kanssaan käytävästä
@@ -171,7 +196,7 @@ sidosryhmien tarpeet sopimuksen puitteissa tulevat huomioiduiksi mahdollisimman 
 Olemme yhteydessä paikallismedioihin ja sovimme hoitovuosittain heidän kanssaan käytävästä
 vuoropuhelusta ja viestinnästä.',
  2019),
-(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, null, 0, 0,
+(13, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 8, null, '{0}', 0,
  'Palautteet ja kehittäminen',
  'Toimitamme tienkäyttäjäpalautteet ja urakoitsijaviestit henkilöstön ja alihankkijoiden
 tietoisuuteen viikoittain. Näiden palautteiden ja omien sekä alihankkijoidemme havaintojen
@@ -179,7 +204,7 @@ perusteella kehitämme ja teemme tienkäyttäjiä palvelevia toimenpiteitä esim
 työmenetelmiin ja alihankinnan ohjaukseen. Keskustelemme kehittämistoimista tilaajan kanssa
 sekä huomioimme ne viestinnässä.',
  2019),
-(14, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 3, null, 9, 0,
+(14, (SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu'  AND "urakan-alkuvuosi" = 2019), null, 'yksittainen', 3, null, '{9}', 0,
  'Tyytyväisyystutkimustulokset',
  'Teemme Talven tienkäyttäjätyytyväisyystutkimustuloksista (ml. vapaat vastaukset) analyysin
 kerran vuodessa. Saatamme tutkimuksen ja analyysin tulokset henkilöstön ja alihankkijoiden
@@ -237,5 +262,135 @@ DO $$
         PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 4,7', 7, null,null, 3, null, ryhma_otsikko_id_2);
         PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,0', 11, null,null, 3, null, ryhma_otsikko_id_2);
         PERFORM luo_lupauksen_vaihtoehto(3, 2021, '> 5,3', 15, null,null, 3, null, ryhma_otsikko_id_2);
+    END
+$$ LANGUAGE plpgsql;
+
+--- Linkitetään 2025 urakat lupausryhmiin
+INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
+SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
+FROM urakka
+         JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
+WHERE lupausryhma."urakan-alkuvuosi" = 2025
+  AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen';
+
+-- ============================================================================
+-- KAJAANI 2025-2030 URAKAN LUPAUS- JA TAVOITEHINTA TESTIDATA
+-- ============================================================================
+DO $$
+    DECLARE
+        kajaani_urakka_id INTEGER;
+        kajaani_kayttaja_id INTEGER;
+        kajaani_alkuvuosi INTEGER := 2025;
+        
+    BEGIN
+        -- Hae Kajaani 2025 urakan ID
+        kajaani_urakka_id := (SELECT id FROM urakka 
+                              WHERE nimi = 'POP MHU Kajaani 2025-2030' 
+                              AND EXTRACT(YEAR FROM alkupvm) = 2025);
+        
+        -- Hae sopiva käyttäjä
+        kajaani_kayttaja_id := (SELECT id FROM kayttaja 
+                                WHERE kayttajanimi = 'yit_uuvh' 
+                                LIMIT 1);
+        
+        -- Tarkista että urakka löytyi
+        IF kajaani_urakka_id IS NULL THEN
+            RAISE NOTICE 'HUOM: Kajaani 2025 urakkaa ei löytynyt, ohitetaan lupaus_sitoutuminen ja urakka_tavoite lisäykset';
+            RETURN;
+        END IF;
+        
+        RAISE NOTICE 'Lisätään lupaus_sitoutuminen ja urakka_tavoite Kajaani 2025 urakalle (ID: %)', kajaani_urakka_id;
+        
+        -- ========================================================================
+        -- 1. LUPAUS_SITOUTUMINEN
+        -- ========================================================================
+        -- Urakoitsija sitoutuu 80 pisteeseen (esimerkki)
+        INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja, luotu)
+        VALUES (kajaani_urakka_id, 80, kajaani_kayttaja_id, NOW())
+        ON CONFLICT DO NOTHING;
+        
+        -- ========================================================================
+        -- 2. URAKKA_TAVOITE - 5 HOITOKAUTTA
+        -- ========================================================================
+        -- Hoitokausi 1: 2025-2026 (alkaa 1.10.2025)
+        INSERT INTO urakka_tavoite(
+            urakka, 
+            hoitokausi, 
+            tarjous_tavoitehinta, 
+            tavoitehinta, 
+            kattohinta, 
+            tavoitehinta_indeksikorjattu, 
+            kattohinta_indeksikorjattu, 
+            luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 
+            1, 
+            8500000,  -- Tarjous tavoitehinta (8.5M€)
+            9000000,  -- Tavoitehinta (9M€)
+            9900000,  -- Kattohinta (9.9M€, 110% tavoitehinnasta)
+            testidata_indeksikorjaa(9000000, kajaani_alkuvuosi, 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(9900000, kajaani_alkuvuosi, 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 2: 2026-2027
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 2, 8500000, 9000000, 9900000,
+            testidata_indeksikorjaa(9000000, (1 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(9900000, (1 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 3: 2027-2028
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 3, 8500000, 9200000, 10120000,
+            testidata_indeksikorjaa(9200000, (2 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10120000, (2 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 4: 2028-2029
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 4, 8500000, 9500000, 10450000,
+            testidata_indeksikorjaa(9500000, (3 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10450000, (3 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 5: 2029-2030
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 5, 8500000, 9800000, 10780000,
+            testidata_indeksikorjaa(9800000, (4 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10780000, (4 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        RAISE NOTICE 'Kajaani 2025 urakan lupaus_sitoutuminen ja urakka_tavoite lisätty onnistuneesti!';
+        
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'VIRHE Kajaani 2025 testidatan lisäyksessä: %', SQLERRM;
     END
 $$ LANGUAGE plpgsql;

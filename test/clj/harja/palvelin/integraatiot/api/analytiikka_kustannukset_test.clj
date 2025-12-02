@@ -74,6 +74,32 @@
                      :tavoitehintainen :true}]
      :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
 
+(defn uusi-kulu-tehtavalla-kustannukset-testiin [urakka-id summa vuosi urakan-alkupvm]
+  (let [erapaiva (pvm/->pvm (str "1.11." vuosi))]
+    {:id nil
+     :urakka urakka-id
+     :viite "12345678"
+     :erapaiva erapaiva
+     :kokonaissumma summa
+     :tyyppi "laskutettava"
+     :kohdistukset [{:kohdistus-id nil
+                     :rivi 1
+                     :summa (/ summa 2)
+                     :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23104")
+                     :tehtavaryhma (hae-tehtavaryhman-id-tunnisteella "3d5962b4-c7ca-4750-81f1-f589b9c7c52b") ;; B1 - Talvisuola
+                     :tehtava (hae-tehtavan-id-nimella "Suolaus")
+                     :tyyppi :hankintakulu
+                     :tavoitehintainen :true}
+                    {:kohdistus-id nil
+                     :rivi 2
+                     :summa (/ summa 2)
+                     :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23104")
+                     :tehtavaryhma (hae-tehtavaryhman-id-tunnisteella "3d5962b4-c7ca-4750-81f1-f589b9c7c52b") ;; B1 - Talvisuola
+                     :tehtava (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)")
+                     :tyyppi :hankintakulu
+                     :tavoitehintainen :true}]
+     :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
+
 (deftest hae-toteutuneet-kustannukset-kulut-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -121,6 +147,65 @@
     (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen])) "Tavoitehintaisuus ei palaudu oikein.")
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
+;; Monista yllä oleva testi, mutta tehtävällä varustetulla kululla
+(deftest hae-toteutuneet-kustannukset-kulut-tehtavalla-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+
+        ;; Poista urakan kaikki kulut
+        _ (u (str "DELETE FROM kulu_kohdistus WHERE kulu in (select id from kulu where urakka = " urakka-id ");"))
+        _ (u (str "DELETE FROM kulu_liite WHERE kulu in (select id from kulu where urakka = " urakka-id ");"))
+        _ (u (str "DELETE FROM kulu WHERE urakka = " urakka-id ";"))
+
+        ;; Luodaan kulu, joka on pakko löytyä aineistosta
+        kulu-summa 1000M
+        uusi-kulu (uusi-kulu-tehtavalla-kustannukset-testiin urakka-id kulu-summa 2023 urakan-alkupvm)
+        _ (println "uusi-kulu" (pr-str uusi-kulu))
+        _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen uusi-kulu})
+
+        kulut-kannasta (q-map
+                         (format "SELECT u.id                        AS urakka,
+                                                u.urakkanro                 AS urakkatunnus,
+                                                k.id                        AS \"kulu-id\",
+                                                k.laskun_numero             AS \"laskun-tunniste\",
+                                                k.lisatieto                 AS \"kulun-kuvaus\",
+                                                k.poistettu                 AS \"poistettu\",
+                                                k.koontilaskun_kuukausi     AS \"koontilaskun-kuukausi\",
+                                                k.erapaiva                  AS \"kulun-ajankohta_laskun-paivamaara\",
+                                                k.kokonaissumma             AS \"kulun-kokonaissumma\",
+                                                kk.tehtava                 AS \"kulukohdistus-tehtava\"
+                                           FROM kulu k
+                                                JOIN kulu_kohdistus kk ON k.id = kk.kulu
+                                                JOIN urakka u ON k.urakka = u.id
+                                          WHERE u.id = %s
+                                          GROUP BY k.id, u.id, kk.tehtava
+                                          ORDER BY k.erapaiva ;" urakka-id))
+
+        ;; Varmista, että kannasta löytyy juuri luotu kulu
+        juuri-luotu-kulu-kannasta (first (filter #(= (:kulun-kokonaissumma %) kulu-summa) kulut-kannasta))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-kulu-rajapinnasta (first (filter (fn [k]
+                                                       (= (get-in k [:kulu :kulun-kokonaissumma]) (bigint kulu-summa)))
+                                               (get-in encoodattu-body [:toteutuneet-kustannukset :kulut])))]
+    (is (= 200 (:status vastaus)))
+    (is (= kulu-summa (:kulun-kokonaissumma juuri-luotu-kulu-kannasta)
+          (bigdec (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-kokonaissumma]))) "Tietokannan ja rajapinnan kulu ei täsmää.")
+    (is (= 2023 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
+    (is (= 11 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
+    (is (= "2023-10-31T22:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
+    (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen]))
+    "Tavoitehintaisuus ei palaudu oikein.")
+    (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset]))))
+
+    ;; Varmista, että tehtävät tuli - Tehtävät on kovakoodattu, niin haetaan ne apufunktioilla
+    (is (= (hae-tehtavan-id-nimella "Suolaus") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 0 :kulukohdistus :kohdistus :tehtava])))
+    (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 1 :kulukohdistus :kohdistus :tehtava])))))
 
 (deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU

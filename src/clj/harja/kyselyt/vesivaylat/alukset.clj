@@ -48,7 +48,7 @@
                                                           (Float/parseFloat loppu)]}))))
                                    (fn [o]
                                      (konv/pgobject->map o
-                                                         :aika :date
+                                                         :aika :datetime
                                                          :sijainti :string)))
                                  pisteet))))))
 

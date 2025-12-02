@@ -111,7 +111,10 @@
                         (istunto/ominaisuus-kaytossa? :vesivayla)))
 
     :valitavoitteet (and
-                      (oikeudet/urakat-valitavoitteet id)
+                      ;; MHU-urakoissa tämä välilehti sisältää sekä Lupaukset että Välitavoitteet
+                      ;; Näytä välilehti jos käyttäjällä on jompikumpi oikeus
+                      (or (oikeudet/urakat-lupaukset id)
+                        (oikeudet/urakat-valitavoitteet id))
                       (not (urakka/kanavaurakka? urakka)))
 
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
@@ -131,15 +134,15 @@
     :tiemerkinnan-kustannukset (and
                                  (oikeudet/urakat-tiemerkinta-kustannukset id)
                                  (= tyyppi :tiemerkinta))
-    
+
     :kustannusten-kirjaus (and
                             (oikeudet/urakat-tiemerkinta-kustannukset id)
                             (= tyyppi :tiemerkinta))
-    
+
     :kustannusten-yhteenveto (and
                                (oikeudet/urakat-tiemerkinta-kustannukset id)
                                (= tyyppi :tiemerkinta))
-    
+
     :paikkaukset-mpu (and
                        (oikeudet/urakat-paikkaukset id)
                        (= tyyppi :paallystys)
@@ -148,7 +151,7 @@
     :valikatselmus (and
                      (oikeudet/urakat-kulut-valikatselmus id)
                      (= tyyppi :teiden-hoito))
-    
+
     :kustannukset (and
                     (oikeudet/urakat-paikkaukset id)
                     (= tyyppi :paallystys)
@@ -157,6 +160,7 @@
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
+                     ;; TODO: Kun viet tuontatoon, enabloi myös mhu_kulut.cljs -> (e! (->HaeUrakanMuutostyot 
                      (k/kehitysymparistossa?)
                      (= tyyppi :teiden-hoito))
     false))
@@ -168,7 +172,7 @@
         _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
-                       (:tyyppi ur))
+                      (:tyyppi ur))
         sopimustyyppi (:sopimustyyppi ur)
         valittu-valilehti (nav/valittu-valilehti :urakat)
         _ (js/console.log "Urakkanäkymä :: valittu välilehti:" (pr-str valittu-valilehti))
