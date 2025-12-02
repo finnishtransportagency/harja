@@ -10,7 +10,8 @@
   merkitse-tyypin-maksuerat-likaisiksi!
   luo-maksuera<! merkitse-toimenpiteen-maksuerat-likaisiksi! hae-lahetettava-maksuera hae-maksueranumero-lahetys-idlla
   lukitse-maksuera! merkitse-maksuera-odottamaan-vastausta! merkitse-maksueralle-lahetysvirhe!
-  merkitse-maksuera-lahetetyksi! onko-olemassa? hae-likaiset-maksuerat maksuearat-ilman-kustannussuunnitelmaa)
+  merkitse-maksuera-lahetetyksi! onko-olemassa? hae-likaiset-maksuerat maksuearat-ilman-kustannussuunnitelmaa
+  hae-maksueran-urakka)
 
 (defn hae-urakan-maksueran-summat [db urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
