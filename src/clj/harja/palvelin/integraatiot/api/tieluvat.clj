@@ -66,8 +66,8 @@
                                 "Sisä-Suomi" 4
                                 "Keski-Suomi" 5
                                 "Itä-Suomi" 6
-                                "Etelä-Suomi" 7
-                                "Pohjanmaa" 7
+                                "Etelä-Pohjanmaa" 7
+                                "Pohjanmaa" 8
                                 "Pohjois-Suomi" 9
                                 "Lappi" 10
                                 nil nil
