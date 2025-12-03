@@ -464,172 +464,180 @@ DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo
 
 -- name: hae-tehtava-maaramuutokset
 WITH urakan_tehtavat AS (
-  SELECT
-    tt.toimenpidekoodi           AS toimenpidekoodi,
-    SUM(tt.maara)                AS maara,
-    :urakka                      AS urakka,
-    MAX(t.id)                    AS toteuma_id,
-    MAX(tt.id)                   AS toteuma_tehtava_id
-  FROM toteuma t
-    JOIN toteuma_tehtava tt ON t.id = tt.toteuma
-                            AND tt.urakka_id = :urakka
-                            AND tt.poistettu = FALSE
-    LEFT JOIN toteuma_materiaali tm ON t.id = tm.toteuma
-                                   AND tm.urakka_id = :urakka
-                                   AND tm.poistettu = FALSE
-  WHERE t.urakka = :urakka
-    AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-    AND t.poistettu = FALSE
-  GROUP BY tt.toimenpidekoodi
-) 
-SELECT
-  tk.id                                            AS id,
-  o.otsikko                                        AS toimenpide,
-  tk.nimi                                          AS tehtava,
-  tk.id                                            AS tehtava_id,
-  mmt.versio                                       AS versio,
-  mmt.syy                                          AS syy,
-  mmt.lahde                                        AS yksikkohinnan_lahde,
-  mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
-  mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
-  COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
-  COALESCE(SUM(urakan_tehtavat.maara), 0)          AS maara,
-  SUM(ut.maara)                                    AS suunniteltu_maara,
-  tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
-  tk.suunnitteluyksikko                            AS yksikko,
-  -- ---------------------------------------------------- --
-  -- Määrämuutos  =  Toteutunut määrä - suunniteltu määrä 
-  -- ---------------------------------------------------- --
-  COALESCE(SUM(urakan_tehtavat.maara), 0) -
-  COALESCE(SUM(ut.maara), 0)                       AS maaramuutos,
-  -- ---------------------------------------------------- --
-  -- Yksikköhinta =  Kirjatut kulut / toteutunut määrä   
-  -- Ei autom. laskentaa -> Tav hinnan muutos / Määrämuutos
-  -- ---------------------------------------------------- --
-  CASE
-      WHEN mmt.kasin_syotetty_tavoitehintamuutos IS NOT NULL 
-      THEN ROUND( 
-          mmt.kasin_syotetty_tavoitehintamuutos /
-          (COALESCE(SUM(urakan_tehtavat.maara), 0) - COALESCE(SUM(ut.maara), 0)), 
-          2
-        ) 
-    -- 
-	  WHEN mmt.lahde IS NULL 
-        OR mmt.lahde = 'laskettu'
-	    THEN ROUND(kulut.summa / NULLIF(SUM(urakan_tehtavat.maara), 0), 2)
-    -- 
-    -- Yksikköhinta valittu käyttöliittymästä 
-	  WHEN mmt.lahde = 'valittu' THEN NULL
-    -- 
-	  ELSE NULL
-	END                                             AS yksikkohinta,
-  -- ---------------------------------------------------- --
-  -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
-  -- ---------------------------------------------------- --
-  CASE 
-    -- ============================================================
-    -- Yksikköhinta puuttuu -> muutos syötetään käsin 
-    -- Myös ennen 2025 alkaneet urakat syöttävät aina käsin
-    -- ============================================================
-    WHEN (mmt.lahde = 'puuttuu' OR :laskenta-automatiikka? = false) THEN mmt.kasin_syotetty_tavoitehintamuutos
-    -- ============================================================
-    -- Seuraaviin tarvitaan toteumia, ei jatketa muuten
-    -- Ei jatketa myöskään, jos kyseessä vanhempi urakka ilman automatiikkaa
-    -- ============================================================
-    WHEN (:laskenta-automatiikka? = false OR (SUM(urakan_tehtavat.maara) = 0)) THEN NULL
-    -- ============================================================
-    -- Tavoitehinta lasketaan itsestään, joten lasketaan se tässä 
-    -- ============================================================
-  	WHEN mmt.lahde IS NULL OR mmt.lahde = 'laskettu' 
-      -- Toteutunut  - suunniteltu 
-      THEN (COALESCE(SUM(urakan_tehtavat.maara), 0) -
-		        COALESCE(SUM(ut.maara), 0)
-           )  -- Kertaa yksikköhinta 
-           * (COALESCE(kulut.summa, 0) / SUM(urakan_tehtavat.maara))  
-    -- ============================================================
-    -- Yksikköhinta valittu, lasketaan endpointissa erikseen => palauta null
-    -- ============================================================
-    WHEN mmt.lahde = 'valittu' THEN NULL
-  END                                             AS tavoitehinnan_muutos
-FROM tehtava tk
-       JOIN tehtavaryhma tr_alataso
-ON tr_alataso.id = tk.tehtavaryhma
-       JOIN tehtavaryhmaotsikko o
-         ON tr_alataso.tehtavaryhmaotsikko_id = o.id
-        AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-  LEFT JOIN urakka_tehtavamaara ut
-         ON ut.urakka = :urakka
-        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-        AND ut.poistettu IS NOT TRUE
-        AND tk.id = ut.tehtava
-        AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
-  LEFT JOIN urakan_tehtavat
-         ON tk.id = urakan_tehtavat.toimenpidekoodi
-       JOIN urakka u
-         ON u.id = :urakka
-  -- --------------------------------------------------------------------
-  -- Vedetään täältä syy sekä yksikköhinnan hk / kirjattu tavoitehinta
-  -- --------------------------------------------------------------------
-  LEFT JOIN LATERAL (
-    SELECT mmt.*
-      FROM mhu_muutos_tehtava_tiedot mmt
-     WHERE mmt.urakka = :urakka
-       AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-       AND mmt.tehtava = tk.id
-  ORDER BY mmt.versio DESC
-     LIMIT 1
-  ) mmt ON TRUE
-  -- Hae tehtävän kulut
-  LEFT JOIN (
     SELECT
-      -- Kiinnostaa tässä  vaiheessa vaan summa, ja yhdistetään tehtava_id 
-      kk.tehtava       AS tehtava_id,
-      SUM(kk.summa)    AS summa
-     FROM kulu k
-     JOIN kulu_kohdistus kk
-       ON k.id = kk.kulu
-      AND kk.poistettu IS NOT TRUE
-    WHERE k.urakka = :urakka
-      AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
-      AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
-      AND k.poistettu IS NOT TRUE
- GROUP BY kk.tehtava) kulut ON kulut.tehtava_id = tk.id
-WHERE
-  -- Tärkeä:: halutaan nimenomaan vain määrämitattavat urakan tehtävät 
-  tk."maaramitattava?" IS TRUE
-  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-  -- mutta otetaan mukaan Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen ja lisätyöt
-  AND (
-    (tk.suunnitteluyksikko IS NOT NULL AND tk.suunnitteluyksikko != 'euroa') OR
-    tk.yksiloiva_tunniste IN (
-      '49b7388b-419c-47fa-9b1b-3797f1fab21d',
-      '63a2585b-5597-43ea-945c-1b25b16a06e2',
-      'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-      'e32341fc-775a-490a-8eab-c98b8849f968',
-      '0c466f20-620d-407d-87b0-3cbb41e8342e',
-      'c058933e-58d3-414d-99d1-352929aa8cf9'
-    )
-  )
-  -- Näkymään halutaan vain tehtävät jotka suunniteltu 
-  AND ut.maara IS NOT NULL 
-  AND ut.maara > 0
+        tt.toimenpidekoodi           AS toimenpidekoodi,
+        SUM(tt.maara)                AS maara,
+        :urakka                      AS urakka,
+        MAX(t.id)                    AS toteuma_id,
+        MAX(tt.id)                   AS toteuma_tehtava_id
+      FROM toteuma t
+            JOIN toteuma_tehtava tt
+              ON t.id = tt.toteuma
+             AND tt.urakka_id = :urakka
+             AND tt.poistettu = FALSE
+       LEFT JOIN toteuma_materiaali tm
+              ON t.id = tm.toteuma
+             AND tm.urakka_id = :urakka
+             AND tm.poistettu = FALSE
+     WHERE t.urakka = :urakka
+       AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+       AND t.poistettu = FALSE
+  GROUP BY tt.toimenpidekoodi
+),
+materiaalimaara AS (
+    -- Kohdista materiaaleina raportoitavat tehtävät tehtävätoteumina 
+    -- Suolauksen alle esim talvisuolamateriaalit, ja niiden toteumat 
+    -- Ref:  https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t
+    SELECT
+         teh.id          AS tehtava_id,
+         teh.nimi        AS tehtava,
+         SUM(tm.maara)   AS maara,
+         mk.yksikko
+    -- toteuma_materiaali taulussa on kaikki urakan materiaalitoteumat 
+    FROM toteuma_materiaali tm
+              JOIN toteuma t
+                   ON t.id = tm.toteuma AND t.poistettu IS FALSE
+              -- Materiaali linkin 'päätaulu' 
+              JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
+              -- tehtava taulussa on materiaalin luokka, sekä koodi linkkinä 
+              JOIN tehtava teh
+                   ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
+                       AND teh."maaramitattava?" IS TRUE -- Vain määrämitattavat tehtävät mukaan  
+                       AND (teh.materiaalikoodi_id = tm.materiaalikoodi
+                           -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
+                           OR teh.materiaalikoodi_id IS NULL)
+    WHERE t.urakka = :urakka
+      AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+ GROUP BY teh.id, teh.nimi, mk.yksikko
+ ORDER BY teh.id
+),
+maaramuutokset AS (
+    SELECT
+        tk.id                                            AS id,
+        o.otsikko                                        AS toimenpide,
+        tk.nimi                                          AS tehtava,
+        tk.id                                            AS tehtava_id,
+        mmt.versio                                       AS versio,
+        mmt.syy                                          AS syy,
+        mmt.lahde                                        AS lahde,
+        mmt.lahde                                        AS yksikkohinnan_lahde,
+        mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
+        mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
+        COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
+        -- toteutunut määrä: materiaalitoteuma -> muuten urakan_tehtavat
+        COALESCE(MAX(mm.maara), SUM(urakan_tehtavat.maara)) AS toteutunut_maara,
+        SUM(ut.maara)                                    AS suunniteltu_maara,
+        tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
+        tk.suunnitteluyksikko                            AS yksikko,
+        tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
+        0.7 AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun 
+      FROM tehtava tk
+          JOIN tehtavaryhma tr_alataso
+            ON tr_alataso.id = tk.tehtavaryhma
+          JOIN tehtavaryhmaotsikko o 
+            ON tr_alataso.tehtavaryhmaotsikko_id = o.id
+           AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+     LEFT JOIN urakka_tehtavamaara ut
+            ON ut.urakka = :urakka
+           AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+           AND ut.poistettu IS NOT TRUE
+           AND tk.id = ut.tehtava
+           AND (CAST(:tehtava AS INTEGER) IS NULL OR tk.id = :tehtava)
+     LEFT JOIN urakan_tehtavat
+            ON tk.id = urakan_tehtavat.toimenpidekoodi
+           AND tr_alataso.yksiloiva_tunniste NOT IN ('3d5962b4-c7ca-4750-81f1-f589b9c7c52b')
+     LEFT JOIN materiaalimaara mm
+            ON mm.tehtava_id = tk.id
+          JOIN urakka u
+            ON u.id = :urakka
+     -- Syy, yksikköhinnan hk, kirjattu tavoitehinta 
+     LEFT JOIN LATERAL (
+           SELECT mmt.*
+             FROM mhu_muutos_tehtava_tiedot mmt
+            WHERE mmt.urakka = :urakka
+              AND mmt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+              AND mmt.tehtava = tk.id
+         ORDER BY mmt.versio DESC LIMIT 1 ) mmt ON TRUE
+     -- Kirjatut kulut 
+     LEFT JOIN (
+           SELECT kk.tehtava    AS tehtava_id, 
+                  SUM(kk.summa) AS summa
+            FROM kulu k
+                  JOIN kulu_kohdistus kk
+                    ON k.id = kk.kulu
+                   AND kk.poistettu IS NOT TRUE
+           WHERE k.urakka = :urakka
+             AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= k.erapaiva)
+             AND (:loppupvm::DATE IS NULL OR k.erapaiva <= :loppupvm::DATE)
+             AND k.poistettu IS NOT TRUE
+    GROUP BY kk.tehtava ) kulut ON kulut.tehtava_id = tk.id
+ WHERE tk."maaramitattava?" IS TRUE   -- Vain määrämitattavat 
+   AND ut.maara IS NOT NULL           -- Vain joilla on suunniteltu arvo 
+   AND ut.maara > 0
+   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+   -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+   AND ((tk.suunnitteluyksikko IS NOT NULL AND tk.suunnitteluyksikko != 'euroa') OR
+       tk.yksiloiva_tunniste IN ('49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
+                                'e32341fc-775a-490a-8eab-c98b8849f968',
+                                '0c466f20-620d-407d-87b0-3cbb41e8342e',
+                                'c058933e-58d3-414d-99d1-352929aa8cf9'))
 GROUP BY
-  tk.id,
-  tk.nimi,
-  o.otsikko,
-  tk.kasin_lisattava_maara,
-  tk.suunnitteluyksikko,
-  kulut.summa,
-  mmt.versio,
-  mmt.syy,
-  mmt.lahde,
-  mmt.valitun_yksikkohinnan_hoitokausi,
-  mmt.kasin_syotetty_tavoitehintamuutos
-ORDER BY
-  o.otsikko ASC,
-  tk.nimi ASC;
+     tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, 
+     tk.suunnitteluyksikko, kulut.summa, mmt.versio, mmt.syy, mmt.lahde, 
+     mmt.valitun_yksikkohinnan_hoitokausi, mmt.kasin_syotetty_tavoitehintamuutos, tr_alataso.yksiloiva_tunniste
+)
+SELECT
+    id,
+    toimenpide,
+    tehtava,
+    tehtava_id,
+    versio,
+    syy,
+    yksikkohinnan_lahde,
+    yksikkohinnan_alkuvuosi,
+    syotetty_tavoitehintamuutos,
+    COALESCE(kirjatut_kulut_summa, 0) AS kirjatut_kulut_summa,
+    COALESCE(toteutunut_maara, 0)     AS maara,
+    suunniteltu_maara,
+    kasin_lisattava_maara,
+    yksikko,
+    -- Määrämuutos = Toteutunut määrä - suunniteltu määrä
+    COALESCE(toteutunut_maara, 0) - COALESCE(suunniteltu_maara, 0) AS maaramuutos,
+    tr_tunniste,
+    (tr_tunniste = '3d5962b4-c7ca-4750-81f1-f589b9c7c52b') AS talvisuola, -- = 'Liukkaudentorjunta suolaamalla (materiaali)' - onko kyseessä talvisuola? 
+    talvisuola_kerroin,
+    CASE
+        -- ---------------------------------------------------------
+        -- Yksikköhinta = Kirjatut kulut / toteutunut määrä   
+        -- Ei autom. laskentaa        -> Tav hinnan muutos / Määrämuutos
+        -- Valittu käyttöliittymästä  -> pass 
+        WHEN syotetty_tavoitehintamuutos IS NOT NULL
+            THEN ROUND(syotetty_tavoitehintamuutos / NULLIF(COALESCE(toteutunut_maara,0) - COALESCE(suunniteltu_maara,0), 0), 2)
+        WHEN (lahde IS NULL OR lahde = 'laskettu')
+            THEN ROUND(COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara, 0), 2)
+        WHEN lahde = 'valittu' THEN NULL
+        END AS yksikkohinta,
+    CASE
+        -- ---------------------------------------------------------
+        -- Tavoitehinnan muutos = Määrämuutos * yksikköhinta  
+        -- Yksikköhinta puuttuu        -> muutos syötetään käsin, myös ennen 2025 alkaneet syöttävät käsin
+        -- Ei toteumia, vanha urakka   -> pass 
+        -- Yksikköhinta valittu        -> pass 
+        -- Automatiikka käytössä       -> laske 
+        WHEN (lahde = 'puuttuu' OR :laskenta-automatiikka? = FALSE)
+            THEN syotetty_tavoitehintamuutos
+        WHEN (:laskenta-automatiikka? = FALSE OR COALESCE(toteutunut_maara,0) = 0)
+            THEN NULL
+        WHEN (lahde IS NULL OR lahde = 'laskettu')
+            THEN (COALESCE(toteutunut_maara,0) - COALESCE(suunniteltu_maara,0))
+            * (COALESCE(kirjatut_kulut_summa,0) / NULLIF(toteutunut_maara,0))
+        WHEN lahde = 'valittu' THEN NULL
+        END AS tavoitehinnan_muutos
+    FROM maaramuutokset
+ORDER BY toimenpide, tehtava; 
 
 
 -- name: paivita-tehtava-tiedot<!
