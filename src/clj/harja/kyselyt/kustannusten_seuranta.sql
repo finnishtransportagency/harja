@@ -397,7 +397,13 @@ UNION ALL
 -- Näillä ei ole toteutuneita kuluja, noudetaan pekästään tavoitehinnan muutos (suunniteltu määrä)
 -- 
 SELECT mmk.summa                                    AS budjetoitu_summa,
-       mmk.summa                                    AS budjetoitu_summa_indeksikorjattu,
+       -- Jos pysyvä muutos astunut voimaan valittuna vuotena, näytä vaan suunniteltu
+       -- Muuten käytä indeksiä jos olemassa, eli voimassaolon jälkeisinä vuosina. 
+       -- Fallback suunniteltu määrä
+       CASE 
+           WHEN (EXTRACT(YEAR FROM m.voimassa_alkaen) = :hoitokauden-alkuvuosi::INTEGER) THEN mmk.summa 
+           ELSE COALESCE(indeksikorjaa(mmk.summa, (EXTRACT (YEAR FROM :alkupvm::DATE)::INTEGER), 10, m.urakka), mmk.summa)
+       END                                          AS budjetoitu_summa_indeksikorjattu,
        0                                            AS toteutunut_summa,
        NULL::TEXT                                   AS maksutyyppi,
        'hankinta'                                   AS toimenpideryhma,
@@ -417,7 +423,7 @@ WHERE m.urakka = :urakka
   AND m.tyyppi = 'pysyva'
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
   -- Voimassa alkaen on valittu vuosi 
-  AND EXTRACT(YEAR FROM m.voimassa_alkaen) = :hoitokauden-alkuvuosi::INTEGER
+  AND EXTRACT(YEAR FROM m.voimassa_alkaen) <= :hoitokauden-alkuvuosi::INTEGER
   -- Pysyvä muutos astunut voimaan tällä hoitokaudella 
   AND EXTRACT(MONTH FROM m.voimassa_alkaen) >= 10
 UNION ALL
