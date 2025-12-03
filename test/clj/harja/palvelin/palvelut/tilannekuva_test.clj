@@ -301,12 +301,12 @@
                       :loppuetaisyys 2780},
                      :alkanut #inst "2015-02-01T17:00:00.000000000-00:00",
                      :tehtava
-                     {:id 10, :toimenpide "Suolaus", :yksikko "tiekm", :maara 123M},
+                     {:id 10, :toimenpide "Liukkaudentorjunta suolaamalla (materiaali)", :yksikko "tiekm", :maara 123M},
                      :paattynyt #inst "2015-02-01T18:05:00.000000000-00:00",
                      :suorittaja {:nimi "Tehotekijät Oy"},
                      :tyyppi-kartalla :toteuma,
                      :id 10,
-                     :toimenpide "Suolaus"}
+                     :toimenpide "Liukkaudentorjunta suolaamalla (materiaali)"}
         parametrit-sisaan {:y 7214206.908812937,
                            :talvi #{27 24 50 51 25 34 23 35 26 52 49},
                            :toleranssi 1198.8469917446225,

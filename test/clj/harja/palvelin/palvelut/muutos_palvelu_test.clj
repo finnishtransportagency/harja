@@ -1,14 +1,12 @@
 (ns harja.palvelin.palvelut.muutos-palvelu-test
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
-            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
 
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu])
@@ -1633,7 +1631,8 @@
 
 (deftest hae-tehtava-maaramuutokset-toimii
   (let [maaramuutokset (hae-maaramuutos-alkutiedot)
-        reunapaalujen-uusiminen (first maaramuutokset)
+        reunapaalujen-uusiminen (first
+                                  (filter #(= (:tehtava %) "Opastustaulun/-viitan uusiminen") maaramuutokset))
         suunniteltu (-> reunapaalujen-uusiminen :suunniteltu_maara)
         kulut (-> reunapaalujen-uusiminen :kirjatut_kulut_summa)
         toteumat (-> reunapaalujen-uusiminen :maara)
@@ -1688,7 +1687,8 @@
 
         ;; Pitäisi pitkälti näyttää nollaa
         maaramuutokset-tyhja-kanta (hae-maaramuutos-alkutiedot)
-        opastustaulun-uusiminen (first maaramuutokset-tyhja-kanta)
+        opastustaulun-uusiminen (first
+                                  (filter #(= (:tehtava %) "Opastustaulun/-viitan uusiminen") maaramuutokset-tyhja-kanta))
         tehtava_id (-> opastustaulun-uusiminen :tehtava_id)
 
         lisatty-kulu 77777
@@ -1802,9 +1802,8 @@
   (let [maaramuutokset (hae-maaramuutos-alkutiedot)
         ;; --------------------------------------------------------
         ;; Haetut 
-        opastetaulun-uusiminen (second maaramuutokset)
-
-        _ (println "\n opastetaulun-uusiminen :: " opastetaulun-uusiminen)
+        opastetaulun-uusiminen (first
+                                 (filter #(= (:tehtava %) "Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)") maaramuutokset))
         suunniteltu (-> opastetaulun-uusiminen :suunniteltu_maara)
         kulut (-> opastetaulun-uusiminen :kirjatut_kulut_summa)
         toteumat (-> opastetaulun-uusiminen :maara)
@@ -1836,7 +1835,7 @@
         ;; --------------------------------------------------------
         ;; Tallennetut (yksikköhinta)
         tallennetut-maaramuutokset (hae-maaramuutos-alkutiedot)
-        opastetaulun-uusiminen-tallennettu (second tallennetut-maaramuutokset)
+        opastetaulun-uusiminen-tallennettu (first (filter #(= (:tehtava %) "Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)") tallennetut-maaramuutokset))
         maaramuutos-t (-> opastetaulun-uusiminen-tallennettu :maaramuutos)
         tav-hinta-muutos-t (-> opastetaulun-uusiminen-tallennettu :tavoitehinnan_muutos)
         yksikkohinta-t (-> opastetaulun-uusiminen-tallennettu :yksikkohinta)
@@ -1847,9 +1846,9 @@
         ;; --------------------------------------------------------
         ;; Grid tallennus 
         tallenna-yksikkohinta? false
-        runkopuiden-poisto (nth maaramuutokset 2)
-        palteiden-poisto (nth maaramuutokset 3)
-        maakiven-poisto (nth maaramuutokset 4)
+        runkopuiden-poisto (first (filter #(= (:tehtava %) "Runkopuiden poisto") maaramuutokset))
+        palteiden-poisto (first (filter #(= (:tehtava %) "Päällystettyjen teiden palteiden poisto") maaramuutokset))
+        maakiven-poisto (first (filter #(= (:tehtava %) "Maakivien (>1m3) poisto") maaramuutokset))
         puuttuu-muutos 123123123
         syy-1 "Muutoksia 1"
         syy-2 "Muutoksia 2"
@@ -1868,9 +1867,9 @@
         _ (tallenna-maaramuutokset rivit tallenna-yksikkohinta?)
 
         tallennetut-grid (hae-maaramuutos-alkutiedot)
-        runkopuiden-poisto-t (nth tallennetut-grid 2)
-        palteiden-poisto-t (nth tallennetut-grid 3)
-        maakiven-poisto-t (nth tallennetut-grid 4)
+        runkopuiden-poisto-t (first (filter #(= (:tehtava %) "Runkopuiden poisto") tallennetut-grid))
+        palteiden-poisto-t (first (filter #(= (:tehtava %) "Päällystettyjen teiden palteiden poisto") tallennetut-grid))
+        maakiven-poisto-t (first (filter #(= (:tehtava %) "Maakivien (>1m3) poisto") tallennetut-grid))
 
         runko-lahde (-> runkopuiden-poisto-t :yksikkohinnan_lahde)
         runko-tav-hinta (-> runkopuiden-poisto-t :syotetty_tavoitehintamuutos)
@@ -1890,9 +1889,10 @@
         _ (tallenna-maaramuutokset rivit tallenna-yksikkohinta?)
 
         tallennetut-grid (hae-maaramuutos-alkutiedot)
-        runkopuiden-poisto-t (nth tallennetut-grid 2)
-        palteiden-poisto-t (nth tallennetut-grid 3)
-        maakiven-poisto-t (nth tallennetut-grid 4)
+        runkopuiden-poisto-t (first (filter #(= (:tehtava %) "Runkopuiden poisto") tallennetut-grid))
+        palteiden-poisto-t (first (filter #(= (:tehtava %) "Päällystettyjen teiden palteiden poisto") tallennetut-grid))
+        maakiven-poisto-t (first (filter #(= (:tehtava %) "Maakivien (>1m3) poisto") tallennetut-grid))
+
         versio-runkopuut (-> runkopuiden-poisto-t :versio)
         versio-palteet (-> palteiden-poisto-t :versio)
         versio-maakivet (-> maakiven-poisto-t :versio)]
