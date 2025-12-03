@@ -574,8 +574,6 @@
                                             :materiaali materiaali-kaikki-talvisuola-yhteensa}
                                            [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
 
-        _ (println "\n mk::  " materiaalit-kannasta)
-
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
