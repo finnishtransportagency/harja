@@ -299,7 +299,7 @@
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= "kattohinnan-ylitys" (get-in vastaus [:kattohintapaatos])) "Rahapäätökset")
-    (is (= "tavoitehinnan-ylitus" (get-in vastaus [:tavoitehintaylityspaatos])) "Rahapäätökset")
+    (is (= "tavoitehinnan-ylitys" (get-in vastaus [:tavoitehintaylityspaatos])) "Rahapäätökset")
     (is (= "bonus" (get-in vastaus [:lupauspaatos])) "Lupauspäätökset")))
 
 (deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
