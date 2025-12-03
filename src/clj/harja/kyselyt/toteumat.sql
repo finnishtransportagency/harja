@@ -1256,6 +1256,13 @@ SELECT alkanut
   FROM toteuma
  WHERE id = :id;
 
+-- name: hae-toteuman-perustiedot-ulkoisella-idlla
+SELECT id, urakka, sopimus, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, lisatieto,
+       tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+       tyyppi, luotu, luoja, muokattu, muokkaaja
+  FROM toteuma
+ WHERE ulkoinen_id = :ulkoinen_id;
+
 -- name: hae-reittitoteumat-analytiikalle
 SELECT t.toteuma_tunniste_id,
        t.toteuma_sopimus_id,
