@@ -113,7 +113,7 @@
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [id verkkotyyppi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                                               tr-ajorata tr-kaista verkon-tarkoitus kasittelymenetelma paksuus lisatty-paksuus
-                                              verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara massa murske]}
+                                              verkon-sijainti toimenpide kasittelysyvyys massamenekki kokonaismassamaara rc% massa murske]}
                                       kohteen-tienumero karttapvm]
     [:alustalle-tehty-toimenpide
      [:harja-id id]
@@ -141,6 +141,7 @@
      (when massamenekki [:massamenekki massamenekki])
      [:kokonaismassamaara kokonaismassamaara]
       (lisaa-massa massa)
+     (when rc% [:rc-prosentti rc%])
      [:murske 
       [:mursketyyppi (:tyyppi murske)]
       [:rakeisuus (:rakeisuus murske)]
@@ -239,5 +240,3 @@
         (throw+ {:type :invalidi-yha-kohde-xml
                  :error virheviesti}))
       xml)))
-
-
