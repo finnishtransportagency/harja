@@ -79,7 +79,7 @@
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
       (is (= (count (:toimenpiteet hankinnat)) 7))
-      (is (true? (some #(= (:nimi %) "TALVIHOITO") (:toimenpiteet hankinnat))))
+      (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
       (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
 

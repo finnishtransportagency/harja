@@ -456,7 +456,7 @@ FROM materiaalikoodi;
 -- name: hae-suolauksen-toimenpidekoodi
 SELECT id
   FROM tehtava
- WHERE nimi = 'Suolaus';
+ WHERE nimi = 'Liukkaudentorjunta suolaamalla (materiaali)';
 
 -- name: hae-suolatoteumat-tr-valille
 SELECT *

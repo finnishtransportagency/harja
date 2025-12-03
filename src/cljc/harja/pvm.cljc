@@ -1394,12 +1394,22 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   [pvm sama-vuosi]
   (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))
 
-(defn paivat-aikavalissa [alku loppu]
-  (if (or (t/equal? alku loppu) (t/after? alku loppu))
-    [alku]
-    (sort (into [alku loppu]
-                (map #(t/plus alku (t/days %))
-                     (range 1 (t/in-days (t/interval alku loppu))))))))
+#?(:clj
+   (defn paivat-aikavalissa
+     "Olettaa saavansa ajat joko joda-time objekteina tai java.util.Date objekteina."
+     [alku loppu]
+     (let [joda-alku (if (joda-time? alku)
+                          alku
+                          (joda-timeksi alku))
+           joda-loppu (if (joda-time? loppu)
+                           loppu
+                           (joda-timeksi loppu))]
+       (if (or (t/equal? joda-alku joda-loppu) (t/after? joda-alku joda-loppu))
+         [joda-alku]
+         (let [intervalli (t/interval joda-alku joda-loppu)
+               paivat-vali (range 1 (t/in-days intervalli))]
+           (sort (into [joda-alku joda-loppu]
+                   (map #(t/plus joda-alku (t/days %)) paivat-vali))))))))
 
 (defn aikavali-nyt-miinus [paivia]
   (let [nyt #?(:clj  (joda-timeksi (nyt))
