@@ -646,8 +646,8 @@
 (deftest materiaalien-ajo-kantaan-onnistuu
   ;; Sorastusmurske
   (aja-materiaalit-kantaan "Sorastusmurske" "t" 0.6 0.1 0.5)
-  ;; Kesäsuola (päällystettyjen teiden pölynsidonta)
-  (aja-materiaalit-kantaan "Kesäsuola päällystettyjen teiden pölynsidonta" "t" 5M 2M 3M)
+  ;; Talvisuola (muutettu kesäsuolasta talvisuolaan)
+  (aja-materiaalit-kantaan "Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta" "t" 5M 2M 3M)
   ;; Murske -> pitäisi muuntua sorastusmurskeeksi
   (aja-materiaalit-kantaan "Murske" "t" 10.2M 5.0M 5.2M)
   ;; Kesäsuola -> pitäisi muuntua Kesäsuola (pölynsidonta)
