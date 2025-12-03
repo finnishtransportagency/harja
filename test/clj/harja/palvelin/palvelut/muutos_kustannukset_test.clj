@@ -150,7 +150,8 @@
                                                             :loppupvm "2026-09-30"
                                                             :hoitokauden-alkuvuosi 2025})
           pysyvat-muutokset-seurannassa (filter #(= "pysyva" (:kulu_tyyppi %)) kustannusten-seuranta)
-          v1 (first pysyvat-muutokset-seurannassa)]
+          v1 (filter #(= "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot." (:muutostyo_syy %)) pysyvat-muutokset-seurannassa)
+          v1 (first v1)]
 
       (is (= "pysyva" (:kulu_tyyppi v1)))
       (is (= "Täytyykin tehdä enemmän päällysteiden paikkausta, koska pahat kelirikot." (:muutostyo_syy v1)))
