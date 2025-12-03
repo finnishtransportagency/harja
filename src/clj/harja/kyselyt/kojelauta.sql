@@ -13,7 +13,7 @@ SELECT u.id,
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
           LIMIT 1) AS tavoitehintaalituspaatos,
-       (SELECT 'tavoitehinnan-ylitus' as tyyppi
+       (SELECT 'tavoitehinnan-ylitys' as tyyppi
         FROM paatos_tavoitehinta_ylitys p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -25,6 +25,12 @@ SELECT u.id,
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
         LIMIT 1) AS kattohintapaatos,
+       (SELECT 'tavoitehinnan-muutokset' as tyyppi
+        FROM paatos_tavoitehinnan_muutos p
+        WHERE p.urakkaid = u.id
+          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+          AND p.poistettu IS FALSE
+        LIMIT 1) AS tavoitehinnan_muutospaatos,
        (SELECT tyyppi::TEXT as tyyppi
          FROM paatos_lupaus p
          WHERE p.urakkaid = u.id
