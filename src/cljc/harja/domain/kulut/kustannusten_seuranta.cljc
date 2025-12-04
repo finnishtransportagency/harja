@@ -317,7 +317,6 @@
   (pvm/luo-pvm vuosi 10 15))
 
 (defn valikatselmuksen-paatostyypin-nimi [tyyppi]
-  (println "valikatselmuksen-paatostyypin-nimi tyyppi:" (pr-str tyyppi))
   (case tyyppi
     "tavoitehinnan-ylitys" "Tavoitehinnan ylitys"
     "kattohinnan-ylitys" "Kattohinnan ylitys"
