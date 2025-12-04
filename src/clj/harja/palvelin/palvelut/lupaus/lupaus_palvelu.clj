@@ -463,10 +463,10 @@
   - W,erikoisoikeus = Kirjoitus + nimetty erikoisoikeus"
   [db user {:keys [id lupaus-id urakka-id kuukausi vuosi paatos vastaus lupaus-vaihtoehto-id kustannusennuste] :as tiedot}]
   {:pre [db user tiedot]}
-  
+
   ;; Perustarkistus: lukuoikeus riittää katseluun (Excel: R)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
-  
+
   (assert (not (and vastaus lupaus-vaihtoehto-id)))
   ;; HUOM: vastaus/lupaus-vaihtoehto-id saa päivittää nil-arvoon (= ei vastattu)
   (let [{:keys [lupaus-id urakka-id vuosi kuukausi]} (if id
@@ -479,7 +479,7 @@
         paivamaara (pvm/luo-pvm vuosi (dec kuukausi) 1)
         hoitovuosi-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
         hoitovuoden-erikoisarvot (first (lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet db {:lupaus-id lupaus-id :hoitovuosi-nro hoitovuosi-nro}))]
-    
+
     ;; OIKEUSTARKISTUKSET - Excel määrittää kuka saa tehdä mitäkin
     (cond
       ;; Kustannusennuste: vaatii erikoisoikeuden (Excel: W,kustannusennuste)
@@ -488,18 +488,18 @@
                              oikeudet/urakat-lupaukset
                              user
                              urakka-id)
-      
+
       ;; Päätökset: vaatii erikoisoikeuden (Excel: W,päätös)
       paatos
       (oikeudet/vaadi-oikeus "päätös"
                              oikeudet/urakat-lupaukset
                              user
                              urakka-id)
-      
+
       ;; Muut vastaukset: kirjoitusoikeus riittää (Excel: W)
       (or vastaus lupaus-vaihtoehto-id)
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id))
-    
+
     ;; MUUT VALIDOINNIT
     (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
@@ -845,6 +845,20 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
   (hae-kuukausittaiset-pisteet-hoitokaudelle db user tiedot))
 
+(defn generoi-lupausvastaukset
+  "Generoidaan annetulle urakalle ja hoitokaudelle lupausvastaukset kaikille lupauksille, riippumatta lupaustyypistä."
+  [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (lupaus-kyselyt/generoi-lupaukset-urakalle db {:urakkaid urakka-id
+                                                         :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                                                         :urakan_alkuvuosi urakan-alkuvuosi
+                                                         :kayttajaid (:id user)})]
+    {:ok "ok"}))
+
+
+
 (defrecord Lupaus [asetukset]
   component/Lifecycle
   (start [this]
@@ -898,20 +912,26 @@
                       :hae-kuukausittaiset-pisteet
                       (fn [user tiedot]
                         (hae-kuukausittaiset-pisteet (:db this) user (lisaa-nykyhetki tiedot asetukset))))
+    (julkaise-palvelu (:http-palvelin this)
+      :generoi-lupausvastaukset
+      (fn [user tiedot]
+        (generoi-lupausvastaukset (:db this) user (lisaa-nykyhetki tiedot asetukset))))
 
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-urakan-lupaustiedot
-                     :tallenna-luvatut-pisteet
-                     :vastaa-lupaukseen
-                     :lupauksen-kommentit
-                     :lisaa-lupauksen-kommentti
-                     :poista-lupauksen-kommentti
-                     :tallenna-kuukausittaiset-pisteet
-                     :poista-kuukausittaiset-pisteet
-                     :hae-kuukausittaiset-pisteet)
+    (poista-palvelut
+      (:http-palvelin this)
+      :hae-urakan-lupaustiedot
+      :tallenna-luvatut-pisteet
+      :vastaa-lupaukseen
+      :lupauksen-kommentit
+      :lisaa-lupauksen-kommentti
+      :poista-lupauksen-kommentti
+      :tallenna-kuukausittaiset-pisteet
+      :poista-kuukausittaiset-pisteet
+      :hae-kuukausittaiset-pisteet
+      :generoi-lupausvastaukset)
     this))
 
 
@@ -926,7 +946,7 @@
 
 (comment
   (def j harja.palvelin.main/harja-jarjestelma)
-  (lupaus-kyselyt/hae-urakan-lupaustiedot 
+  (lupaus-kyselyt/hae-urakan-lupaustiedot
     (:db j)
     {:urakka 36
      :urakan-alkuvuosi 2021

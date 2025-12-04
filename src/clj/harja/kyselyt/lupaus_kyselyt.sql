@@ -475,3 +475,8 @@ SELECT kuukausi,
 FROM lupaus_kustannusennuste_kuukausi_pisteet 
 WHERE "lupaus-id" = :lupaus-id
 ORDER BY kuukausi;
+
+-- name: generoi-lupaukset-urakalle
+-- Generoi lupaukset urakalle. Admin ominaisuus. Käytetään testidatassa.
+SELECT lisaa_urakan_lupaukset(:urakkaid::INT, :hoitokauden_alkuvuosi,
+                              :urakan_alkuvuosi, :kayttajaid);
