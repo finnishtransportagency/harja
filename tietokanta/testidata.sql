@@ -56,8 +56,7 @@ SELECT setval(
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql
 
--- Luodaan hallintayksikot (elinvoimakeskukset ja ELY-keskukset)
-\i testidata/elinvoimakeskukset.sql
+-- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
 
 -- Luodaan urakoitsijat
