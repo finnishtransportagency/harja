@@ -34,8 +34,8 @@ SELECT id,nimi,tyyppi FROM organisaatio
 
 -- name: hae-elinvoimakeskus-numerolla-tielupaa-varten
 -- Hakee Elinvoimakeskuksen organisaation numeron perusteella
-SELECT id,nimi,tyyppi FROM organisaatio
-WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elinvoimakeskusnumero = :elinvoimakeskusnumero;
+SELECT id,nimi FROM elinvoimakeskus
+WHERE numero = :elinvoimakeskusnumero;
 
 -- name: hae-ely-numerolla-tielupaa-varten
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella

@@ -79,7 +79,7 @@
                                          :virheet [{:koodi virheet/+tuntematon-elinvoimakeskus+
                                                     :viesti (str "Tuntematon elinvoimakeskus " elinvoimakeskus)}]}))
         elinvoimakeskus-id (:id (first (kayttajat-q/hae-elinvoimakeskus-numerolla-tielupaa-varten db elinvoimakeskusnumero)))]
-    (assoc tielupa ::tielupa/elinvoimakeskus elinvoimakeskus-id)))
+    (assoc tielupa ::tielupa/elinvoimakeskus_id elinvoimakeskus-id)))
 
 ;; Tieluvilla on enemmän ely-keskuksia kuin Harjassa muuten
 (defn hae-ely [db ely tielupa]

@@ -41,7 +41,7 @@
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
    ::tielupa/urakoiden-nimet ["Oulu"]
-   ::tielupa/elinvoimakeskus 1
+   ::tielupa/elinvoimakeskus_id 1
    ::tielupa/ely 1
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste
@@ -86,19 +86,19 @@
     (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db testiluvan-ulkoinen-tunniste)))
     (is (= maara-luonnin-jalkeen (hae-maara)))
     (is tallennettu-yhteyshenkilo (::tielupa/tienpitoviranomainen-yhteyshenkilo tallennettu))
-    (is 1 (::tielupa/elinvoimakeskus tallennettu))
+    (is 1 (::tielupa/elinvoimakeskus_id tallennettu))
     (is 1 (::tielupa/ely tallennettu))
 
     ;; paivittaminen ulkoisella tunnisteella
     (let [paivitetty-yhteyshenkilo "Teijo 'TESTIMIES' Tienpitäjä"
           paivitettava (assoc testitielupa ::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty-yhteyshenkilo
-                         ::tielupa/elinvoimakeskus 9
+                         ::tielupa/elinvoimakeskus_id 9
                          ::tielupa/ely 12)
           paivitetty (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste)]
       (tielupa-q/tallenna-tielupa db paivitettava)
       (is (= maara-luonnin-jalkeen (hae-maara)))
       (is paivitetty-yhteyshenkilo (::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty))
-      (is 9 (::tielupa/elinvoimakeskus paivitetty))
+      (is 9 (::tielupa/elinvoimakeskus_id paivitetty))
       (is 12 (::tielupa/ely paivitetty)))
 
     ;; paivittaminen Harjan id:lla
