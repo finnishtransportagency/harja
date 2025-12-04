@@ -90,7 +90,7 @@
                   ::tielupa/otsikko "Lupa lisätä mainos tielle"
                   ::tielupa/hakija-postinosoite "Liitintie 1"
                   ::tielupa/urakoiden-nimet ["Oulun alueurakka"]
-                  ::tielupa/ely 13                          ;; organisaatio.id
+                  ::tielupa/ely 12                          ;; organisaatio.id
                   ::tielupa/kohde-postinumero "90900"
                   ::tielupa/ulkoinen-tunniste 3453455
                   ::tielupa/saapumispvm #inst "2017-09-21T21:00:00.000-00:00"
