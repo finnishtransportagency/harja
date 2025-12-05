@@ -33,6 +33,7 @@
 (def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
 (def +tuntematon-maksuera+ "tuntematon-maksuera")
 (def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
+(def +tuntematon-elinvoimakeskus+ "tuntematon-elinvoimakeskus")
 (def +tuntematon-ely+ "tuntematon-ely")
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 (def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
