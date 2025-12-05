@@ -132,7 +132,7 @@
                    (concat [nil] hoitokaudet)
                    hoitokaudet)]
     [:div {:class (or (:wrapper-luokka optiot) "col-xs-6.col-md-3")}
-     [:label.alasvedon-otsikko-vayla vuosi-termi]
+     [:label.alasvedon-otsikko vuosi-termi]
      [yleiset/livi-pudotusvalikko
       {:valinta valittu-hoitokausi
        :vayla-tyyli? true
