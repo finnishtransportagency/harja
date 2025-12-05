@@ -124,7 +124,8 @@
 
 (defn valikatselmus-sarake
   [rivi]
-  (let [{:keys [urakan_alkuvuosi tavoitehintaalituspaatos tavoitehintaylityspaatos kattohintapaatos lupauspaatos hoitokauden_alkuvuosi]} rivi
+  (let [{:keys [urakan_alkuvuosi tavoitehintaalituspaatos tavoitehintaylityspaatos kattohintapaatos
+                lupauspaatos hoitokauden_alkuvuosi tavoitehinnan_muutospaatos]} rivi
         edellisen-hoitokauden-alkuvuosi (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))) 1)
         ;; 15.11. on takaraja, milloin edellisen hoitokauden välikatselmus pitää olla tehtynä (edellinen --> kuluva hk -1)
         valikatselmuksen-takaraja-ohi? (or
@@ -138,20 +139,25 @@
      [:a.klikattava.alleviivaa {:href "#"
                                 :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
       [:div.tavoitehintapaatos
+       (if (and (nil? tavoitehinnan_muutospaatos) (nil? tavoitehinnan_muutospaatos))
+         (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
+           {:fmt-fn (constantly "Ei tavoitehinnan\u00ADmuutospäätöstä")})
+         (yleiset/tila-indikaattori "valmis"
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi tavoitehinnan_muutospaatos))}))]
+
+      [:div.tavoitehintapaatos
        (if (and (nil? tavoitehintaalituspaatos) (nil? tavoitehintaylityspaatos))
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
            {:fmt-fn (constantly "Ei tavoitehinta\u00ADpäätöstä")})
          (yleiset/tila-indikaattori "valmis"
            {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi (or tavoitehintaalituspaatos tavoitehintaylityspaatos)))}))]
-      ;; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
-      ;; 2021 ja jälkeen riittää kertoa onko tavoitehintapäätös tehty
+
+      ; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
+      ;; 2021 ja jälkeen riittää kertoa onko kattohintapäätös tehty. Jos sitä ei ole aloitettu, niin ei oleteta, että se tehdään
       [:div.kattohintapaatos
-       (when (< urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+)
-         (if (nil? kattohintapaatos)
-           (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
-             {:fmt-fn (constantly "Ei kattohinta\u00ADpäätöstä")})
-           (yleiset/tila-indikaattori "valmis"
-             {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))})))]
+       (when (and (> urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+) (not (nil? kattohintapaatos)))
+         (yleiset/tila-indikaattori "valmis"
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))}))]
 
       [:div.lupauspaatokset
        (if (nil? lupauspaatos)

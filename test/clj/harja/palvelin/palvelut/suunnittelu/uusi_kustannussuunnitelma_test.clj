@@ -15,7 +15,9 @@
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]))
+            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -77,7 +79,7 @@
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
       (is (= (count (:toimenpiteet hankinnat)) 7))
-      (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
+      (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
       (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
 
@@ -209,15 +211,16 @@
 
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id
             (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                          FROM kustannusarvioitu_tyo
                                                   WHERE sopimus = %s
                                                     AND toimenpideinstanssi = %s
-                                                    AND tehtavaryhma = 28
+                                                    AND tehtavaryhma = %s
                                                     AND (
                                                     (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                     (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                sopimus-id hoidonjohto-tpi-id (:id tehtavaryhma-erillishankinnat) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-tietokannasta)))))))
 
@@ -348,15 +351,17 @@
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id
             (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
                                                            WHERE sopimus = %s
                                                              AND toimenpideinstanssi = %s
-                                                             AND tehtava = 3061
+                                                             AND tehtava = %s
                                                              AND (
                                                                   (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                                   (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                   sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                   sopimus-id hoidonjohto-tpi-id (:id tehtava-hoidonjohtopalkkio)
+                                                   hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
 
@@ -696,7 +701,11 @@
         ;; Kustisksen vahvistus vaatii tarjouksen tallentamisen, joten tallennetaan alkuun simppeli tarjous, niin ei jää siitä kiinni
         kattohintakerroin 1.1
         vahvistetut-vuodet #{}
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019 vahvistetut-vuodet)
+
+        tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
+        tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
+        tarjous (apurit/paivita-tarjoustietomallin-idt apurit/tarjous-tietomalli-2019 tehtavaryhma-erillishankinnat tehtava-hoidonjohtopalkkio)
+        tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)

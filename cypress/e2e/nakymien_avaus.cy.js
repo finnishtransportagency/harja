@@ -1,7 +1,8 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
+import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
-const ladataanHarjaaTimeout = 30000;
 const urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
 
 // Alustetaan yllänimetty urakka Kustannussuunnittelua varten
@@ -12,9 +13,7 @@ function alustaUrakkaKustannussuunnitteluun() {
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
         cy.viewport(1100, 2000)
-        cy.visit("/")
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+        avaaHarjaTimeoutilla();
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
@@ -72,9 +71,7 @@ describe('Päänäkymien avaamiset', function () {
 describe('MH-Urakan näkymien avaamiset', function () {
     beforeEach(function () {
         cy.viewport(1100, 2000)
-        cy.visit("/")
-        // Varmista, että pääsivu on ladattu ennen testien aloitusta
-        cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+        avaaHarjaTimeoutilla();
     })
 
     it("Avaa Yleiset, Työmaapäiväkirja Turvallisuus", function () {

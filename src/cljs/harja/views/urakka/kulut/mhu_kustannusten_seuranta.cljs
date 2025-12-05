@@ -17,9 +17,17 @@
             [harja.tiedot.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta-tiedot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tyokalut.big :as big]
-            [harja.views.urakka.kulut.yhteiset :refer [fmt->big yhteenveto-laatikko]]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
+
+(defn fmt->big
+  ([arvo] (fmt->big arvo false))
+  ([arvo on-big?]
+   (let [arvo (if on-big?
+                arvo
+                (big/->big arvo))
+         fmt-arvo (harja.fmt/desimaaliluku (or (:b arvo) 0) 2 true)]
+     fmt-arvo)))
 
 (defn- muotoile-prosentti
   "Olettaa saavansa molemmat parametrit big arvoina."
@@ -546,8 +554,7 @@
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
          [:div
-          [kustannukset-taulukko e! app taulukon-rivit]
-          [yhteenveto-laatikko e! app taulukon-rivit :kustannusten-seuranta]])])))
+          [kustannukset-taulukko e! app taulukon-rivit]])])))
 
 (defn kustannusten-seuranta* [e! app]
   (komp/luo

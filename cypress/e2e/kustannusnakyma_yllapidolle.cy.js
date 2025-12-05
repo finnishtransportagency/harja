@@ -28,9 +28,9 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
 
     it('Pitäisi löytää ja avata päällystysurakan Kustannukset', function () {
         cy.viewport(1100, 2000);
-        cy.server();
-        cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
-        cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
+        cy.intercept('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
+        cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
+
         // Avaa päänäkymä
         cy.visit("/");
 
@@ -91,9 +91,8 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
             .should('be.visible')
             .should('not.be.disabled')
 
-        cy.server();
-        cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
-        cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
+        cy.intercept('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
+        cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
 
         // Tallenna
         cy.get('[data-cy="tallena-yllapito-kustannus"]').click();
@@ -155,9 +154,8 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
             .should('be.visible')
             .should('not.be.disabled');
 
-        cy.server();
-        cy.route('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
-        cy.route('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
+        cy.intercept('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
+        cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
 
         // Tallenna
         cy.get('[data-cy="tallena-yllapito-kustannus"]').click();

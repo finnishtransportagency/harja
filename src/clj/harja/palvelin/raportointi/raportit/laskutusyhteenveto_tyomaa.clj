@@ -7,6 +7,7 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
@@ -92,7 +93,9 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Hoidonjohtopalkkio" :hjpalkkio_hoitokausi_yht :hjpalkkio_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :hoidonjohto_hoitokausi_yht :hoidonjohto_val_aika_yht true)]
 
-                    (= "Muutokset" otsikko)
+                    (and
+                      (ominaisuus-kaytossa? :mhu-muutokset)
+                      (= "Muutokset" otsikko))
                     [(taulukko-rivi data kyseessa-kk-vali? "Muutostyöt (erillisrahoitetut)" :muutos_erillis_hoitokausi_yht :muutos_erillis_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutos_hoitokausi_yht :jjh_muutos_val_aika_yht false)
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muutostyo_hoitokausi_yht :muutostyo_val_aika_yht true)]
@@ -252,15 +255,16 @@
                           :laskutettu-teksti laskutettu-teksti
                           :laskutetaan-teksti laskutetaan-teksti
                           :kyseessa-kk-vali? kyseessa-kk-vali?})))
-     
+
      ;; --------------- ;;
      ;;    Muutokset    ;;
      ;; --------------- ;;
-     (taulukko {:data rivitiedot
-                :otsikko "Muutokset"
-                :laskutettu-teksti laskutettu-teksti
-                :laskutetaan-teksti laskutetaan-teksti
-                :kyseessa-kk-vali? kyseessa-kk-vali?})
+     (when (ominaisuus-kaytossa? :mhu-muutokset)
+       (taulukko {:data rivitiedot
+                  :otsikko "Muutokset"
+                  :laskutettu-teksti laskutettu-teksti
+                  :laskutetaan-teksti laskutetaan-teksti
+                  :kyseessa-kk-vali? kyseessa-kk-vali?}))
 
      ;; ------------------------ ;;
      ;;   Rahavaraukset, muut    ;;
@@ -298,7 +302,7 @@
          (pvm/ennen? (pvm/nyt) loppupvm))
        [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
-     
+
      ;; ----------------------------------------------------- ;;
      ;;    Lisätyöt, bonukset, sanktiot, muut                 ;;
      ;; ----------------------------------------------------- ;;

@@ -70,12 +70,12 @@
                                                  :urakka-id @nav/valittu-urakka-id})}]
           [:button {:type "submit"
                     :class #{"nappi-toissijainen"}}
-           [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
+           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]]
         ;; Excel tuonti
         [:div.lataus-nappi
          [liitteet/lataa-tiedosto
           {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-          {:nappi-teksti "Tuo tiedot excelistä"
+          {:nappi-teksti "Tuo tiedot Excelistä"
            :url "lue-reikapaikkauskohteet-excelista"
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu (fn []
