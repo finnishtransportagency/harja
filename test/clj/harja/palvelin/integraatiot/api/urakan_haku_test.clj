@@ -25,7 +25,7 @@
     "Pinnan tasaus"
     "Pistehiekoitus"
     "Sulamisveden haittojen torjunta"
-    "Suolaus"
+    "Liukkaudentorjunta suolaamalla (materiaali)"
     "L- ja p-alueiden puhdistus"
     "Koneellinen niitto"
     "Koneellinen vesakonraivaus"
