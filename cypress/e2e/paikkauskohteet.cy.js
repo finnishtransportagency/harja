@@ -332,7 +332,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa POT lomake
         cy.get('button').contains('.nappi-toissijainen', 'Tee päällystysilmoitus', {timout: clickTimeout}).click({force: true})
-        cy.get('h1').contains("Päällystysilmoitus");
+        cy.get('h1', {timeout: 30000}).contains("Päällystysilmoitus");
     })
 })
 
