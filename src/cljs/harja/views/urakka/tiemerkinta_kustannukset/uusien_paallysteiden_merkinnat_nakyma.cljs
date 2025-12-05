@@ -116,6 +116,7 @@
         
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
          [:h1 "Uusien päällysteiden tiemerkinnät"]
+         ;; [debug/debug app]
 
          ;; Aikaväli 
          [:div.flex-row.margin-bottom-16
