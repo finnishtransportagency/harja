@@ -3,7 +3,7 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
-\i testidata/__Toimenpide_Kopio_01.sql -- Älä  vaihda järjestystä 
+\i testidata/__Toimenpide_Kopio_01.sql 
 \i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
@@ -51,9 +51,6 @@ SELECT setval(
   pg_get_serial_sequence('rahavaraus_tehtava', 'id'),
   (SELECT COALESCE(MAX(id), 1) FROM rahavaraus_tehtava)
 );
-
--- Tehtävämigraatiot testidataan 
-\i testidata/tehtavamuutokset.sql
 
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql
@@ -122,6 +119,9 @@ SELECT paivita_pohjavesialueet();
 \i testidata/rajoitusalueet.sql
 
 \i testidata/hoitoluokat.sql
+
+-- Tehtävämigraatiot testidataan 
+\i testidata/tehtavamuutokset.sql
 
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
