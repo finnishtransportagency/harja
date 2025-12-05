@@ -40,7 +40,7 @@
               :disabled haku-kaynnissa?
               :class #{"nappi-toissijainen"}}
 
-     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna Excel"]]]
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]
 
    ;;
    ;; Pdf raportti
@@ -55,7 +55,7 @@
               :disabled haku-kaynnissa?
               :class #{"nappi-toissijainen"}}
 
-     [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Tallenna PDF"]]]])
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]])
 
 (defn urakan-sopimus
   ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
