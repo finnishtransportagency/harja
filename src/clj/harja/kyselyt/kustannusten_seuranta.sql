@@ -11,7 +11,8 @@ WITH urakan_toimenpideinstanssi_23150 AS
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset ja rahavaraukset kustannusarvioitu_tyo taulusta
 -- Kaikki budjetoidut kustannukset ovat joko rahavarauksia tai hankintoja. Erillishankinnat on eriytetty omaksi haukseen
-SELECT COALESCE(SUM(kt.summa + mmk.summa), 0)         AS budjetoitu_summa,
+SELECT COALESCE(SUM(kt.summa + 
+                    COALESCE(mmk.summa, 0)), 0)       AS budjetoitu_summa,
        COALESCE(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        kt.tyyppi::TEXT                                AS maksutyyppi,
@@ -46,9 +47,9 @@ FROM toimenpide tk,
                 ON mm.urakka = :urakka 
                AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI 
                AND mm.poistettu IS FALSE 
-        LEFT JOIN mhu_muutos_kustannusvaikutus mmk
-               ON mmk.muutos = mm.id 
-              AND mmk.toimenpideinstanssi = kt.toimenpideinstanssi,
+         LEFT JOIN mhu_muutos_kustannusvaikutus mmk
+                ON mmk.muutos = mm.id 
+               AND mmk.toimenpideinstanssi = kt.toimenpideinstanssi,
      toimenpideinstanssi tpi,
      sopimus s
 WHERE s.urakka = :urakka
@@ -439,7 +440,7 @@ WHERE m.urakka = 44
   AND m.tyyppi = 'pysyva'
   -- talvihoito, liikenneympariston-hoito, sorateiden-hoito, paallystepaikkaukset, mhu-yllapito, mhu-korvausinvestointi
   AND tp.koodi IN ('23104', '23116', '23124', '20107', '20191', '14301')
-  AND (mmk.hoitokauden_alkuvuosi = (:hoitokauden-alkuvuosi::INTEGER -1) AND extract(YEAR FROM m.voimassa_alkaen) <= :hoitokauden-alkuvuosi -1 )
+  AND (extract(YEAR FROM m.voimassa_alkaen) < :hoitokauden-alkuvuosi AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER)
 UNION ALL
 -- Pysyvät muutokset
 -- Kuluvana hoitokautena voimaan astuvat 
