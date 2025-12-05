@@ -74,7 +74,7 @@
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id materiaali-nimet]
   [:div.suolatoteumat
-   [:h1 "Talvisuolatoteumat"]
+   [:h1 "Talvisuolan käyttö"]
    [kartta/kartan-paikka]
    [:span.valinnat
     [urakka-valinnat/aikavali-nykypvm-taakse urakka
@@ -111,8 +111,7 @@
     @tiedot/ui-lomakkeen-tila]
 
    [:div.margin-top-16
-    [grid/grid {:otsikko "Talvisuolan käyttö"
-                :tunniste :rivinumero
+    [grid/grid {:tunniste :rivinumero
                 :tallenna (if (oikeudet/voi-kirjoittaa?
                                 oikeudet/urakat-toteumat-suola
                                 (:id @nav/valittu-urakka))

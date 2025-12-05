@@ -229,7 +229,6 @@
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div
    [:div
-
     [:span
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
@@ -247,9 +246,7 @@
      urakka/valittu-urakan-vuosi
      #(do
         (urakka/valitse-urakan-vuosi! %)
-        (e! (paallystys/->HaePaallystysilmoitukset)))]
-
-    ]
+        (e! (paallystys/->HaePaallystysilmoitukset)))]]
 
    [:div [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [valittu-arvo]
                                                                                ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
