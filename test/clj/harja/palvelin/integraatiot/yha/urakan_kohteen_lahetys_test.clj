@@ -313,6 +313,7 @@
            nil]]
          [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        nil
         [:murske
          [:mursketyyppi 1]
          [:rakeisuus "0/40"]
@@ -360,6 +361,7 @@
            nil]]
          [:sideaineet [:sideaine [:tyyppi 1] [:pitoisuus 5.5M]]]
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]
+        nil
         [:murske
          [:mursketyyppi 1]
          [:rakeisuus "0/40"]
@@ -467,7 +469,7 @@
         xml (kohteen-lahetyssanoma/muodosta urakka kohteet)
         luotu-xml-parsittu (xml/lue xml)]
     (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
-    (is (= 10.0M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
+    (is (= 10M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
 
@@ -535,3 +537,30 @@
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :karttapaivamaara) ["2022-12-13"]))
     (is (nil? virheet) "Ei validointivirheitä")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
+
+(defn hae-viimeisin-yha-integraatiotapahtuma []
+  (first (q-map "SELECT it.id, it.onnistunut, i.jarjestelma, i.nimi  
+                 FROM integraatiotapahtuma it   
+                 JOIN integraatio i ON i.id = it.integraatio   
+                 WHERE i.jarjestelma = 'yha'   
+                 ORDER BY it.id DESC LIMIT 1")))
+
+(deftest tarkista-epaonnistunut-lahetys-virhe-vastauksella
+  (let [kohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        url (tee-url)
+        ;;Vaikka HTTP 200 OK, vastaus sisältää virheen ja päätyy integraatiolokille epäonnistunut tilaan
+        virheellinen-vastaus (slurp "resources/xsd/yha/esimerkit/urakan-kohteiden-toteumatietojen-kirjausvastaus.xml")]
+    (with-fake-http
+      [{:url url :method :post} virheellinen-vastaus]
+      (try+
+        (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id] +kayttaja-jvh+)
+        (is false "Poikkeusta ei heitetty")
+        (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+          (let [lahetystiedot (hae-kohteen-lahetystiedot kohde-id)
+                integraatioloki (hae-viimeisin-yha-integraatiotapahtuma)]
+
+            (is (not (nil? virheet)) "Virheet löytyy poikkeuksesta")
+            (is (false? (:lahetys_onnistunut lahetystiedot)) "Lähetys merkitty epäonnistuneeksi")
+            (is (false? (:onnistunut integraatioloki)) "Integraatiotapahtuma merkitty epäonnistuneeksi")
+            (is (= "yha" (:jarjestelma integraatioloki)) "Integraatiotapahtuma nimi on YHA")))))))

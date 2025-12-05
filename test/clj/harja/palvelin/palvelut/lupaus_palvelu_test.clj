@@ -848,3 +848,53 @@
 
         (is (:tarkkuus-prosentti tarkkuus-tulos) "Domain-funktio laskee tarkkuuden")
         (is (number? (:tarkkuus-prosentti tarkkuus-tulos)) "Tarkkuus on numero")))))
+
+(deftest vastaa-lupaukseen-oikeustarkistus
+  (testing "Urakoitsija voi vastata kirjauskuukauteen"
+    (let [vastaus {:lupaus-id 6
+                   :kuukausi 7  ; Heinäkuu 2022 - kirjauskuukausi lupaus 6:lle
+                   :vuosi 2022
+                   :vastaus true
+                   :paatos false  ; Kirjauskuukausi, ei päätös
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+          tulos (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :vastaa-lupaukseen
+                                  +kayttaja-yit_uuvh+
+                                  vastaus)
+                  :onnistui
+                  (catch Exception e
+                    :epaonnistui))]
+      (is (= :onnistui tulos) "Urakoitsija saa vastata kirjauskuukauteen")))
+
+  (testing "Urakoitsija ei voi vastata päättävään kuukauteen"
+    (let [vastaus {:lupaus-id 4
+                   :kuukausi 1  ; Tammikuu - Päättävä kuukausi lupaus 4:lle
+                   :vuosi 2022
+                   :paatos true
+                   :vastaus false
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}]
+      ;; Tämän pitäisi heittää poikkeus
+      (is (thrown? Exception
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :vastaa-lupaukseen
+                            +kayttaja-yit_uuvh+
+                            vastaus))
+          "Urakoitsija ei saa vastata päättävään kuukauteen")))
+
+  (testing "Tilaaja voi tehdä päätöksen"
+    (let [vastaus {:lupaus-id 4
+                   :kuukausi 2  ; Helmikuu - Päättävä kuukausi lupaus 4:lle
+                   :vuosi 2022
+                   :paatos true
+                   :vastaus false
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
+          tulos (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :vastaa-lupaukseen
+                                  +kayttaja-jvh+
+                                  vastaus)
+                  :onnistui
+                  (catch Exception e
+                    :epaonnistui))]
+      (is (= :onnistui tulos) "Tilaaja saa tehdä päätöksen"))))

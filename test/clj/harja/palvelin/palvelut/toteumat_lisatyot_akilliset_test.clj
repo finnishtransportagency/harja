@@ -16,25 +16,25 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
-                      (component/start
-                        (component/system-map
-                          :db tietokanta
-                          :db-replica tietokanta
-                          :http-palvelin (testi-http-palvelin)
-                          :karttakuvat (component/using
-                                         (karttakuvat/luo-karttakuvat)
-                                         [:http-palvelin :db])
-                          :integraatioloki (component/using
-                                             (integraatioloki/->Integraatioloki nil)
-                                             [:db])
-                          :toteumat (component/using
-                                      (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat])
-                          :tehtavamaarat (component/using
-                                           (tehtavamaarat/->Tehtavamaarat false)
-                                           [:http-palvelin :db]))))))
+    (fn [_]
+      (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
+        (component/start
+          (component/system-map
+            :db tietokanta
+            :db-replica tietokanta
+            :http-palvelin (testi-http-palvelin)
+            :karttakuvat (component/using
+                           (karttakuvat/luo-karttakuvat)
+                           [:http-palvelin :db])
+            :integraatioloki (component/using
+                               (integraatioloki/->Integraatioloki nil)
+                               [:db])
+            :toteumat (component/using
+                        (toteumat/->Toteumat)
+                        [:http-palvelin :db :db-replica :karttakuvat])
+            :tehtavamaarat (component/using
+                             (tehtavamaarat/->Tehtavamaarat false)
+                             [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -120,8 +120,8 @@
 
 (defn- lisaa-toteuma [toteuma]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tallenna-toteuma +kayttaja-jvh+
-                  toteuma))
+    :tallenna-toteuma +kayttaja-jvh+
+    toteuma))
 
 ;;
 (deftest lisaa-maarien-toteuma-test
@@ -131,18 +131,18 @@
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :hae-mhu-toteumatehtavat +kayttaja-jvh+
-                                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                          :tehtavaryhma 0 ;;"Kaikki"
-                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                           :hae-mhu-toteumatehtavat +kayttaja-jvh+
+                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                            :tehtavaryhma 0 ;;"Kaikki"
+                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         tallennettu-toteuma (keep #(when (= "Pysäkkikatoksen uusiminen" (:tehtava %))
                                      %)
-                                  toteumat-vastaus)
+                              toteumat-vastaus)
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id tallennettu-toteuma)})]
+            :poista-toteuma +kayttaja-jvh+
+            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+             :toteuma-id (:toteuma_id tallennettu-toteuma)})]
     (is (= 1 (count tallennettu-toteuma)) "Yksi lisätty toteuma pitäisi löytyä")))
 
 (deftest lisaa-virheellinen-toteuma-test
@@ -153,21 +153,21 @@
   (let [tallennettu-toteuma (lisaa-toteuma default-toteuma-maara)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :hae-maarien-toteuma +kayttaja-jvh+
-                                       {:id (first tallennettu-toteuma)})
+                         :hae-maarien-toteuma +kayttaja-jvh+
+                         {:id (first tallennettu-toteuma)})
         ;; Muokataan tietoja
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-toteuma (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
 
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-maarien-toteuma +kayttaja-jvh+
-                                                {:id (first muokattu)})
+                                  :hae-maarien-toteuma +kayttaja-jvh+
+                                  {:id (first muokattu)})
 
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id haettu-toteuma)})]
+            :poista-toteuma +kayttaja-jvh+
+            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+             :toteuma-id (:toteuma_id haettu-toteuma)})]
 
     (is (= (:lisatieto haettu-toteuma) (:lisatieto (first (:toteumat default-toteuma-maara))))
       "Toteuman lisätieto täsmää tallennuksen jälkeen")
@@ -193,37 +193,37 @@
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
         lisatyo-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-mhu-toteumatehtavat +kayttaja-jvh+
-                                        {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                         :tehtavaryhma 0 ;;"Kaikki"
-                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                          :hae-mhu-toteumatehtavat +kayttaja-jvh+
+                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                           :tehtavaryhma 0 ;;"Kaikki"
+                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
 
         tallennettu-lisatyo (keep #(when (= "Lisätyö (talvihoito)" (:tehtava %))
                                      %)
-                                  lisatyo-vastaus)
+                              lisatyo-vastaus)
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id tallennettu-lisatyo)})]
+            :poista-toteuma +kayttaja-jvh+
+            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+             :toteuma-id (:toteuma_id tallennettu-lisatyo)})]
     (is (= 1 (count tallennettu-lisatyo)) "Yksi lisätty toteuma pitäisi löytyä")))
 
 (deftest muokkaa-lisatyo-test
   (let [tallennettu-lisatyo (lisaa-toteuma default-lisatyo)
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
         haettu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :hae-maarien-toteuma +kayttaja-jvh+
-                                       {:id (first tallennettu-lisatyo)})
+                         :hae-maarien-toteuma +kayttaja-jvh+
+                         {:id (first tallennettu-lisatyo)})
         muokattava (muokkaa-toteuman-arvot-palvelua-varten haettu-lisatyo (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
         muokattu (lisaa-toteuma muokattava)
         haettu-muokattu-lisatyo (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-maarien-toteuma +kayttaja-jvh+
-                                                {:id (first muokattu)})
+                                  :hae-maarien-toteuma +kayttaja-jvh+
+                                  {:id (first muokattu)})
         ;; Siivotaan toteuma pois
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :poista-toteuma +kayttaja-jvh+
-                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                           :toteuma-id (:toteuma_id haettu-lisatyo)})]
+            :poista-toteuma +kayttaja-jvh+
+            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+             :toteuma-id (:toteuma_id haettu-lisatyo)})]
 
     (is (= (:lisatieto haettu-lisatyo) (:lisatieto default-lisatyo))
       "Toteuman lisätieto täsmää tallennuksen jälkeen")
@@ -243,25 +243,25 @@
     (is (= "-muokattu" (:lisatieto haettu-muokattu-lisatyo)))
     (is (= 1M (:toteutunut haettu-muokattu-lisatyo)))))
 
-#_ (deftest hae-toteumalistaus-test
+#_(deftest hae-toteumalistaus-test
     (let [hoitokauden-alkuvuosi 2019
           _ (lisaa-toteuma default-toteuma-maara)
           alkupvm "2019-10-01"
           loppupvm "2020-09-30"
           ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
           toteumat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :urakan-maarien-toteumat +kayttaja-jvh+
-                                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                            :tehtavaryhma "Kaikki"
-                                            :alkupvm alkupvm
-                                            :loppupvm loppupvm})
+                             :urakan-maarien-toteumat +kayttaja-jvh+
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :tehtavaryhma "Kaikki"
+                              :alkupvm alkupvm
+                              :loppupvm loppupvm})
           _ (log/debug "toteumat-vastaus " (pr-str toteumat-vastaus))
           ;; Haetaan suunniteltuja tehtäviä
           ;; tehtavamaara-hierarkia ottaa hakuparametreina: urakka-id hoitokauden-alkuvuosi
           suunnitelmat-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :hae-mhu-suunniteltavat-tehtavat +kayttaja-jvh+
-                                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                                 :hae-mhu-suunniteltavat-tehtavat +kayttaja-jvh+
+                                 {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           _ (log/debug "suunnitelmat-vastaus" (pr-str suunnitelmat-vastaus))
           ;; Tarkistetaan, että kaikki 2019 alkavan hoitokauden suunnitellut tehtävät löytyy vastauksesta
           ]
@@ -278,7 +278,7 @@
                   {:tyyppi :maaramitattava
                    :urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
                    :loppupvm (pvm/->pvm "19.9.2024")
-                   :toteumat [{:maara 123 :tehtava {:id 3118 :tehtava "KT-valuasfalttipaikkaus K" :yksikko "tonni", :rahavaraus nil}
+                   :toteumat [{:maara 123 :tehtava {:id 24631 :tehtava "KT-valuasfalttipaikkaus K" :yksikko "tonni", :rahavaraus nil}
                                :sijainti sijainti}]})
         onnistuneen-id-1 (first (lisaa-toteuma (toteuma sijainti-ok-1)))
         onnistuneen-id-2 (first (lisaa-toteuma (toteuma sijainti-ok-2)))]

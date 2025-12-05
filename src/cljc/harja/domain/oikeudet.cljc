@@ -26,6 +26,7 @@
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
+  urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
@@ -39,9 +40,22 @@
   urakat-kanavat-liikenne
   urakat-tyomaapaivakirja
   hallinta-indeksit
+  hallinta-api-jarjestelmatunnukset
   urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
+  hallinta-koulutusvideot
+  hallinta-hairioilmoitukset
+  hallinta-yhteydenpito
+  hallinta-palautevayla
+  hallinta-integraatiotilanne
+  hallinta-urakkahenkilot
+  hallinta-paallystysilmoitukset
+  hallinta-lupaukset
+  hallinta-vesivaylat
+  hallinta-lampotilat
+  hallinta-valitavoitteet
+  hallinta-tehtavat
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot
   urakat-suunnittelu-yksikkohintaisettyot
@@ -57,10 +71,14 @@
   urakat-aikataulu
   urakat-laadunseuranta
   urakat-turvallisuus
+  urakat-kulut-maksuerat
   urakat-kulut
   urakat-kulut-vesivaylalaskutusyhteenveto
   urakat-tiemerkinta-kustannukset
-  roolit)
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

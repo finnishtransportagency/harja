@@ -107,7 +107,10 @@
                         (istunto/ominaisuus-kaytossa? :vesivayla)))
 
     :valitavoitteet (and
-                      (oikeudet/urakat-valitavoitteet id)
+                      ;; MHU-urakoissa tämä välilehti sisältää sekä Lupaukset että Välitavoitteet
+                      ;; Näytä välilehti jos käyttäjällä on jompikumpi oikeus
+                      (or (oikeudet/urakat-lupaukset id)
+                        (oikeudet/urakat-valitavoitteet id))
                       (not (urakka/kanavaurakka? urakka)))
 
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
@@ -153,7 +156,6 @@
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
-                     ;; TODO: Kun viet tuontatoon, enabloi myös mhu_kulut.cljs -> (e! (->HaeUrakanMuutostyot 
                      (k/kehitysymparistossa?)
                      (= tyyppi :teiden-hoito))
     false))
