@@ -94,6 +94,7 @@
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
   [huoltokierros "huoltokierros" "Huoltokierros"]
+  [tarkastusajo "tarkastusajo" "Tarkastusajo"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
   [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"])
 
