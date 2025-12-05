@@ -71,6 +71,6 @@ runs:
           "$IMAGE_NAME" \
           bash -c "echo -e \"Chrome version:  \$(google-chrome --version) \nEdge version:  \$(edge --version) \n\";
                    echo '-------------------';
-                   cypress run --browser $BROWSER"
+                   cypress run --browser $BROWSER --spec 'cypress/e2e/paikkauskohteet.cy.js'"
       shell: bash
 
