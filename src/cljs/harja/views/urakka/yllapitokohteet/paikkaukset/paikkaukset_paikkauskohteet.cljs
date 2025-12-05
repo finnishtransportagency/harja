@@ -44,7 +44,7 @@
         [:div
          [:p.body-caption (if (= urakkatyyppi :tiemerkinta)
                             "Tiemerkinnän tilan voi asettaa, kun paikkausten tila on “Valmis”."
-                            (str 
+                            (str
                               "Jos kohteelle on ilmoitettu tuhoutunut tiemerkintä, näkyy se tässä käsittelemättömänä. "
                               "Tiemerkinnän tila asetetaan tämän jälkeen tiemerkintäurakassa."))]]]
 
@@ -118,12 +118,12 @@
                  :tasaa (if (not= urakkatyyppi :tiemerkinta) :vasen :oikea)
                  :solun-luokka (fn [arvo _rivi]
                                  ;; Korosta "käsittelemättä" sarake paikkaus urakoille
-                                 (when (and 
+                                 (when (and
                                          (= arvo "kasittelematta")
                                          (not= urakkatyyppi :tiemerkinta))
                                    "ehdotettu-bg"))
                  :tyyppi :komponentti
-                 :komponentti (fn [{:keys [tiemerkinnan-tila 
+                 :komponentti (fn [{:keys [tiemerkinnan-tila
                                            alasveto-valinnat paikkauskohteen-tila] :as rivi}]
                                 ;;
                                 ;; ==== Jos ei olla tiemerkintä urakassa, näytä vaan tila  ====
@@ -134,7 +134,7 @@
                                   ;; ==== Tiemerkintä urakat voi asettaa tiemerkinnän tilan ====
                                   [:div {:on-click #(.stopPropagation %)} ;; Älä avaa lomaketta kun inffonappia painetaan
                                    [valinnat/checkbox-pudotusvalikko
-                                    
+
                                     ;; Alasvedon valinnat, vectorissa, esim   [{:nimi Käsittelemättä, :arvo :kasittelematta, :valittu? false}]
                                     (remove #(= (:arvo %) :ei-tiemerkintaa) alasveto-valinnat)
                                     (fn [tila _valittu?]
@@ -216,7 +216,8 @@
                         paikkauskohteet)
         rivi-valittu #(= (:id (:lomake app)) (:id %))
         aluekohtaisissa? (:hae-aluekohtaiset-paikkauskohteet? app)
-        loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)]
+        loytyi-kohteita? (> (count (:paikkauskohteet app)) 0)
+        kohteet-count (count (:paikkauskohteet app))]
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12.paikkauskohde-nakyma
@@ -227,7 +228,7 @@
                         (when-not aluekohtaisissa?
                           [:div.flex-row.tasaa-alas
                            (when-not haku-kaynnissa?
-                             [:h2 (str (count (:paikkauskohteet app)) " paikkauskohdetta")])
+                             [:h2 (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
                            (when (and
                                    (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
                                    (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
@@ -383,7 +384,7 @@
                                                             (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
          [" ELY valittu" " ELYä valittu"]
          {:vayla-tyyli? true}]])
-     
+
      ;; Kohteen tila 
      [:div.col-xs-2
       [:label.alasvedon-otsikko-vayla "Tila"]
@@ -419,6 +420,7 @@
 
 (defn- paikkauskohteet-sivu [e! app]
   [:div
+   [:h1 "Paikkauskohteet"]
    [filtterit e! app]
    [kartta/kartan-paikka]
    (when (:lomake app) [paikkauskohdelomake/paikkauslomake e! app])
@@ -435,9 +437,9 @@
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (e! (t-paikkauskohteet/->HaePaikkauskohteet true)))
-                      #(do
-                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
-                         (e! (t-paikkauskohteet/->SuljeLomake))))
+      #(do
+         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
+         (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row
        [paikkauskohteet-sivu e! app]])))
