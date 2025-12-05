@@ -274,10 +274,11 @@
         (e! (paallystys/->MuutaTila [:paallystysilmoitukset-tai-kohteet-nakymassa?] false))))
     (fn [e! {:keys [urakka-tila paallystysilmoitus-lomakedata lukko urakka kayttaja paikkauskohteet?] :as app}]
       [:div.paallystysilmoitukset
-       [:h1 "Päällystysilmoitukset"]
        ;; Kartan paikka on hieman erilainen, kun nämä renderöidään paikkauskohteista
        (when-not (and paikkauskohteet? paallystysilmoitus-lomakedata)
          [:<>
+          (when-not paallystysilmoitus-lomakedata
+            [:h1 "Päällystysilmoitukset"])
           [kartta/kartan-paikka]])
        ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
