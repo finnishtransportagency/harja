@@ -52,6 +52,8 @@ SELECT setval(
   (SELECT COALESCE(MAX(id), 1) FROM rahavaraus_tehtava)
 );
 
+-- Tehtävämigraatiot testidataan 
+\i testidata/tehtavamuutokset.sql
 
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql

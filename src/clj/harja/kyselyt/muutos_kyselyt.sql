@@ -16,9 +16,9 @@ SELECT m.id,
                    JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
          WHERE k.poistettu IS FALSE
            AND kk.poistettu IS FALSE
-           AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                 (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
-
+           AND k.erapaiva BETWEEN 
+               (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+               (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
        -- Haetaan ja järjestellään kustannusvaikutukset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
        -- järjestely ole hankalaa
        COALESCE(
@@ -33,14 +33,8 @@ SELECT m.id,
                        ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi
                    )
             FROM ONLY mhu_muutos_kustannusvaikutus kust
-            WHERE kust.muutos = m.id 
-              AND 
-                CASE 
-                    WHEN :hae-vain-aiemmat-pysyvat-muutokset? THEN 
-                        kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi -1
-                    ELSE 
-                        kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-                END
+            WHERE kust.muutos = m.id
+              AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
            ),
            '[]'::json) AS kustannusvaikutukset,
        COALESCE(
@@ -49,6 +43,9 @@ SELECT m.id,
                            'tehtava', tjm.tehtava,
                            'suunniteltu_maara', ut.maara,
                            'maaramuutos', tjm.maaramuutos,
+                           -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
+                           --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
+                           --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
                            'edellinen_maara', tjm.edellinen_maara,
                            'uusi_maara', tjm.uusi_maara,
                            'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
@@ -62,8 +59,7 @@ SELECT m.id,
                                    AND ut.poistettu IS NOT TRUE
                                    AND tjm.tehtava = ut.tehtava
             WHERE tjm.muutos = m.id
-              AND tjm.versio = m.versio
-           ),
+              AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
            '[]'::json) AS tehtavat_ja_maarat,
        CASE
            WHEN COUNT(lii.*) = 0 THEN NULL
