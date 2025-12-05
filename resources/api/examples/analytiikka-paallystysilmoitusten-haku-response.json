@@ -69,7 +69,7 @@
           "pintaAla": 1400,
           "paallystetyomenetelma": "REM, REMIX-pintaus",
           "massamenekki": 20.0,
-          "rc-prosentti": 80.0,
+          "rc-prosentti": 80,
           "poistettu": false,
           "pituus": 350,
           "alikohde": 50
@@ -125,7 +125,7 @@
           "pintaAla": 2600,
           "paallystetyomenetelma": "MP, Massapintaus",
           "massamenekki": 100.0,
-          "rc-prosentti": 10.0,
+          "rc-prosentti": 10,
           "poistettu": false,
           "pituus": 300,
           "alikohde": 49
@@ -225,6 +225,58 @@
         {
           "massa": {
             "litteyslukuluokka": "FI15",
+            "kuulamyllyluokka": "AN7",
+            "massatyyppi": "SMA, Kivimastiksiasfaltti",
+            "runkoaineet": [
+              {
+                "fillerityyppi": "Kalkkifilleri (KF)",
+                "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
+                "massaprosentti": 5.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Kiviaines",
+                "massaprosentti": 85.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Asfalttirouhe",
+                "massaprosentti": 10.0
+              }
+            ],
+            "lisaaineet": [
+              {
+                "tyyppi": "Kuitu",
+                "pitoisuus": 0.5
+              }
+            ],
+            "sideaineet": [
+              {
+                "tyyppi": "Bitumi, 20/30",
+                "pitoisuus": 5.5
+              }
+            ]
+          },
+          "tierekisteriosoitevali": {
+            "ajorata": 1,
+            "kaista": 1,
+            "aosa": 20,
+            "let": 1300,
+            "losa": 20,
+            "tienumero": 86,
+            "aet": 650
+          },
+          "kasittelymenetelma": "REM-TAS, REMIX-tasaus",
+          "massamenekki": 20.1,
+          "poistettu": false,
+          "rc%": 82,
+          "pituus": 650
+        },
+        {
+          "massa": {
+            "litteyslukuluokka": "FI15",
             "kuulamyllyluokka": "AN10",
             "massatyyppi": "AB, Asfalttibetoni",
             "runkoaineet": [
@@ -255,17 +307,17 @@
           },
           "tierekisteriosoitevali": {
             "ajorata": 1,
-            "kaista": 1,
+            "kaista": 11,
             "aosa": 20,
-            "let": 1300,
+            "let": 650,
             "losa": 20,
             "tienumero": 86,
-            "aet": 650
+            "aet": 100
           },
-          "kasittelymenetelma": "TAS, Massatasaus",
-          "massamenekki": 0.10,
+          "kasittelymenetelma": "Muu RP, Muu RP",
+          "massamenekki": 15.0,
           "poistettu": false,
-          "pituus": 650
+          "pituus": 550
         }
       ],
       "toteutunutHinta": 98900,

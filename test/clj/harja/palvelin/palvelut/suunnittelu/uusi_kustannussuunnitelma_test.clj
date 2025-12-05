@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-test
   (:require [clojure.string :as str]
             [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
@@ -14,7 +15,9 @@
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]))
+            [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
+            [harja.kyselyt.tehtavaryhmat :as tehtavaryhmat-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -76,7 +79,7 @@
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
       (is (= (count (:toimenpiteet hankinnat)) 7))
-      (is (true? (some #(= (:nimi %) "Talvihoito laaja TPI") (:toimenpiteet hankinnat))))
+      (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
       (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
 
@@ -208,15 +211,16 @@
 
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat db +kayttaja-jvh+ urakka-id
             (:erillishankinnat apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         erillishankinnat-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                          FROM kustannusarvioitu_tyo
                                                   WHERE sopimus = %s
                                                     AND toimenpideinstanssi = %s
-                                                    AND tehtavaryhma = 28
+                                                    AND tehtavaryhma = %s
                                                     AND (
                                                     (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                     (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                sopimus-id hoidonjohto-tpi-id (:id tehtavaryhma-erillishankinnat) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-tietokannasta)))))))
 
@@ -347,15 +351,17 @@
         tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
         _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db +kayttaja-jvh+ urakka-id
             (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
         hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
                                                             FROM kustannusarvioitu_tyo
                                                            WHERE sopimus = %s
                                                              AND toimenpideinstanssi = %s
-                                                             AND tehtava = 3061
+                                                             AND tehtava = %s
                                                              AND (
                                                                   (vuosi = %s AND kuukausi in (10,11,12)) OR
                                                                   (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                   sopimus-id hoidonjohto-tpi-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
+                                                   sopimus-id hoidonjohto-tpi-id (:id tehtava-hoidonjohtopalkkio)
+                                                   hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
 
@@ -561,7 +567,6 @@
     ;; Viimeinen rivi on "Muut kulut"
     (is (= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
 
-
 (deftest muokkaa-johto-ja-hallintokorvaukset-2025-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
         hoitovuoden-alkuvuosi 2025
@@ -696,7 +701,11 @@
         ;; Kustisksen vahvistus vaatii tarjouksen tallentamisen, joten tallennetaan alkuun simppeli tarjous, niin ei jää siitä kiinni
         kattohintakerroin 1.1
         vahvistetut-vuodet #{}
-        tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin apurit/tarjous-tietomalli-2019 vahvistetut-vuodet)
+
+        tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
+        tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
+        tarjous (apurit/paivita-tarjoustietomallin-idt apurit/tarjous-tietomalli-2019 tehtavaryhma-erillishankinnat tehtava-hoidonjohtopalkkio)
+        tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1002,4 +1011,46 @@
     (is (= (:kattohinta dbtavoite) kasin-paivitetty-kattohinta) "urakka_tavoite -taulusta löytyy oikea kattohinta")
     (is (= kasin-paivitetty-kattohinta (get-in toimiva-vastaus [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])) "Käsin asetettu kattohinta täsmää")))
 
+(deftest paivita-tavoite-ja-kattohinta-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) urakka-id))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet (:db jarjestelma) urakka-id)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
+        hoitovuoden-alkuvuosi 2024
+        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        hae-tavoitetiedot (fn [urakka-id hoitokausinumero]
+                            (q-map (format "SELECT tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu
+                                        FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s"
+                                     urakka-id hoitokausinumero)))
+
+
+        ;; Poistetaan kaikki tiedot, jotta tavoitehinnan laskenta menee varmasti uudestaan
+        _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               (hae-sopimus-id-urakka-idlla urakka-id) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM kustannusarvioitu_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               (hae-sopimus-id-urakka-idlla urakka-id) hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM johto_ja_hallintokorvaus WHERE \"urakka-id\" = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               urakka-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka-id hoitokausinumero))
+
+        ;; Hankinnat - Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
+        h-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille apurit/hankinnat-tietomalli toimenpiteet)
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta h-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi)
+        hankinnat-yhteensa (bigdec (apply + (map :yhteensa (:toimenpiteet h-tietomalli))))
+        hankinnat-indeksikorjattu-yhteensa (bigdec (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitokausinumero) hankinnat-yhteensa))
+        tavoitetiedot (first (hae-tavoitetiedot urakka-id hoitokausinumero))]
+
+    (is (= (:tavoitehinta tavoitetiedot) hankinnat-yhteensa) "Tavoitehinnan pitäisi vastata hankintojen summaa")
+    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot) hankinnat-indeksikorjattu-yhteensa)
+      "Indeksikorjatun tavoitehinnan pitäisi vastata indeksikorjattujen hankintojen summaa")
+    (is (= (:kattohinta tavoitetiedot) (* kattohintakerroin hankinnat-yhteensa)) "Kattohinnan pitäisi vastata hankintojen summaa kerrottuna kattohintakertoimella")
+    (is (= (:kattohinta_indeksikorjattu tavoitetiedot) (* kattohintakerroin hankinnat-indeksikorjattu-yhteensa))
+      "Indeksikorjatun kattohinnan pitäisi vastata indeksikorjattujen hankintojen summaa kerrottuna kattohintakertoimella")))
 

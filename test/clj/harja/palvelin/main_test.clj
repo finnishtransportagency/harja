@@ -173,6 +173,7 @@
     :talvihoitoreitit
     :tieosoitteet-hallinta
     :ajastukset-hallinta
+    :raporttityokalu-hallinta
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
@@ -265,6 +266,7 @@
     :tieosoitteet-hallinta
     :tiemerkinnan-kustannuskirjaukset
     :ajastukset-hallinta
+    :raporttityokalu-hallinta
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
