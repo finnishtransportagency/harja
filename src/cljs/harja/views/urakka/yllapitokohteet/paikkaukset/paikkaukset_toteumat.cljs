@@ -150,7 +150,7 @@
          paikkauskohteen-tila-virhe "paikkauskohteen-tila-virhe"
          excel-luku-virhe "excel-luku-virhe"} urem-excel-virheet]
     [modal/modal
-     {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
+     {:otsikko "Virheitä urapaikkausten tuonnissa Excelillä"
       :nakyvissa? urem-excel-virheet
       :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
       :footer [:div
@@ -158,7 +158,7 @@
      [:div
       (when validointivirheet
         [:<>
-         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-P ei ole muokattu, ja paikkaukset alkavat riviltä 8."]
+         [:p "Tuotua Exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-P ei ole muokattu, ja paikkaukset alkavat riviltä 8."]
          [:<>
           [:br]
           (for* [[rivi virheet] validointivirheet]
@@ -178,7 +178,7 @@
       (when excel-luku-virhe
         [:<>
          [:br]
-         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q tai otsikkorivejä ei ole muokattu."]])]]))
+         [:p "Tuotu Excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-Q tai otsikkorivejä ei ole muokattu."]])]]))
 
 
 (def ohje-teksti-tilaajalle
