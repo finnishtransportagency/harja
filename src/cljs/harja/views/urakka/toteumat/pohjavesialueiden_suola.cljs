@@ -151,7 +151,7 @@
                                                         (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))))))
     (fn [e! app]
       [:div.pohjavesialueiden-suola
-       [:h2 "Rajoitusalueiden suolatoteumat"]
+       [:h1 "Rajoitusalueiden suolatoteumat"]
 
        ;; Aikavälivalinta ja muut kontrollit
        [:div.taulukon-kontrollit
