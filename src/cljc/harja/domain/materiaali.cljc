@@ -20,7 +20,7 @@
     "Formiaatit yhteensä" 12.1
     "Kesäsuola sorateiden kevätkunnostus" 13
     "Kesäsuola sorateiden pölynsidonta" 14
-    "Kesäsuola päällystettyjen teiden pölynsidonta" 15
+    "Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta" 15
     "Kesäsuola yhteensä (t)" 16
     "Hiekoitushiekka, liukkaudentorjunta" 17.1
     "Hiekoitushiekka, ennalta arvaamattomien kuljetusten avustaminen" 17.2

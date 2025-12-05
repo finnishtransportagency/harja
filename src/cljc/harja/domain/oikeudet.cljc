@@ -34,9 +34,22 @@
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
   hallinta-indeksit
+  hallinta-api-jarjestelmatunnukset
   urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
+  hallinta-koulutusvideot
+  hallinta-hairioilmoitukset
+  hallinta-yhteydenpito
+  hallinta-palautevayla
+  hallinta-integraatiotilanne
+  hallinta-urakkahenkilot
+  hallinta-paallystysilmoitukset
+  hallinta-lupaukset
+  hallinta-vesivaylat
+  hallinta-lampotilat
+  hallinta-valitavoitteet
+  hallinta-tehtavat
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot
   urakat-suunnittelu-yksikkohintaisettyot
@@ -44,7 +57,11 @@
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
-  roolit)
+  urakat-kulut-maksuerat
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

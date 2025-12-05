@@ -666,7 +666,7 @@ WHERE
 -- single?: true
 SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
     AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
-OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Liukkaudentorjunta suolaamalla (materiaali)');
 
 -- name: hae-pisteen-hoitoluokat
 -- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
@@ -1255,6 +1255,13 @@ SELECT id FROM toteuma where ulkoinen_id = :ulkoinen_id;
 SELECT alkanut
   FROM toteuma
  WHERE id = :id;
+
+-- name: hae-toteuman-perustiedot-ulkoisella-idlla
+SELECT id, urakka, sopimus, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, lisatieto,
+       tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+       tyyppi, luotu, luoja, muokattu, muokkaaja
+  FROM toteuma
+ WHERE ulkoinen_id = :ulkoinen_id;
 
 -- name: hae-reittitoteumat-analytiikalle
 SELECT t.toteuma_tunniste_id,

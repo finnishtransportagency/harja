@@ -1,17 +1,17 @@
 (ns harja.palvelin.palvelut.tehtavamaarat_test
   (:require [clojure.test :refer :all]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.palvelut.tehtavamaarat :refer :all]
-    [harja.testi :refer :all]
-    [taoensso.timbre :as log]
-    [com.stuartsierra.component :as component]
-    [harja.pvm :as pvm]
-    [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
-    [harja.domain.urakka :as urakka]
-    [harja.domain.tehtavamaarat :as tm-domain]
-    [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-    [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [clojure.set :as set]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.tehtavamaarat :refer :all]
+            [harja.testi :refer :all]
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.tehtavamaarat :as tm-domain]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [clojure.set :as set]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -46,7 +46,7 @@
 
 ;; Uudet lisättävät tehtävät
 (def id-ise-rampit (hae-toimenpidekoodin-id "Ise rampit" "23104"))
-(def id-suolaus (hae-toimenpidekoodin-id "Suolaus" "23104"))
+(def id-suolaus (hae-toimenpidekoodin-id "Liukkaudentorjunta suolaamalla (materiaali)" "23104"))
 (def id-portaiden-talvihuolto (hae-toimenpidekoodin-id "Portaiden talvihoito" "23104"))
 (def id-yksityisten-rumpujen (hae-toimenpidekoodin-id "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet" "20191"))
 (def id-ic-rampit (hae-toimenpidekoodin-id "Ic rampit" "23104"))
@@ -55,7 +55,7 @@
 ;; Tehtäviä, joilla sopimuksen tehtävämäärä
 (def id-III (hae-toimenpidekoodin-id "III" "23104"))
 (def id-katupolyn-sidonta (hae-toimenpidekoodin-id "Katupölynsidonta" "23116"))
-(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Sorateiden pölynsidonta (materiaali)" "23124"))
+(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Kesäsuola (CaCl2, materiaali)" "23124"))
 (def id-id-ohituskaistat (hae-toimenpidekoodin-id "Is ohituskaistat" "23104"))
 
 
@@ -98,7 +98,7 @@
                                      :tehtavaryhmat-ja-toimenpiteet
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    (is (= (count tehtavaryhmat-toimenpiteet) tr-tp-lkm) "Palauttaa tehtäväryhmä ja toimenpidelistan huomioiden tehtäväryhmän voimassaoloajan")))
+    (is (= (count tehtavaryhmat-toimenpiteet) (- tr-tp-lkm 1)) "Palauttaa tehtäväryhmä ja toimenpidelistan huomioiden tehtäväryhmän voimassaoloajan")))
 
 (deftest tehtavaryhmat-ja-toimenpiteet-vaaralla-datalla-testi
   (is (thrown? IllegalArgumentException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -222,19 +222,45 @@
                                                   :tehtavamaarat virheellinen-tehtava})) "Vain validit tehtävät voi tallentaa."))
 
 (def odotetut-tehtavamaarien-nimet-ja-tehtavien-lukumaarat
-  [{:nimi "1.0 TALVIHOITO", :sopimus-tallennettu nil, :tehtavien-lkm 31}
-   {:nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 2}
-   {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 3}
-   {:nimi "2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 3}
-   {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito", :sopimus-tallennettu nil, :tehtavien-lkm 2}
-   {:nimi "3 SORATEIDEN HOITO", :sopimus-tallennettu nil, :tehtavien-lkm 7}
-   {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS", :sopimus-tallennettu nil, :tehtavien-lkm 4}
-   {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen", :sopimus-tallennettu nil, :tehtavien-lkm 8}
-   {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito", :sopimus-tallennettu nil, :tehtavien-lkm 8}
-   {:nimi "7 KORVAUSINVESTOINTI", :sopimus-tallennettu nil, :tehtavien-lkm 1}
-   {:nimi "8 MUUTA", :sopimus-tallennettu nil, :tehtavien-lkm 4}])
+  [{:nimi "1.0 TALVIHOITO"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 32}
+   {:nimi "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 9}
+   {:nimi "2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 6}
+   {:nimi "2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 1}
+   {:nimi "2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 1}
+   {:nimi "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 4}
+   {:nimi "2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 2}
+   {:nimi "3 SORATEIDEN HOITO"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 9}
+   {:nimi "4 PÄÄLLYSTEIDEN PAIKKAUS"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 12}
+   {:nimi "6.1 YLLÄPITO / Rumpujen uusiminen"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 8}
+   {:nimi "6.2 YLLÄPITO / Avo-ojien kunnossapito"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 8}
+   {:nimi "7 KORVAUSINVESTOINTI"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 1}
+   {:nimi "8 MUUTA"
+    :sopimus-tallennettu nil
+    :tehtavien-lkm 9}])
 
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -434,13 +460,13 @@
                           :tehtavaryhmat-ja-toimenpiteet
                           +kayttaja-jvh+
                           {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})
-                      ;; Otetaan ensimmäinen tehtäväryhmä testausta varten
+          ;; Otetaan ensimmäinen tehtäväryhmä testausta varten
           tehtavaryhma-id (:tehtavaryhma-id (first tehtavaryhmat))
           tehtavat (kutsu-palvelua (:http-palvelin jarjestelma)
                      :hae-tehtavaryhman-tehtavat-urakalle
                      +kayttaja-jvh+
                      {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                      :tehtavaryhma-id tehtavaryhma-id}) 
+                      :tehtavaryhma-id tehtavaryhma-id})
           db-tehtavien-lkm (ffirst (q (str "SELECT count(*) FROM tehtava t
                                                         WHERE t.tehtavaryhma = " tehtavaryhma-id "
                                                         AND t.\"maaramitattava?\" is true
