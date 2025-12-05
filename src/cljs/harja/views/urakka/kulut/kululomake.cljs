@@ -47,6 +47,7 @@
                         (+ a (tiedot/parsi-summa (:summa s))))
                       0
                       kohdistukset))]
+   [:hr]
    [:div.kulu-poisto-footer
     [napit/poista "Poista tiedot" varmistus-fn]
     [napit/peruuta "Peruuta" (fn [] (modal/piilota!))]]])
@@ -687,27 +688,30 @@
        [:div.kulu-napit
 
         [:span.kulu-valistys-oikea
-         [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
-          {:disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+         [napit/tallenna
+          "Tallenna"
+          #(e! (tiedot/->TallennaKulu))
+          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa)}]]
 
         [:span
-         [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))]]
+         [napit/peruuta
+          "Peruuta"
+          #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+          {:disabled haku-menossa}]]
 
-        [napit/poista "Poista kulu"
-         #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
-            [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
-                                                            (modal/piilota!)
-                                                            (e! (tiedot/->PoistaKulu (:id lomake))))
-                                            :kohdistukset kohdistukset
-                                            :koontilaskun-kuukausi koontilaskun-kuukausi
-                                            :tehtavaryhma tehtavaryhma
-                                            :laskun-pvm (pvm/pvm erapaiva)
-                                            :tehtavaryhmat tehtavaryhmat}])
-         {:style {:font-size "14px"
-                  :margin-left "auto"
-                  :float "right"}}]
-
-
+        (when-not haku-menossa
+          [napit/poista "Poista kulu"
+           #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
+              [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
+                                                              (modal/piilota!)
+                                                              (e! (tiedot/->PoistaKulu (:id lomake))))
+                                              :kohdistukset kohdistukset
+                                              :koontilaskun-kuukausi koontilaskun-kuukausi
+                                              :tehtavaryhma tehtavaryhma
+                                              :laskun-pvm (pvm/pvm erapaiva)
+                                              :tehtavaryhmat tehtavaryhmat}])
+           {:style {:margin-left "auto"
+                    :float "right"}}])
 
         (when haku-menossa
           [:span.kulu-ladataan
