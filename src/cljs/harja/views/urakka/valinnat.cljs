@@ -175,7 +175,7 @@
              ;; oikeaan korkeuteen. Lopullisessa moodissa label ei ole enää boldilla, mutta nyt vielä on, kun muutos on kesken.
              (if vayla-tyyli?
                [:label.alasvedon-otsikko (or otsikko "Aikaväli")]
-               [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
+               [:label.alasvedon-otsikko (or otsikko "Aikaväli")])
              [livi-pudotusvalikko {:valinta @valinta
                                    :format-fn first
                                    :valitse-fn (partial valitse urakka)}

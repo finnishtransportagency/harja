@@ -503,7 +503,7 @@
 
         [:div.row.filtterit-container
          [:div.filtteri
-          [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+          [:label.alasvedon-otsikko {:for "hoitovuosi"} "Hoitovuosi"]
           [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
                                         :vayla-tyyli? true
                                         :data-cy "hoitokausi-valinta"
@@ -514,7 +514,7 @@
                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            hoitokaudet]]
          [:div.filtteri.kuukausi
-          [:span.alasvedon-otsikko-vayla "Kuukausi"]
+          [:label.alasvedon-otsikko {:for "kuukausi"} "Kuukausi"]
           [yleiset/livi-pudotusvalikko {:valinta valittu-kuukausi
                                         :vayla-tyyli? true
                                         :elementin-id "kuukausi"
@@ -529,7 +529,7 @@
                                         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
            hoitokauden-kuukaudet]]
          
-         [:div.filtteri {:style {:padding-top "25px"}}
+         [:div.filtteri {:style {:padding-top "16px"}}
           ^{:key "raporttixls"}
           [:form {:style {:margin-left "auto"}
                   :target "_blank" :method "POST"
@@ -544,7 +544,7 @@
                      :class "nappi-toissijainen nappi-korkeus-36"}
             [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
          
-         [:div.filtteri {:style {:padding-top "25px"}}
+         [:div.filtteri {:style {:padding-top "16px"}}
           (if valikatselmus-tekematta?
             [yleiset/linkki "Siirry välikatselmukseen"
              #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]

@@ -251,20 +251,22 @@
        &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta -välilehdellä \t") "70%"]]
      [:div.row {:style {:margin-left "-15px"}}
       [:div.col-xs-12.col-md-6
-       [:label.alasvedon-otsikko-vayla "Toimenpide"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
+       [:label.alasvedon-otsikko {:for "toimenpide-valikko"} "Toimenpide"]
+       [yleiset/livi-pudotusvalikko {:elementin-id "toimenpide-valikko"
+                                     :valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
-       [:label.alasvedon-otsikko-vayla "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+       [:label.alasvedon-otsikko {:for "hoitokausi-valikko"} "Hoitokausi"]
+       [yleiset/livi-pudotusvalikko {:elementin-id "hoitokausi-valikko"
+                                     :valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
+      [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
