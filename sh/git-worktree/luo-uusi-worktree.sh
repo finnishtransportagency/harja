@@ -268,7 +268,7 @@ fi
 echo -e "${SININEN}⚙️  Luodaan käynnistysskripti...${EI_VARIA}"
 
 cat > "$WORKTREE_KANSIO/kaynnista-kaikki.sh" << EOF
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 WORKTREE_KANSIO="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
