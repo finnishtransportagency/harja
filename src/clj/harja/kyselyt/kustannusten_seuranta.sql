@@ -435,7 +435,7 @@ FROM mhu_muutos_kustannusvaikutus mmk
          JOIN mhu_muutos m ON m.id = mmk.muutos
          JOIN toimenpideinstanssi tpi ON tpi.id = mmk.toimenpideinstanssi
          JOIN toimenpide tp ON tp.id = tpi.toimenpide
-WHERE m.urakka = 44
+WHERE m.urakka = :urakka
   AND m.poistettu IS NOT TRUE
   AND m.tyyppi = 'pysyva'
   -- talvihoito, liikenneympariston-hoito, sorateiden-hoito, paallystepaikkaukset, mhu-yllapito, mhu-korvausinvestointi
