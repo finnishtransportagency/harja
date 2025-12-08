@@ -139,7 +139,7 @@ describe('Reikäpaikkausnäkymä toimii', function ()
     // Tyhjennä määrä 
     cy.get('.input-default.komponentin-input').eq(0).clear();
     cy.get('[data-cy="tallena-reikapaikkaus"]').should('be.disabled');
-    cy.contains('Syötä määrä', { timeout: clickTimeout }).should('be.visible');
+    cy.contains('Syötä tienumero', { timeout: clickTimeout }).should('be.visible');
 
     // Tyhjennä kustannus 
     cy.get('.input-default.komponentin-input.veda-oikealle').eq(0).clear();
