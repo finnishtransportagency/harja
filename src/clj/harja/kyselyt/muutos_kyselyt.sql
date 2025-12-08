@@ -16,9 +16,9 @@ SELECT m.id,
                    JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
          WHERE k.poistettu IS FALSE
            AND kk.poistettu IS FALSE
-           AND k.erapaiva BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                 (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
-
+           AND k.erapaiva BETWEEN 
+               (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+               (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))) AS "jjh-muutosten-summa",
        -- Haetaan ja järjestellään kustannusvaikutukset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
        -- järjestely ole hankalaa
        COALESCE(
@@ -32,13 +32,11 @@ SELECT m.id,
                        )
                        ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi
                    )
-              FROM ONLY mhu_muutos_kustannusvaikutus kust
-             WHERE kust.muutos = m.id
-               AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
+            FROM ONLY mhu_muutos_kustannusvaikutus kust
+            WHERE kust.muutos = m.id
+              AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+           ),
            '[]'::json) AS kustannusvaikutukset,
-
-       -- Haetaan ja järjestellään tehtavan määrämuutokset erikseen alikyselyllä, jotta ei tarvitse käyttää DISTINCT, eikä
-       -- järjestely ole hankalaa
        COALESCE(
            (SELECT JSON_AGG(
                        JSONB_BUILD_OBJECT(
@@ -54,14 +52,14 @@ SELECT m.id,
                            'versio', tjm.versio)
                        ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
                    )
-              FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
-                   LEFT JOIN urakka_tehtavamaara ut
-                             ON ut.urakka = :urakka
-                                 AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
-                                 AND ut.poistettu IS NOT TRUE
-                                 AND tjm.tehtava = ut.tehtava
-             WHERE tjm.muutos = m.id
-               AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
+            FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
+                     LEFT JOIN urakka_tehtavamaara ut
+                               ON ut.urakka = :urakka
+                                   AND ut."hoitokauden-alkuvuosi" = tjm.hoitokauden_alkuvuosi
+                                   AND ut.poistettu IS NOT TRUE
+                                   AND tjm.tehtava = ut.tehtava
+            WHERE tjm.muutos = m.id
+              AND tjm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi),
            '[]'::json) AS tehtavat_ja_maarat,
        CASE
            WHEN COUNT(lii.*) = 0 THEN NULL
@@ -69,25 +67,26 @@ SELECT m.id,
                'muutos', lii.muutos,
                'id', lii.liite)) END AS liitteet
 -- ONLY tarvitaan, jottei kysellä historiatauluista
-  FROM ONLY mhu_muutos m
-       LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
-  WHERE m.urakka = :urakka
-    AND CASE
-        -- Mahdollistetaan aiempien vuosien pysyvien muutosten haku samalla kyselyllä
-            WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
-                (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
-                 m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
+FROM ONLY mhu_muutos m
+         LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
+WHERE m.urakka = :urakka
+  AND 
+    CASE 
+        WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
+            (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
+             m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
         -- Kirjatuista muutoksista taulukossa saa näyttää vain ne, joiden voimassa_alkaen osuu valitulle hoitokaudelle
         -- Haetaan kaikkien kirjattujen muutostyyppien tiedot
-            ELSE
-                m.tyyppi IN
-                ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND
-                m.voimassa_alkaen BETWEEN (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
-                        (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
-      END
-    AND m.poistettu IS FALSE
-  GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, m.tyyppi, m.nimi,
-           m.syy, m.kulu_kohdistus, m.luonnos;
+        ELSE
+            m.tyyppi IN
+            ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus') AND
+            m.voimassa_alkaen BETWEEN 
+                (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+                (SELECT TO_DATE(:hoitokauden_alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
+    END
+  AND m.poistettu IS FALSE
+GROUP BY m.id, m.versio, m.urakka, m.voimassa_alkaen, 
+         m.tyyppi, m.nimi, m.syy, m.kulu_kohdistus, m.luonnos;
 
 
 -- name: rahavarausten-toteumat
@@ -508,6 +507,8 @@ materiaalimaara AS (
                            OR teh.materiaalikoodi_id IS NULL)
     WHERE t.urakka = :urakka
       AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+      AND tm.poistettu IS FALSE
+      AND t.poistettu IS FALSE
  GROUP BY teh.id, teh.nimi, mk.yksikko
  ORDER BY teh.id
 ),
