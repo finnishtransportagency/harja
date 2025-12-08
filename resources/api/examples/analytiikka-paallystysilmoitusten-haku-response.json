@@ -69,7 +69,7 @@
           "pintaAla": 1400,
           "paallystetyomenetelma": "REM, REMIX-pintaus",
           "massamenekki": 20.0,
-          "rc-prosentti": 80.0,
+          "rc-prosentti": 80,
           "poistettu": false,
           "pituus": 350,
           "alikohde": 50
@@ -125,7 +125,7 @@
           "pintaAla": 2600,
           "paallystetyomenetelma": "MP, Massapintaus",
           "massamenekki": 100.0,
-          "rc-prosentti": 10.0,
+          "rc-prosentti": 10,
           "poistettu": false,
           "pituus": 300,
           "alikohde": 49
@@ -225,19 +225,25 @@
         {
           "massa": {
             "litteyslukuluokka": "FI15",
-            "kuulamyllyluokka": "AN10",
-            "massatyyppi": "AB, Asfalttibetoni",
+            "kuulamyllyluokka": "AN7",
+            "massatyyppi": "SMA, Kivimastiksiasfaltti",
             "runkoaineet": [
               {
                 "fillerityyppi": "Kalkkifilleri (KF)",
                 "runkoainetyyppi": "Erikseen lisättävä fillerikiviaines",
-                "massaprosentti": 1.0
+                "massaprosentti": 5.0
               },
               {
                 "litteysluku": 20.0,
                 "kuulamyllyarvo": 10.0,
                 "runkoainetyyppi": "Kiviaines",
-                "massaprosentti": 100.0
+                "massaprosentti": 85.0
+              },
+              {
+                "litteysluku": 20.0,
+                "kuulamyllyarvo": 10.0,
+                "runkoainetyyppi": "Asfalttirouhe",
+                "massaprosentti": 10.0
               }
             ],
             "lisaaineet": [
@@ -262,9 +268,10 @@
             "tienumero": 86,
             "aet": 650
           },
-          "kasittelymenetelma": "TAS, Massatasaus",
-          "massamenekki": 0.10,
+          "kasittelymenetelma": "REM-TAS, REMIX-tasaus",
+          "massamenekki": 20.1,
           "poistettu": false,
+          "rc%": 82,
           "pituus": 650
         },
         {

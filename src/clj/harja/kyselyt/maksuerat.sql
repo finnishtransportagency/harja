@@ -115,6 +115,7 @@ GROUP BY tpi_id;
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
 SELECT
   m.numero                 AS numero,
+  m.maksuera_alias         AS maksuera_alias,
   m.tyyppi                 AS maksuera_tyyppi,
   m.nimi                   AS maksuera_nimi,
   m.tila                   AS maksuera_tila,
@@ -184,6 +185,7 @@ WHERE tpi.urakka = :urakkaid;
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
 SELECT
     m.numero                 AS numero,
+    m.maksuera_alias         AS maksuera_alias,
     m.tyyppi                 AS maksuera_tyyppi,
     m.nimi                   AS maksuera_nimi,
     m.tila                   AS maksuera_tila,

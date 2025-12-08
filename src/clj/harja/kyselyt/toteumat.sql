@@ -666,7 +666,7 @@ WHERE
 -- single?: true
 SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
     AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
-OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Liukkaudentorjunta suolaamalla (materiaali)');
 
 -- name: hae-pisteen-hoitoluokat
 -- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska

@@ -31,8 +31,14 @@
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
+  urakat-kohdeluettelo-paallystyskohteet
+  urakat-kohdeluettelo-paallystysilmoitukset
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
+  urakat-vesivayla-materiaalit
+  urakat-vesivaylatoimenpiteet
+  urakat-kanavat-liikenne
+  urakat-tyomaapaivakirja
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
   urakat-yleiset
@@ -57,8 +63,22 @@
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
+  urakat-toteumat-yksikkohintaisettyot
+  urakat-suunnittelu
+  urakat-toteumat
+  urakat-toteutus
+  urakat-paikkaukset
+  urakat-aikataulu
+  urakat-laadunseuranta
+  urakat-turvallisuus
   urakat-kulut-maksuerat
-  roolit)
+  urakat-kulut
+  urakat-kulut-vesivaylalaskutusyhteenveto
+  urakat-tiemerkinta-kustannukset
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
