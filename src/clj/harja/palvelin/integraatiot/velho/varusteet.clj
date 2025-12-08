@@ -820,6 +820,7 @@
           vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
       vastaus))) 
   
+  ;; Tarvitsetko urakoita joista löytyy välimäisiä varusteita testaukseen - Hyödynnä näitä apu funktioita suoraan replissä
   (comment 
     (defn test-hae-urakan-nimi-oideilla [oidit http-asetukset konteksti]
       (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
