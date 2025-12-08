@@ -798,7 +798,9 @@
       {:onnistui ->PoistoOnnistui
        :epaonnistui ->KutsuEpaonnistui
        :epaonnistui-parametrit [{:viesti "Poisto epäonistui"}]})
-    (update-in app [:parametrit :haetaan] inc))
+    (-> app
+      (assoc-in [:parametrit :haku-menossa] true)
+      (update-in [:parametrit :haetaan] inc)))
 
   AsetaHakukuukausi
   (process-event [{:keys [kuukausi]} app]
