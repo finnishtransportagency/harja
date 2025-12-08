@@ -21,10 +21,8 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(e! (tiedot/->HaeKustannustiedot)))
-
-    ;; Näkymä
+    
     (fn [e! {:keys [haku-kaynnissa? tallennus-kaynnissa? lomake-valinnat muokataan tyomenetelmittain] :as app}]
-
       (let [urakka @nav/valittu-urakka
             voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
             voi-tallentaa? (and
@@ -35,12 +33,10 @@
           [ajax-loader-pieni "Haetaan tietoja..."]
 
           [:div.kustannukset
-           ;; Lomake
            (when muokataan
              (apurit/kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
-           ;; Pääotsikko
-           [:h2.header-yhteiset "Kustannukset"]
+           [:h1 "Kustannukset"]
            [debug/debug app]
            [:div.kalenterivalinta
             ;; Vuosi valinta
@@ -55,7 +51,6 @@
                 (urakka/valitse-urakan-vuosi! %)
                 (e! (tiedot/->HaeKustannustiedot)))]]
 
-           ;; Väliotsikko
            [:h3.header-yhteiset.ei-marginia "Työmenetelmittäin"]
 
            ;; Kustannus taulukko työmenetelmittäin
@@ -68,13 +63,11 @@
                        :piilota-toiminnot? true
                        :piilota-otsikot? true}
 
-            ;; Työmenetelmä / kustannus selite
             [{:tyyppi :string
               :nimi :tyomenetelma
               :luokka "text-nowrap"
               :leveys 1}
 
-             ;; Kustannus
              {:tyyppi :euro
               :desimaalien-maara 2
               :nimi :kokonaiskustannus
@@ -84,10 +77,8 @@
             tyomenetelmittain]
 
            [:div.valitetty-rivi
-            ;; Väliotsikko
             [:h3.header-yhteiset.ei-marginia "Muut kustannukset"]
 
-            ;; Lisää kustannus
             [:span
              [napit/yleinen-ensisijainen
               "Lisää kustannus"

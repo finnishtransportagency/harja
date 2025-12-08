@@ -211,7 +211,7 @@
                                               :value (transit/clj->transit (v/hakuparametrit app))}]
                                      [:button {:type "submit"
                                                :class #{"nappi-toissijainen nappi-reunaton"}}
-                                      [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]])]
+                                      [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]])]
        :voi-lisata? false :voi-kumota? false
        :voi-poistaa? (constantly false) :voi-muokata? true}
       [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
@@ -321,6 +321,7 @@
           (e! (v/->TyhjennaVarusteListaus)))))
     (fn [e! app]
       [:div.varusteet-nakyma
+       [:h1 "Varusteet"]
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! app])
        [suodatuslomake e! app]
