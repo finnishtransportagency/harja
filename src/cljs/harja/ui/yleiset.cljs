@@ -409,7 +409,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
-              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
+              nappi-id (or elementin-id (str "btn-hoitokausivalinta"  "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title)))
               ryhmitellyt-vaihtoehdot (atom [])
               ryhmittely-fn (fn []
                               (when ryhmittely
