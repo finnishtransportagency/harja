@@ -59,7 +59,7 @@
       :aikavalin-rajoitus [6 :kuukausi]}]]
 
    ;; Haku
-   [:div.haku-nappi
+   [:div.haku-nappi {:style {:margin-top "14px"}}
     [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]])
 
 
