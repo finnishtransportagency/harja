@@ -451,6 +451,11 @@
   (paivita-url)
   (log "VALITTIIN ILMOITUS: " (pr-str id)))
 
+(defonce urakka-klikkaus-kuuntelija
+  (t/kuuntele! :urakka-klikattu
+    (fn [urakka]
+      (valitse-urakka! urakka))))
+
 (defn valitse-hallintayksikko-varmistuksella! [yks]
   (when (varmista-navigointi-fn :hallintayksikko)
     (valitse-hallintayksikko! yks)))
