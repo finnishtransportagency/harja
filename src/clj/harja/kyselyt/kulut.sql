@@ -147,6 +147,7 @@ WHERE k.urakka = :urakka
 -- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT m.numero                AS "maksuera-numero",
+       m.maksuera_alias        AS "maksuera-alias",
  	     k.id                    AS "id",
        k.kokonaissumma         AS "kokonaissumma",
        k.erapaiva              AS "erapaiva",

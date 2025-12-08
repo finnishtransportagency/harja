@@ -108,7 +108,9 @@
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.10.0"]
+                 [reagent "1.1.1"]
+                 [cljsjs/react "17.0.2-0"]
+                 [cljsjs/react-dom "17.0.2-0"]
 
 
                  ;; Local-storage apuri frontille

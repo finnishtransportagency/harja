@@ -327,7 +327,7 @@ WHERE l.urakka = :urakka
       OR (tk.koodi = '23151' AND lk.tyyppi = 'jjh-muutos')
   )
 GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.syy, mmk.summa, 
-         lk.maksueratyyppi, l.erapaiva, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
+         lk.maksueratyyppi, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
          lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi),  lk.tavoitehintainen
 UNION ALL
 -- 

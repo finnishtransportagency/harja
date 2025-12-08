@@ -5,9 +5,9 @@ INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from tehtava where nimi = 'Katupölynsidonta'), 666);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from tehtava where nimi = 'Ib rampit'), 500);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from tehtava where nimi = 'K2'), 55.5);
-INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 777.6);
+INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 777.6);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from tehtava where nimi = 'Is ohituskaistat'), 69.96);
-INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 123.4);
+INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 123.4);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from tehtava where nimi = 'Is ohituskaistat'), 5556);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from tehtava where nimi = 'Kuumapäällyste'), 999);
 
@@ -82,11 +82,11 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, h
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'K2'), 1000, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'K2'), 1000, NOW(), null, 2023);
 
---INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 11000, NOW(), null, 2019);
---INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 11000, NOW(), null, 2020);
---INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 11000, NOW(), null, 2021);
---INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 11000, NOW(), null, 2022);
---INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'), 11000, NOW(), null, 2023);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 11000, NOW(), null, 2019);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 11000, NOW(), null, 2020);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 11000, NOW(), null, 2021);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 11000, NOW(), null, 2022);
+--INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'), 11000, NOW(), null, 2023);
 
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2019);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from tehtava where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2020);
@@ -129,7 +129,7 @@ begin
         select extract(year from urakka_rivi.alkupvm) into urakan_alkuvuosi;
         select extract(year from urakka_rivi.loppupvm) into urakan_loppuvuosi;
         perform luo_testitarjousmaarat_tehtavalle(urakka_rivi.id,
-                (select id from tehtava where nimi = 'Sorateiden pölynsidonta (materiaali)'),
+                (select id from tehtava where nimi = 'Kesäsuola (CaCl2, materiaali)'),
                 11000, 
                 urakan_alkuvuosi,
                 urakan_loppuvuosi - 1);
@@ -147,7 +147,7 @@ delete from sopimus_tehtavamaara where tehtava = (select id from tehtava where n
 -- Kun dataa haetaan urakat_tehtavamaara taulusta, materliaalikoodi ja materiaaliluokka mäppäykset on oltava.
 -- Joten luodaan ne tässä
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola')
-WHERE nimi = 'Suolaus';
+WHERE nimi = 'Liukkaudentorjunta suolaamalla (materiaali)';
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti')
 WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)';
 
@@ -158,7 +158,7 @@ WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)'; -- Liukkaudentorj
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')
-WHERE nimi = 'Sorateiden pölynsidonta (materiaali)';
+WHERE nimi = 'Kesäsuola (CaCl2, materiaali)';
 
 UPDATE tehtava SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
                            materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kelirikkomurske')
@@ -220,7 +220,6 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
-	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Suolaus' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
@@ -253,7 +252,7 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise rampit' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise 1-ajorat.' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Ise 2-ajorat.' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
-	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
+	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Kesäsuola (CaCl2, materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,false),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'KT-valuasfalttipaikkaus T' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Katupölynsidonta' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
@@ -307,6 +306,8 @@ BEGIN
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Sohjo-ojien teko' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet' limit 1),0,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	-- Määrämitattavat 
+	-- Liukkaudentorjunta suolaamalla (materiaali) 
+    (v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta suolaamalla (materiaali)'),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	-- Opastetaulut
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen' limit 1),6,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
 	(v_urakka_id,p_hoitovuosi,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' limit 1),20,false,'2025-08-18 08:56:13.763757',v_kayttaja_id,NULL,NULL,true),
@@ -338,6 +339,7 @@ BEGIN
     (urakka,tehtava,maara,muokattu,muokkaaja,hoitovuosi)
   VALUES
 	-- Määrämitattavat 
+    (v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta suolaamalla (materiaali)'),6,'2025-08-18 08:10:19.324',v_kayttaja_id,p_hoitovuosi),
 	-- Opastetaulut
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastustaulujen ja opastusviittojen uusiminen -vanhan viitan/opastetaulun uusiminen' limit 1),7,'2025-08-18 08:09:23.831',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Opastinviitan tai -taulun uusiminen ja lisääminen -ajoradan yläpuoliset opasteet' limit 1),14,'2025-08-18 08:09:23.835',v_kayttaja_id,p_hoitovuosi),
@@ -393,7 +395,7 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä' limit 1),0,'2025-08-18 08:09:23.92',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon' limit 1),0,'2025-08-18 08:09:23.925',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta hiekoituksella (materiaali)' limit 1),0,'2025-08-18 08:09:23.942',v_kayttaja_id,p_hoitovuosi),
-	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' limit 1),0,'2025-08-18 08:09:23.947',v_kayttaja_id,p_hoitovuosi),
+	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kesäsuola (CaCl2, materiaali)' limit 1),0,'2025-08-18 08:09:23.947',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise 2-ajorat.' limit 1),0,'2025-08-18 08:09:23.951',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise 1-ajorat.' limit 1),0,'2025-08-18 08:09:23.957',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Ise rampit' limit 1),0,'2025-08-18 08:09:23.962',v_kayttaja_id,p_hoitovuosi),
@@ -427,7 +429,6 @@ BEGIN
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Pysäkkikatoksen poistaminen' limit 1),0,'2025-08-18 08:10:54.542',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE yksiloiva_tunniste = 'c3ada25e-70f2-407b-8dff-2c1a303578be' limit 1),0,'2025-08-18 08:09:24.128',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' limit 1),0,'2025-08-18 08:09:24.145',v_kayttaja_id,p_hoitovuosi),
-	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Suolaus' limit 1),0,'2025-08-18 08:09:24.15',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' limit 1),0,'2025-08-18 08:09:24.156',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' limit 1),0,'2025-08-18 08:09:24.161',v_kayttaja_id,p_hoitovuosi),
 	(v_urakka_id,(SELECT id FROM tehtava WHERE nimi = 'Kuumapäällyste' limit 1),0,'2025-08-18 08:09:24.169',v_kayttaja_id,p_hoitovuosi),

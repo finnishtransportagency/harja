@@ -20,16 +20,16 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn toimenpide-otsikko
-  [auki? toimenpiteet tpi summa erapaiva maksuera]
+  [auki? toimenpiteet tpi summa erapaiva maksuera maksuera-alias]
   [:tr.table-default-strong.klikattava
    {:on-click #(swap! auki? not)}
    [:td.col-xs-1 (str (pvm/pvm erapaiva))]
-   [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (if maksuera-alias (str "HA" maksuera " / " maksuera-alias) (str "HA" maksuera))]
    [:td.col-xs-4 (get-in toimenpiteet [tpi :toimenpide])]
-   [:td.col-xs-4 
+   [:td.col-xs-4
     [:span.col-xs-6  "Yhteensä"]
-    [:span.col-xs-6  
-     (if @auki? 
+    [:span.col-xs-6
+     (if @auki?
        [ikonit/harja-icon-navigation-up]
        [ikonit/harja-icon-navigation-down])]]
    [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
@@ -51,11 +51,11 @@
    [:td {:colSpan "6"} (str erapaiva)]])
 
 (defn kulu-rivi 
-  [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera liitteet summa erapaiva]}]
+  [{:keys [e!]} {:keys [id toimenpide-nimi tehtavaryhma-nimi maksuera maksuera-alias liitteet summa erapaiva]}]
   [:tr.klikattava 
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
    [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
-   [:td.col-xs-1.sailyta-rivilla (str "HA" maksuera)]
+   [:td.col-xs-1.sailyta-rivilla (if maksuera-alias (str "HA" maksuera " / " maksuera-alias) (str "HA" maksuera)) ]
    [:td.col-xs-4 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
    [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
@@ -67,10 +67,10 @@
     (fn [[_ tpi summa rivit] {:keys [e!]}]
       (if (> (count rivit) 1)
           [:<>
-           [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) (-> rivit first :maksuera-numero)] 
+           [toimenpide-otsikko auki? toimenpiteet tpi summa (-> rivit first :erapaiva) (-> rivit first :maksuera-numero) (-> rivit first :maksuera-alias)] 
            (when @auki? 
              (into [:<>] 
-                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa maksuera-numero] :as rivi} & loput] rivit
+                   (loop [[{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa maksuera-numero maksuera-alias] :as rivi} & loput] rivit
                           odd? false
                           elementit []]  
                      (if (nil? rivi) 
@@ -83,16 +83,18 @@
                                                {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
                                                 :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
                                                 :maksuera maksuera-numero
+                                                :maksuera-alias maksuera-alias
                                                 :summa summa
                                                 :liitteet liitteet
                                                 :erapaiva nil
                                                 :id id}]))))))]
-        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva maksuera-numero]} (first rivit)] 
+        (let [{:keys [id toimenpideinstanssi tehtavaryhma liitteet summa erapaiva maksuera-numero maksuera-alias]} (first rivit)] 
           [kulu-rivi 
            {:e! e! :odd? false} 
            {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide]) 
             :tehtavaryhma-nimi (get-in tehtavaryhmat [tehtavaryhma :tehtavaryhma])
             :maksuera maksuera-numero
+            :maksuera-alias maksuera-alias
             :summa summa
             :liitteet liitteet
             :erapaiva erapaiva

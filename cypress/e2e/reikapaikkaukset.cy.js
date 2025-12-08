@@ -11,8 +11,7 @@ describe('Reikäpaikkausnäkymä toimii', function ()
   it('Pitäisi avata reikäpaikkaukset, asettaa aikavälin ja löytää toteumat', function () 
   {
     cy.viewport(1100, 2000);
-    cy.server();
-    cy.route('POST', '_/hae-reikapaikkaukset').as('reikapaikkaukset'); 
+    cy.intercept('POST', '_/hae-reikapaikkaukset').as('reikapaikkaukset');
 
     // Avaa päänäkymä
     cy.visit("/");
