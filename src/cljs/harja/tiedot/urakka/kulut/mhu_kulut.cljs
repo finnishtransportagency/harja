@@ -7,6 +7,7 @@
     [harja.ui.viesti :as viesti]
     [harja.domain.kulut :as kulut]
     [harja.asiakas.kommunikaatio :as k]
+    [harja.tiedot.istunto :as istunto]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tiedot.navigaatio :as navigaatio])
@@ -468,9 +469,7 @@
       ;; Haetaan koko hoitovuoden kulut
       (tuck/action!
         (fn [e!]
-          ;; TODO 
-          ;;   Enabloi kun muutokset viedään tuotantoon
-          (when (k/kehitysymparistossa?)
+          (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
             (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
                                         :loppupvm loppupvm})))
           (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)

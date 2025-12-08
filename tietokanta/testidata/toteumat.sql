@@ -20,7 +20,7 @@ DO $$
         sopimus_id_oulu_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019' AND paasopimus IS NULL));
         sopimus_id_kajaani_2014_2019 =  (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Kajaanin alueurakka 2014-2019' AND paasopimus IS NULL));
 
-        toimenpidekoodi_suolaus = (SELECT id FROM tehtava WHERE nimi = 'Suolaus');
+        toimenpidekoodi_suolaus = (SELECT id FROM tehtava WHERE nimi = 'Liukkaudentorjunta suolaamalla (materiaali)');
         materiaalikoodi_hiekoitushiekka = (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'); -- Hiekoitushiekka, liukkaudentorjunta
 
 -- Oulun alueurakka 2005-2012

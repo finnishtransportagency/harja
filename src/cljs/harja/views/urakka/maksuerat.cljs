@@ -193,7 +193,12 @@
            :piilota-muokkaus? true
            :tunniste :numero}
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
-            :hae (fn [rivi] (:numero rivi)) :tasaa :oikea}
+            :hae (fn [rivi] 
+                   (let [alias (:alias (:maksuera rivi))]
+                     (if alias
+                       (str (:numero rivi) " / " alias)
+                       (str(:numero rivi)))))
+            :tasaa :oikea}
            {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16
             :hae (fn [rivi] (:nimi (:maksuera rivi)))}
            {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "16%"
@@ -213,8 +218,8 @@
                 [:button.nappi-ensisijainen.nappi-grid
                  (merge
                    (when (and (contains? kuittausta-odottavat maksueranumero)
-                              (not maksuera-odottanut-liian-kauan)
-                              (not kustannussuunnitelma-odottanut-liian-kauan))
+                           (not maksuera-odottanut-liian-kauan)
+                           (not kustannussuunnitelma-odottanut-liian-kauan))
                      {:disabled true})
                    {:type "button"
                     :on-click #(laheta-maksuerat #{maksueranumero} urakka-id)})

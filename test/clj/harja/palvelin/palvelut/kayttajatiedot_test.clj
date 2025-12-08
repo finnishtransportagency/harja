@@ -34,8 +34,7 @@
 
         ;; Testikannan hallintayksiköt
         kanava-hallintayksikko 1
-        pohjanmaa-hallintayksikko 12
-
+        pohjanmaa-hallintayksikko (first (first (q "SELECT id FROM organisaatio WHERE elynumero = 12;")))
         ;; Aseta Saimaan kanava päättyneeksi 
         _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id-saimaa " AND hallintayksikko = " kanava-hallintayksikko ";")
         ;; Aseta Joensuun kanava käynnissä olevaksi  

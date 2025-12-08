@@ -27,6 +27,7 @@
             [harja.tiedot.sijaintivalitsin :as sijaintivalitsin]
             [harja.tiedot.urakka.toteumat.muut-tyot-kartalla :as muut-tyot]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-reikapaikkaukset :as reikapaikkaukset]
             [harja.ui.openlayers.taso :as taso]
@@ -207,13 +208,13 @@
              @hal/vaylamuodon-hallintayksikot
              @nav/valittu-hallintayksikko
              @nav/valittu-urakka
-             @nav/valittu-sivu
-             (nav/valittu-valilehti @nav/valittu-sivu)
+             (@reitit/url-navigaatio :sivu)
+             (nav/valittu-valilehti (@reitit/url-navigaatio :sivu))
              @nav/urakat-kartalla))
       ; Selite mustille urakkarajoille tilannekuvassa
       {:selitteet
        (if (and
-             (= :tilannekuva @nav/valittu-sivu)
+             (= :tilannekuva (@reitit/url-navigaatio :sivu))
              @nav/tilannekuvassa-alueita-valittu?)
          #{urakkarajan-selite}
          #{})})))

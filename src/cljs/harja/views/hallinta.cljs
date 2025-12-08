@@ -1,7 +1,6 @@
 (ns harja.views.hallinta
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.bootstrap :as bs]
+  (:require [harja.ui.bootstrap :as bs]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.toimenpidekoodit :as tp]
@@ -22,6 +21,7 @@
             [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
+            [harja.views.hallinta.tyokalut.raporttityokalu-nakyma :as raporttityokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -248,6 +248,13 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "ajastukset"}
       [ajastukset-nakyma/nayta-ajastukset])
+
+    "Raporttityökalut"
+    :raportittityokalut
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "raporttityokalut"}
+      [raporttityokalu-nakyma/nayta-raporttityokalut])
 
     "Viestitestaus"
     :viestitestaus

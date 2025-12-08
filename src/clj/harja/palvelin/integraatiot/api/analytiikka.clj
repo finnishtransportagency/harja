@@ -1031,6 +1031,7 @@
                                                                  :siirretaan-seuraavalle-hoitovuodelle (cond
                                                                                                          (= "Tavoitehinnan alitus" (:nimi p)) (:siirron_maara p)
                                                                                                          (= "Tavoitehinnan ylitys" (:nimi p)) (:siirto p)
+                                                                                                         (= "Kattohinnan ylitys" (:nimi p)) (:siirrettava_maara p)
                                                                                                          :else nil)
                                                                  :tavoitehinta (if (or
                                                                                      (= "Lupaukset" (:nimi p))
