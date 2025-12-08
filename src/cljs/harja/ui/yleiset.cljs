@@ -479,7 +479,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
-     [:label.alasvedon-otsikko-vayla otsikko]
+     [:label.alasvedon-otsikko otsikko]
      [:label.alasvedon-otsikko otsikko])
    [livi-pudotusvalikko optiot valinnat]])
 
@@ -1167,7 +1167,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.alasvedon-otsikko-vayla "Tieosoite"]
+       [:label.alasvedon-otsikko "Tieosoite"]
        [:div
         [:div.varusteet.tr-osoite-flex
          [osio tie "Tie"]

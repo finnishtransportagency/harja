@@ -143,7 +143,7 @@
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
         [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
-         [:label.alasvedon-otsikko-vayla "Varustetyyppi"]
+         [:label.alasvedon-otsikko "Varustetyyppi"]
 
          [kentat/tee-kentta
           {:tyyppi :haku

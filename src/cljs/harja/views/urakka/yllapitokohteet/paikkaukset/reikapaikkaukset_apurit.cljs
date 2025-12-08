@@ -38,7 +38,7 @@
   [:div.row.filtterit
    ;; TR valinta
    [:div
-    [:div.alasvedon-otsikko-vayla "Tieosoite"]
+    [:label.alasvedon-otsikko "Tieosoite"]
     [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                         :alaotsikot? true
                         :vayla-tyyli? true}

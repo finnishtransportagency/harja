@@ -33,7 +33,7 @@
    [tee-otsikollinen-kentta
     (merge
       {:otsikko "Kohdenumero"
-       :otsikon-luokka "alasvedon-otsikko-vayla"
+       :otsikon-luokka "alasvedon-otsikko"
        :kentta-params (merge {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f} kentan-parametrit)
        :arvo-atom kohdenumero-atom
        :luokka "label-ja-kentta-puolikas"}

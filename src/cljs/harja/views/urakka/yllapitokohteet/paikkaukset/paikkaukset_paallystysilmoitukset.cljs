@@ -63,7 +63,7 @@
     [:div.flex-row.filtterit.paallystysilmoitukset.alkuun.valistys16.padding16.tasaa-alas
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
      [:div.basis256
-      [:label.alasvedon-otsikko-vayla "ELY"]
+      [:label.alasvedon-otsikko "ELY"]
       [valinnat/checkbox-pudotusvalikko
        valittavat-elyt
        (fn [ely valittu?]
@@ -73,7 +73,7 @@
      ;; Hox! Kehittäessa ja auto reloadin kanssa touhutessa kuuntelijat menevät rikki. Jos vuosi ei vaihdu lokaalisti
      ;; niin ei syytä huoleen. Käy eri välilehdellä ja kaikki palaa toimintakuntoon
      [:div.basis128
-      [:label.alasvedon-otsikko-vayla "Vuosi"]
+      [:label.alasvedon-otsikko "Vuosi"]
       [yleiset/livi-pudotusvalikko
        {:valinta valittu-vuosi
         :vayla-tyyli? true
@@ -81,7 +81,7 @@
         :valitse-fn #(e! (t-paallystysilmoitukset/->FiltteriValitseVuosi %))}
        vuodet]]
      [:div.basis256
-      [:label.alasvedon-otsikko-vayla "Tila"]
+      [:label.alasvedon-otsikko "Tila"]
       [valinnat/checkbox-pudotusvalikko
        valittavat-tilat
        (fn [tila valittu?]

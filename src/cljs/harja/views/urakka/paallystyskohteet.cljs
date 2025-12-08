@@ -228,7 +228,7 @@
           [:span.paallystys-valinnat
            [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
            [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-           [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]]
+           [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]]
 
           [validointivirheet-modal]
           [excel-toiminnot {:urakka-id (:id ur)

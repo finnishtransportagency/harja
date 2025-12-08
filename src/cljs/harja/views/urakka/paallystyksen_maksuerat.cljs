@@ -40,7 +40,7 @@
         [:div.paallystyksen-maksuerat
          [valinnat/urakan-vuosi valittu-urakka {:vayla-tyyli? true}]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
+         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]
          [grid/grid
           {:otsikko "Maksuerät"
            :tyhja (if (nil? maksuerat)
