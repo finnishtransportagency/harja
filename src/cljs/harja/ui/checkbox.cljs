@@ -1,14 +1,6 @@
 (ns harja.ui.checkbox
-  (:require [reagent.core :refer [atom]]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.dom :as dom]
-            [harja.ui.yleiset :as y]
-            [harja.ui.komponentti :as komp]
-
-            [cljs.core.async :refer [<!]])
-  (:require-macros
-    [reagent.ratom :refer [reaction]]
-    [cljs.core.async.macros :refer [go]]))
+  (:require [harja.ui.yleiset :as y]
+            [harja.ui.komponentti :as komp]))
 
 (defn paivita-indeterminate-tila [input-id tila]
   (when-let [node (.getElementById js/document input-id)]
@@ -22,11 +14,6 @@
 (def boolean->checkbox-tila-keyword
   {true :valittu
    false :ei-valittu})
-
-(def ^:const
-checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
-                       :ei-valittu "harja-checkbox-ei-valittu"
-                       :osittain-valittu "harja-checkbox-osittain-valittu"})
 
 (defn checkbox
   "Ottaa checkbox-tila atomin, joka määrittelee komponentin tilan.
