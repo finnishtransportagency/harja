@@ -9,9 +9,14 @@ function avaaValitavoitteet(urakkanimi, hallintayksikko) {
     // Valitse hallintayksikkö
     cy.contains('.haku-lista-item', hallintayksikko, { timeout: ladataanHarjaaTimeout }).click();
     cy.get('.ajax-loader', { timeout: ladataanHarjaaTimeout }).should('not.exist');
-    
+
     // Näytä päättyneet urakat (jos tarvitaan)
-    cy.contains('Näytä päättyneet', {timeout: clickTimeout}).click();
+    cy.contains('label', 'Näytä päättyneet', { timeout: clickTimeout })
+        .should('be.visible')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
 
     // Valitse urakka
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkanimi, { timeout: ladataanHarjaaTimeout }).click();

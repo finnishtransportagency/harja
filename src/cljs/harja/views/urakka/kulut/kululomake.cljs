@@ -47,9 +47,10 @@
                         (+ a (tiedot/parsi-summa (:summa s))))
                       0
                       kohdistukset))]
-   [:div
-    [napit/yleinen-toissijainen "Peruuta" (fn [] (modal/piilota!)) {:vayla-tyyli? true :luokka "suuri"}]
-    [napit/poista "Poista tiedot" varmistus-fn {:vayla-tyyli? true :luokka "suuri"}]]])
+   [:hr]
+   [:div.kulu-poisto-footer
+    [napit/poista "Poista tiedot" varmistus-fn]
+    [napit/peruuta "Peruuta" (fn [] (modal/piilota!))]]])
 
 (defn- liitteen-naytto
   [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
@@ -566,26 +567,7 @@
              " sivulla."]]]]
          nil
          "100%"
-         {:luokka "ala-margin-16 max-width-full max-width-full"}])
-
-      ;; Poista-nappi
-      [:div.col-xs-12.col-md-6
-       (when (and (not (nil? (:id lomake))) (not kulu-lukittu?))
-         [napit/poista "Poista kulu"
-          #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
-             [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
-                                                             (modal/piilota!)
-                                                             (e! (tiedot/->PoistaKulu (:id lomake))))
-                                             :kohdistukset kohdistukset
-                                             :koontilaskun-kuukausi koontilaskun-kuukausi
-                                             :tehtavaryhma tehtavaryhma
-                                             :laskun-pvm (pvm/pvm erapaiva)
-                                             :tehtavaryhmat tehtavaryhmat}])
-          {:vayla-tyyli? true
-           :teksti-nappi? true
-           :style {:font-size "14px"
-                   :margin-left "auto"
-                   :float "right"}}])]]
+         {:luokka "ala-margin-16 max-width-full max-width-full"}])]
 
      ;; Onko kulu lukittu
      (when (and kulu-lukittu? (not haku-menossa)) [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
@@ -706,16 +688,30 @@
        [:div.kulu-napit
 
         [:span.kulu-valistys-oikea
-         [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
-          {:vayla-tyyli? true
-           :luokka "suuri"
-           :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+         [napit/tallenna
+          "Tallenna"
+          #(e! (tiedot/->TallennaKulu))
+          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa)}]]
 
         [:span
-         [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-          {:ikoni [ikonit/remove]
-           :luokka "suuri"
-           :vayla-tyyli? true}]]
+         [napit/peruuta
+          "Peruuta"
+          #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+          {:disabled haku-menossa}]]
+
+        (when-not haku-menossa
+          [napit/poista "Poista kulu"
+           #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
+              [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
+                                                              (modal/piilota!)
+                                                              (e! (tiedot/->PoistaKulu (:id lomake))))
+                                              :kohdistukset kohdistukset
+                                              :koontilaskun-kuukausi koontilaskun-kuukausi
+                                              :tehtavaryhma tehtavaryhma
+                                              :laskun-pvm (pvm/pvm erapaiva)
+                                              :tehtavaryhmat tehtavaryhmat}])
+           {:style {:margin-left "auto"
+                    :float "right"}}])
 
         (when haku-menossa
           [:span.kulu-ladataan

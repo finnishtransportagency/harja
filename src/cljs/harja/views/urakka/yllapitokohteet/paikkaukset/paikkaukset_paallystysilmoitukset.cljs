@@ -41,25 +41,25 @@
 (defn- poista-tarkkailijat! []
   (remove-watch u/valittu-sopimusnumero :pkp-sopimusnro))
 
-(defn filtterit [e! app] 
+(defn filtterit [e! app]
   (let [vuodet (v-paikkauskohteet/urakan-vuodet (:alkupvm (-> @tila/tila :yleiset :urakka)) (:loppupvm (-> @tila/tila :yleiset :urakka)))
         valittu-vuosi (or (get-in app [:urakka-tila :valittu-urakan-vuosi]) @u/valittu-urakan-vuosi)
         valitut-elyt (get-in app [:valitut-elyt])
         valitut-tilat (get-in app [:valitut-tilat])
         valittavat-elyt (conj
-                         (map (fn [h]
-                                (-> h
-                                    (dissoc h :alue :type :liikennemuoto)
-                                    (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
-                                                         false))))
-                              @hal/vaylamuodon-hallintayksikot)
-                         {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
-        valittavat-tilat 
+                          (map (fn [h]
+                                 (-> h
+                                   (dissoc h :alue :type :liikennemuoto)
+                                   (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                                      false))))
+                            @hal/vaylamuodon-hallintayksikot)
+                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+        valittavat-tilat
         (map (fn [t]
                {:nimi t
                 :valittu? (or (some #(= t %) valitut-tilat) ;; Onko kyseinen tila valittu
-                              false)})
-             #{:aloitettu :valmis :lukittu :aloittamatta "Kaikki"})]
+                            false)})
+          #{:aloitettu :valmis :lukittu :aloittamatta "Kaikki"})]
     [:div.flex-row.filtterit.paallystysilmoitukset.alkuun.valistys16.padding16.tasaa-alas
      ;;TODO: Ely valinta on varmaan näistä vähiten tärkeä
      [:div.basis256
@@ -97,8 +97,8 @@
                  :else "Aloittamatta"))}]]
      [:div.basis128
       [napit/yleinen-ensisijainen "Hae" #(e! (t-ur-paallystys/->HaePaallystysilmoitukset)) {:luokka "nappi-korkeus-36"}]]
-     #_ [:div.basis128.oikealle
-      [kartta/piilota-tai-nayta-kartta-nappula]]]))
+     #_[:div.basis128.oikealle
+        [kartta/piilota-tai-nayta-kartta-nappula]]]))
 
 (defn paallystysilmoitukset* [e! _]
   (komp/luo
@@ -111,13 +111,13 @@
                          (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (kartta-tasot/taso-paalle! :paikkaukset-paallystysilmoitukset)
                          (lisaa-tarkkailijat! e!))
-                      #(do
-                         (poista-tarkkailijat!)
-                         (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
+      #(do
+         (poista-tarkkailijat!)
+         (kartta-tasot/taso-pois! :paikkaukset-paallystysilmoitukset)))
     (fn [e! app]
       (let [app (assoc app :kayttaja @istunto/kayttaja)]
         [:div
-         [:h1 "Paikkauskohteiden päällystysilmoitukset"]
+         (when (nil? (:paallystysilmoitus-lomakedata app)) [:h1 "Paikkauskohteiden päällystysilmoitukset"])
          ;[debug/debug app]
          [kartta/kartan-paikka]
          ;; Jostain syystä urakkaa ei aina keretä ladata kokonaan sovelluksen tilaan, mikä hajoittaa valinnat-komponetin.
