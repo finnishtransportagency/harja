@@ -58,10 +58,10 @@ describe('Aloita päällystysilmoitus vanha', function () {
     it('Avaa vanha POT-lomake', function () {
 
         cy.viewport(1800, 2000)
-        cy.server()
-        cy.route('POST', '_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus')
+        cy.intercept('POST', '_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus')
 
         cy.visit("/")
+
         cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
         cy.get('.ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})

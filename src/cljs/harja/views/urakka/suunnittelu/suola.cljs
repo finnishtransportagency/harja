@@ -547,7 +547,7 @@
             hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
-         [:h2 "Urakan suolarajoitukset hoitovuosittain"]
+         [:h1 "Urakan suolarajoitukset hoitovuosittain"]
          #_[debug/debug app]
 
          [:div.kontrollit

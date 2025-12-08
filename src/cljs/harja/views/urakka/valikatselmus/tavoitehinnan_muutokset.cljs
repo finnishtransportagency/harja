@@ -87,31 +87,32 @@
           nil nil {:sulje-nappi-id (gensym)}]])
       [:div
        [grid/muokkaus-grid
-        (merge {:tyhja "Ei muutoksia tavoitehintaan"
-                :voi-kumota? false
-                :voi-muokata? voi-muokata?
-                ;; Älä anna käyttäjän naputella rivejä kesken tallennuksen 
-                :disabloi-rivi? (constantly tallennus-kesken?)
-                :sisalto-kun-rivi-disabloitu :oletus
-                :muutos #(do
-                           (reset! tallenna-painettu false)
-                           (reset! virheet-atom (grid/hae-virheet %)))
-                ;; Roskakorinappula rivin päässä
-                :toimintonappi-fn (fn [rivi _muokkaa! id]
-                                    (when (and voi-muokata? (not tallennus-kesken?))
-                                      [napit/poista ""
-                                       #(do
-                                          (poista-oikaisu-fn rivi id))
-                                       {:luokka "napiton-nappi pelkka-ikoni"}]))
-                :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
-                :validoi-uusi-rivi? false
+        {:tyhja "Ei muutoksia tavoitehintaan"
+         :voi-kumota? false
+         :voi-muokata? voi-muokata?
+         :jarjesta-avaimen-mukaan identity
+         ;; Älä anna käyttäjän naputella rivejä kesken tallennuksen
+         :disabloi-rivi? (constantly tallennus-kesken?)
+         :sisalto-kun-rivi-disabloitu :oletus
+         :muutos #(do
+                    (reset! tallenna-painettu false)
+                    (reset! virheet-atom (grid/hae-virheet %)))
+         ;; Roskakorinappula rivin päässä
+         :toimintonappi-fn (fn [rivi _muokkaa! id]
+                             (when (and voi-muokata? (not tallennus-kesken?))
+                               [napit/poista ""
+                                #(do
+                                   (poista-oikaisu-fn rivi id))
+                                {:luokka "napiton-nappi pelkka-ikoni"}]))
+         :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
+         :validoi-uusi-rivi? false
 
-                :uusi-id uusi-id
-                :nayta-virheikoni? false
-                :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                                [{:teksti "Yhteensä" :luokka "yhteensa"}
-                                 {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
-                                 {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
+         :uusi-id uusi-id
+         :nayta-virheikoni? false
+         :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                         [{:teksti "Yhteensä" :luokka "yhteensa"}
+                          {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
+                          {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])}
         [{:otsikko "Muutos"
           :nimi ::valikatselmus/otsikko
           :tyyppi :valinta
