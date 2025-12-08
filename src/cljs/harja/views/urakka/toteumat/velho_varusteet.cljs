@@ -321,6 +321,7 @@
           (e! (v/->TyhjennaVarusteListaus)))))
     (fn [e! app]
       [:div.varusteet-nakyma
+       [:h1 "Varusteet"]
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! app])
        [suodatuslomake e! app]
