@@ -397,7 +397,7 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-onnistuu-test
+(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-urakoitsija-maksaa-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -432,7 +432,7 @@
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
-                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa])) urakoitsija-maksaa))
+                                                         (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
 
         ;; Siivoa roskat - Poistetaan päätös
@@ -444,6 +444,57 @@
             (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
+(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-siirto-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+        hoitokauden-alkuvuosi 2019
+        kattohinta 275000M
+        ylityksen-maara 10000M
+        toteutuneet-kustannukset (+ kattohinta ylityksen-maara)
+        urakoitsija-maksaa 0M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara
+        siirrettava-maara ylityksen-maara
+        viimeinen_hoitokausi false
+
+        ;; Luodaan kulu, jolla ylitetään kattohinta
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id toteutuneet-kustannukset hoitokauden-alkuvuosi urakan-alkupvm)
+
+        kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu})
+
+        kulu-id (:id kulu-vastaus)
+        kayttajaid (:id +kayttaja-jvh+)
+
+        kattohinnan-ylitys-paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                                    ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+        db-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
+
+        ;; Hae päätöksen tiedot
+        paatos-tiedot (q-map (format "SELECT * FROM paatos_kattohinta WHERE urakkaid = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitokauden-alkuvuosi))
+        _ (println "Paatos tiedot:" (pr-str paatos-tiedot))
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        _ (println "encoodattu-body analytiikka vastaus;" (pr-str encoodattu-body))
+        juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
+                                                         (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
+                                                 (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
+
+        ;; Siivoa roskat - Poistetaan päätös
+        _ (paatos-kyselyt/poista-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatos :id]))))
+    (is (= siirrettava-maara
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :siirretaan-seuraavalle-hoitovuodelle]))) "Kattohinnan ylityksen siirto seuraavalle hoitovuodelle ei täsmää.")
+    (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
