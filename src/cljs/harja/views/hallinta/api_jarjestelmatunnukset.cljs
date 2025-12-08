@@ -13,7 +13,7 @@
   (let [ei-muokattava (constantly false)]
     [:div.jarjestelmatunnukset-grid
      [:div
-      [:h2.header-yhteiset "API järjestelmätunnukset"]
+      [:h1 "API järjestelmätunnukset"]
       [:p "Tästä voi muokata käyttäjätunnuksia ja niiden api-oikeuksia, 'kirjoitus' oikeus antaa myös 'luku' oikeuden."]
       [:p "Lukuoikeudella voidaan hakea tietoja esim. yhteystiedot, urakan tiedot tms."]
       [:p "Kirjoitus oikeudella voidaan sekä hakea tietoja että kirjoittaa esim. toteumien lisäystä/poistoa tms."]]
@@ -101,31 +101,31 @@
   (e! (tiedot/->HaeJarjestelmaTunnuksenLisaoikeudet kayttaja-id))
   (fn [e! {:keys [jarjestelmatunnuksen-lisaoikeudet urakkavalinnat]} kayttaja-id]
     (let [lisaoikeudet (or (get jarjestelmatunnuksen-lisaoikeudet kayttaja-id) [])]
-    [grid/grid
-     {:otsikko "Lisäoikeudet urakoihin"
-      :tunniste :urakka-id
-      :tyhja "Ei lisäoikeuksia"
-      :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaJarjestelmaTunnuksenLisaoikeudet % kayttaja-id)}
-     [{:otsikko "Urakka"
-       :nimi :urakka-id
-       :fmt #(:nimi (first (filter (fn [urakka] (= (:id urakka) %)) urakkavalinnat)))
-       :tyyppi :valinta
-       :valinta-arvo :id
-       :valinnat urakkavalinnat
-       :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
-       :leveys 3}
-      {:otsikko "Oikeus"
-       :nimi :kuvaus
-       :hae (fn [] "Täydet oikeudet")
-       :tyyppi :string
-       :muokattava? (constantly false)
-       :leveys 2}]
-     lisaoikeudet])))
+      [grid/grid
+       {:otsikko "Lisäoikeudet urakoihin"
+        :tunniste :urakka-id
+        :tyhja "Ei lisäoikeuksia"
+        :tallenna #(tuck-apurit/e-kanavalla! e! tiedot/->TallennaJarjestelmaTunnuksenLisaoikeudet % kayttaja-id)}
+       [{:otsikko "Urakka"
+         :nimi :urakka-id
+         :fmt #(:nimi (first (filter (fn [urakka] (= (:id urakka) %)) urakkavalinnat)))
+         :tyyppi :valinta
+         :valinta-arvo :id
+         :valinnat urakkavalinnat
+         :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
+         :leveys 3}
+        {:otsikko "Oikeus"
+         :nimi :kuvaus
+         :hae (fn [] "Täydet oikeudet")
+         :tyyppi :string
+         :muokattava? (constantly false)
+         :leveys 2}]
+       lisaoikeudet])))
 
 (defn- jarjestelmatunnuksien-lisaoikeudet [e! {:keys [jarjestelmatunnukset] :as app}]
   [:div
    [:div
-    [:h2.header-yhteiset "API-järjestelmätunnusten lisäoikeudet urakoihin"]
+    [:h1 "API-järjestelmätunnusten lisäoikeudet urakoihin"]
     [:p "Tästä annetaan käyttäjille urakoihin oikeuksia."]]
    [grid/grid
     {:tunniste :id
