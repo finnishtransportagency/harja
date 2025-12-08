@@ -11,6 +11,7 @@
             [harja.ui.palaute :as palaute]
             [harja.ui.viesti :refer [viesti-container toast-viesti-container]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.loki :refer [log logt]]
             [harja.tiedot.hairioilmoitukset :as hairiotiedot]
             [harja.views.murupolku :as murupolku]
@@ -294,7 +295,7 @@
   (komp/luo
     (fn []
       (if @nav/render-lupa?
-        (let [sivu @nav/valittu-sivu
+        (let [sivu (@reitit/url-navigaatio :sivu)
               aikakatkaistu? @istunto/istunto-aikakatkaistu?
               korkeus @dom/korkeus
               kayttaja @istunto/kayttaja]

@@ -150,7 +150,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         let hoitokausiViimeinen = "4. hoitovuosi (" + (urakanAlkuvuosi + 3) + "—" + (urakanAlkuvuosi + 4) + ")";
 
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().type('777')
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').clear().type('777')
         cy.get('div.select-default').contains(hoitokausiNyt).click()
         cy.contains(hoitokausiViimeinen).click()
         cy.get('div.select-default').contains(hoitokausiViimeinen, {timeout: 2000}).should('be.visible');
@@ -160,7 +160,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.get('.harja-alasvetolistaitemi').contains(hoitokausiNyt).click()
         cy.get('div.select-default').contains(hoitokausiNyt, {timeout: 2000}).should('be.visible');
 
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').should('not.have.value');
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').should('not.have.value');
     })
 
     it('Määrän voi vaihtaa', () => {
@@ -192,7 +192,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.get('div.select-default').first().find('button').click()
         cy.get('.harja-alasvetolistaitemi').contains('3 SORATEIDEN HOITO').click()
         cy.wait(1000)
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().blur()
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').clear().blur()
         cy.wait('@TallennaTehtavamaarat')
     })
 })

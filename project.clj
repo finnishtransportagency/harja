@@ -1,5 +1,5 @@
 (def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                     (.getHostName (java.net.InetAddress/getLocalHost))))
+                    (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
@@ -8,9 +8,7 @@
   ;; https://github.com/technomancy/leiningen/blob/24fb93936133bd7fc30c393c127e9e69bb5f2392/sample.project.clj#L82
   ;; Muuta asetusta, jos haluat nähdä varoitukset riippuvuuksien konflikteista
   :pedantic? false
-  :dependencies [
-                 ;; Clojure ja ClojureScript
-                 [org.clojure/clojure "1.10.3"]
+  :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.764"]
                  [org.clojure/spec.alpha "0.5.238"]
 
@@ -110,7 +108,9 @@
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "0.10.0"]
+                 [reagent "1.1.1"]
+                 [cljsjs/react "17.0.2-0"]
+                 [cljsjs/react-dom "17.0.2-0"]
 
 
                  ;; Local-storage apuri frontille
@@ -193,11 +193,6 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            ;; TODO: Pilvisiirtymän jälkeen poistetaan lein-less riippuvuus
-            ;; Harjan pilviversiossa on luovuttu lein-lessistä, mutta on-prem harjassa
-            ;; käytetään sitä vielä. Riippuvuus ja käyttö aliaksissa voidaan poistaa, kun
-            ;; ollaan luovuttu on-premistä ja jenkinsin käytöstä.
-            [lein-less "1.7.5"]
             [lein-ancient "0.7.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
@@ -238,11 +233,6 @@
                                     "resources/public/js/harja.js"
                                     "resources/public/js/harja"]
 
-  ;; Less CSS käännös tuotanto varten, käyttäen lein-lessiä on-prem-harjaa varten.
-  :less {:source-paths ["dev-resources/less/application"
-                        "dev-resources/less/laadunseuranta/application"]
-         :target-path "resources/public/css/"}
-
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
@@ -263,13 +253,9 @@
             "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
-                        ;; Harjan fronttibuildi ja LESS
-                        "less" "once,"
                         "with-profile" "+prod-cljs" "compile-prod,"
-
                         ;; Harja mobiili laadunseuranta fronttibuildi
                         "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
-
                         "uberjar," "codox"]
             "testit" ["do" "clean,"
                       "deps,"
@@ -281,11 +267,9 @@
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
-
             "selainrepl" ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
             "tuotanto-notest" ["do" "clean," "compile,"
-                               "less" "once,"
                                "with-profile" "+prod-cljs" "compile-prod,"
                                "with-profile" "+laadunseuranta-prod" "compile-laadunseuranta-prod,"
                                "uberjar"]}
@@ -298,8 +282,7 @@
                    :ohita :ohita
                    :default (fn [m]
                               (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
-                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
-                   }
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))}
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa

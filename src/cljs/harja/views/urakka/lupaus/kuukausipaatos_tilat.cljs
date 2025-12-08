@@ -95,9 +95,15 @@
        ;; Kustannusennuste - odottaa syöttöä
        (and kustannusennuste-lupaus? (not kustannusennuste-syotetty?) vastauskuukausi?)
        [odottaa-vastausta]
-
-       (or odottaa-kannanottoa?
-           (and vastauskuukausi? (= :kuluva-kuukausi nykyhetkeen-verrattuna)))
+       
+        ;; Kuluva kuukausi ilman vastausta - näytä kysymysmerkki
+       (and vastauskuukausi? 
+            (= :kuluva-kuukausi nykyhetkeen-verrattuna)
+            (not (lupaus-domain/vastattu? vastaus)))
+       [odottaa-vastausta]
+       
+       ;; Odottaa kannanottoa (menneet kuukaudet ilman vastausta)
+       odottaa-kannanottoa?
        [odottaa-vastausta]
 
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan
@@ -114,7 +120,7 @@
 
        ;; Monivalinta vastauksen kuukausi, jossa on pisteet
        (and (:lupaus-vaihtoehto-id vastaus)
-            (:pisteet vastaus))
+         (:pisteet vastaus))
        [:div.kuukausi-pisteet (:pisteet vastaus)]
 
        ;; Joustovara on ylittynyt
