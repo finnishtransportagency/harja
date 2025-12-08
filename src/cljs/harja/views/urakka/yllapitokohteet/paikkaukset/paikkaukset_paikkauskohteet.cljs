@@ -248,7 +248,7 @@
                                                                          :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
                                   [:button {:type "submit"
                                             :class #{"nappi-toissijainen"}}
-                                   [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
+                                   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]])
 
                               [liitteet/lataa-tiedosto
                                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}

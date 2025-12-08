@@ -189,7 +189,7 @@
 
   UremPaikkausLatausOnnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Paikkaukset tuotu excelistä onnistuneesti")
+    (viesti/nayta-toast! "Paikkaukset tuotu Excelistä onnistuneesti")
     (hae-paikkauskohteet (get-in @tila/yleiset [:urakka :id]) app)
     app)
 
@@ -197,8 +197,8 @@
   (process-event [{{response :response} :vastaus} app]
     (viesti/nayta-toast!
       (if (get response "virheet")
-        "Urapaikkausten tuonti excelistä epäonnistui"
-        "Odottamaton virhe urapaikkausten tuonnista excelillä")
+        "Urapaikkausten tuonti Excelistä epäonnistui"
+        "Odottamaton virhe urapaikkausten tuonnista Excelillä")
       :varoitus)
     (assoc app :urem-excel-virheet (get response "virheet")))
 

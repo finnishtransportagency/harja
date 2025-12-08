@@ -183,9 +183,6 @@
             (when @vapaa-aikavali?
               [valinnat/aikavali valittu-aikavali {:aikavalin-rajoitus aikavalin-rajoitus}])]))))))
 
-(defn urakan-toimenpide []
-  (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
-
 (defn urakan-toimenpide+kaikki []
   (valinnat/urakan-toimenpide
     (r/wrap (vec (concat [{:tpi_nimi "Kaikki"}]

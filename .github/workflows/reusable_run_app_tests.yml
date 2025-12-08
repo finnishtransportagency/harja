@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -110,7 +110,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -141,7 +141,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -214,7 +214,7 @@ jobs:
       checks: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get the build artifact name
         id: artifact-name
@@ -291,7 +291,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -341,7 +341,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -391,7 +391,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -435,7 +435,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -499,7 +499,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database

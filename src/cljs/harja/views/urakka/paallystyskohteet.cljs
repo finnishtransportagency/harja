@@ -126,7 +126,7 @@
       [liitteet/lataa-tiedosto
        {:urakka-id (-> @tila/tila :yleiset :urakka :id)
         :vuosi (:vuosi tiedot)}
-       {:nappi-teksti "Tuo kustannukset excelistä"
+       {:nappi-teksti "Tuo kustannukset Excelistä"
         :url "tuo-paallystyskustannukset-excelista"
         :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
         :tiedosto-ladattu #(do
