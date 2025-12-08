@@ -86,6 +86,21 @@ label.radio- {
       }
     }
 
+    // Indeterminate-tila ei-checkatulla checkboxilla (osittain valittu)
+    & + label.indeterminate {
+      &:before {
+        color: @white-default;
+        background: @blue-default;
+      }
+    }
+
+    &:hover:not([disabled]) + label.indeterminate,
+    &:focus-visible:not([disabled]) + label.indeterminate {
+      &:before {
+        color: @white-default;
+        background: @blue-darker;
+      }
+    }
   }
 
   // Checkattu checkbox
@@ -291,4 +306,3 @@ label.radio- {
     margin-left: @valistys-32;
   }
 }
-
