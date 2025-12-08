@@ -370,15 +370,17 @@ RETURNING id;
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
+    tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
     kattohinta = :kattohinta,
+    kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
 
 -- name: indeksikorjaukset-vahvistettu?
 -- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,

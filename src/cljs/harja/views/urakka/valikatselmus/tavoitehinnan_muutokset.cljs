@@ -87,31 +87,32 @@
           nil nil {:sulje-nappi-id (gensym)}]])
       [:div
        [grid/muokkaus-grid
-        (merge {:tyhja "Ei muutoksia tavoitehintaan"
-                :voi-kumota? false
-                :voi-muokata? voi-muokata?
-                ;; Älä anna käyttäjän naputella rivejä kesken tallennuksen 
-                :disabloi-rivi? (constantly tallennus-kesken?)
-                :sisalto-kun-rivi-disabloitu :oletus
-                :muutos #(do
-                           (reset! tallenna-painettu false)
-                           (reset! virheet-atom (grid/hae-virheet %)))
-                ;; Roskakorinappula rivin päässä
-                :toimintonappi-fn (fn [rivi _muokkaa! id]
-                                    (when (and voi-muokata? (not tallennus-kesken?))
-                                      [napit/poista ""
-                                       #(do
-                                          (poista-oikaisu-fn rivi id))
-                                       {:luokka "napiton-nappi pelkka-ikoni"}]))
-                :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
-                :validoi-uusi-rivi? false
+        {:tyhja "Ei muutoksia tavoitehintaan"
+         :voi-kumota? false
+         :voi-muokata? voi-muokata?
+         :jarjesta-avaimen-mukaan identity
+         ;; Älä anna käyttäjän naputella rivejä kesken tallennuksen
+         :disabloi-rivi? (constantly tallennus-kesken?)
+         :sisalto-kun-rivi-disabloitu :oletus
+         :muutos #(do
+                    (reset! tallenna-painettu false)
+                    (reset! virheet-atom (grid/hae-virheet %)))
+         ;; Roskakorinappula rivin päässä
+         :toimintonappi-fn (fn [rivi _muokkaa! id]
+                             (when (and voi-muokata? (not tallennus-kesken?))
+                               [napit/poista ""
+                                #(do
+                                   (poista-oikaisu-fn rivi id))
+                                {:luokka "napiton-nappi pelkka-ikoni"}]))
+         :voi-lisata? false ;; Piilotetaan default lisää rivi -nappi. Se on korvattu custom-toiminnolla
+         :validoi-uusi-rivi? false
 
-                :uusi-id uusi-id
-                :nayta-virheikoni? false
-                :rivi-jalkeen (when @hoitokauden-oikaisut-atom
-                                [{:teksti "Yhteensä" :luokka "yhteensa"}
-                                 {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
-                                 {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])})
+         :uusi-id uusi-id
+         :nayta-virheikoni? false
+         :rivi-jalkeen (when @hoitokauden-oikaisut-atom
+                         [{:teksti "Yhteensä" :luokka "yhteensa"}
+                          {:teksti oikaisut-summa :sarakkeita 2 :tasaa :oikea :luokka "yhteensa-padding-oikea-24"}
+                          {:teksti "" :sarakkeita 2 :luokka "yhteensa"}])}
         [{:otsikko "Muutos"
           :nimi ::valikatselmus/otsikko
           :tyyppi :valinta
@@ -155,7 +156,7 @@
 
 (defn kattohinnan-oikaisu
   "Kattohinnan oikaisua tarvitsevat urkat, jotka ovat alkaneet -19-20 vuosina. Muille kattohinta on 110% tavoitehinnasta."
-  [e! kattohinta paatos-tehty?]
+  [e! kattohinta paatos-tehty? hoitokauden-alkuvuosi]
   (let [uusi-kattohinta (atom (if kattohinta kattohinta 0))]
     (if (not paatos-tehty?)
       [:<>
@@ -174,7 +175,7 @@
                                                          :input-luokka "kattohinta-muutettu"
                                                          :aria-label "Muuttunut kattohinta"
                                                          :on-blur #(when (not (= kattohinta @uusi-kattohinta))
-                                                                     (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta)))}
+                                                                     (e! (valikatselmus-tiedot/->TallennaKattohinnanOikaisu @uusi-kattohinta hoitokauden-alkuvuosi)))}
                                          :arvo-atom uusi-kattohinta}]]]
       [:<>
        [:div.small-caption.lihavoitu.valja "Muuttunut kattohinta"]
@@ -229,7 +230,7 @@
             nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
         (when kattohinnan-oikaisu-mahdollinen?
-          [kattohinnan-oikaisu e! kattohinta paatos-tehty?])
+          [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
         [:hr.paatos-hr]
 
         ;; Päätöksenteko napit

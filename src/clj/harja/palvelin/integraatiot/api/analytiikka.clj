@@ -770,8 +770,7 @@
                       :massat :massa})))
 
 (defn- yhdista-lyhenne-ja-nimi [lyhenne nimi]
-  (cond
-    (and lyhenne nimi (= lyhenne nimi)) nimi
+  (cond    
     (and lyhenne nimi) (str lyhenne ", " nimi)
     nimi nimi
     :else nil))
@@ -1032,6 +1031,7 @@
                                                                  :siirretaan-seuraavalle-hoitovuodelle (cond
                                                                                                          (= "Tavoitehinnan alitus" (:nimi p)) (:siirron_maara p)
                                                                                                          (= "Tavoitehinnan ylitys" (:nimi p)) (:siirto p)
+                                                                                                         (= "Kattohinnan ylitys" (:nimi p)) (:siirrettava_maara p)
                                                                                                          :else nil)
                                                                  :tavoitehinta (if (or
                                                                                      (= "Lupaukset" (:nimi p))

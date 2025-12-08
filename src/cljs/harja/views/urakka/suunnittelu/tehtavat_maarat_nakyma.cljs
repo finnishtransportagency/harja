@@ -54,7 +54,8 @@
           {:disabled (or tallennus-kesken? false)
            :luokka "ikoni-16"
            :vayla-tyyli? false
-           :ikoni (ikonit/action-copy)}]])
+           :ikoni (ikonit/action-copy)
+           :data-cy "btn-kopioi-tuleville-hoitovuosille"}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
@@ -66,7 +67,10 @@
 
      [:div.painikkeet.text-right.grid-status-viestit
       [:span {:style {:margin-left "1rem"}}
-       [napit/muokkaa "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennusTila))]]])])
+       [napit/muokkaa
+       "Muokkaa sopimuksen määriä"
+        #(e! (tiedot/->ToggleTallennusTila))
+        {:data-cy "btn-muokkaa-sopimuksen-maaria"}]]])])
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
