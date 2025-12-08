@@ -173,7 +173,6 @@
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   []
-
   (komp/luo
     (komp/sisaan #(pollaa-kantaa))
     (komp/ulos #(lopeta-pollaus))
@@ -184,7 +183,9 @@
             maksuerarivit @maksuerarivit
             maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
                                                     (not (contains? rivi :teksti)))
-                                                  maksuerarivit)]
+                                            maksuerarivit)
+            urakan-parametrit (:urakan-parametrit(first @maksuerat/maksuerat))
+            maksuera-lahetys-estetty (not (:maksuera_lahetys_sampo urakan-parametrit))]
         [:div.margin-top-32
          [:h1 "Maksuerät"]
          [grid/grid
@@ -221,22 +222,25 @@
                            (not maksuera-odottanut-liian-kauan)
                            (not kustannussuunnitelma-odottanut-liian-kauan))
                      {:disabled true})
+                   (when maksuera-lahetys-estetty
+                     {:disabled true :title "Lähetys estetty"})
                    {:type "button"
                     :on-click #(laheta-maksuerat #{maksueranumero} urakka-id)})
                  "Lähetä"]))
             :leveys "10%"}]
           maksuerarivit]
          [yleiset/vihje (str "Lähetetyt maksuerät luetaan Sampoon klo 12 ja klo 16."
-                             " Jos maksuerät pitää saada Sampoon nopeammin, ne on täytettävä Sampoon käsin.")]
+                          " Jos maksuerät pitää saada Sampoon nopeammin, ne on täytettävä Sampoon käsin.")]
 
          [:button.nappi-ensisijainen
           {:class (if (= (count kuittausta-odottavat)
                          (count maksuerarivit-ilman-otsikkoja))
                     "disabled"
                     "")
-           :disabled (nil? maksuerarivit)
+           :disabled (or (nil? maksuerarivit) maksuera-lahetys-estetty)
+           :title (when maksuera-lahetys-estetty "Lähetys estetty")
            :on-click #(do (.preventDefault %)
-                          (laheta-maksuerat
-                            (into #{} (map :numero maksuerarivit-ilman-otsikkoja))
-                            urakka-id))}
+                        (laheta-maksuerat
+                          (into #{} (map :numero maksuerarivit-ilman-otsikkoja))
+                          urakka-id))}
           "Lähetä kaikki"]]))))

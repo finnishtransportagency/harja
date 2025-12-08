@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
             [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
@@ -112,9 +113,15 @@
 
 (defn laheta-api-maksuera [db api-sampo-asetukset integraatioloki numero summat]
   (if (qm/onko-olemassa? db numero)
-    (try
-      (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
-      (if (lukitse-maksuera db numero)
+    (let [urakka-id (:id (first (qm/hae-maksueran-urakka db numero)))
+          urakan-parametrit (first (urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))]
+      (if-not (:maksuera_lahetys_sampo urakan-parametrit)
+        (do
+          (log/info (format "Maksuerän (numero: %s) lähetys Sampoon ohitettu. Urakan (id: %s) parametreissa maksuera_lahetys_sampo = false." numero urakka-id))
+          false)
+        (try
+          (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
+          (if (lukitse-maksuera db numero)
         (let [viesti-id (str (UUID/randomUUID))
               maksuera (hae-maksueran-tiedot db numero summat)
               _ (tarkista-maksueran-tiedot maksuera)
@@ -139,10 +146,10 @@
             true))
         (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
 
-      (catch Exception e
-        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä API-Sonjaan tapahtui poikkeus: %s." numero e))
-        (merkitse-maksueralle-lahetysvirhe db numero)
-        (throw e)))
+          (catch Exception e
+            (log/warn e (format "Maksuerän (numero: %s) lähetyksessä API-Sonjaan tapahtui poikkeus: %s." numero e))
+            (merkitse-maksueralle-lahetysvirhe db numero)
+            (throw e)))))
 
     (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
       (log/error virheviesti)
