@@ -985,7 +985,7 @@
                                        :voimassa_alkaen #inst"2024-09-30T21:00:00.000-00:00"}
         ;; - Nyt lukitaan yksi hoitovuosista vahvistamalla sen tavoitehinta - Hoitovuosi 2025-2026
         ;; Lisätään urakalle sopiva tavoitehinta valmiiksi vahvistettuna - Poistetaan olemassa oleva, jos sellaisia on
-        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id 2))
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id hoitokausi-nro))
         insert-str (format (str
                              "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
                              "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
@@ -1417,7 +1417,6 @@
                    :muutos muutos-payload})
         liitelinkkien-maara-tallennuksen-jalkeen (ffirst (q (format "SELECT COUNT(*) FROM mhu_muutos_liite WHERE muutos = %s;" muutos-id)))
         kirjatut (:kirjatut-muutokset vastaus)
-        _ (prn "toni" vastaus)
         paivitetty (first (filter #(= (:id %) muutos-id) kirjatut))
         odotetut-liite-linkit (list {:id olemassaoleva-liite-id, :muutos muutos-id} {:id luotu-liite-id, :muutos muutos-id})
         liitteet-poistava-payload (muutospayload-liitteilla muutos-id urakka-id [])
@@ -1560,6 +1559,165 @@
                :muutos muutos-payload}))))))
 
 ;; ----
+
+;; -- Kirjatun muutoksen poistaminen (pysyvä muutos, muutostyö, johto- ja hallintokorvauksen muutos) ----
+
+(defn poista-muutos [kayttaja tiedot]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+    :poista-muutos
+    kayttaja
+    tiedot))
+
+(deftest poista-pysyva-muutos-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
+        ;; Luodaan ensin uusi pysyvä muutos
+        muutos-payload {:tyyppi "pysyva"
+                        :voimassa_alkaen #inst "2025-10-02T10:07:32.000-00:00"
+                        :syy "Testattava pysyvä muutos"
+                        :nimi "Poistettava muutos"
+                        :tehtavat_ja_maarat [{:tehtava 24628, :maaramuutos 50, :hoitokauden_alkuvuosi 2025}]
+                        :kustannusvaikutukset [{:summa 500
+                                                :toimenpideinstanssi 90
+                                                :kustannuslaji "hankintakustannukset"
+                                                :hoitokauden_alkuvuosi 2025}]}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-muutos
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valittu-hoitokausi valittu-hoitokausi
+             :muutos muutos-payload})
+        muutos-id (inc max-id-ennen-tallennusta)
+        ;; Varmistetaan että muutos on olemassa
+        muutos-ennen-poistoa (first (q (format "SELECT * FROM mhu_muutos WHERE id = %s AND poistettu = false;" muutos-id)))
+
+        ;; Poistetaan muutos
+        vastaus-poiston-jalkeen (poista-muutos +kayttaja-jvh+
+                                  {:muutos-id muutos-id
+                                   :urakka-id urakka-id
+                                   :valittu-hoitokausi valittu-hoitokausi
+                                   :hoitokaudet (mapv (fn [vuosi]
+                                                        [(pvm/hoitokauden-alkupvm vuosi)
+                                                         (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                                                  (range 2021 2026))
+                                   :laskenta-automatiikka? true})
+
+        ;; Varmistetaan että muutos on merkitty poistetuksi
+        muutos-poiston-jalkeen (first (q (format "SELECT poistettu FROM mhu_muutos WHERE id = %s;" muutos-id)))
+        historia-poiston-jalkeen (q-map (format "SELECT poistettu, versio FROM mhu_muutos_historia WHERE id = %s" muutos-id))
+        poistettu-muutoksia-vastauksessa (filter #(= muutos-id (:id %))
+                                           (:kirjatut-muutokset vastaus-poiston-jalkeen))]
+
+    (is (not (nil? muutos-ennen-poistoa)) "Muutos on olemassa ennen poistoa")
+    (is (true? (first muutos-poiston-jalkeen)) "Muutos on merkitty poistetuksi tietokannassa")
+    (is (= [{:poistettu false :versio 1}] historia-poiston-jalkeen) "Vanha versio historiataulussa on oikein")
+    (is (empty? poistettu-muutoksia-vastauksessa) "Poistettu muutos ei palaudu haussa")))
+
+(deftest poista-pysyva-muutos-kun-hoitovuosi-lukittu-suomussalmi
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+        lukittava-hoitokausi-nro 3
+        max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
+        ;; Luodaan ensin uusi pysyvä muutos
+        muutos-payload {:tyyppi "pysyva"
+                        :voimassa_alkaen #inst "2025-10-01T10:07:32.000-00:00"
+                        :syy "Testattava pysyvä muutos vahvistetulle hoitovuodelle"
+                        :nimi "Poistolle tarkoitettu muutos vahvistettu"
+                        :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2025}
+                                             {:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2026}]
+                        ;; Hox: Toimenpideinstanssit ovat urakkakohtaisia.
+                        :kustannusvaikutukset [{:toimenpideinstanssi 122, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2025}
+                                               {:toimenpideinstanssi 122, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2026}]}
+
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-muutos
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valittu-hoitokausi valittu-hoitokausi
+             :muutos muutos-payload})
+        muutos-id (inc max-id-ennen-tallennusta)
+
+        ;; Vahvistetaan hoitovuosi 2025-2026 (hoitokausi 2)
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))
+        insert-str (format (str
+                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
+                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
+                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id lukittava-hoitokausi-nro 10 10 10 10)
+        _ (u insert-str)
+        poisto-epaonnistui? (atom false)]
+
+    (try
+      (poista-muutos +kayttaja-jvh+
+        {:muutos-id muutos-id
+         :urakka-id urakka-id
+         :valittu-hoitokausi valittu-hoitokausi
+         :hoitokaudet (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2024 2029))
+         :laskenta-automatiikka? true})
+      (catch Exception e
+        (println "Virhedata:" (ex-data e))
+        (reset! poisto-epaonnistui? true)))
+
+    (is (true? @poisto-epaonnistui?) "Pysyvän muutoksen poisto vahvistetulla hoitovuodella epäonnistuu")
+
+    ;; Siivotaan testidatan muutokset
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))))
+
+(deftest poista-erillisrahoitettu-muutostyo
+  ;; TODO: Testaa että erillisrahoitetun muutostyön voi poistaa
+  ;; TODO: Miten tehdään kulujen kanssa? Toinen käyttäjärooli luo muutoksen ja toinen luo siihen liittyvät kulut.
+  ;;       Tämä täytyy ottaa huomioon poistossa ja käyttöliittymän logiikassa, jotta käyttäjät eivät hämmenny.
+  )
+
+;; TODO:
+#_(deftest poista-johto-ja-hallintokorvaus-muutos
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
+
+        max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
+        ;; Luodaan uusi JJH-muutos
+        muutos-payload {:voimassa_alkaen #inst "2025-10-19T21:00:00.000-00:00"
+                        :syy "Testattava JJH-muutos"
+                        :kulut (list {:pvm #inst "2025-10-14T21:00:00.000-00:00", :tavoitehinnan-muutos -100}
+                                     {:pvm #inst "2026-09-14T21:00:00.000-00:00", :tavoitehinnan-muutos -120})
+                        :tyyppi "johto-ja-hallintokorvaus"}
+
+        luotu-muutos (first (filter #(= "Testattava JJH-muutos" (:syy %))
+                              (:kirjatut-muutokset
+                                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-muutos
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :valittu-hoitokausi valittu-hoitokausi
+                                   :muutos muutos-payload}))))
+        muutos-id (inc max-id-ennen-tallennusta)
+
+        ;; Poistetaan muutos
+        vastaus-poiston-jalkeen (poista-muutos +kayttaja-jvh+
+                                  {:muutos-id muutos-id
+                                   :urakka-id urakka-id
+                                   :valittu-hoitokausi valittu-hoitokausi
+                                   :hoitokaudet (mapv (fn [vuosi]
+                                                        [(pvm/hoitokauden-alkupvm vuosi)
+                                                         (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                                                  (range 2021 2026))
+                                   :laskenta-automatiikka? true})
+
+        muutos-poiston-jalkeen (first (q (format "SELECT poistettu FROM mhu_muutos WHERE id = %s;" muutos-id)))
+        poistettu-muutoksia-vastauksessa (filter #(= muutos-id (:id %))
+                                           (:kirjatut-muutokset vastaus-poiston-jalkeen))]
+
+    (is (true? (first muutos-poiston-jalkeen)) "JJH-muutos on merkitty poistetuksi")
+    (is (empty? poistettu-muutoksia-vastauksessa) "Poistettu JJH-muutos ei palaudu haussa")))
+
+
+;; ----
+
+
 
 
 ;; -- Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset ----
