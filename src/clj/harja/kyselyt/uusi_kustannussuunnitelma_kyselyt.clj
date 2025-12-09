@@ -101,22 +101,24 @@
                                         :pysyvat-muutokset "Ei muutoksia"})))
                    []
                    toimenpiteet)
+
         viimeisin-muokkaus (first (hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
                                     db {:sopimus-id sopimus-id
                                         :vuosi hoitovuoden-alkuvuosi
                                         :urakkaid urakka-id}))
         ;; Yhteenvetorivi
         yhteenveto {:nimi "Yhteensä"
-                    :alkukausi (apply + (map :alkukausi kiinteat))
-                    :alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu kiinteat))
-                    :loppukausi (apply + (map :loppukausi kiinteat))
-                    :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu kiinteat))
-                    :yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
-                    :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
+                    :kaikki-alkukausi (apply + (map :alkukausi kiinteat))
+                    :kaikki-alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu kiinteat))
+                    :kaikki-loppukausi (apply + (map :loppukausi kiinteat))
+                    :kaikki-loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu kiinteat))
+                    :kaikki-yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
+                    :kaikki-yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
                     :pysyvat-muutokset "Ei muutoksia"
                     :jarjestys 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
+
         kiinteat (vec (sort-by :jarjestys (conj kiinteat yhteenveto)))]
     kiinteat))
 
@@ -496,7 +498,7 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hankinnat-yht (:yhteensa (last kilpailutettavat-hankinnat))
+        hankinnat-yht (:kaikki-yhteensa (last kilpailutettavat-hankinnat))
 
         rahavaraukset (hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
         rahavaraukset-yht (apply + (map (fn [rivi] (if (:suunniteltu-summa rivi) (:suunniteltu-summa rivi) 0)) rahavaraukset))
@@ -802,10 +804,13 @@
         ;; Kaikki kustannussuunnitelman summat vaikuttaa tavoitehintaan
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        kilpailutettavat-hankinnat-yht (apply + (map :yhteensa kilpailutettavat-hankinnat))
+
+        kilpailutettavat-hankinnat-yht (apply + (keep :yhteensa kilpailutettavat-hankinnat))
         tarjous-hankinnat (filter (fn [rivi] (= "hankintakustannukset" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-hankinnat-yht (:summa (first tarjous-hankinnat))
 
+        kilpailutettavat-hankinnat-yht (bigdec (or kilpailutettavat-hankinnat-yht 0.0))
+        tarjous-hankinnat-yht (bigdec (or tarjous-hankinnat-yht 0.0))
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat
@@ -821,6 +826,9 @@
         tarjous-erillishankinnat (filter (fn [rivi] (= "erillishankinnat" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-erillishankinnat-yht (:summa (first tarjous-erillishankinnat))
 
+        tarjous-erillishankinnat-yht (bigdec (or tarjous-erillishankinnat-yht 0.0))
+        erillishankinnat-yht (bigdec (or erillishankinnat-yht 0.0))
+
         puuttuvat (cond
                     ;; Tarkistetaan, että hankinnat osio = tarjouksen erillishankinnat
                     (and (>= urakan-alkuvuosi 2025) (boolean (seq erillishankinnat)) (= erillishankinnat-yht tarjous-erillishankinnat-yht))
@@ -835,6 +843,8 @@
         tarjous-hoidonjohtopalkkiot (filter (fn [rivi] (= "hoidonjohtopalkkio" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-hoidonjohtopalkkiot-yht (:summa (first tarjous-hoidonjohtopalkkiot))
 
+        tarjous-hoidonjohtopalkkiot-yht (bigdec (or tarjous-hoidonjohtopalkkiot-yht 0.0))
+        hoidonjohtopalkkiot-yht (bigdec (or hoidonjohtopalkkiot-yht 0.0))
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hoidonjohtopalkkio osio = tarjouksen hoidonjohtopalkkiot
@@ -858,7 +868,6 @@
         tarjous-jjh (filter (fn [rivi] (= "johto-ja-hallintokorvaus" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-jjh-yht (:summa (first tarjous-jjh))
 
-
         ;; Tarkistetaan että jotain on kirjattu jjh osioon
         jjh-summia-olemassa? (cond
                                ;; Ennen 25 urakoilla oma tietomallinsa
@@ -876,6 +885,9 @@
                                (boolean
                                  (some
                                    #(not (zero? (or (:summa %) 0))) johto-ja-hallintokorvaukset)))
+
+        johto-ja-hallintokorvaukset-yht (bigdec (or johto-ja-hallintokorvaukset-yht 0.0))
+        tarjous-jjh-yht (bigdec (or tarjous-jjh-yht 0.0))
 
         puuttuvat (cond
                     ;; 2025 ja myöhemmin alkavilla urakoilla summien tulee täsmätä tarjouksen kanssa

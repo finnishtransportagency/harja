@@ -38,9 +38,9 @@
           taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
           _ (reset! yhteiset/grid-hankinnat-atom taulukon-tiedot)
 
-          yht-alkukausi (:alkukausi (last toimenpiteet))
-          yht-loppukausi (:loppukausi (last toimenpiteet))
-          yht (:yhteensa (last toimenpiteet))
+          yht-alkukausi (:kaikki-alkukausi (last toimenpiteet))
+          yht-loppukausi (:kaikki-loppukausi (last toimenpiteet))
+          yht (:kaikki-yhteensa (last toimenpiteet))
 
           viimeisin-muokkaus (:viimeisin-muokkaus (last toimenpiteet))
           viimeisin-muokkaaja (:viimeisin-muokkaaja (last toimenpiteet))
@@ -64,8 +64,8 @@
                             kirjaamatta-rivi]
 
           kilpailutettavat-hankinnat (:toimenpiteet kilpailutettavat-hankinnat)
-          kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
-          kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
+          kilpailutettavat-hankinnat-yhteensa (:kaikki-yhteensa (last kilpailutettavat-hankinnat))
+          kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:kaikki-yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
       [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
        [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Kilpailutettavat hankinnat" tarjouksen-maara pysyvat-muutokset-maara
@@ -550,7 +550,7 @@
         [:div.col-xs-12
          [yleiset/info-laatikko :varoitus vahvistus-virhe nil nil {:sulje-nappi-id (gensym)}]]])]))
 
-(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa?	 valittu-hoitokausi] :as app}]
+(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         urakan-kesto-vuosina (- urakan-loppuvuosi urakan-alkuvuosi)
