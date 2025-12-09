@@ -27,7 +27,7 @@
         kommentoitu (filter
                       #(> (:kommenttien-maara %) 0)
                       (:tiedot tiedot))]
-    
+
     {:kaikki (str "Kaikki (" (count (:tiedot tiedot)) ")")
      :myohastyneet (str "Myöhästyneet (" (count myohassa) ")")
      :puuttuvat (str "Puuttuvat (" (count puuttuu) ")")
@@ -57,7 +57,7 @@
 
     [:div.tyomaapaivakirja
      [:div.paivakirja-listaus
-      [:h1.header-yhteiset "Työmaapäiväkirja"] 
+      [:h1 "Työmaapäiväkirja"]
 
       [:div.row.filtterit
        [valinnat/aikavali
@@ -144,10 +144,10 @@
   [e! {:keys [muutoshistoria historiarivi-auki]}]
   ;; Tehty custom modali koska Harjan nayta-modal herjasi React atom virheitä ilman kummempia tietoja enkä saanut korjattua
   ;; Ei sopinut luultavasti tuck staten kanssa yhteen
-  [:div.muutoshistoria-modal {:on-click(fn [e]
-                                         ;; Jos klikattiin elementin ulkopuolelle, suljetaan modali
-                                         (when (= (-> e .-target .-classList str) "muutoshistoria-modal")
-                                           (e! (tiedot/->MuutoshistoriaAuki nil))))}
+  [:div.muutoshistoria-modal {:on-click (fn [e]
+                                          ;; Jos klikattiin elementin ulkopuolelle, suljetaan modali
+                                          (when (= (-> e .-target .-classList str) "muutoshistoria-modal")
+                                            (e! (tiedot/->MuutoshistoriaAuki nil))))}
    [:div#muutoshistoria-dialog
     [:span.klikattava.sulje {:on-click #(e! (tiedot/->MuutoshistoriaAuki nil))}
      [ikonit/harja-icon-navigation-close]]
@@ -164,8 +164,8 @@
              infot (str/join ", " (distinct (map :info versiomuutokset)))
              muokattu (reduce (fn [x y]
                                 (if (>
-                                     (get-in y [:uudet :versio])
-                                     (get-in x [:uudet :versio]))
+                                      (get-in y [:uudet :versio])
+                                      (get-in x [:uudet :versio]))
                                   y x))
                         (first versiomuutokset)
                         versiomuutokset)
@@ -200,9 +200,9 @@
                                     :else "Ei tietoja"))
              fn-arvo-tai-tyhja (fn [kentta avain arvo]
                                  (or (get-in kentta [avain arvo]) "(tyhjä)"))
-             fn-rivita-pilkun-jalkeen  (fn [teksti]
-                                         (let [osat (str/split teksti #", ½n")]
-                                           (for* [osa osat] [:div osa])))
+             fn-rivita-pilkun-jalkeen (fn [teksti]
+                                        (let [osat (str/split teksti #", ½n")]
+                                          (for* [osa osat] [:div osa])))
              fn-hae-arvo (fn [kentta uusi?]
                            ;; Tehdään kenttiin arvot ja selitykset 
                            (let [avain (if uusi? :uudet :vanhat)]
@@ -252,9 +252,9 @@
                                  :else "Ei tietoja"))))]
          [:div.muutoshistoria-grid
           [:span.muutos-tiedot.klikattava {:on-click #(e! (tiedot/->ValitseHistoriarivi indeksi))}
-           [:span  (if kentta-auki?
-                     [:img.muutos-dialog-icon {:alt "Expander" :src "images/expander-down.svg"}]
-                     [:img.navigation-ympyrassa.muutos-dialog-icon.klikattava {:alt "Expander" :src "images/expander.svg"}])]
+           [:span (if kentta-auki?
+                    [:img.muutos-dialog-icon {:alt "Expander" :src "images/expander-down.svg"}]
+                    [:img.navigation-ympyrassa.muutos-dialog-icon.klikattava {:alt "Expander" :src "images/expander.svg"}])]
            [:span.muutos-pvm muokattu]
            [:span.muutos-toiminto toiminto]]
 
@@ -293,8 +293,8 @@
      (when historiatiedot-auki
        (nayta-muutoshistoria e! app))
 
-     [:h3.header-yhteiset (:urakka-nimi valittu-rivi)]
-     [:h1.header-yhteiset (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
+     [:h3 (:urakka-nimi valittu-rivi)]
+     [:h1 (str "Työmaapäiväkirja " (pvm/pvm (:paivamaara valittu-rivi)))]
 
      [:div.nakyma-otsikko-tiedot
       [:span (str "Saapunut " (pvm/pvm-aika-klo (:luotu valittu-rivi)))]
@@ -363,8 +363,8 @@
                infot (str/join ", " (distinct (map :info versiomuutokset)))
                muokattu (reduce (fn [x y]
                                   (if (>
-                                       (get-in y [:uudet :versio])
-                                       (get-in x [:uudet :versio]))
+                                        (get-in y [:uudet :versio])
+                                        (get-in x [:uudet :versio]))
                                     y x))
                           (first versiomuutokset)
                           versiomuutokset)
@@ -404,7 +404,7 @@
                 sukunimi :sukunimi
                 luoja :luoja
                 urakoitsijan-merkinta? :urakoitsijan_merkinta} (first versiomuutokset)]
-           
+
            ;; Käsittele urakoitsijan merkinnät
            [:span
             (if urakoitsijan-merkinta?
@@ -498,7 +498,7 @@
 
      ;; Sticky bar (Edellinen - Seuraava) Tallenna PDF
      (paivakirjan-sticky e!)
-     
+
      ;; Siirrä käyttäjä kommentteihin, jos poistettiin/lisättiin uusi kommentti
      (when siirry-kommentteihin-latauksesta
        (e! (tiedot/->SiirryKommentteihin)))]
@@ -527,7 +527,7 @@
       [:div
        (if valittu-rivi
          ;; Jos valittu rivi, näytä päiväkirjanäkymä (tehty raporttien puolelle)
-         (do 
+         (do
            (e! (tiedot/->HaeMuutoshistoria))
            (e! (tiedot/->HaeKommentit))
            [suorita-tyomaapaivakirja-raportti e! app])
