@@ -6,7 +6,6 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
             [harja.ui.komponentti :as komp]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
@@ -580,8 +579,7 @@
      [jjh/johto-ja-hallintokorvaus e! app]
      [hoidonjohtopalkkiot e! app]
      [pysyvat-muutokset e! app]
-     [tavoite-ja-kattohinta e! app]
-     [debug/debug app]]))
+     [tavoite-ja-kattohinta e! app]]))
 
 (defn nakyma* [e! _app]
   (let [{:keys [sisaan ulos]}

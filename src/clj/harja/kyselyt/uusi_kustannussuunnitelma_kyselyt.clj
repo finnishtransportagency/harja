@@ -865,8 +865,8 @@
                                           (round2 2 (apply + (map :yhteensa-kk (mapcat :kuukaudet johto-ja-hallintokorvaukset))))
                                           (apply + (map :summa johto-ja-hallintokorvaukset)))
 
-        tarjous-jjh (filter (fn [rivi] (= "johto-ja-hallintokorvaus" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
-        tarjous-jjh-yht (:summa (first tarjous-jjh))
+        tarjous-jjh (filter (fn [rivi] (= "johto-ja-hallintokorvaus" (:osio rivi))) (:toimenkuvat hoitovuoden-tarjous))
+        tarjous-jjh-yht (apply + (map :summa tarjous-jjh))
 
         ;; Tarkistetaan että jotain on kirjattu jjh osioon
         jjh-summia-olemassa? (cond
@@ -888,6 +888,8 @@
 
         johto-ja-hallintokorvaukset-yht (bigdec (or johto-ja-hallintokorvaukset-yht 0.0))
         tarjous-jjh-yht (bigdec (or tarjous-jjh-yht 0.0))
+
+        _ (println "JJH tarkistus:" johto-ja-hallintokorvaukset-yht tarjous-jjh-yht jjh-summia-olemassa?)
 
         puuttuvat (cond
                     ;; 2025 ja myöhemmin alkavilla urakoilla summien tulee täsmätä tarjouksen kanssa

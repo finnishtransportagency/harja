@@ -116,7 +116,7 @@
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
-        #_ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
+        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -126,7 +126,7 @@
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
-        #_ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
+        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -145,7 +145,7 @@
                   :johto-ja-hallintokorvaukset-2025)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi)
-        #_ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
+        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -155,7 +155,7 @@
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
-        #_ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
+        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
