@@ -147,6 +147,7 @@ WHERE k.urakka = :urakka
 -- name: hae-urakan-kulut-kohdistuksineen
 -- Hakee urakan kulut ja niihin liittyvät kohdistukset annetulta aikaväliltä
 SELECT m.numero                AS "maksuera-numero",
+       m.maksuera_alias        AS "maksuera-alias",
  	     k.id                    AS "id",
        k.kokonaissumma         AS "kokonaissumma",
        k.erapaiva              AS "erapaiva",
@@ -358,7 +359,7 @@ SELECT k.id                        AS "kulu-id",
            JOIN toimenpide tp ON tpi.toimenpide = tp.id
            LEFT JOIN tehtavaryhma tr ON kk.tehtavaryhma = tr.id
            LEFT JOIN rahavaraus rv ON kk.rahavaraus_id = rv.id
-           LEFT JOIN tehtava te ON tr.id = te.id
+           LEFT JOIN tehtava te ON te.id = kk.tehtava
  WHERE u.id = :urakka-id
  GROUP BY k.id, k.laskun_numero, k.lisatieto, k.poistettu, k.koontilaskun_kuukausi, k.erapaiva, k.kokonaissumma
  ORDER BY k.erapaiva;

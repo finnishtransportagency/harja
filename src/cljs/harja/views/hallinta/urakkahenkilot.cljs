@@ -56,7 +56,7 @@
                                                :paattyneet? paattyneet?})}]
         [:button {:type "submit"
                   :class #{"nappi-toissijainen nappi-reunaton"}}
-         [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]]]
+         [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]]]
      [:div.livi-grid
       [:table
        [:thead

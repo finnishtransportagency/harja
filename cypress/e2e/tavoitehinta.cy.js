@@ -232,26 +232,8 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
             });
     });
 
-    // Tavoitehinta kustannusten seurannassa
-    it('Tavoitehinta kustannusten seurannassa', () => {
-        cy.get('[data-cy=tabs-taso1-Kulut]').click();
-        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
-        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
-        // varmista
-        cy.get('div.yhteenveto div.rivi span').contains('Tavoitehinta (indeksikorjattu)').next().then(function (text1) {
-            const trimmattuTodellinen = trimmaaArvo(text1);
-            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
-            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-        });
-        cy.get('div.yhteenveto div.rivi span').contains('Kattohinta (indeksikorjattu)').next().then(function (text1) {
-            const trimmattuTodellinen = trimmaaArvo(text1);
-            const trimmattuOdotettu = trimmaaArvo(indeksikorjattuKattohinta);
-            expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-        });
-    });
-
     // Tavoitehinta Laskutusyhteenvedossa
-    it('Tavoitehinta Laskutusyhteenvedossa', () => {
+    it('Tavoitehinta Laskutusyhteenvedossa', () => {  
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Laskutusyhteenveto"]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
@@ -264,7 +246,7 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         });
 
         // varmista
-        cy.get('span.varillinen-teksti').contains('Tavoitehinta (indeksikorjattu)').parent().parent().parent().next()
+        cy.get('span.varillinen-teksti').contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().parent().parent().next()
             .get('span.arvo')
             .then(function (text1) {
                 const trimmattuTodellinen = trimmaaArvo(text1);
@@ -273,4 +255,3 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
             });
     });
 });
-

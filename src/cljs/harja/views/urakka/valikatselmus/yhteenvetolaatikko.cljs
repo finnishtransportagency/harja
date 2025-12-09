@@ -22,6 +22,7 @@
         erillishankinnat (or (get-in yhteenvedon-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
         johto-ja-hallintokorvaus (or (get-in yhteenvedon-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
         hoidonjohtopalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)
+        muut-kulut (or (get-in yhteenvedon-tiedot [:kustannukset :muukulu-tavoitehintainen-toteutunut]) 0)
         toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
 
         ;; Urakoitsijan saatavat
@@ -104,6 +105,10 @@
      [:div.flex-row.summa-rivi
       [:span "Hoidonjohtopalkkio"]
       [:span (fmt/euro-opt false hoidonjohtopalkkio)]]
+     (when (> muut-kulut 0)
+       [:div.flex-row.summa-rivi
+        [:span "Muut kulut"]
+        [:span (fmt/euro-opt false muut-kulut)]])
      [:hr]
      [:div.flex-row.summa-rivi-ylin
       [:span.laskenta-rivi-lukema "Toteutuma yhteensä"]

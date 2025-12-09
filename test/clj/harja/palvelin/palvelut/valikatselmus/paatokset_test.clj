@@ -1,10 +1,13 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatokset-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
+            [harja.palvelin.palvelut.kulut.kulu-apurit :as kuluapurit]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -27,7 +30,10 @@
           :http-palvelin (testi-http-palvelin)
           :valikatselmus (component/using
                            (valikatselmukset/->Valikatselmukset)
-                           [:http-palvelin :db :db-replica])))))
+                           [:http-palvelin :db :db-replica])
+          :kulut (component/using
+                   (kulut/->Kulut)
+                   [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -817,7 +823,7 @@
     (is (nil? poistettu-paatos))))
 
 ;; Kattohinnan ylitys lisäys
-(deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
+(deftest kysely-kattohinnan-ylitys-lisays-2024-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -839,7 +845,7 @@
     (testaa-kattohinnan-ylityspaatos vastaus urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
       ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)))
 
-(deftest kysely-kattohinnan-ylitys-lisays-onnistuu-test
+(deftest kysely-kattohinnan-ylitys-lisays-2025-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -864,7 +870,7 @@
     ;; -25 alkavalla urakalla siirtorajoitusprosentti pitää olla kolme
     (is (= 0.03M (:siirtorajoitus_prosentti vastaus)))))
 
-(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
+(deftest rajapinta-kattohinnan-ylitys-lisays-epaonnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -886,10 +892,63 @@
                                 valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
                                                                                 kattohinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e
+                    (is (not (nil? e)))))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :kattohinnan-ylitys)]
     ;; Koska ehdot eivät täyty, niin kattohinnan ylityspäätöksen default päätöstä ei voida palauttaa
     (is (nil? tallennettu-paatos))))
+
+(deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        kattohinta 50M
+        toteutuneet-kustannukset 55M
+        ylityksen-maara (- toteutuneet-kustannukset kattohinta)
+        urakoitsija-maksaa ylityksen-maara
+        siirrettava-maara 0M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+
+        ;; Luodaan kulu, jolla ylitetään kattohinta
+        uusi-kulu (kuluapurit/uusi-kulu urakkaid toteutuneet-kustannukset hoitokauden-alkuvuosi urakan-alkupvm)
+
+        kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakkaid
+                        :kulu-kohdistuksineen uusi-kulu})
+
+        kulu-id (:id kulu-vastaus)
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+
+        vastaus (try
+                  (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit]
+                                                                                  [{:hoitovuoden-lopun-kattohinta kattohinta
+                                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}])
+                                budjettisuunnittelu-kyselyt/onko-kustannussuunnitelma-vahvistettu (fn [db hakuparametrit]
+                                                                                                    [{:exists true}])]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e
+                    (println "ERROR: " e)
+                    (is (nil? e))))
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :kattohinnan-ylitys)
+        ;; Hae päätöksen tiedot tietokannasta, jotta nekin voidaan tarkistaa
+        paatos-tiedot (first (q-map (format "SELECT * FROM paatos_kattohinta WHERE urakkaid = %s AND hoitokauden_alkuvuosi = %s" urakkaid hoitokauden-alkuvuosi)))]
+
+    (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinta täsmää tallennuksen jälkeen")
+    (is (= kattohinta (:kattohinta paatos-tiedot)) "Kattohinta täsmää tallennuksen jälkeen")
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset tallennettu-paatos)) "Toteutuneet kustannukset täsmää tallennuksen jälkeen")
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos-tiedot)) "Toteutuneet kustannukset täsmää tallennuksen jälkeen")
+    (is (= siirrettava-maara (:siirrettava_maara tallennettu-paatos)) "Siirrettävä määrä täsmää tallennuksen jälkeen")
+    (is (= siirrettava-maara (:siirrettava_maara paatos-tiedot)) "Siirrettävä määrä täsmää tallennuksen jälkeen")
+    (is (= ylityksen-maara (:ylityksen_maara tallennettu-paatos)) "Siirrettävä määrä täsmää tallennuksen jälkeen")
+    (is (= ylityksen-maara (:ylityksen_maara paatos-tiedot)) "Siirrettävä määrä täsmää tallennuksen jälkeen")))
 
 (deftest rajapinta-kattohinnan-ylitys-epaonnistuu-viimeisena-vuotena-test
   (let [;; Hae vaativa mhu urakka
