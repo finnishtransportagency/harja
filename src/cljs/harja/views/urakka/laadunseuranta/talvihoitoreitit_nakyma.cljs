@@ -20,7 +20,7 @@
 (defn- talvihoitoreitti-rivi [{:keys [talvihoitoreittien-tilat] :as app} e!
                               {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
                                       tr_maara ka_maara kup_maara]}]
-  
+
   (let [valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
@@ -29,11 +29,11 @@
                             (:hoitoluokka %))
                      (get hoitoluokat :huoltoaukot))
         talvihoito-osin (some #(when (= "Talvihoito osin" (:hoitoluokka %))
-                            (:hoitoluokka %))
-                     (get hoitoluokat :huoltoaukot))
+                                 (:hoitoluokka %))
+                          (get hoitoluokat :huoltoaukot))
         ei-talvihoitoa (some #(when (= "Ei talvihoitoa" (:hoitoluokka %))
-                            (:hoitoluokka %))
-                     (get hoitoluokat :huoltoaukot))]
+                                (:hoitoluokka %))
+                         (get hoitoluokat :huoltoaukot))]
     [:<>
      [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when reitteja-olemassa? " klikattava"))
                                                ;  :style {:margin-top "0"}
@@ -105,7 +105,7 @@
        [:div (napit/yleinen "Keskitä"
                :toissijainen
                #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
-               {:ikoni    (ikonit/zoom-in)
+               {:ikoni (ikonit/zoom-in)
                 :luokka "btn-xs talvihoitoreitti-poisto"})]
        [:div (napit/yleinen "Poista"
                :toissijainen
@@ -114,18 +114,18 @@
                    :sisalto [:div "Oletko varma, että haluat poistaa talvihoitoreitin?"]
                    :hyvaksy "Poista"
                    :toiminto-fn (fn [] (e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id)))})
-               {:ikoni    (ikonit/livicon-trash)
+               {:ikoni (ikonit/livicon-trash)
                 :luokka "btn-xs talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
              (get talvihoitoreittien-tilat id)
              reitteja-olemassa?)
-       
+
        ;; Sisältö
        [:div.talvihoitoreitti-sisalto
         [:h2 "Reitti"]
-        
+
         [grid/grid
          {:salli-valiotsikoiden-piilotus? true
           :valiotsikoiden-alkutila :kaikki-kiinni
@@ -153,6 +153,7 @@
 
 (defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit] :as app}]
   [:<>
+   [:h1 "Talvihoitoreititys"]
    [kartta/kartan-paikka]
 
    (if (:haku-kaynnissa? app)
@@ -160,7 +161,6 @@
 
      [:div.talvihoitoreititys
       [:div.flex-row {:style {:justify-content "space-between"}}
-       [:h2 "Talvihoitoreititys"]
        [:div {:style {:display "flex"}}
         ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
         (when-not (empty? talvihoitoreitit)
@@ -187,23 +187,24 @@
         [:div "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa."]
 
         (doall
-          [grid/grid {:tunniste :id
-                      :sivuta 10
-                      :voi-kumota? false
-                      :piilota-otsikot? true
-                      :piilota-border? true
-                      :piilota-muokkaus? true
-                      :piilota-toiminnot? true
-                      :mahdollista-rivin-valinta? false}
+          [:div.margin-top-16
+           [grid/grid {:tunniste :id
+                       :sivuta 10
+                       :voi-kumota? false
+                       :piilota-otsikot? true
+                       :piilota-border? true
+                       :piilota-muokkaus? true
+                       :piilota-toiminnot? true
+                       :mahdollista-rivin-valinta? false}
 
-           [{:tyyppi :komponentti
-             :solun-luokka #(str "talvihoitoreitti-rivi")
-             :tunniste :id
-             :komponentti (fn [reitti]
-                            ;; Väkänen / rivi
-                            (talvihoitoreitti-rivi app e! reitti))
-             :leveys 1}]
-           talvihoitoreitit]))])])
+            [{:tyyppi :komponentti
+              :solun-luokka #(str "talvihoitoreitti-rivi")
+              :tunniste :id
+              :komponentti (fn [reitti]
+                             ;; Väkänen / rivi
+                             (talvihoitoreitti-rivi app e! reitti))
+              :leveys 1}]
+            talvihoitoreitit]]))])])
 
 (defn talvihoitoreitit* [e! app]
   (komp/luo
