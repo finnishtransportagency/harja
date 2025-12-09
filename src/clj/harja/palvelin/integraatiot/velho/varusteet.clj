@@ -317,24 +317,32 @@
   ["yleiset/valisijainti"
    "alkusijainti"])
 
-(defn- tee-toimenpide-lisatty-parametri [toimenpiteella-suodatetut-oidit]
+(defn- lisaa-oid-haku-jos-tarvitaan
+  "Lisää OID-perusteisen haun 'tai'-lausekkeeseen jos oidit-lista ei ole tyhjä.
+   Jos oidit on tyhjä, palauttaa vain varsinaisen haun."
+  [varsinainen-haku oidit]
+  (if (seq oidit)
     ["tai"
-     ["ja"
-      ["ei" ["kohdeluokka"
-             "yleiset/valisijainti"
-             ["olemassa"
-              valimainen-sijainti-polku]]]
-      ["ei" ["kohdeluokka"
-             "toimenpiteet/varustetoimenpiteet"
-             ["olemassa"
-              varustetoimenpiteet-polku]]]
-      ["tai"
-       ["ei" loppuaika-olemassa]
-       (tee-loppuaika-parametri "pvm-suurempi-kuin")]]
+     varsinainen-haku
      ["joukossa"
       ["yleiset/perustiedot"
        "oid"]
-      toimenpiteella-suodatetut-oidit]])
+      oidit]]
+    varsinainen-haku))
+
+(defn- tee-toimenpide-lisatty-parametri [toimenpiteella-suodatetut-oidit]
+  (lisaa-oid-haku-jos-tarvitaan
+    ["ja"
+     ["ei" ["kohdeluokka"
+            "yleiset/valisijainti"
+            ["olemassa" valimainen-sijainti-polku]]]
+     ["ei" ["kohdeluokka"
+            "toimenpiteet/varustetoimenpiteet"
+            ["olemassa" varustetoimenpiteet-polku]]]
+     ["tai"
+      ["ei" loppuaika-olemassa]
+      (tee-loppuaika-parametri "pvm-suurempi-kuin")]]
+    toimenpiteella-suodatetut-oidit))
 
 (defn- tee-valimainen-toimenpide-lisatty-parametri []
   ["ja"
@@ -347,29 +355,21 @@
     (tee-loppuaika-parametri "pvm-suurempi-kuin")]])
 
 (defn- tee-kohteen-poisto-parametri [toimenpiteella-suodatetut-oidit]
-  ["tai"
-   ["ja" loppuaika-olemassa
-    (tee-loppuaika-parametri "pvm-pienempi-kuin")]
-   ["joukossa"
-    ["yleiset/perustiedot"
-     "oid"]
-    toimenpiteella-suodatetut-oidit]])
+  (lisaa-oid-haku-jos-tarvitaan
+    ["ja" loppuaika-olemassa
+     (tee-loppuaika-parametri "pvm-pienempi-kuin")]
+    toimenpiteella-suodatetut-oidit))
 
 (defn- tee-muut-varustetoimenpiteet-parametri [db toimenpiteella-suodatetut-oidit]
   (let [nimikkeet (map #(str (:nimiavaruus %) "/" (:nimi %)) (q-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet db))]
-    ["tai"
-     ["ja"
-      ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
-       ["joukossa"
-        varustetoimenpiteet-polku
-        nimikkeet]]
-      ["tai"
-       ["ei" loppuaika-olemassa]
-       (tee-loppuaika-parametri "pvm-suurempi-kuin")]]
-     ["joukossa"
-      ["yleiset/perustiedot"
-       "oid"]
-      toimenpiteella-suodatetut-oidit]]))
+    (lisaa-oid-haku-jos-tarvitaan
+      ["ja"
+       ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+        ["joukossa" varustetoimenpiteet-polku nimikkeet]]
+       ["tai"
+        ["ei" loppuaika-olemassa]
+        (tee-loppuaika-parametri "pvm-suurempi-kuin")]]
+      toimenpiteella-suodatetut-oidit)))
 
 (defn- tee-muut-valimaiset-varustetoimenpiteet-parametri [db]
   (let [nimikkeet (map #(str (:nimiavaruus %) "/" (:nimi %)) (q-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet db))]
@@ -385,15 +385,12 @@
 (defn- tee-varustetoimenpide-parametri [db otsikko toimenpiteella-suodatetut-oidit]
   (let [varustetoimenpidenimike (q-nimikkeistot/hae-nimike-otsikolla db {:otsikko otsikko})]
     (when varustetoimenpidenimike
-      ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
-       ["tai"
-        ["joukossa"
-         varustetoimenpiteet-polku
-         [(str "varustetoimenpide/" varustetoimenpidenimike)]]
-        ["joukossa"
-         ["yleiset/perustiedot"
-          "oid"]
-         toimenpiteella-suodatetut-oidit]]])))
+      (lisaa-oid-haku-jos-tarvitaan
+        ["kohdeluokka" "toimenpiteet/varustetoimenpiteet"
+         ["joukossa"
+          varustetoimenpiteet-polku
+          [(str "varustetoimenpide/" varustetoimenpidenimike)]]]
+        toimenpiteella-suodatetut-oidit))))
 
 (defn- tee-valimainen-varustetoimenpide-parametri [db otsikko]
   (let [varustetoimenpidenimike (q-nimikkeistot/hae-nimike-otsikolla db {:otsikko otsikko})]
@@ -461,6 +458,16 @@
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
 
+(defn test-hae-kaikki-valimaiset-varuste-toimenpiteet [http-asetukset konteksti]
+  (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                             :liitoshaku false
+                             :palautettavat-kentat [["toimenpiteet/valimaiset-varustetoimenpiteet"
+                                                     "ominaisuudet"
+                                                     "toimenpiteen-kohde"]]}
+                 :kohdeluokat ["toimenpiteet/valimaiset-varustetoimenpiteet"]}
+        {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+        vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
+    vastaus))
 
 
 (defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
@@ -555,11 +562,11 @@
                                      ["pvm-pienempi-kuin"
                                       ["yleiset/versioitu" "version-voimassaolo" "alku"]
                                       (second aikavali)]]
-                
-                valimaiset-oidit  (hae-urakan-valimaisten-varusteiden-oidit 
-                                    http-asetukset 
-                                    konteksti 
-                                    urakka-velho-oid 
+
+                valimaiset-oidit  (hae-urakan-valimaisten-varusteiden-oidit
+                                    http-asetukset
+                                    konteksti
+                                    urakka-velho-oid
                                     alkuaika-parametri
                                     loppuaika-parametri)
                 oidit (mapv :oid valimaiset-oidit)
@@ -811,37 +818,106 @@
                                oidit])}
           {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
           vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
-      vastaus))
+      vastaus))) 
+  
+  ;; Tarvitsetko urakoita joista löytyy välimäisiä varusteita testaukseen - Hyödynnä näitä apu funktioita suoraan replissä
+  (comment 
+    (defn test-hae-urakan-nimi-oideilla [oidit http-asetukset konteksti]
+      (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                                 :liitoshaku false
+                                 :palautettavat-kentat [["yleiset/perustiedot" "oid"]
+                                                        ["urakka/urakka" "ominaisuudet" "nimi"]]}
+                     :kohdeluokat ["urakka/maanteiden-hoitourakka"]
+                     :lauseke (keep identity
+                                ["joukossa"
+                                 ["yleiset/perustiedot"
+                                  "oid"]
+                                 oidit])}
+            {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+            vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
+        vastaus))
+    (defn test-hae-varusteet-oideille [oidit http-asetukset konteksti]
+      (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                                 :liitoshaku false
+                                 :palautettavat-kentat [["yleiset/perustiedot" "muutoksen-lahde-oid"]]}
+                     :kohdeluokat ["varusteet/aidat"
+                                   "varusteet/kaiteet"
+                                   "varusteet/reunapaalut"
+                                   "varusteet/reunatuet"]
+                     :lauseke (keep identity
+                                ["joukossa"
+                                 ["yleiset/perustiedot"
+                                  "oid"]
+                                 oidit])}
+            {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+            vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
+        vastaus))
+    
+    (defn hae-urakat-valimaisilla-toimenpiteilla
+      "Hakee urakat joissa on välimäisiä varustetoimenpiteitä.
+             1. Hakee kaikki välimäiset toimenpiteet
+             2. Poimii varuste-OID:t
+             3. Hakee varusteet OID:eilla ja saa niiden muutoksen-lahde-oid:n (urakka-OID)
+             4. Hakee urakkojen nimet
+             
+             Palauttaa listan urakkoja: [{:oid '...' :nimi '...'}]"
+      [http-asetukset konteksti]
+      (let [;; 1. Hae kaikki välimäiset toimenpiteet
+            toimenpiteet (test-hae-kaikki-valimaiset-varuste-toimenpiteet http-asetukset konteksti)
+            _ (log/info "DEBUG: Haettiin" (count toimenpiteet) "toimenpidettä")
+            _ (when (seq toimenpiteet)
+                (log/info "DEBUG: Ensimmäinen toimenpide:" (clojure.pprint/pprint (first toimenpiteet))))
+    
+            ;; 2. Poimii varuste-OID:t
+            varuste-oidit (distinct (keep #(get-in % [:ominaisuudet :toimenpiteen-kohde]) toimenpiteet))
+            _ (log/info "DEBUG: Löydettiin" (count varuste-oidit) "varustetta välimäisillä toimenpiteillä")
+            _ (when (seq varuste-oidit)
+                (log/info "DEBUG: Ensimmäinen varuste-OID:" (first varuste-oidit)))
+    
+            ;; 3. Hae varusteet ja niiden muutoksen-lahde-oid (urakka-OID)
+            varusteet (when (seq varuste-oidit)
+                        (test-hae-varusteet-oideille varuste-oidit http-asetukset konteksti))
+            _ (log/info "DEBUG: Haettiin" (count varusteet) "varustetta")
+            _ (when (seq varusteet)
+                (log/info "DEBUG: Ensimmäinen varuste:" (pr-str (first varusteet))))
+    
+            ;; Suodatetaan vain maanteiden hoitourakan OID:t (alkavat 1.2.246.578.8.1.) - voi olla inventoiteja tai projekteja
+            urakka-oidit (distinct (keep (fn [varuste]
+                                           (let [oid (:muutoksen-lahde-oid varuste)]
+                                             (when (and oid (str/starts-with? oid "1.2.246.578.8.1."))
+                                               oid)))
+                                         varusteet))
+            _ (log/info "DEBUG: Löydettiin" (count urakka-oidit) "maanteiden hoitourakan OID:a") 
 
+            _ (when (seq urakka-oidit)
+                (log/info "DEBUG: Ensimmäinen urakka-OID:" (first urakka-oidit)))
+            _ (log/info "DEBUG: oidit urakoille" urakka-oidit "urakkaa")] 
+        urakka-oidit))
+    
+    (defn hae-urakat-valimaisilla-toimenpiteilla-wrapper []
+      (let [varusteet-integraatio (:velho-integraatio harja.palvelin.main/harja-jarjestelma)]
+        (integraatiotapahtuma/suorita-integraatio 
+          (:db varusteet-integraatio)
+          (:integraatioloki varusteet-integraatio)
+          "velho"
+          "urakoiden-haku"  ;; Käytetään olemassa olevaa nimeä!
+          nil  ;; ulkoinen-id (voi olla nil)
+          (fn [konteksti]  ;; tyonkulku-fn - saa kontekstin parametrina
+            (let [asetukset (:asetukset varusteet-integraatio)
+                  token (velho-yhteiset/hae-velho-token 
+                          (:token-url asetukset)
+                          (:varuste-kayttajatunnus asetukset)
+                          (:varuste-salasana asetukset)
+                          konteksti
+                          (fn [x] (log/error "Token-virhe" x)))
+                  http-asetukset {:metodi :POST
+                                  :otsikot (velho-yhteiset/velho-otsikot token)
+                                  :url (str (:varuste-api-juuri-url asetukset)
+                                            velho-yhteiset/hakupalvelu-url)}]
+              (hae-urakat-valimaisilla-toimenpiteilla http-asetukset konteksti))))))
+    
+    ;; Käytä hakua tästä - evaluoi kaikki muut funktiot ensin
+    (def urakat (hae-urakat-valimaisilla-toimenpiteilla-wrapper))
+    (clojure.pprint/pprint urakat))
+  
 
-  (defn test-hae-varusteet-oideille [oidit http-asetukset konteksti]
-    (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
-                               :liitoshaku false
-                               :palautettavat-kentat [["yleiset/perustiedot" "muutoksen-lahde-oid"]]}
-                   :kohdeluokat ["varusteet/aidat"
-                                 "varusteet/kaiteet"
-                                 "varusteet/reunapaalut"
-                                 "varusteet/reunatuet"]
-                   :lauseke (keep identity
-                              ["joukossa"
-                               ["yleiset/perustiedot"
-                                "oid"]
-                               oidit])}
-          {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
-          vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
-      vastaus))
-
-  (defn test-hae-urakan-nimi-oideilla [oidit http-asetukset konteksti]
-    (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
-                               :liitoshaku false
-                               :palautettavat-kentat [["yleiset/perustiedot" "oid"]
-                                                      ["urakka/urakka" "ominaisuudet" "nimi"]]}
-                   :kohdeluokat ["urakka/maanteiden-hoitourakka"]
-                   :lauseke (keep identity
-                              ["joukossa"
-                               ["yleiset/perustiedot"
-                                "oid"]
-                               oidit])}
-          {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
-          vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
-      vastaus)))
