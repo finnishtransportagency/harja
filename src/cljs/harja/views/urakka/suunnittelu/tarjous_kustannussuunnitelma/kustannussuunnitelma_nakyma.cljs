@@ -40,11 +40,13 @@
           yht-alkukausi (:kaikki-alkukausi (last toimenpiteet))
           yht-loppukausi (:kaikki-loppukausi (last toimenpiteet))
           yht (:kaikki-yhteensa (last toimenpiteet))
+          yht-pysyvat (:kaikki-pysyvat-muutokset (last toimenpiteet))
 
           viimeisin-muokkaus (:viimeisin-muokkaus (last toimenpiteet))
           viimeisin-muokkaaja (:viimeisin-muokkaaja (last toimenpiteet))
 
           kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
+          kirjaamatta (+ kirjaamatta (when (number? yht-pysyvat) yht-pysyvat))
           kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
           kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
                              [^{:luokka "kustannukset-yhteenveto"}
@@ -56,7 +58,10 @@
 
           yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
                              {:teksti "Yhteensä" :luokka "yhteensa korkea"}
-                             {:teksti "Ei muutoksia" :luokka "yhteensa-ei-korostusta korkea"}
+                             {:teksti (if (number? yht-pysyvat)
+                                        (fmt/euro-opt false yht-pysyvat)
+                                        yht-pysyvat)
+                              :luokka "yhteensa korkea"}
                              {:teksti (fmt/euro-opt false yht-alkukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht-loppukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
@@ -104,7 +109,7 @@
                                           yhteenveto-rivit)})
           [{:otsikko "Toimenpide" :nimi :toimenpide-nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
             :otsikkorivi-luokka "korkea"}
-           {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string
+           {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string :fmt #(if (number? %) (fmt/euro-opt false %) %)
             :leveys "20%" :muokattava? (constantly false)}
            {:otsikko (str "Loka-joulukuu " (pvm/vuosi (first valittu-hoitokausi)) " (€)") :nimi :alkukausi :tyyppi :euro
             :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :vaadi-ei-negatiivinen? true

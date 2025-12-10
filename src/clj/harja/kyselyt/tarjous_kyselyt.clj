@@ -501,10 +501,7 @@
                                _ (tallenna-tarjouksen-rahavaraukset db rivi tietokantatarjous rahavarauslistaus tarjousdb urakka-id kayttaja-id)
                                ;; Rahavaraukset tallennetaan tarjouksen lisäksi myös kustannusarvioitu_tyo tauluun
                                _ (tallanna-rahavaraukset-kustannussuuunnitelmaan db rivi urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id)
-                               _ (tallenna-tarjouksen-toimenkuvat db rivi tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id)
-
-                               ; Päivitetään urakan tavoite- ja kattohinnat aina, kun tarjous tallennetaan
-                               #_(uk-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi rivi))]
+                               _ (tallenna-tarjouksen-toimenkuvat db rivi tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
     tallennukset))

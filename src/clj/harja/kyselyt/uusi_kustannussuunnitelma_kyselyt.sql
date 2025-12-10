@@ -15,6 +15,25 @@ WHERE sopimus = :sopimus-id
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
   AND toimenpideinstanssi = :toimenpideinstanssi-id;
 
+-- name: hae-pysyvat-hankintakus-muutokset 
+SELECT
+    mmk.muutos,
+    :vuosi::INTEGER              AS vuosi,
+    NULL::INTEGER                AS kuukausi,
+    mmk.summa,
+    mmk.toimenpideinstanssi
+FROM mhu_muutos_kustannusvaikutus mmk
+         JOIN mhu_muutos m ON m.id = mmk.muutos
+         JOIN toimenpideinstanssi tpi ON tpi.id = mmk.toimenpideinstanssi
+         JOIN toimenpide tp ON tp.id = tpi.toimenpide
+WHERE m.urakka = :urakka
+  AND mmk.toimenpideinstanssi = :toimenpideinstanssi-id
+  AND m.poistettu IS NOT TRUE
+  AND m.tyyppi = 'pysyva'
+  AND tp.koodi IN ('23104', '23116', '23124', '20107', '20191', '14301')
+  AND (extract(YEAR FROM m.voimassa_alkaen) < :vuosi
+  AND mmk.hoitokauden_alkuvuosi = :vuosi::INTEGER);
+
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
        CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'

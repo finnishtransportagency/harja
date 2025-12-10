@@ -19,7 +19,7 @@
   {:positional? true})
 
 (declare hae-urakan-toimenpiteet hae-kiintea-kustannus-toimenpiteelle-kuukaudelta
-  hae-kiintea-kustannus-kuukausittain poista-kiinteat-kustannukset-kuukausittain!
+  hae-kiintea-kustannus-kuukausittain hae-pysyvat-hankintakus-muutokset poista-kiinteat-kustannukset-kuukausittain!
   tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
   hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
@@ -62,6 +62,13 @@
                                             db {:sopimus-id sopimus-id
                                                 :vuosi hoitovuoden-alkuvuosi
                                                 :toimenpideinstanssi-id toimenpideinstanssi-id})
+
+                                 pysyvat (hae-pysyvat-hankintakus-muutokset
+                                           db {:sopimus-id sopimus-id
+                                               :urakka urakka-id
+                                               :vuosi hoitovuoden-alkuvuosi
+                                               :toimenpideinstanssi-id toimenpideinstanssi-id})
+
                                  kiinteat-alkukausi (filter #(>= (:kuukausi %) 10) kiinteat)
                                  kiinteat-loppukausi (filter #(<= (:kuukausi %) 9) kiinteat)
                                  alkukausi (if (seq kiinteat-alkukausi) (apply + (map (fn [rivi]
@@ -98,7 +105,7 @@
                                         :loppukausi-indeksikorjattu loppukausi-indeksikorjattu
                                         :yhteensa (+ alkukausi loppukausi)
                                         :yhteensa-indeksikorjattu (+ alkukausi-indeksikorjattu loppukausi-indeksikorjattu)
-                                        :pysyvat-muutokset "Ei muutoksia"})))
+                                        :pysyvat-muutokset (or (some-> pysyvat first :summa) "Ei muutoksia")})))
                    []
                    toimenpiteet)
 
@@ -106,15 +113,18 @@
                                     db {:sopimus-id sopimus-id
                                         :vuosi hoitovuoden-alkuvuosi
                                         :urakkaid urakka-id}))
+
+        pysyvat-muutokset-yht (bigdec (apply + (filter number? (map :pysyvat-muutokset kiinteat))))
+
         ;; Yhteenvetorivi
         yhteenveto {:nimi "Yhteensä"
                     :kaikki-alkukausi (apply + (map :alkukausi kiinteat))
                     :kaikki-alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu kiinteat))
                     :kaikki-loppukausi (apply + (map :loppukausi kiinteat))
                     :kaikki-loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu kiinteat))
-                    :kaikki-yhteensa (+ (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
+                    :kaikki-yhteensa (+ pysyvat-muutokset-yht (apply + (map :alkukausi kiinteat)) (apply + (map :loppukausi kiinteat)))
                     :kaikki-yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu kiinteat)) (apply + (map :loppukausi-indeksikorjattu kiinteat)))
-                    :pysyvat-muutokset "Ei muutoksia"
+                    :kaikki-pysyvat-muutokset (if (> pysyvat-muutokset-yht 0.0M) pysyvat-muutokset-yht "Ei muutoksia")
                     :jarjestys 999999999 ;; Joku iso luku, jolla saadaan yhteenvetorivi listan loppuun
                     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
                     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}
@@ -525,6 +535,7 @@
 
         tavoitetiedot (first (hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitokausinumero
                                                                        :urakka-id urakka-id}))
+
         ;; Päivitä tai lisää tavoite ja kattohinta tietokantaan
         tiedot (if (:id tavoitetiedot)
                  (paivita-tavoite-ja-kattohinta<! db
@@ -888,8 +899,6 @@
 
         johto-ja-hallintokorvaukset-yht (bigdec (or johto-ja-hallintokorvaukset-yht 0.0))
         tarjous-jjh-yht (bigdec (or tarjous-jjh-yht 0.0))
-
-        _ (println "JJH tarkistus:" johto-ja-hallintokorvaukset-yht tarjous-jjh-yht jjh-summia-olemassa?)
 
         puuttuvat (cond
                     ;; 2025 ja myöhemmin alkavilla urakoilla summien tulee täsmätä tarjouksen kanssa

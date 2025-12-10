@@ -69,10 +69,7 @@
           tavoitetiedot (first (suunnitelma-q/hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitovuosinro
                                                                                        :urakka-id urakka-id}))
 
-          ;; Nimestään huolimatta näytetään tarjouksen tavoitehinta
-          ;hoitovuoden-alun-tavoitehinta (:tarjous_tavoitehinta tavoitetiedot)
-
-          hoitovuoden-alun-tavoitehinta (:tavoitehinta tavoitetiedot)
+          ;; hoitovuoden-alun-tavoitehinta (:tavoitehinta tavoitetiedot) 
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
           pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
@@ -96,7 +93,7 @@
                                     :erillishankinnat erillishankinnat
                                     :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset
                                     :hoidonjohtopalkkiot hoidonjohtopalkkiot
-                                    :hoitovuoden-alun-tavoitehinta hoitovuoden-alun-tavoitehinta
+                                    :hoitovuoden-alun-tavoitehinta (+ pysyvat-muutokset-maara (:tarjous_tavoitehinta tavoitetiedot))
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
@@ -115,8 +112,7 @@
   (jdbc/with-db-transaction [db db]
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
-        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
+        (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot)))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -125,8 +121,7 @@
   (jdbc/with-db-transaction [db db]
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
-        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
+        (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -144,8 +139,7 @@
                   :johto-ja-hallintokorvaukset-2019
                   :johto-ja-hallintokorvaukset-2025)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi)
-        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi))
+        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
@@ -154,8 +148,7 @@
   (jdbc/with-db-transaction [db db]
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
-        #_(suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi)))
+        (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
