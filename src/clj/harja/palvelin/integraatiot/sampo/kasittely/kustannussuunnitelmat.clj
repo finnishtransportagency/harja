@@ -154,9 +154,10 @@
 
 (defn laheta-api-kustannusuunnitelma [db api-sampo-asetukset integraatioloki numero]
   (if (kustannussuunnitelmat/onko-olemassa? db numero)
-    (let [urakka-id (:id (first (maksuerat/hae-maksueran-urakka db numero)))
+    (let [urakka-id (maksuerat/hae-maksueran-urakka db numero)
           urakan-parametrit (first (urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))]
-      (if-not (:kustannussuunnitelma_lahetys_sampo urakan-parametrit)
+      (if (and urakan-parametrit
+                (not (:kustannussuunnitelma_lahetys_sampo urakan-parametrit)))
         (do
           (log/info (format "Kustannussuunnitelman (numero: %s) lähetys Sampoon ohitettu. Urakan (id: %s) parametreissa kustannussuunnitelma_lahetys_sampo = false." numero urakka-id))
           nil)
