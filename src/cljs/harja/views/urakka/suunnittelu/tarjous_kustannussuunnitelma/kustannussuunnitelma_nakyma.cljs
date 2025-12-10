@@ -267,10 +267,10 @@
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)
+            :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?)
             :otsikkorivi-luokka "korkea" :vaadi-ei-negatiivinen? true}
            {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+            :fmt #(if-not (<= % 0.0) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           erillishankinnat]]]
 
        (when-not vahvistettu?
@@ -353,10 +353,10 @@
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro
-            :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)
+            :tasaa :oikea :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?)
             :otsikkorivi-luokka "korkea" :vaadi-ei-negatiivinen? true}
            {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+            :fmt #(if-not (<= % 0.0) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           hoidonjohtopalkkiot]]]
 
        (when-not vahvistettu?

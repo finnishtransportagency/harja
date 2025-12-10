@@ -156,14 +156,15 @@ VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenp
         :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
         :luoja, NOW());
 
--- name: paivita-urakan-tavoite-ja-kattohinta<!
+-- name: paivita-urakan-tavoite-ja-kattohinta!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
     tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
     kattohinta = :kattohinta,
     kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
-    muokkaaja = :muokkaaja
+    muokkaaja = :muokkaaja,
+    tarjous_tavoitehinta = :tarjous_tavoitehinta
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 

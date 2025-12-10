@@ -498,6 +498,12 @@
                              [10 11 12 1 2 3 4 5 6 7 8 9]))]
     (sort-by (juxt :vuosi :kuukausi) erillishankinnat)))
 
+(defn hae-aiempien-vuosien-pysyvat-muutokset [db urakka-id hoitovuoden-alkuvuosi]
+  (let [aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
+        ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
+        pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))]
+    pysyvat-muutokset-maara))
+
 (defn paivita-tavoite-ja-kattohinta
   "Jokaisen kustannussuunnitelman muutoksen jälkeen tavoite- ja kattohinta pitää laskea uusiksi."
   [db kayttaja-id urakka-id hoitovuoden-alkuvuosi]
@@ -824,7 +830,7 @@
         ;; Pysyvät muutokset lisätään mukaan joko vähentämään tai lisäämään tavoitehintaa
         kilpailutettavat-hankinnat (hae-kiinteat-kustannukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
 
-        kilpailutettavat-hankinnat-yht (apply + (keep :yhteensa kilpailutettavat-hankinnat))
+        kilpailutettavat-hankinnat-yht (apply + (map #(or (:yhteensa %) 0) kilpailutettavat-hankinnat))
         tarjous-hankinnat (filter (fn [rivi] (= "hankintakustannukset" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-hankinnat-yht (:summa (first tarjous-hankinnat))
 
@@ -858,7 +864,7 @@
                     :else (conj puuttuvat "Erillishankinnat"))
 
         hoidonjohtopalkkiot (hae-hoidonjohtopalkkiot db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-yht (apply + (map :summa hoidonjohtopalkkiot))
+        hoidonjohtopalkkiot-yht (apply + (map #(or (:summa %) 0) hoidonjohtopalkkiot))
         tarjous-hoidonjohtopalkkiot (filter (fn [rivi] (= "hoidonjohtopalkkio" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-hoidonjohtopalkkiot-yht (:summa (first tarjous-hoidonjohtopalkkiot))
 
@@ -881,11 +887,12 @@
                                       (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi)
                                       :else (hae-johto-ja-hallintokorvaukset-2025 db urakka-id hoitovuoden-alkuvuosi))
         johto-ja-hallintokorvaukset-yht (if (<= urakan-alkuvuosi 2024)
-                                          (round2 2 (apply + (map :yhteensa-kk (mapcat :kuukaudet johto-ja-hallintokorvaukset))))
-                                          (apply + (map :summa johto-ja-hallintokorvaukset)))
+                                          (round2 2 (apply + (map #(or (:yhteensa-kk %) 0.0M)
+                                                               (mapcat :kuukaudet johto-ja-hallintokorvaukset))))
+                                          (apply + (map #(or (:summa %) 0) johto-ja-hallintokorvaukset)))
 
         tarjous-jjh (filter (fn [rivi] (= "johto-ja-hallintokorvaus" (:osio rivi))) (:toimenkuvat hoitovuoden-tarjous))
-        tarjous-jjh-yht (apply + (map :summa tarjous-jjh))
+        tarjous-jjh-yht (apply + (map #(or (:summa %) 0.0M) tarjous-jjh))
 
         ;; Tarkistetaan että jotain on kirjattu jjh osioon
         jjh-summia-olemassa? (cond

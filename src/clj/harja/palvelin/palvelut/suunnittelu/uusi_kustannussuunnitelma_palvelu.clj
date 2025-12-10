@@ -82,6 +82,8 @@
           ;; Haetaan tieto, että onko tulevilla hoitovuosilla mitään arvoja tallennettuna.
           tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi)
 
+          hoitovuoden-alun-tavoitehinta (:tavoitehinta tavoitetiedot)
+
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
@@ -93,7 +95,7 @@
                                     :erillishankinnat erillishankinnat
                                     :johto-ja-hallintokorvaukset johto-ja-hallintokorvaukset
                                     :hoidonjohtopalkkiot hoidonjohtopalkkiot
-                                    :hoitovuoden-alun-tavoitehinta (+ pysyvat-muutokset-maara (:tarjous_tavoitehinta tavoitetiedot))
+                                    :hoitovuoden-alun-tavoitehinta hoitovuoden-alun-tavoitehinta
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
