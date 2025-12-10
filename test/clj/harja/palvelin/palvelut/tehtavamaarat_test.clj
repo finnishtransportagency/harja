@@ -46,7 +46,7 @@
 
 ;; Uudet lisättävät tehtävät
 (def id-ise-rampit (hae-toimenpidekoodin-id "Ise rampit" "23104"))
-(def id-suolaus (hae-toimenpidekoodin-id "Suolaus" "23104"))
+(def id-suolaus (hae-toimenpidekoodin-id "Liukkaudentorjunta suolaamalla (materiaali)" "23104"))
 (def id-portaiden-talvihuolto (hae-toimenpidekoodin-id "Portaiden talvihoito" "23104"))
 (def id-yksityisten-rumpujen (hae-toimenpidekoodin-id "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet" "20191"))
 (def id-ic-rampit (hae-toimenpidekoodin-id "Ic rampit" "23104"))
@@ -55,7 +55,7 @@
 ;; Tehtäviä, joilla sopimuksen tehtävämäärä
 (def id-III (hae-toimenpidekoodin-id "III" "23104"))
 (def id-katupolyn-sidonta (hae-toimenpidekoodin-id "Katupölynsidonta" "23116"))
-(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Sorateiden pölynsidonta (materiaali)" "23124"))
+(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Kesäsuola (CaCl2, materiaali)" "23124"))
 (def id-id-ohituskaistat (hae-toimenpidekoodin-id "Is ohituskaistat" "23104"))
 
 

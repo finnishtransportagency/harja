@@ -164,10 +164,7 @@
        :leveys 20 :tyyppi :string
        :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
       {:otsikko "Valmis\u00ADtumis\u00ADpäivä"
-       :muokattava? #(and
-                       voi-merkita-valmiiksi?
-                       (boolean
-                         (not (some? (:valtakunnallinen-id %)))))
+       :muokattava? (constantly voi-merkita-valmiiksi?)
        :leveys 20 :tyyppi :pvm
        :nimi :valmispvm
        :fmt #(if %
@@ -177,9 +174,7 @@
        :leveys 35 :tyyppi :string
        :muokattava? #(and
                        voi-merkita-valmiiksi?
-                       (:valmispvm %)
-                       (boolean
-                         (not (some? (:valtakunnallinen-id %)))))
+                       (:valmispvm %))
        :nimi :valmis-kommentti}
       {:otsikko "Merkit\u00ADsijä"
        :leveys 20 :tyyppi :string :muokattava? (constantly false)
@@ -318,9 +313,11 @@
 
         (if ladataan?
           [:div.valitavoitteet
+           [:h1 "Välitavoitteet"]
            [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
 
           [:div.valitavoitteet
+           [:h1 "Välitavoitteet"]
            [:div.valinnat.margin-bottom-16
             [valinnat/urakan-hoitokausi-tuck
              valittu-hoitokausi

@@ -73,7 +73,7 @@ INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, 
              'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'VAN-LYV-toteuma');
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM tehtava WHERE nimi='Suolaus'), 21.3, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
+        (SELECT id FROM tehtava WHERE nimi='Liukkaudentorjunta suolaamalla (materiaali)'), 21.3, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
             (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
