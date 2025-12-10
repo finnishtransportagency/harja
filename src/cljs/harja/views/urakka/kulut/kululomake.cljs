@@ -125,7 +125,6 @@
   [:div.col-xs-12.col-md-3
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Lisätieto"
-     :luokka "poista-label-top-margin"
      :vayla-tyyli? true
      :otsikon-luokka ""
      :arvo-atom (r/wrap lisatieto
@@ -247,7 +246,6 @@
       [:div.col-xs-12.col-md-6 {:style {:max-width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :tyylit {:width "150px"}
          :otsikon-luokka ""
@@ -303,7 +301,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -337,7 +334,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -383,7 +379,6 @@
       [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :otsikon-luokka ""
          :arvo-atom (r/wrap lisatyon-lisatieto
