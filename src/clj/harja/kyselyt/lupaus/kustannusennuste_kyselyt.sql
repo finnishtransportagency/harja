@@ -32,10 +32,10 @@ SELECT ke.id,
 INSERT INTO lupaus_kustannusennuste 
             ("lupaus-id", "urakka-id", hoitovuosi, maarapaiva, 
              ennustettu_tavoitehinta, ennustetut_kustannukset, syotetty_pvm, 
-             lasketut_pisteet, luoja)
+             lasketut_pisteet, luoja, luotu)
      VALUES (:lupaus-id, :urakka-id, :hoitovuosi, :maarapaiva,
              :tavoitehinta, :toteutuneet-kustannukset, :syotetty-pvm,
-             :pisteet, :kayttaja);
+             :pisteet, :kayttaja, NOW());
 
 -- name: paivita-kustannusennuste<!
 UPDATE lupaus_kustannusennuste
