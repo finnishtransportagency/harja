@@ -504,6 +504,7 @@
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
+        tehtava-haku-menossa? (boolean (first (filter #(true? (:tehtava-haku-menossa %)) kohdistukset)))
         kulu-lukittu? (or haku-menossa
                         (when erapaivan-hoitovuosi
                           (some #(and
@@ -691,7 +692,7 @@
          [napit/tallenna
           "Tallenna"
           #(e! (tiedot/->TallennaKulu))
-          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa)}]]
+          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa tehtava-haku-menossa?)}]]
 
         [:span
          [napit/peruuta
