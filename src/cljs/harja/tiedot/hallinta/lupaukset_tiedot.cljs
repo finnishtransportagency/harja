@@ -313,7 +313,8 @@
           ;; Hae määräpäivät ja aloita täyttö
           (tuck-apurit/post! :hae-kustannusennuste-maarapaivat
             {:lupaus-id lupaus-id
-             :hoitokauden-alkuvuosi hoitokausi}
+             :hoitokauden-alkuvuosi hoitokausi
+             :urakka-id urakka-id}
             {:onnistui ->HaeMaarapaivatOnnistui
              :epaonnistui ->TaytaKustannusennusteetEpaonnistui
              :paasta-virhe-lapi? true})

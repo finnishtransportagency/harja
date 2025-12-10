@@ -50,9 +50,24 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
   (let [lupaus-id (kustannusennuste-kyselyt/hae-urakan-kustannusennuste-lupaus-id
                     db {:urakka-id urakka-id})
-        kustannusennusteet (kustannusennuste-kyselyt/hae-urakan-kaikki-kustannusennusteet-testaus
-                             db {:urakka-id urakka-id
-                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+        ;; Hae KAIKKI urakan kustannusennusteet (ilman hoitovuosisuodatusta)
+        kaikki-ennusteet (kustannusennuste-kyselyt/hae-urakan-kaikki-kustannusennusteet-testaus-kaikki-hoitovuodet
+                           db {:urakka-id urakka-id
+                               :lupaus-id lupaus-id})
+        ;; Suodata ne jotka pisteytetään tälle hoitokaudelle (huomioi offset)
+        kustannusennusteet (filter (fn [ke]
+                                     (let [kuukausi (:kuukausi ke)
+                                           tallennuksen-hoitovuosi (:hoitovuosi ke)
+                                           offset (or (kustannusennuste-kyselyt/hae-kustannusennuste-kuukausi-offset
+                                                        db {:lupaus-id lupaus-id
+                                                            :kuukausi kuukausi})
+                                                      0)
+                                           pisteytys-hoitovuosi (+ tallennuksen-hoitovuosi offset)]
+                                       (= pisteytys-hoitovuosi hoitokauden-alkuvuosi)))
+                             kaikki-ennusteet)
+        lopputilanne (first (lupaus-kyselyt/hae-hoitovuoden-lopputilanne
+                              db {:urakka-id urakka-id
+                                  :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi}))]
     (when-not lupaus-id
       (log/warn "VAROITUS: Urakalta" urakka-id "ei löytynyt kustannusennuste-lupausta!"))
     {:lupaus-id lupaus-id
@@ -61,14 +76,16 @@
                                    (update :pisterajat jsonb-kentta->map)
                                    (update :laskentakaava_parametrit jsonb-kentta->map)
                                    (update :laskentakaava_vaiheet jsonb-kentta->map)
-                                     ;; Normalisoi avainten nimet väliviivalle
                                    (clojure.set/rename-keys {:laskentakaava_parametrit :laskentakaava-parametrit
                                                              :laskentakaava_vaiheet :laskentakaava-vaiheet
                                                              :laskentakaava_teksti :laskentakaava-teksti})))
                            kustannusennusteet)
-     :lopputilanne (first (lupaus-kyselyt/hae-hoitovuoden-lopputilanne
-                            db {:urakka-id urakka-id
-                                :hoitovuosi-alkuvuosi hoitokauden-alkuvuosi}))}))
+     :lopputilanne (when lopputilanne
+                     (assoc lopputilanne 
+                            ;; Näytä vain ne kuukaudet joille pisteet on OIKEASTI laskettu
+                            ;; (ei kaikkia tallennettuja kuukausia, koska offset voi vaikuttaa)
+                            :kaytetyt-kuukaudet (sort (distinct (map :kuukausi 
+                                                                  (filter :lasketut_pisteet kustannusennusteet))))))}))
 
 ;; Triggeröi kustannusennuste-laskennan - kutsuu lupaus_palvelu/laske-lopullinen-kustannusennuste! joka laskee lopulliset pisteet
 (defn- triggeroi-kustannusennuste-laskenta [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi
@@ -89,12 +106,46 @@
        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})))
 
 ;; Hakee kustannusennusteen määräpäivät (kuukaudet) hoitokaudelle
-(defn- hae-kustannusennuste-maarapaivat [db kayttaja {:keys [lupaus-id hoitokauden-alkuvuosi]}]
+;; Generoi määräpäivät suoraan lupauksen kirjaus-kkt kentästä
+(defn- hae-kustannusennuste-maarapaivat [db kayttaja {:keys [lupaus-id hoitokauden-alkuvuosi urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-lupaukset kayttaja)
-  {:maarapaivat (kustannusennuste-kyselyt/hae-kustannusennuste-maarapaivat 
-                  db 
-                  {:lupaus-id lupaus-id
-                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})})
+  (let [;; Hae lupaus suoraan id:llä
+        lupaus (first (lupaus-kyselyt/hae-lupaus db {:id lupaus-id}))
+        
+        ;; Laske hoitovuosi-nro
+        urakan-alkuvuosi (:urakan-alkuvuosi lupaus)
+        hoitovuosi-nro (when urakan-alkuvuosi
+                        (inc (- hoitokauden-alkuvuosi urakan-alkuvuosi)))
+        
+        ;; Ylikirjoita hoitovuosikohtaiset arvot (sama funktio kuin päänäkymä käyttää)
+        ;; HUOM: hae-lupaus palauttaa :id, mutta ylikirjoita-hoitovuosikohtaiset-arvot odottaa :lupaus-id
+        lupaus-ylikirjoitettu (when hoitovuosi-nro
+                                (first (lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot 
+                                         db [(assoc lupaus :lupaus-id (:id lupaus))] hoitovuosi-nro)))
+
+        ;; Käytä ylikirjoitettua tai alkuperäistä
+        kaytettava-lupaus (or lupaus-ylikirjoitettu lupaus)
+        
+        ;; Hae kirjauskuukaudet
+        kirjaus-kkt (sort (:kirjaus-kkt kaytettava-lupaus))
+        
+        ;; Generoi määräpäivät kirjauskuukausista
+        ;; Käytetään kiinteää 15. päivää (kuten oikeassa kirjauksessa)
+        maarapaivat (mapv (fn [kuukausi]
+                            (let [vuosi (if (>= kuukausi 10)
+                                          hoitokauden-alkuvuosi
+                                          (inc hoitokauden-alkuvuosi))]
+                              {:kuukausi kuukausi
+                               :vuosi vuosi
+                               :paiva 15
+                               :kuvaus (str "Kuukausi " kuukausi)}))
+                      kirjaus-kkt)]
+    
+    (log/info "Generoitiin määräpäivät lupaus-id:" lupaus-id
+              "hoitovuosi-nro:" hoitovuosi-nro
+              "kirjaus-kkt:" kirjaus-kkt
+              "määräpäivät:" (count maarapaivat) "kpl")
+    {:maarapaivat maarapaivat}))
 
 (defn- poista-kustannusennusteet-testaukseen
   [db kayttaja {:keys [urakka-id hoitokauden-alkuvuosi]}]

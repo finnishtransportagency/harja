@@ -266,6 +266,7 @@
               (if lopputilanne
                 [:div
                  [:p (str "Keskiarvo pisteet: " (:kustannusennuste_keskiarvo_pisteet lopputilanne))]
+                 [:p (str "Käytetyt kuukaudet laskennassa: " (str/join ", " (:kaytetyt-kuukaudet lopputilanne)))]
                  [:p (str "Välikatselmus: " (:valikatselmus_pvm lopputilanne))]
                  [:p (str "Vahvistettu: " (:vahvistettu lopputilanne))]]
                 [:p "Ei vielä lopputilannetta."])
