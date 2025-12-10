@@ -1001,19 +1001,15 @@
 
       ;; Hae kaikki kustannusennusteet lupausten kautta
       (let [lupaukset (lupaus-kyselyt/hae-urakan-lupaukset db {:urakka-id urakka-id})
-            _ (log/info "Lupaukset:" lupaukset)
-            kustannusennuste-lupaukset (filter #(= "kustannusennuste" (:lupaustyyppi %)) lupaukset)
-            _ (log/info "Kustannusennuste-lupaukset:" (count kustannusennuste-lupaukset))]
+            kustannusennuste-lupaukset (filter #(= "kustannusennuste" (:lupaustyyppi %)) lupaukset)]
 
         ;; Käy läpi jokainen kustannusennuste-lupaus
         (doseq [lupaus kustannusennuste-lupaukset]
           (let [lupaus-id (:lupaus-id lupaus)
-                _ (log/info "Käsitellään lupaus-id:" lupaus-id)
                 kustannusennusteet (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
                                      db {:lupaus-id lupaus-id
                                          :urakka-id urakka-id
-                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-                _ (log/info "Löydettiin" (count kustannusennusteet) "kustannusennustetta")]
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
 
             (doseq [ke kustannusennusteet]
               (let [ennustettu-tavoitehinta (:tavoitehinta ke)
