@@ -69,6 +69,28 @@ SELECT ke.id,
    AND ke.hoitovuosi = :hoitokauden-alkuvuosi
  ORDER BY ke.maarapaiva;
 
+-- name: hae-lupauksen-kaikki-kustannusennusteet-kaikki-hoitovuodet
+-- Hakee kaikki kustannusennusteet ILMAN hoitovuosisuodatusta
+-- Käytetään välikatselmuksessa kun lasketaan pisteitä (huomioidaan offset)
+SELECT ke.id,
+       ke."lupaus-id",
+       ke."urakka-id", 
+       ke.hoitovuosi,
+       ke.maarapaiva,
+       ke.ennustettu_tavoitehinta AS tavoitehinta,
+       ke.ennustetut_kustannukset AS "toteutuneet-kustannukset",
+       ke.syotetty_pvm,
+       ke.lasketut_pisteet AS pisteet,
+       ke.luoja,
+       ke.muokkaaja,
+       ke.luotu,
+       ke.muokattu,
+       EXTRACT(MONTH FROM ke.maarapaiva) AS maarapaiva_kk
+  FROM lupaus_kustannusennuste ke
+ WHERE ke."lupaus-id" = :lupaus-id
+   AND ke."urakka-id" = :urakka-id
+ ORDER BY ke.maarapaiva;
+
 -- name: hae-kustannusennuste-kuukausi-pisterajat  
 -- single?: true
 -- Hakee kuukauden pisterajat JSON-muodossa uudesta taulusta
@@ -166,6 +188,7 @@ SELECT DISTINCT u.id AS "urakka-id",
 -- Hakee kaikki kustannusennusteet hoitokaudelle testaustyökalua varten
 -- Sisältää myös pisterajat kuukauden perusteella ja laskentakaavan tiedot
 SELECT ke.id,
+       ke.hoitovuosi,
        ke.maarapaiva,
        ke.ennustettu_tavoitehinta AS "ennustettu_tavoitehinta",
        ke.ennustetut_kustannukset AS "ennustetut_kustannukset",
@@ -183,6 +206,30 @@ SELECT ke.id,
              AND EXTRACT(MONTH FROM ke.maarapaiva) = kp.kuukausi
  WHERE ke."urakka-id" = :urakka-id
    AND ke.hoitovuosi = :hoitokauden-alkuvuosi
+ ORDER BY ke.maarapaiva;
+
+-- name: hae-urakan-kaikki-kustannusennusteet-testaus-kaikki-hoitovuodet
+-- Hakee KAIKKI urakan kustannusennusteet ILMAN hoitovuosisuodatusta testaustyökalua varten
+-- Käytetään kun halutaan nähdä kaikki ennusteet huomioiden offset-logiikka
+SELECT ke.id,
+       ke.hoitovuosi,
+       ke.maarapaiva,
+       ke.ennustettu_tavoitehinta AS "ennustettu_tavoitehinta",
+       ke.ennustetut_kustannukset AS "ennustetut_kustannukset",
+       ke.lasketut_pisteet,
+       ke.tarkkuus_prosentti,
+       (ke.maarapaiva < NOW()) AS "syotetty_ajoissa",
+       kp.pisterajat,
+       EXTRACT(MONTH FROM ke.maarapaiva) AS "kuukausi",
+       ke.laskentakaava_teksti AS "laskentakaava-teksti",
+       ke.laskentakaava_parametrit,
+       ke.laskentakaava_vaiheet
+  FROM lupaus_kustannusennuste ke
+       LEFT JOIN lupaus_kustannusennuste_kuukausi_pisteet kp 
+              ON ke."lupaus-id" = kp."lupaus-id"
+             AND EXTRACT(MONTH FROM ke.maarapaiva) = kp.kuukausi
+ WHERE ke."urakka-id" = :urakka-id
+   AND ke."lupaus-id" = :lupaus-id
  ORDER BY ke.maarapaiva;
 
 -- name: hae-poistettavien-kustannusennusteiden-lkm

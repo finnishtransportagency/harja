@@ -202,7 +202,7 @@
         :lopputilanne lopputilanne))
     lupaus))
 
-(defn- ylikirjoita-hoitovuosikohtaiset-arvot
+(defn ylikirjoita-hoitovuosikohtaiset-arvot
   "Ylikirjoittaa lupauksen oletusarvot hoitovuosikohtaisilla arvoilla, jos niitä on määritelty.
    
    Hakee lupaus_hoitovuoden_kirjauskuukaudet-taulusta hoitovuosikohtaiset arvot ja korvaa:
@@ -611,14 +611,9 @@
                                                            kustannusennuste] :as tiedot}]
   ;; EI lasketa pisteitä automaattisesti - ne lasketaan vasta välikatselmuksessa
    (let [maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15)
-         syotetty-pvm (pvm/nyt)
+         syotetty-pvm (pvm/nyt) 
+         hoitovuosi (pvm/hoitokauden-alkuvuosi vuosi kuukausi)
          
-         pisterajat-offset-tulos (kustannusennuste-kyselyt/hae-kustannusennuste-kuukausi-offset
-                                   db {:lupaus-id lupaus-id
-                                       :kuukausi kuukausi}) 
-         pisteytys-offset (or (:pisteytys-hoitovuosi-offset pisterajat-offset-tulos) 0)
-         hoitovuosi (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi kuukausi pisteytys-offset)
-    
         ;; Tarkista onko kustannusennuste jo olemassa
          olemassa-oleva-id (kustannusennuste-kyselyt/hae-kustannusennuste-id
                              db {:lupaus-id lupaus-id
@@ -1005,11 +1000,21 @@
 
         ;; Käy läpi jokainen kustannusennuste-lupaus
         (doseq [lupaus kustannusennuste-lupaukset]
-          (let [lupaus-id (:lupaus-id lupaus)
-                kustannusennusteet (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet
-                                     db {:lupaus-id lupaus-id
-                                         :urakka-id urakka-id
-                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+          (let [lupaus-id (:lupaus-id lupaus) 
+                kaikki-ennusteet (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet-kaikki-hoitovuodet
+                                   db {:lupaus-id lupaus-id
+                                       :urakka-id urakka-id})
+                ;; Suodata ne jotka pisteytetään tälle hoitokaudelle (huomioi offset)
+                kustannusennusteet (filter (fn [ke]
+                                             (let [kuukausi (pvm/kuukausi (:maarapaiva ke))
+                                                   tallennuksen-hoitovuosi (:hoitovuosi ke)
+                                                   offset (or (kustannusennuste-kyselyt/hae-kustannusennuste-kuukausi-offset
+                                                                db {:lupaus-id lupaus-id
+                                                                    :kuukausi kuukausi})
+                                                              0)
+                                                   pisteytys-hoitovuosi (+ tallennuksen-hoitovuosi offset)]
+                                               (= pisteytys-hoitovuosi hoitokauden-alkuvuosi)))
+                                     kaikki-ennusteet)]
 
             (doseq [ke kustannusennusteet]
               (let [ennustettu-tavoitehinta (:tavoitehinta ke)
