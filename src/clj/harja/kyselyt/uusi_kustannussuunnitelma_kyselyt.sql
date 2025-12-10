@@ -107,6 +107,7 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
+
 -- name: hae-kuukauden-erillishankinta
 SELECT id,
        kuukausi,
@@ -119,6 +120,24 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+
+-- name: hae-tallennetun-kuukauden-erillishankinta
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+ FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id
+  AND vuosi = :vuosi
+  AND kuukausi = :kuukausi
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id;
 
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille

@@ -22,7 +22,7 @@
   hae-kiintea-kustannus-kuukausittain hae-pysyvat-hankintakus-muutokset poista-kiinteat-kustannukset-kuukausittain!
   tallenna-kiinteat-kustannukset-kuukaudelta<! paivita-kiinteat-kustannukset-kuukausittain<!
   hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
-  hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta
+  hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta hae-tallennetun-kuukauden-erillishankinta
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
   hae-viimeisin-muokkaaja-erillishankinnoille
   hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
@@ -470,6 +470,7 @@
                               :vuosi hoitovuoden-alkuvuosi
                               :tehtavaryhma-id (:id tehtavaryhma)
                               :toimenpideinstanssi-id hoidonjohto-tpi-id}))
+
         erillishankinnat (if (seq erillishankinnat)
                            ;; Jos on tallennettu jo erillishankintoja, niin lisätään niihin kalenterikuukausi
                            (map (fn [rivi]
@@ -627,10 +628,14 @@
                                           :koodi "23151"})))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db
                               {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
-        ; Tallenna kuukausittaiset summat
+
         _ (doseq [rivi erillishankinnat]
-            (let [dbrivi (first (hae-kuukauden-erillishankinta db {:id (:id rivi)}))
-                  vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+            (let [vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                  dbrivi (first (hae-tallennetun-kuukauden-erillishankinta db {:sopimus-id sopimus-id
+                                                                               :toimenpideinstanssi-id hoidonjohto-tpi-id
+                                                                               :vuosi vuosi
+                                                                               :kuukausi (:kuukausi rivi)
+                                                                               :tehtavaryhma-id (:id tehtavaryhma)}))
                   _ (if (:id dbrivi)
                       (paivita-kuukauden-erillishankinta<! db
                         {:id (:id dbrivi)
