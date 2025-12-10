@@ -200,6 +200,26 @@ SELECT id,
 FROM johto_ja_hallintokorvaus
 WHERE id = :id;
 
+
+-- name: hae-tallennettu-kuukauden-johto-ja-hallintokorvaus
+SELECT id,
+       kuukausi,
+       vuosi,
+       tunnit,
+       tuntipalkka,
+       tuntipalkka_indeksikorjattu,
+       "urakka-id",
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja
+ FROM johto_ja_hallintokorvaus
+WHERE "urakka-id" = :urakka-id
+  AND kuukausi = :kuukausi
+  AND vuosi = :vuosi
+  AND "toimenkuva-id" = :toimenkuva-id;
+
+
 -- name: hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
 -- Käytetään -24 ja aiemmin alkaville urakoille, kun yksittäisellä toimenkuvalla on kaikki merkitys
 SELECT id,

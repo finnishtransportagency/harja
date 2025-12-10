@@ -29,6 +29,7 @@
   hae-rahavaraus-vuodelta
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
+  hae-tallennettu-kuukauden-johto-ja-hallintokorvaus
   hae-johto-ja-hallintokorvaukset-2019-mhu
   hae-kuukauden-johto-ja-hallintokorvaus hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
   hae-toimenkuvan-johto-ja-hallintokorvaukset-kuukausittain
@@ -713,9 +714,11 @@
 
 (defn tallenna-vuosittaiset-toimenkuvat [db rivi urakan-indeksit kayttaja urakka-id toimenkuva-id hoitovuosi-nro hoitovuoden-alkuvuosi]
   (let [vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
-        dbrivi (first (hae-kuukauden-johto-ja-hallintokorvaus db {:id (:id rivi)}))
+        dbrivi (first (hae-tallennettu-kuukauden-johto-ja-hallintokorvaus db {:urakka-id urakka-id
+                                                                              :toimenkuva-id toimenkuva-id
+                                                                              :vuosi vuosi
+                                                                              :kuukausi (:kuukausi rivi)}))
         _ (if (:id dbrivi)
-
             (paivita-kuukauden-johto-ja-hallintokorvaus<! db
               {:id (:id dbrivi)
                :tuntipalkka (:summa rivi)
