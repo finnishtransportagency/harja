@@ -1120,8 +1120,8 @@
         (is (= 2 hk2-nro) "Toinen hoitokausi on numero 2")))))
 
 (deftest laske-lopullinen-kustannusennuste-puuttuvat-arvot-test
-  "Testaa, että funktio käsittelee puuttuvat ja virheelliset arvot turvallisesti.
-   Varmistaa, että NULL-arvot ja virheelliset parametrit eivät kaada järjestelmää."
+  "Testaa, että funktio vaatii validit parametrit ja hylkää virheelliset arvot.
+   Funktio odottaa välikatselmuksen tiedot jotka ovat aina numeroita."
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         db (:db jarjestelma)
         hoitokauden-alkuvuosi 2021
@@ -1130,32 +1130,27 @@
         valikatselmus-pvm (pvm/luo-pvm 2022 8 15)
         user-id (:id +kayttaja-jvh+)]
 
-    (testing "NULL tavoitehinta välikatselmuksen parametrissa"
-      ;; Testaa, että funktio käsittelee NULL-arvon oikein ilman kaatumista
-      (let [tulos (try
-                    (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                      db urakka-id hoitokauden-alkuvuosi nil toteutunut-kustannus valikatselmus-pvm user-id)
-                    (catch Exception _e nil))]
-        (is (or (nil? tulos) (map? tulos)) 
-            "Käsittelee NULL tavoitehinnan ilman kaatumista")))
+    (testing "NULL tavoitehinta välikatselmuksen parametrissa hylätään pre-conditionilla"
+      (is (thrown? AssertionError
+            (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+              db urakka-id hoitokauden-alkuvuosi nil toteutunut-kustannus valikatselmus-pvm user-id))
+          "Pre-condition hylkää nil tavoitehinnan"))
     
-    (testing "NULL toteutuneet kustannukset parametrissa"
-      ;; Testaa, että funktio käsittelee NULL-arvon oikein ilman kaatumista
-      (let [tulos (try
-                    (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                      db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta nil valikatselmus-pvm user-id)
-                    (catch Exception _e nil))]
-        (is (or (nil? tulos) (map? tulos)) 
-            "Käsittelee NULL kustannukset ilman kaatumista")))
+    (testing "NULL toteutuneet kustannukset parametrissa hylätään pre-conditionilla"
+      (is (thrown? AssertionError
+            (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+              db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta nil valikatselmus-pvm user-id))
+          "Pre-condition hylkää nil kustannukset"))
     
-    (testing "Virheellinen urakka-id"
-      ;; Testaa, että funktio ei kaadu, vaikka urakkaa ei löydy
+    (testing "Funktio toimii kun urakkaa ei löydy tai sillä ei ole ennusteita"
+      ;; Funktio ei kaadu vaikka urakkaa ei löydy tai sillä ei ole dataa
       (let [tulos (try
                     (lupaus-palvelu/laske-lopullinen-kustannusennuste!
                       db 999999 hoitokauden-alkuvuosi toteutunut-tavoitehinta toteutunut-kustannus valikatselmus-pvm user-id)
-                    (catch Exception _e nil))]
-        (is (or (nil? tulos) (map? tulos)) 
-            "Käsittelee virheellisen urakka-id:n ilman kaatumista")))))
+                    (catch Exception _e
+                      nil))]
+        (is (nil? tulos)
+            "Palauttaa nil kun urakkaa ei ole tai sillä ei ole ennusteita")))))
 
 (deftest laske-lopullinen-kustannusennuste-ei-ennusteita-test
   "Testaa, että funktio toimii oikein, kun kustannusennusteita ei ole saatavilla.
