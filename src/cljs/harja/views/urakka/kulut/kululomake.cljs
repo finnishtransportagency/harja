@@ -700,19 +700,19 @@
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
           {:disabled haku-menossa}]]
 
-        (when-not haku-menossa
-          [napit/poista "Poista kulu"
-           #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
-              [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
-                                                              (modal/piilota!)
-                                                              (e! (tiedot/->PoistaKulu (:id lomake))))
-                                              :kohdistukset kohdistukset
-                                              :koontilaskun-kuukausi koontilaskun-kuukausi
-                                              :tehtavaryhma tehtavaryhma
-                                              :laskun-pvm (pvm/pvm erapaiva)
-                                              :tehtavaryhmat tehtavaryhmat}])
-           {:style {:margin-left "auto"
-                    :float "right"}}])
+        (when (and (not haku-menossa) (not tehtava-haku-menossa?) (not (nil? (:id lomake))))
+          [:span
+           [napit/poista "Poista kulu"
+            #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
+               [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
+                                                               (modal/piilota!)
+                                                               (e! (tiedot/->PoistaKulu (:id lomake))))
+                                               :kohdistukset kohdistukset
+                                               :koontilaskun-kuukausi koontilaskun-kuukausi
+                                               :tehtavaryhma tehtavaryhma
+                                               :laskun-pvm (pvm/pvm erapaiva)
+                                               :tehtavaryhmat tehtavaryhmat}])
+            {:style {:margin-left "1rem"}}]])
 
         (when haku-menossa
           [:span.kulu-ladataan
