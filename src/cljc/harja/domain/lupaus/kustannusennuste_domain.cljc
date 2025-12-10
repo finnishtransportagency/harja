@@ -3,7 +3,8 @@
    
    Sisältää kustannusennusteiden laskentaan, validointiin ja määräpäivien
    käsittelyyn liittyvän puhtaan funktionaalisen logiikan."
-  (:require [harja.pvm :as pvm]))
+  (:require [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn kustannusennuste?
   "Tarkistaa onko lupaus kustannusennuste-tyyppinen."
@@ -122,7 +123,8 @@
             tarkkuus (+ (* tavoitehinta-ero 0.05)
                         (* kustannus-ero 0.05)
                         (* riski-ero 0.9))
-            tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)
+            ;; Kerrotaan 100:lla (desimaalista prosentiksi) ja pyöristetään yhteen desimaaliin
+            tarkkuus-prosentti (fmt/pyorista-desimaaliin (* tarkkuus 100.0) 1)
 
             ;; Tallennettava data
             kaava-versio "v1.0"
