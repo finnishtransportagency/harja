@@ -917,7 +917,7 @@
     (if (voi-poistaa-pysyvan-muutoksen? db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
       {:voi-poistaa? true}
       {:voi-poistaa? false
-       :virhe "Pysyvää muutosta ei voi poistaa, koska sen tavoitehintavaikutuksia sisältyy vahvistettuihin hoitovuoden alun tavoitehintoihin."})
+       :virhe "Muutoksen muuttamia tavoitehintoja on vahvistettu. Peru mahdolliset vahvistukset poistaaksesi muutoksen."})
 
     "muutostyo"
     (if (= (:alityyppi muutos) :erillisrahoitus)
@@ -944,7 +944,8 @@
     (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
           _ (when-not muutos
               (throw+ {:type virheet/+viallinen-kutsu+
-                       :virheet [{:virhe "Muutosta ei löydy"}]}))
+                       :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                                  :viesti "Muutosta ei löydy"}]}))
 
           tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
           ;; Tarkasta voiko muutoksen poistaa
@@ -952,7 +953,8 @@
 
       (when (not voi-poistaa?)
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
-                 :virheet [{:virhe virhe}]}))
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                            :viesti virhe}]}))
 
 
       ;; Poista muutos, ja hae urakan ajantasaiset muutostiedot

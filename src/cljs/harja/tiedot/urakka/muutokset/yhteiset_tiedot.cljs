@@ -1,20 +1,23 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
-  (:require [tuck.core :as tuck]
-            [clojure.string :as str]
-            [reagent.core :refer [atom]]
-            [taoensso.timbre :as log]
+  (:require
+    [clojure.string :as str]
+    [reagent.core :refer [atom]]
+    [taoensso.timbre :as log]
+    [tuck.core :as tuck]
 
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.ui.nakymasiirrin :as siirrin]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.viesti :as viesti]
+    [harja.ui.liitteet :as liitteet]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
+    [harja.ui.nakymasiirrin :as siirrin]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tyokalut.tuck :as tuck-apurit]))
 
 
 (defonce ^{:private true}
@@ -469,9 +472,17 @@
 
   PoistaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! (str "Muutoksen poistaminen epäonnistui! "
-                           (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
-    (assoc app :tallennus-kesken? false))
+    (let [virhe-str (get-in vastaus [:response :virhe] "Tuntematon virhe")]
+      (modal/nayta!
+        {:otsikko "Muutosta ei voitu poistaa"
+         :footer [napit/sulje #(modal/piilota!)]}
+        [:div (str virhe-str)])
+
+      ;; Näytä myös toast-viesti, jotta käyttäjä varmasti huomaa virheen tapahtuneen
+      ;; Avattu modal antaa tarkempaa lisätietoa.
+      (viesti/nayta-toast! (str "Muutoksen poistaminen epäonnistui!") :varoitus viesti/viestin-nayttoaika-keskipitka)
+
+      (assoc app :tallennus-kesken? false)))
 
 
   ;; Liitteet
