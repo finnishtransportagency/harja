@@ -547,14 +547,15 @@
             hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
-         [:h2 "Urakan suolarajoitukset hoitovuosittain"]
+         [:h1 "Urakan suolarajoitukset hoitovuosittain"]
          #_[debug/debug app]
 
          [:div.kontrollit
           [:div.row
            [:div.:div.col-xs-12.col-md-3
-            [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
-            [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
+            [:label.alasvedon-otsikko {:for "suolarajoitus-hoitovuosi"} "Hoitovuosi"]
+            [yleiset/livi-pudotusvalikko {:element-id "suolarajoitus-hoitovuosi"
+                                          :valinta valittu-vuosi
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))

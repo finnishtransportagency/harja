@@ -143,7 +143,7 @@
           :valintojen-maara (count (:kohdeluokat valinnat))}]
 
         [:div {:class "col-md-2 filtteri label-ja-alasveto-grid"}
-         [:label.alasvedon-otsikko-vayla "Varustetyyppi"]
+         [:label.alasvedon-otsikko "Varustetyyppi"]
 
          [kentat/tee-kentta
           {:tyyppi :haku
@@ -321,6 +321,7 @@
           (e! (v/->TyhjennaVarusteListaus)))))
     (fn [e! app]
       [:div.varusteet-nakyma
+       [:h1 "Varusteet"]
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! app])
        [suodatuslomake e! app]

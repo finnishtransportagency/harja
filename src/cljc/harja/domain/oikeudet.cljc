@@ -20,6 +20,7 @@
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
+  hallinta-lupaukset
   urakat-laadunseuranta-talvihoitoreititys
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset

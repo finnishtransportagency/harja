@@ -47,9 +47,10 @@
                         (+ a (tiedot/parsi-summa (:summa s))))
                       0
                       kohdistukset))]
-   [:div
-    [napit/yleinen-toissijainen "Peruuta" (fn [] (modal/piilota!)) {:vayla-tyyli? true :luokka "suuri"}]
-    [napit/poista "Poista tiedot" varmistus-fn {:vayla-tyyli? true :luokka "suuri"}]]])
+   [:hr]
+   [:div.kulu-poisto-footer
+    [napit/poista "Poista tiedot" varmistus-fn]
+    [napit/peruuta "Peruuta" (fn [] (modal/piilota!))]]])
 
 (defn- liitteen-naytto
   [e! {:keys [liite-id liite-nimi liite-tyyppi liite-koko] :as _liite}]
@@ -124,7 +125,6 @@
   [:div.col-xs-12.col-md-3
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Lisätieto"
-     :luokka "poista-label-top-margin"
      :vayla-tyyli? true
      :otsikon-luokka ""
      :arvo-atom (r/wrap lisatieto
@@ -246,7 +246,6 @@
       [:div.col-xs-12.col-md-6 {:style {:max-width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :tyylit {:width "150px"}
          :otsikon-luokka ""
@@ -302,7 +301,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -336,7 +334,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -382,7 +379,6 @@
       [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :otsikon-luokka ""
          :arvo-atom (r/wrap lisatyon-lisatieto
@@ -503,6 +499,7 @@
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
+        tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
         kulu-lukittu? (or haku-menossa
                         (when erapaivan-hoitovuosi
                           (some #(and
@@ -566,26 +563,7 @@
              " sivulla."]]]]
          nil
          "100%"
-         {:luokka "ala-margin-16 max-width-full max-width-full"}])
-
-      ;; Poista-nappi
-      [:div.col-xs-12.col-md-6
-       (when (and (not (nil? (:id lomake))) (not kulu-lukittu?))
-         [napit/poista "Poista kulu"
-          #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
-             [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
-                                                             (modal/piilota!)
-                                                             (e! (tiedot/->PoistaKulu (:id lomake))))
-                                             :kohdistukset kohdistukset
-                                             :koontilaskun-kuukausi koontilaskun-kuukausi
-                                             :tehtavaryhma tehtavaryhma
-                                             :laskun-pvm (pvm/pvm erapaiva)
-                                             :tehtavaryhmat tehtavaryhmat}])
-          {:vayla-tyyli? true
-           :teksti-nappi? true
-           :style {:font-size "14px"
-                   :margin-left "auto"
-                   :float "right"}}])]]
+         {:luokka "ala-margin-16 max-width-full max-width-full"}])]
 
      ;; Onko kulu lukittu
      (when (and kulu-lukittu? (not haku-menossa)) [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
@@ -641,7 +619,6 @@
       [:div.col-xs-12.col-md-6.lisatiedot
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto"
-         :luokka #{}
          :arvo-atom (r/wrap (:lisatieto lomake)
                       #(e! (tiedot/->KulunLisatieto %)))
          :kentta-params {:tyyppi :text
@@ -652,7 +629,7 @@
 
      [:div.row
       [:div.col-xs-12.col-md-2
-       [:div {:style {:max-width "250px"}}
+       [:div.label-ja-alasveto {:style {:max-width "250px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
          {:valitse #(e! (tiedot/->ValitseErapaiva %))
@@ -681,7 +658,6 @@
                          :disabled? kulu-lukittu?
                          :elementin-id "koontilaskun-numero-input"}
          :otsikko "Koontilaskun numero"
-         :luokka #{}
          :arvo-atom (r/wrap
                       (:laskun-numero lomake)
                       #(e! (tiedot/->KoontilaskunNumero %)))}]]]
@@ -706,16 +682,30 @@
        [:div.kulu-napit
 
         [:span.kulu-valistys-oikea
-         [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKulu))
-          {:vayla-tyyli? true
-           :luokka "suuri"
-           :disabled (or (not lomake-validi?) kulu-lukittu?)}]]
+         [napit/tallenna
+          "Tallenna"
+          #(e! (tiedot/->TallennaKulu))
+          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa tehtava-haku-menossa?)}]]
 
         [:span
-         [napit/peruuta "Peruuta" #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
-          {:ikoni [ikonit/remove]
-           :luokka "suuri"
-           :vayla-tyyli? true}]]
+         [napit/peruuta
+          "Peruuta"
+          #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
+          {:disabled haku-menossa}]]
+
+        (when (and (not haku-menossa) (not tehtava-haku-menossa?) (not (nil? (:id lomake))))
+          [:span
+           [napit/poista "Poista kulu"
+            #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
+               [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
+                                                               (modal/piilota!)
+                                                               (e! (tiedot/->PoistaKulu (:id lomake))))
+                                               :kohdistukset kohdistukset
+                                               :koontilaskun-kuukausi koontilaskun-kuukausi
+                                               :tehtavaryhma tehtavaryhma
+                                               :laskun-pvm (pvm/pvm erapaiva)
+                                               :tehtavaryhmat tehtavaryhmat}])
+            {:style {:margin-left "1rem"}}]])
 
         (when haku-menossa
           [:span.kulu-ladataan

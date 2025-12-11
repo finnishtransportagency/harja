@@ -313,9 +313,11 @@
 
         (if ladataan?
           [:div.valitavoitteet
+           [:h1 "Välitavoitteet"]
            [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
 
           [:div.valitavoitteet
+           [:h1 "Välitavoitteet"]
            [:div.valinnat.margin-bottom-16
             [valinnat/urakan-hoitokausi-tuck
              valittu-hoitokausi
