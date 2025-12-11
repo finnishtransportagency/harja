@@ -1107,6 +1107,7 @@
   "Generoidaan annetulle urakalle ja hoitokaudelle lupausvastaukset kaikille lupauksille, riippumatta lupaustyypistä."
   [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         _ (lupaus-kyselyt/generoi-lupaukset-urakalle db {:urakkaid urakka-id
