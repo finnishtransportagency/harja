@@ -14,7 +14,6 @@
 
 (declare
   tallenna-lopputilanne! hae-urakan-lupaukset
-  hae-lupauksen-kaikki-kustannusennusteet paivita-kustannusennuste-lopulliset-pisteet!
   hae-lupaus hae-urakan-lupaustiedot hae-lupaus-vaihtoehdot hae-indeksikorotus-summalle
   hae-kaynnissa-olevat-lupaus-urakat hae-lupauksen-urakkatieto paivita-urakan-luvatut-pisteet<!
   lisaa-urakan-luvatut-pisteet<! paivita-lupaus-vastaus! hae-lupaus-vastaus lisaa-lupaus-vastaus<!
@@ -22,5 +21,5 @@
   kommentit lisaa-lupaus-kommentti<! poista-kayttajan-oma-kommentti!
   paivita-kuukausittaiset-pisteet<! tallenna-kuukausittaiset-pisteet<! poista-kuukausittaiset-pisteet<!
   hae-kuukausivastaus hae-lupauksen-hoitovuoden-kirjauskuukaudet
-  hae-kustannusennuste-id paivita-kustannusennuste<! lisaa-kustannusennuste<! hae-kustannusennuste
-  hae-kustannusennuste-maarapaivat)
+  hae-puuttuvat-urakka-linkitykset hae-rivin-tunnistin-selitteet hae-kategorian-urakat
+  hae-hoitovuoden-lopputilanne)
