@@ -49,8 +49,9 @@
                                               valittu-tpi-id
                                               toimenpideinstanssit tehtavat-tasoineen)]
         [:div.row.muut-tyot
-         [valinnat/urakan-sopimus ur]
-         [valinnat/urakan-toimenpide+muut ur]
+         [:div.flex-row {:style {:justify-content "flex-start"}}
+          [valinnat/urakan-sopimus ur]
+          [valinnat/urakan-toimenpide+muut ur]]
          [grid/grid
           {:otsikko      "Urakkasopimuksen mukaiset muutos- ja lisätyöhinnat"
            :luokat       ["col-md-10"]

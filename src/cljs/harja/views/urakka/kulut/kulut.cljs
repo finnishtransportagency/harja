@@ -262,8 +262,9 @@
 
             [:div.flex-row {:style {:justify-content "flex-start"}}
              [:div.filtteri.label-ja-alasveto
-              [:span.alasvedon-otsikko "Hoitovuosi"]
-              [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+              [:label.alasvedon-otsikko {:for "kulut-hoitokausi-valinta"} "Hoitovuosi"]
+              [yleiset/livi-pudotusvalikko {:elementin-id "kulut-hoitokausi-valinta"
+                                            :valinta valittu-hoitokausi
                                             :disabled haku-menossa
                                             :vayla-tyyli? true
                                             :data-cy "hoitokausi-valinta"
@@ -288,7 +289,7 @@
              [:span {:class "label-ja-aikavali"}
               (when-not haku-menossa
                 [:div.label-ja-alasveto.aikavali
-                 [:span.alasvedon-otsikko (str "Aikaväli")]
+                 [:label.alasvedon-otsikko {:for "kulut-aikavali-alku"} (str "Aikaväli")]
                  [:div.aikavali-valinnat
                   [kentat/tee-kentta {:tyyppi :pvm
                                       :vayla-tyyli? true

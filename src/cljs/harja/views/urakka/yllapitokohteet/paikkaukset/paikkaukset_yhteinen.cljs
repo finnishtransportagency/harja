@@ -42,7 +42,7 @@
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Näytä"
          :luokka ""
-         :otsikon-luokka "alasvedon-otsikko-vayla"
+         :otsikon-luokka "alasvedon-otsikko"
          :kentta-params {:tyyppi :radio-group
                          :vaihtoehdot [:kaikki-kohteet :kohteet-joilla-toteumia]
                          :vaihtoehto-nayta (fn [arvo]
@@ -55,7 +55,7 @@
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Toteuman tieosoite"
          :luokka ""
-         :otsikon-luokka "alasvedon-otsikko-vayla"
+         :otsikon-luokka "alasvedon-otsikko"
          :kentta-params {:tyyppi :tierekisteriosoite
                          :tr-otsikot? false
                          :voi-valita-kartalta? false
@@ -70,7 +70,7 @@
                                          :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
                                          :vayla-tyyli? true}]
        [:span {:style {:width "500px"}}
-        [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
+        [:label.alasvedon-otsikko "Työmenetelmä"]
         [:div.kentta
          [valinnat/checkbox-pudotusvalikko
           (map (fn [t]
@@ -85,7 +85,7 @@
           [" Työmenetelmä valittu" " Työmenetelmää valittu"]
           {:vayla-tyyli? true}]]] 
        [:span {:style {:align-self "flex-start"
-                       :margin-top "2rem"
+                       :margin-top "21px"
                        :padding-bottom "2px"}}
         [napit/yleinen-ensisijainen "Hae toteumia" haku-fn {:luokka "nappi-korkeus-36"}]]
        #_ [kartta/piilota-tai-nayta-kartta-nappula {:luokka #{"oikealle"}
