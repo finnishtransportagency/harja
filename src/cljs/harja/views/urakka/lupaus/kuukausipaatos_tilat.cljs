@@ -11,6 +11,7 @@
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]))
 
 (defn paattele-kohdevuosi [kohdekuukausi vastaukset app]
@@ -64,7 +65,7 @@
         kustannusennuste-lupaus? (lupaus-domain/kustannusennuste? lupaus) 
         nykyhetki (or (:nykyhetki app) (pvm/nyt))
         maarapaiva-data (when (and kustannusennuste-lupaus? (:maarapaiva-pvm lupaus-kuukausi))
-                              (lupaus-domain/kustannusennuste-maarapaiva-paattely 
+                              (kustannusennuste-domain/kustannusennuste-maarapaiva-paattely 
                                 nykyhetki 
                                 (:maarapaiva-pvm lupaus-kuukausi)
                                 kustannusennuste-syotetty?

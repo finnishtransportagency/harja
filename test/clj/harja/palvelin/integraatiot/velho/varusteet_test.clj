@@ -143,3 +143,69 @@
                 :valimaiset-toimenpiteet []}
                {:oid "1.2.246.578.4.3.14.2171636297.4142310436",
                 :valimaiset-toimenpiteet []}) vastaus)))))
+
+;; Testit tyhjien OID-listojen käsittelylle (ei saa tuottaa tyhjiä OID-listoja payloadiin)
+(deftest lisaa-oid-haku-jos-tarvitaan-test
+  (testing "Lisää OID-haun kun oidit on annettu"
+    (let [varsinainen-haku ["ja" ["kohdeluokka" "test"] ["olemassa" "kentta"]]
+          oidit ["oid-1" "oid-2" "oid-3"]
+          tulos (#'varusteet/lisaa-oid-haku-jos-tarvitaan varsinainen-haku oidit)]
+      (is (= ["tai"
+              ["ja" ["kohdeluokka" "test"] ["olemassa" "kentta"]]
+              ["joukossa" ["yleiset/perustiedot" "oid"] ["oid-1" "oid-2" "oid-3"]]]
+            tulos))
+      (is (not (some #{[]} (flatten tulos))) "Ei saa sisältää tyhjiä vektoreita")))
+
+  (testing "Ei lisää OID-hakua kun oidit on tyhjä lista"
+    (let [varsinainen-haku ["ja" ["kohdeluokka" "test"] ["olemassa" "kentta"]]
+          oidit []
+          tulos (#'varusteet/lisaa-oid-haku-jos-tarvitaan varsinainen-haku oidit)]
+      (is (= varsinainen-haku tulos) "Tyhjällä OID-listalla pitää palauttaa vain varsinainen haku")
+      (is (not (some #{[]} (flatten tulos))) "Ei saa sisältää tyhjiä vektoreita")))
+
+  (testing "Ei lisää OID-hakua kun oidit on nil"
+    (let [varsinainen-haku ["ja" ["kohdeluokka" "test"] ["olemassa" "kentta"]]
+          oidit nil
+          tulos (#'varusteet/lisaa-oid-haku-jos-tarvitaan varsinainen-haku oidit)]
+      (is (= varsinainen-haku tulos) "nil OID-listalla pitää palauttaa vain varsinainen haku")
+      (is (not (some #{[]} (flatten tulos))) "Ei saa sisältää tyhjiä vektoreita"))))
+
+(deftest toimenpide-parametrit-ei-sisalla-tyhja-oid-listoja-test
+  (testing "tee-toimenpide-lisatty-parametri ei tuota tyhjiä OID-listoja"
+    (let [tulos-tyhja (#'varusteet/tee-toimenpide-lisatty-parametri [])
+          tulos-nil (#'varusteet/tee-toimenpide-lisatty-parametri nil)
+          tulos-oidit (#'varusteet/tee-toimenpide-lisatty-parametri ["oid-1" "oid-2"])]
+      (is (not (some #{[]} (flatten tulos-tyhja))) "Tyhjä lista ei saa tuottaa tyhjiä vektoreita")
+      (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
+      (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")
+      (is (some #(= ["joukossa" ["yleiset/perustiedot" "oid"] ["oid-1" "oid-2"]] %)
+              (tree-seq coll? seq tulos-oidit))
+        "OID-listan kanssa pitää sisältää OID-haku")))
+
+  (testing "tee-kohteen-poisto-parametri ei tuota tyhjiä OID-listoja"
+    (let [tulos-tyhja (#'varusteet/tee-kohteen-poisto-parametri [])
+          tulos-nil (#'varusteet/tee-kohteen-poisto-parametri nil)
+          tulos-oidit (#'varusteet/tee-kohteen-poisto-parametri ["oid-1"])]
+      (is (not (some #{[]} (flatten tulos-tyhja))) "Tyhjä lista ei saa tuottaa tyhjiä vektoreita")
+      (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
+      (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")))
+
+  (testing "tee-muut-varustetoimenpiteet-parametri ei tuota tyhjiä OID-listoja"
+    (with-redefs [harja.kyselyt.velho-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet
+                  (constantly [{:nimiavaruus "varustetoimenpide" :nimi "vtp01"}])]
+      (let [tulos-tyhja (#'varusteet/tee-muut-varustetoimenpiteet-parametri nil [])
+            tulos-nil (#'varusteet/tee-muut-varustetoimenpiteet-parametri nil nil)
+            tulos-oidit (#'varusteet/tee-muut-varustetoimenpiteet-parametri nil ["oid-1"])]
+        (is (not (some #{[]} (flatten tulos-tyhja))) "Tyhjä lista ei saa tuottaa tyhjiä vektoreita")
+        (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
+        (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita"))))
+
+  (testing "tee-varustetoimenpide-parametri ei tuota tyhjiä OID-listoja"
+    (with-redefs [harja.kyselyt.velho-nimikkeistot/hae-nimike-otsikolla
+                  (constantly "vtp01")]
+      (let [tulos-tyhja (#'varusteet/tee-varustetoimenpide-parametri nil "Korjaus" [])
+            tulos-nil (#'varusteet/tee-varustetoimenpide-parametri nil "Korjaus" nil)
+            tulos-oidit (#'varusteet/tee-varustetoimenpide-parametri nil "Korjaus" ["oid-1"])]
+        (is (not (some #{[]} (flatten tulos-tyhja))) "Tyhjä lista ei saa tuottaa tyhjiä vektoreita")
+        (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
+        (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")))))

@@ -87,9 +87,10 @@
             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
               oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
            ^{:key "uusi-laatupoikkeama"}
-           [napit/uusi "Uusi laatupoikkeama"
-            #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-            {:disabled (not oikeus?)}]))]]
+           [:div {:style {:padding-top "12px"}}
+            [napit/uusi "Uusi laatupoikkeama"
+             #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+             {:disabled (not oikeus?)}]]))]]
 
      [:div.margin-top-16
       [grid/grid
