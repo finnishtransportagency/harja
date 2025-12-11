@@ -38,7 +38,7 @@
   [:div.row.filtterit
    ;; TR valinta
    [:div
-    [:div.alasvedon-otsikko-vayla "Tieosoite"]
+    [:label.alasvedon-otsikko "Tieosoite"]
     [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                         :alaotsikot? true
                         :vayla-tyyli? true}
@@ -59,7 +59,7 @@
       :aikavalin-rajoitus [6 :kuukausi]}]]
 
    ;; Haku
-   [:div.haku-nappi
+   [:div.haku-nappi {:style {:margin-top "14px"}}
     [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]])
 
 

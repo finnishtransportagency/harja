@@ -265,17 +265,17 @@
 
       ;; 3 Kohdenumero
       [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko"}}]
       ;; 4 Tienumero
       [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                         :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]]
+                                                         :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko"}}]]
 
      ;; Ryhmä #2 
      [:div
       ;; 1 Aikajana 
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Aikajana"
-        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :otsikon-luokka "alasvedon-otsikko"
         :luokka "label-ja-kentta-puolikas"
         :kentta-params {:tyyppi :toggle
                         :vayla-tyyli? true
@@ -288,7 +288,7 @@
       [kentat/tee-otsikko-ja-kentat
        {:otsikko "Aikajanan asetukset"
         :luokka "label-ja-kentta"
-        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :otsikon-luokka "alasvedon-otsikko"
         :kentat [{:kentta-params {:tyyppi :checkbox
                                   :teksti "Näytä tarkka aikataulu"}
                   :arvo-atom tiedot/nayta-tarkka-aikajana?}
