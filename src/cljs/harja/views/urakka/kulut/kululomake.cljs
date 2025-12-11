@@ -504,7 +504,7 @@
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
-        tehtava-haku-menossa? (boolean (first (filter #(true? (:tehtava-haku-menossa %)) kohdistukset)))
+        tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
         kulu-lukittu? (or haku-menossa
                         (when erapaivan-hoitovuosi
                           (some #(and
