@@ -2,7 +2,8 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]))
 
-(declare hae-kuukausittaiset-pisteet hae-sitoutumistiedot)
+(declare hae-kuukausittaiset-pisteet hae-sitoutumistiedot hae-kustannusennuste-kuukausi-pisterajat
+  generoi-lupaukset-urakalle)
 
 ;; Tämä on käytössä, vaikka kondo ei sitä huomaakaan. Sitä käytetään jeesql:ssä.
 (defn muunna-lupaus [lupaus]

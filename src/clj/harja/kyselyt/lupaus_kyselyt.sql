@@ -328,3 +328,8 @@ SELECT lopullinen_tavoitehinta,
 FROM lupaus_hoitovuosi_lopputilanne
 WHERE "urakka-id" = :urakka-id
   AND hoitovuosi_alkuvuosi = :hoitovuosi-alkuvuosi;
+
+-- name: generoi-lupaukset-urakalle
+-- Generoi lupaukset urakalle. Admin ominaisuus. Käytetään testidatassa.
+SELECT lisaa_urakan_lupaukset(:urakkaid::INT, :hoitokauden_alkuvuosi,
+                              :urakan_alkuvuosi, :kayttajaid);

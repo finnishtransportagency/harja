@@ -149,11 +149,11 @@
 
 (defn- hae-perustiedot
   "Hakee urakan ja hoitokauden perustiedot.
-   
+
    Palauttaa mapin joka sisältää:
    - :urakan-tiedot - Urakan täydelliset tiedot
    - :urakan-alkuvuosi - Urakan alkuvuosi
-   - :urakan-alkupvm - Urakan alkupäivämäärä  
+   - :urakan-alkupvm - Urakan alkupäivämäärä
    - :hoitokauden-alkuvuosi - Valitun hoitokauden alkuvuosi
    - :hoitovuosi-nro - Hoitovuoden järjestysnumero (1, 2, 3...)
    - :hk-alkupvm - Hoitokauden alkupäivämäärä
@@ -177,13 +177,13 @@
 
 (defn- rikasta-lupaus-lisatiedoilla
   "Rikastaa lupauksen tyyppi-spesifisillä lisätiedoilla.
-   
+
    Kustannusennuste-lupaukset rikastavat kustannusennuste-datalla ja tiloinformaatiolla.
    Muut lupaustyyppit (yksittäinen, monivalinta, kysely) palauttavat sellaisenaan."
   [lupaus db urakka-id hoitokauden-alkuvuosi urakan-alkuvuosi hoitovuosi-nro]
   (if (= "kustannusennuste" (:lupaustyyppi lupaus))
     (let [kustannusennusteet (when (and db (:lupaus-id lupaus) urakka-id hoitokauden-alkuvuosi)
-                               (kustannusennuste-kyselyt/hae-lupauksen-kustannusennusteet 
+                               (kustannusennuste-kyselyt/hae-lupauksen-kustannusennusteet
                                  db (:lupaus-id lupaus) urakka-id hoitokauden-alkuvuosi))
           pisteet-tila (when (and db urakka-id hoitokauden-alkuvuosi)
                          (kustannusennuste-kyselyt/onko-kustannusennuste-pisteet-laskettu?
@@ -204,12 +204,12 @@
 
 (defn ylikirjoita-hoitovuosikohtaiset-arvot
   "Ylikirjoittaa lupauksen oletusarvot hoitovuosikohtaisilla arvoilla, jos niitä on määritelty.
-   
+
    Hakee lupaus_hoitovuoden_kirjauskuukaudet-taulusta hoitovuosikohtaiset arvot ja korvaa:
    - kirjaus-kkt: aina
    - paatos-kk: jos ei nil
    - joustovara-kkta: jos ei nil
-   
+
    Arvot ylikirjoitetaan suoraan lupaus-mappiin, jolloin domain-funktiot saavat
    ne automaattisesti fallback-logiikan kautta."
   [db vastaus hoitovuosi-nro]
@@ -217,7 +217,7 @@
   (let [lupaus-idt (mapv :lupaus-id vastaus)
         hoitovuoden-arvot (when (seq lupaus-idt)
                             (->> lupaus-idt
-                              (map #(lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet 
+                              (map #(lupaus-kyselyt/hae-lupauksen-hoitovuoden-kirjauskuukaudet
                                      db {:lupaus-id %
                                          :hoitovuosi-nro hoitovuosi-nro}))
                               (filter seq)
@@ -233,13 +233,13 @@
 
 (defn- prosessoi-lupausvastaukset
   "Prosessoi lupausvastaukset: konvertoi JSON, rikastaa domain-logiikalla.
-  
+
   Parametrit:
   - vastaus: Lupausvastaukset (arvot on jo ylikirjoitettu hoitovuosikohtaisilla arvoilla)
   - maarapaiva-tiedot: Map lupaus-id -> määräpäivätiedot
-  - opts: {:db, :urakka-id, :urakan-alkuvuosi, :hoitokauden-alkuvuosi, 
+  - opts: {:db, :urakka-id, :urakan-alkuvuosi, :hoitokauden-alkuvuosi,
            :hoitovuosi-nro, :valittu-hoitokausi, :nykyhetki}
-  
+
   Palauttaa prosessoidun lupausvastausvektorin."
   [vastaus maarapaiva-tiedot opts]
   {:pre [(coll? vastaus)
@@ -252,7 +252,7 @@
          (or (nil? (:hoitovuosi-nro opts)) (number? (:hoitovuosi-nro opts)))
          (vector? (:valittu-hoitokausi opts))
          (some? (:nykyhetki opts))]}
-  (let [{:keys [db urakka-id urakan-alkuvuosi hoitokauden-alkuvuosi 
+  (let [{:keys [db urakka-id urakan-alkuvuosi hoitokauden-alkuvuosi
                 hoitovuosi-nro valittu-hoitokausi nykyhetki]} opts]
     (->> vastaus
       (mapv #(update % :vastaukset konversio/jsonb->clojuremap))
@@ -276,7 +276,7 @@
 
 (defn- hae-talouslaskelmat
   "Hakee talouslaskelmat lupausten näkymään.
-  
+
   Parametrit:
   - db: Tietokantayhteys
   - urakka-id: Urakan ID
@@ -284,7 +284,7 @@
   - hk-loppupvm: Hoitokauden loppupäivä (voi olla nil)
   - hoitokauden-alkuvuosi: Hoitokauden alkuvuosi
   - lupaus-sitoutuminen: Lupauksen sitoutumistiedot (sisältää :pisteet)
-  
+
   Palauttaa mapin jossa:
   - :tavoitehinta - Urakan tavoitehinta
   - :oikaistu-tavoitehinta - Oikaistu tavoitehinta välikatselmuksesta
@@ -327,7 +327,7 @@
 
 (defn- muodosta-yhteenveto
   "Muodostaa yhteenvedon lupausten näkymään.
-  
+
   Parametrit (options-map):
   - piste-maksimi: Maksimipisteet
   - piste-ennuste: Ennustepisteet
@@ -345,7 +345,7 @@
   - luvatut-pisteet-puuttuu?: Boolean: puuttuuko luvatut pisteet
   - ennusteen-tila: Ennusteen tila (:katselmoitu-toteuma, :alustava-toteuma, :ennuste, :ei-viela-ennustetta)
   - tallennettu-paatos: Tallennettu päätös (voi olla nil)
-  
+
   Palauttaa yhteenvedon mapin jossa:
   - :ennusteen-tila - Ennusteen tila
   - :pisteet - Map jossa :maksimi, :ennuste, :toteuma
@@ -395,7 +395,7 @@
 
 (defn- laske-bonus-ja-ennuste
   "Laskee bonuksen/sanktion ja ennusteen tilan.
-  
+
   Parametrit (options-map):
   - tallennettu-paatos: Tallennettu lupaus-päätös (voi olla nil)
   - piste-toteuma: Toteutuneet pisteet (voi olla nil)
@@ -404,11 +404,11 @@
   - tavoitehinta: Urakan tavoitehinta
   - nykyhetki: Nykyinen aika
   - hk-alkupvm: Hoitokauden alkupäivä
-  
+
   Palauttaa mapin jossa:
   - :bonus-tai-sanktio - Bonuksen tai sanktion määrä
   - :ennusteen-tila - Ennusteen tila (:katselmoitu-toteuma, :alustava-toteuma, :ennuste, :ei-viela-ennustetta)"
-  [{:keys [tallennettu-paatos piste-toteuma piste-ennuste 
+  [{:keys [tallennettu-paatos piste-toteuma piste-ennuste
            lupaus-sitoutuminen tavoitehinta nykyhetki hk-alkupvm]}]
   {:pre [(inst? nykyhetki)
          (or (nil? hk-alkupvm) (inst? hk-alkupvm))
@@ -442,9 +442,9 @@
                                                         valittu-hoitokausi] :as tiedot}]
   ;; Hae perustiedot - eliminoi duplikaatit
   (let [perustiedot (hae-perustiedot db urakka-id valittu-hoitokausi)
-        {:keys [urakan-tiedot urakan-alkuvuosi hoitokauden-alkuvuosi 
+        {:keys [urakan-tiedot urakan-alkuvuosi hoitokauden-alkuvuosi
                 hoitovuosi-nro hk-alkupvm hk-loppupvm valittu-hoitokausi]} perustiedot
-        
+
         kustannusennuste-pisteet-tila (kustannusennuste-kyselyt/onko-kustannusennuste-pisteet-laskettu?
                                         db urakka-id hoitokauden-alkuvuosi)
         vastaus (into []
@@ -453,12 +453,12 @@
                                                               :urakan-alkuvuosi urakan-alkuvuosi
                                                               :loppupvm hk-loppupvm}))
         maarapaiva-tiedot (laske-maarapaiva-tiedot db vastaus urakka-id urakan-tiedot hoitokauden-alkuvuosi nykyhetki)
-        
+
         ;; Ylikirjoita hoitovuosikohtaiset arvot esim. kirjaus-kkt tarkemmilla säännöillä
         vastaus (ylikirjoita-hoitovuosikohtaiset-arvot db vastaus hoitovuosi-nro)
-        
+
         ;; Prosessoi vastaukset
-        vastaus (prosessoi-lupausvastaukset 
+        vastaus (prosessoi-lupausvastaukset
                   vastaus
                   maarapaiva-tiedot
                   {:db db
@@ -468,7 +468,7 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :valittu-hoitokausi valittu-hoitokausi
                    :nykyhetki nykyhetki})
-        
+
         lupaus-sitoutuminen (sitoutumistiedot vastaus)
         lupausryhmat (lupausryhman-tiedot vastaus)
         piste-maksimi (lupaus-domain/rivit->maksimipisteet lupausryhmat)
@@ -477,7 +477,7 @@
         odottaa-kannanottoa (lupaus-domain/lupausryhmat->odottaa-kannanottoa lupausryhmat)
         merkitsevat-odottaa-kannanottoa (lupaus-domain/lupausryhmat->merkitsevat-odottaa-kannanottoa lupausryhmat)
         odottaa-urakoitsijan-kannanottoa? (> odottaa-kannanottoa merkitsevat-odottaa-kannanottoa)
-        
+
         ;; Hae talouslaskelmat
         {:keys [tavoitehinta
                 oikaistu-tavoitehinta
@@ -487,12 +487,12 @@
                                                                  hk-alkupvm hk-loppupvm
                                                                  hoitokauden-alkuvuosi
                                                                  lupaus-sitoutuminen)
-        
+
         tallennettu-paatos (hae-lupauspaatos db urakka-id (pvm/vuosi hk-alkupvm))
         valikatselmus-tehty? (valikatselmus-tehty-urakalle? db urakka-id hoitokauden-alkuvuosi)
-        
+
         ;; Laske bonus ja ennuste
-        {:keys [bonus-tai-sanktio ennusteen-tila]} 
+        {:keys [bonus-tai-sanktio ennusteen-tila]}
         (laske-bonus-ja-ennuste
           {:tallennettu-paatos tallennettu-paatos
            :piste-toteuma piste-toteuma
@@ -501,7 +501,7 @@
            :tavoitehinta tavoitehinta
            :nykyhetki nykyhetki
            :hk-alkupvm hk-alkupvm})
-        
+
         ;; Muodosta yhteenveto
         yhteenveto (muodosta-yhteenveto
                      {:piste-maksimi piste-maksimi
@@ -531,7 +531,7 @@
                    :nykyhetki nykyhetki} ; Minkä hetken mukaan on laskettu
      ;; Yhteenveto
      :yhteenveto yhteenveto}))
-     
+
 (defn- hae-urakan-lupaustiedot [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
   {:pre [(number? urakka-id) valittu-hoitokausi
          (inst? (first valittu-hoitokausi)) (inst? (second valittu-hoitokausi))]}
@@ -611,9 +611,9 @@
                                                            kustannusennuste] :as tiedot}]
   ;; EI lasketa pisteitä automaattisesti - ne lasketaan vasta välikatselmuksessa
    (let [maarapaiva (pvm/luo-pvm vuosi (dec kuukausi) 15)
-         syotetty-pvm (pvm/nyt) 
+         syotetty-pvm (pvm/nyt)
          hoitovuosi (pvm/hoitokauden-alkuvuosi vuosi kuukausi)
-         
+
         ;; Tarkista onko kustannusennuste jo olemassa
          olemassa-oleva-id (kustannusennuste-kyselyt/hae-kustannusennuste-id
                              db {:lupaus-id lupaus-id
@@ -1000,7 +1000,7 @@
 
         ;; Käy läpi jokainen kustannusennuste-lupaus
         (doseq [lupaus kustannusennuste-lupaukset]
-          (let [lupaus-id (:lupaus-id lupaus) 
+          (let [lupaus-id (:lupaus-id lupaus)
                 kaikki-ennusteet (kustannusennuste-kyselyt/hae-lupauksen-kaikki-kustannusennusteet-kaikki-hoitovuodet
                                    db {:lupaus-id lupaus-id
                                        :urakka-id urakka-id})
@@ -1103,6 +1103,21 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset user urakka-id)
   (hae-kuukausittaiset-pisteet-hoitokaudelle db user tiedot))
 
+(defn generoi-lupausvastaukset
+  "Generoidaan annetulle urakalle ja hoitokaudelle lupausvastaukset kaikille lupauksille, riippumatta lupaustyypistä."
+  [db user {:keys [urakka-id valittu-hoitokausi] :as tiedot}]
+  {:pre [db user tiedot (number? urakka-id) (not (nil? valittu-hoitokausi)) (number? (:id user))]}
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset user urakka-id)
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        _ (lupaus-kyselyt/generoi-lupaukset-urakalle db {:urakkaid urakka-id
+                                                         :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                                                         :urakan_alkuvuosi urakan-alkuvuosi
+                                                         :kayttajaid (:id user)})]
+    {:ok "ok"}))
+
+
+
 (defrecord Lupaus [asetukset]
   component/Lifecycle
   (start [this]
@@ -1156,20 +1171,24 @@
                       :hae-kuukausittaiset-pisteet
                       (fn [user tiedot]
                         (hae-kuukausittaiset-pisteet (:db this) user (lisaa-nykyhetki tiedot asetukset))))
+    (julkaise-palvelu (:http-palvelin this)
+      :generoi-lupausvastaukset
+      (fn [user tiedot]
+        (generoi-lupausvastaukset (:db this) user (lisaa-nykyhetki tiedot asetukset))))
 
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-urakan-lupaustiedot
-                     :tallenna-luvatut-pisteet
-                     :vastaa-lupaukseen
-                     :lupauksen-kommentit
-                     :lisaa-lupauksen-kommentti
-                     :poista-lupauksen-kommentti
-                     :tallenna-kuukausittaiset-pisteet
-                     :poista-kuukausittaiset-pisteet
-                     :hae-kuukausittaiset-pisteet)
+    (poista-palvelut
+      (:http-palvelin this)
+      :hae-urakan-lupaustiedot
+      :tallenna-luvatut-pisteet
+      :vastaa-lupaukseen
+      :lupauksen-kommentit
+      :lisaa-lupauksen-kommentti
+      :poista-lupauksen-kommentti
+      :tallenna-kuukausittaiset-pisteet
+      :poista-kuukausittaiset-pisteet
+      :hae-kuukausittaiset-pisteet
+      :generoi-lupausvastaukset)
     this))
-
-
