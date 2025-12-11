@@ -40,12 +40,10 @@
         [:div.paallystyksen-maksuerat
          [:h1 "Maksuerät"]
 
-         [valinnat/urakan-vuosi valittu-urakka {:vayla-tyyli? true :ei-valistysta? true}]
-
-         [:span.paallystys-valinnat
+         [:div.flex-row {:style {:justify-content "flex-start"}}
+          [valinnat/urakan-vuosi valittu-urakka]
           [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
           [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]]
-
 
          [grid/grid
           {:tyhja (if (nil? maksuerat)

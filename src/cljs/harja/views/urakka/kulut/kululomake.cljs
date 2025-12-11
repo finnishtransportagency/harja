@@ -619,7 +619,6 @@
       [:div.col-xs-12.col-md-6.lisatiedot
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto"
-         :luokka #{}
          :arvo-atom (r/wrap (:lisatieto lomake)
                       #(e! (tiedot/->KulunLisatieto %)))
          :kentta-params {:tyyppi :text
@@ -630,7 +629,7 @@
 
      [:div.row
       [:div.col-xs-12.col-md-2
-       [:div {:style {:max-width "250px"}}
+       [:div.label-ja-alasveto {:style {:max-width "250px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
          {:valitse #(e! (tiedot/->ValitseErapaiva %))
@@ -659,7 +658,6 @@
                          :disabled? kulu-lukittu?
                          :elementin-id "koontilaskun-numero-input"}
          :otsikko "Koontilaskun numero"
-         :luokka #{}
          :arvo-atom (r/wrap
                       (:laskun-numero lomake)
                       #(e! (tiedot/->KoontilaskunNumero %)))}]]]
