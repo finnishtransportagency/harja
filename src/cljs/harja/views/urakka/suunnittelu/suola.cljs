@@ -57,15 +57,15 @@
                        @poista-kaikilta-vuosilta?-atom
                        (:kopioidaan-tuleville-vuosille? lomake-tila))
                      urakka)]
-            [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
-                                                          (mapv #(pvm/vuosi (first %))
-                                                                (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")])]
+        [:li (fmt/hoitokauden-jarjestysluku-ja-vuodet vuosi
+               (mapv #(pvm/vuosi (first %))
+                 (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")])]
      ;; Vain yksi poistettava rajoitus
      [:ul
       [:li
        (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitokauden-alkuvuosi lomake-tila)
-                                                (mapv #(pvm/vuosi (:alkupvm %))
-                                                      (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")]])
+         (mapv #(pvm/vuosi (:alkupvm %))
+           (urakka/hoito-tai-sopimuskaudet urakka)) "Hoitovuosi")]])
    [:div
     [kentat/tee-kentta
      {:tyyppi :checkbox
@@ -148,7 +148,7 @@
             :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)
             :tyyppi :komponentti
             :komponentti (fn []
-                           [:div ])}))
+                           [:div])}))
        (when (:validaatioinfot lomake)
          (lomake/ryhma {:rivi true}
            {:nimi :validaatioinfot
@@ -228,9 +228,9 @@
                          (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
                          lomake)
         muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
-        disabled? (or (not (get-in app [:lomake ::tila/validi?]))  (:hae-tiedot-kaynnissa? app) (not saa-muokata?))]
+        disabled? (or (not (get-in app [:lomake ::tila/validi?])) (:hae-tiedot-kaynnissa? app) (not saa-muokata?))]
     [:div.lomake-rajoitusalue
-        [debug/debug (:lomake app)]
+     [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? saa-muokata?
@@ -309,8 +309,8 @@
         lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
         ;; Aseta tuleville vuosille kopiointi defaulttina päälle, jos sitä ei ole erikseen estetty
         lomake (if (nil? (:kopioi-rajoitukset lomake))
-              (assoc lomake :kopioi-rajoitukset true)
-              lomake)]
+                 (assoc lomake :kopioi-rajoitukset true)
+                 lomake)]
     [:div
      [lomake/lomake {:ei-borderia? true
                      :tarkkaile-ulkopuolisia-muutoksia? false
@@ -343,7 +343,7 @@
                                            :wrapper-luokka "tooltip-wrapper"}
                           [ikonit/harja-icon-status-info]
                           [:div
-                           "Talvisuolan käyttöraja kirjataan Tehtävät ja määrät -välilehdellä kohdassa " [:b "Suolaus."]]])})
+                           "Talvisuolan käyttöraja kirjataan Tehtävät ja määrät -välilehdellä kohdassa " [:b "Liukkaudentorjunta suolaamalla (materiaali)."]]])})
 
        (lomake/rivi
          {:nimi :sanktio_ylittavalta_tonnilta
@@ -496,8 +496,8 @@
                                     (merge
                                       {:kopioidaan-tuleville-vuosille? true}
                                       (some (fn [r]
-                                                   (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
-                                             rajoitukset))))}
+                                              (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
+                                        rajoitukset))))}
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
     {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.5}
@@ -542,19 +542,20 @@
                             (:valittu-hoitovuosi app))
             ;; Varmista, ettei vahingossa oteta niin uutta vuotta, että urakka ei tue sellaista
             valittu-vuosi (if (> valittu-vuosi urakan-loppuvuosi)
-              urakan-loppuvuosi
-              (:valittu-hoitovuosi app))
+                            urakan-loppuvuosi
+                            (:valittu-hoitovuosi app))
             hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
-         [:h2 "Urakan suolarajoitukset hoitovuosittain"]
-         #_ [debug/debug app]
+         [:h1 "Urakan suolarajoitukset hoitovuosittain"]
+         #_[debug/debug app]
 
          [:div.kontrollit
           [:div.row
            [:div.:div.col-xs-12.col-md-3
-            [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
-            [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
+            [:label.alasvedon-otsikko {:for "suolarajoitus-hoitovuosi"} "Hoitovuosi"]
+            [yleiset/livi-pudotusvalikko {:element-id "suolarajoitus-hoitovuosi"
+                                          :valinta valittu-vuosi
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))

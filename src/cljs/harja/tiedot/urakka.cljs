@@ -41,9 +41,6 @@
   (when (nil? (first @valittu-sopimusnumero))
     (reset! valittu-sopimusnumero (urakan-oletussopimus @nav/valittu-urakka))))
 
-(defn valitse-sopimusnumero-kaikki! []
-  (reset! valittu-sopimusnumero [nil "Kaikki"]))
-
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                _ @istunto/kayttaja]
