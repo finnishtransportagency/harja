@@ -339,6 +339,8 @@
      [nykyhetki (r/wrap
                   (:nykyhetki app)
                   #(e! (lupaus-tiedot/->AsetaNykyhetki %)))]
+     [napit/yleinen-toissijainen "Generoi vastaukset"
+      #(e! (lupaus-tiedot/->GeneroiLupausvastaukset))]
      [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn lupaukset-alempi-valilehti*

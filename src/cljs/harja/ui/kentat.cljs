@@ -249,7 +249,7 @@
   [:input {:class (cond-> nil
                     (and lomake?
                       (not vayla-tyyli?)) (str "form-control ")
-                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                    true (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
                     disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change #(let [v (-> % .-target .-value)]
@@ -414,7 +414,7 @@
                            :class (cond-> nil
                                     (and lomake?
                                       (not vayla-tyyli?)) (str "form-control ")
-                                    vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                                    true (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
                                     disabled? (str "disabled")
                                     input-luokka (str " " input-luokka)
                                     veda-oikealle? (str " veda-oikealle"))

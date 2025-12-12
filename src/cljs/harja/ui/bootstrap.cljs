@@ -158,6 +158,6 @@ Opts can have the following keys:
                          (:class options) " panel-default")}
     (when title
       [:div.panel-heading
-       [:h2.musta title]])
+       [:h1.musta title]])
     [:div.panel-body
      content]]))
