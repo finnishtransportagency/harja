@@ -14,7 +14,7 @@
       
       /* Tieosoite valinta */
       .tierekisteriosoite-flex {
-        padding-right: 120px;
+        padding-right: 7.5rem;
       }
 
       /* Tieosoite otsikko */
@@ -28,14 +28,14 @@
       .haku-nappi {
         display: flex;
         align-items: center;
-        padding-bottom: 8px;
-        padding-left: 20px;
+        padding-bottom: @valistys-8;
+        padding-left: @valistys-20;
       }
     }
 
     /* Karttanäkymä */
     .reikapaikkaukset-kartta {
-      padding: 12px 0;
+      padding: @valistys-12 0;
     }
 
     /* Grid */
@@ -64,12 +64,12 @@
         flex-direction: column;
 
         .reikapaikkaus-pvm {
-          margin-left: 0px;
-          margin-top: 40px;
+          margin-left: 0;
+          margin-top: @valistys-48;
         }
 
         .haku-nappi {
-          padding-left: 0px;
+          padding-left: 0;
         }
       }
     }
@@ -78,22 +78,22 @@
   /* Toteuman muokkauspaneeli/lomake */
   .overlay-oikealla 
   {
-    width: 600px;
+    width: 37.5rem;
     overflow: auto;
-    padding: 22px;
+    padding: @valistys-24;
 
     .sijainti-sarakkeet {
       display: flex;
       flex-direction: column;
-      gap: 20px; 
+      gap: @valistys-20; 
 
       :first-child {
-        gap: 0px;
+        gap: 0;
       }
     }
 
     .lomake-tr-valinta {
-      width: 93px;
+      width: 5.8125rem;
     }
 
     .leveys-kokonainen {
@@ -107,33 +107,33 @@
     }
 
     .lomake-ryhma-otsikko {
-      padding-bottom: 0px;
+      padding-bottom: 0;
     }
 
     .maara-valinnat {
       width: 30%;
       float: left;
 
-      margin-right: 13px;
-      margin-left: 0px;
-      padding-left: 12px;
+      margin-right: @valistys-12;
+      margin-left: 0;
+      padding-left: @valistys-12;
     }
 
     .tr-input {
-      margin-right: 13px;
-      margin-left: 0px;
-      padding-left: 12px;
+      margin-right: @valistys-12;
+      margin-left: 0;
+      padding-left: @valistys-12;
     }
 
     .muokkaus-modal-napit 
     {
       .nappi-ensisijainen  {
-        margin-right: 25px;
+        margin-right: @valistys-24;
       }
 
       .nappi-toissijainen {
         float: right;
-        margin-right: 0px;
+        margin-right: 0;
       }
 
       .lomake-poista {
