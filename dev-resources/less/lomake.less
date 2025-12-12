@@ -1,4 +1,5 @@
 @import "./livi_tyylit";
+@import "./vayla/typography.less";
 
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
   //background-color: @taustavari;
@@ -35,11 +36,7 @@
     }
   }
   label:not(.checkbox-label, .file-upload) {
-    color: @black-light;
-    font-family: 'Open Sans', serif;
-    font-weight: 600;
-    font-size: 12px;
-    line-height: @valistys-16;
+    .caption-small-strong();
   }
   .lomakeryhman-rivi-tausta {
     background-color: @harmaa12;
@@ -48,12 +45,7 @@
   }
   &.lukutila {
     .lomake-arvo {
-      color: @black-default;
-      font-family: 'Open Sans', serif;
-      font-style: normal;
-      font-weight: normal;
-      font-size: 14px;
-      line-height: 20px;
+      .body-text();
       &.harmaa-tumma-teksti {
           color: @harmaa2;
       }
