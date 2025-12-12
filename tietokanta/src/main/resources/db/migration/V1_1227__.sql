@@ -7,7 +7,7 @@ INSERT INTO tehtava (nimi, emo, luotu, luoja, poistettu, yksikko, jarjestys, hin
 VALUES ( 'Tarkastusajo', (select id from toimenpide where koodi = 'VALA_YKSHINT'), NOW(),
          (select id from kayttaja where kayttajanimi = 'Integraatio'), false,
          'jkm', null, '{yksikkohintainen}', true,
-         'tarkastusajo', null, null, null,
+         'valaistusurakoiden tarkastusajo', null, null, null,
          '31e23876-f4c2-4dfb-835f-925e5903ff2d', null, null, null,
          false, false, null, null,
          false, 140, null, false);
