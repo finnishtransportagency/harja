@@ -809,15 +809,18 @@
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
         [:div
-         [:h1 "Yleiset tiedot"]
-         [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
-         (when (= :paallystys (:tyyppi ur))
-           [paallystys-indeksit/paallystysurakan-indeksit ur])
-         [urakkaan-liitetyt-kayttajat @kayttajat]
-         [yhteyshenkilot ur]
-         (when (u/vesivaylaurakka-ei-kanava? ur)
-           [alukset ur])
-         (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat/paivystajat ur])
-         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
-           [urakan-tyotunnit ur])]))))
+         [:div
+          [:h1 "Yleiset tiedot"]
+          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]]
+         [:div.row
+          [:div.col-md-12
+           (when (= :paallystys (:tyyppi ur))
+             [paallystys-indeksit/paallystysurakan-indeksit ur])
+           [urakkaan-liitetyt-kayttajat @kayttajat]
+           [yhteyshenkilot ur]
+           (when (u/vesivaylaurakka-ei-kanava? ur)
+             [alukset ur])
+           (when (urakka/paivystys-kaytossa? ur)
+             [paivystajat/paivystajat ur])
+           (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+             [urakan-tyotunnit ur])]]]))))

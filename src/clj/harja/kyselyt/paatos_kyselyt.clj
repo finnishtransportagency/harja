@@ -32,8 +32,7 @@
         vastaus (if vastaus
                  (let [kuukaudet-vector (konv/pgarray->vector (:hoitokauden_kuukaudet vastaus))
                        kuukaudet-map (mapv #(konv/pgobject->map % :kuukausi :string :indeksiluku :double) kuukaudet-vector)
-                       hoitokauden-kuukaudet (map #(vals %) kuukaudet-map)
-                       vastaus (assoc vastaus :hoitokauden_kuukaudet hoitokauden-kuukaudet)]
+                       vastaus (assoc vastaus :hoitokauden_kuukaudet kuukaudet-map)]
                    ;; Kysyjä olettaa saavansa vectorin
                    (conj [] vastaus))
                   vastaus)]
