@@ -93,9 +93,9 @@
   [lumensiirto "lumensiirto" "Lumensiirto"]
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
-  [huoltokierros "huoltokierros" "Huoltokierros"]
-  [tarkastusajo "tarkastusajo" "Tarkastusajo"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
+  [huoltokierros "huoltokierros" "Huoltokierros"]
+  [valaistusurakoiden-tarkastusajo "valaistusurakoiden tarkastusajo" "Tarkastusajo"]
   [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"])
 
 (def tehtavien-jarjestys
@@ -154,6 +154,7 @@
           muu]
    :valaistus [ryhmavaihto
                huoltokierros
+               valaistusurakoiden-tarkastusajo
                muut-valaistusurakoiden-toimenpiteet]})
 
 (def yllapidon-reaaliaikaseurattavat
@@ -167,6 +168,7 @@
 (def valaistuksen-reaaliaikaseurattavat
   #{(:id ryhmavaihto)
     (:id huoltokierros)
+    (:id valaistusurakoiden-tarkastusajo)
     (:id muut-valaistusurakoiden-toimenpiteet)})
 
 (defn valitut-suodattimet
