@@ -13,4 +13,4 @@ VALUES ( 'Tarkastusajo', (select id from toimenpide where koodi = 'VALA_YKSHINT'
          false, 140, null, false);
 
 -- Päivitetaan apitunnus samaksi, kuin tehtävän id
-UPDATE tehtava SET api_tunnus = id WHERE suoritettavatehtava = 'tarkastusajo';
+UPDATE tehtava SET api_tunnus = id WHERE suoritettavatehtava = 'valaistusurakoiden tarkastusajo';

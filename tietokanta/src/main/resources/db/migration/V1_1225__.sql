@@ -1,3 +1,3 @@
--- Lisätään uusi tehtävä: Tarkastusajo
-ALTER TYPE suoritettavatehtava ADD VALUE 'tarkastusajo' AFTER 'muut valaistusurakoiden toimenpiteet';
+-- Lisätään uusi tehtävä: Valaistusurakoiden tarkastusajo
+ALTER TYPE suoritettavatehtava ADD VALUE 'valaistusurakoiden tarkastusajo' AFTER 'turvalaite';
 

@@ -497,7 +497,7 @@
 
    "RYHMAVAIHTO" "Ryhmävaihto"
    "HUOLTOKIERROS" "Huoltokierros"
-   "TARKASTUSAJO" "Tarkastusajo"
+   "VALAISTUSURAKOIDEN TARKASTUSAJO" "Tarkastusajo"
    "MUUT VALAISTUSURAKOIDEN TOIMENPITEET" "Muut toimenpiteet"})
 
 (defn tehtavan-nimi [tehtavat]

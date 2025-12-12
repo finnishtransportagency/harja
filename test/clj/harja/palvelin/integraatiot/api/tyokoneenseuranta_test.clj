@@ -27,7 +27,6 @@
     "aurausviitoitus ja kinostimet",
     "harjaus",
     "huoltokierros",
-    "tarkastusajo",
     "jyrays",
     "kelintarkastus",
     "koneellinen niitto",
@@ -68,7 +67,8 @@
     "tiemerkinta",
     "tiestotarkastus",
     "tilaajan laadunvalvonta",
-    "turvalaite"})
+    "turvalaite",
+    "valaistusurakoiden tarkastusajo"})
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [_ (anna-kirjoitusoikeus kayttaja)
