@@ -123,12 +123,6 @@ ORDER BY hoitokausi;
 INSERT INTO urakka_tavoite (hoitokausi, urakka, tarjous_tavoitehinta, luoja, luotu)
 VALUES (:hoitovuosinro, :urakkaid, :tarjous_tavoitehinta, :luoja, NOW());
 
--- name: paivita-urakan-tavoite-tarjous<!
-UPDATE urakka_tavoite
-SET tarjous_tavoitehinta = :tarjous_tavoitehinta,
-    muokkaaja = :muokkaaja,
-    muokattu = NOW()
-WHERE id = :id;
 
 -- name: hae-tarjouksen-viimeisin-muokkaaja
 SELECT GREATEST(t.muokattu, t.luotu) AS viimeisin_muokkaus,

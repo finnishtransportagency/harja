@@ -22,7 +22,7 @@
   tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-tiedot hae-tarjous-vuodella
   hae-kustannus-tarjoukselle hae-rahavaraus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
-  hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tarjous-tavoitehinnat paivita-urakan-tavoite-tarjous<!
+  hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tarjous-tavoitehinnat
   lisaa-urakan-tavoite-tarjous<! paivita-rahavaraus-budjettiin<! lisaa-rahavaraus-budjettiin<!
   paivita-urakan-tavoite-ja-kattohinta! lisaa-urakan-tavoite-ja-kattohinta<!)
 
@@ -474,26 +474,22 @@
                                                                               :tavoitehinta tavoitehinta
                                                                               :tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                               (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)
-                                                                              :kattohinta (* kattohintakerroin tavoitehinta)
+                                                                              :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
                                                                               :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                             (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
-                                                                                                            (* kattohintakerroin tavoitehinta))
+                                                                                                            (* (or kattohintakerroin 0) tavoitehinta))
                                                                               :muokkaaja kayttaja-id})
                                    ;; Ei lisätä 0 arvoja ollenkaan.
                                    (when-not (zero? tavoitehinta)
-                                     (lisaa-urakan-tavoite-tarjous<! db {:urakkaid urakka-id
-                                                                         :hoitovuosinro kuluva-hoitovuosi-nro
-                                                                         :tarjous_tavoitehinta tavoitehinta
-                                                                         :luoja kayttaja-id})
-                                     (lisaa-urakan-tavoite-ja-kattohinta<! db {:urakkaid urakka-id
+                                     (lisaa-urakan-tavoite-ja-kattohinta<! db {:urakka-id urakka-id
                                                                                :hoitokausinumero kuluva-hoitovuosi-nro
                                                                                :tavoitehinta tavoitehinta
                                                                                :tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                                (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)
-                                                                               :kattohinta (* kattohintakerroin tavoitehinta)
+                                                                               :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
                                                                                :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                              (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
-                                                                                                             (* kattohintakerroin tavoitehinta))
+                                                                                                             (* (or kattohintakerroin 0) tavoitehinta))
                                                                                :luoja kayttaja-id})))
 
                                ;; Tallennetaan tarjouksen kustannukset, toimenkuvat ja rahavaraukset tietokantaan

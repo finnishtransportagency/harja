@@ -921,7 +921,8 @@
             (str "Kattohinnan pitäisi olla " kattohintakerroin " x tavoitehinta. Tavoitehinta: " tavoitehinta ", odotettu kattohinta: " odotettu-kattohinta ", todellinen kattohinta: " kattohinta))]))
 
 (deftest testaa-kasin-syotettava-kattohinta-2019-urakalle
-  (let [db (:db jarjestelma)
+  (let [;; TODO .. 
+        db (:db jarjestelma)
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
@@ -938,16 +939,15 @@
         kattohinta-rivi {:nimi "Tarjouksen kattohinta" :osio "yhteensa"
                          :hoitovuosittaiset-arvot [{:vuosi 2019 :summa 11}
                                                    {:vuosi 2020 :summa hoitovuoden-kattohinta}
-                                                   {:vuosi 2021 :summa 4500}
-                                                   {:vuosi 2022 :summa 3000}
-                                                   {:vuosi 2023 :summa 4000}]
+                                                   {:vuosi 2021 :summa 8500}
+                                                   {:vuosi 2022 :summa 7000}
+                                                   {:vuosi 2023 :summa 8000}]
                          :yhteensa 11532}
         tarjous (update tarjous :tarjous #(conj % kattohinta-rivi))
         ;; 2019-urakoille ei anneta kattohintakerrointa, vaan kattohinta syötetään käsin urakan_parametrit-tauluun
         kattohintakerroin nil
         vahvistetut-vuodet #{}
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+
 
         ;; Varmista suoraan tietokannasta, että tarjous taulun tarjous_kattohinta kolumniin meni oikeat arvot
         tarjous-tietokannasta (first (q-map (format "SELECT tarjous_kattohinta FROM tarjous WHERE urakka_id = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitovuoden-alkuvuosi)))
@@ -959,7 +959,7 @@
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
-        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
+        ;_ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
 
         ;; Lisätään erillishankinnat
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
@@ -971,8 +971,11 @@
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
             (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
         ;; Tavoitehinta lasketaan erillisellä funktiolla, jos kustsutaan tallennuksia suoraan kyselyfunktioilla eikä rajapinnan kautta
-        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
+        ;_ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
 
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
 
         ;; Syötä kattohinta käsin kustannussuuunnitelmalle.
@@ -989,7 +992,7 @@
                                  (println "Tapahtui virhe:" e (.getMessage e))
                                  {:error (.getMessage e)}))
 
-        _ (is (str/includes? virheellinen-vastaus "Annettu kattohinta 5 on pienempi"))
+        _ (is (str/includes? virheellinen-vastaus "Annettu kattohinta 5 on pienempi") "Virhe heitettiin")
 
         kasin-paivitetty-kattohinta 1500000M
         tiedot2 {:urakka-id urakka-id
