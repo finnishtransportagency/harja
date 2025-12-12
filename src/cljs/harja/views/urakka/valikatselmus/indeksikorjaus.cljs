@@ -54,7 +54,7 @@
          [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
        (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
        (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
-      [:div pistelukujen-muutos " %"]]]))
+      [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]]))
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :indeksikorjaus

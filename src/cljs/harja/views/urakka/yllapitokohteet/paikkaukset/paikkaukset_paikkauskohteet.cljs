@@ -379,7 +379,7 @@
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
        [:div.col-xs-2
-        [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-ely"} "ELY"]
+        [:label {:class "alasvedon-otsikko" :for "filtteri-ely"} "ELY"]
         [valinnat/checkbox-pudotusvalikko valittavat-elyt (fn [ely valittu?]
                                                             (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
          [" ELY valittu" " ELYä valittu"]
@@ -387,7 +387,7 @@
 
      ;; Kohteen tila 
      [:div.col-xs-2
-      [:label.alasvedon-otsikko-vayla "Tila"]
+      [:label.alasvedon-otsikko "Tila"]
       [valinnat/checkbox-pudotusvalikko valittavat-tilat (fn [tila valittu?]
                                                            (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
@@ -396,7 +396,7 @@
      ;; Vuosivalinnat
      [:div.col-xs-2 {:data-cy "paikkauskohde-vuosivalinta"}
       [:label
-       {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
+       {:class "alasvedon-otsikko" :for "filtteri-vuosi"} "Vuosi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
                                     :vayla-tyyli? true
                                     :disabled haku-kaynnissa?
@@ -406,7 +406,7 @@
 
      ;; Työmenetelmä 
      [:div.col-xs-4
-      [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
+      [:label.alasvedon-otsikko "Työmenetelmä"]
       [valinnat/checkbox-pudotusvalikko valittavat-tyomenetelmat (fn [tyomenetelma valittu?]
                                                                    (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
        [" Työmenetelmä valittu" " Työmenetelmää valittu"]

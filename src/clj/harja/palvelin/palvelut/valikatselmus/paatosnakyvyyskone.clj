@@ -136,11 +136,14 @@
   ;; Hoitotovuoden pitää olla päättynyt
   ;; Hoitovuodelle on syötetty tarjouksen tavoitehinta -- Toteutettu
   ;; Hoitovuodelle on syötetty kaikkien lupausten toteumat
-
   (cond
     ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
     (lisaa-paatos-virheellisena paatokset "Lupaukset" "Hoitovuosi ei ole päättynyt tai Tarjouksen tavoitehinta -päätös on täyttämättä tai lupausten toteumissa on vielä osa täyttämättä." true 1)
+    (and validoinnit-kaytossa? (or (nil? luvatut-pisteet) (nil? toteutuneet-pisteet)))
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Lupauksia täyttämättä." true 1)
+    (and validoinnit-kaytossa? (or (nil? tarjouksen-tavoitehinta) (nil? tavoitehinta-indeksikorjattu)))
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Tarjouksen tavoitehintaa ei ole määritelty." true 1)
     (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta-indeksikorjattu)
     (let [erotus (- luvatut-pisteet toteutuneet-pisteet)
           tyyppi (cond
@@ -239,7 +242,8 @@
             piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
             pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
             alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
-            muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100)))
+            muutos-prosentteina (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100))
+
             ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
             indeksikorotuksen-prosenttiosuus (if (> muutos-prosentteina 2) (- muutos-prosentteina 2) 0)
             muutosten-summa (if (seq tavoitehinnan-muutokset)

@@ -52,7 +52,7 @@
                  [cheshire "6.0.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
-                 [cljs-http "0.1.48"]
+                 [cljs-http "0.1.49"]
                  [http-kit "2.8.0"]
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa

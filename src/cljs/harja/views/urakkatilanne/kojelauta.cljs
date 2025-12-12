@@ -39,7 +39,7 @@
       nav/+urakkatyypit+)]
    [:div
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko-vayla {:for "elyhaku"} "Hallintayksikkö"]
+     [:label.alasvedon-otsikko {:for "elyhaku"} "Hallintayksikkö"]
      [kentat/tee-kentta
       {:input-id "elyhaku" :tyyppi :haku
        :nayta #(hal/elynumero-ja-nimi %)
@@ -70,7 +70,7 @@
      (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko-vayla {:for "urakkahaku"} "Hae urakkaa"]
+     [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
      [kentat/tee-kentta
       {:input-id "urakkahaku" :tyyppi :haku
        :nayta :nimi
