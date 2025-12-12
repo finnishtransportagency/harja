@@ -21,6 +21,29 @@
     [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
 
+(defn poista-muutos-varmistus
+  [e! muutos]
+  (let [vahvistus-tiedot (cond
+                           ;; JJH-muutos
+                           (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+                           {:sisalto [:div "Muutoksen poistaminen poistaa myös Harjan automaattisesti luomat maksuerät."]}
+
+                           ;; Erillisrahoitettu muutostyö
+                           (and (= (:tyyppi muutos) "muutostyo")
+                             (= (:alityyppi muutos) :erillisrahoitus))
+                           {:sisalto [:div "Muutostyölle ei voi poistamisen jälkeen kohdistaa kuluja"]}
+
+                           ;; Pysyvä muutos, muu muutostyö ja kaikki muut mahdolliset muutostyypit (default)
+                           :else
+                           {:sisalto [:div "Haluatko varmasti poistaa muutoksen?"]})]
+
+    ;; Näytä vahvistusdialogi
+    (varmista-kayttajalta/varmista-kayttajalta
+      (merge {:otsikko "Poistetaanko muutos?"
+              :hyvaksy "Poista"
+              :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}
+        vahvistus-tiedot))))
+
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
                                  tallenna-painettu? lomakkeella-virheita?
@@ -65,12 +88,7 @@
       ;;       tämä uusi toissijainen nappi, joka on tyyliltään hillitty, kaikille toissijaisille toiminnoille sopiva nappi.
       [napit/yleinen-toissijainen
        "Poista muutos"
-       #(do
-          (varmista-kayttajalta/varmista-kayttajalta
-            {:otsikko "Muutoksen poistaminen"
-             :sisalto [:div "Haluatko varmasti poistaa muutoksen?"]
-             :hyvaksy "Poista"
-             :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}))
+       #(poista-muutos-varmistus e! muutos)
        {:ikoni [ikonit/livicon-trash] :paksu? true
         ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
         ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
