@@ -1,7 +1,6 @@
 (ns harja.views.urakka.muutokset.lomake.muutoslomake
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require
-    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
     [taoensso.timbre :as log]
     [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
     [harja.ui.napit :as napit]
@@ -13,6 +12,8 @@
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.ui.yleiset :as yleiset]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
     ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
     [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
@@ -59,18 +60,22 @@
      {:disabled tallennus-kesken?}]
 
     (when (:id muutos)
-      [napit/poista "Poista muutos"
+      ;; TODO: Tehdään tästä erillisessä PR:ssä yleinen pattern, joka korvaa vanhentuneen napit/poista komponentin.
+      ;;       Figman Design libraryn mukaisessa tyylissä ei ole lainkaan vanhentunutta punaista napit/poista nappia, vaan
+      ;;       tämä uusi toissijainen nappi, joka on tyyliltään hillitty, kaikille toissijaisille toiminnoille sopiva nappi.
+      [napit/yleinen-toissijainen
+       "Poista muutos"
        #(do
-          (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
           (varmista-kayttajalta/varmista-kayttajalta
             {:otsikko "Muutoksen poistaminen"
              :sisalto [:div "Haluatko varmasti poistaa muutoksen?"]
              :hyvaksy "Poista"
              :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}))
-       ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
-       ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
-       ;;       On siis tarpeen erotella nämä kaksi tilannetta
-       {:disabled (or
+       {:ikoni [ikonit/livicon-trash] :paksu? true
+        ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
+        ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
+        ;;       On siis tarpeen erotella nämä kaksi tilannetta
+        :disabled (or
                     tallennus-kesken?
                     muutoksen-tiedot-haku-kaynnissa?)}])
 
