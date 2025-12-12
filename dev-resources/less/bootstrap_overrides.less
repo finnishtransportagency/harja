@@ -20,12 +20,12 @@
 // tarkistettava bs:n LESS-muuttujien nimet jos bs päivitetään (deprikoitumisvaara)
 @media (max-width: @screen-sm) {
   .row-sisalto > [class^="col-"], [class*=" col-"] {
-    padding: 0 6px;
+    padding: 0 @valistys-6;
   }
 }
 @media (max-width: @screen-xs) {
   .row-sisalto > [class^="col-"], [class*=" col-"] {
-    padding: 0 2px;
+    padding: 0 @valistys-4;
   }
 }
 
@@ -41,7 +41,7 @@
 
 .form-control {
   color: @harmaa1;
-  padding: 2px 6px;
+  padding: @valistys-4 @valistys-6;
 
   // Parempikontrastinen placeholder tekstin väri input-kentille
   .placeholder(@black-lighter);
@@ -57,11 +57,11 @@
 }
 
 .navbar-brand {
-  width: 100px;
+  width: 6.25rem;
 }
 
 .navbar-form {
-  margin: 8px 0;
+  margin: @valistys-8 0;
 }
 
 .panel {
@@ -79,10 +79,10 @@
   > .panel-heading {
     background-color: @harjan-taustavari;
     border: none;
-    padding: 3px 15px;
+    padding: @valistys-4 @valistys-14;
   }
   > .panel-body {
-    padding-top: 3px;
+    padding-top: @valistys-4;
   }
 }
 
@@ -107,15 +107,15 @@ li.active > a {
 // Tiivistä checkbokseja:
 .radio,
 .checkbox {
-  margin-top: 8px;
-  margin-bottom: 8px;
+  margin-top: @valistys-8;
+  margin-bottom: @valistys-8;
 }
 
 
 
 // Tooltip
 @tooltip-arrow-color: @white;
-@tooltip-arrow-width: 15px;
+@tooltip-arrow-width: @valistys-14;
 
 .tooltip {
   word-break: break-word;
