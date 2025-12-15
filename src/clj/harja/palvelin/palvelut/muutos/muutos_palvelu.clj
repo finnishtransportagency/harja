@@ -935,6 +935,23 @@
     ;; JJH ja muut ilman erityisiä poistorajoituksia
     {:voi-poistaa? true}))
 
+(defn- hae-jjh-muutoksen-kulut
+  "Hakee kaikki JJH-muutokseen liittyvät kulut mhu_muutos_kulu -taulusta."
+  [db muutos-id muutos-versio]
+  (muutos-kyselyt/hae-jjh-muutoksen-kulut db {:muutos muutos-id
+                                              :versio muutos-versio}))
+
+(defn- poista-jjh-muutoksen-kulut!
+  "Asettaa poistetuksi JJH-muutoksen automaattisesti luodut kulut ja niiden kohdistukset."
+  [db kayttaja muutos-id muutos-versio]
+  (let [kulut (hae-jjh-muutoksen-kulut db muutos-id muutos-versio)]
+    (doseq [kulu kulut]
+      (log/info "Poistetaan JJH-muutoksen kulu id:llä" (:kulu-id kulu))
+      (kulu-kyselyt/poista-kulu! db {:id (:kulu-id kulu)
+                                     :kayttaja (:id kayttaja)})
+      (kulu-kyselyt/poista-kulun-kohdistukset! db {:id (:kulu-id kulu)
+                                                   :kayttaja (:id kayttaja)}))))
+
 (defn poista-muutos
   "Poistaa muutoksen ja tarvittaessa muutokseen liittyvät tiedot muutoksen tyypistä riippuen"
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos-id laskenta-automatiikka?] :as tiedot}]
@@ -956,11 +973,17 @@
                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                             :viesti virhe}]}))
 
+      ;; Poista JJH-muutoksen kulut ennen muutoksen poistoa
+      ;; Kulut ovat automaattisesti luotuja, joten ne voidaan poistaa ilman erillistä käyttäjän vahvistusta
+      (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+        (poista-jjh-muutoksen-kulut! conn kayttaja muutos-id (:versio muutos)))
 
-      ;; Poista muutos, ja hae urakan ajantasaiset muutostiedot
+      ;; Merkitse muutos poistetuksi
+      ;; Äiti-muutos poistetaan soft-deletellä ja linkitetyt taulut jätetään ennalleen
       (muutos-kyselyt/poista-muutos! conn {:id muutos-id
                                            :kayttaja (:id kayttaja)})
 
+      ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
       (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
                                               :hoitokaudet hoitokaudet
                                               :valittu-hoitokausi valittu-hoitokausi

@@ -260,6 +260,12 @@ VALUES (:kulu, 0, :summa,
         'jjh-muutos'::KOHDISTUSTYYPPI, current_timestamp, :kayttaja,
         TRUE::BOOLEAN);
 
+-- name: hae-jjh-muutoksen-kulut
+SELECT mk.kulu AS "kulu-id"
+  FROM mhu_muutos_kulu mk
+ WHERE mk.muutos = :muutos
+   AND mk.versio = :versio;
+
 -- name: hae-johto-ja-hallintokorvausmuutoksen-tiedot
 SELECT m.id,
        m.versio,
