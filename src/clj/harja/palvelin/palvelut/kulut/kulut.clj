@@ -424,15 +424,15 @@
                                            true)]
 
           (if (and muutostyo-voimassa? muutostyo-erapaiva-validi? yhteensopiva?)
-            (as-> kohdistusrivi r
-              (update r :summa big/unwrap)
-              (assoc r :kulu (:id kuludb))
-              (if (true? (:poistettu r))
+            (as-> kohdistusrivi kohdistus
+              (update kohdistus :summa big/unwrap)
+              (assoc kohdistus :kulu (:id kuludb))
+              (if (true? (:poistettu kohdistus))
                 (poista-kulun-kohdistus db user {:id id
                                                  :urakka-id urakka-id
-                                                 :kohdistuksen-id (:kohdistus-id r)
-                                                 :kohdistus r})
-                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) r muutostyo)))
+                                                 :kohdistuksen-id (:kohdistus-id kohdistus)
+                                                 :kohdistus kohdistus})
+                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) kohdistus muutostyo)))
 
             (cond
               (not yhteensopiva?)
