@@ -553,8 +553,9 @@
          [:div.kontrollit
           [:div.row
            [:div.:div.col-xs-12.col-md-3
-            [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
-            [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
+            [:label.alasvedon-otsikko {:for "suolarajoitus-hoitovuosi"} "Hoitovuosi"]
+            [yleiset/livi-pudotusvalikko {:element-id "suolarajoitus-hoitovuosi"
+                                          :valinta valittu-vuosi
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))

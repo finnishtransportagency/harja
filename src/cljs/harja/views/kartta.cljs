@@ -63,7 +63,7 @@
                    [cljs.core.async.macros :refer [go go-loop]]))
 
 
-(def +kartan-napit-padding+ 26)
+(def +kartan-napit-padding+ 36)
 (def +kartan-korkeus-s+ 0)
 
 (def tasot-joita-zoomataan-aina

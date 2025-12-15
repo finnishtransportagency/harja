@@ -226,11 +226,10 @@
            [:h1 "Päällystyskohteet"]
            [kartta/kartan-paikka]
 
-           [valinnat/urakan-vuosi ur {:vayla-tyyli? true :ei-valistysta? true}]
-
-           [:span.paallystys-valinnat
+           [:div.flex-row {:style {:justify-content "flex-start"}}
+            [valinnat/urakan-vuosi ur]
             [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-            [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]]
+            [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]]
 
            [validointivirheet-modal]
            [excel-toiminnot {:urakka-id (:id ur)
