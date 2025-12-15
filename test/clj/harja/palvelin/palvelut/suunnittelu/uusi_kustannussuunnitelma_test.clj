@@ -804,7 +804,13 @@
   ;; Kilpailutettavat hankinnat
   (let [h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
-        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)]
+        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
+        kayttaja-id (:id +kayttaja-jvh+)
+        kattohintakerroin 1.1
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
+        vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
+        tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}]
     (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
       hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
     ;; Erillishankinnat
@@ -817,20 +823,8 @@
     (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
       johto-ja-hallinto-tietomalli hoitovuoden-alkuvuosi)
     ;; Tarjous
-    (let [kayttaja-id (:id +kayttaja-jvh+)
-          kattohintakerroin 1.1
-          rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
-          vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
-          tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
-          vahvistetut-vuodet #{}]
-      (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-        (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet))))
-
-(defn- hae-laskutusraja
-  "Hakee laskutusrajan urakka_tavoite-taulusta"
-  [urakka-id]
-  (:laskutusraja (first (q-map (format "SELECT laskutusraja FROM urakka_tavoite
-                                        WHERE urakka = %s AND hoitokausi = 1" urakka-id)))))
+    (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+      (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)))
 
 (defn- vahvista-tai-kumoa-tavoite-ja-kattohinta!
   "Vahvistaa tai kumoaa tavoitteen ja kattohinnan"
@@ -852,11 +846,11 @@
       (:johto-ja-hallintokorvaukset-2025 johto-ja-hallinto-tietomalli-2025)
       apurit/tarjous-tietomalli-2025)
     ;; Varmista että laskutusraja on NULL ennen vahvistusta
-    (is (nil? (hae-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
+    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
     ;; Tarkista että laskutusraja on asetettu
-    (let [laskutusraja (hae-laskutusraja urakka-id)
+    (let [laskutusraja (hae-urakan-laskutusraja urakka-id)
           tavoitehinta_indeksikorotettu (:tavoitehinta_indeksikorjattu
                                           (first (q-map (format "SELECT tavoitehinta_indeksikorjattu
                                                 FROM urakka_tavoite
@@ -875,10 +869,10 @@
       (:johto-ja-hallintokorvaukset-2019  apurit/johto-ja-hallinto-tietomalli-2019)
       apurit/tarjous-tietomalli-2019)
     ;; Varmista että laskutusraja on NULL ennen vahvistusta
-    (is (nil? (hae-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
+    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
-    (is (nil? (hae-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL kun laskutusraja_kaytossa = FALSE")))
+    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL kun laskutusraja_kaytossa = FALSE")))
 
 (deftest laskutusraja-nollataan-kun-vahvistus-kumotaan
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -892,12 +886,12 @@
       apurit/tarjous-tietomalli-2025)
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
-    (is (not (nil? (hae-laskutusraja urakka-id))) "Laskutusrajan pitäisi olla asetettu")
+    (is (not (nil? (hae-urakan-laskutusraja urakka-id))) "Laskutusrajan pitäisi olla asetettu")
     (kutsu-palvelua (:http-palvelin jarjestelma)
       :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ {:urakka-id urakka-id
                                                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                                                       :vahvista? false})
-    (is (nil? (hae-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL vahvistuksen kumouksen jälkeen")))
+    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL vahvistuksen kumouksen jälkeen")))
 
 (deftest vahvista-kattohinta-toimii-tarkennettuna
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
