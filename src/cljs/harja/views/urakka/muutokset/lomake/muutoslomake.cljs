@@ -90,9 +90,6 @@
        "Poista muutos"
        #(poista-muutos-varmistus e! muutos)
        {:ikoni [ikonit/livicon-trash] :paksu? true
-        ;; TODO: Suunnittele erikseen :voi-poistaa? logiikka
-        ;;       Muut kirjatut muutokset vs pysyvä muutos käyttäytyvät eri tavoin poistamisen suhteen
-        ;;       On siis tarpeen erotella nämä kaksi tilannetta
         :disabled (or
                     tallennus-kesken?
                     muutoksen-tiedot-haku-kaynnissa?)}])
