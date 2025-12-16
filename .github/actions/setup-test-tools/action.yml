@@ -16,7 +16,7 @@ runs:
   steps:
     - name: Cache PhantomJS
       id: cache-phantom-js
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       if: ${{ inputs.phantom-js != '' }}
       with:
         path: /usr/local/bin/phantomjs
@@ -45,7 +45,7 @@ runs:
 
     - name: Cache clj-kondo
       id: cache-clj-kondo
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       if: ${{ inputs.clj-kondo != '' }}
       with:
         path: /usr/local/bin/clj-kondo
