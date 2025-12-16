@@ -235,10 +235,23 @@ UPDATE mhu_muutos_kulu
  WHERE muutos = :muutos
    AND kulu = :vanha-kulu;
 
+-- TODO Muutostyön (erillisrahoitettu) kulujen hallinnassa on poikkeuvuus, joka irtauttaa sen mhu_muutos_kulu
+--       linkityksestä ja historiaseurannasta. Katsotaan myöhemmin miten tämän kanssa toimitaan.
+--       Emme varmaan halua pitkällä aikavälillä, että on kahta erilaista kulujen linkityksen hallintaa.
+--       JJH-muutosten kulut vs Muutostyön kulut.
+
 -- name: paivita-muutostyo-kulukohdistus!
 UPDATE kulu_kohdistus
    SET muutos = :muutos
  WHERE id = :kohdistus-id;
+
+-- name: hae-muutostyon-kulujen-maara
+-- single?: true
+-- Palauttaa muutostyöhön kohdistettujen kulujen määrän, jotta voidaan tarkistaa onko kuluja jo kohdistettu
+SELECT COUNT(*) AS maara
+  FROM kulu_kohdistus kk
+ WHERE kk.muutos = :muutos-id
+   AND kk.poistettu IS NOT TRUE;
 
 -- name: onko-muutoksella-kuluja-ennen-voimassa-paivaa?
 -- single?: true
@@ -248,7 +261,7 @@ WHERE
 	kk.tyyppi = :tyyppi::kohdistustyyppi
   AND kk.poistettu IS FALSE  
   AND k.erapaiva < :voimassa::DATE
-  AND kk.muutos = :muutos; 
+  AND kk.muutos = :muutos;
 
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,

@@ -911,7 +911,6 @@
 (defn muutoksen-poisto-estetty?
   "Palauttaa mapin, jossa :voi-poistaa? boolean ja :virhe string (jos ei voi poistaa)"
   [db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos]
-
   (case (:tyyppi muutos)
     "pysyva"
     (if (voi-poistaa-pysyvan-muutoksen? db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
@@ -920,16 +919,17 @@
        :virhe "Muutoksen muuttamia tavoitehintoja on vahvistettu. Peru mahdolliset vahvistukset poistaaksesi muutoksen."})
 
     "muutostyo"
-    (if (= (:alityyppi muutos) :erillisrahoitus)
-      ;; TODO: Selvitetään mitä tehdään muutostyön kulujen kanssa ennen kuin sallitaan poisto
-      ;;       Pitääkö käyttäjän käydä itse poistamssa kulut, vai onko ensin erillinen prosessi jossa kulut poistetaan automaattisesti
-      ;;       käyttäjän hyväksymänä?
-      ;; TODO: Alla hahmotelmaa
-      (if true
-        {:voi-poistaa? true}
-        {:voi-poistaa? false
-         :virhe "Erillisrahoitettua muutostyötä ei voi poistaa, koska sille on kohdistettu kuluja."})
-      ;; Muut
+    ;; TODO: Alityyppi on toisaalla keyword ja toisaalla string, yhtenäistä tämä jossain vaiheessa muutosten kokonaisuudessa
+    ;;       Kaikki tyypit (tyyppi/alityyppi) saisivat olla stringejä tai keywordeja joka paikassa, mutta ei sekaisin kumpaakin
+    (if (= (:alityyppi muutos) "erillisrahoitus")
+      (let [kulujen-maara (or (muutos-kyselyt/hae-muutostyon-kulujen-maara db
+                                {:muutos-id (:id muutos)})
+                            0)]
+        (if (zero? kulujen-maara)
+          {:voi-poistaa? true}
+          {:voi-poistaa? false
+           :virhe "Muutostyölle on kohdistettu kuluja. Poista kohdistetut kulut ennen muutoksen poistamista."}))
+      ;; Muut muutostyöt
       {:voi-poistaa? true})
 
     ;; JJH ja muut ilman erityisiä poistorajoituksia
