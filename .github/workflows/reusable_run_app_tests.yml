@@ -225,7 +225,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v6.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           # Download to the same directory as the uberjar is built to
@@ -531,7 +531,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v6.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./
@@ -582,7 +582,7 @@ jobs:
           echo +++++++++++++++++++
           echo
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: cache-npm
         with:
           path: node_modules
