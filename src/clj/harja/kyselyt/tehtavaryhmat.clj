@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/tehtavaryhmat.sql"
   {:positional? true})
 
-(declare hae-tehtavaryhma hae-tehtavaryhma-tunnisteella)
+(declare hae-tehtavaryhma hae-tehtavaryhma-tunnisteella hae-tehtavaryhmat-joilla-tehtava-on-pakollinen)
