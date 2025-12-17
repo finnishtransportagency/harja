@@ -241,6 +241,7 @@
                         :tehtavaryhma (:tehtavaryhma kohdistus)
                         ;; Jos kyseessä on "Muu tehtävä", tehtävä-id:tä ei tallenneta
                         :tehtava-id (when-not on-muu-tehtava? tehtava-id)
+                        :muu-tehtava-kaytossa (when on-muu-tehtava? true)
                         :maksueratyyppi (kohdistuksen-maksueratyyppi db 
                                           (:tehtavaryhma kohdistus) 
                                           (when-not on-muu-tehtava? tehtava-id) 
@@ -249,7 +250,16 @@
                         :lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
                         :rahavarausid (when (:rahavaraus kohdistus) (:id (:rahavaraus kohdistus)))
                         :tyyppi (name (:tyyppi kohdistus))
-                        :tavoitehintainen (name (:tavoitehintainen kohdistus))}]
+                        :tavoitehintainen (name (:tavoitehintainen kohdistus))}
+
+        ;; Haetaan tehtäväryhmät, joilla tehtävä on pakollinen
+        tehtavaryhmat-joilla-tehtava (tehtavaryhma-kyselyt/hae-tehtavaryhmat-joilla-tehtava-on-pakollinen db)
+        ;; Tarkistetaan, että kulukohdistukselle on lisätty tehtävä, jos tehtäväryhmä vaatii sen
+        _ (when (and (some #(= (:id %) (:tehtavaryhma kohdistus)) tehtavaryhmat-joilla-tehtava)
+                     (nil? tehtava-id))
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                                :viesti "Valitulle tehtäväryhmälle on valittava myös tehtävä!"}]}))]
     
     (if (nil? (:kohdistus-id kohdistus))
       (let [vastaus (q/luo-kulun-kohdistus<! db (assoc kulu_kohdistus :kulu kulu-id :rivi (:rivi kohdistus)))
@@ -414,15 +424,15 @@
                                            true)]
 
           (if (and muutostyo-voimassa? muutostyo-erapaiva-validi? yhteensopiva?)
-            (as-> kohdistusrivi r
-              (update r :summa big/unwrap)
-              (assoc r :kulu (:id kuludb))
-              (if (true? (:poistettu r))
+            (as-> kohdistusrivi kohdistus
+              (update kohdistus :summa big/unwrap)
+              (assoc kohdistus :kulu (:id kuludb))
+              (if (true? (:poistettu kohdistus))
                 (poista-kulun-kohdistus db user {:id id
                                                  :urakka-id urakka-id
-                                                 :kohdistuksen-id (:kohdistus-id r)
-                                                 :kohdistus r})
-                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) r muutostyo)))
+                                                 :kohdistuksen-id (:kohdistus-id kohdistus)
+                                                 :kohdistus kohdistus})
+                (luo-tai-paivita-kulun-kohdistus db user urakka (:id kuludb) kohdistus muutostyo)))
 
             (cond
               (not yhteensopiva?)
