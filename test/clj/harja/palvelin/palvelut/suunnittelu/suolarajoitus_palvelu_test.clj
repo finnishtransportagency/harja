@@ -1225,4 +1225,58 @@
     (is (= (pvm/pvm (:pvm summatiedot-viim-paiva)) "28.02.2025"))
     (is (= (:suolatoteumat vastaus-koko-helmikuu) 3.0) "Koko helmikuu 3.0")))
 
+(deftest hae-talvisuolan-kokonaiskayttoraja-sisaltaa-mhu-muutokset-test
+  (testing "Talvisuolan kokonaiskäyttöraja sisältää MHU-muutokset"
+    (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hk-alkuvuosi 2025
+          tarjous-maara 1000M
+          muutos-maara 150M
+          odotettu-raja (+ tarjous-maara muutos-maara)
+          
+          ;; Hae suolauksen tehtävän id
+          suolaus-tehtava-id (:id (first (t/q-map "SELECT id FROM tehtava 
+                                                     WHERE suunnitteluyksikko = 'kuivatonnia' 
+                                                       AND suoritettavatehtava = 'suolaus'")))
+          
+          ;; Siivoa mahdollinen vanha tieto ensin
+          _ (t/u (format "DELETE FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))
+          _ (t/u (format "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo 
+                          WHERE muutos IN (SELECT id FROM mhu_muutos WHERE urakka = %s) 
+                            AND hoitokauden_alkuvuosi = %s" urakka-id hk-alkuvuosi))
+          _ (t/u (format "DELETE FROM urakka_tehtavamaara 
+                          WHERE urakka = %s AND \"hoitokauden-alkuvuosi\" = %s AND tehtava = %s" 
+                   urakka-id hk-alkuvuosi suolaus-tehtava-id))
+          
+          ;; Aseta tarjousmäärä
+          _ (aseta-urakalle-talvisuolaraja tarjous-maara urakka-id hk-alkuvuosi)
+          
+          ;; Luo MHU-muutos
+          muutos-id (ffirst (t/q (format "INSERT INTO mhu_muutos (urakka, luotu, luoja) 
+                                          VALUES (%s, NOW(), %s) 
+                                          RETURNING id" urakka-id (:id t/+kayttaja-jvh+))))
+          
+          ;; Lisää tehtävä ja määrä muutokseen  
+          _ (t/u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo 
+                          (muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara) 
+                          VALUES (%s, %s, %s, %s, %s, %s)" 
+                   muutos-id suolaus-tehtava-id hk-alkuvuosi tarjous-maara muutos-maara (+ tarjous-maara muutos-maara)))
+          
+          ;; Hae käyttöraja
+          hakutulos (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                      :hae-talvisuolan-kayttorajat t/+kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :hoitokauden-alkuvuosi hk-alkuvuosi})
+          
+          ;; Siivoa lopuksi (vain itse luodut rivit)
+          _ (t/u (format "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo WHERE muutos = %s" muutos-id))
+          _ (t/u (format "DELETE FROM mhu_muutos WHERE id = %s" muutos-id))
+          _ (t/u (format "DELETE FROM urakka_tehtavamaara 
+                          WHERE urakka = %s AND \"hoitokauden-alkuvuosi\" = %s AND maara = %s" urakka-id hk-alkuvuosi tarjous-maara))
+          _ (t/u (format "DELETE FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))]
+      
+      (is (= odotettu-raja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja]))
+          (str "Käyttörajan tulisi olla tarjous (" tarjous-maara 
+               ") + muutos (" muutos-maara ") = " odotettu-raja)))))
+
+
 
