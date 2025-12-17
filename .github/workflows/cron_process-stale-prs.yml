@@ -51,41 +51,42 @@ jobs:
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
           stale-pr-message: "Tämä PR on ollut avoin 3 päivää ilman kommentteja tai päivityksiä, joten se merkitään vanhentuneeksi. Voit perua merkinnän kommentoimalla tai päivittämällä PR:ää."
-          days-before-pr-close: ''
+          # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
+          days-before-pr-close: -1
           remove-pr-stale-when-updated: true
-          # Avoimeen PR:ään voi myös lisätä WIP-labelin, jolloin se ei vanhenee
+          # Avoimeen PR:ään voi myös lisätä WIP-labelin, jolloin se ei vanhene
           exempt-pr-labels: "WIP"
           # Draft-PR:iä ei ole tarpeen merkitä vanhentuneiksi, seurataan vain avoimia PR:iä
           exempt-draft-pr: true
-      - name: Format Stale PRs list
-        if: ${{ steps.find-stale-prs.outputs.staled-issues-prs != '' && steps.find-stale-prs.outputs.staled-issues-prs != '[]' }}
-        id: stale-prs-list
-        uses: actions/github-script@v8
-        env:
-          STALE_PRS: ${{ steps.find-stale-prs.outputs.staled-issues-prs }}
-        with:
-          script: |
-            const stalePRs = JSON.parse(process.env.STALE_PRS);
-            const formattedList = stalePRs
-              .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
-              .join('\n');
-            return formattedList;
-      - name: Send a summary of stale PRs into Slack
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
-        # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
-        if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Katselmointia kaipaavat PRt:\n${{ steps.stale-prs-list.outputs.result }}"
-                  }
-                }
-              ]
-            }
+#      - name: Format Stale PRs list
+#        if: ${{ steps.find-stale-prs.outputs.staled-issues-prs != '' && steps.find-stale-prs.outputs.staled-issues-prs != '[]' }}
+#        id: stale-prs-list
+#        uses: actions/github-script@v8
+#        env:
+#          STALE_PRS: ${{ steps.find-stale-prs.outputs.staled-issues-prs }}
+#        with:
+#          script: |
+#            const stalePRs = JSON.parse(process.env.STALE_PRS);
+#            const formattedList = stalePRs
+#              .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
+#              .join('\n');
+#            return formattedList;
+#      - name: Send a summary of stale PRs into Slack
+#        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+#        # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
+#        if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
+#        with:
+#          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+#          webhook-type: incoming-webhook
+#          payload: |
+#            {
+#              "blocks": [
+#                {
+#                  "type": "section",
+#                  "text": {
+#                    "type": "mrkdwn",
+#                    "text": "Katselmointia kaipaavat PRt:\n${{ steps.stale-prs-list.outputs.result }}"
+#                  }
+#                }
+#              ]
+#            }
