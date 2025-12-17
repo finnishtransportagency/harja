@@ -133,7 +133,7 @@
         ;; Kanavaurakat
         (or (= urakkatyyppi "vesivayla-kanavien-hoito")
             (= urakkatyyppi "vesivayla-kanavien-korjaus"))
-        (organisaatiot-q/hae-id-lyhenteella db "KAN")
+        (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "KAN")
 
         ;; Meri- tai sisävesiväyläurakat
         ;; Huom! Samposta ei tällä hetkellä saada tietoa onko kyseessä meri vais sisävesiväylä urakka
@@ -142,7 +142,7 @@
         (or (= urakkatyyppi "vesivayla-turvalaitteiden-korjaus")
             (= urakkatyyppi "vesivayla-hoito")
             (= urakkatyyppi "vesivayla-ruoppaus"))
-        (organisaatiot-q/hae-id-lyhenteella db "MV")
+        (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
         :else (organisaatiot-q/hae-ely-id-sampo-hashilla db
