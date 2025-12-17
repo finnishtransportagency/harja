@@ -1,4 +1,6 @@
--- Luo VIEW joka yhdistää urakka_tehtavamaara taulun tarjousmäärät ja 
+-- Repeatable: Urakka tehtävämäärä yhteenvetonäkymä
+-- 
+-- Yhdistää urakka_tehtavamaara taulun tarjousmäärät ja 
 -- mhu_muutos_tehtava_ja_maaraluettelo taulun mutaatiosummat yhdeksi yhteenvetonäkymäksi.
 --
 -- Ratkaisu keskittää tehtävämäärien laskennan yhteen paikkaan ja estää 
@@ -42,11 +44,12 @@ FROM
             JOIN mhu_muutos m ON mmtml.muutos = m.id
         WHERE 
             m.poistettu = FALSE
-            -- Haetaan vain viimeisin versio kustakin mutaatiosta
+            -- Haetaan vain viimeisin versio kustakin mutaatio+tehtävä yhdistelmästä
             AND mmtml.versio = (
                 SELECT MAX(versio) 
                 FROM mhu_muutos_tehtava_ja_maaraluettelo mmtml2 
                 WHERE mmtml2.muutos = mmtml.muutos
+                   AND mmtml2.tehtava = mmtml.tehtava
             )
         GROUP BY 
             m.urakka, 
