@@ -516,6 +516,7 @@
                                     (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
                                     (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                ;; Jos muutos-id:tä tai versiota ei ole annettu, haetaan vain pohjatiedot (uusi pysyvä muutos)
                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
                                                                                           :versio muutos-versio
                                                                                           :urakka urakka-id}))
