@@ -837,9 +837,17 @@
         kilpailutettavat-hankinnat-yht (bigdec (or kilpailutettavat-hankinnat-yht 0.0))
         tarjous-hankinnat-yht (bigdec (or tarjous-hankinnat-yht 0.0))
 
+        aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi false)
+        pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+
         puuttuvat (cond
-                    ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat
-                    (and (>= urakan-alkuvuosi 2025) (boolean (seq kilpailutettavat-hankinnat)) (= kilpailutettavat-hankinnat-yht tarjous-hankinnat-yht))
+                    ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat + pysyvät muutokset 
+                    (and
+                      (>= urakan-alkuvuosi 2025)
+                      (boolean (seq kilpailutettavat-hankinnat))
+                      (= kilpailutettavat-hankinnat-yht (+
+                                                          (or tarjous-hankinnat-yht 0)
+                                                          (or pysyvat-muutokset-maara 0))))
                     puuttuvat
                     ;; Tarkistetaan, että hankinnat osio ei ole 0 2024 tai aiemmin alkaneilla
                     (and (<= urakan-alkuvuosi 2024) (boolean (seq kilpailutettavat-hankinnat)) (some (fn [x] (not= (:yhteensa x) 0)) kilpailutettavat-hankinnat))

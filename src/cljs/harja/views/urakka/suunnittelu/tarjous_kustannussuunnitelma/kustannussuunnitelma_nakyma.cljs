@@ -36,32 +36,25 @@
           toimenpiteet (:toimenpiteet kilpailutettavat-hankinnat)
           taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
           _ (reset! yhteiset/grid-hankinnat-atom taulukon-tiedot)
-
           yht-alkukausi (:kaikki-alkukausi (last toimenpiteet))
           yht-loppukausi (:kaikki-loppukausi (last toimenpiteet))
           yht (:kaikki-yhteensa (last toimenpiteet))
-          yht-pysyvat (:kaikki-pysyvat-muutokset (last toimenpiteet))
 
           viimeisin-muokkaus (:viimeisin-muokkaus (last toimenpiteet))
           viimeisin-muokkaaja (:viimeisin-muokkaaja (last toimenpiteet))
 
-          kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
-          kirjaamatta (+ kirjaamatta (when (number? yht-pysyvat) yht-pysyvat))
+          kirjaamatta (tyokalut/round2 2 (+ pysyvat-muutokset-maara (- tarjouksen-maara yht)))
           kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
+
           kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
                              [^{:luokka "kustannukset-yhteenveto"}
                               {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
-                              {:teksti "" :luokka kirjaamatta-luokka}
                               {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                               {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                               {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
 
           yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
                              {:teksti "Yhteensä" :luokka "yhteensa korkea"}
-                             {:teksti (if (number? yht-pysyvat)
-                                        (fmt/euro-opt false yht-pysyvat)
-                                        yht-pysyvat)
-                              :luokka "yhteensa korkea"}
                              {:teksti (fmt/euro-opt false yht-alkukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht-loppukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
@@ -96,6 +89,7 @@
         [:div.col-xs-12
          [grid/grid (merge (yhteiset/grid-perusasetukset (if vahvistettu? false true) :nimi)
                       {:otsikko ""
+                       :piilota-toiminnot? true
                        :jarjestys :jarjestys
                        :muutos #(do
                                   (reset! yhteiset/tallenna-painettu false)
@@ -109,8 +103,6 @@
                                           yhteenveto-rivit)})
           [{:otsikko "Toimenpide" :nimi :toimenpide-nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
             :otsikkorivi-luokka "korkea"}
-           {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string :fmt #(if (number? %) (fmt/euro-opt false %) %)
-            :leveys "20%" :muokattava? (constantly false)}
            {:otsikko (str "Loka-joulukuu " (pvm/vuosi (first valittu-hoitokausi)) " (€)") :nimi :alkukausi :tyyppi :euro
             :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :vaadi-ei-negatiivinen? true
             :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
@@ -552,7 +544,7 @@
      (when vahvistus-virhe
        [:div.row {:style {:margin-bottom "1rem"}}
         [:div.col-xs-12
-         [yleiset/info-laatikko :varoitus vahvistus-virhe nil nil {:sulje-nappi-id (gensym)}]]])]))
+         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Suunnitellut kustannukset eivät täsmää tarjouksen tietoihin:"]]])]))
 
 (defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))

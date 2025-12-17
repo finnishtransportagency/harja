@@ -372,18 +372,13 @@
                                   :yhteensa-indeksikorjattu nil})))
                        muuttuneet)
 
-          pysyvat-muutokset-yht (apply + (filter number? (map :pysyvat-muutokset muuttuneet)))
-
           yhteenveto {:nimi "Yhteensä"
                       :kaikki-alkukausi (apply + (map :alkukausi muuttuneet))
                       :kaikki-alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
                       :kaikki-loppukausi (apply + (map :loppukausi muuttuneet))
                       :kaikki-loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
-                      :kaikki-yhteensa (+ pysyvat-muutokset-yht (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
+                      :kaikki-yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
                       :kaikki-yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
-                      :kaikki-pysyvat-muutokset (if (> pysyvat-muutokset-yht 0.0M)
-                                                  pysyvat-muutokset-yht
-                                                  "Ei muutoksia")
                       :viimeisin-muokkaus (:viimeisin-muokkaus (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))
                       :viimeisin-muokkaaja (:viimeisin-muokkaaja (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))}
           muuttuneet (conj muuttuneet yhteenveto)]

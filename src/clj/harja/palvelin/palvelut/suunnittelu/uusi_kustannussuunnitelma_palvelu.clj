@@ -156,9 +156,9 @@
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [virheet []
-          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+    (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+
           ;; Riipumatta vahvistuksen onnistumisesta, aseta kattohinta, jos se on annettu
           _ (when (and paivitetty-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit))
               (suunnitelma-q/paivita-kasin-syotetty-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi
@@ -169,15 +169,9 @@
           ;; Onko hoitovuoden tarjous tallennettu? Jos ei ole, niin ei voida vahvistaa.
           tarjous (tarjous-kyselyt/hae-tarjousrivit-tietokannasta db urakka-id)
           hoitovuoden-tarjous (first (filter #(= hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %)) tarjous))
-          virheet (if hoitovuoden-tarjous
-                    virheet
-                    (conj virheet (str "Hoitovuoden " hoitovuoden-alkuvuosi " tarjous puuttuu. Tietoja ei voida vahvistaa.")))
 
           ;; Onko indeksit valmiina
           indeksi-olemassa? (boolean (some #(= hoitovuoden-alkuvuosi (:vuosi %)) urakan-indeksit))
-          virheet (if indeksi-olemassa?
-                    virheet
-                    (conj virheet (str "Indeksit puuttuvat hoitovuodelle " hoitovuoden-alkuvuosi ". Indeksit on lisättävä ennen vahvistusta.")))
 
           ;; Tarkistetaan, että kilpailutettavat hankinnat, erillishankinnat, hoidonjohtopalkkiot ja johto-ja hallintokorvaukset täsmää tarjouksen kanssa.
           ;; Muuten ei voida vahvistaa tavoitehintaa.
@@ -188,14 +182,30 @@
           _ (when (and suunnitelmat-annettu? indeksi-olemassa? hoitovuoden-tarjous)
               (suunnitelma-q/vahvista-tavoite-ja-kattohinta db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi))
           vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
-          virheet (if suunnitelmat-annettu?
-                    virheet
-                    (conj virheet (str
-                                    (when hoitovuoden-tarjous "Tietoja ei voitu vahvistaa. ") ;; Jos hoitovuoden tarjousta ei ole, tämä lisätään jo yllä
-                                    "Kustannustietoja puuttuu. Tarkista " (str/join ", " puuttuvat-suunnitelmat))))]
+
+          tarjous-puuttuu? (or
+                             (not hoitovuoden-tarjous)
+                             (<= (bigdec
+                                   (or (:tarjous_tavoitehinta hoitovuoden-tarjous) 0)) 0.0M))
+
+          virheet []
+          virheet (if tarjous-puuttuu?
+                    (into virheet
+                      (concat
+                        [(str "Hoitovuoden " hoitovuoden-alkuvuosi
+                           " tarjous puuttuu. Tietoja ei voida vahvistaa.")]))
+
+                    (into virheet
+                      (concat
+                        (when-not indeksi-olemassa?
+                          [(str "Indeksit puuttuvat hoitovuodelle " hoitovuoden-alkuvuosi
+                             ". Indeksit on lisättävä ennen vahvistusta.")])
+
+                        (when (seq puuttuvat-suunnitelmat)
+                          (map #(str %) puuttuvat-suunnitelmat)))))]
 
       (if-not (empty? virheet)
-        (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] (str/join " " virheet))
+        (assoc-in vastaus [:kustannussuunnitelma :vahvistus-virhe] virheet)
         vastaus))))
 
 (defrecord UusiKustannussuunnitelmaPalvelu []
