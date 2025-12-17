@@ -10,6 +10,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu])
   (:import (org.apache.commons.io IOUtils)))
 
@@ -1869,7 +1870,7 @@
           kulut-ennen (q (str "SELECT COUNT(*) AS maara FROM kulu_kohdistus kk"
                            " WHERE kk.muutos = " muutos-id
                            " AND kk.poistettu IS NOT TRUE"))
-          kulut-ennen-2 (harja.kyselyt.muutos-kyselyt/hae-muutostyon-kulujen-maara (:db jarjestelma) {:muutos-id muutos-id})
+          kulut-ennen-2 (muutos-kyselyt/hae-muutostyon-kulujen-maara (:db jarjestelma) {:muutos-id muutos-id})
 
           poisto-epaonnistui? (atom false)
           virheviesti (atom nil)]
