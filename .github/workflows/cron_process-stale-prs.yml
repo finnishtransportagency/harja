@@ -44,19 +44,21 @@ jobs:
         id: find-stale-prs
         uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
-          # TODO: Dry-run (debug) ajo ensin, kunnes varmistutaan että toimii oikein
-          #       Poistetaan kovakoodattu dry-run asetus myöhemmin, ja otetaan se käyttöön GitHub action inputista
-          debug-only: true
-          #debug-only: ${{ github.event.inputs.dry-run }}
+          debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
           stale-pr-message: "Tämä PR on ollut avoin 3 päivää ilman kommentteja tai päivityksiä, joten se merkitään vanhentuneeksi. Voit perua merkinnän kommentoimalla tai päivittämällä PR:ää."
-          days-before-pr-close: ''
+          # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
+          days-before-pr-close: -1
+          days-before-close: -1
           remove-pr-stale-when-updated: true
-          # Avoimeen PR:ään voi myös lisätä WIP-labelin, jolloin se ei vanhenee
+          # Avoimeen PR:ään voi myös lisätä WIP-labelin, jolloin se ei vanhene
           exempt-pr-labels: "WIP"
           # Draft-PR:iä ei ole tarpeen merkitä vanhentuneiksi, seurataan vain avoimia PR:iä
           exempt-draft-pr: true
+          # Älä merkitse issueita vanhentuneiksi, seurataan vain avoimia PR:iä
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
       - name: Format Stale PRs list
         if: ${{ steps.find-stale-prs.outputs.staled-issues-prs != '' && steps.find-stale-prs.outputs.staled-issues-prs != '[]' }}
         id: stale-prs-list
@@ -68,7 +70,7 @@ jobs:
             const stalePRs = JSON.parse(process.env.STALE_PRS);
             const formattedList = stalePRs
               .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
-              .join('\n');
+              .join('\\n');
             return formattedList;
       - name: Send a summary of stale PRs into Slack
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
@@ -84,7 +86,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Katselmointia kaipaavat PRt:\n${{ steps.stale-prs-list.outputs.result }}"
+                    "text": ":please-cat: Katselmointia tai muutoksia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
                   }
                 }
               ]
