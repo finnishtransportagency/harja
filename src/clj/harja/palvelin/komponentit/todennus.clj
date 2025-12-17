@@ -341,10 +341,7 @@
   Todennus
   (todenna-pyynto [{db :db :as this} req kehitysmoodi?]
     (let [headerit (:headers req)
-          #_ (println "*** HTTP Headerit:" (pr-str headerit))
-
-          kayttaja-id (headerit "oam_remote_user")
-          #_ (println "*** kayttaja-id:" (pr-str kayttaja-id))]
+          kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
