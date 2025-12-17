@@ -449,7 +449,7 @@
             vastaus))
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
-              :hallintayksikko {:id 12
+              :hallintayksikko {:id 22
                                 :nimi "Pohjois-Pohjanmaa"
                                 :elynumero 12}
               :urakat #{{:id 4
