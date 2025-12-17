@@ -5,19 +5,62 @@ WITH rahavaraustehtava AS
     FROM rahavaraus_urakka rvu
              JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
     WHERE rvu.urakka_id = :urakkaid ),
- muutokset AS (
-    SELECT mm.id, mmtm.edellinen_maara, mmtm.maaramuutos, mmtm.uusi_maara, mmtm.tehtava as tehtavaid,
-           mm.voimassa_alkaen, mm.syy
+ muutokset_versiosuodatetut AS (
+    -- Hae muutokset tarjousmäärällä, suodatettuna uusimpaan versioon
+    -- Versio-suodatus tehdään alla
+    SELECT mm.id, 
+           mmtm.maaramuutos, 
+           mmtm.tehtava as tehtavaid,
+           mm.voimassa_alkaen, 
+           mm.syy,
+           mmtm.versio,
+           COALESCE(v.tarjous_maara, 0) as tarjous_maara
       FROM mhu_muutos mm
-           LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
+           JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
+           LEFT JOIN urakka_tehtavamaara_yhteenveto v 
+                ON v.tehtava = mmtm.tehtava 
+                AND v.urakka = mm.urakka
+                AND v.hoitokauden_alkuvuosi = mmtm.hoitokauden_alkuvuosi
     WHERE mm.urakka = :urakkaid
       AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       AND mm.poistettu IS NOT TRUE
+      -- Suodata vain uusimmat versiot jokaiselle tehtävä+muutos yhdistelmälle
+      AND mmtm.versio = (
+          SELECT MAX(mmtm2.versio)
+            FROM mhu_muutos_tehtava_ja_maaraluettelo mmtm2
+           WHERE mmtm2.muutos = mmtm.muutos
+             AND mmtm2.tehtava = mmtm.tehtava
+      )
+    ),
+ muutokset AS (
+    -- Laske kumulatiiviset arvot window functionilla
+    SELECT 
+        id,
+        tehtavaid,
+        maaramuutos,
+        voimassa_alkaen,
+        syy,
+        -- Edellinen määrä = tarjous + summa kaikista edellisistä muutoksista
+        tarjous_maara + COALESCE(
+            SUM(maaramuutos) OVER (
+                PARTITION BY tehtavaid
+                ORDER BY voimassa_alkaen, id
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+            ), 
+            0
+        ) as edellinen_maara,
+        -- Uusi määrä = tarjous + summa tästä muutoksesta ja kaikista edellisistä
+        tarjous_maara + SUM(maaramuutos) OVER (
+            PARTITION BY tehtavaid
+            ORDER BY voimassa_alkaen, id
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) as uusi_maara
+    FROM muutokset_versiosuodatetut
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, 
        v.tarjous_maara,
-       (SELECT array_agg(row(id, v.tarjous_maara, maaramuutos, (v.tarjous_maara+maaramuutos), tehtavaid, voimassa_alkaen, syy))
+       (SELECT array_agg(row(id, edellinen_maara, maaramuutos, uusi_maara, tehtavaid, voimassa_alkaen, syy) ORDER BY voimassa_alkaen)
         FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutokset,
        v.muutossumma AS muutos_maaramuutos,
        v.laskettu_maara AS yhteensa
