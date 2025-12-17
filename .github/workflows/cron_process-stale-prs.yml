@@ -44,10 +44,7 @@ jobs:
         id: find-stale-prs
         uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
-          # TODO: Dry-run (debug) ajo ensin, kunnes varmistutaan että toimii oikein
-          #       Poistetaan kovakoodattu dry-run asetus myöhemmin, ja otetaan se käyttöön GitHub action inputista
-          debug-only: true
-          #debug-only: ${{ github.event.inputs.dry-run }}
+          debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
           stale-pr-message: "Tämä PR on ollut avoin 3 päivää ilman kommentteja tai päivityksiä, joten se merkitään vanhentuneeksi. Voit perua merkinnän kommentoimalla tai päivittämällä PR:ää."
@@ -89,7 +86,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Katselmointia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
+                    "text": ":please-cat: Katselmointia tai muutoksia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
                   }
                 }
               ]
