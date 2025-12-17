@@ -235,7 +235,6 @@
    ;; Muuten etsitään urakoitsijakohtaista roolia
    (hae-organisaatio-liitetylle-roolille db roolit)))
 
-
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
@@ -342,7 +341,10 @@
   Todennus
   (todenna-pyynto [{db :db :as this} req kehitysmoodi?]
     (let [headerit (:headers req)
-          kayttaja-id (headerit "oam_remote_user")]
+          #_ (println "*** HTTP Headerit:" (pr-str headerit))
+
+          kayttaja-id (headerit "oam_remote_user")
+          #_ (println "*** kayttaja-id:" (pr-str kayttaja-id))]
       (if (nil? kayttaja-id)
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))

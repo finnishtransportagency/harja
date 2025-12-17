@@ -204,22 +204,24 @@
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  (let [urakat (oikeudet/kayttajan-urakat user)]
+  (let [urakat (oikeudet/kayttajan-urakat user)
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
     (if (and (nil? organisaatio) (empty? urakat))
       (do
         (oikeudet/ei-oikeustarkistusta!)
         [])
       (into []
-            urakka-xf
-            (q/listaa-urakat-hallintayksikolle db
-                                               {:hallintayksikko      hallintayksikko-id
-                                                :kayttajan_org_id     (:id organisaatio)
-                                                :kayttajan_org_tyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
-                                                :sallitut_urakat      (if (empty? urakat)
-                                                                        ;; Jos ei urakoita, annetaan
-                                                                        ;; dummy, jotta IN toimii
-                                                                        [-1]
-                                                                        urakat)})))))
+        urakka-xf
+        (q/listaa-urakat-hallintayksikolle db
+          {:hallintayksikko hallintayksikko-id
+           :elinvoimakeskus_id (when (= "elinvoimakeskus" organisaatiotyyppi) hallintayksikko-id)
+           :kayttajan_org_id (:id organisaatio)
+           :kayttajan_org_tyyppi organisaatiotyyppi
+           :sallitut_urakat (if (empty? urakat)
+                              ;; Jos ei urakoita, annetaan
+                              ;; dummy, jotta IN toimii
+                              [-1]
+                              urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)

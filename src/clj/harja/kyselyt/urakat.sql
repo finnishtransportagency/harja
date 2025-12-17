@@ -215,9 +215,9 @@ SELECT
   )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
-  hal.id                                  AS hallintayksikko_id,
-  hal.nimi                                AS hallintayksikko_nimi,
-  hal.lyhenne                             AS hallintayksikko_lyhenne,
+  COALESCE(hal.id, evk.id)                AS hallintayksikko_id,
+  COALESCE(hal.nimi, evk.nimi)            AS hallintayksikko_nimi,
+  COALESCE(hal.lyhenne, evk.lyhenne)      AS hallintayksikko_lyhenne,
   org.id                                  AS urakoitsija_id,
   org.nimi                                AS urakoitsija_nimi,
   org.ytunnus                             AS urakoitsija_ytunnus,
@@ -255,18 +255,22 @@ SELECT
 
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE hallintayksikko = :hallintayksikko
+WHERE (('hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND u.hallintayksikko = :hallintayksikko::INT)
+        OR
+       ('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND u.elinvoimakeskus_id = :elinvoimakeskus_id::INT))
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
-           OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
-                'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-               OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+           OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+               OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = org.id)));
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
