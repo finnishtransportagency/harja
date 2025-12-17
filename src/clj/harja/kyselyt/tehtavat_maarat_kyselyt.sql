@@ -11,6 +11,7 @@ WITH rahavaraustehtava AS
       FROM mhu_muutos mm
            LEFT JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
     WHERE mm.urakka = :urakkaid
+      AND extract(YEAR from m.voimassa_alkaen) <= :hoitokauden-alkuvuosi
       AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       AND mm.poistettu IS NOT TRUE
     )
