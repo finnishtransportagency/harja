@@ -60,7 +60,7 @@ VALUES (
   'https://tilu.fi/666',
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   ARRAY [(SELECT id
    FROM urakka
    WHERE sampoid = '1242141-OULU2')],
@@ -194,7 +194,7 @@ VALUES (
   'https://tilu.fi/123',
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   ARRAY [(SELECT id
           FROM urakka
           WHERE sampoid = '1242141-OULU2')],
