@@ -1,82 +1,13 @@
--- Päivitä voimassa oleville urakoille elinvoimakeskustieto
+-- Tallenna elinvoimakeskukset
+-- Elynumero-kentän merkitystä on laajennettu. Kun ELYä haetaan numeron perusteella, täytyy rajauksessa ottaa mukaan myös organisaatio.tyyppi.
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Uudenmaan elinvoimakeskus', 'UUD', 1, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Lounais-Suomen elinvoimakeskus', 'LOU', 2, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Kaakkois-Suomen elinvoimakeskus', 'KAS', 3, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Sisä-Suomen elinvoimakeskus', 'SIS', 4, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Keski-Suomen elinvoimakeskus', 'KES', 5, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Itä-Suomen elinvoimakeskus', 'ITA', 6, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Etelä-Pohjanmaan elinvoimakeskus', 'EPO', 7, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Pohjanmaan elinvoimakeskus', 'POH', 8, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Pohjois-Suomen elinvoimakeskus', 'PSU', 9, 'elinvoimakeskus', 'T');
+INSERT INTO organisaatio (nimi, lyhenne, elynumero, tyyppi, liikennemuoto) VALUES ('Lapin elinvoimakeskus', 'LAP', 10, 'elinvoimakeskus', 'T');
 
--- Vanha ely ja uusi elinvoimakeskus vastaavat toisiaan
--- Eli LAP => Lappi, POP => Pohjois-Suomi, POS => Itä-Suomi, KES => Keski-Suomi
--- ja VAR => Lounais-Suomi
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Lappi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Lappi')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Pohjois-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Pohjois-Pohjanmaa')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Itä-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Pohjois-Savo')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Keski-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Keski-Suomi')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Varsinais-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Lounais-Suomi')
-  AND loppupvm > '2026-01-01';
-
--- Vanha ely on kokonaan jonkun uuden elinvoimakeskuksen alueella
--- eli KAS => Kaakkois-Suomi ja PIR => Sisä-Suomi
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Kaakkois-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Kaakkois-Suomi')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Sisä-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Pirkanmaa')
-  AND loppupvm > '2026-01-01';
-
--- Vanhat elyn urakat jakautuvat selkeästi  kahden uuden elinvoimakeskuksen kesken
--- eli EPO => Pohjanmaa ja Etelä-Pohjanmaa
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Pohjanmaa')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Etelä-Pohjanmaa')
-  AND lyhyt_nimi IN ('Kristiinankaupunki 22',
-                     'Vaasa 23',
-                     'Kokkola 24',
-                     'Pietarsaari 21',
-                     'Veteli 21')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Etelä-Pohjanmaa')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Etelä-Pohjanmaa')
-  AND lyhyt_nimi IN ('Seinäjoki 24',
-                     'Kauhajoki 23',
-                     'Alavus 22',
-                     'Lapua 25')
-  AND loppupvm > '2026-01-01';
-
--- Uudenmaan elinvoimakeskuksen alueelle jäävät UUD-elyn urakat
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Uusimaa')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Uusimaa')
-  AND lyhyt_nimi IN ('Raasepori 21',
-                     'Espoo 24',
-                     'Vantaa 24',
-                     'Porvoo 25',
-                     'Nummi 21',
-                     'Mäntsälä 25')
-  AND loppupvm > '2026-01-01';
-
--- UUD-elystä pois siirtyvät urakat
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Kaakkois-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Uusimaa')
-  AND lyhyt_nimi IN ('Heinola 22',
-                     'Lahti 22')
-  AND loppupvm > '2026-01-01';
-UPDATE urakka
-SET elinvoimakeskus_id = (select id from elinvoimakeskus where lyhytnimi = 'Sisä-Suomi')
-WHERE hallintayksikko = (select id from organisaatio where nimi = 'Uusimaa')
-  AND lyhyt_nimi IN ('Hyvinkää 23',
-                     'Hämeenlinna 23')
-  AND loppupvm > '2026-01-01';
