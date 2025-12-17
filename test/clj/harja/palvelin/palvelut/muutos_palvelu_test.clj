@@ -199,12 +199,9 @@
         budjettitavoitteet (:budjettitavoitteet vastaus)]
 
     ;; Indeksikorjattu tavoitehinta on nil, koska urakalle ei ole vahvistettu indeksikorjausta hoitovuodelle 2025
-    ;; TODO: Hoidetaan testidataan Iin tai Suomussalmen urakalle vahvistettu tavoitehinta, jotta saadaan tämäkin
-    ;;       testattua kunnolla (toinen urakka riittää, ei tarvi molempiin), ja UI:ssa näkyisi jotain järkevää suoraan
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
     (is (= {2024 false 2025 false 2026 false 2027 false 2028 false}
           (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
-    ;; TODO: Eikä urakalla ole myöskään indeksiä vuodelle 2026, joten ei voida laskea indeksikorjauksia
     (is (= 0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
 
@@ -379,12 +376,6 @@
     (is (= (map #(dissoc % :luotu :muokattu) kanta-muokkauksen-jalkeen) (map #(dissoc % :luotu :muokattu) odotettu-kanta-muokkauksen-jalkeen-ilman-aikaleimaa)) "Rahavarausmuutosten syyt kannasta muokkauksen jälkeen")
     (is (instance? java.util.Date (:muokattu (first (filter #(= (:rahavaraus_id %) 1) kanta-muokkauksen-jalkeen)))) "Muokatun syyn muokkausaika on asetettu")
     (is (= vastaus-muokkauksen-jalkeen odotetut-muokkauksen-jalkeen) "Rahavarausmuutosten syyt muokkauksen jälkeen")))
-
-
-;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
-;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
-;; TODO: Testaa mhu_muutos_kulun historia, historia ei tällä hetkellä tallennu koska kulun päivitys ei toimi
-;;       mhu_muutos_kulu tauluun, vaan koodi luo vain uusia rivejä version muuttuessa
 
 (deftest tallenna-johto-ja-hallintokorvausmuutos-ii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -565,7 +556,6 @@
                                      ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
                                      {:tehtava 6953 :maaramuutos 100, :hoitokauden_alkuvuosi 2028}]
         odotettu-vastaus (list
-                           ;; TODO: Edellinen maara ja uusi maara laskematta vielä palvelussa, siksi 0-arvot
                            {:edellinen_maara nil
                             :hoitokauden_alkuvuosi 2027
                             :maaramuutos 333
@@ -710,7 +700,6 @@
                                        :muutos muutos-payload})))
         historia-tyhja-insertin-jalkeen (first (q (format "SELECT * FROM mhu_muutos_historia WHERE id = %s;" (inc max-id-ennen-tallennusta))))
         ;; Odotusarvoisesti haetaan valittua hoitokautta vastaavat tulokset
-        ;; TODO: Pohdintaa, pitäisikö hakea kaikkien hoitokausien tiedot kerralla, jos muutos koskee useampaa hoitokautta?
         odotetut-luonnin-jalkeen (list {:id (inc max-id-ennen-tallennusta)
                                         :jjh-muutosten-summa nil
                                         :kulu_kohdistus nil
@@ -1463,7 +1452,6 @@
     (is (every? #(= #inst "2025-09-30T21:00:00.000-00:00" (:voimassa_alkaen %)) vastaus)
       "Molemmilla sama voimassa_alkaen")))
 
-;; TODO: Testaa kulut
 (deftest muutostyo-erillisrahoitettu-tallennus-suomussalmi
   (testing "Tallennataan erillisrahoitettu muutostyö, joka kohdistuu valittuun hoitokauteen"
     (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
