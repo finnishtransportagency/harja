@@ -5,15 +5,15 @@ WITH rahavaraustehtava AS
     FROM rahavaraus_urakka rvu
              JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
     WHERE rvu.urakka_id = :urakkaid ),
- muutokset_versiosuodatetut AS (
-    -- Hae muutokset tarjousmäärällä, suodatettuna uusimpaan versioon
-    -- Versio-suodatus tehdään alla
+ muutokset_haetut AS (
+    -- Hae muutokset tarjousmäärällä
+    -- Huom: mhu_muutos_tehtava_ja_maaraluettelo päätalussa on aina vain uusin versio
+    -- per (muutos, tehtava, hoitokauden_alkuvuosi) yhdistelmä, ei tarvita versiosuodatusta
     SELECT mm.id, 
            mmtm.maaramuutos, 
            mmtm.tehtava as tehtavaid,
            mm.voimassa_alkaen, 
            mm.syy,
-           mmtm.versio,
            COALESCE(v.tarjous_maara, 0) as tarjous_maara
       FROM mhu_muutos mm
            JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
@@ -24,13 +24,6 @@ WITH rahavaraustehtava AS
     WHERE mm.urakka = :urakkaid
       AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       AND mm.poistettu IS NOT TRUE
-      -- Suodata vain uusimmat versiot jokaiselle tehtävä+muutos yhdistelmälle
-      AND mmtm.versio = (
-          SELECT MAX(mmtm2.versio)
-            FROM mhu_muutos_tehtava_ja_maaraluettelo mmtm2
-           WHERE mmtm2.muutos = mmtm.muutos
-             AND mmtm2.tehtava = mmtm.tehtava
-      )
     ),
  muutokset AS (
     -- Laske kumulatiiviset arvot window functionilla
@@ -55,7 +48,7 @@ WITH rahavaraustehtava AS
             ORDER BY voimassa_alkaen, id
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) as uusi_maara
-    FROM muutokset_versiosuodatetut
+    FROM muutokset_haetut
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, 
@@ -115,3 +108,54 @@ UPDATE urakka_tehtavamaara
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden-alkuvuosi, :tehtavaid, :maara, :luoja, NOW())
 RETURNING id, urakka as urakka_id, "hoitokauden-alkuvuosi", tehtava as tehtava_id, maara, muokattu, muokkaaja, luotu, luoja;
+
+
+-- name: debug-hae-muutokset-ja-versiot
+-- Hae urakan kaikki muutokset versiotietoineen debuggausta varten
+SELECT 
+    mm.id as muutos_id,
+    mm.voimassa_alkaen,
+    mm.syy as muutoksen_syy,
+    mm.poistettu as muutos_poistettu,
+    mmtm.tehtava as tehtava_id,
+    t.nimi as tehtavan_nimi,
+    mmtm.hoitokauden_alkuvuosi,
+    mmtm.maaramuutos,
+    mmtm.versio,
+    -- Onko tämä uusin versio tälle tehtävä+muutos yhdistelmälle?
+    CASE WHEN mmtm.versio = (
+        SELECT MAX(mmtm2.versio)
+        FROM mhu_muutos_tehtava_ja_maaraluettelo mmtm2
+        WHERE mmtm2.muutos = mmtm.muutos
+          AND mmtm2.tehtava = mmtm.tehtava
+    ) THEN 'KYLLÄ' ELSE 'EI' END as onko_uusin_versio,
+    -- Montako versiota tällä tehtävä+muutos yhdistelmällä on?
+    (SELECT COUNT(*)
+     FROM mhu_muutos_tehtava_ja_maaraluettelo mmtm3
+     WHERE mmtm3.muutos = mmtm.muutos
+       AND mmtm3.tehtava = mmtm.tehtava
+    ) as versioita_yhteensa,
+    -- VIEW:n laskemat arvot
+    v.tarjous_maara,
+    v.muutossumma,
+    v.laskettu_maara
+FROM mhu_muutos mm
+     JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
+     LEFT JOIN tehtava t ON t.id = mmtm.tehtava
+     LEFT JOIN urakka_tehtavamaara_yhteenveto v 
+          ON v.tehtava = mmtm.tehtava 
+          AND v.urakka = mm.urakka
+          AND v.hoitokauden_alkuvuosi = mmtm.hoitokauden_alkuvuosi
+WHERE mm.urakka = :urakkaid
+  -- Valinnainen suodatus hoitokaudelle
+  AND (:hoitokauden-alkuvuosi::INTEGER IS NULL OR mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi)
+  -- Valinnainen suodatus tehtävälle
+  AND (:tehtavaid::INTEGER IS NULL OR mmtm.tehtava = :tehtavaid)
+  -- Valinnainen suodatus: näytä vain uusimmat versiot
+  AND (:vain-uusimmat-versiot::BOOLEAN IS NOT TRUE OR mmtm.versio = (
+      SELECT MAX(mmtm2.versio)
+      FROM mhu_muutos_tehtava_ja_maaraluettelo mmtm2
+      WHERE mmtm2.muutos = mmtm.muutos
+        AND mmtm2.tehtava = mmtm.tehtava
+  ))
+ORDER BY mm.voimassa_alkaen DESC, mmtm.tehtava, mmtm.versio DESC;

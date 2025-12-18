@@ -34,6 +34,9 @@ FROM
     urakka_tehtavamaara ut
     LEFT JOIN (
         -- Aggregoidaan kaikki tehtävän mutaatiot hoitokausittain
+        -- Huom: mhu_muutos_tehtava_ja_maaraluettelo päätalussa on aina vain uusin versio
+        -- per (muutos, tehtava, hoitokauden_alkuvuosi) yhdistelmä, koska ON CONFLICT
+        -- päivittää rivin in-place ja trigger siirtää vanhan version historiaan.
         SELECT 
             m.urakka,
             mmtml.tehtava,
@@ -44,13 +47,6 @@ FROM
             JOIN mhu_muutos m ON mmtml.muutos = m.id
         WHERE 
             m.poistettu = FALSE
-            -- Haetaan vain viimeisin versio kustakin mutaatio+tehtävä yhdistelmästä
-            AND mmtml.versio = (
-                SELECT MAX(versio) 
-                FROM mhu_muutos_tehtava_ja_maaraluettelo mmtml2 
-                WHERE mmtml2.muutos = mmtml.muutos
-                   AND mmtml2.tehtava = mmtml.tehtava
-            )
         GROUP BY 
             m.urakka, 
             mmtml.tehtava, 
@@ -76,8 +72,8 @@ CREATE INDEX IF NOT EXISTS mhu_muutos_poistettu_idx
     WHERE poistettu = FALSE;
 
 -- Indeksi mhu_muutos_tehtava_ja_maaraluettelo tauluun aggregointiin
-CREATE INDEX IF NOT EXISTS mhu_muutos_tehtava_ja_maaraluettelo_urakka_idx 
-    ON mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, versio);
+CREATE INDEX IF NOT EXISTS mhu_muutos_tehtava_ja_maaraluettelo_aggregointi_idx 
+    ON mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi);
 
 -- Kommentit VIEW:lle ja sen sarakkeille
 COMMENT ON VIEW urakka_tehtavamaara_yhteenveto IS 
@@ -97,7 +93,7 @@ COMMENT ON COLUMN urakka_tehtavamaara_yhteenveto.tarjous_maara IS
     'Alkuperäinen tarjousmäärä urakka_tehtavamaara taulusta. Tämä on sopimuksen mukainen lähtömäärä.';
 
 COMMENT ON COLUMN urakka_tehtavamaara_yhteenveto.muutossumma IS 
-    'Kaikkien hyväksyttyjen (poistettu = FALSE) mutaatioiden summa tälle tehtävälle ja hoitokaudelle. Sisältää vain viimeisimmän version jokaisesta mutaatiosta.';
+    'Kaikkien hyväksyttyjen (poistettu = FALSE) mutaatioiden summa tälle tehtävälle ja hoitokaudelle. Päätalussa on aina vain uusin versio per muutos.';
 
 COMMENT ON COLUMN urakka_tehtavamaara_yhteenveto.laskettu_maara IS 
     'Todellinen suunniteltu määrä: tarjous_maara + muutossumma. Tätä tulisi käyttää kun viitataan "suunniteltuun määrään" tai "tavoitemäärään".';
