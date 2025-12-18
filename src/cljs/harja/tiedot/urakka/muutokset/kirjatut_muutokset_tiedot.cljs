@@ -197,14 +197,8 @@
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
       (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
         {:urakka-id @nav/valittu-urakka-id
-         ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
-         ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
-         ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
-         ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
-         ;;       vain pelkät pohjatiedot.
-         :muutos {:id nil
-                  :versio nil
-                  :tyyppi "pysyva"}}
+         :muutos-id nil
+         :muutos-versio nil}
         {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
          :onnistui-parametrit [valittu-hoitokausi]
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
