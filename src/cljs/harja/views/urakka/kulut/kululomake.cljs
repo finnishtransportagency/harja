@@ -145,6 +145,13 @@
                                   kielletyt-tehtavaryhmat))
                         tehtavaryhmat)
         tehtavat (:tehtavaryhman-tehtavat kohdistus)
+        ;; Jos tehtävistä löytyy "Muu tehtävä" id -1, ja kohdistuksen "muu-tehtava-kaytossa" = true, niin aseta se käyttöön
+        ;; Kyseessä on ns. dummy tehtävä, jota ei voi valita normaalisti, mutta joka on olemassa tietokannassa, jotta käyttöliittymässä voi näyttää "Muu tehtävä" valinnan
+        trlla-on-muu-tehtava? (some #(= -1 (:id %)) tehtavat)
+        muu-tehtava-kaytossa? (:muu-tehtava-kaytossa kohdistus)
+        kohdistus (if (and trlla-on-muu-tehtava? muu-tehtava-kaytossa?)
+                    (assoc kohdistus :tehtava {:id -1 :nimi "Muu tehtävä (ei määrämitattava)" :jarjestys 99999, :emo nil, :maaramitattava? true})
+                    kohdistus)
         tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)]
     [:div
      [:div.row

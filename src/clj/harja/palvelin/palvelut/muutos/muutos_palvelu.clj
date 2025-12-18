@@ -516,6 +516,7 @@
                                     (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))
                                     (update :tehtavat_ja_maarat #(konv/jsonb->clojuremap %))))
                                 ;; pysyvän muutoksen tietoja voi olla usealla hoitovuodella. Kysely ja palvelu palauttavat kaikkien hoitovuosien tiedot, toimenpiteittäin ryhmiteltynä.
+                                ;; Jos muutos-id:tä tai versiota ei ole annettu, haetaan vain pohjatiedot (uusi pysyvä muutos)
                                 (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
                                                                                           :versio muutos-versio
                                                                                           :urakka urakka-id}))
@@ -622,15 +623,6 @@
                                                        :kulu kulu-id-db}))
       (poista-vanhat-kulutiedot! db kayttaja rivi))))
 
-
-(defn- poista-muutos
-  "Poistaa muutoksen."
-  ;; Hox: tätä ei vielä käytetä. Jossain kohti tulee varmasti lomakkeelle poistaminen mahdolliseksi
-  [db kayttaja muutos]
-  (when (and (:id muutos) (:versio muutos))
-    (muutos-kyselyt/poista-muutos! db {:id (:id muutos)
-                                       :versio (:versio muutos)
-                                       :kayttaja (:id kayttaja)})))
 
 (defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
   (let [{muutos-id :id uusi-muutos-versio :versio} aiti-muutos-id-ja-versio
@@ -879,6 +871,125 @@
                                               :laskenta-automatiikka? laskenta-automatiikka?}))))
 
 
+(defn pysyvan-muutoksen-hoitovuodet
+  "Palauttaa listan hoitovuosista, joita pysyvä muutos koskee perustuen syötettyihin kustannusvaikutuksiin."
+  [db muutos]
+  (let [muutos-id (:id muutos)
+        muutos-versio (:versio muutos)
+        urakka-id (:urakka muutos)
+        kustannusvaikutukset (mapv
+                               (fn [rivi]
+                                 (-> rivi
+                                   (update :kustannusvaikutukset #(konv/jsonb->clojuremap %))))
+                               (muutos-kyselyt/hae-pysyvan-muutoksen-kustannustiedot db {:id muutos-id
+                                                                                         :versio muutos-versio
+                                                                                         :urakka urakka-id}))]
+    (->> kustannusvaikutukset
+      (mapcat :kustannusvaikutukset)
+      (map :hoitokauden_alkuvuosi)
+      (distinct)
+      (remove nil?))))
+
+
+(defn voi-poistaa-pysyvan-muutoksen?
+  "Palauttaa true, jos pysyvän muutoksen voi poistaa.
+  False, jos jokin muutoksen koskema hoitovuosi on lukittu (TODO: tai välikatselmus on tehty)."
+  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos]
+
+  (let [muutoksen-hk-alkuvuodet (pysyvan-muutoksen-hoitovuodet db muutos)
+        ;; Tarkistetaan onko hoitovuoden alun tavoitehinnan kannalta relevantteja vuosia jo lukittu
+        lukitut-vuodet (filterv #(muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                                   tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                   (:voimassa_alkaen muutos)
+                                   (pvm/vuodesta-hoitokausi %))
+                         muutoksen-hk-alkuvuodet)]
+
+    ;; TODO: Välikatselmuksen tarkistus tähän myöhemmin
+
+    ;; Muutoksen saa poistaa, mikäli lukittuja vuosia ei ole
+    (empty? lukitut-vuodet)))
+
+(defn muutoksen-poisto-estetty?
+  "Palauttaa mapin, jossa :voi-poistaa? boolean ja :virhe string (jos ei voi poistaa)"
+  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos]
+  (case (:tyyppi muutos)
+    "pysyva"
+    (if (voi-poistaa-pysyvan-muutoksen? db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
+      {:voi-poistaa? true}
+      {:voi-poistaa? false
+       :virhe "Muutoksen muuttamia tavoitehintoja on vahvistettu. Peru mahdolliset vahvistukset poistaaksesi muutoksen."})
+
+    "muutostyo"
+    ;; TODO: Alityyppi on toisaalla keyword ja toisaalla string, yhtenäistä tämä jossain vaiheessa muutosten kokonaisuudessa
+    ;;       Kaikki tyypit (tyyppi/alityyppi) saisivat olla stringejä tai keywordeja joka paikassa, mutta ei sekaisin kumpaakin
+    (if (= (:alityyppi muutos) "erillisrahoitus")
+      (let [kulujen-maara (or (muutos-kyselyt/hae-muutostyon-kulujen-maara db
+                                {:muutos-id (:id muutos)})
+                            0)]
+        (if (zero? kulujen-maara)
+          {:voi-poistaa? true}
+          {:voi-poistaa? false
+           :virhe "Muutostyölle on kohdistettu kuluja. Poista kohdistetut kulut ennen muutoksen poistamista."}))
+      ;; Muut muutostyöt
+      {:voi-poistaa? true})
+
+    ;; JJH ja muut ilman erityisiä poistorajoituksia
+    {:voi-poistaa? true}))
+
+(defn- hae-jjh-muutoksen-kulut
+  "Hakee kaikki JJH-muutokseen liittyvät kulut mhu_muutos_kulu -taulusta."
+  [db muutos-id muutos-versio]
+  (muutos-kyselyt/hae-jjh-muutoksen-kulut db {:muutos muutos-id
+                                              :versio muutos-versio}))
+
+(defn- poista-jjh-muutoksen-kulut!
+  "Asettaa poistetuksi JJH-muutoksen automaattisesti luodut kulut ja niiden kohdistukset."
+  [db kayttaja muutos-id muutos-versio]
+  (let [kulut (hae-jjh-muutoksen-kulut db muutos-id muutos-versio)]
+    (doseq [kulu kulut]
+      (log/info "Poistetaan JJH-muutoksen kulu id:llä" (:kulu-id kulu))
+      (kulu-kyselyt/poista-kulu! db {:id (:kulu-id kulu)
+                                     :kayttaja (:id kayttaja)})
+      (kulu-kyselyt/poista-kulun-kohdistukset! db {:id (:kulu-id kulu)
+                                                   :kayttaja (:id kayttaja)}))))
+
+(defn poista-muutos
+  "Poistaa muutoksen ja tarvittaessa muutokseen liittyvät tiedot muutoksen tyypistä riippuen"
+  [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos-id laskenta-automatiikka?] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+
+  (jdbc/with-db-transaction [conn db]
+    (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
+          _ (when-not muutos
+              (throw+ {:type virheet/+viallinen-kutsu+
+                       :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                                  :viesti "Muutosta ei löydy"}]}))
+
+          tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
+          ;; Tarkasta voiko muutoksen poistaa
+          {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty? conn tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)]
+
+      (when (not voi-poistaa?)
+        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                            :viesti virhe}]}))
+
+      ;; Poista JJH-muutoksen kulut ennen muutoksen poistoa
+      ;; Kulut ovat automaattisesti luotuja, joten ne voidaan poistaa ilman erillistä käyttäjän vahvistusta
+      (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+        (poista-jjh-muutoksen-kulut! conn kayttaja muutos-id (:versio muutos)))
+
+      ;; Merkitse muutos poistetuksi
+      ;; Äiti-muutos poistetaan soft-deletellä ja linkitetyt taulut jätetään ennalleen
+      (muutos-kyselyt/poista-muutos! conn {:id muutos-id
+                                           :kayttaja (:id kayttaja)})
+
+      ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
+      (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
+                                              :hoitokaudet hoitokaudet
+                                              :valittu-hoitokausi valittu-hoitokausi
+                                              :laskenta-automatiikka? laskenta-automatiikka?}))))
+
 (defn hae-urakan-muutostyot
   "Hakee kululomakkeeseen laaditut muutostyöt, jotta näille voi kirjata kuluja"
   [db kayttaja
@@ -919,6 +1030,14 @@
       (julkaise-palvelut
         (:http-palvelin this)
 
+        :tallenna-muutos
+        (fn [kayttaja tiedot]
+          (tallenna-muutos (:db this) kayttaja tiedot))
+
+        :poista-muutos
+        (fn [kayttaja tiedot]
+          (poista-muutos (:db this) kayttaja tiedot))
+
         :hae-urakan-muutostiedot
         (fn [kayttaja tiedot]
           (hae-urakan-muutostiedot (:db this) kayttaja tiedot))
@@ -943,10 +1062,6 @@
         (fn [kayttaja tiedot]
           (tallenna-maaramuutos-yksikkohinta (:db this) kayttaja tiedot))
 
-        :tallenna-muutos
-        (fn [kayttaja tiedot]
-          (tallenna-muutos (:db this) kayttaja tiedot))
-
         :hae-urakan-muutostyot
         (fn [kayttaja tiedot]
           (hae-urakan-muutostyot (:db this) kayttaja tiedot))
@@ -959,6 +1074,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
       :tallenna-muutos
+      :poista-muutos
       :hae-muutoksen-tiedot
       :hae-urakan-muutostyot
       :hae-urakan-muutostiedot
