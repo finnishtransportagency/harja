@@ -5,7 +5,7 @@ WITH rahavaraustehtava AS
     FROM rahavaraus_urakka rvu
              JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
     WHERE rvu.urakka_id = :urakkaid ),
- muutokset_haetut AS (
+ muutokset_raakadata AS (
     -- Hae muutokset tarjousmäärällä
     -- Huom: mhu_muutos_tehtava_ja_maaraluettelo päätalussa on aina vain uusin versio
     -- per (muutos, tehtava, hoitokauden_alkuvuosi) yhdistelmä, ei tarvita versiosuodatusta
@@ -25,7 +25,7 @@ WITH rahavaraustehtava AS
       AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
       AND mm.poistettu IS NOT TRUE
     ),
- muutokset AS (
+ muutokset_kumulatiiviset AS (
     -- Laske kumulatiiviset arvot window functionilla
     SELECT 
         id,
@@ -48,13 +48,13 @@ WITH rahavaraustehtava AS
             ORDER BY voimassa_alkaen, id
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) as uusi_maara
-    FROM muutokset_haetut
+    FROM muutokset_raakadata
     )
 SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, t.suunnitteluyksikko, t.jarjestys,
        tr.nimi as tehtavaryhmanimi, tro.otsikko as tehtavaryhmaotsikko, tp.nimi as toimenpidenimi, 
        v.tarjous_maara,
        (SELECT array_agg(row(id, edellinen_maara, maaramuutos, uusi_maara, tehtavaid, voimassa_alkaen, syy) ORDER BY voimassa_alkaen)
-        FROM muutokset WHERE muutokset.tehtavaid = t.id) AS muutokset,
+        FROM muutokset_kumulatiiviset WHERE muutokset_kumulatiiviset.tehtavaid = t.id) AS muutokset,
        v.muutossumma AS muutos_maaramuutos,
        v.laskettu_maara AS yhteensa
 FROM tehtavaryhma tr
