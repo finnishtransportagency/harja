@@ -75,7 +75,7 @@
                                 (throw+ {:type virheet/+viallinen-kutsu+
                                          :virheet [{:koodi virheet/+tuntematon-elinvoimakeskus+
                                                     :viesti (str "Tuntematon elinvoimakeskus " elinvoimakeskus)}]}))
-        elinvoimakeskus-id (:id (first (kayttajat-q/hae-elinvoimakeskus-lyhenteella-tielupaa-varten db elinvoimakeskusnumero)))]
+        elinvoimakeskus-id (:id (first (kayttajat-q/hae-elinvoimakeskus-lyhenteella-tielupaa-varten db elinvoimakeskuslyhenne)))]
     (assoc tielupa ::tielupa/elinvoimakeskus_id elinvoimakeskus-id)))
 
 ;; Tieluvilla on enemmän ely-keskuksia kuin Harjassa muuten
