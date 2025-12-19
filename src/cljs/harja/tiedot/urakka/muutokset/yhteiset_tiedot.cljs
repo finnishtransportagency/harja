@@ -1,19 +1,23 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
-  (:require [tuck.core :as tuck]
-            [clojure.string :as str]
-            [reagent.core :refer [atom]]
+  (:require
+    [clojure.string :as str]
+    [reagent.core :refer [atom]]
+    [taoensso.timbre :as log]
+    [tuck.core :as tuck]
 
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.ui.nakymasiirrin :as siirrin]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.viesti :as viesti]
+    [harja.ui.liitteet :as liitteet]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
+    [harja.ui.nakymasiirrin :as siirrin]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tyokalut.tuck :as tuck-apurit]))
 
 
 (defonce ^{:private true}
@@ -89,6 +93,10 @@
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosOnnistui [vastaus])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
+(defrecord PoistaMuutos [muutos])
+(defrecord PoistaMuutosOnnistui [vastaus])
+(defrecord PoistaMuutosEpaonnistui [vastaus])
+
 
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
@@ -433,6 +441,48 @@
     (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
                            (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
+
+  PoistaMuutos
+  (process-event [{:keys [muutos]}
+                  {:keys [laskenta-automatiikka?] :as app}]
+    (let [muutos-id (:id muutos)
+          urakka (:urakka @tila/yleiset)]
+      (tuck-apurit/post! :poista-muutos
+        {:muutos-id muutos-id
+         :urakka-id (:id urakka)
+         :valittu-hoitokausi (:valittu-hoitokausi app)
+         :hoitokaudet @u/valitun-urakan-hoitokaudet
+         :laskenta-automatiikka? laskenta-automatiikka?}
+        {:onnistui ->PoistaMuutosOnnistui
+         :epaonnistui ->PoistaMuutosEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc app :tallennus-kesken? true)))
+
+  PoistaMuutosOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+
+    (-> app
+      ;; Resetoi muutoslomake onnistuneen poistamisen jälkeen, jotta lomake suljetaan
+      (assoc
+        :viimeksi-valittu nil
+        :muokattava-muutos nil
+        :tallennus-kesken? false)
+      (vastaus-haku-onnistui vastaus)))
+
+  PoistaMuutosEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [virhe-str (get-in vastaus [:response :virhe] "Tuntematon virhe")]
+      (modal/nayta!
+        {:otsikko "Muutosta ei voitu poistaa"
+         :footer [napit/sulje #(modal/piilota!)]}
+        [:div (str virhe-str)])
+
+      ;; Näytä myös toast-viesti, jotta käyttäjä varmasti huomaa virheen tapahtuneen
+      ;; Avattu modal antaa tarkempaa lisätietoa.
+      (viesti/nayta-toast! (str "Muutoksen poistaminen epäonnistui!") :varoitus viesti/viestin-nayttoaika-keskipitka)
+
+      (assoc app :tallennus-kesken? false)))
 
 
   ;; Liitteet
