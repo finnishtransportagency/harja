@@ -258,7 +258,7 @@
                                                       ;; joskus refaktoroitua
                                                       (reset! yllapito-tiedot/tienumero valittu-arvo)
                                                       (e! (paallystys/->SuodataYllapitokohteet)))
-     {:otsikon-luokka "alasvedon-otsikko-vayla"}]]])
+     {:otsikon-luokka "alasvedon-otsikko"}]]])
 
 (defn paallystysilmoitukset
   [e! app]
