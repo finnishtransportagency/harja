@@ -401,7 +401,10 @@
   (let [vastaus (poista-urakan-alue-ja-id (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia))
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
         urakkatyypit (set (distinct (keep #(get-in % [:tyyppi]) vastaus)))
-        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))]
+        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))
+        _ (println "OEFHUOE " vastaus)
+        _ (println "ELYNUMEROT  " elynumerot)
+        ]
 
     (is (= (count elynumerot) 6) "JVH:n pitäisi nähdä kaikki ELY:t")
 
