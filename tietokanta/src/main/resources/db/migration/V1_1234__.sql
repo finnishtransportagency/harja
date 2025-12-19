@@ -35,10 +35,12 @@ SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Sisä-Suomen
 WHERE hallintayksikko = (select id from organisaatio where nimi = 'Pirkanmaa')
   AND loppupvm > '2026-01-01';
 
--- Vanhat elyn urakat jakautuvat selkeästi  kahden uuden elinvoimakeskuksen kesken
--- eli EPO => Pohjanmaa ja Etelä-Pohjanmaa
+-- Vanhat elyn urakat jakautuvat selkeästi  kahden uuden elinvoimakeskuksen kesken,
+-- mutta Etelä-Pohjanmaan elinvoimakeskus vastaa teiden hoidosta myös Pohjanmaan
+-- elinvoimakerkuksen puolella.
+-- eli EPO => Etelä-Pohjanmaa
 UPDATE urakka
-SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Pohjanmaan elinvoimakeskus')
+SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Etelä-Pohjanmaan elinvoimakeskus')
 WHERE hallintayksikko = (select id from organisaatio where nimi = 'Etelä-Pohjanmaa')
   AND lyhyt_nimi IN ('Kristiinankaupunki 22',
                      'Vaasa 23',
