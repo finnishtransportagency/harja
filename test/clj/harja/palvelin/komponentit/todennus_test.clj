@@ -168,7 +168,7 @@
         (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
-        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {33 #{"Paakayttaja"}}))))
 
     (testing "Käytetään OAM-headereita normaalisti, mikäli ne on määritelty"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
@@ -185,7 +185,7 @@
         (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
-        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {33 #{"Paakayttaja"}}))))))
 
 (deftest cognito-headereiden-purku-harja-api-usernamella
   (let [handler (->

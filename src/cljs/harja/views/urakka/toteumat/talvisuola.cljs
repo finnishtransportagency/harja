@@ -141,7 +141,7 @@
       {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20 :muokattava? muokattava?
        :validoi [[:ei-tyhja "Anna päivämäärä"]]
        :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-      {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
+      {:otsikko "Käytetty määrä (100% kuivatonni)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
        :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
        :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
       {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :kokonaisluku? true
