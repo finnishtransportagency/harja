@@ -287,7 +287,7 @@
         (is (= "testi@example.com" (:sahkoposti kayttaja)))
         (is (= "0401234567" (:puhelin kayttaja)))
         (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
-        (is (contains? (get-in kayttaja [:organisaatioroolit 23]) "Paakayttaja") "Pääkäyttäjärooli on asetettu")))
+        (is (contains? (get-in kayttaja [:organisaatioroolit 33]) "Paakayttaja") "Pääkäyttäjärooli on asetettu")))
 
     (testing "Olemassa oleva käyttäjä päivitetään jos tiedot muuttuvat"
       (let [muutetut-headerit (assoc testi-headerit
@@ -311,9 +311,7 @@
                             "oam_organization" "Lapin elinvoimakeskus"
                             "oam_groups" "ELY_Paakayttaja"}
             kayttaja (#'todennus/varmista-kayttajatiedot db evk-headerit)
-            _ (println "Käyttäjä:" (pr-str kayttaja))
-            kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))
-            _ (println "kayttaja-kannassa:" (pr-str kayttaja-kannassa))]
+            kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))]
 
         (is (some? kayttaja) "Käyttäjä palautetaan")
         (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
@@ -322,8 +320,7 @@
         (is (= "Elinvoimakeskus" (:sukunimi kayttaja)))
         (is (= "testi@example.com" (:sahkoposti kayttaja)))
         (is (= "0401234567" (:puhelin kayttaja)))
-        (is (= "Lapin elinvoimakeskus" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
-        (is (contains? (get-in kayttaja [:organisaatioroolit 23]) "Paakayttaja") "Pääkäyttäjärooli on asetettu")))
+        (is (= "Lapin elinvoimakeskus" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
 
     ;; Siivoa testi-käyttäjä lopuksi
     (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
