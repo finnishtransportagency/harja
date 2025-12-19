@@ -143,6 +143,8 @@ WITH maaramitattavat_tehtavat AS (
     AND tpk."mhu-tehtava?" IS TRUE
     AND tpk.piilota IS NOT true
     AND tpk.poistettu IS NOT true
+    AND (tpk.voimassaolo_alkuvuosi IS NULL OR tpk.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+    AND (tpk.voimassaolo_loppuvuosi IS NULL OR tpk.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
 )
 -- 1. Palautetaan kaikki maaramitattavat tehtävät
 SELECT
