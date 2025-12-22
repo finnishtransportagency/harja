@@ -215,9 +215,9 @@ SELECT
   )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
-  COALESCE(hal.id, evk.id)                AS hallintayksikko_id,
-  COALESCE(hal.nimi, evk.nimi)            AS hallintayksikko_nimi,
-  COALESCE(hal.lyhenne, evk.lyhenne)      AS hallintayksikko_lyhenne,
+  hal.id                                  AS hallintayksikko_id,
+  hal.nimi                                AS hallintayksikko_nimi,
+  hal.lyhenne                             AS hallintayksikko_lyhenne,
   org.id                                  AS urakoitsija_id,
   org.nimi                                AS urakoitsija_nimi,
   org.ytunnus                             AS urakoitsija_ytunnus,
@@ -262,9 +262,7 @@ FROM urakka u
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE (('hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND u.hallintayksikko = :hallintayksikko::INT)
-        OR
-       ('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi::organisaatiotyyppi AND u.elinvoimakeskus_id = :elinvoimakeskus_id::INT))
+WHERE hallintayksikko = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
            OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
