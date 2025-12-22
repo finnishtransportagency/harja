@@ -214,7 +214,6 @@
         urakka-xf
         (q/listaa-urakat-hallintayksikolle db
           {:hallintayksikko hallintayksikko-id
-           :elinvoimakeskus_id (when (= "elinvoimakeskus" organisaatiotyyppi) hallintayksikko-id)
            :kayttajan_org_id (:id organisaatio)
            :kayttajan_org_tyyppi organisaatiotyyppi
            :sallitut_urakat (if (empty? urakat)

@@ -255,7 +255,6 @@ SELECT
 
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
