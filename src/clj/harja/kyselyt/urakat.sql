@@ -264,9 +264,10 @@ FROM urakka u
 WHERE hallintayksikko = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
-           OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
-                'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-               OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+           OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+               OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = org.id)));
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon

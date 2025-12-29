@@ -48,7 +48,7 @@ SELECT id,nimi,tyyppi FROM organisaatio
 -- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
 SELECT u.id
   FROM urakka u
- WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
+ WHERE u.urakoitsija = :org OR u.hallintayksikko = :org OR u.elinvoimakeskus_id = :org;
 
 
 -- name: hae-kayttaja
