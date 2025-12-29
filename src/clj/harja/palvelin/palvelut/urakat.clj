@@ -18,10 +18,8 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c])
+            [clojure.java.jdbc :as jdbc])
   (:import (org.joda.time.format DateTimeFormat)))
 
 (def ^{:const true} oletus-toleranssi 50)
