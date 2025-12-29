@@ -172,7 +172,14 @@
                                               (assoc :toimenpide toimenpide)
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
-                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
+                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
+                                              (assoc :tehtava (when (and (nil? (:tehtava-id kohdistus))
+                                                                      (:muu-tehtava-kaytossa kohdistus))
+                                                                {:id -1
+                                                                 :nimi "Muu tehtävä (ei määrämitattava)"
+                                                                 :jarjestys 99999
+                                                                 :emo nil
+                                                                 :maaramitattava? true})))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
