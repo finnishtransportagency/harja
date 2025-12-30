@@ -13,7 +13,9 @@
   "Näyttää rahavarausten muutokset taulukossa sekä yhteenvedon.
   Taulukko on avattava ja suljettava. Sisältö automaattisesti laskettu muista tauluista."
   [e! {:keys [rahavarausten-muutokset] :as app}]
-  (let [rivit (or (butlast rahavarausten-muutokset) [])
+  ;; Prosessoi rivit vasta kun saatavilla on sekvenssimuotoista dataa, jotta gridin load-spinneri näkyy nil-arvolla
+  (let [rivit (when (seq rahavarausten-muutokset)
+                (or (butlast rahavarausten-muutokset) []))
         yhteenveto (last rahavarausten-muutokset)
         suunnittelutiedot-puuttuvat (every? #(or
                                                (nil? (:summa-indeksikorjattu %))
@@ -25,9 +27,9 @@
       :summa (:tavoitehinnan-muutos yhteenveto)
       :toiminnot (fn [e! app]
                    [::span
-                    [yleiset/vihje (str 
-                                     "Harja laskee rahavarausten tavoitehintamuutokset automaattisesti "
-                                     "kustannussuunnitelman ja kulukirjausten perusteella.")]
+                    [yleiset/vihje (str
+                                     "Harja laskee rahavarausten tavoitehintamuutokset "
+                                     "automaattisesti kustannussuunnitelman ja kulukohdistusten perusteella.")]
                     (when suunnittelutiedot-puuttuvat
                       [yleiset/toast-viesti "Suunnittelutiedot puuttuvat tarjouksen tiedoista."])])
       :taulukko
@@ -51,43 +53,47 @@
                               {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}])}
 
          ;; Taulukon kentät
-         [{:otsikko "Rahavaraus" 
-           :nimi :nimi 
-           :tyyppi :string 
-           :leveys 15 
+         [{:otsikko "Rahavaraus"
+           :nimi :nimi
+           :tyyppi :string
+           :leveys 15
            :muokattava? (constantly false)}
-          
-          {:otsikko "Muutoksen syy" 
-           :nimi :syy 
+
+          {:otsikko "Muutoksen syy"
+           :nimi :syy
            :tyyppi :text
-           :pituus-max 1000 
-           :koko [50 3] 
+           :pituus-max 1000
+           :koko [50 3]
            :leveys 25}
-          
-          {:otsikko "Suunniteltu määrä" 
-           :nimi :summa-indeksikorjattu 
+
+          {:otsikko "Suunniteltu määrä"
+           :nimi :summa-indeksikorjattu
            :tyyppi :numero
-           :tasaa :oikea 
+           :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)
            :fmt (fn [arvo]
                   (if arvo
                     (fmt/euro-opt arvo)
                     "Ei indeksikorjattua summaa"))}
-          
-          {:otsikko "Toteutunut määrä" 
-           :nimi :toteumat 
+
+          {:otsikko "Toteutunut määrä"
+           :nimi :toteumat
            :tyyppi :numero
-           :fmt     fmt/euro-opt 
-           :tasaa :oikea 
+           :fmt #(if %
+                   (fmt/euro-opt %)
+                   (fmt/euro-opt 0))
+           :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)}
-          
-          {:otsikko "Tavoitehinnan muutos (€)" 
-           :nimi :tavoitehinnan-muutos 
+
+          {:otsikko "Tavoitehinnan muutos (€)"
+           :nimi :tavoitehinnan-muutos
            :tyyppi :numero
-           :fmt fmt/euro-opt 
-           :tasaa :oikea 
+           :fmt #(if %
+                   (fmt/euro-opt %)
+                   (fmt/euro-opt 0))
+           :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)}
           ;; Tyhjä sarake, jotta "Tavoitehinnan muutos (€)" -sarake asettuun samaan kohtaan kuin muissa muutostauluissa

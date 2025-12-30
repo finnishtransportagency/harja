@@ -2,7 +2,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                                     tyyppi, urakkanro, urakoitsija)
     VALUES ('5731289-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                                 FROM organisaatio
-                                                                WHERE lyhenne = 'POP'),
+                                                                WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
             'Analytiikan testipäällystysurakka',
             '2023-01-01', '2023-12-31', 'paallystys', 'analytiikka1', (SELECT id
                                                                        FROM organisaatio
@@ -254,10 +254,57 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                     paallystysilmoitus.id,
                     0.1,
                     massa.id
-             FROM alikohde,
-                  paallystysilmoitus,
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa
+               WHERE tr_alkuetaisyys = 0
+             UNION ALL
+             SELECT tr_numero,
+                    tr_alkuetaisyys,
+                    tr_alkuosa,
+                    tr_loppuetaisyys,
+                    tr_loppuosa,
+                    tr_ajorata,
+                    tr_kaista,
+                    (SELECT koodi FROM pot2_mk_alusta_toimenpide WHERE lyhenne = 'TAS'),
+                    paallystysilmoitus.id,
+                    0.1,
+                    massa.id
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa
+               WHERE tr_alkuetaisyys = 300
+             UNION ALL
+             SELECT tr_numero,
+                    tr_alkuetaisyys,
+                    tr_alkuosa,
+                    tr_loppuetaisyys,
+                    tr_loppuosa,
+                    tr_ajorata,
+                    tr_kaista,
+                    (SELECT koodi FROM pot2_mk_alusta_toimenpide WHERE lyhenne = 'REM-TAS'),
+                    paallystysilmoitus.id,
+                    20.1,
+                    massa2.id
+               FROM alikohde,
+                    paallystysilmoitus,
+                    massa2
+               WHERE tr_alkuetaisyys = 650
+             UNION ALL
+             SELECT 86,
+                    100,
+                    20,
+                    650,
+                    20,
+                    1,
+                    11,
+                    (SELECT koodi FROM pot2_mk_alusta_toimenpide WHERE nimi = 'Muu RP'),
+                    paallystysilmoitus.id,
+                    15,
+                    massa.id
+             FROM paallystysilmoitus,
                   massa
-             RETURNING *),
+            RETURNING *),        
      kulutuskerros_mp AS (
          INSERT INTO pot2_paallystekerros (kohdeosa_id, toimenpide, materiaali, leveys, pinta_ala, kokonaismassamaara,
                                            piennar, pot2_id, massamenekki)

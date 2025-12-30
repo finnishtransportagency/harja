@@ -2,7 +2,6 @@
   "Muutokset välilehden 'Kirjatut muutokset' -osio"
   (:require [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
@@ -18,7 +17,7 @@
     :otsikko (str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
                     (some-> valittu-hoitokausi (first) (pvm/vuosi))
                     (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden")
-               " kirjatut muutokset")
+               " kirjallisesti sovitut muutokset")
     :luokat ["kirjatut-muutokset-grid"]
     :tyhja "Ei kirjattuja muutoksia."
     :voi-lisata? false
@@ -31,7 +30,7 @@
                       (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
     :rivi-jalkeen-fn (fn [rivit]
                        (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))]
-                         [{:teksti "Hoitovuoden lopun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
+                         [{:teksti "Yhteensä" :luokka "yhteensa" :sarakkeita 2}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
@@ -67,11 +66,17 @@
      :leveys 10
      :tasaa :oikea
      :komponentti (fn [rivi]
-                    [napit/muokkaa "Muokkaa"
-                     #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
+                    (let [poikkeama? (= (:alityyppi rivi) :poikkeama)
+                          nimi (if poikkeama? "TODO (poikkeama)" "Muokkaa")]
+
+                      #_[napit/muokkaa "Muokkaa"
+                         #(e! (t-yhteiset/->MuokkaaMuutosta rivi))]
+
+                      ;; Voi poistaa kun poikkeama lomake toteutettu
+                      [napit/muokkaa nimi
+                       #(e! (t-yhteiset/->MuokkaaMuutosta rivi)) {:disabled poikkeama?}]))}]
    kirjatut-muutokset])
 
-;; TODO: Toteuta loppuun ja testaa
 (defn aiemmilta-hoitovuosilta-jatkuvat-pysyvat-muutokset-grid [e! {:keys [aiempien-hoitovuosien-pysyvat-muutokset] :as app}]
   [grid/grid
    {:tunniste :id
@@ -89,7 +94,7 @@
     :rivi-jalkeen-fn (fn [rivit]
                        (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))
                              tavoitehinnan-muutokset-indeksikorjattu-yht (reduce + (map :tavoitehinnan-muutos-indeksikorjattu rivit))]
-                         [{:teksti "Hoitovuoden alun tavoitehinnan muutokset yhteensä" :luokka "yhteensa" :sarakkeita 2}
+                         [{:teksti "Yhteensä" :luokka "yhteensa" :sarakkeita 2}
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-indeksikorjattu-yht) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
@@ -133,7 +138,7 @@
   [yhteiset/kehystetty-avattava-grid e! app
    {:taulukon-avain :kirjatut-muutokset
     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :kirjatut-muutokset))
-    :otsikko "Kirjatut muutokset"
+    :otsikko "Kirjallisesti sovitut muutokset"
     :summa (reduce + 0 (map :tavoitehinnan-muutos kirjatut-muutokset))
     :toiminnot-asetukset {:tasaa :oikea}
     :toiminnot (fn [e! app]

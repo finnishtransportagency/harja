@@ -1,7 +1,6 @@
 -- name: hae-ymparistoraportti-tiedot
 -- Haetaan kuinka paljon jokaista materiaalia on käytetty. Tämä on "summarivi" hoitoluokittaisille riveille,
 -- lisäksi tälle riville otetaan mukaan frontin kautta raportoidut käytöt, jolle ei ole hoitoluokkatietoa.
-
 WITH paikkaustehtavat AS (SELECT tpk4.*
                             FROM tehtava tpk4
                                      JOIN toimenpide tpk3 ON tpk4.emo = tpk3.id
@@ -50,6 +49,7 @@ SELECT
     CASE
         WHEN tk.yksikko = 'tonni'
             THEN 't'
+            ELSE tk.yksikko
         END AS materiaali_yksikko,
     'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
     date_trunc('month', rtmaarat.alkanut) AS kk,

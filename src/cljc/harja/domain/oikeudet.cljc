@@ -20,22 +20,43 @@
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
+  hallinta-lupaukset
   urakat-laadunseuranta-talvihoitoreititys
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
   urakat-kulut-valikatselmus
   urakat-valitavoitteet
+  urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
+  urakat-kohdeluettelo-paallystyskohteet
+  urakat-kohdeluettelo-paallystysilmoitukset
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
+  urakat-vesivayla-materiaalit
+  urakat-vesivaylatoimenpiteet
+  urakat-kanavat-liikenne
+  urakat-tyomaapaivakirja
   hallinta-indeksit
+  hallinta-api-jarjestelmatunnukset
   urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
+  hallinta-koulutusvideot
+  hallinta-hairioilmoitukset
+  hallinta-yhteydenpito
+  hallinta-palautevayla
+  hallinta-integraatiotilanne
+  hallinta-urakkahenkilot
+  hallinta-paallystysilmoitukset
+  hallinta-lupaukset
+  hallinta-vesivaylat
+  hallinta-lampotilat
+  hallinta-valitavoitteet
+  hallinta-tehtavat
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot
   urakat-suunnittelu-yksikkohintaisettyot
@@ -43,7 +64,22 @@
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
-  roolit)
+  urakat-toteumat-yksikkohintaisettyot
+  urakat-suunnittelu
+  urakat-toteumat
+  urakat-toteutus
+  urakat-paikkaukset
+  urakat-aikataulu
+  urakat-laadunseuranta
+  urakat-turvallisuus
+  urakat-kulut-maksuerat
+  urakat-kulut
+  urakat-kulut-vesivaylalaskutusyhteenveto
+  urakat-tiemerkinta-kustannukset
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

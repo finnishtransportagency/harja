@@ -3,13 +3,15 @@
   .label-ja-alasveto, .kalenteri-kontti, div.kentta {
     width: 320px;
   }
+
+  .livi-alasvetolista {
+    min-width: 100%;
+  }
   .lisatiedot {
     label.kentan-otsikko {
       margin-top: 0;
     }
-
   }
-
 }
 .kulujen-listaus {
   @media screen and (min-width: 954px) {
@@ -194,35 +196,6 @@
     }
   }
 
-  #kulun-poisto-modaali {
-    padding: 15px;
-
-    div {
-      font-style: normal;
-      font-weight: normal;
-      font-size: 14px;
-      line-height: 29px;
-      display: flex;
-      align-items: center;
-
-      &:last-of-type {
-        margin-top: 68px;
-        margin-bottom: 53px;
-      }
-    }
-
-    button {
-      &:first-of-type {
-        margin-right: 15px;
-      }
-
-      &:last-of-type {
-        margin-left: 15px;
-      }
-    }
-
-  }
-
   .aikavali {
     width: 250px;
 
@@ -283,5 +256,27 @@
 
   .info-laatikko-teksti-normaali {
     font-weight: normal;
+  }
+}
+
+#kulun-poisto-modaali {
+  
+  div {
+    font-style: normal;
+    font-weight: normal;
+    font-size: @fontin-koko-leipateksti;
+    line-height: 29px;
+    display: flex;
+    align-items: center;
+
+    &:last-of-type {
+      margin-top: @valistys-16;
+    }
+  }
+
+  .kulu-poisto-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
   }
 }

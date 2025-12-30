@@ -1,29 +1,34 @@
-import * as apurit from '../support/apurit.js';
+import {ladataanHarjaaTimeout, clickTimeout} from "../support/apurit.js";
 
 function avaaValitavoitteet(urakkanimi, hallintayksikko) {
     cy.visit('/');
 
     // Varmista, että pääsivu on ladattu ennen testien aloitusta
-    cy.get('.ladataan-harjaa', { timeout: 30000 }).should('not.exist');
+    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist');
 
     // Valitse hallintayksikkö
-    cy.contains('.haku-lista-item', hallintayksikko, { timeout: 30000 }).click();
-    cy.get('.ajax-loader', { timeout: 10000 }).should('not.exist');
-    
+    cy.contains('.haku-lista-item', hallintayksikko, { timeout: ladataanHarjaaTimeout }).click();
+    cy.get('.ajax-loader', { timeout: ladataanHarjaaTimeout }).should('not.exist');
+
     // Näytä päättyneet urakat (jos tarvitaan)
-    cy.contains('Näytä päättyneet').click();
+    cy.contains('label', 'Näytä päättyneet', { timeout: clickTimeout })
+        .should('be.visible')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
 
     // Valitse urakka
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkanimi, { timeout: 10000 }).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkanimi, { timeout: ladataanHarjaaTimeout }).click();
     
     // Mene "Lupaukset ja tavoitteet" välilehdelle
-    cy.get('[data-cy="tabs-taso1-Lupaukset ja tavoitteet"]', { timeout: 20000 }).click();
+    cy.get('[data-cy="tabs-taso1-Lupaukset ja tavoitteet"]', { timeout: ladataanHarjaaTimeout }).click();
     
     // Avaa Välitavoitteet
     cy.get('[data-cy=tabs-taso2-Valitavoitteet]').click();
     
     // Odota että ajax-loader häviää
-    cy.get('img[src="images/ajax-loader.gif"]', { timeout: 20000 }).should('not.exist');
+    cy.get('img[src="images/ajax-loader.gif"]', { timeout: ladataanHarjaaTimeout }).should('not.exist');
     
     // Varmista että URL sisältää välitavoitteet
     cy.url().should('include', 'valitavoitteet');

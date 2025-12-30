@@ -284,21 +284,6 @@ SELECT ru.rahavaraus_id                          as rahavaraus_id,
  WHERE ru.urakka_id = :urakkaid
 GROUP BY ru.rahavaraus_id, COALESCE(ru.urakkakohtainen_nimi, r.nimi);
 
--- name: paivita-rahavaraus<!
-UPDATE kustannusarvioitu_tyo
-SET summa = :summa,
-    summa_indeksikorjattu = :summa_indeksikorjattu,
-    muokattu = NOW(),
-    muokkaaja = :muokkaaja
-WHERE id = :id;
-
--- name: lisaa-rahavaraus<!
-INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
-VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
-        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
-        :luoja, NOW());
-
 --name: vahvista-tai-kumoa-indeksikorjaukset-kiinteahintaisille-toille!
 UPDATE kiinteahintainen_tyo kt
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP ELSE NULL END,
@@ -335,10 +320,40 @@ UPDATE urakka_tavoite ut
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
     tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.tavoitehinta_indeksikorjattu END,
-    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END
+    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END,
+    laskutusraja = CASE
+                        WHEN :vahvista?::BOOLEAN = TRUE
+                         AND EXISTS (
+                          SELECT 1
+                            FROM urakka_parametrit up
+                           WHERE up.urakkaid = ut.urakka
+                             AND up.laskutusraja_kaytossa = TRUE)
+                        THEN ut.tavoitehinta_indeksikorjattu
+                        ELSE NULL
+                    END
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
+
+-- name: aseta-kasin-syotetty-kattohinta<!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       luotu = NOW(),
+       luoja = :luoja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
+
+-- name: paivita-kasin-syotetty-kattohinta!
+UPDATE urakka_tavoite ut
+   SET kattohinta = :kattohinta,
+       kattohinta_indeksikorjattu = :kattohinta-indeksikorjattu,
+       muokattu = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE ut.urakka = :urakka-id
+       -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
+   AND ut.hoitokausi = :hoitovuosinro;
 
 -- name: hae-kustannussuunnitelman-osiot
 SELECT *
@@ -365,18 +380,23 @@ RETURNING id;
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
+    tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
     kattohinta = :kattohinta,
+    kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
 
 -- name: indeksikorjaukset-vahvistettu?
-SELECT COUNT(*) > 0 AS "kiinteat-vahvistettu?"
+-- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
+-- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,
+-- niin päätellään, että kaikilla on. Logiikka toimii niin.
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kiinteahintainen_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -384,7 +404,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM kustannusarvioitu_tyo kt
          JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
 WHERE tpi.urakka = :urakka-id
@@ -392,7 +412,7 @@ WHERE tpi.urakka = :urakka-id
   AND kt.indeksikorjaus_vahvistettu IS NOT NULL
 
 UNION ALL
-SELECT COUNT(*) > 0 AS "arvioidut-vahvistettu?"
+SELECT COUNT(*) > 0 AS "vahvistettu?"
 FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
   AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)

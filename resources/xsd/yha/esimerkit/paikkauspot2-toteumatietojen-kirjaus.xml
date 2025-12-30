@@ -162,7 +162,7 @@
                         <pinta-ala>2600</pinta-ala>
                         <paallystetyomenetelma>31</paallystetyomenetelma>
                         <massamenekki>90.0</massamenekki>
-                        <rc-prosentti>10.0</rc-prosentti>
+                        <rc-prosentti>10</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>
@@ -216,7 +216,7 @@
                         <pinta-ala>2600</pinta-ala>
                         <paallystetyomenetelma>31</paallystetyomenetelma>
                         <massamenekki>90.0</massamenekki>
-                        <rc-prosentti>10.0</rc-prosentti>
+                        <rc-prosentti>10</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>

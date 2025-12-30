@@ -50,7 +50,8 @@ WHERE id = :id;
 -- name: hae-ely
 SELECT *
 FROM organisaatio
-WHERE elynumero = :elynumero;
+WHERE elynumero = :elynumero
+  and tyyppi = 'hallintayksikko';
 
 -- name: luo-ely<!
 INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
@@ -65,7 +66,8 @@ SET
   liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO,
   elynumero     = :elynumero,
   alue          = ST_GeomFromText(:alue) :: GEOMETRY
-WHERE elynumero = :elynumero;
+WHERE elynumero = :elynumero
+  and tyyppi = 'hallintayksikko';
 
 -- name: hae-ely-id-sampo-hashilla
 SELECT id
@@ -80,10 +82,11 @@ SELECT
   tyyppi
 FROM organisaatio;
 
--- name: hae-id-lyhenteella
+-- name: hae-vesivayla-organisaation-id-lyhenteella
 SELECT id
 FROM organisaatio
-WHERE lyhenne = :lyhenne;
+WHERE lyhenne = :lyhenne
+  AND liikennemuoto = 'V';
 
 -- name: listaa-organisaatiot-analytiikalle
 SELECT id, ytunnus, nimi, lyhenne, tyyppi,

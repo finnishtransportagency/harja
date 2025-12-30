@@ -60,7 +60,7 @@ VALUES (
   'https://tilu.fi/666',
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   ARRAY [(SELECT id
    FROM urakka
    WHERE sampoid = '1242141-OULU2')],
@@ -194,7 +194,7 @@ VALUES (
   'https://tilu.fi/123',
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   ARRAY [(SELECT id
           FROM urakka
           WHERE sampoid = '1242141-OULU2')],
@@ -316,7 +316,7 @@ VALUES (
   'https://tilu.fi/124',
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   ARRAY [(SELECT id
           FROM urakka
           WHERE nimi = 'Aktiivinen Oulu Testi')],
@@ -430,7 +430,7 @@ VALUES (
            'https://tilu.fi/124',
            (SELECT id
             FROM organisaatio
-            WHERE lyhenne = 'UUD'),
+            WHERE lyhenne = 'UUD' and tyyppi = 'hallintayksikko'),
            ARRAY [(SELECT id
                    FROM urakka
                    WHERE nimi = 'Porvoon päällystysurakka')],
@@ -541,7 +541,7 @@ VALUES (
            'https://tilu.fi/124',
            (SELECT id
             FROM organisaatio
-            WHERE lyhenne = 'UUD'),
+            WHERE lyhenne = 'UUD' and tyyppi = 'hallintayksikko'),
            ARRAY [(SELECT id
                    FROM urakka
                    WHERE nimi = 'Porvoon päällystysurakka')],
@@ -621,7 +621,7 @@ VALUES (
            'Testilupa Johto ja kaapelisysteemien asentamiseen',
            'https://liite.tilu.fi/124.pdf',
            'https://tilu.fi/124',
-           (SELECT id FROM organisaatio WHERE lyhenne = 'UUD'),
+           (SELECT id FROM organisaatio WHERE lyhenne = 'UUD' and tyyppi = 'hallintayksikko'),
            ARRAY [(SELECT id
                      FROM urakka
                     WHERE nimi = 'Porvoon päällystysurakka')],

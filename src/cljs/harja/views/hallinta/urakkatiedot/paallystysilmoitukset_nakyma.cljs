@@ -1,23 +1,23 @@
 (ns harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma
   "Päällystysilmoitusten näkymä"
   (:require
-   [harja.domain.oikeudet :as oikeudet]
-   [harja.pvm :as pvm]
-   [harja.tiedot.hallinta.paallystysilmoitukset-tiedot :as tiedot]
-   [harja.tiedot.istunto :as istunto]
-   [harja.ui.debug :as debug]
-   [harja.ui.grid :as grid]
-   [harja.ui.ikonit :as ikonit]
-   [harja.ui.komponentti :as komp]
-   [harja.ui.valinnat :as valinnat]
-   [harja.ui.yleiset :as yleiset]
-   [harja.domain.roolit :as roolit]
-   [harja.loki :refer [log logt tarkkaile!]]
-   [harja.ui.napit :as napit]
-   [harja.asiakas.kommunikaatio :as k]
-   [harja.ui.viesti :as viesti]
-   [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as yhteiset]
-   [tuck.core :refer [tuck]]))
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.pvm :as pvm]
+    [harja.tiedot.hallinta.paallystysilmoitukset-tiedot :as tiedot]
+    [harja.tiedot.istunto :as istunto]
+    [harja.ui.debug :as debug]
+    [harja.ui.grid :as grid]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.komponentti :as komp]
+    [harja.ui.valinnat :as valinnat]
+    [harja.ui.yleiset :as yleiset]
+    [harja.domain.roolit :as roolit]
+    [harja.loki :refer [log logt tarkkaile!]]
+    [harja.ui.napit :as napit]
+    [harja.asiakas.kommunikaatio :as k]
+    [harja.ui.viesti :as viesti]
+    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as yhteiset]
+    [tuck.core :refer [tuck]]))
 
 (def valittu-vuosi 2024)
 
@@ -52,7 +52,7 @@
      "Lähetä"
      #(do
         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
-          ") kohde (id:" (pr-str kohde-id) ") YHA:n") 
+          ") kohde (id:" (pr-str kohde-id) ") YHA:n")
         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
                                         :kohde-idt kohde-id
@@ -80,7 +80,7 @@
                                       (nil? lahettaja)))
         kohde-idt (map #(:paallystyskohde-id %) (filter ilmoituksen-voi-lahettaa? paallystysilmoitus))
         kaikki-kohteet-maara (count paallystysilmoitus)
-        kohteet-lahetyksessa-maara (count kohde-idt) 
+        kohteet-lahetyksessa-maara (count kohde-idt)
         kun-onnistuu-fn #(e! (tiedot/->ValitseUrakka %))
         paivita-urakkatilanne-fn #(e! (tiedot/->HaePaallystysUrakat %))]
     [napit/palvelinkutsu-nappi
@@ -89,9 +89,9 @@
         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id
           ") kohde (id:" (pr-str kohde-idt) ") YHA:n")
         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :kohde-idt kohde-idt
-                                               :vuosi vuosi}
+                                        :sopimus-id sopimus-id
+                                        :kohde-idt kohde-idt
+                                        :vuosi vuosi}
           nil
           true))
      {:ikoni (ikonit/envelope)
@@ -114,7 +114,7 @@
       :nayta-virheviesti? false}]))
 
 (defn- laheta-pot-yhaan-komponentti [rivi _ e! urakka valittu-sopimusnumero
-                                             valittu-urakan-vuosi kohteet-yha-lahetyksessa kayttaja]
+                                     valittu-urakan-vuosi kohteet-yha-lahetyksessa kayttaja]
   (let [kohde-id (:paallystyskohde-id rivi)
         {:keys [muokattu lahetetty]} rivi
         muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
@@ -148,17 +148,17 @@
       [:div
        "Kehittäjän lähetys:"
        [lahetys-yha-nappi e! {:oikeus oikeudet/hallinta-paallystysilmoitukset
-                               :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                               :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
-                               :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa
-                               :valittu-urakka urakka}]
-        [:div "Lähetetty viimeksi: " (pvm/pvm-aika (:lahetetty rivi))]]
-       nayta-nappi?
-       [lahetys-yha-nappi e! {:oikeus oikeudet/hallinta-paallystysilmoitukset
                               :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
                               :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
                               :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa
                               :valittu-urakka urakka}]
+       [:div "Lähetetty viimeksi: " (pvm/pvm-aika (:lahetetty rivi))]]
+      nayta-nappi?
+      [lahetys-yha-nappi e! {:oikeus oikeudet/hallinta-paallystysilmoitukset
+                             :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                             :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
+                             :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa
+                             :valittu-urakka urakka}]
 
       nayta-lahetyksen-aika?
       [:div
@@ -167,10 +167,10 @@
        [:div
         "Lähetä uudelleen vaikka jo lähetetty:"
         [lahetys-yha-nappi e! {:oikeus oikeudet/hallinta-paallystysilmoitukset
-                                     :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
-                                     :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
-                                     :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa
-                                     :valittu-urakka urakka}]]]
+                               :urakka-id (:id urakka) :sopimus-id (first valittu-sopimusnumero)
+                               :vuosi valittu-urakan-vuosi :paallystysilmoitus rivi
+                               :kohteet-yha-lahetyksessa kohteet-yha-lahetyksessa
+                               :valittu-urakka urakka}]]]
 
       :else nil)))
 
@@ -186,7 +186,7 @@
          [debug/debug app]
          [:h2 "Päällystysilmoitukset"]
          [:div "Pot-tietojen uudelleenlähetys YHA:an vuodelle 2024 kehittäjille. Konsultoi YHA-tiimiä ennen kuin lähetät jo lähetettyjä kohteita uudelleen koska se voi johtaa käyttäjän muokkausten häviämiseen YHA:ssa."]
-             ;; Urakan valinta
+         ;; Urakan valinta
          [yleiset/pudotusvalikko
           "Valitse urakka"
           {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
@@ -197,9 +197,9 @@
           (:urakat urakat)]
          (when (and (roolit/jvh? @istunto/kayttaja) urakka-id)
            [kaikki-lahetys-yha-nappi e! {:oikeus oikeudet/hallinta-paallystysilmoitukset
-                                               :urakka-id urakka-id :sopimus-id valittu-sopimusnumero
-                                               :vuosi valittu-vuosi :paallystysilmoitus urakan-paallystysilmoitukset
-                                               :valittu-urakka valittu-urakka}])
+                                         :urakka-id urakka-id :sopimus-id valittu-sopimusnumero
+                                         :vuosi valittu-vuosi :paallystysilmoitus urakan-paallystysilmoitukset
+                                         :valittu-urakka valittu-urakka}])
          (when (seq urakan-paallystysilmoitukset)
            [grid/grid
             {:otsikko ""

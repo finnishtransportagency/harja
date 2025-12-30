@@ -4,12 +4,12 @@
 
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
-  ["hankintakustannukset", "johto-ja-hallintokorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset",
+  ["hankintakustannukset", "johto-ja-hallintokorvaus", "hoidonjohdonpalkkio", "muutokset", "erillishankinnat", "rahavaraukset",
    "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys",
    "sanktiot", "ulkopuoliset-rahavaraukset", "lisatyo", "muukulu-tavoitehintainen", "muukulu-eitavoitehintainen"])
 
-(def yhteenvedosta-jatettavat-paaryhmat
-  (set (map #(nth raportin-paaryhmat %) [5 8 9 10 11 12 13 15])))
+(def tavoitehintaan-kuulumattomat-paaryhmat
+  (set (map #(nth raportin-paaryhmat %) [6 9 10 11 12 13 14 16])))
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -38,12 +38,25 @@
     (group-by :tehtava_nimi (concat toteutuneet budjetoidut))))
 
 (defn- summaa-toimenpidetaso
-  "Käytetään seuraaville pääryhmille: hankintakustannukset ja rahavaraukset."
+  "Käytetään seuraaville pääryhmille: hankintakustannukset, muutokset ja rahavaraukset."
   [toimenpiteet paaryhmaotsikko]
   (sort-by :jarjestys
     (mapv
       (fn [toimenpide]
         (let [toimenpiteen-tehtavat (second toimenpide)
+              toimenpide-nimi (first toimenpide)
+              toimenpide-nimi  (cond
+                                 (= toimenpide-nimi "erillisrahoitettu-muutos")
+                                 "Muutostyöt (erillisrahoitetut)"
+
+                                 (= toimenpide-nimi "jjh-muutos")
+                                 "Johto- ja hallintokorvauksen muutokset"
+                                 
+                                 (= toimenpide-nimi "pysyva")
+                                 "Pysyvät muutokset"
+                                 
+                                 :else
+                                 toimenpide-nimi)
               ;; Toimenpiteet listassa on budjetoidut ja toteutuneet tehtävät
               ;; UI:lla budjetointi lasketaan yhteen toimenpideryhmän perusteella (esim. hankinnat) ja toimenpiteen perusteella (esim. talvihoito)
               ;; Toteutuneet kustannukset näytetään tehtävittäin ryhmiteltynä.
@@ -65,7 +78,7 @@
                                      toimenpiteen-tehtavat)
               jarjestys (some #(:jarjestys %) toimenpiteen-tehtavat)]
           {:paaryhma paaryhmaotsikko
-           :toimenpide (first toimenpide)
+           :toimenpide toimenpide-nimi
            :jarjestys jarjestys
            :toimenpide-toteutunut-summa (reduce (fn [summa tehtava]
                                                   (+ summa (or (:toteutunut_summa tehtava) 0))) ;; vain toteutuneet tehtävät ilman lisätöitä
@@ -193,6 +206,7 @@
         hankintakustannukset (get (select-keys paaryhmat ["hankintakustannukset"]) "hankintakustannukset") ;; hankinta
         jjhallinta-kustannukset (get (select-keys paaryhmat ["johto-ja-hallintokorvaus"]) "johto-ja-hallintokorvaus") ;; johto-ja-hallintokorvaus
         hoidonjohdonpalkkiot (get (select-keys paaryhmat ["hoidonjohdonpalkkio"]) "hoidonjohdonpalkkio") ;; hoidonjohdonpalkkio
+        muutokset (get (select-keys paaryhmat ["muutokset"]) "muutokset") ;; muutokset 
         erillishankinnat (get (select-keys paaryhmat ["erillishankinnat"]) "erillishankinnat") ;; erillishankinnat
         rahavaraukset (get (select-keys paaryhmat ["rahavaraukset"]) "rahavaraukset") ;; rahavaraukset
         bonukset (get (select-keys paaryhmat ["bonukset"]) "bonukset") ;; bonukset
@@ -207,25 +221,28 @@
         muutkulut-tavoitehintainen (get (select-keys paaryhmat ["muukulu-tavoitehintainen"]) "muukulu-tavoitehintainen") ;; muukulu-tavoitehintainen
         muutkulut-eitavoitehintainen (get (select-keys paaryhmat ["muukulu-eitavoitehintainen"]) "muukulu-eitavoitehintainen") ;; muukulu-eitavoitehintainen
 
-        ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
+        rahavaraukset (sort-by toimenpide-jarjestys (group-by :toimenpide rahavaraukset))
+        muutokset (sort-by toimenpide-jarjestys (group-by :kulu_tyyppi muutokset))
         hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
+
+        ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
         jjhallinnan-tehtavat (summaa-paaryhman-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
-        rahavaraukset (sort-by toimenpide-jarjestys (group-by :toimenpide rahavaraukset))
-        rahavaraus-toimenpiteet (summaa-toimenpidetaso rahavaraukset (nth raportin-paaryhmat 4))
         hoidonjohdonpalkkiot (summaa-paaryhman-tehtavat hoidonjohdonpalkkiot (nth raportin-paaryhmat 2))
-        bonus-tehtavat (summaa-paaryhman-tehtavat bonukset (nth raportin-paaryhmat 5))
-        erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 3))
-        siirrot (summaa-paaryhman-tehtavat siirrot (nth raportin-paaryhmat 6))
-        tavoitehinnanoikaisut (summaa-paaryhman-tehtavat tavoitehinnanoikaisut (nth raportin-paaryhmat 7))
-        tavoitepalkkiot (summaa-hoitokauden-paattamisen-kulut tavoitepalkkiot (nth raportin-paaryhmat 8))
-        tavoitehinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut tavoitehinnan-ylitykset (nth raportin-paaryhmat 9))
-        kattohinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut kattohinnan-ylitykset (nth raportin-paaryhmat 10))
-        sanktio-tehtavat (summaa-paaryhman-tehtavat sanktiot (nth raportin-paaryhmat 11))
-        ulkopuoliset-rahavaraukset-tehtavat (summaa-paaryhman-tehtavat ulkopuoliset-rahavaraukset (nth raportin-paaryhmat 12))
-        lisatyo-tehtavat (summaa-paaryhman-tehtavat lisatyot (nth raportin-paaryhmat 13))
-        muukulu-tavoitehintainen-tehtavat (summaa-paaryhman-tehtavat muutkulut-tavoitehintainen (nth raportin-paaryhmat 14))
-        muukulu-eitavoitehintainen-tehtavat (summaa-paaryhman-tehtavat muutkulut-eitavoitehintainen (nth raportin-paaryhmat 15))
+        muutokset (summaa-toimenpidetaso muutokset (nth raportin-paaryhmat 3))
+        erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 4))
+        rahavaraus-toimenpiteet (summaa-toimenpidetaso rahavaraukset (nth raportin-paaryhmat 5))
+        bonus-tehtavat (summaa-paaryhman-tehtavat bonukset (nth raportin-paaryhmat 6))
+        siirrot (summaa-paaryhman-tehtavat siirrot (nth raportin-paaryhmat 7))
+        tavoitehinnanoikaisut (summaa-paaryhman-tehtavat tavoitehinnanoikaisut (nth raportin-paaryhmat 8))
+        tavoitepalkkiot (summaa-hoitokauden-paattamisen-kulut tavoitepalkkiot (nth raportin-paaryhmat 9))
+        tavoitehinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut tavoitehinnan-ylitykset (nth raportin-paaryhmat 10))
+        kattohinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut kattohinnan-ylitykset (nth raportin-paaryhmat 11))
+        sanktio-tehtavat (summaa-paaryhman-tehtavat sanktiot (nth raportin-paaryhmat 12))
+        ulkopuoliset-rahavaraukset-tehtavat (summaa-paaryhman-tehtavat ulkopuoliset-rahavaraukset (nth raportin-paaryhmat 13))
+        lisatyo-tehtavat (summaa-paaryhman-tehtavat lisatyot (nth raportin-paaryhmat 14))
+        muukulu-tavoitehintainen-tehtavat (summaa-paaryhman-tehtavat muutkulut-tavoitehintainen (nth raportin-paaryhmat 15))
+        muukulu-eitavoitehintainen-tehtavat (summaa-paaryhman-tehtavat muutkulut-eitavoitehintainen (nth raportin-paaryhmat 16))
 
         taulukon-rivit (-> {}
                          ;; Aseta pääryhmän avaimelle toimenpiteet
@@ -239,57 +256,59 @@
                          (assoc (keyword (nth raportin-paaryhmat 2)) hoidonjohdonpalkkiot)
                          (summaa-tehtavat hoidonjohdonpalkkiot 2)
 
-                         (assoc (keyword (nth raportin-paaryhmat 3)) erillishankinta-tehtavat)
-                         (summaa-tehtavat erillishankinta-tehtavat 3)
+                         (assoc (keyword (nth raportin-paaryhmat 3)) muutokset)
+                         (summaa-paaryhman-toimenpiteet 3 muutokset)
 
-                         (assoc (keyword (nth raportin-paaryhmat 4)) rahavaraus-toimenpiteet)
-                         (summaa-paaryhman-toimenpiteet 4 rahavaraus-toimenpiteet)
+                         (assoc (keyword (nth raportin-paaryhmat 4)) erillishankinta-tehtavat)
+                         (summaa-tehtavat erillishankinta-tehtavat 4)
 
-                         (assoc (keyword (nth raportin-paaryhmat 5)) bonus-tehtavat)
-                         (summaa-tehtavat bonus-tehtavat 5)
+                         (assoc (keyword (nth raportin-paaryhmat 5)) rahavaraus-toimenpiteet)
+                         (summaa-paaryhman-toimenpiteet 5 rahavaraus-toimenpiteet)
 
-                         (assoc (keyword (nth raportin-paaryhmat 6)) siirrot)
-                         (summaa-tehtavat siirrot 6)
+                         (assoc (keyword (nth raportin-paaryhmat 6)) bonus-tehtavat)
+                         (summaa-tehtavat bonus-tehtavat 6)
 
-                         (assoc (keyword (nth raportin-paaryhmat 7)) tavoitehinnanoikaisut)
-                         (summaa-tehtavat tavoitehinnanoikaisut 7)
+                         (assoc (keyword (nth raportin-paaryhmat 7)) siirrot)
+                         (summaa-tehtavat siirrot 7)
 
-                         (assoc (keyword (nth raportin-paaryhmat 8)) tavoitepalkkiot)
-                         (summaa-paaryhman-toimenpiteet 8 tavoitepalkkiot)
+                         (assoc (keyword (nth raportin-paaryhmat 8)) tavoitehinnanoikaisut)
+                         (summaa-tehtavat tavoitehinnanoikaisut 8)
 
-                         (assoc (keyword (nth raportin-paaryhmat 9)) tavoitehinnan-ylitykset)
-                         (summaa-paaryhman-toimenpiteet 9 tavoitehinnan-ylitykset)
+                         (assoc (keyword (nth raportin-paaryhmat 9)) tavoitepalkkiot)
+                         (summaa-paaryhman-toimenpiteet 9 tavoitepalkkiot)
 
-                         (assoc (keyword (nth raportin-paaryhmat 10)) kattohinnan-ylitykset)
-                         (summaa-paaryhman-toimenpiteet 10 kattohinnan-ylitykset)
+                         (assoc (keyword (nth raportin-paaryhmat 10)) tavoitehinnan-ylitykset)
+                         (summaa-paaryhman-toimenpiteet 10 tavoitehinnan-ylitykset)
 
-                         (assoc (keyword (nth raportin-paaryhmat 11)) sanktio-tehtavat)
-                         (summaa-tehtavat sanktio-tehtavat 11)
+                         (assoc (keyword (nth raportin-paaryhmat 11)) kattohinnan-ylitykset)
+                         (summaa-paaryhman-toimenpiteet 11 kattohinnan-ylitykset)
 
-                         (assoc (keyword (nth raportin-paaryhmat 12)) ulkopuoliset-rahavaraukset-tehtavat)
-                         (summaa-tehtavat ulkopuoliset-rahavaraukset-tehtavat 12)
+                         (assoc (keyword (nth raportin-paaryhmat 12)) sanktio-tehtavat)
+                         (summaa-tehtavat sanktio-tehtavat 12)
 
-                         (assoc (keyword (nth raportin-paaryhmat 13)) lisatyo-tehtavat)
-                         (summaa-tehtavat lisatyo-tehtavat 13)
+                         (assoc (keyword (nth raportin-paaryhmat 13)) ulkopuoliset-rahavaraukset-tehtavat)
+                         (summaa-tehtavat ulkopuoliset-rahavaraukset-tehtavat 13)
 
-                         (assoc (keyword (nth raportin-paaryhmat 14)) muukulu-tavoitehintainen-tehtavat)
-                         (summaa-tehtavat muukulu-tavoitehintainen-tehtavat 14)
+                         (assoc (keyword (nth raportin-paaryhmat 14)) lisatyo-tehtavat)
+                         (summaa-tehtavat lisatyo-tehtavat 14)
 
-                         (assoc (keyword (nth raportin-paaryhmat 15)) muukulu-eitavoitehintainen-tehtavat)
-                         (summaa-tehtavat muukulu-eitavoitehintainen-tehtavat 15))
+                         (assoc (keyword (nth raportin-paaryhmat 15)) muukulu-tavoitehintainen-tehtavat)
+                         (summaa-tehtavat muukulu-tavoitehintainen-tehtavat 15)
+
+                         (assoc (keyword (nth raportin-paaryhmat 16)) muukulu-eitavoitehintainen-tehtavat)
+                         (summaa-tehtavat muukulu-eitavoitehintainen-tehtavat 16))
         taulukon-rivit (into (sorted-map) taulukon-rivit)
+
+        toteutunut #(get taulukon-rivit (keyword (str % "-toteutunut")))
+        budjetoitu #(get taulukon-rivit (keyword (str % "-budjetoitu")))
+        budjetoitu-indeksikorjattu #(get taulukon-rivit (keyword (str % "-budjetoitu-indeksikorjattu")))
+        rivit (remove #(tavoitehintaan-kuulumattomat-paaryhmat %) raportin-paaryhmat)
 
         ;; Yhteensä tavoitehintaiset
         yhteensa {:toimenpide "Yhteensä"
-                  :yht-toteutunut-summa (apply + (map (fn [pr]
-                                                        (get taulukon-rivit (keyword (str pr "-toteutunut"))))
-                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))
-                  :yht-budjetoitu-summa (apply + (map (fn [pr]
-                                                        (get taulukon-rivit (keyword (str pr "-budjetoitu"))))
-                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))
-                  :yht-budjetoitu-summa-indeksikorjattu (apply + (map (fn [pr]
-                                                                        (get taulukon-rivit (keyword (str pr "-budjetoitu-indeksikorjattu"))))
-                                                                   (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)))}]
+                  :yht-toteutunut-summa (apply + (map toteutunut rivit))
+                  :yht-budjetoitu-summa (apply + (map budjetoitu rivit))
+                  :yht-budjetoitu-summa-indeksikorjattu (apply + (map budjetoitu-indeksikorjattu rivit))}]
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa}))
 
@@ -302,9 +321,11 @@
     "tavoitehinnan-ylitys" "Tavoitehinnan ylitys"
     "kattohinnan-ylitys" "Kattohinnan ylitys"
     "tavoitehinnan-alitus" "Tavoitehinnan alitus"
+    "tavoitehinnan-muutokset" "Tavoitehinnan muutokset"
     "lupausbonus" "Lupausbonus"
     "lupaussanktio" "Lupaussanktio"
     "bonus" "Lupausbonus"
     "sanktio" "Lupaussanktio"
+    "taytetty" "Lupaus täytetty"
 
     "tuntematon tyyppi"))

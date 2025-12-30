@@ -145,6 +145,7 @@
   {::tielupa/mainoslupa-mainostettava-asia (:mainostettava-asia mainoslupa)
    ::tielupa/mainoslupa-sijainnin-kuvaus (:sijainnin-kuvaus mainoslupa)
    ::tielupa/mainoslupa-korvaava-paatos (:korvaava-paatos mainoslupa)
+   ::tielupa/mainoslupa-tiedoksi-elinvoimakeskukselle (:tiedoksi-elinvoimakeskukselle mainoslupa)
    ::tielupa/mainoslupa-tiedoksi-elykeskukselle (:tiedoksi-elykeskukselle mainoslupa)
    ::tielupa/mainoslupa-asemakaava-alueella (:asemakaava-alueella mainoslupa)
    ::tielupa/mainoslupa-suoja-alueen-leveys (nil-turvallinen-bigdec (:suoja-alueen-leveys mainoslupa))

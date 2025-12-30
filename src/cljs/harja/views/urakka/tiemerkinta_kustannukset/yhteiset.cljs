@@ -43,7 +43,7 @@
 
    ;; Otsikko / header, raporttiviennit
    [:div.header
-    [:h1.header-yhteiset otsikko]
+    [:h1 otsikko]
     (valinnat/raporttiviennit raportti haku-kaynnissa?)]
 
    ;; Suodattimet
