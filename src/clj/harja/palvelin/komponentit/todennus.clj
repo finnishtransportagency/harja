@@ -235,7 +235,6 @@
    ;; Muuten etsitään urakoitsijakohtaista roolia
    (hae-organisaatio-liitetylle-roolille db roolit)))
 
-
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"

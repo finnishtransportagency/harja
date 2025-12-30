@@ -22,4 +22,5 @@ FROM paallysteen_korjausluokka pk,
 organisaatio o
 WHERE pk.korjausluokka = :korjausluokka
   AND o.elynumero = :elynumero
+  AND o.tyyppi = 'hallintayksikko'
   AND st_intersects(o.alue, pk.geometria);;
