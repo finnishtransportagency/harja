@@ -94,15 +94,15 @@ SELECT setval(
 
 -- Lisätään ELY numerot hallintayksiköille
 
-UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD';
-UPDATE organisaatio SET elynumero=2 WHERE lyhenne='VAR';
-UPDATE organisaatio SET elynumero=3 WHERE lyhenne='KAS';
-UPDATE organisaatio SET elynumero=4 WHERE lyhenne='PIR';
-UPDATE organisaatio SET elynumero=8 WHERE lyhenne='POS';
-UPDATE organisaatio SET elynumero=9 WHERE lyhenne='KES';
-UPDATE organisaatio SET elynumero=10 WHERE lyhenne='EPO';
-UPDATE organisaatio SET elynumero=12 WHERE lyhenne='POP';
-UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
+UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=2 WHERE lyhenne='VAR' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=3 WHERE lyhenne='KAS' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=4 WHERE lyhenne='PIR' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=8 WHERE lyhenne='POS' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=9 WHERE lyhenne='KES' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=10 WHERE lyhenne='EPO' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=12 WHERE lyhenne='POP' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP' and tyyppi = 'hallintayksikko';
 
 -- Lisätään indeksejä
 \i testidata/indeksit.sql

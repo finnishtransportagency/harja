@@ -598,6 +598,12 @@
 (defn hae-urakoitsijan-id-ytunnuksella [ytunnus]
   (ffirst (q (str "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' AND ytunnus = '" ytunnus "';"))))
 
+(defn hae-urakan-laskutusraja
+  "Hakee laskutusrajan urakka_tavoite-taulusta"
+  [urakka-id]
+  (:laskutusraja (first (q-map (format "SELECT laskutusraja FROM urakka_tavoite
+                                        WHERE urakka = %s AND hoitokausi = 1" urakka-id)))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]
