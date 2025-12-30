@@ -731,7 +731,7 @@
            (count paikkaukset-jalkeen)
            0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
 
-(deftest testaa-muodosta-paikkauskohteen-excelrivit
+(deftest muodosta-paikkauskohteen-excelrivit
   (let [paikkauskohde [{:ulkoinen-id 123
                         :nimi "Testikohde"
                         :tie 22
