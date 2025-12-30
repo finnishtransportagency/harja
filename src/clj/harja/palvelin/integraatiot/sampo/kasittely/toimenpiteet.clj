@@ -60,12 +60,11 @@
              :ei-kriittinen? true
              :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu."}]}))
 
-  (when (not (and (= (urakka/hae-urakkatyyppi-sampoidlla sampo-urakka-id) "teiden-hoito") (onko-mhu-toimenpidekoodi? sampo-toimenpidekoodi)))
+  (when (and (= (urakka/hae-urakkatyyppi-sampoidlla db sampo-urakka-id) "teiden-hoito") (not (onko-mhu-toimenpidekoodi? sampo-toimenpidekoodi)))
     (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Illegal operation code provided.")
              :ei-kriittinen? true
              :virheet [{:virhe "Annettu toimenpidekoodi (vv_operation) ei ole sallittu maanteiden hoidon urakoissa."}]}))
-
 
   (when (not (toimenpiteet/sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja? db sampo-urakka-id))
     (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
