@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-test
   (:require [clojure.test :refer :all]
+            [harja.palvelin.raportointi.excel :as excel]
             [harja.testi :refer :all]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
@@ -14,6 +15,7 @@
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
             [clojure.java.io :as io]
+            [taoensso.timbre :as log]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]))
 
@@ -728,3 +730,48 @@
     (is (= (count paikkaukset-ennen)
            (count paikkaukset-jalkeen)
            0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
+
+(deftest testaa-muodosta-paikkauskohteen-excelrivit
+  (let [paikkauskohde [{:ulkoinen-id 123
+                        :nimi "Testikohde"
+                        :tie 22
+                        :ajorata 1
+                        :aosa 1
+                        :aet 0
+                        :losa 2
+                        :let 100
+                        :alkupvm (pvm/->pvm "01.01.2020")
+                        :loppupvm (pvm/->pvm "01.02.2020")
+                        :tyomenetelma "AB-paikkaus"
+                        :suunniteltu-maara 100
+                        :yksikko "t"
+                        :suunniteltu-hinta 5000
+                        :toteutunut-hinta 4500
+                        :lisatiedot "Testikommentti"}]
+        rivit (p-excel/muodosta-excelrivit paikkauskohde)]
+
+    ;; Tarkistetaan rivien rakenne
+    (is (= 3 (count rivit)) "Pitäisi olla datarivi, yhteenveto ja ohjerivi")
+
+    ;; Tarkistetaan datarivi
+    (let [datarivi (:rivi (first rivit))]
+      (is (= "123" (first datarivi)) "Ulkoinen-id pitäisi olla ensimmäisenä")
+      (is (= "Testikohde" (second datarivi)) "Nimi pitäisi olla toisena")
+      (is (= 22 (nth datarivi 2)) "Tie pitäisi olla oikeassa kohdassa")
+      (is (= 1 (nth datarivi 3)) "Ajorata pitäisi olla oikeassa kohdassa")
+      (is (= 1 (nth datarivi 4)) "Aosa pitäisi olla oikeassa kohdassa")
+      (is (= 0 (nth datarivi 5)) "Aet pitäisi olla oikeassa kohdassa")
+      (is (= 2 (nth datarivi 6)) "Losa pitäisi olla oikeassa kohdassa")
+      (is (= 100 (nth datarivi 7)) "Let pitäisi olla oikeassa kohdassa")
+      (is (= "01.01.2020" (nth datarivi 8)) "Alkupvm pitäisi olla oikeassa kohdassa")
+      (is (= "01.02.2020" (nth datarivi 9)) "Loppupvm pitäisi olla oikeassa kohdassa")
+      (is (= "AB-paikkaus" (nth datarivi 10)) "Työmenetelmä pitäisi olla oikeassa kohdassa")
+      (is (= 100 (nth datarivi 11)) "Suunniteltu määrä pitäisi olla oikeassa kohdassa")
+      (is (= "t" (nth datarivi 12)) "Yksikkö pitäisi olla oikeassa kohdassa")
+      (is (= 5000 (nth datarivi 13)) "Suunniteltu hinta pitäisi olla oikeassa kohdassa")
+      (is (= 4500 (nth datarivi 14)) "Toteutunut hinta pitäisi olla oikeassa kohdassa")
+      (is (= "Testikommentti" (nth datarivi 15)) "Lisätiedot pitäisi olla oikeassa kohdassa"))
+
+    ;; Tarkistetaan yhteenvetorivi
+    (let [yhteenveto (first (drop 1 rivit))]
+      (is (= "Yhteensä:" (nth yhteenveto 12)) "Yhteensä-teksti pitäisi olla oikeassa kohdassa"))))
