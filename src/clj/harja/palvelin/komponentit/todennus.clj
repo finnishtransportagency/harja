@@ -267,8 +267,8 @@
                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                    oikeudet/roolit
                    ryhmat)
-          elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case organisaation_nimi)) organisaationumero)
-          ely (when (= "ely" (str/lower-case organisaation_nimi)) organisaationumero)
+          elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+          ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
@@ -357,7 +357,7 @@
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)] 
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
