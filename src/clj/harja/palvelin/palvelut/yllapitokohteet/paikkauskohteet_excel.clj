@@ -194,7 +194,8 @@
     (when (> (count kohteet) 0)
       (mapcat
         (fn [rivi]
-          (let [suunniteltu-summa (or (:suunniteltu-hinta rivi) 0)]
+          (let [suunniteltu-summa (or (:suunniteltu-hinta rivi) 0)
+                toteutunut-hinta (or (:toteutunut-hinta rivi) 0)]
             [{:rivi [(str (:ulkoinen-id rivi))
                      (:nimi rivi)
                      (:tie rivi)
@@ -209,18 +210,26 @@
                      (:suunniteltu-maara rivi)
                      (:yksikko rivi)
                      suunniteltu-summa
+                     toteutunut-hinta
                      (:lisatiedot rivi)]
               :lihavoi? false}]))
         kohteet))))
+
+(defn muodosta-yhteensa-summa [kohteet ensimmainen-rivi-jossa-kustannuksia]
+[:kaava {:kaava :summaa-yllaolevat
+         :alkurivi ensimmainen-rivi-jossa-kustannuksia
+         :loppurivi (+ (count kohteet)
+                      (- ensimmainen-rivi-jossa-kustannuksia 1))}])
 
 (defn muodosta-excelrivit [kohteet]
   (let [kohteet (rivita-kohteet kohteet)
         ensimmainen-rivi-jossa-kustannuksia 5
         yhteenvetorivi [[nil nil nil nil nil nil nil nil nil nil nil nil
-                         "Yhteensä:" [:kaava {:kaava :summaa-yllaolevat
-                                              :alkurivi ensimmainen-rivi-jossa-kustannuksia
-                                              :loppurivi (+ (count kohteet)
-                                                           (- ensimmainen-rivi-jossa-kustannuksia 1))}]
+                         "Yhteensä:"
+                         ;;  Kustannusarvio-summat yhteensä:
+                         (muodosta-yhteensa-summa kohteet ensimmainen-rivi-jossa-kustannuksia)
+                         ;; Toteutuneet kustannukset -summat yhteensä:
+                         (muodosta-yhteensa-summa kohteet ensimmainen-rivi-jossa-kustannuksia)
                          nil]]
         ohjerivi [{:lihavoi? true
                    :rivi [nil "Älä käytä tätä exceliä kohteiden muokkaukseen. Muokkaa kohteet käyttöliittymässä."
@@ -259,6 +268,7 @@
                    {:otsikko "Määrä"}
                    {:otsikko "Yksikkö" :tasaa :oikea}
                    {:otsikko "Kustannusarvio" :tasaa :oikea}
+                   {:otsikko "Toteutuneet kustannukset" :tasaa :oikea}
                    {:otsikko "Lisätiedot"}]
 
         rivit (muodosta-excelrivit kohteet)
