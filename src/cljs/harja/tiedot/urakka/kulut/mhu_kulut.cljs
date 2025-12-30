@@ -79,6 +79,13 @@
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
+(def muu-tehtava
+  {:id -1
+   :nimi "Muu tehtävä (ei määrämitattava)"
+   :jarjestys 99999
+   :emo nil
+   :maaramitattava? true})
+
 (def vuoden-paatoksen-kulun-tyypit
   {:tavoitepalkkio "Tavoitepalkkio"
    :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
@@ -175,11 +182,7 @@
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
                                               (assoc :tehtava (when (and (nil? (:tehtava-id kohdistus))
                                                                       (:muu-tehtava-kaytossa kohdistus))
-                                                                {:id -1
-                                                                 :nimi "Muu tehtävä (ei määrämitattava)"
-                                                                 :jarjestys 99999
-                                                                 :emo nil
-                                                                 :maaramitattava? true})))))
+                                                                muu-tehtava)))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
