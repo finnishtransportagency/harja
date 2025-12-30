@@ -30,7 +30,7 @@ WHERE id = :id;
 -- name: hae-ely-numerolla
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 SELECT id,nimi,tyyppi FROM organisaatio
- WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
+ WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero;
 
 -- name: hae-elinvoimakeskus-lyhenteella-tielupaa-varten
 -- Hakee Elinvoimakeskuksen organisaation numeron perusteella
@@ -41,7 +41,7 @@ WHERE lyhenne = :elinvoimakeskuslyhenne and tyyppi = 'elinvoimakeskus';
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 -- Tielupasanomissa tulee enemmän Ely-arvoja kuin mitä Harjassa muuten käytetään.
 SELECT id,nimi,tyyppi FROM organisaatio
- WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elynumero = :elynumero
+ WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elynumero = :elynumero;
 
 
 -- name: hae-organisaation-urakat
@@ -77,11 +77,11 @@ WHERE k.poistettu = FALSE
 -- Poista käyttäjältä rooli.
 UPDATE kayttaja_rooli
 SET poistettu = TRUE, muokkaaja = :muokkaaja, muokattu = NOW()
-WHERE kayttaja = :kayttaja AND rooli = :rooli :: kayttajarooli
+WHERE kayttaja = :kayttaja AND rooli = :rooli :: kayttajarooli;
 
 -- name: lisaa-rooli<!
 -- Lisää käyttäjälle rooli.
-INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW(), :kayttaja, :rooli :: kayttajarooli)
+INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW(), :kayttaja, :rooli :: kayttajarooli);
 
 
 -- name: poista-kayttaja!
@@ -98,15 +98,15 @@ SELECT
   o.nimi   AS nimi,
   o.tyyppi AS tyyppi
 FROM organisaatio o
-WHERE lower(o.nimi) = lower(:nimi)
+WHERE lower(o.nimi) = lower(:nimi);
 
 -- name: hae-organisaatio-idlla
 -- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
-SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
+SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id;
 
 -- name: hae-organisaatio-y-tunnuksella
 -- Hakee organisaation id:n, nimen ja tyypin Y-tunnuksen perusteella.
-SELECT id,nimi,tyyppi FROM organisaatio WHERE ytunnus = :y-tunnus
+SELECT id,nimi,tyyppi FROM organisaatio WHERE ytunnus = :y-tunnus;
 
 -- name: hae-kayttajien-tunnistetiedot
 -- Hakee käyttäjistä ydintiedot tekstihaulla.
@@ -210,7 +210,10 @@ SELECT id FROM urakka WHERE sampoid = :sampoid;
 
 -- name: hae-urakoitsijan-id-ytunnuksella
 -- single?: true
-SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
+SELECT id
+  FROM organisaatio
+ WHERE tyyppi = 'urakoitsija'
+   AND ytunnus = :ytunnus;
 
 -- name: hae-kayttajan-yleisin-urakkatyyppi
 -- single?: true
