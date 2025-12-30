@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.raportointi.excel :as excel]
             [harja.testi :refer :all]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
@@ -15,7 +14,6 @@
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
             [clojure.java.io :as io]
-            [taoensso.timbre :as log]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]))
 
