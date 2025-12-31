@@ -12,9 +12,11 @@
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.todennus-varmistus :as varmistus])
+            [harja.palvelin.komponentit.todennus-varmistus :as varmistus]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]])
   (:import (org.apache.commons.codec.binary Base64)
            (org.apache.commons.codec.net BCodec)))
 
@@ -98,6 +100,71 @@
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
+
+(defn kasittele-miam-vastaus
+  "Logita mahdollinen virhe."
+  [status body]
+
+  (try
+    (if (= 200 status)
+      body
+      (do
+        ;; Virheen sattuessa palauta nil
+        (log/error "Virhe miam kutsussa :: saatu virhe: " body)
+        nil))
+    (catch Exception e
+      (log/error "Virhe miam kutsussa :: poikkeus " e)
+      ;; Palautetaan virheen sattuessa nil
+      nil)))
+
+(defn hae-kayttajaroolit-rajapinnasta
+  "Haetaan käyttäjätunnuksen perusteella käyttäjän roolit kutsumalla ulkoista
+   käyttäjäroolien hakupalvelua. Harjassa rajapinnan palauttamat tiedot ovat samoja mitä tulee oam_headers parametrista kutsun headereissa/otsikkotiedoissa.
+
+   Parametrit:
+   - db: Tietokantayhteys integraatiolokituksen tallentamiseen
+   - integraatioloki: Integraatiolokikomponentti rajapintakutsujen lokitukseen
+   - miam: MIAM-rajapinnan asetukset (url ja apiavain)
+   - kayttajanimi: Käyttäjätunnus, jonka roolit haetaan
+
+   Palauttaa JSON-muotoisen merkkijonon, joka sisältää käyttäjän roolit MIAM-rajapinnasta,
+   tai nil jos rajapintakutsu epäonnistuu."
+  [db integraatioloki miam kayttajanimi]
+  (let [;; Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset
+        ;; on hyvä pitää miam rajapinnan kutsu pois päältä - vaikka rooleja, ei tulisikaan headereista
+        vastaus (integraatiotapahtuma/suorita-integraatio
+                  db integraatioloki "miam" "hae-kayttajan-roolit" nil
+                  (fn [konteksti]
+                    (let [http-asetukset {:metodi :GET
+                                          :url (str (:url miam) kayttajanimi)
+                                          :otsikot (merge
+                                                     {"Content-Type" "application/json"}
+                                                     {"x-api-key" (:apiavain miam)})}
+                          {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                      (kasittele-miam-vastaus status body))))]
+    vastaus))
+
+(defn kayttajaroolit-rajapintavastauksesta
+  "Parsii käyttäjäroolit MIAM-rajapinnan JSON-vastauksesta ja muuntaa ne Harjan ryhmärakenteeksi.
+
+   Parametrit:
+   - db: Tietokantayhteys, jota käytetään Sampo-id:iden ja Y-tunnusten muuntamiseen Harjan id:ksi
+   - vastaus: JSON-muotoinen merkkijono MIAM-rajapinnasta, tai nil jos kutsu epäonnistui
+
+   Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
+   tai nil jos vastaus on nil."
+  [db vastaus]
+  (let [vastaus-map (json/read-str vastaus)
+        ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
+        ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
+        ryhmat (->> (get vastaus-map "Table1")
+                 (map #(get % "Role"))
+                 (str/join ","))]
+    (kayttajan-roolit
+      (partial q/hae-urakan-id-sampo-idlla db)
+      (partial q/hae-urakoitsijan-id-ytunnuksella db)
+      oikeudet/roolit
+      ryhmat)))
 
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
@@ -238,7 +305,7 @@
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
-  [db {kayttajanimi "oam_remote_user"
+  [db integraatioloki miam {kayttajanimi "oam_remote_user"
        ryhmat "oam_groups"
        ely "oam_departmentnumber"
        organisaation_nimi "oam_organization"
@@ -253,11 +320,16 @@
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
-    (let [roolit (kayttajan-roolit
-                   (partial q/hae-urakan-id-sampo-idlla db)
-                   (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                   oikeudet/roolit
-                   ryhmat)
+    (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
+                   ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
+                   (kayttajan-roolit
+                     (partial q/hae-urakan-id-sampo-idlla db)
+                     (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                     oikeudet/roolit
+                     ryhmat)
+                   ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
+                   (kayttajaroolit-rajapintavastauksesta db
+                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)))
           organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
@@ -308,15 +380,15 @@
       koka-headerit))
 
 (defn koka->kayttajatiedot
-  ([db headerit oikeudet kehitysmoodi?]
-   (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? nil))
-  ([db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset]
+  ([db integraatioloki miam headerit oikeudet kehitysmoodi?]
+   (koka->kayttajatiedot db integraatioloki miam headerit oikeudet kehitysmoodi? nil))
+  ([db integraatioloki miam headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset]
    (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
        (get (swap! kayttajatiedot-cache-atom #(cache/through
                                                 (fn [oam-tiedot]
-                                                  (varmista-kayttajatiedot db oam-tiedot))
+                                                  (varmista-kayttajatiedot db integraatioloki miam oam-tiedot))
                                                 %
                                                 oam-tiedot))
          oam-tiedot)
@@ -330,7 +402,7 @@
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (defrecord HttpTodennus 
-  [oikeudet todennus-varmistus-asetukset]
+  [oikeudet todennus-varmistus-asetukset miam]
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
@@ -339,14 +411,14 @@
     this)
 
   Todennus
-  (todenna-pyynto [{db :db :as this} req kehitysmoodi?]
+  (todenna-pyynto [{db :db integraatioloki :integraatioloki :as this} req kehitysmoodi?]
     (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
+          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit req))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)] 
+        (if-let [kayttajatiedot (koka->kayttajatiedot db integraatioloki miam headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str
@@ -368,10 +440,10 @@
       :kayttaja kayttaja)))
 
 (defn http-todennus
-  ([] (http-todennus nil nil))
-  ([oikeudet] (http-todennus oikeudet nil))
-  ([oikeudet todennus-varmistus]
-   (->HttpTodennus oikeudet todennus-varmistus)))
+  ([] (http-todennus nil nil nil))
+  ([oikeudet] (http-todennus oikeudet nil nil))
+  ([oikeudet todennus-varmistus miam]
+   (->HttpTodennus oikeudet todennus-varmistus miam)))
 
 (defn feikki-http-todennus [kayttaja]
   (->FeikkiHttpTodennus kayttaja))

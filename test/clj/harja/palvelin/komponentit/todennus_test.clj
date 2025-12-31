@@ -89,6 +89,14 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
+(deftest kayttajaroolit-rajapinnasta-test
+  (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
+          :roolit #{}
+          :urakkaroolit {39 #{"vastuuhenkilo"}}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"))))
+
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"
     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
