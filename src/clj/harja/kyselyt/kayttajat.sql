@@ -30,7 +30,12 @@ WHERE id = :id;
 -- name: hae-ely-numerolla
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 SELECT id,nimi,tyyppi FROM organisaatio
- WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
+ WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero;
+
+-- name: hae-elinvoimakeskus-numerolla
+-- Hakee elinvoimakeskuksen organisaation elinvoimakeskusnumeron perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND elinvoimakeskusnumero = :elinvoimakeskusnumero;
 
 -- name: hae-elinvoimakeskus-lyhenteella-tielupaa-varten
 -- Hakee Elinvoimakeskuksen organisaation numeron perusteella
