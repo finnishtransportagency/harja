@@ -207,6 +207,13 @@
            (q/hae-ely-numerolla db)
            first))
 
+(defn- hae-organisaatio-elinvoimakeskusnumerolla [db elinvoimakeskus]
+  (some->> elinvoimakeskus
+    (re-matches #"\d+")
+    Long/parseLong
+    (q/hae-elinvoimakeskus-numerolla db)
+    first))
+
 (defn- hae-organisaatio-nimella [db nimi]
   (first (q/hae-organisaatio-nimella db nimi)))
 
@@ -224,23 +231,25 @@
            first))
 
 (defn- hae-kayttajalle-organisaatio
-  [db ely y-tunnus organisaatio roolit]
+  [db elinvoimakeskus ely y-tunnus organisaatio roolit]
   (or
-   ;; Jos ELY-numero haetaan se
-   (hae-organisaatio-elynumerolla db ely)
-   ;; Jos yrityksen Y-tunnus annettu, hae sillä
-   (hae-organisaatio-y-tunnuksella db y-tunnus)
-   ;; Muuten haetaan org. nimellä
-   (hae-organisaatio-nimella db organisaatio)
-   ;; Muuten etsitään urakoitsijakohtaista roolia
-   (hae-organisaatio-liitetylle-roolille db roolit)))
+    ;; Jos elinvoimakeskusnumero annettu, haetaan organisaatio sillä
+    (hae-organisaatio-elinvoimakeskusnumerolla db elinvoimakeskus)
+    ;; Jos ELY-numero haetaan se
+    (hae-organisaatio-elynumerolla db ely)
+    ;; Jos yrityksen Y-tunnus annettu, hae sillä X
+    (hae-organisaatio-y-tunnuksella db y-tunnus)
+    ;; Muuten haetaan org. nimellä
+    (hae-organisaatio-nimella db organisaatio)
+    ;; Muuten etsitään urakoitsijakohtaista roolia
+    (hae-organisaatio-liitetylle-roolille db roolit)))
 
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
   [db {kayttajanimi "oam_remote_user"
        ryhmat "oam_groups"
-       ely "oam_departmentnumber"
+       organisaationumero "oam_departmentnumber"
        organisaation_nimi "oam_organization"
        etunimi "oam_user_first_name"
        sukunimi "oam_user_last_name"
@@ -258,7 +267,9 @@
                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                    oikeudet/roolit
                    ryhmat)
-          organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaation_nimi roolit)
+          elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+          ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+          organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
                     :sukunimi sukunimi
@@ -346,7 +357,7 @@
         (do
           (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan: " headerit))
           (throw+ todennusvirhe))
-        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)] 
+        (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset)]
           (assoc req :kayttaja kayttajatiedot)
           (do
             (log/warn (str

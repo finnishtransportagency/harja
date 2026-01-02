@@ -150,7 +150,7 @@
         trlla-on-muu-tehtava? (some #(= -1 (:id %)) tehtavat)
         muu-tehtava-kaytossa? (:muu-tehtava-kaytossa kohdistus)
         kohdistus (if (and trlla-on-muu-tehtava? muu-tehtava-kaytossa?)
-                    (assoc kohdistus :tehtava {:id -1 :nimi "Muu tehtävä (ei määrämitattava)" :jarjestys 99999, :emo nil, :maaramitattava? true})
+                    (assoc kohdistus :tehtava tiedot/muu-tehtava)
                     kohdistus)
         tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)]
     [:div
