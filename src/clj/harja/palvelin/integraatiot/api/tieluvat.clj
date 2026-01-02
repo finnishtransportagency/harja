@@ -54,22 +54,19 @@
 
 ;; Korvaa rajapinnan elinvoimakeskustiedon Harjan organisaatiotaulusta löytyvällä id:llä tieluvan tallennusta varten.
 (defn hae-elinvoimakeskus [db elinvoimakeskus tielupa]
-  ;; Elinvoimakeskusaineiston numerot ja lyhenteet eivät sovellu Harjan käyttöön, koska niissä
-  ;; on päällekkäisyyksiä elyjen kanssa. Jos halutaan käyttää aineiston lyhenteitä, täytyy
-  ;; ely- ja elinvoimakeskukset erottaa toisistaan joko erillä organisaatiotyypillä tai ihan omalla
-  ;; boolean-tyyppisellä tiedollaan. Tieluparajapinnassa siksi käytössä omat, lyhyet nimet
-  ;; elinvoimakeskuksille.
-  (let [elinvoimakeskusnumero (case elinvoimakeskus
-                                "Uusimaa" 1
-                                "Lounais-Suomi" 2
-                                "Kaakkois-Suomi" 3
-                                "Sisä-Suomi" 4
-                                "Keski-Suomi" 5
-                                "Itä-Suomi" 6
-                                "Etelä-Pohjanmaa" 7
-                                "Pohjanmaa" 8
-                                "Pohjois-Suomi" 9
-                                "Lappi" 10
+  ;; Huomaa että elinvoimakeskusten numerot ja lyhenteet sisältävät samoja arvoja kuin elykeskusten numerot ja lyhenteet.
+  ;; Käytä siksi rajauksessa aina myös organisaatiotyyppiä elinvoimakeksus.
+  (let [elinvoimakeskuslyhenne (case elinvoimakeskus
+                                "Uusimaa" "UUD"
+                                "Lounais-Suomi" "LOU"
+                                "Kaakkois-Suomi" "KAS"
+                                "Sisä-Suomi" "SIS"
+                                "Keski-Suomi" "KES"
+                                "Itä-Suomi" "ITA"
+                                "Etelä-Pohjanmaa" "EPO"
+                                "Pohjanmaa" "POH"
+                                "Pohjois-Suomi" "PSU"
+                                "Lappi" "LAP"
                                 nil nil
                                 ;; Elinvoimakeskus ei ole pakollinen tieto, koska vanhat tieluvat linkittyvät elyihin.
                                 ;; Kutsujalle palutetaan virhe vääränlaisesta elinvoimakeskusarvosta, mutta virhettä
@@ -78,7 +75,7 @@
                                 (throw+ {:type virheet/+viallinen-kutsu+
                                          :virheet [{:koodi virheet/+tuntematon-elinvoimakeskus+
                                                     :viesti (str "Tuntematon elinvoimakeskus " elinvoimakeskus)}]}))
-        elinvoimakeskus-id (:id (first (kayttajat-q/hae-elinvoimakeskus-numerolla-tielupaa-varten db elinvoimakeskusnumero)))]
+        elinvoimakeskus-id (:id (first (kayttajat-q/hae-elinvoimakeskus-lyhenteella-tielupaa-varten db elinvoimakeskuslyhenne)))]
     (assoc tielupa ::tielupa/elinvoimakeskus_id elinvoimakeskus-id)))
 
 ;; Tieluvilla on enemmän ely-keskuksia kuin Harjassa muuten

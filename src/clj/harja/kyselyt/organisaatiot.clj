@@ -5,5 +5,5 @@
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})
 
-(declare listaa-organisaatiot-analytiikalle hae-ely-id-sampo-hashilla hae-id-lyhenteella luo-organisaatio<!
+(declare listaa-organisaatiot-analytiikalle hae-ely-id-sampo-hashilla hae-vesivayla-organisaation-id-lyhenteella luo-organisaatio<!
   hae-id-y-tunnuksella)

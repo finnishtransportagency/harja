@@ -74,9 +74,9 @@
   (try+
     (let [_ (log/info "Lähetä rest-api sähköposti.")
           vastaus (integraatiotapahtuma/suorita-integraatio
-                    db integraatioloki "api" (if liite?
-                                               "sahkoposti-ja-liite-lahetys"
-                                               "sahkoposti-lahetys") nil
+                    db integraatioloki "sahkoposti" (if liite?
+                                                      "sahkoposti-ja-liite-lahetys"
+                                                      "sahkoposti-lahetys") nil
                     (fn [konteksti]
                       (let [http-asetukset {:metodi :POST
                                             :url (muodosta-lahetys-uri asetukset liite?)

@@ -133,7 +133,7 @@
     (is (= (select-keys vastauksen-vanha-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
           {:id ismon-paivystys-id
            :matkapuhelin "+358234567"
-           :organisaatio {:id 14
+           :organisaatio {:id 24
                           :nimi "YIT Rakennus Oy"
                           :tyyppi :urakoitsija}
            :tyopuhelin "+358765432"
