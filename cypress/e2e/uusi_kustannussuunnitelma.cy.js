@@ -6,7 +6,7 @@ import {avaaKustannussuunnittelu, avaaUusiKustannussuunnittelu} from "../support
 const indeksit = [];
 
 function alustaSuomussalmenUrakka() {
-    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
+    ks.alustaKanta('KOPIO POP MHU Suomussalmi 2024-2029');
 }
 function alustaIinUrakka() {
     ks.alustaKanta('Iin MHU 2021-2026');

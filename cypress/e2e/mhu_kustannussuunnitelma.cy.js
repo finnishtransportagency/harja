@@ -19,7 +19,7 @@ import {avaaKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 const indeksit = [];
 
 function alustaIvalonUrakka() {
-    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
+    ks.alustaKanta('KOPIO POP MHU Suomussalmi 2024-2029');
 }
 
 
@@ -28,7 +28,7 @@ function alustaIvalonUrakka() {
 describe('Testaa Suomussalmen MHU urakan kustannussuunnitelmanäkymää', function () {
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
     })
 
     it('Testaa tilayhteenvedon vierityslinkit', function () {

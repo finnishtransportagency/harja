@@ -26,7 +26,8 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tamperee
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Raahen MHU 23 pääsopimus','2023-10-01','2028-09-30', '2FSD6HO4/01', (SELECT id FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Kajaanin MHU 24 pääsopimus','2025-10-01','2030-09-30', '2023.3095.1-T00015732', (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Suomussalmen MHU 24 pääsopimus','2024-10-01','2029-09-30', '2023.3097.1-T00015733', (SELECT id FROM urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029'));
-
+-- TODO: Tunkkaa paremmaksi, ja tee järkevämpi kovakoodattu 2024 alkanut testiurakka + sopimus. Kovakoodattuja 2024 urakoita pitäisi olla vähintään kaksi. Tätä käytetään lupausten testeissä.
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Suomussalmen MHU 24 pääsopimus KOPIO','2024-10-01','2029-09-30', '2023.3097.1-T00015734', (SELECT id FROM urakka WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029'));
 
 -- Kajaanin pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)

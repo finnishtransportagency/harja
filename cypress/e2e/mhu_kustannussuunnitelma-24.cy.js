@@ -4,13 +4,13 @@ import * as ks from "../support/kustannussuunnitelmaFns.js";
 const indeksit = [];
 
 function alustaSuomussalmenUrakka() {
-    ks.alustaKanta('POP MHU Suomussalmi 2024-2029');
+    ks.alustaKanta('KOPIO POP MHU Suomussalmi 2024-2029');
 }
 
 describe('Johto- & Hallintokorvaukset, 2024->', () => {
     before(function () {
         alustaSuomussalmenUrakka();
-        avaaKustannussuunnittelu('POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Pohjanmaa', indeksit);
 
         // Valitse ensimmäinen hoitovuosi
         cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {
