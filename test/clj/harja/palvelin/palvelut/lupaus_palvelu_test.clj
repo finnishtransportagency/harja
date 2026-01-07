@@ -134,33 +134,33 @@
         "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
-  (let [kajaaniid (hae-urakan-id-nimella "Aktiivinen Kajaani Testi")
-        kajaanin-tiedot {:urakka-id kajaaniid
-                         :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                              #inst "2025-09-30T20:59:59.000-00:00"]
-                         :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        oulunid (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
-        oulu-tiedot {:urakka-id oulunid
-                     :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
-                                          #inst "2025-09-30T20:59:59.000-00:00"]
-                     :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
-        kajaani-vastaus (hae-urakan-lupaustiedot
-                          +kayttaja-jvh+
-                          kajaanin-tiedot)
-        oulu-vastaus (hae-urakan-lupaustiedot
+  (let [suomussalmi-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        suomussalmen-tiedot {:urakka-id suomussalmi-id
+                             :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                                  #inst "2025-09-30T20:59:59.000-00:00"]
+                             :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        suomussalmi-2-id (hae-urakan-id-nimella "KOPIO POP MHU Suomussalmi 2024-2029")
+        suomussalmi-2-tiedot-2 {:urakka-id suomussalmi-2-id
+                                :valittu-hoitokausi [#inst "2024-09-30T21:00:00.000-00:00"
+                                                     #inst "2025-09-30T20:59:59.000-00:00"]
+                                :nykyhetki #inst "2024-03-01T21:00:00.000-00:00"}
+        suomussalmi-vastaus (hae-urakan-lupaustiedot
                               +kayttaja-jvh+
-                       oulu-tiedot)
-        kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
-        oulu-ryhmat (:lupausryhmat oulu-vastaus)
-        kajaani-lupaus-44 (etsi-lupaus kajaani-vastaus 44)
-        oulu-lupaus-68 (etsi-lupaus oulu-vastaus 68)
-        kajaani-ryhma-idt (sort (map :id kajaani-ryhmat))
-        oulu-ryhma-idt (sort (map :id oulu-ryhmat))]
-    (is (= (list 17 19 21 23 25) kajaani-ryhma-idt) "Kajaanin ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (= (list 16 18 20 22 24) oulu-ryhma-idt) "Oulun ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
-    (is (not= kajaani-ryhma-idt oulu-ryhma-idt) "Ryhmät pitää olla erit, koska Kajaani simuloi erittäin vaativaa urakkaa tässä testissä.")
-    (is (= 44 (:lupaus-id kajaani-lupaus-44)) "Kajaanilla on lupaus 44 ryhmasta 1")
-    (is (= 68 (:lupaus-id oulu-lupaus-68)) "Oululla on lupaus 13 ryhmasta 5")))
+                              suomussalmen-tiedot)
+        suomussalmi-2-vastaus (hae-urakan-lupaustiedot
+                                +kayttaja-jvh+
+                                suomussalmi-2-tiedot-2)
+        suomussalmi-ryhmat (:lupausryhmat suomussalmi-vastaus)
+        suomussalmi-2-ryhmat (:lupausryhmat suomussalmi-2-vastaus)
+        suomussalmi-lupaus-44 (etsi-lupaus suomussalmi-vastaus 44)
+        suomussalmi-2-lupaus-68 (etsi-lupaus suomussalmi-2-vastaus 68)
+        suomussalmi-ryhma-idt (sort (map :id suomussalmi-ryhmat))
+        suomussalmi-2-ryhma-idt (sort (map :id suomussalmi-2-ryhmat))]
+    (is (= (list 17 19 21 23 25) suomussalmi-ryhma-idt) "Suomussalmen ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (= (list 16 18 20 22 24) suomussalmi-2-ryhma-idt) "Suomussalmi 2 urakan ryhmä-idt - Eri ryhmät kuin toisella samalla vuodella alkavalla urakalla")
+    (is (not= suomussalmi-ryhma-idt suomussalmi-2-ryhma-idt) "Ryhmät pitää olla erit, koska Kajaani simuloi erittäin vaativaa urakkaa tässä testissä.")
+    (is (= 44 (:lupaus-id suomussalmi-lupaus-44)) "Suomussalmella on lupaus 44 ryhmasta 1")
+    (is (= 68 (:lupaus-id suomussalmi-2-lupaus-68)) "Suomussalmi 2:lla on lupaus 13 ryhmasta 5")))
 
 
 (deftest urakan-2025-lupaustiedot-toimii

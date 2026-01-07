@@ -44,24 +44,24 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta: Aktiivinen Kajaani Testi, Aktiivinen Oulu Testi
--- Tehään Lupauksien kannalta Aktiivinen Kajaani Testi urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
+-- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta: POP MHU Suomussalmi 2024-2029 ja, POP MHU Suomussalmi 2024-2029 KOPIO
+-- Tehdään Lupauksien kannalta POP MHU Suomussalmi 2024-2029 urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
 
 -- Linkitetään Kajaani
 DO $$
     DECLARE
         tarkistus_lapaisty BOOLEAN;
-        urakka_id_kajaani INTEGER;
+        urakka_id_suomussalmi INTEGER;
 
     BEGIN
-        urakka_id_kajaani = (SELECT id FROM urakka WHERE nimi = 'Aktiivinen Kajaani Testi' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
+        urakka_id_suomussalmi = (SELECT id FROM urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
 
         -- Tarkista löytyykö ympäristöstä
-        IF urakka_id_kajaani IS NULL THEN
-            RAISE EXCEPTION 'Kajaanin urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
+        IF urakka_id_suomussalmi IS NULL THEN
+            RAISE EXCEPTION 'Suomussalmen urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
             tarkistus_lapaisty := FALSE;
         ELSE
-            RAISE NOTICE 'Kajaanin urakka linkitetty lupauksiin!';
+            RAISE NOTICE 'Suomussalmen urakka linkitetty lupauksiin!';
             tarkistus_lapaisty := TRUE;
         END IF;
 
@@ -69,30 +69,30 @@ DO $$
             INSERT INTO lupausryhma_urakka(lupausryhma_id, urakka_id) VALUES
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani);
+ urakka_id_suomussalmi);
         END IF;
     END $$;
 
--- Linkitetään kaikki muut 2024 paitsi Kajaani
+-- Linkitetään kaikki muut 2024 paitsi POP MHU Suomussalmi 2024-2029
 INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
 SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
 FROM urakka
          JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
 WHERE lupausryhma."urakan-alkuvuosi" = 2024
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen'
-  AND urakka.nimi NOT LIKE 'Aktiivinen Kajaani Testi';
+  AND urakka.nimi NOT LIKE 'POP MHU Suomussalmi 2024-2029';
 
 INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
 SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
