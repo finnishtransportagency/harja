@@ -1,10 +1,13 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [clojure.string :as str]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [slingshot.slingshot :refer [throw+]]
             [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
@@ -20,9 +23,12 @@
      (component/start
       (component/system-map
        :db (tietokanta/luo-tietokanta testitietokanta)
+        :integraatioloki (component/using
+                           (integraatioloki/->Integraatioloki nil)
+                           [:db])
        :todennus (component/using
                   (todennus/http-todennus)
-                  [:db])))))
+                  [:db :integraatioloki])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -272,6 +278,8 @@
 
 (deftest varmista-kayttajatiedot-test
   (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        miam-asetukset {} ;; Laita asetukset tyhjänä
         testi-kayttajanimi "testi-kayttaja-123"
         testi-headerit {"oam_remote_user" testi-kayttajanimi
                         "oam_user_first_name" "Testi"
@@ -284,7 +292,7 @@
     (testing "Uusi käyttäjä luodaan tietokantaan"
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
 
-      (let [kayttaja (#'todennus/varmista-kayttajatiedot db testi-headerit)
+      (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
 
         (is (some? kayttaja) "Käyttäjä palautetaan")
@@ -301,7 +309,7 @@
       (let [muutetut-headerit (assoc testi-headerit
                                 "oam_user_first_name" "Muutettu"
                                 "oam_user_mail" "uusi@example.com")
-            kayttaja (#'todennus/varmista-kayttajatiedot db muutetut-headerit)
+            kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset muutetut-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
 
         (is (= "Muutettu" (:etunimi kayttaja)))
@@ -318,7 +326,7 @@
                             "oam_user_mobile" "0401234567"
                             "oam_organization" "Lapin elinvoimakeskus"
                             "oam_groups" "ELY_Paakayttaja"}
-            kayttaja (#'todennus/varmista-kayttajatiedot db evk-headerit)
+            kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset evk-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))]
 
         (is (some? kayttaja) "Käyttäjä palautetaan")
@@ -332,3 +340,49 @@
 
     ;; Siivoa testi-käyttäjä lopuksi
     (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
+
+(deftest varmista-kayttajatiedot-miam-rajapinnasta-test
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        ;; MIAM-asetukset kuten ne tulevat asetukset.edn tiedostosta, mutta testi-osoitteilla
+        miam-asetukset {:url "https://testi-miam.example.com/api/v1/users"
+                        :apiavain "test-api-key-12345"}
+        testi-kayttajanimi "miam-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "MIAM"
+                        "oam_user_last_name" "Testaaja"
+                        "oam_user_mail" "miam@example.com"
+                        "oam_user_mobile" "0501234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "2234567-8_Paakayttaja"}
+        ;; Mockattu MIAM-vastaus
+        miam-vastaus (cheshire/encode
+                       {"Table1" [{"CompanyID" "2163026-3"
+                                   "Company" "Destia Oy"
+                                   "UserName" testi-kayttajanimi
+                                   "Name" "MIAM Testaaja"
+                                   "Role" "2234567-8_Paakayttaja"
+                                   "StartDate" "1.1.2024 0:00:00"
+                                   "EndDate" "31.12.2029 23:59:59"
+                                   "Agreementname" "Testisopimus"
+                                   "Appname" "HARJA"
+                                   "email" "miam@example.com"}]})]
+
+    (testing "MIAM-käyttäjä luodaan kun MIAM-asetukset on määritelty"
+      ;; Mockataan HTTP-kysely
+      (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
+                    todennus/hae-kayttajaroolit-rajapinnasta (fn [db integraatioloki miam kayttajanimi] miam-vastaus)]
+        (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
+              kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+          (is (some? kayttaja) "Käyttäjä palautetaan")
+          (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+          (is (= testi-kayttajanimi (:kayttajanimi kayttaja)))
+          (is (= "MIAM" (:etunimi kayttaja)))
+          (is (= "Testaaja" (:sukunimi kayttaja)))
+          (is (= "miam@example.com" (:sahkoposti kayttaja)))
+          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
+
+      ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
+
