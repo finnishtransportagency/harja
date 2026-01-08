@@ -142,6 +142,10 @@ WITH maaramitattavat_tehtavat AS (
     AND tpk."mhu-tehtava?" IS TRUE
     AND tpk.piilota IS NOT true
     AND tpk.poistettu IS NOT true
+    -- Tehtävän voimassaoloa verrataan aina urakan alkuvuoteen. Eli kun uudet urakat alkavat,
+    -- niin voimassaolon perusteella voidaan urakalle määritellä jotain tiettyjä poikkeuksia tehtävien suhteen.
+    AND (tpk.voimassaolo_alkuvuosi IS NULL OR tpk.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+    AND (tpk.voimassaolo_loppuvuosi IS NULL OR tpk.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
 )
 -- 1. Palautetaan kaikki maaramitattavat tehtävät
 SELECT
@@ -175,6 +179,10 @@ WHERE
       AND t2."mhu-tehtava?" IS TRUE
       AND t2.piilota IS NOT true
       AND t2.poistettu IS NOT true
+      -- Tehtävän voimassaoloa verrataan aina urakan alkuvuoteen. Eli kun uudet urakat alkavat,
+      -- niin voimassaolon perusteella voidaan urakalle määritellä jotain tiettyjä poikkeuksia tehtävien suhteen.
+      AND (t2.voimassaolo_alkuvuosi IS NULL OR t2.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+      AND (t2.voimassaolo_loppuvuosi IS NULL OR t2.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
   )
 ORDER BY jarjestys, nimi;
 

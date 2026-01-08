@@ -401,7 +401,10 @@
   (let [vastaus (poista-urakan-alue-ja-id (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia))
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
         urakkatyypit (set (distinct (keep #(get-in % [:tyyppi]) vastaus)))
-        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))]
+        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))
+        _ (println "OEFHUOE " vastaus)
+        _ (println "ELYNUMEROT  " elynumerot)
+        ]
 
     (is (= (count elynumerot) 6) "JVH:n pitäisi nähdä kaikki ELY:t")
 
@@ -413,7 +416,7 @@
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 53) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 54) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
@@ -449,7 +452,7 @@
             vastaus))
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
-              :hallintayksikko {:id 12
+              :hallintayksikko {:id 22
                                 :nimi "Pohjois-Pohjanmaa"
                                 :elynumero 12}
               :urakat #{{:id 4

@@ -239,6 +239,14 @@ INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'POP MHU Suomussalmi 2024-2029 MHU Ylläpito TP'), 'kokonaishintainen', 'POP MHU Suomussalmi 2024-2029 MHU Ylläpito' );
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'POP MHU Suomussalmi 2024-2029 MHU Korvausinvestointi TP'), 'kokonaishintainen', 'POP MHU Suomussalmi 2024-2029 MHU Korvausinvestointi' );
 
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 Talvihoito TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 Talvihoito' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 Liikenneympäristön hoito TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 Liikenneympäristön hoito' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 Soratien hoito TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 Soratien hoito' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 MHU ja HJU Hoidon johto'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 MHU ja HJU Hoidon johto' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 Päällystepaikkaukset TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 Päällystepaikkaukset' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 MHU Ylläpito TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 MHU Ylläpito' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029 MHU Korvausinvestointi TP'), 'kokonaishintainen', 'KOPIO POP MHU Suomussalmi 2024-2029 MHU Korvausinvestointi' );
+
 
 -- Sanktioita
 INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,

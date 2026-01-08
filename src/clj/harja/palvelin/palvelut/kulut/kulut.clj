@@ -254,8 +254,9 @@
 
         ;; Haetaan tehtäväryhmät, joilla tehtävä on pakollinen
         tehtavaryhmat-joilla-tehtava (tehtavaryhma-kyselyt/hae-tehtavaryhmat-joilla-tehtava-on-pakollinen db)
-        ;; Tarkistetaan, että kulukohdistukselle on lisätty tehtävä, jos tehtäväryhmä vaatii sen
-        _ (when (and (some #(= (:id %) (:tehtavaryhma kohdistus)) tehtavaryhmat-joilla-tehtava)
+        ;; Tarkistetaan, että hankintakulun kulukohdistukselle on lisätty tehtävä, jos tehtäväryhmä vaatii sen
+        _ (when (and (= "hankintakulu" (:tyyppi kohdistus)) 
+                  (some #(= (:id %) (:tehtavaryhma kohdistus)) tehtavaryhmat-joilla-tehtava)
                      (nil? tehtava-id))
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
