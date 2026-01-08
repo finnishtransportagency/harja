@@ -267,8 +267,11 @@
                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                    oikeudet/roolit
                    ryhmat)
+          ;; Käytä ensisijaisesti elinvoimakeskusta
           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
-          ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+          ;; Jos elinvoimakeskusta ei ole, käytä organisaationumeroa ELY:nä - näin varmistetaan,
+          ;; että käyttäjä kuuluu oikeaan organisaatioon, vaikka olisi väyläläinen
+          ely (if elinvoimakeskus nil organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
           kayttaja {:kayttajanimi kayttajanimi
                     :etunimi etunimi
