@@ -47,6 +47,13 @@ FROM
             JOIN mhu_muutos m ON mmtml.muutos = m.id
         WHERE 
             m.poistettu = FALSE
+            -- Varmistetaan että muutos on voimassa ko. hoitokaudella:
+            -- Muutos vaikuttaa hoitokauteen jos voimassa_alkaen on hoitokauden loppuun mennessä.
+            -- Hoitokausi on 1.10.XXXX - 30.9.XXXX+1, joten tarkistetaan että muutos on alkanut
+            -- ennen hoitokauden loppua. Tämä tukee:
+            -- 1) Pysyviä muutoksia jotka jatkuvat useampaan hoitokauteen
+            -- 2) Kesken hoitokauden luotuja muutoksia
+            AND m.voimassa_alkaen <= make_date(mmtml.hoitokauden_alkuvuosi + 1, 9, 30)
         GROUP BY 
             m.urakka, 
             mmtml.tehtava, 
