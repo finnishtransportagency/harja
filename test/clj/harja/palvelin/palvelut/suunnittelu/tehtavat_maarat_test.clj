@@ -73,6 +73,29 @@
                muutos-id tehtava-id hoitokauden-alkuvuosi maaramuutos))
     muutos-id))
 
+(defn luo-muutos-usealle-tehtavalle!
+  "Luo uuden MHU-muutoksen usealle tehtävälle eri määrämuutoksilla ja versioilla.
+   Käytetään erityisesti versio-suodatustesteihin.
+   
+   Parametrit:
+   - urakka-id: Urakan id
+   - voimassa-alkaen: Päivämäärä (String tai Date)
+   - hoitokauden-alkuvuosi: Hoitokauden alkuvuosi
+   - syy: Syy muutokselle (String)
+   - tehtavat: Vector of maps [{:tehtava-id X :maaramuutos Y :versio Z}]
+   
+   Palauttaa muutoksen id:n."
+  [urakka-id voimassa-alkaen hoitokauden-alkuvuosi syy tehtavat]
+  (let [muutos-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
+                              VALUES (%s, '%s', '%s', 
+                                      (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
+                             urakka-id voimassa-alkaen syy))]
+    (doseq [{:keys [tehtava-id maaramuutos versio]} tehtavat]
+      (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
+                  VALUES (%s, %s, %s, %s, %s)"
+                 muutos-id tehtava-id hoitokauden-alkuvuosi maaramuutos versio)))
+    muutos-id))
+
 ;; === VIEW-kyselyt ===
 
 (defn hae-view-muutossumma
@@ -114,6 +137,14 @@
              " (odotettu: " odotettu ")"
              (when muutokset 
                (str "\nMuutokset kannassa: " muutokset))))))
+
+;; === Tehtävä-helperit ===
+
+(defn hae-tehtava-id-nimella
+  "Hakee tehtävän id:n nimen perusteella tietokannasta.
+   Palauttaa nil jos tehtävää ei löydy."
+  [nimi]
+  (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s' LIMIT 1" nimi)))))
 
 (defn hae-tehtava-nimella
   "Hakee tehtävän nimen perusteella tehtävälistasta"
@@ -470,24 +501,20 @@
           hoitokausi 2025
           
           ;; Valitaan kaksi eri tehtävää testiin
-          tehtava-a-id 24628 ;; AB-paikkaus levittäjällä
-          tehtava-b-id 24629 ;; PAB-paikkaus levittäjällä
+          tehtava-a-id (hae-tehtava-id-nimella "AB-paikkaus levittäjällä")
+          tehtava-b-id (hae-tehtava-id-nimella "PAB-paikkaus levittäjällä")
           
           ;; Hae alkutilanne ennen testimuutosta
           alku-muutossumma-a (hae-view-muutossumma urakka-id tehtava-a-id hoitokausi)
           alku-muutossumma-b (hae-view-muutossumma urakka-id tehtava-b-id hoitokausi)
           
-          ;; 2. Lisätään testimuutos
-          muutos-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
-                                VALUES (%s, '2025-06-15', 'Testi: Yksi muutos kahdelle tehtävälle', 
-                                        (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
-                               urakka-id))
-          ;; Tehtävä A saa version 1, Tehtävä B saa version 2
+          ;; Lisää testimuutos kahdelle tehtävälle eri versioilla
           ;; Tämä testaa että VIEW:n versio-suodatus on tehtäväkohtainen
-          _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                        VALUES (%s, %s, %s, 75, 1)" muutos-id tehtava-a-id hoitokausi))
-          _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                        VALUES (%s, %s, %s, 50, 2)" muutos-id tehtava-b-id hoitokausi))
+          muutos-id (luo-muutos-usealle-tehtavalle!
+                      urakka-id "2025-06-15" hoitokausi
+                      "Testi: Yksi muutos kahdelle tehtävälle"
+                      [{:tehtava-id tehtava-a-id :maaramuutos 75 :versio 1}
+                       {:tehtava-id tehtava-b-id :maaramuutos 50 :versio 2}])
           
           ;; 3. Hae tilanne muutoksen jälkeen
           muutokset-kannassa (q-map (format "SELECT tehtava, maaramuutos FROM mhu_muutos_tehtava_ja_maaraluettelo 
@@ -521,7 +548,7 @@
   (testing "Hoitokausi ylittää kalenterivuoden rajan - muutokset näkyvät oikein"
     (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
           hoitokausi 2023 ;; Hoitokausi 2023 = 1.10.2023 - 30.9.2024
-          tehtava-id 24628 ;; AB-paikkaus levittäjällä
+          tehtava-id (hae-tehtava-id-nimella "AB-paikkaus levittäjällä")
           
           ;; Hae alkutilanne ennen muutoksia
           alku-muutossumma (hae-view-muutossumma urakka-id tehtava-id hoitokausi)]
@@ -574,7 +601,7 @@
   (testing "VIEW:n WHERE-ehto suodattaa pois muutokset joiden voimassa_alkaen on hoitokauden lopun jälkeen"
     (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
           hoitokausi 2030 ;; Hoitokausi 2030 = 1.10.2030 - 30.9.2031
-          tehtava-id 24628 ;; AB-paikkaus levittäjällä
+          tehtava-id (hae-tehtava-id-nimella "AB-paikkaus levittäjällä")
           
           ;; Varmista että hoitokaudelle on tarjousrivi
           _ (varmista-tarjousrivi! urakka-id hoitokausi tehtava-id)
