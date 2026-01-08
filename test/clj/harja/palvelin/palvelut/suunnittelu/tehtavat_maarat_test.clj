@@ -522,3 +522,97 @@
           (let [muutos-yhteensa (- loppu-muutossumma alku-muutossumma)]
             (is (= muutos-yhteensa 1000M)
                 (str "Muutosten summa: " muutos-yhteensa "M (pitäisi olla 1000M sisältäen 2024-03-15 muutoksen)"))))))))
+
+(deftest voimassa-alkaen-where-ehto-suodatus
+  (testing "VIEW:n WHERE-ehto suodattaa pois muutokset joiden voimassa_alkaen on hoitokauden lopun jälkeen"
+    (let [;; Käytetään Iin MHU 2021-2026 urakkaa
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokausi 2030 ;; Hoitokausi 2030 = 1.10.2030 - 30.9.2031 (ei testidataa)
+          tehtava-id 24628 ;; AB-paikkaus levittäjällä
+          
+          ;; Hae alkutilanne ennen muutoksia
+          alkutilanne (first (q-map (format "SELECT COALESCE(muutossumma, 0) as muutossumma 
+                                             FROM urakka_tehtavamaara_yhteenveto 
+                                             WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
+                                            urakka-id tehtava-id hoitokausi)))
+          alku-muutossumma (or (:muutossumma alkutilanne) 0M)]
+      
+      ;; Lisätään 3 muutosta: kaksi hoitokauden sisällä ja yksi sen jälkeen
+      (let [;; Muutos 1: Hoitokauden sisällä, alussa (PITÄÄ NÄKYÄ)
+            muutos1-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
+                                   VALUES (%s, '2024-11-15', 'Hoitokauden sisällä - alussa', 
+                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
+                                  urakka-id))
+            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
+                          VALUES (%s, %s, %s, 111, 1)" muutos1-id tehtava-id hoitokausi))
+            
+            ;; Muutos 2: Hoitokauden sisällä, lopussa mutta ennen 30.9. (PITÄÄ NÄKYÄ)
+            muutos2-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
+                                   VALUES (%s, '2025-09-29', 'Hoitokauden sisällä - lopussa', 
+                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
+                                  urakka-id))
+            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
+                          VALUES (%s, %s, %s, 222, 1)" muutos2-id tehtava-id hoitokausi))
+            
+            ;; Muutos 3: Hoitokauden JÄ LKEEN (EI SAA NÄKYÄ) 
+            ;; Tämä simuloi tilannetta jossa käyttäjä vaihtaa muutoksen voimassa_alkaen-päivää
+            ;; myöhemmäksi, mutta child-taulussa on vielä vanha hoitokauden_alkuvuosi
+            muutos3-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
+                                   VALUES (%s, '2025-10-15', 'Hoitokauden JÄLKEEN', 
+                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
+                                  urakka-id))
+            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
+                          VALUES (%s, %s, %s, 999, 1)" muutos3-id tehtava-id hoitokausi))
+            
+            ;; Hae tilanne muutosten jälkeen VIEW:stä
+            lopputilanne (first (q-map (format "SELECT COALESCE(muutossumma, 0) as muutossumma 
+                                                FROM urakka_tehtavamaara_yhteenveto 
+                                                WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
+                                               urakka-id tehtava-id hoitokausi)))
+            loppu-muutossumma (or (:muutossumma lopputilanne) 0M)
+            
+            ;; Hae myös suoraan muutostaulusta vertailua varten
+            muutokset-kannassa (q-map (format "SELECT m.id, m.voimassa_alkaen, mmtml.maaramuutos, m.syy,
+                                                      m.voimassa_alkaen <= make_date(mmtml.hoitokauden_alkuvuosi + 1, 9, 30) AS pitaa_nakya
+                                               FROM mhu_muutos m
+                                               JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtml ON m.id = mmtml.muutos
+                                               WHERE m.urakka = %s 
+                                                 AND mmtml.tehtava = %s 
+                                                 AND mmtml.hoitokauden_alkuvuosi = %s
+                                                 AND m.poistettu IS NOT TRUE
+                                                 AND m.id IN (%s, %s, %s)
+                                               ORDER BY m.voimassa_alkaen"
+                                              urakka-id tehtava-id hoitokausi 
+                                              muutos1-id muutos2-id muutos3-id))
+            
+            ;; Odotettu tulos: Vain muutos1 (111M) ja muutos2 (222M) mukana = 333M
+            ;; Muutos3 (999M) EI saa olla mukana koska voimassa_alkaen > hoitokauden loppu
+            odotettu-muutossumma (+ alku-muutossumma 333M)
+            vaara-muutossumma (+ alku-muutossumma 1332M)] ;; Jos WHERE-ehto ei toimi, kaikki 3 muutosta mukana
+        
+        (testing "Tietokannassa on 3 testimuutosta"
+          (is (= 3 (count muutokset-kannassa))
+              (str "Muutostaulussa pitää olla 3 testimuutosta, löytyi: " (count muutokset-kannassa))))
+        
+        (testing "WHERE-ehto laskee oikein mitkä muutokset pitää näkyä"
+          (let [pitaa-nakya (filter :pitaa_nakya muutokset-kannassa)
+                ei-saa-nakya (remove :pitaa_nakya muutokset-kannassa)]
+            (is (= 2 (count pitaa-nakya))
+                (str "2 muutosta pitää näkyä (voimassa_alkaen <= 30.9.2025), löytyi: " (count pitaa-nakya)))
+            (is (= 1 (count ei-saa-nakya))
+                (str "1 muutos ei saa näkyä (voimassa_alkaen > 30.9.2025), löytyi: " (count ei-saa-nakya)))))
+        
+        (testing "VIEW aggregoi vain hoitokauden sisäiset muutokset"
+          (is (= loppu-muutossumma odotettu-muutossumma)
+              (str "VIEW:n muutossumma: " loppu-muutossumma 
+                   " (odotettu: " odotettu-muutossumma ", väärä olisi: " vaara-muutossumma ")"
+                   "\nMuutokset kannassa: " muutokset-kannassa)))
+        
+        (testing "Hoitokauden jälkeinen muutos ei vaikuta summaan"
+          (let [muutos-yhteensa (- loppu-muutossumma alku-muutossumma)]
+            (is (= muutos-yhteensa 333M)
+                (str "Muutosten summa: " muutos-yhteensa "M (pitäisi olla 333M = 111 + 222, EI 1332M = 111 + 222 + 999)"))))
+        
+        (testing "WHERE-ehto estää epäjohdonmukaisen datan näkymisen"
+          (is (not= loppu-muutossumma vaara-muutossumma)
+              (str "VIEW:n tulos (" loppu-muutossumma ") ei saa olla sama kuin jos WHERE-ehto puuttuisi (" vaara-muutossumma ")")))))))
