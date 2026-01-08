@@ -43,8 +43,6 @@
     (and (>= (.compareTo pvm alku) 0)
          (<= (.compareTo pvm loppu) 0))))
 
-;; === Testidatan luonti ===
-
 (defn varmista-tarjousrivi!
   "Varmistaa että annetulle urakalle, hoitokaudelle ja tehtävälle on tarjousrivi.
    Palauttaa tarjousrivin id:n."
@@ -475,22 +473,17 @@
           tehtava-a-id 24628 ;; AB-paikkaus levittäjällä
           tehtava-b-id 24629 ;; PAB-paikkaus levittäjällä
           
-          ;; 1. Hae alkutilanne ennen testimuutosta
-          alkutilanne-a (first (q-map (format "SELECT muutossumma FROM urakka_tehtavamaara_yhteenveto 
-                                               WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                              urakka-id tehtava-a-id hoitokausi)))
-          alkutilanne-b (first (q-map (format "SELECT muutossumma FROM urakka_tehtavamaara_yhteenveto 
-                                               WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                              urakka-id tehtava-b-id hoitokausi)))
-          alku-muutossumma-a (or (:muutossumma alkutilanne-a) 0M)
-          alku-muutossumma-b (or (:muutossumma alkutilanne-b) 0M)
+          ;; Hae alkutilanne ennen testimuutosta
+          alku-muutossumma-a (hae-view-muutossumma urakka-id tehtava-a-id hoitokausi)
+          alku-muutossumma-b (hae-view-muutossumma urakka-id tehtava-b-id hoitokausi)
           
           ;; 2. Lisätään testimuutos
           muutos-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
                                 VALUES (%s, '2025-06-15', 'Testi: Yksi muutos kahdelle tehtävälle', 
                                         (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
                                urakka-id))
-          ;; Jos tehtäväfiltteri puuttuu, vain versio 2 otetaan mukaan molemmille
+          ;; Tehtävä A saa version 1, Tehtävä B saa version 2
+          ;; Tämä testaa että VIEW:n versio-suodatus on tehtäväkohtainen
           _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
                         VALUES (%s, %s, %s, 75, 1)" muutos-id tehtava-a-id hoitokausi))
           _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
@@ -499,14 +492,8 @@
           ;; 3. Hae tilanne muutoksen jälkeen
           muutokset-kannassa (q-map (format "SELECT tehtava, maaramuutos FROM mhu_muutos_tehtava_ja_maaraluettelo 
                                              WHERE muutos = %s" muutos-id))
-          view-a (first (q-map (format "SELECT tehtava, muutossumma FROM urakka_tehtavamaara_yhteenveto 
-                                        WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                       urakka-id tehtava-a-id hoitokausi)))
-          view-b (first (q-map (format "SELECT tehtava, muutossumma FROM urakka_tehtavamaara_yhteenveto 
-                                        WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                       urakka-id tehtava-b-id hoitokausi)))
-          muutossumma-a (:muutossumma view-a)
-          muutossumma-b (:muutossumma view-b)
+          muutossumma-a (hae-view-muutossumma urakka-id tehtava-a-id hoitokausi)
+          muutossumma-b (hae-view-muutossumma urakka-id tehtava-b-id hoitokausi)
           odotettu-a (+ alku-muutossumma-a 75M)
           odotettu-b (+ alku-muutossumma-b 50M)]
       
@@ -517,14 +504,12 @@
       (testing "Tehtävä A:n muutossumma kasvoi 75M alkutilasta"
         ;; Jos versio-suodatus on väärin (ilman AND mmtml2.tehtava = mmtml.tehtava),
         ;; VIEW ottaa vain yhden tehtävän mukaan tai summaa kaikki yhteen -> väärä kasvu
-        (is (= muutossumma-a odotettu-a)
-            (str "Tehtävä A: alku=" alku-muutossumma-a " -> loppu=" muutossumma-a " (odotettu: " odotettu-a ")")))
+        (assert-muutossumma= urakka-id tehtava-a-id hoitokausi odotettu-a))
       
       (testing "Tehtävä B:n muutossumma kasvoi 50M alkutilasta"
         ;; Jos versio-suodatus on väärin, tämä tehtävä saattaa jäädä kokonaan ilman muutosta
         ;; TAI saada väärän määrämuutoksen
-        (is (= muutossumma-b odotettu-b)
-            (str "Tehtävä B: alku=" alku-muutossumma-b " -> loppu=" muutossumma-b " (odotettu: " odotettu-b ")")))
+        (assert-muutossumma= urakka-id tehtava-b-id hoitokausi odotettu-b))
       
       (testing "Eri tehtävien määrämuutokset olivat eri suuruiset (75M vs 50M)"
         (let [muutos-a (- muutossumma-a alku-muutossumma-a)
@@ -534,59 +519,30 @@
 
 (deftest voimassa-alkaen-filterointi-vuodenvaihteessa
   (testing "Hoitokausi ylittää kalenterivuoden rajan - muutokset näkyvät oikein"
-    (let [;; Käytetään Iin MHU 2021-2026 urakkaa joka on MHU-tyyppinen
-          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+    (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
           hoitokausi 2023 ;; Hoitokausi 2023 = 1.10.2023 - 30.9.2024
           tehtava-id 24628 ;; AB-paikkaus levittäjällä
           
           ;; Hae alkutilanne ennen muutoksia
-          alkutilanne (first (q-map (format "SELECT COALESCE(muutossumma, 0) as muutossumma 
-                                             FROM urakka_tehtavamaara_yhteenveto 
-                                             WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                            urakka-id tehtava-id hoitokausi)))
-          alku-muutossumma (or (:muutossumma alkutilanne) 0M)]
+          alku-muutossumma (hae-view-muutossumma urakka-id tehtava-id hoitokausi)]
       
-      ;; Lisätään 4 muutosta eri ajankohtiin hoitokauden ympärille
+      ;; Luo 4 muutosta eri ajankohtiin hoitokauden ympärille
       (let [;; Muutos 1: Ennen hoitokautta (ei pitäisi näkyä)
-            muutos1-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
-                                   VALUES (%s, '2023-09-15', 'Ennen hoitokautta', 
-                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
-                                  urakka-id))
-            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                          VALUES (%s, %s, %s, 100, 1)" muutos1-id tehtava-id hoitokausi))
+            muutos1-id (luo-muutos! urakka-id "2023-09-15" tehtava-id hoitokausi 100 "Ennen hoitokautta")
             
             ;; Muutos 2: Hoitokauden alkupuolella (pitää näkyä)
-            muutos2-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
-                                   VALUES (%s, '2023-10-15', 'Hoitokauden alussa', 
-                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
-                                  urakka-id))
-            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                          VALUES (%s, %s, %s, 200, 1)" muutos2-id tehtava-id hoitokausi))
+            muutos2-id (luo-muutos! urakka-id "2023-10-15" tehtava-id hoitokausi 200 "Hoitokauden alussa")
             
             ;; Muutos 3: Hoitokauden puolivälissä (pitää näkyä)
-            muutos3-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
-                                   VALUES (%s, '2023-12-15', 'Hoitokauden keskellä', 
-                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
-                                  urakka-id))
-            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                          VALUES (%s, %s, %s, 300, 1)" muutos3-id tehtava-id hoitokausi))
+            muutos3-id (luo-muutos! urakka-id "2023-12-15" tehtava-id hoitokausi 300 "Hoitokauden keskellä")
             
             ;; Muutos 4: Kalenterivuoden 2024 puolella mutta hoitokauden sisällä (PITÄÄ NÄKYÄ!)
-            muutos4-id (i (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, syy, luoja, luotu, poistettu)
-                                   VALUES (%s, '2024-03-15', 'Kalenterivuoden 2024 puolella', 
-                                           (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW(), false)"
-                                  urakka-id))
-            _ (u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos, versio)
-                          VALUES (%s, %s, %s, 400, 1)" muutos4-id tehtava-id hoitokausi))
+            muutos4-id (luo-muutos! urakka-id "2024-03-15" tehtava-id hoitokausi 400 "Kalenterivuoden 2024 puolella")
             
-            ;; Hae tilanne muutosten jälkeen VIEW:stä
-            lopputilanne (first (q-map (format "SELECT COALESCE(muutossumma, 0) as muutossumma 
-                                                FROM urakka_tehtavamaara_yhteenveto 
-                                                WHERE urakka = %s AND tehtava = %s AND hoitokauden_alkuvuosi = %s"
-                                               urakka-id tehtava-id hoitokausi)))
-            loppu-muutossumma (or (:muutossumma lopputilanne) 0M)
+            ;; Hae tulos VIEW:stä
+            loppu-muutossumma (hae-view-muutossumma urakka-id tehtava-id hoitokausi)
             
-            ;; Hae myös suoraan muutostaulusta vertailua varten
+            ;; Hae muutokset kannasta vertailua varten
             muutokset-kannassa (q-map (format "SELECT m.voimassa_alkaen, mmtml.maaramuutos, m.syy
                                                FROM mhu_muutos m
                                                JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtml ON m.id = mmtml.muutos
@@ -607,10 +563,7 @@
         (testing "VIEW aggregoi kaikki hoitokauden muutokset, myös kalenterivuoden 2024 puolelta"
           ;; Hoitokausi 2023 kattaa 1.10.2023-30.9.2024
           ;; joten maaliskuun 2024 muutos kuuluu hoitokauteen 2023
-          (is (= loppu-muutossumma odotettu-muutossumma)
-              (str "VIEW:n muutossumma: " loppu-muutossumma 
-                   " (odotettu: " odotettu-muutossumma ")"
-                   "\nKaikki muutokset: " muutokset-kannassa)))
+          (assert-muutossumma= urakka-id tehtava-id hoitokausi odotettu-muutossumma muutokset-kannassa))
         
         (testing "Kalenterivuoden 2024 muutos on mukana hoitokaudella 2023"
           (let [muutos-yhteensa (- loppu-muutossumma alku-muutossumma)]
