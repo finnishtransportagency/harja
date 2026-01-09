@@ -1250,10 +1250,10 @@
           ;; Aseta tarjousmäärä
           _ (aseta-urakalle-talvisuolaraja tarjous-maara urakka-id hk-alkuvuosi)
           
-          ;; Luo MHU-muutos
-          muutos-id (ffirst (t/q (format "INSERT INTO mhu_muutos (urakka, luotu, luoja) 
-                                          VALUES (%s, NOW(), %s) 
-                                          RETURNING id" urakka-id (:id t/+kayttaja-jvh+))))
+          ;; Luo MHU-muutos hoitokauden alkupäivällä (1.10.2025)
+          muutos-id (ffirst (t/q (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, luotu, luoja) 
+                                          VALUES (%s, '%d-10-01', NOW(), %s) 
+                                          RETURNING id" urakka-id hk-alkuvuosi (:id t/+kayttaja-jvh+))))
           
           ;; Lisää tehtävä ja määrä muutokseen  
           _ (t/u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo 
