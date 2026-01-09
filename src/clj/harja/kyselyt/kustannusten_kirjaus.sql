@@ -160,3 +160,55 @@ SET
     muut_kustannukset = :muut-kustannukset
 WHERE paikkauskohde = :id
 RETURNING id;
+
+-- name: hae-analytiikalle-tiemerkintakustannukset
+-- Yhdistää kustannukset kolmesta eri lähteestä analytiikkaa varten
+WITH vuosi_cte AS (
+    SELECT :vuosi::INTEGER AS vuosi
+)
+SELECT
+    'korjauskustannus' AS "kustannustyyppi",
+    vuosi_cte.vuosi AS "ajankohta",
+    COALESCE(SUM(ukk.kustannus), 0) AS "kustannus",
+    null AS "linjamerkinnat",
+    null AS "pienmerkinnat",
+    null AS "jyrsinnat",
+    null AS "muut-kustannukset"
+FROM vuosi_cte
+LEFT JOIN tiemerkinta_korjauskustannus ukk ON ukk.kustannusvuosi = vuosi_cte.vuosi
+GROUP BY vuosi_cte.vuosi
+
+UNION ALL
+
+SELECT
+    'paikkauskohde' AS "kustannustyyppi",
+    vuosi_cte.vuosi AS "ajankohta",
+    null AS "kustannus",
+    COALESCE(SUM(tpk.linjamerkinnat), 0) AS "linjamerkinnat",
+    COALESCE(SUM(tpk.pienmerkinnat), 0) AS "pienmerkinnat",
+    COALESCE(SUM(tpk.jyrsinnat), 0) AS "jyrsinnat",
+    COALESCE(SUM(tpk.muut_kustannukset), 0) AS "muut-kustannukset"
+FROM vuosi_cte
+LEFT JOIN paikkauskohde pk ON EXTRACT(YEAR FROM pk.alkupvm) = vuosi_cte.vuosi
+    AND pk."tiemerkinnan-tila" = 'valmis'
+    AND pk.poistettu = false
+LEFT JOIN tiemerkinta_paikkauskohteen_kustannus tpk ON pk.id = tpk.paikkauskohde
+GROUP BY vuosi_cte.vuosi
+
+UNION ALL
+
+SELECT
+    'yllapitokohde' AS "kustannustyyppi",
+    vuosi_cte.vuosi AS "ajankohta",
+    null AS "kustannus",
+    COALESCE(SUM(tyk.linjamerkinnat), 0) AS "linjamerkinnat",
+    COALESCE(SUM(tyk.pienmerkinnat), 0) AS "pienmerkinnat",
+    COALESCE(SUM(tyk.jyrsinnat), 0) AS "jyrsinnat",
+    COALESCE(SUM(tyk.muut_kustannukset), 0) AS "muut-kustannukset"
+FROM vuosi_cte
+LEFT JOIN yllapitokohde ypk ON ypk.vuodet && ARRAY[vuosi_cte.vuosi]::INTEGER[]
+    AND ypk.poistettu = false
+LEFT JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
+GROUP BY vuosi_cte.vuosi
+
+ORDER BY "ajankohta", "kustannustyyppi";

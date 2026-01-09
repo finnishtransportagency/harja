@@ -35,6 +35,7 @@
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
             [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
+            [harja.kyselyt.kustannusten-kirjaus :as kustannusten-kirjaus-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -105,6 +106,22 @@
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi virheet/+puutteelliset-parametrit+
            :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)})))))
+
+(defn- tarkista-vuosihaun-parametrit [parametrit]
+  (try
+    (s/valid? ::alkuvuosi (:vuosi parametrit))
+    (parametrivalidointi/tarkista-parametrit
+      parametrit
+      {:vuosi "Vuosi puuttuu"})
+    (catch Exception e
+      (log/error "Virhe Analytiikka-api kutsussa:" e)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                          :viesti "Poikkeus annetussa parametrissa. Anna vuosi muodossa: yyyy"}]})))
+  (when (not (s/valid? ::alkuvuosi (:vuosi parametrit)))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+puutteelliset-parametrit+
+       :viesti (format "Vuosi väärässä muodossa: %s Anna muodossa: yyyy" (:vuosi parametrit))})))
 
 (def db-tehtavat->avaimet
   {:f1 :id
@@ -832,6 +849,19 @@
 
     {:kulut kulut}))
 
+(defn hae-tiemerkkinnan-kustannukset [db {:keys [vuosi] :as parametrit}]
+  (log/info "Analytiikka API tiemerkinnän kustannukset :: parametrit" (pr-str parametrit))
+  (tarkista-vuosihaun-parametrit parametrit)
+  (let [kustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkintakustannukset db
+                       {:vuosi (konversio/konvertoi->int vuosi)})
+        kustannukset (reduce (fn [acc kustannus]
+                               (let [tyyppi (keyword (:kustannustyyppi kustannus))
+                                     ilman-tyyppia (dissoc kustannus :kustannustyyppi)]
+                                 (assoc acc tyyppi ilman-tyyppia)))
+                       {}
+                       kustannukset)]
+    {:tiemerkinnan-kustannukset kustannukset}))
+
 (defn hae-paikkauskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paikkauskohteet :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit false)
@@ -1265,6 +1295,15 @@
           :analytiikka "analytiikka")))
 
     (julkaise-reitti
+      http :analytiikka-hae-tiemerkinnan-kustannukset
+      (GET "/api/analytiikka/tiemerkinnan-kustannukset/:vuosi" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-tiemerkinnan-kustannukset parametrit
+          json-skeemat/+analytiikka-tiemerkinnan-kustannukset-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-tiemerkkinnan-kustannukset db parametrit))
+          :analytiikka "analytiikka")))
+
+    (julkaise-reitti
       http :analytiikka-hae-paikkauskohteet
       (GET "/api/analytiikka/paikkauskohteet/:alkuaika/:loppuaika" parametrit
         (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkauskohteet parametrit
@@ -1324,6 +1363,7 @@
       :analytiikka-hae-paallystyskohteiden-aikataulut
       :analytiikka-hae-paallystysilmoitukset
       :analytiikka-hae-hoidon-paikkauskustannukset
+      :analytiikka-hae-tiemerkinnan-kustannukset
       :analytiikka-hae-paikkauskohteet
       :analytiikka-hae-paikkaukset
       :analytiikka-toteutuneet-kustannukset

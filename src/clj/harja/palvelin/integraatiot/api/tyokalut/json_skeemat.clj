@@ -44,6 +44,7 @@
 (def +analytiikka-paallystysilmoitusten-haku-vastaus+ "api/schemas/analytiikka-paallystysilmoitusten-haku-response.schema.json")
 
 (def +analytiikka-hoidon-paikkaukset-haku-vastaus+ "api/schemas/analytiikka-hoitourakoiden-paikkausten-haku-response.schema.json")
+(def +analytiikka-tiemerkinnan-kustannukset-haku-vastaus+ "api/schemas/analytiikka-tiemerkinnan-kustannukset-haku-response.schema.json")
 (def +analytiikka-paikkauskohteiden-haku-vastaus+ "api/schemas/analytiikka-paikkauskohteiden-haku-response.schema.json")
 (def +analytiikka-paikkausten-haku-vastaus+ "api/schemas/analytiikka-paikkausten-haku-response.schema.json")
 

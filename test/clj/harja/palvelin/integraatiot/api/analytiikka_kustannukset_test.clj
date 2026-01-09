@@ -555,3 +555,30 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count rahavaraukset-kannasta) (count (:rahavaraukset encoodattu-body))))))
+
+(deftest hae-tiemerkinnan-kustannukset-onnistuu-test
+  (let [vuosi 2023
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tiemerkinnan-kustannukset/" vuosi)]
+                  kayttaja-analytiikka
+                  portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+
+    ;; Testaa HTTP-vastauksen status
+    (is (= 200 (:status vastaus)) "Rajapinnan tulee palauttaa HTTP 200")
+
+    ;; Testaa vastauksen perusrakenne
+    (is (contains? encoodattu-body :tiemerkinnan-kustannukset) "Vastauksessa tulee olla :tiemerkinnan-kustannukset avain")
+
+    ;; Testaa että jokaisessa kustannuksessa on tarvittavat avaimet
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :ajankohta]))) "Ajankohta löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :kustannus]))) "Kustannus löytyy")
+    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :linjamerkinnat])) "Linjamerkinnät on nil")
+
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :ajankohta]))) "Ajankohta löytyy")
+    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :kustannus])) "Kustannus nil")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :linjamerkinnat]))) "Linjamerkinnät löytyy")
+
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :ajankohta]))) "Ajankohta löytyy")
+    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :kustannus])) "Kustannus nil")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :linjamerkinnat]))) "Linjamerkinnät löytyy")))
+
