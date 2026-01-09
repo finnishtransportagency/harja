@@ -1,0 +1,28 @@
+{
+  "tiemerkinnan-kustannukset": {
+    "korjauskustannus": {
+      "ajankohta": 2023,
+      "kustannus": 125000.50,
+      "linjamerkinnat": null,
+      "pienmerkinnat": null,
+      "jyrsinnat": null,
+      "muut-kustannukset": null
+    },
+    "paikkauskohde": {
+      "ajankohta": 2023,
+      "kustannus": null,
+      "linjamerkinnat": 45000.00,
+      "pienmerkinnat": 22500.50,
+      "jyrsinnat": 12000.25,
+      "muut-kustannukset": 4000.00
+    },
+    "yllapitokohde": {
+      "ajankohta": 2023,
+      "kustannus": null,
+      "linjamerkinnat": 85000.00,
+      "pienmerkinnat": 40500.00,
+      "jyrsinnat": 17800.75,
+      "muut-kustannukset": 7000.00
+    }
+  }
+}

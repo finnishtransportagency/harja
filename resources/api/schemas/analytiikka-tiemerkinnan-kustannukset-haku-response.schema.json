@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tiemerkinnan-kustannukset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "korjauskustannus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ajankohta": {
+              "type": "integer",
+              "description": "Kustannusvuosi"
+            },
+            "kustannus": {
+              "type": "number",
+              "description": "Korjauskustannusten kokonaissumma euroina. Tämä on korjauskustannus-taulun kustannus-kenttä, ei laskettu summa."
+            },
+            "linjamerkinnat": {
+              "type": "null",
+              "description": "Korjauskustannuksissa ei ole linjamerkintöjä"
+            },
+            "pienmerkinnat": {
+              "type": "null",
+              "description": "Korjauskustannuksissa ei ole pienmerkintöjä"
+            },
+            "jyrsinnat": {
+              "type": "null",
+              "description": "Korjauskustannuksissa ei ole jyrsintöjä"
+            },
+            "muut-kustannukset": {
+              "type": "null",
+              "description": "Korjauskustannuksissa ei ole muita kustannuksia"
+            }
+          },
+          "required": [
+            "ajankohta",
+            "kustannus",
+            "linjamerkinnat",
+            "pienmerkinnat",
+            "jyrsinnat",
+            "muut-kustannukset"
+          ]
+        },
+        "paikkauskohde": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ajankohta": {
+              "type": "integer",
+              "description": "Kustannusvuosi"
+            },
+            "kustannus": {
+              "type": "null",
+              "description": "Paikkauskohteilla ei ole erillistä kustannus-kenttää"
+            },
+            "linjamerkinnat": {
+              "type": "number",
+              "description": "Linjamerkintöjen kustannukset euroina. Summattu kaikista vuoden paikkauskohteista."
+            },
+            "pienmerkinnat": {
+              "type": "number",
+              "description": "Pienmerkintöjen kustannukset euroina. Summattu kaikista vuoden paikkauskohteista."
+            },
+            "jyrsinnat": {
+              "type": "number",
+              "description": "Jyrsintöjen kustannukset euroina. Summattu kaikista vuoden paikkauskohteista."
+            },
+            "muut-kustannukset": {
+              "type": "number",
+              "description": "Muut kustannukset euroina. Summattu kaikista vuoden paikkauskohteista."
+            }
+          },
+          "required": [
+            "ajankohta",
+            "kustannus",
+            "linjamerkinnat",
+            "pienmerkinnat",
+            "jyrsinnat",
+            "muut-kustannukset"
+          ]
+        },
+        "yllapitokohde": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ajankohta": {
+              "type": "integer",
+              "description": "Kustannusvuosi"
+            },
+            "kustannus": {
+              "type": "null",
+              "description": "Ylläpitokohteilla ei ole erillistä kustannus-kenttää"
+            },
+            "linjamerkinnat": {
+              "type": "number",
+              "description": "Linjamerkintöjen kustannukset euroina. Summattu kaikista vuoden ylläpitokohteista."
+            },
+            "pienmerkinnat": {
+              "type": "number",
+              "description": "Pienmerkintöjen kustannukset euroina. Summattu kaikista vuoden ylläpitokohteista."
+            },
+            "jyrsinnat": {
+              "type": "number",
+              "description": "Jyrsintöjen kustannukset euroina. Summattu kaikista vuoden ylläpitokohteista."
+            },
+            "muut-kustannukset": {
+              "type": "number",
+              "description": "Muut kustannukset euroina. Summattu kaikista vuoden ylläpitokohteista."
+            }
+          },
+          "required": [
+            "ajankohta",
+            "kustannus",
+            "linjamerkinnat",
+            "pienmerkinnat",
+            "jyrsinnat",
+            "muut-kustannukset"
+          ]
+        }
+      },
+      "required": [
+        "korjauskustannus",
+        "paikkauskohde",
+        "yllapitokohde"
+      ]
+    }
+  },
+  "required": [
+    "tiemerkinnan-kustannukset"
+  ]
+}
