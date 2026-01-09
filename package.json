@@ -6,7 +6,7 @@
     "node": "^22.0.0"
   },
   "devDependencies": {
-    "cypress": "10.2.0",
+    "cypress": "15.8.2",
     "less": "4.2.0",
     "nodemon": "^3.1.11"
   },
