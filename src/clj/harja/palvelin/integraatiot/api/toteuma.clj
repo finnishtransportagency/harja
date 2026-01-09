@@ -16,6 +16,14 @@
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn muunna-toteuma-lahde
+  "Muutetaan koneellinen/kasin enum toteuman lähteeksi tietokantaan"
+  [lahde]
+  (cond
+    (= lahde "koneellinen") "harja-api"
+    (= lahde "kasin") "harja-api-ui"
+    :else "harja-api"))
+
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
   (keep identity
     (reduce
@@ -56,7 +64,8 @@
                       :luoja (:id kirjaaja)
                       :tyokonetyyppi (:tyokonetyyppi tyokone)
                       :tyokonetunniste (:id tyokone)
-                      :tyokoneen-lisatieto (:tunnus tyokone)})
+                      :tyokoneen-lisatieto (:tunnus tyokone)
+                      :lahde (muunna-toteuma-lahde (:lahde toteuma))})
         toteuman-id (if paivitetty
                       (:id paivitetty)
                       (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
@@ -120,7 +129,7 @@
          :alkuetaisyys nil
          :loppuosa nil
          :loppuetaisyys nil
-         :lahde "harja-api"
+         :lahde (muunna-toteuma-lahde (:lahde toteuma))
          :tyokonetyyppi (:tyokonetyyppi tyokone)
          :tyokonetunniste (:id tyokone)
          :tyokoneen-lisatieto (:tunnus tyokone)})

@@ -17,6 +17,7 @@
       "tunniste": {
         "id": __ID__
       },
+      "lahde": __LAHDE__,
       "sopimusId": __SOPIMUS_ID__,
       "suorittaja": {
         "nimi": "__SUORITTAJA_NIMI__",

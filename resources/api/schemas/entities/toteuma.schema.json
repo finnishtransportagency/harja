@@ -16,6 +16,15 @@
       "type": ["string", "integer"],
       "required": false
     },
+    "lahde": {
+      "id": "urn:harja/toteumat/0/toteuma/lahde",
+      "type": "string",
+      "required": false,
+      "enum": [
+        "koneellinen",
+        "kasin"
+      ]
+    },
     "sopimusId": {
       "id": "urn:harja/toteumat/0/toteuma/sopimusId",
       "type": "integer"
