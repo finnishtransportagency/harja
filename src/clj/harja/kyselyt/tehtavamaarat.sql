@@ -280,6 +280,10 @@ WHERE tehtavaryhma IS NOT NULL
 -- name: hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
+--
+-- HUOM: Siirtymävaihe 2025 urakoille:
+-- - Vanhat urakat (alkupvm < 2025-10-01): Tarkistetaan sopimuksen_tehtavamaarat_tallennettu
+-- - Uudet urakat (alkupvm >= 2025-10-01): Tarkistetaan että VIEW:n tarjous_maara on syötetty
 SELECT
     mk.id as materiaali_id,
     mk.nimi as materiaali,
@@ -294,16 +298,26 @@ SELECT
     v.tehtava AS "tehtava-id",
     v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
     SUM(v.laskettu_maara) as maara,
-    MAX(ut.muokattu) as muokattu,
-    MAX(ut.luotu) as luotu
+    MAX(v.muokattu) as muokattu,
+    MAX(v.luotu) as luotu
 FROM urakka_tehtavamaara_yhteenveto v
          JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
          JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
-         JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
-         LEFT JOIN urakka_tehtavamaara ut ON v.id = ut.id
 WHERE u.id = :urakka
+  -- Siirtymävaiheen tarkistus: vanhalle mallille tai uudelle mallille
+  AND (
+      -- Vanhat urakat: tarkista sopimuksen_tehtavamaarat_tallennettu
+      (u.alkupvm < '2025-10-01'::DATE 
+       AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
+                   WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE))
+      OR
+      -- Uudet urakat: tarkista että tarjous_maara on syötetty
+      (u.alkupvm >= '2025-10-01'::DATE 
+       AND v.tarjous_maara IS NOT NULL 
+       AND v.tarjous_maara > 0)
+  )
 GROUP BY v.hoitokauden_alkuvuosi, mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.id, v.tehtava;
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
@@ -326,6 +340,10 @@ group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi";
 -- name: hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
+--
+-- HUOM: Siirtymävaihe 2025 urakoille:
+-- - Vanhat urakat (alkupvm < 2025-10-01): Tarkistetaan sopimuksen_tehtavamaarat_tallennettu
+-- - Uudet urakat (alkupvm >= 2025-10-01): Tarkistetaan että VIEW:n tarjous_maara on syötetty
 SELECT
     SUM(v.laskettu_maara) as maara,
     tk.nimi as tehtava,
@@ -333,12 +351,23 @@ SELECT
     v.id as "mhu-tehtavamaara-id",
     NULL AS "hoito-tehtavamaara-id",
     v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
-    MAX(ut.muokattu) as muokattu,
-    MAX(ut.luotu) as luotu
+    MAX(v.muokattu) as muokattu,
+    MAX(v.luotu) as luotu
 FROM urakka_tehtavamaara_yhteenveto v
+         JOIN urakka u ON v.urakka = u.id
          JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
-         JOIN sopimuksen_tehtavamaarat_tallennettu stt on v.urakka = stt.urakka AND stt.tallennettu IS TRUE
-         LEFT JOIN urakka_tehtavamaara ut ON v.id = ut.id
 WHERE v.urakka = :urakka-id
   AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
+  -- Siirtymävaiheen tarkistus: vanhalle mallille tai uudelle mallille
+  AND (
+      -- Vanhat urakat: tarkista sopimuksen_tehtavamaarat_tallennettu
+      (u.alkupvm < '2025-10-01'::DATE 
+       AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
+                   WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE))
+      OR
+      -- Uudet urakat: tarkista että tarjous_maara on syötetty
+      (u.alkupvm >= '2025-10-01'::DATE 
+       AND v.tarjous_maara IS NOT NULL 
+       AND v.tarjous_maara > 0)
+  )
 GROUP BY v.hoitokauden_alkuvuosi, tk.id, v.id;
