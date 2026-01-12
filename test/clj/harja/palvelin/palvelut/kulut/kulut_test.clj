@@ -87,14 +87,14 @@
                    :summa 666
                    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
                    :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                   :tehtava nil
+                   :tehtava (hae-tehtavan-id-nimella "Runkopuiden poisto")
                    :tavoitehintainen :true
                    :tyyppi "hankintakulu"}
                   {:kohdistus-id nil
                    :rivi 2
                    :summa 3333.33
                    :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
-                   :tehtavaryhma (hae-tehtavaryhman-id "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito")
+                   :tehtavaryhma (hae-tehtavaryhman-id "K - Kuivatusjärjestelmät")
                    :tehtava nil
                    :tavoitehintainen :true
                    :tyyppi "hankintakulu"}]
@@ -302,40 +302,34 @@
           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
            :kulu-kohdistuksineen uusi-kulu})
         tallennettu-id (:id tallennettu-kulu)
-        paivitetty-kulu
-        (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :kulu-kohdistuksineen (assoc tallennettu-kulu :lisatieto "lisätieto" :id tallennettu-id)})
+        paivitetty-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                           :kulu-kohdistuksineen (assoc tallennettu-kulu :lisatieto "lisätieto" :id tallennettu-id)})
         kohdistus-idt (map :kohdistus-id (:kohdistukset paivitetty-kulu))
-        paivitetty-kohdistus
-        (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :kulu-kohdistuksineen (-> (assoc kulun-paivitys :id tallennettu-id)
-                                   (assoc-in [:kulut 0 :kohdistus-id] (nth kohdistus-idt 0))
-                                   (assoc-in [:kulut 1 :kohdistus-id] (nth kohdistus-idt 1)))})
-        lisatty-kohdistus
-        (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :kulu-kohdistuksineen (assoc paivitetty-kohdistus
-                                   :id tallennettu-id
-                                   :kohdistukset (merge (:kohdistukset paivitetty-kohdistus)
-                                                   uusi-kohdistus))})
-        poistettu-kohdistus
-        (kutsu-http-palvelua :poista-kohdistus (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :id tallennettu-id
-           :kohdistuksen-id (-> lisatty-kohdistus
-                              :kohdistukset
-                              first
-                              :kohdistus-id)})
-        poistettu-kulu
-        (kutsu-http-palvelua :poista-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :id tallennettu-id})
-        poistetun-kulun-haku
-        (kutsu-http-palvelua :hae-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :id tallennettu-id})
+        paivitetty-kohdistus (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                                :kulu-kohdistuksineen (-> (assoc kulun-paivitys :id tallennettu-id)
+                                                        (assoc-in [:kulut 0 :kohdistus-id] (nth kohdistus-idt 0))
+                                                        (assoc-in [:kulut 1 :kohdistus-id] (nth kohdistus-idt 1)))})
+        lisatty-kohdistus (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                            {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                             :kulu-kohdistuksineen (assoc paivitetty-kohdistus
+                                                     :id tallennettu-id
+                                                     :kohdistukset (merge (:kohdistukset paivitetty-kohdistus)
+                                                                     uusi-kohdistus))})
+        poistettu-kohdistus (kutsu-http-palvelua :poista-kohdistus (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                               :id tallennettu-id
+                               :kohdistuksen-id (-> lisatty-kohdistus
+                                                  :kohdistukset
+                                                  first
+                                                  :kohdistus-id)})
+        poistettu-kulu (kutsu-http-palvelua :poista-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                         {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                          :id tallennettu-id})
+        poistetun-kulun-haku (kutsu-http-palvelua :hae-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                                :id tallennettu-id})
         tehtava (-> tallennettu-kulu :kohdistukset first :tehtava)
         tehtava-map-muodossa (-> tallennettu-kulu :kohdistukset second :tehtava)]
 
@@ -527,6 +521,7 @@
    :laskun-numero nil, :maksuera-alias nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
    :tehtava {:nimi nil, :id nil},
+   :muu-tehtava-kaytossa false
    :summa 400.77M, :kohdistus-id 12,
    :muutos-voimassa-alkaen nil, :muutos-nimi nil, :muutos-id nil,
    :rahavaraus nil

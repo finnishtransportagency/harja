@@ -228,13 +228,11 @@
                         (when-not aluekohtaisissa?
                           [:div.flex-row.tasaa-alas
                            (when-not haku-kaynnissa?
-                             [:h2 (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
+                             [:h2 {:style {:white-space "nowrap"}} (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
                            (when (and
                                    (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
                                    (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-                             [:div
-                              (when loytyi-kohteita?
-                                {:style {:text-align "end"}})
+                             [:div.flex-row {:style {:justify-content "flex-end"}}
                               (when loytyi-kohteita?
                                 [:span.inline-block
                                  [:form {:style {:margin-left "auto"}
@@ -259,7 +257,8 @@
                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
                               [yleiset/tiedoston-lataus-linkki
                                "Lataa Excel-pohja"
-                               "/excel/harja_paikkauskohteet_pohja.xlsx"]
+                               "/excel/harja_paikkauskohteet_pohja.xlsx"
+                               {:luokat ["padding-top-8"]}]
                               [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
                                {:paksu? true
                                 :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])
@@ -456,4 +455,3 @@
   (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
   [wrap-paikkauskohteet e! app-state])
-

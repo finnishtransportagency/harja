@@ -16,7 +16,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava (hae-tehtavan-id-nimella "Runkopuiden poisto")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}
                     {:kohdistus-id nil
@@ -24,7 +24,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava (hae-tehtavan-id-nimella "Runkopuiden poisto")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}]
      :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))

@@ -46,10 +46,14 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (let [tehtavat (into []
+  (let [;; Hae urakan alkuvuosi
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        tehtavat (into []
                    (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle db
                      {:urakka-id urakka-id
-                      :tehtavaryhma-id tehtavaryhma-id}))]
+                      :tehtavaryhma-id tehtavaryhma-id
+                      :urakan-alkuvuosi alkuvuosi}))]
     tehtavat))
 
 (defn- paivita-tarvittaessa [idt polku arvo]
