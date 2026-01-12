@@ -274,34 +274,20 @@ RETURNING *;
 select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa::int, :let::int);
 
 -- name: hae-talvisuolan-kokonaiskayttoraja
--- Kokonaiskäyttöraja haetaan VIEW:stä joka laskee tarjous + muutokset.
--- 
--- HUOM: Siirtymävaihe 2025 urakoille:
--- - Vanhat urakat (alkupvm < 2025-10-01): Tarkistetaan sopimuksen_tehtavamaarat_tallennettu
--- - Uudet urakat (alkupvm >= 2025-10-01): Tarkistetaan että VIEW:n tarjous_maara on syötetty
+-- Kokonaiskäyttöraja on voimassa vain, jos sopimuksen tehtävämäärät on tallennettu
 SELECT v.laskettu_maara as talvisuolan_kayttoraja
   FROM urakka_tehtavamaara_yhteenveto v
-       JOIN urakka u ON v.urakka = u.id
  WHERE v.tehtava = (SELECT id
                       FROM tehtava
                      WHERE suunnitteluyksikko = 'kuivatonnia'
                        AND suoritettavatehtava = 'suolaus')
    AND v.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
    AND v.urakka = :urakka-id
-   -- Siirtymävaiheen tarkistus: vanhalle mallille tai uudelle mallille
-   AND (
-       -- Vanhat urakat: tarkista sopimuksen_tehtavamaarat_tallennettu
-       (u.alkupvm < '2025-10-01'::DATE 
-        AND true = (SELECT tallennettu
-                      FROM sopimuksen_tehtavamaarat_tallennettu
-                     WHERE urakka = :urakka-id
-                     LIMIT 1))
-       OR
-       -- Uudet urakat: tarkista että tarjous_maara on syötetty
-       (u.alkupvm >= '2025-10-01'::DATE 
-        AND v.tarjous_maara IS NOT NULL 
-        AND v.tarjous_maara > 0)
-   );
+   AND true = (SELECT tallennettu
+                 FROM sopimuksen_tehtavamaarat_tallennettu
+                WHERE urakka = :urakka-id
+                LIMIT 1);
+
 
 -- name: hae-talvisuolan-sanktiot
 SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",
