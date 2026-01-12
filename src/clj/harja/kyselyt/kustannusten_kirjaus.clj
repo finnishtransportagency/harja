@@ -10,4 +10,6 @@
   hae-urakan-paikkauskohteiden-kustannukset hae-yllapitokustannus
   lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus! paivita-tiemerkinta-yllapitokohde-kustannuskirjaus!
   hae-paikkauskustannus lisaa-tiemerkinta-paikkauskohde-kustannuskirjaus!
-  paivita-tiemerkinta-paikkauskohde-kustannuskirjaus! hae-analytiikalle-tiemerkintakustannukset)
+  paivita-tiemerkinta-paikkauskohde-kustannuskirjaus!
+  hae-analytiikalle-tiemerkinta-korjauskustannukset hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset
+  hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset)

@@ -557,8 +557,16 @@
     (is (= (count rahavaraukset-kannasta) (count (:rahavaraukset encoodattu-body))))))
 
 (deftest hae-tiemerkinnan-kustannukset-onnistuu-test
-  (let [vuosi 2023
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tiemerkinnan-kustannukset/" vuosi)]
+  (let [;; Vuodelle 2026 ei löydy paikkauskohteen tiemerkintäkustannuksia, joten luodaan ne
+        ;; Hae ensin paikkauskohde, jolla niitä voidaan lisätä
+        paikkauskohde (first (q-map (str "SELECT * FROM paikkauskohde where alkupvm > '2026-01-01' ORDER BY id DESC LIMIT 1")))
+        ;; Lisätään löydetylle paikkauskohteelle tiemerkintäkustannuksia
+        _ (u (format "INSERT INTO tiemerkinta_paikkauskohteen_kustannus (paikkauskohde, luoja, luotu, linjamerkinnat, pienmerkinnat, jyrsinnat, muut_kustannukset)
+        VALUES (%s, %s, NOW(), 1, 2, 3, 4)" (:id paikkauskohde) (:id kayttaja-analytiikka)))
+
+        alkuaika "2026-01-01T00:00:00+03"
+        loppuaika "2026-12-31T00:00:00+03"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/tiemerkinnan-kustannukset/" alkuaika "/" loppuaika)]
                   kayttaja-analytiikka
                   portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -570,15 +578,15 @@
     (is (contains? encoodattu-body :tiemerkinnan-kustannukset) "Vastauksessa tulee olla :tiemerkinnan-kustannukset avain")
 
     ;; Testaa että jokaisessa kustannuksessa on tarvittavat avaimet
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :ajankohta]))) "Ajankohta löytyy")
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :kustannus]))) "Kustannus löytyy")
-    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannus :linjamerkinnat])) "Linjamerkinnät on nil")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannukset 0 :sopimusvuosi]))) "Ajankohta löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannukset 0 :kustannus]))) "Kustannus löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :korjauskustannukset 0 :pk1%]))) "pk1% löytyy")
 
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :ajankohta]))) "Ajankohta löytyy")
-    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :kustannus])) "Kustannus nil")
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohde :linjamerkinnat]))) "Linjamerkinnät löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohdekustannukset 0 :sopimusvuosi]))) "Sopimusvuosi löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohdekustannukset 0 :nimi]))) "Nimi löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohdekustannukset 0 :linjamerkinnat]))) "Linjamerkinnät löytyy")
 
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :ajankohta]))) "Ajankohta löytyy")
-    (is (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :kustannus])) "Kustannus nil")
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :yllapitokohde :linjamerkinnat]))) "Linjamerkinnät löytyy")))
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohdekustannukset 0 :sopimusvuosi]))) "Ajankohta löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohdekustannukset 0 :nimi]))) "Nimi löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset :paikkauskohdekustannukset 0 :linjamerkinnat]))) "Linjamerkinnät löytyy")))
 

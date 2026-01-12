@@ -849,18 +849,32 @@
 
     {:kulut kulut}))
 
-(defn hae-tiemerkkinnan-kustannukset [db {:keys [vuosi] :as parametrit}]
+(defn hae-tiemerkkinnan-kustannukset [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API tiemerkinnän kustannukset :: parametrit" (pr-str parametrit))
-  (tarkista-vuosihaun-parametrit parametrit)
-  (let [kustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkintakustannukset db
-                       {:vuosi (konversio/konvertoi->int vuosi)})
-        kustannukset (reduce (fn [acc kustannus]
-                               (let [tyyppi (keyword (:kustannustyyppi kustannus))
-                                     ilman-tyyppia (dissoc kustannus :kustannustyyppi)]
-                                 (assoc acc tyyppi ilman-tyyppia)))
-                       {}
-                       kustannukset)]
-    {:tiemerkinnan-kustannukset kustannukset}))
+  (tarkista-haun-parametrit parametrit false)
+  (let [korjauskustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-korjauskustannukset db
+                              {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                               :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        yllapitokohdekustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset db
+                                    {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                     :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        yllapitokohdekustannukset (mapv #(update % :sopimusvuosi (fn [sopimusvuosi]
+                                                            ;; Käytännössä tuotannossa on aina yksi vuosi sopimusvuosi-sarakkeessa. Jos sattuisi olemaan kaksi,
+                                                            ;; otetaan suurempi arvo, koska se on aina kuluva vuosi, koska päällystyskohteita ei voi hakea tulevalle vuodelle YHA:sta
+                                                             (if sopimusvuosi
+                                                               (apply max (konversio/pgarray->vector sopimusvuosi))
+                                                               nil))) yllapitokohdekustannukset)
+        ;; Muutetaan kenttien nimet analytiikan odottamaan muotoon
+        yllapitokohdekustannukset (map #(konversio/alaviiva->rakenne %) yllapitokohdekustannukset)
+
+        paikkauskohdekustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset db
+                                    {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                                     :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+        ;; Muutetaan kenttien nimet analytiikan odottamaan muotoon
+        paikkauskohdekustannukset (map #(konversio/alaviiva->rakenne %) paikkauskohdekustannukset)]
+    {:tiemerkinnan-kustannukset {:korjauskustannukset korjauskustannukset
+                                 :yllapitokohdekustannukset yllapitokohdekustannukset
+                                 :paikkauskohdekustannukset paikkauskohdekustannukset}}))
 
 (defn hae-paikkauskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paikkauskohteet :: parametrit" (pr-str parametrit))
@@ -1296,7 +1310,7 @@
 
     (julkaise-reitti
       http :analytiikka-hae-tiemerkinnan-kustannukset
-      (GET "/api/analytiikka/tiemerkinnan-kustannukset/:vuosi" parametrit
+      (GET "/api/analytiikka/tiemerkinnan-kustannukset/:alkuaika/:loppuaika" parametrit
         (kasittele-get-kutsu db integraatioloki :analytiikka-hae-tiemerkinnan-kustannukset parametrit
           json-skeemat/+analytiikka-tiemerkinnan-kustannukset-haku-vastaus+
           (fn [parametrit _kayttaja db]
