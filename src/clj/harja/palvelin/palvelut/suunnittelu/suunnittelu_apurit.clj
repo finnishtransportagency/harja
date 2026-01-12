@@ -35,13 +35,13 @@
     (assoc tarjous :tarjous nollatut-arvot)))
 
 
-(defn kustannussuunnitelman-vahvistukset [db urakka-id fn-kustannussuunnitelma-vahvistettu?]
+(defn kustannussuunnitelman-vahvistukset [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot db urakka-id))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         ;; Varmista, että yhtenäkään vuonna koko urakan keston ajalta kustannussuunnitelmaa ei ole vahvistettu. Jos on, niin tarjousta ei voi enää muokata
         vuodet (jasenna-tallennettavat-vuodet db urakka-id urakan-alkuvuosi true)
         vahvistukset (reduce (fn [lista vuosi]
-                               (let [vahvistettu? (fn-kustannussuunnitelma-vahvistettu? db urakka-id vuosi)]
+                               (let [vahvistettu? (ks-kyselyt/kustannussuunnitelma-vahvistettu? db urakka-id vuosi)]
                                  (conj lista {:vuosi vuosi :vahvistettu? vahvistettu?})))
                        [] vuodet)]
     vahvistukset))
@@ -50,7 +50,7 @@
 (defn koosta-tarjouksen-tiedot [db urakka-id]
   (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
         tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
-        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id ks-kyselyt/kustannussuunnitelma-vahvistettu?)]
+        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)]
     (-> tarjous
       (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))
       (assoc :vahvistetut-vuodet (into #{}

@@ -35,7 +35,7 @@
                           (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))) ;; Haetaan kaikki urakan vuodet
 
           ;; Varmistetaan, että ei yritetä tallentaa sellaisen vuoden tietoja, jotka on jo vahvistettu
-          vahvistukset (apurit/kustannussuunnitelman-vahvistukset db urakka-id ks-kyselyt/kustannussuunnitelma-vahvistettu?)
+          vahvistukset (apurit/kustannussuunnitelman-vahvistukset db urakka-id)
           vahvistetut-vuodet (set (map :vuosi (filter :vahvistettu? vahvistukset)))
           kaikki-vahvistettu? (= (count vahvistetut-vuodet) (count urakan-vuodet))
 
