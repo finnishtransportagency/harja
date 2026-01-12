@@ -450,6 +450,9 @@ WHERE urakka = :urakka-id
 INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
 VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
 
+-- name: hae-urakan-hoitovuoden-tarjous
+SELECT * FROM tarjous WHERE urakka_id = :urakka_id AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
+
 -- name: indeksikorjaukset-vahvistettu?
 -- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
 -- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,

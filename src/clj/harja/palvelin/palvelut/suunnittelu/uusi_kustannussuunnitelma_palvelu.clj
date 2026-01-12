@@ -69,7 +69,6 @@
           tavoitetiedot (first (suunnitelma-q/hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitovuosinro
                                                                                        :urakka-id urakka-id}))
 
-          ;; hoitovuoden-alun-tavoitehinta (:tavoitehinta tavoitetiedot) 
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
           pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
@@ -166,6 +165,11 @@
                 (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
                 urakan-parametrit))
 
+          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
+          ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
+          ;; mein se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
+          _ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
+
           ;; Onko hoitovuoden tarjous tallennettu? Jos ei ole, niin ei voida vahvistaa.
           tarjous (tarjous-kyselyt/hae-tarjousrivit-tietokannasta db urakka-id)
           hoitovuoden-tarjous (first (filter #(= hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %)) tarjous))
@@ -175,7 +179,7 @@
 
           ;; Tarkistetaan, että kilpailutettavat hankinnat, erillishankinnat, hoidonjohtopalkkiot ja johto-ja hallintokorvaukset täsmää tarjouksen kanssa.
           ;; Muuten ei voida vahvistaa tavoitehintaa.
-          puuttuvat-suunnitelmat (suunnitelma-q/puuttuvat-suunnitelmat db urakka-id hoitovuoden-alkuvuosi hoitovuoden-tarjous)
+          puuttuvat-suunnitelmat (suunnitelma-q/puuttuvat-suunnitelmat db urakka-id hoitovuoden-alkuvuosi hoitovuoden-tarjous aiempien-vuosien-pysyvat-muutokset)
           suunnitelmat-annettu? (if (empty? puuttuvat-suunnitelmat)
                                   true
                                   false)

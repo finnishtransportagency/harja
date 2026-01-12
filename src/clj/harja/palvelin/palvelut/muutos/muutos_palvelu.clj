@@ -22,6 +22,7 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
@@ -689,10 +690,11 @@
 
 (defn tallenna-muutoksen-tehtavien-maaramuutokset
   "Poikkeaminen tehtävä- ja määräluettelon määristä"
-  [db aiti-muutos-id-ja-versio maaramuutokset]
+  [db kayttaja-id urakka-id aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
 
-  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+  (let [kaikki-muutokset maaramuutokset
+        muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)
         poistettavat (filter :poistettu maaramuutokset)
         lisattavat-ja-paivitettavat (remove :poistettu maaramuutokset)]
@@ -717,7 +719,13 @@
                               ;;       Ja kuinka monimutkaiseksi useamman muutoksen tietojen yhdistely menee.
                               #_:uusi_maara 0
                               #_:edellinen_maara 0))]
-          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))
+
+    ;; Päivitä tavoite ja kattohinta 
+    (doseq [maaramuutos kaikki-muutokset]
+      (when (and (:hoitokauden_alkuvuosi maaramuutos))
+        (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi maaramuutos)
+          (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi maaramuutos) true))))))
 
 
 (defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi]
@@ -857,7 +865,7 @@
                                                     (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
                                      maaramuutokset)
                                    maaramuutokset)]
-              (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset)))
+              (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
           ;; Tallenna kulut
           (case

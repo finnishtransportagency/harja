@@ -10,9 +10,10 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.kyselyt.kustannusarvioidut-tyot :as ka-q]
-            [harja.kyselyt.indeksit :as indeksi-kyselyt]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uk-kyselyt]))
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]))
 
 (defqueries "harja/kyselyt/tarjous_kyselyt.sql"
   {:positional? true})
@@ -455,7 +456,6 @@
         tallennukset (mapv
                        (fn [rivi]
                          (let [kuluva-hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (:hoitokauden_alkuvuosi rivi))
-                               aiemmat-pysyvat-muutokset (uk-kyselyt/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi))
                                ;; Etsi vuodelle ja urakalle tarjousta
                                tarjousdb (first (hae-tarjous-vuodella db {:vuosi (:hoitokauden_alkuvuosi rivi)
                                                                           :urakka_id urakka-id}))
@@ -466,7 +466,7 @@
                                                    (tallenna-tarjous<! db rivi))
                                ;; Päivitetään tarjouksen tiedot myös urakka_tavoite -tauluun, jota muut Harjan osa-alueet käyttävät
                                urakka-tavoite-db (first (filter #(= kuluva-hoitovuosi-nro (:hoitovuosinro %)) urakan-tavoitteet-tietokannasta))
-                               tavoitehinta (+ aiemmat-pysyvat-muutokset (:tarjous_tavoitehinta rivi))
+                               tavoitehinta (:tarjous_tavoitehinta rivi)
                                _ (if urakka-tavoite-db
                                    (paivita-urakan-tavoite-ja-kattohinta! db {:urakka-id urakka-id
                                                                               :hoitokausinumero kuluva-hoitovuosi-nro
@@ -498,8 +498,9 @@
                                ;; Rahavaraukset tallennetaan tarjouksen lisäksi myös kustannusarvioitu_tyo tauluun
                                _ (tallanna-rahavaraukset-kustannussuuunnitelmaan db rivi urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id)
                                _ (tallenna-tarjouksen-toimenkuvat db rivi tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id)
-                               ;_ (uk-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi rivi))
-                               ]
+
+                               aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi) true)
+                               _ (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi rivi) aiempien-vuosien-pysyvat-muutokset)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
     tallennukset))
