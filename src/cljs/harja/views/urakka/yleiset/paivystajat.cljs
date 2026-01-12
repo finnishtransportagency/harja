@@ -23,6 +23,7 @@
 
 (def yhteyshenkilot (r/atom []))
 (def yhteyshenkilot-haettu? (r/atom false))
+(def paivystajaksi-merkityt (r/atom nil))
 
 (defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
   (log "tallenna päivystäjät!" (pr-str uudet-paivystajat))
@@ -219,23 +220,21 @@
        (aikajanariveiksi paivystajat @tiedot/aikajana-vain-urakoitsijat?)]])])
 
 (defn paivystajat [ur]
-  (let [paivystajat (r/atom nil)
-        hae! (fn [urakka-id]
-               (log "HAETAAN PÄIVYSTÄJÄT: " urakka-id)
-               (reset! paivystajat nil)
+  (let [hae! (fn [urakka-id]
                (reset! yhteyshenkilot nil)
                (reset! yhteyshenkilot-haettu? false)
-               (go (reset! paivystajat
+               (log "HAETAAN PÄIVYSTÄJÄT JA YHTEYSHENKILÖT: " urakka-id)
+               (go (reset! paivystajaksi-merkityt
                            (reverse (sort-by :loppu
                                              (<! (tiedot/hae-urakan-paivystajat urakka-id))))))
                (go (reset! yhteyshenkilot
-                     (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur))))))]
+                     (<! (tiedot/hae-urakan-yhteyshenkilot urakka-id)))))]
     (hae! (:id ur))
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))
       (fn [ur]
         [:div.paivystajat
-         [paivystajalista ur @paivystajat
+         [paivystajalista ur @paivystajaksi-merkityt
           (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-            #(tallenna-paivystajat ur paivystajat %))]
-         [aikajana @paivystajat]]))))
+            #(tallenna-paivystajat ur paivystajaksi-merkityt %))]
+         [aikajana @paivystajaksi-merkityt]]))))
