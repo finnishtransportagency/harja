@@ -30,12 +30,17 @@ WHERE id = :id;
 -- name: hae-ely-numerolla
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
 SELECT id,nimi,tyyppi FROM organisaatio
- WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
+ WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero;
 
--- name: hae-elinvoimakeskus-numerolla-tielupaa-varten
+-- name: hae-elinvoimakeskus-numerolla
+-- Hakee elinvoimakeskuksen organisaation elinvoimakeskusnumeron perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND elinvoimakeskusnumero = :elinvoimakeskusnumero;
+
+-- name: hae-elinvoimakeskus-lyhenteella-tielupaa-varten
 -- Hakee Elinvoimakeskuksen organisaation numeron perusteella
-SELECT id,nimi FROM elinvoimakeskus
-WHERE numero = :elinvoimakeskusnumero;
+SELECT id,nimi FROM organisaatio
+WHERE lyhenne = :elinvoimakeskuslyhenne and tyyppi = 'elinvoimakeskus';
 
 -- name: hae-ely-numerolla-tielupaa-varten
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
@@ -48,7 +53,7 @@ SELECT id,nimi,tyyppi FROM organisaatio
 -- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
 SELECT u.id
   FROM urakka u
- WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
+ WHERE u.urakoitsija = :org OR u.hallintayksikko = :org OR u.elinvoimakeskus_id = :org;
 
 
 -- name: hae-kayttaja

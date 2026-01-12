@@ -18,10 +18,8 @@
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c])
+            [clojure.java.jdbc :as jdbc])
   (:import (org.joda.time.format DateTimeFormat)))
 
 (def ^{:const true} oletus-toleranssi 50)
@@ -204,22 +202,23 @@
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  (let [urakat (oikeudet/kayttajan-urakat user)]
+  (let [urakat (oikeudet/kayttajan-urakat user)
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
     (if (and (nil? organisaatio) (empty? urakat))
       (do
         (oikeudet/ei-oikeustarkistusta!)
         [])
       (into []
-            urakka-xf
-            (q/listaa-urakat-hallintayksikolle db
-                                               {:hallintayksikko      hallintayksikko-id
-                                                :kayttajan_org_id     (:id organisaatio)
-                                                :kayttajan_org_tyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
-                                                :sallitut_urakat      (if (empty? urakat)
-                                                                        ;; Jos ei urakoita, annetaan
-                                                                        ;; dummy, jotta IN toimii
-                                                                        [-1]
-                                                                        urakat)})))))
+        urakka-xf
+        (q/listaa-urakat-hallintayksikolle db
+          {:hallintayksikko hallintayksikko-id
+           :kayttajan_org_id (:id organisaatio)
+           :kayttajan_org_tyyppi organisaatiotyyppi
+           :sallitut_urakat (if (empty? urakat)
+                              ;; Jos ei urakoita, annetaan
+                              ;; dummy, jotta IN toimii
+                              [-1]
+                              urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
