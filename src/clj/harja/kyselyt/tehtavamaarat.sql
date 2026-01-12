@@ -294,8 +294,8 @@ SELECT
     v.tehtava AS "tehtava-id",
     v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
     SUM(v.laskettu_maara) as maara,
-    MAX(v.muokattu) as muokattu,
-    MAX(v.luotu) as luotu
+    v.muokattu as muokattu,
+    v.luotu as luotu
 FROM urakka_tehtavamaara_yhteenveto v
          JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
          JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
@@ -304,11 +304,11 @@ FROM urakka_tehtavamaara_yhteenveto v
 WHERE u.id = :urakka
   AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
               WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE)
-GROUP BY v.hoitokauden_alkuvuosi, mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.id, v.tehtava;
+GROUP BY v.hoitokauden_alkuvuosi, mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.id, v.tehtava, v.muokattu, v.luotu;
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
-select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "mhu-tehtavamaara-id", yt.id as "hoito-tehtavamaara-id", MAX(yt.luotu) as luotu,
-       MAX(yt.muokattu) as muokattu,
+select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "mhu-tehtavamaara-id", yt.id as "hoito-tehtavamaara-id", yt.luotu as luotu,
+       yt.muokattu as muokattu,
        CASE
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 10 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN EXTRACT(YEAR FROM yt.alkupvm)::INT
@@ -321,7 +321,7 @@ where yt.urakka = :urakka-id
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
   -- aikavälistä osuu annettuun ajankohtaan.
   and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
-group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi";
+group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi", yt.luotu, yt.muokattu;
 
 -- name: hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
@@ -333,8 +333,8 @@ SELECT
     v.id as "mhu-tehtavamaara-id",
     NULL AS "hoito-tehtavamaara-id",
     v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
-    MAX(v.muokattu) as muokattu,
-    MAX(v.luotu) as luotu
+    v.muokattu as muokattu,
+    v.luotu as luotu
 FROM urakka_tehtavamaara_yhteenveto v
          JOIN urakka u ON v.urakka = u.id
          JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
@@ -342,4 +342,4 @@ WHERE v.urakka = :urakka-id
   AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
   AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
               WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE)
-GROUP BY v.hoitokauden_alkuvuosi, tk.id, v.id;
+GROUP BY v.hoitokauden_alkuvuosi, tk.id, v.id, v.muokattu, v.luotu;
