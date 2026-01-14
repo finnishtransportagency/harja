@@ -10,7 +10,7 @@ case $ke in
           rm -r -f ../apidoc
           mkdir ../apidoc
           rm -f resources/api/api.html
-          raml2html resources/api/api.raml > resources/api/api.html
+          /Users/markusva/repos/Github/node_modules/raml2html/bin/raml2html resources/api/api.raml > resources/api/api.html
           cp -r resources/api/ ../apidoc
           cd ../apidoc
           zip -r api.zip schemas examples documentation api.html api.raml

@@ -4,7 +4,7 @@
         "reittitoteuma": {
           "toteuma": {
             "tunniste": {
-              "id": 4
+              "id": 45257
             },
             "sopimusId": {
               "id": 4
@@ -20,23 +20,31 @@
             "lisatieto": "Reitti oli jäinen",
             "tehtavat": [
               {
-                "id": 4,
-                "tehtavaryhmaid": 5,
+                "id": 1369,
+                "tehtavaryhmaid": 2,
                 "maara": {
-                  "yksikko": "t",
-                  "maara": 4
+                  "yksikko": "km",
+                  "maara": 3.23
                 },
-                "selite": "selite"
+                "selite": "selite",
+                "tehtava-rivi-id": 501,
+                "tehtava-poistettu": false,
+                "tehtava-luotu": "2016-01-30T17:00:00Z",
+                "tehtava-muokattu": null
               }
             ],
             "materiaalit": [
               {
                 "id": 5,
-                "materiaali": "suola",
+                "materiaali": "Talvisuola, rakeinen NaCl",
                 "maara": {
                   "yksikko": "t",
-                  "maara": 4
-                }
+                  "maara": 0.24
+                },
+                "materiaali-rivi-id": 945,
+                "materiaali-poistettu": false,
+                "materiaali-luotu": "2016-01-30T17:00:00Z",
+                "materiaali-muokattu": null
               }
             ],
             "tiesijainti": {
@@ -59,8 +67,8 @@
               "reittipiste": {
                 "aika": "2018-01-18T12:00:00+02:00",
                 "koordinaatit": {
-                  "x": 448353,
-                  "y": 7225182
+                  "x": "448353",
+                  "y": "7225182"
                 },
                 "tehtavat": [
                   {
@@ -71,10 +79,10 @@
                 ],
                 "materiaalit": [
                   {
-                    "materiaali": "Talvisuolaliuos NaCl",
+                    "materiaali": "Talvisuola, rakeinen NaCl",
                     "maara": {
                       "yksikko": "t",
-                      "maara": 4
+                      "maara": 0.04
                     }
                   }
                 ]
@@ -84,22 +92,22 @@
               "reittipiste": {
                 "aika": "2018-01-18T12:15:00+02:00",
                 "koordinaatit": {
-                  "x": 455574,
-                  "y": 7227716
+                  "x": "455574",
+                  "y": "7227716"
                 },
                 "tehtavat": [
                   {
                     "tehtava": {
-                      "id": 1359
+                      "id": 1369
                     }
                   }
                 ],
                 "materiaalit": [
                   {
-                    "materiaali": "Talvisuolaliuos NaCl",
+                    "materiaali": "Talvisuola, rakeinen NaCl",
                     "maara": {
                       "yksikko": "t",
-                      "maara": 1
+                      "maara": 0.2
                     }
                   }
                 ]
@@ -108,9 +116,9 @@
           ]
         },
         "tyokone": {
-          "id": "työkoneid",
-          "tunnus": "työkonetunnus",
-          "tyokonetyyppi": "työkonetyyppi"
+          "id": "98364831",
+          "tunnus": "Raatajat-01",
+          "tyokonetyyppi": "Kuorma-auto (ka)"
         }
       }
     ]
