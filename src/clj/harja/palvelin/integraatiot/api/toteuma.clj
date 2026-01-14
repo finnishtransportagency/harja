@@ -1,8 +1,6 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [compojure.core :refer [POST GET]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+  (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
