@@ -87,7 +87,7 @@
         _ (anna-kirjoitusoikeus kayttaja-jvh)
         fn-tee-kutsu (fn []
                        (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
@@ -116,7 +116,7 @@
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
-                               (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                               (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                  slurp (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
