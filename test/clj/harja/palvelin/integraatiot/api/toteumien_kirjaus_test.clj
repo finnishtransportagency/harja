@@ -89,6 +89,7 @@
                        (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                          (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))))
@@ -117,7 +118,9 @@
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
-                                 slurp (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 slurp
+                                 (.replace "__LAHDE__" "koneellinen")
+                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
