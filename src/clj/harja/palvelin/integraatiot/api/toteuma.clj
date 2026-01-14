@@ -15,12 +15,27 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muunna-toteuma-lahde
-  "Muutetaan koneellinen/kasin enum toteuman lähteeksi tietokantaan"
-  [lahde]
+  "Muuttaa koneellinen/kasin enum toteuman lähteeksi tietokantaan.
+
+  Koneellinen toteuma -> 'harja-api'
+  Uusi käsin-toteuma -> 'harja-api-ui'
+  Korjaus käsin-toteuma -> 'harja-api-ui-korjaus'."
+  [lahde uusi?]
   (cond
-    (= lahde "koneellinen") "harja-api"
-    (= lahde "kasin") "harja-api-ui"
-    :else "harja-api"))
+    (= lahde "koneellinen")
+    "harja-api"
+
+    (and uusi? (= lahde "kasin"))
+    "harja-api-ui"
+
+    ;; Aina, kun käsin päivitetään, niin merkataan se käsin päivitetyksi
+    (and (not uusi?) (= lahde "kasin"))
+    "harja-api-ui-korjaus"
+
+    ;; Oletataan, että aineisto tulee koneellisena
+    :else
+    "harja-api"))
+
 
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
   (keep identity
@@ -63,7 +78,7 @@
                       :tyokonetyyppi (:tyokonetyyppi tyokone)
                       :tyokonetunniste (:id tyokone)
                       :tyokoneen-lisatieto (:tunnus tyokone)
-                      :lahde (muunna-toteuma-lahde (:lahde toteuma))})
+                      :lahde (muunna-toteuma-lahde (:lahde toteuma) false)})
         toteuman-id (if paivitetty
                       (:id paivitetty)
                       (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
@@ -127,7 +142,7 @@
          :alkuetaisyys nil
          :loppuosa nil
          :loppuetaisyys nil
-         :lahde (muunna-toteuma-lahde (:lahde toteuma))
+         :lahde (muunna-toteuma-lahde (:lahde toteuma) true)
          :tyokonetyyppi (:tyokonetyyppi tyokone)
          :tyokonetunniste (:id tyokone)
          :tyokoneen-lisatieto (:tunnus tyokone)})
