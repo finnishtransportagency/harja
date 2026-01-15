@@ -60,6 +60,7 @@ HAARAN_NIMI="$1"
 
 # Määritä polut - käytä harja_dir.sh apuskriptiä
 # shellcheck source=../harja_dir.sh
+# shellcheck disable=SC1091
 source "$( dirname "${BASH_SOURCE[0]}" )/../harja_dir.sh" || exit
 
 PROJEKTIN_JUURI="$HARJA_DIR"
@@ -100,6 +101,34 @@ fi
 echo ""
 echo -e "${SININEN}🛑 Pysäytetään worktreen prosessit...${EI_VARIA}"
 
+tapa_prosessit_komentorivista() {
+    local komento_regex="$1"
+    local nimi="$2"
+
+    local prosessit
+    prosessit=$(ps ax -o pid= -o command= | awk -v polku="$WORKTREE_KANSIO" -v re="$komento_regex" '$0 ~ polku && $0 ~ re {print $1}' || true)
+
+    if [ -n "$prosessit" ]; then
+        echo -e "${KELTAINEN}   Tapetaan $nimi PID:t: $prosessit${EI_VARIA}"
+        echo "$prosessit" | xargs kill -TERM 2>/dev/null || true
+        sleep 2
+
+        local elossa=""
+        local pid
+        for pid in $prosessit; do
+            if kill -0 "$pid" 2>/dev/null; then
+                elossa="$elossa $pid"
+            fi
+        done
+
+        if [ -n "$elossa" ]; then
+            echo -e "${KELTAINEN}   Pakotetaan lopetus (KILL) PID:t:$elossa${EI_VARIA}"
+            # shellcheck disable=SC2086
+            kill -KILL $elossa 2>/dev/null || true
+        fi
+    fi
+}
+
 # 1. Tarkista .backend.pid tiedosto
 if [ -f "$WORKTREE_KANSIO/.backend.pid" ]; then
     BACKEND_PROSESSI_ID=$(cat "$WORKTREE_KANSIO/.backend.pid")
@@ -108,26 +137,18 @@ if [ -f "$WORKTREE_KANSIO/.backend.pid" ]; then
     rm "$WORKTREE_KANSIO/.backend.pid"
 fi
 
-# 2. Etsi ja tapa kaikki lein-prosessit jotka liittyvät tähän worktreehen
-echo -e "${KELTAINEN}   Etsitään lein-prosesseja worktree-hakemistossa...${EI_VARIA}"
-LEIN_PROSESSIT=$(lsof -t +D "$WORKTREE_KANSIO" 2>/dev/null || true)
-if [ -n "$LEIN_PROSESSIT" ]; then
-    echo -e "${KELTAINEN}   Tapetaan prosessit: $LEIN_PROSESSIT${EI_VARIA}"
-    echo "$LEIN_PROSESSIT" | xargs kill -9 2>/dev/null || true
-fi
+# 2. Etsi ja tapa lein-prosessit joiden komentorivillä näkyy worktree-polku
+echo -e "${KELTAINEN}   Etsitään lein-prosesseja worktreestä...${EI_VARIA}"
+tapa_prosessit_komentorivista "[[:space:]/]lein([[:space:]]|$)" "lein"
 
-# 3. Etsi Java-prosessit jotka viittaavat worktree-hakemistoon
-echo -e "${KELTAINEN}   Etsitään Java-prosesseja...${EI_VARIA}"
-JAVA_PROSESSIT=$(ps aux | grep "java.*$WORKTREE_KANSIO" | grep -v grep | awk '{print $2}' || true)
-if [ -n "$JAVA_PROSESSIT" ]; then
-    echo -e "${KELTAINEN}   Tapetaan Java-prosessit: $JAVA_PROSESSIT${EI_VARIA}"
-    echo "$JAVA_PROSESSIT" | xargs kill -9 2>/dev/null || true
-fi
+# 3. Etsi ja tapa Java-prosessit joiden komentorivillä näkyy worktree-polku
+echo -e "${KELTAINEN}   Etsitään Java-prosesseja worktreestä...${EI_VARIA}"
+tapa_prosessit_komentorivista "[[:space:]/]java([[:space:]]|$)" "Java"
 
 # 4. Odota hetki että prosessit ehtivät sulkeutua
 sleep 2
 
-# 5. Vielä yksi tarkistus - onko jotain jäljellä?
+# 5. Vielä yksi tarkistus - onko hakemistoa käyttävää prosessia jäljellä?
 JALJELLA_OLEVAT_PROSESSIT=$(lsof +D "$WORKTREE_KANSIO" 2>/dev/null | grep -v "COMMAND" || true)
 if [ -n "$JALJELLA_OLEVAT_PROSESSIT" ]; then
     echo -e "${KELTAINEN}⚠️  Varoitus: Jotkin prosessit käyttävät vielä hakemistoa:${EI_VARIA}"
