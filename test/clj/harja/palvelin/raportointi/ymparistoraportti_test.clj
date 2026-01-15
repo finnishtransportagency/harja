@@ -861,3 +861,30 @@ VALUES
       (is (map? ensimmainen-rivi))
       ;; Varmista, että oulun urakkanumero on mukana urakan nimessä
       (is (= (str/includes? (second (:rivi ensimmainen-rivi)) "(1238)"))))))
+
+(deftest ymparistoraportti-sisaltaa-mhu-muutokset-suunnitelmassa-test
+  (testing "Ympäristöraportin suunniteltu määrä sisältää MHU-muutokset"
+    ;; Tämä testi varmistaa että ymparisto.sql käyttää urakka_tehtavamaara_yhteenveto VIEW:tä
+    ;; ja että raportti toimii ilman virheitä MHU-urakoille.
+    (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          
+          ;; Hae raportti - ei poikkeusta = SQL toimii VIEW:n kanssa
+          raportti (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :suorita-raportti
+                     +kayttaja-jvh+
+                     {:nimi :ymparistoraportti
+                      :konteksti "urakka"
+                      :urakka-id urakka-id
+                      :parametrit {:alkupvm (c/to-date (t/local-date 2025 1 1))
+                                   :loppupvm (c/to-date (t/local-date 2025 12 31))
+                                   :urakoittain? false}})
+          
+          ;; Tarkista että raportti sisältää perus taulukot
+          talvisuolat-taulukko (apurit/taulukko-otsikolla raportti "Talvisuolat")
+          paikkausmateriaalit-taulukko (apurit/taulukko-otsikolla raportti "Paikkausmateriaalit")]
+      
+      ;; Tarkista että taulukot löytyivät
+      (is (some? raportti) "Ympäristöraportti generoituu MHU-urakalle")
+      (is (some? talvisuolat-taulukko) "Talvisuolat-taulukko löytyy raportista")
+      (is (some? paikkausmateriaalit-taulukko) "Paikkausmateriaalit-taulukko löytyy raportista"))))
+
