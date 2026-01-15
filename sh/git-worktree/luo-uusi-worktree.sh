@@ -13,7 +13,7 @@ set -euo pipefail
 #
 # ESIMERKIT:
 #   sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus
-#   sh/git-worktree/luo-uusi-worktree.sh feature/login-fix 3005
+#   sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus 3005
 #
 # MITÄ SKRIPTI TEKEE:
 #   1. Luo uuden git worktreen annetulle haaralle
@@ -53,8 +53,8 @@ etsi_vapaa_portti() {
     
     for portti in $(seq $alku_portti $loppu_portti); do
         # Tarkista onko portti vapaana (ei kuuntele mitään)
-        if ! lsof -Pi :$portti -sTCP:LISTEN -t >/dev/null 2>&1; then
-            echo $portti
+        if ! lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "$portti"
             return 0
         fi
     done
@@ -101,6 +101,7 @@ fi
 
 # Määritä polut - käytä harja_dir.sh apuskriptiä
 # shellcheck source=../harja_dir.sh
+# shellcheck disable=SC1091
 source "$( dirname "${BASH_SOURCE[0]}" )/../harja_dir.sh" || exit
 HAARAN_NIMI="$1"
 PROJEKTIN_JUURI="$HARJA_DIR"
@@ -218,17 +219,20 @@ hae_viimeisin_migraatio() {
     local regex="V1_([0-9]+)__.*"
     local suurin_versio=0
     local viimeisin_tiedosto=""
-    
-    for tiedosto in $(find "$polku" -type f -name "*.sql" 2>/dev/null); do
-        local nimi=$(basename "$tiedosto")
+
+    local tiedosto
+    while IFS= read -r -d '' tiedosto; do
+        local nimi
+        nimi=$(basename -- "$tiedosto")
         if [[ $nimi =~ $regex ]]; then
-            local versio="${BASH_REMATCH[1]}"
+            local versio
+            versio="${BASH_REMATCH[1]}"
             if [ "$versio" -gt "$suurin_versio" ]; then
                 suurin_versio=$versio
                 viimeisin_tiedosto=$nimi
             fi
         fi
-    done
+    done < <(find "$polku" -type f -name "*.sql" -print0 2>/dev/null)
     
     echo "$viimeisin_tiedosto"
 }
