@@ -7,13 +7,16 @@
   
   Tämä namespace hyödyntää makrot.clj:n funktioita välttääkseen koodin duplikaatiota.
   
-  Käyttö:
+  Ajetaan myös automaattisesti kehitysympäristössä Harjan käynnistyessä
+  (kehitysmoodi-komponentissa), jos resources/roolit.xlsx on muuttunut.
+  
+  Manuaalinen ajo:
     lein run -m harja.tyokalut.oikeudet-edn-export"
   (:require [clojure.pprint :as pprint]
             [harja.domain.oikeudet.makrot :as makrot]))
 
 
-(defn- lue-oikeudet-excelistä
+(defn- lue-oikeudet-excelista
   "Kutsuu harja.domain.oikeudet.makrot/lue-oikeudet funktiota.
   Tämä on private funktio makroissa, joten käytämme var-dereferenssiä."
   []
@@ -30,15 +33,13 @@
   [oikeudet]
   (->> oikeudet
     (map (fn [oikeus]
-           (update oikeus :roolien-oikeudet
+           (update oikeus
+             :roolien-oikeudet
              (fn [roolien-oikeudet]
-                        ;; Muuta tavallinen map sorted-mapiksi
                (into (sorted-map)
                  (map (fn [[rooli oikeudet-set]]
-                                     ;; Muuta tavallinen set sorted-setiksi
-                        [rooli (into (sorted-set) oikeudet-set)])
-                   roolien-oikeudet))))))
-       ;; Järjestä oikeudet osion ja näkymän mukaan
+                        [rooli (into (sorted-set) oikeudet-set)]))
+                 roolien-oikeudet)))))
     (sort-by (juxt :osio :nakyma))
     vec))
 
@@ -51,7 +52,7 @@
   Roolit järjestetään aakkosjärjestykseen nimen mukaan."
   []
   (try
-    (let [{:keys [roolimappaus]} (lue-oikeudet-excelistä)
+    (let [{:keys [roolimappaus]} (lue-oikeudet-excelista)
           roolit (jarjesta-roolit roolimappaus)]
       (spit "resources/roolit.edn"
         (with-out-str
@@ -97,7 +98,7 @@
   Oikeudet ja roolien-oikeudet järjestetään aakkosjärjestykseen."
   []
   (try
-    (let [{:keys [oikeudet]} (lue-oikeudet-excelistä)
+    (let [{:keys [oikeudet]} (lue-oikeudet-excelista)
           oikeudet-jarjestetty (jarjesta-oikeudet oikeudet)]
       (spit "resources/oikeudet.edn"
         (with-out-str
@@ -151,7 +152,13 @@
       false)))
 
 (defn generoi-kaikki!
-  "Generoi molemmat EDN-kopiot Excelistä."
+  "Generoi molemmat EDN-kopiot Excelistä.
+  
+  Tämä ajetaan myös automaattisesti kehitysympäristössä Harjan käynnistyessä
+  (kehitysmoodi-komponentissa), jos resources/roolit.xlsx on muuttunut.
+  
+  Manuaalinen ajo:
+    lein run -m harja.tyokalut.oikeudet-edn-export"
   []
   (println "═══════════════════════════════════════════════════════════════════════════════")
   (println "  Generoidaan EDN-KOPIOT Excelistä")
