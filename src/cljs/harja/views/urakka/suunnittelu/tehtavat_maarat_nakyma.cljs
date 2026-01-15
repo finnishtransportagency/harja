@@ -93,7 +93,7 @@
   (cond
     (nil? arvo) "-"
     (pos? arvo) (str "+" arvo)
-    (neg? arvo) (str "-" arvo)
+    (neg? arvo) (str arvo)
     :else arvo))
 
 (defn tehtava-vetolaatikko
