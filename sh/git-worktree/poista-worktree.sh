@@ -29,6 +29,11 @@ set -euo pipefail
 # LUO UUSI WORKTREE:
 #   sh/git-worktree/luo-uusi-worktree.sh <haara-nimi>
 #
+# TIETOKANTA (tärkeä huomio):
+#   Worktree:t käyttävät oletuksena samaa lokaalista dev-tietokantaa.
+#   Jos ajat useaa worktree:tä rinnakkain tai vaihdat branchia jossa on eri migraatiot,
+#   saatat aiheuttaa migraatio-/data-konflikteja.
+#
 #═══════════════════════════════════════════════════════════════════════════════
 
 # Värit
@@ -58,6 +63,23 @@ fi
 
 HAARAN_NIMI="$1"
 
+validoi_haaran_nimi() {
+    local nimi="$1"
+
+    if [ -z "$nimi" ]; then
+        echo -e "${PUNAINEN}❌ Haaran nimi puuttuu${EI_VARIA}"
+        exit 1
+    fi
+
+    if [[ "$nimi" =~ [[:space:]] ]]; then
+        echo -e "${PUNAINEN}❌ Haaran nimi ei saa sisältää välilyöntejä: '$nimi'${EI_VARIA}"
+        echo -e "${KELTAINEN}   Vinkki: käytä '-' tai '_' välilyöntien sijaan.${EI_VARIA}"
+        exit 1
+    fi
+}
+
+validoi_haaran_nimi "$HAARAN_NIMI"
+
 # Määritä polut - käytä harja_dir.sh apuskriptiä
 # shellcheck source=../harja_dir.sh
 # shellcheck disable=SC1091
@@ -67,8 +89,36 @@ PROJEKTIN_JUURI="$HARJA_DIR"
 YLAKANSIO="$(dirname "$PROJEKTIN_JUURI")"
 
 # Sanitoi haaran nimi
-TURVALLINEN_HAARAN_NIMI=$(echo "$HAARAN_NIMI" | sed 's/[\/:]/-/g')
+TURVALLINEN_HAARAN_NIMI=$(printf '%s' "$HAARAN_NIMI" | sed 's#[^[:alnum:]._-]#-#g')
 WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
+
+varmista_turvallinen_polku() {
+    local polku="$1"
+
+    if [ -z "$polku" ]; then
+        echo -e "${PUNAINEN}❌ Turvavirhe: tyhjä polku${EI_VARIA}"
+        exit 1
+    fi
+
+    case "$polku" in
+        "$YLAKANSIO"|"$YLAKANSIO/"|"/"|".")
+            echo -e "${PUNAINEN}❌ Turvavirhe: epäilyttävä worktree-polku: $polku${EI_VARIA}"
+            exit 1
+            ;;
+    esac
+
+    case "$polku" in
+        "$YLAKANSIO"/harja-worktree-*)
+            ;;
+        *)
+            echo -e "${PUNAINEN}❌ Turvavirhe: worktree-polku ei näytä oikealta: $polku${EI_VARIA}"
+            echo -e "${KELTAINEN}   Odotettu prefix: $YLAKANSIO/harja-worktree-${EI_VARIA}"
+            exit 1
+            ;;
+    esac
+}
+
+varmista_turvallinen_polku "$WORKTREE_KANSIO"
 
 echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
 echo -e "${SININEN}  Harja Git Worktree poistaminen${EI_VARIA}"
@@ -106,7 +156,7 @@ tapa_prosessit_komentorivista() {
     local nimi="$2"
 
     local prosessit
-    prosessit=$(ps ax -o pid= -o command= | awk -v polku="$WORKTREE_KANSIO" -v re="$komento_regex" '$0 ~ polku && $0 ~ re {print $1}' || true)
+    prosessit=$(ps ax -o pid= -o command= | awk -v polku="$WORKTREE_KANSIO" -v re="$komento_regex" 'index($0, polku) && $0 ~ re {print $1}' || true)
 
     if [ -n "$prosessit" ]; then
         echo -e "${KELTAINEN}   Tapetaan $nimi PID:t: $prosessit${EI_VARIA}"
@@ -126,6 +176,16 @@ tapa_prosessit_komentorivista() {
             # shellcheck disable=SC2086
             kill -KILL $elossa 2>/dev/null || true
         fi
+    fi
+}
+
+yrita_fuser_k() {
+    local polku="$1"
+
+    if command -v fuser >/dev/null 2>&1; then
+        fuser -k "$polku" 2>/dev/null || true
+    else
+        echo -e "${KELTAINEN}⚠️  fuser ei ole saatavilla tässä ympäristössä, ohitetaan.${EI_VARIA}"
     fi
 }
 
@@ -163,7 +223,7 @@ git worktree remove "$WORKTREE_KANSIO" --force 2>/dev/null || {
     echo -e "${KELTAINEN}⚠️  Git worktree remove epäonnistui, poistetaan manuaalisesti...${EI_VARIA}"
     
     # Pakota prosessien lopetus jos vielä jotain jäljellä
-    fuser -k "$WORKTREE_KANSIO" 2>/dev/null || true
+    yrita_fuser_k "$WORKTREE_KANSIO"
     sleep 1
     
     # Poista hakemisto
@@ -178,7 +238,7 @@ if [ -d "$WORKTREE_KANSIO" ]; then
     echo -e "${PUNAINEN}❌ Hakemisto on vielä olemassa, pakotetaan poisto...${EI_VARIA}"
     
     # Viimeinen yritys - pakota kaikki kiinni
-    fuser -k "$WORKTREE_KANSIO" 2>/dev/null || true
+    yrita_fuser_k "$WORKTREE_KANSIO"
     sleep 1
     
     # Poista raa'asti
