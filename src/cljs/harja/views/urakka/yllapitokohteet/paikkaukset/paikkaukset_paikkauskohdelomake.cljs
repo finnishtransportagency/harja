@@ -785,7 +785,7 @@
           [napit/tallenna
            "Tallenna"
            (t-paikkauskohteet/nayta-modal
-             (str "Merkitääntkö kohde \"" (:nimi lomake) "\" valmiiksi?")
+             (str "Merkitäänkö kohde \"" (:nimi lomake) "\" valmiiksi?")
              "Tilaaja saa sähköpostiin ilmoituksen kohteen valmistumisesta."
              [napit/palvelinkutsu-nappi
               "Merkitse valmiiksi"

@@ -215,7 +215,7 @@
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
-  (merge-with #(if (map? %1)
+  (merge-with #(if (and (map? %1) (map? %2))
                  (merge %1 %2)
                  %2)
     oletukset asetukset))

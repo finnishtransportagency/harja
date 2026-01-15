@@ -50,7 +50,7 @@
   (let [listauksessa? true
         valittu? (and (= (get-in app [:vastaus-lomake :lupaus-id]) (:lupaus-id lupaus))
                    (= (:kuukausi lupaus-kuukausi) (get-in app [:vastaus-lomake :vastauskuukausi])))]
-    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {}]))
+    [kuukausitilat/kuukausi-wrapper e! lupaus lupaus-kuukausi listauksessa? valittu? {} app]))
 
 (defn- toteuma-tai-ennuste-luokka [{:keys [pisteet-toteuma]}]
   (cond (and pisteet-toteuma (pos? pisteet-toteuma)) "toteuma-pisteet-positiivnen"
@@ -149,7 +149,7 @@
           (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
             (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
             @istunto/kayttaja)
-          (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
+          (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset
             (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
@@ -327,7 +327,7 @@
    [:span.kentan-otsikko "Aseta nykyhetki"]
    [:div.kentta
     [kentat/tee-kentta
-     {:tyyppi :pvm}
+     {:tyyppi :pvm-aika}
      data]]])
 
 (defn testausvalinnat [e! app]
@@ -339,6 +339,8 @@
      [nykyhetki (r/wrap
                   (:nykyhetki app)
                   #(e! (lupaus-tiedot/->AsetaNykyhetki %)))]
+     [napit/yleinen-toissijainen "Generoi vastaukset"
+      #(e! (lupaus-tiedot/->GeneroiLupausvastaukset))]
      [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn lupaukset-alempi-valilehti*
@@ -391,7 +393,6 @@
     (if (= tyyppi :teiden-hoito)
       [bs/tabs
        {:style :tabs :classes "tabs-taso2"
-        ;; huom: avain yhä valitavoitteet, koska Rooli-excel ja oikeudet
         :active (nav/valittu-valilehti-atom :valitavoitteet)}
 
        "Lupaukset" :lupaukset

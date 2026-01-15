@@ -8,3 +8,5 @@
 
 (defqueries "harja/kyselyt/tilannekuva.sql"
   {:positional? true})
+
+(declare hallintayksikoiden-urakat)

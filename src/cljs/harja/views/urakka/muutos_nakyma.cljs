@@ -6,6 +6,7 @@
     [harja.tiedot.urakka.siirtymat :as siirtymat]
 
     [harja.fmt :as fmt]
+    [harja.pvm :as pvm]
     [harja.ui.grid :as grid]
     [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
@@ -16,6 +17,7 @@
     [harja.ui.yleiset :as yleiset]
 
     ;; Osiot / lomake
+    [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]
     [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
     [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
@@ -140,7 +142,7 @@
        t-yhteiset/+indeksikorjausta-ei-vahvistettu-txt+
        (fmt/euro-opt true true (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))))
 
-   "Kirjatut muutokset"
+   "Kirjallisesti sovitut muutokset"
    (fmt/euro-opt true true (:kirjatut-muutokset-yht budjettitavoitteet))
 
    ^{:viiva-rivin-alle? true}
@@ -178,37 +180,48 @@
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
   [_e! {:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa?] :as _app}]
-  (let [indeksikorjaus-vahvistettu? (t-yhteiset/hoitovuoden-indeksikorjaus-vahvistettu?
-                                      budjettitavoitteet valittu-hoitokausi)]
+  (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+        indeksikorjaus-vahvistettu? (muutos-domain/hoitovuoden-indeksikorjaus-vahvistettu?
+                                      tavoitehinta-indeksikorjattu-per-hoitovuosi valittu-hoitokausi)]
     [:div.muutosten-vaikutus
      (into []
        (concat
          [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
                            :tietorivi-luokka "padding-8"}
-          [:h2 "Muutosten vaikutus"] ""]
+          [:h2 "Muutosten vaikutus tavoitehintaan"] ""]
          (if haku-kaynnissa?
            [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
            (muutosten-vaikutus-sisalto-rivit* budjettitavoitteet valittu-hoitokausi indeksikorjaus-vahvistettu?))))]))
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
-  [:valinnat-ja-listaus
+  [:div.valinnat-ja-listaus
    [:h1 "Muutosten hallinta"]
    [:div.otsikko-ja-hoitokausi
 
+    ;; TODO:  
+    ;; Jos vanhoille hoitovuosille toteutetaan osiot, kaikki nayta-muutokset-sivu? kutsut voi poistaa 
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
-     #(e! (t-yhteiset/->HaeUrakanMuutostiedot)) haku-kaynnissa? false]]
+     #(when (t-yhteiset/nayta-muutokset-sivu?)
+        ;; Älä tee turhia kutsuja, jos sivua ei näytetä 
+        (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))) haku-kaynnissa? false]]
 
-   [muutosten-vaikutus e! app]
-   [muutoslistaus e! app]])
+   (if (t-yhteiset/nayta-muutokset-sivu?)
+     [:<>
+      [muutosten-vaikutus e! app]
+      [muutoslistaus e! app]]
+     ;; Tämä näytetään, jos 2025 aikaisempi hoitovuosi valittuna
+     [yleiset/varoitus-vihje
+      "Muutokset ovat käytössä hoitovuodesta 2025 alkaen." nil :alert])])
 
 
 (defn muutokset-alempi-valilehti*
   [e! _app]
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
-    (komp/sisaan #(e! (t-yhteiset/->HaeUrakanMuutostiedot)))
+    (komp/sisaan #(when (t-yhteiset/nayta-muutokset-sivu?)
+                    (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))))
     (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu

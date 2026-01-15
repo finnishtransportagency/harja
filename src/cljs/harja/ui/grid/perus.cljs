@@ -162,14 +162,15 @@
   (when (nil? rivi)
     (log "muokkausrivi on nil"))
   [:tr.muokataan {:class luokka}
-
-   (doall (for [{:keys [nimi tyyppi] :as sarake} (if (:colspan rivi)
+   (doall (for [{:keys [nimi tyyppi luokka solun-luokka] :as sarake} (if (:colspan rivi)
                                                    (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
                                                    skeema)]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                  (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
+                                                          luokka
+                                                          (when solun-luokka (solun-luokka (get rivi nimi) rivi))
+                                                          (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index esta-tiivis-grid?])))
    (when-not piilota-toiminnot?
@@ -280,11 +281,13 @@
                     (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
                     ^{:key (str "avattava-rivi-tila" id)}
                     [avattavat-rivi-tila ohjaus avattavat-rivit id (y/luokat "vetolaatikon-tila"
+                                                                     (when solun-luokka (solun-luokka (get rivi nimi) rivi))
                                                                      (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
 
                     (= :vetolaatikon-tila tyyppi)
                     ^{:key (str "vetolaatikontila" id)}
                     [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
+                                                                (when solun-luokka (solun-luokka (get rivi nimi) rivi))
                                                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
                     :else
                     ^{:key (str i nimi)}
@@ -855,7 +858,7 @@
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
   :muokattava?                          funktio, jonka avulla päätellään, voiko solun tietoja muokata. Anna esim. (constantly false) - Olisi hyvä, jos tämä voitaisiin joskus nimetä :solu-muokattava?
-   
+  :piilota-muokkaus?                    Default false, piilottaa muokkausrivin.
   :sivuta                               Ottaa integerin montako riviä näkyy yhdellä sivulla. Lisää sivutuksen (paginaation) taulukkoon
                                         Tälle olemassa myös muuttuja grid/vakiosivutus, mutta voi antaa minkä vaan numeron 
   :piilota-sivutus-footer?              Boolean mikäli halutaan piilottaa taulukon alapuolen sivutuskontrollit,
@@ -894,7 +897,8 @@
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
   :custom-toiminto                      Muokkauspaneeliin vietävä custom-toiminto
-  :paneelikomponentit                   vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.\n  :tunniste                             rivin tunnistava kenttä, oletuksena :id
+  :paneelikomponentit                   vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
+  :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
@@ -918,7 +922,9 @@
                                         oletuksena auki / kiinni. Vaihtoehdot: :kaikki-auki / :kaikki-kiinni
   :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
   :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
+  :muokkaa-aina                         Jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole.
+                                        Jos haluat asettaa gridin ulkopuolisella napilla muokkaustilaan, niin jätä tämä aina trueksi
+                                        ja säädä yksittäisen kolumnin muokkaustatusta :muokattava? attribuutilla otsikkotiedoista.
   :muutos                               jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                         Parametrina Grid ohjauskahva
   :prosessoi-muutos                     funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
@@ -1001,6 +1007,7 @@
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (or (:vetolaatikot-auki opts)
                               (atom #{}))
+        vetolaatikot-resetoitu-maara (atom 0)
         avattavat-rivit-auki (or (:avattavat-rivit-auki opts)
                                (atom #{}))
         validoi-ja-anna-virheet (fn [uudet-tiedot tyyppi]
@@ -1188,7 +1195,10 @@
                                  ;; vaikkei gridin data oleellisesti muuttuisikaan.
                                  (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
-                           (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
+                           ;; Vetolaatikoita ei voi resetoida joka kerta, kun grid keksii, että muokataan jotain. Resetoidaan ne ensimmäisellä kerralla vain.
+                           (when (= 0 @vetolaatikot-resetoitu-maara)
+                             (reset! vetolaatikot-auki #{})) ; sulje vetolaatikot
+                           (swap! vetolaatikot-resetoitu-maara inc)
                            (reset! avattavat-rivit-auki #{}) ; sulje avattavat rivit
                            (nollaa-muokkaustiedot!)
                            (swap! muokkauksessa-olevat-gridit conj komponentti-id)

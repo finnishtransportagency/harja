@@ -2,7 +2,7 @@
 <urakan-kohteiden-toteumatietojen-kirjaus xmlns="http://www.vayla.fi/xsd/yha">
     <urakka>
         <yha-id>5731290</yha-id>
-        <harja-id>54</harja-id>
+        <harja-id>55</harja-id>
         <sampotunnus>5731290-TES2</sampotunnus>
         <tunnus>YHA5731290</tunnus>
         <kohteet>
@@ -162,7 +162,7 @@
                         <pinta-ala>2600</pinta-ala>
                         <paallystetyomenetelma>31</paallystetyomenetelma>
                         <massamenekki>90.0</massamenekki>
-                        <rc-prosentti>10.0</rc-prosentti>
+                        <rc-prosentti>10</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>
@@ -216,7 +216,7 @@
                         <pinta-ala>2600</pinta-ala>
                         <paallystetyomenetelma>31</paallystetyomenetelma>
                         <massamenekki>90.0</massamenekki>
-                        <rc-prosentti>10.0</rc-prosentti>
+                        <rc-prosentti>10</rc-prosentti>
                         <kokonaismassamaara>260</kokonaismassamaara>
                         <massa>
                             <massatyyppi>12</massatyyppi>

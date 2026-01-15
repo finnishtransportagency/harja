@@ -54,7 +54,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         alustaKantaanTehtavatJaMaarat('Pellon MHU testiurakka (3. hoitovuosi)');
 
         // Sivun tila on useiden lokaalitestien jälkeen väärässä kohdassa, joten joudumme käymään eri sivuilla nollataksemme tilateen
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
         cy.wait('@tehtavamaarat')
         cy.viewport(1100, 2000)
@@ -121,7 +121,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
 
     it.skip('Määrän voi syöttää', () => {
         cy.viewport(1100, 2000)
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeSuunniteltavatTehtavat')
         cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
         cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
@@ -150,7 +150,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         let hoitokausiViimeinen = "4. hoitovuosi (" + (urakanAlkuvuosi + 3) + "—" + (urakanAlkuvuosi + 4) + ")";
 
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().type('777')
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').clear().type('777')
         cy.get('div.select-default').contains(hoitokausiNyt).click()
         cy.contains(hoitokausiViimeinen).click()
         cy.get('div.select-default').contains(hoitokausiViimeinen, {timeout: 2000}).should('be.visible');
@@ -160,11 +160,11 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.get('.harja-alasvetolistaitemi').contains(hoitokausiNyt).click()
         cy.get('div.select-default').contains(hoitokausiNyt, {timeout: 2000}).should('be.visible');
 
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').should('not.have.value');
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').should('not.have.value');
     })
 
     it('Määrän voi vaihtaa', () => {
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeTehtavamaarat')
         cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
         cy.wait('@HaeTehtavamaarat')
@@ -192,7 +192,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.get('div.select-default').first().find('button').click()
         cy.get('.harja-alasvetolistaitemi').contains('3 SORATEIDEN HOITO').click()
         cy.wait(1000)
-        cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().blur()
+        cy.get('table.grid').contains('Kesäsuola (CaCl2, materiaali)').parent().find('td.muokattava').find('input').clear().blur()
         cy.wait('@TallennaTehtavamaarat')
     })
 })

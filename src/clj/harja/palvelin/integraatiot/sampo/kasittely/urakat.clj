@@ -66,14 +66,13 @@
         ;; Lisätään urakalle toimenkuvat
         (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
         urakka-id)
-      (do
-        (let [urakka-id (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
-                          ely-id urakoitsija-id)
-              ;; Lisätään urakan parametrit
-              _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
-              ;; Lisätään urakalle toimenkuvat
-              _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})]
-          urakka-id)))))
+      (let [urakka-id (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
+                        ely-id urakoitsija-id)
+            ;; Lisätään urakan parametrit
+            _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
+            ;; Lisätään urakalle toimenkuvat
+            _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})]
+        urakka-id))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
   (yhteyshenkilot-q/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)
@@ -124,8 +123,7 @@
       "THPP-2-1501" "KP921" ;VAR
       "PR00033567" "KP941" ;KAS
       )
-    ely-hash)
-  )
+    ely-hash))
 
 (defn hae-hallintayksikko
   [db ely-hash urakkatyyppi urakan-sampoid]
@@ -135,7 +133,7 @@
         ;; Kanavaurakat
         (or (= urakkatyyppi "vesivayla-kanavien-hoito")
             (= urakkatyyppi "vesivayla-kanavien-korjaus"))
-        (organisaatiot-q/hae-id-lyhenteella db "KAN")
+        (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "KAN")
 
         ;; Meri- tai sisävesiväyläurakat
         ;; Huom! Samposta ei tällä hetkellä saada tietoa onko kyseessä meri vais sisävesiväylä urakka
@@ -144,7 +142,7 @@
         (or (= urakkatyyppi "vesivayla-turvalaitteiden-korjaus")
             (= urakkatyyppi "vesivayla-hoito")
             (= urakkatyyppi "vesivayla-ruoppaus"))
-        (organisaatiot-q/hae-id-lyhenteella db "MV")
+        (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
         :else (organisaatiot-q/hae-ely-id-sampo-hashilla db

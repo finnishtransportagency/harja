@@ -275,18 +275,19 @@ select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa
 
 -- name: hae-talvisuolan-kokonaiskayttoraja
 -- Kokonaiskäyttöraja on voimassa vain, jos sopimuksen tehtävämäärät on tallennettu
-SELECT ut.maara as talvisuolan_kayttoraja
-  FROM urakka_tehtavamaara ut
- WHERE ut.tehtava = (SELECT id
-                       from tehtava
-                      WHERE suunnitteluyksikko = 'kuivatonnia'
-                        AND suoritettavatehtava = 'suolaus')
-  AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
-  AND ut.urakka = :urakka-id
-  AND true = (SELECT tallennettu
-                FROM sopimuksen_tehtavamaarat_tallennettu
-               WHERE urakka = :urakka-id
-               LIMIT 1);
+SELECT v.laskettu_maara as talvisuolan_kayttoraja
+  FROM urakka_tehtavamaara_yhteenveto v
+ WHERE v.tehtava = (SELECT id
+                      FROM tehtava
+                     WHERE suunnitteluyksikko = 'kuivatonnia'
+                       AND suoritettavatehtava = 'suolaus')
+   AND v.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+   AND v.urakka = :urakka-id
+   AND true = (SELECT tallennettu
+                 FROM sopimuksen_tehtavamaarat_tallennettu
+                WHERE urakka = :urakka-id
+                LIMIT 1);
+
 
 -- name: hae-talvisuolan-sanktiot
 SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",

@@ -4,6 +4,7 @@
   suoraan urakan tietoihin syvälle. Tämä vaatii useita eri tietoatomien manipulaatioita
   ja on hyvä keskittää yhteen paikkaan."
   (:require [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.asiakas.kommunikaatio :as k]
@@ -119,7 +120,7 @@
           vastaus (if (= 1 pot-versio)
                     (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
                     (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
-          nykyinen-valilehti-taso1 @nav/valittu-sivu
+          nykyinen-valilehti-taso1 (@reitit/url-navigaatio :sivu)
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
       (nav/esta-url-paivitys!)

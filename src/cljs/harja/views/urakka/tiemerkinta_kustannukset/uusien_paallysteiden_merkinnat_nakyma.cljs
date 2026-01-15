@@ -115,7 +115,7 @@
                       haku-kaynnissa? urakan-hoitokaudet valittu-hoitokausi] :as _app}]
         
         [:div.livi-grid.tiemerkinta-kustannusten-kirjaus
-         [:h1 "Uusien päällysteiden tiemerkinnät"] 
+         [:h1 "Uusien päällysteiden tiemerkinnät"]
          ;; [debug/debug app]
 
          ;; Aikaväli 

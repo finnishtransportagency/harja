@@ -8,8 +8,8 @@
    "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys",
    "sanktiot", "ulkopuoliset-rahavaraukset", "lisatyo", "muukulu-tavoitehintainen", "muukulu-eitavoitehintainen"])
 
-(def yhteenvedosta-jatettavat-paaryhmat
-  (set (map #(nth raportin-paaryhmat %) [5 8 9 10 11 12 13 15])))
+(def tavoitehintaan-kuulumattomat-paaryhmat
+  (set (map #(nth raportin-paaryhmat %) [6 9 10 11 12 13 14 16])))
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -38,7 +38,7 @@
     (group-by :tehtava_nimi (concat toteutuneet budjetoidut))))
 
 (defn- summaa-toimenpidetaso
-  "Käytetään seuraaville pääryhmille: hankintakustannukset ja rahavaraukset."
+  "Käytetään seuraaville pääryhmille: hankintakustannukset, muutokset ja rahavaraukset."
   [toimenpiteet paaryhmaotsikko]
   (sort-by :jarjestys
     (mapv
@@ -302,7 +302,7 @@
         toteutunut #(get taulukon-rivit (keyword (str % "-toteutunut")))
         budjetoitu #(get taulukon-rivit (keyword (str % "-budjetoitu")))
         budjetoitu-indeksikorjattu #(get taulukon-rivit (keyword (str % "-budjetoitu-indeksikorjattu")))
-        rivit (remove #(yhteenvedosta-jatettavat-paaryhmat %) raportin-paaryhmat)
+        rivit (remove #(tavoitehintaan-kuulumattomat-paaryhmat %) raportin-paaryhmat)
 
         ;; Yhteensä tavoitehintaiset
         yhteensa {:toimenpide "Yhteensä"
@@ -321,9 +321,11 @@
     "tavoitehinnan-ylitys" "Tavoitehinnan ylitys"
     "kattohinnan-ylitys" "Kattohinnan ylitys"
     "tavoitehinnan-alitus" "Tavoitehinnan alitus"
+    "tavoitehinnan-muutokset" "Tavoitehinnan muutokset"
     "lupausbonus" "Lupausbonus"
     "lupaussanktio" "Lupaussanktio"
     "bonus" "Lupausbonus"
     "sanktio" "Lupaussanktio"
+    "taytetty" "Lupaus täytetty"
 
     "tuntematon tyyppi"))
