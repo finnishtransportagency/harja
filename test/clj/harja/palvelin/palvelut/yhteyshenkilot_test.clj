@@ -230,7 +230,7 @@
         paivystaja {:id -1  ;; Uusi päivystys
                     :yhteyshenkilo_id yhteyshenkilo-id  ;; Linkitetään olemassa olevaan
                     :vastuuhenkilo true
-                    :alku (pvm/nyt)
+                    :alku (pvm/->pvm "1.1.2026")
                     :loppu (pvm/->pvm "1.1.2030")}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-urakan-paivystajat
@@ -251,7 +251,7 @@
         paivystaja {:id -1
                     :yhteyshenkilo_id yhteyshenkilo-id
                     :vastuuhenkilo false
-                    :alku (pvm/nyt)
+                    :alku (pvm/->pvm "1.1.2026")
                     :loppu (pvm/->pvm "1.1.2030")}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-urakan-paivystajat
@@ -276,7 +276,7 @@
                     :yhteyshenkilo_id yhteyshenkilo-id
                     :matkapuhelin "9999999999"  ;; Yritetään muuttaa puhelinnumeroa
                     :vastuuhenkilo true
-                    :alku (pvm/nyt)
+                    :alku (pvm/->pvm "1.1.2026")
                     :loppu (pvm/->pvm "1.1.2030")}
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-urakan-paivystajat
@@ -297,7 +297,7 @@
         paivystaja {:id -1
                     :yhteyshenkilo_id yhteyshenkilo-id
                     :vastuuhenkilo true
-                    :alku (pvm/nyt)
+                    :alku (pvm/->pvm "1.1.2026")
                     :loppu (pvm/->pvm "1.1.2030")}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-urakan-paivystajat
