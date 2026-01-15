@@ -5,9 +5,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [slingshot.slingshot :refer [throw+]]
             [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
+            [harja.kyselyt.kayttajat :as kayttaja-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta])
   (:import (org.apache.commons.codec.binary Base64)))
 
@@ -166,7 +168,7 @@
         (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
-        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {33 #{"Paakayttaja"}}))))
 
     (testing "Käytetään OAM-headereita normaalisti, mikäli ne on määritelty"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
@@ -183,7 +185,7 @@
         (is (= (get-in req [:kayttaja :puhelin]) "1234567890"))
         (is (= (get-in req [:kayttaja :etunimi]) "Daniel"))
         (is (= (get-in req [:kayttaja :sukunimi]) "Destialainen"))
-        (is (= (get-in req [:kayttaja :organisaatioroolit]) {23 #{"Paakayttaja"}}))))))
+        (is (= (get-in req [:kayttaja :organisaatioroolit]) {33 #{"Paakayttaja"}}))))))
 
 (deftest cognito-headereiden-purku-harja-api-usernamella
   (let [handler (->
@@ -259,3 +261,66 @@
                                                     "oam_user_companyid" "NOT_FOUND"
                                                     "oam_groups" ""}} true)]
         (is (= (get-in req [:kayttaja :organisaatio :id]) destia-id))))))
+
+(deftest varmista-kayttajatiedot-test
+  (let [db (:db jarjestelma)
+        testi-kayttajanimi "testi-kayttaja-123"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "Testi"
+                        "oam_user_last_name" "Käyttäjä"
+                        "oam_user_mail" "testi@example.com"
+                        "oam_user_mobile" "0401234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "2234567-8_Paakayttaja"}]
+
+    (testing "Uusi käyttäjä luodaan tietokantaan"
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      (let [kayttaja (#'todennus/varmista-kayttajatiedot db testi-headerit)
+            kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+        (is (some? kayttaja) "Käyttäjä palautetaan")
+        (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+        (is (= testi-kayttajanimi (:kayttajanimi kayttaja)))
+        (is (= "Testi" (:etunimi kayttaja)))
+        (is (= "Käyttäjä" (:sukunimi kayttaja)))
+        (is (= "testi@example.com" (:sahkoposti kayttaja)))
+        (is (= "0401234567" (:puhelin kayttaja)))
+        (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
+        (is (contains? (get-in kayttaja [:organisaatioroolit 33]) "Paakayttaja") "Pääkäyttäjärooli on asetettu")))
+
+    (testing "Olemassa oleva käyttäjä päivitetään jos tiedot muuttuvat"
+      (let [muutetut-headerit (assoc testi-headerit
+                                "oam_user_first_name" "Muutettu"
+                                "oam_user_mail" "uusi@example.com")
+            kayttaja (#'todennus/varmista-kayttajatiedot db muutetut-headerit)
+            kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+        (is (= "Muutettu" (:etunimi kayttaja)))
+        (is (= "uusi@example.com" (:sahkoposti kayttaja)))
+        (is (= "Muutettu" (:etunimi kayttaja-kannassa)))
+        (is (= "uusi@example.com" (:sahkoposti kayttaja-kannassa)))))
+
+    (testing "Elinvoimakeskus-käyttäjä toimii"
+      (let [evk-kayttajanimi "testi-evk"
+            evk-headerit {"oam_remote_user" evk-kayttajanimi
+                            "oam_user_first_name" "ELY"
+                            "oam_user_last_name" "Elinvoimakeskus"
+                            "oam_user_mail" "testi@example.com"
+                            "oam_user_mobile" "0401234567"
+                            "oam_organization" "Lapin elinvoimakeskus"
+                            "oam_groups" "ELY_Paakayttaja"}
+            kayttaja (#'todennus/varmista-kayttajatiedot db evk-headerit)
+            kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))]
+
+        (is (some? kayttaja) "Käyttäjä palautetaan")
+        (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+        (is (= evk-kayttajanimi (:kayttajanimi kayttaja)))
+        (is (= "ELY" (:etunimi kayttaja)))
+        (is (= "Elinvoimakeskus" (:sukunimi kayttaja)))
+        (is (= "testi@example.com" (:sahkoposti kayttaja)))
+        (is (= "0401234567" (:puhelin kayttaja)))
+        (is (= "Lapin elinvoimakeskus" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
+
+    ;; Siivoa testi-käyttäjä lopuksi
+    (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))

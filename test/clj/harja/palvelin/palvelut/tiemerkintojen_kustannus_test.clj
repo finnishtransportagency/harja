@@ -179,7 +179,8 @@
 
 (deftest hae-tiemerkinta-paallystyskohteiden-kustannukset-toimii
   (testing "Päällystyskohteiden kustannusten hakeminen toimii oikein"
-    (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+    (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+          urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
           kohdenumero "123"
           urakka (first (q-map "SELECT nimi, id, alkupvm, loppupvm FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024'"))
           yllapitokohde-id (i (format "INSERT INTO yllapitokohde 
@@ -193,7 +194,7 @@
                                4, 1, 0, 1, 100, 
                                'paallyste'::YLLAPITOKOHDETYYPPI, 
                                'paallystys'::YLLAPITOKOHDETYOTYYPPI,
-                               false, '{2025}'::INTEGER[], %s, %s) " urakka-id urakka-id kohdenumero urakka-id))
+                               false, '{%s}'::INTEGER[], %s, %s) " urakka-id urakka-id nykyinen-vuosi kohdenumero urakka-id))
 
 
           ;; Lisää kustannus
@@ -227,7 +228,8 @@
 
 (deftest tallenna-tiemerkinta-yllapitokohteiden-kustannukset-toimii
   (testing "Tiemerkintä-ylläpitokohteiden kustannusten tallennus toimii"
-    (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+    (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+          urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
           kohdenumero "123"
           urakka (first (q-map "SELECT nimi, id, alkupvm, loppupvm FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024'"))
 
@@ -243,8 +245,8 @@
                                       4, 1, 0, 1, 100, 
                                       'paallyste'::YLLAPITOKOHDETYYPPI, 
                                       'paallystys'::YLLAPITOKOHDETYOTYYPPI,
-                                      false, '{2025}'::INTEGER[], %s, %s) 
-                                     RETURNING id" urakka-id urakka-id kohdenumero urakka-id))
+                                      false, '{%s}'::INTEGER[], %s, %s)
+                                     RETURNING id" urakka-id urakka-id nykyinen-vuosi kohdenumero urakka-id))
 
           ;; Tallenna kustannukset
           kustannustiedot {:tiedot [{:id yllapitokohde-id

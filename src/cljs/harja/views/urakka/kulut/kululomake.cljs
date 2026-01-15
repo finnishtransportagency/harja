@@ -125,7 +125,6 @@
   [:div.col-xs-12.col-md-3
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Lisätieto"
-     :luokka "poista-label-top-margin"
      :vayla-tyyli? true
      :otsikon-luokka ""
      :arvo-atom (r/wrap lisatieto
@@ -146,6 +145,13 @@
                                   kielletyt-tehtavaryhmat))
                         tehtavaryhmat)
         tehtavat (:tehtavaryhman-tehtavat kohdistus)
+        ;; Jos tehtävistä löytyy "Muu tehtävä" id -1, ja kohdistuksen "muu-tehtava-kaytossa" = true, niin aseta se käyttöön
+        ;; Kyseessä on ns. dummy tehtävä, jota ei voi valita normaalisti, mutta joka on olemassa tietokannassa, jotta käyttöliittymässä voi näyttää "Muu tehtävä" valinnan
+        trlla-on-muu-tehtava? (some #(= -1 (:id %)) tehtavat)
+        muu-tehtava-kaytossa? (:muu-tehtava-kaytossa kohdistus)
+        kohdistus (if (and trlla-on-muu-tehtava? muu-tehtava-kaytossa?)
+                    (assoc kohdistus :tehtava tiedot/muu-tehtava)
+                    kohdistus)
         tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)]
     [:div
      [:div.row
@@ -247,7 +253,6 @@
       [:div.col-xs-12.col-md-6 {:style {:max-width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :tyylit {:width "150px"}
          :otsikon-luokka ""
@@ -303,7 +308,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -337,7 +341,6 @@
      [:div.col-xs-12.col-md-6 {:style {:width "350px"}}
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Lisätieto *"
-        :luokka "poista-label-top-margin"
         :vayla-tyyli? true
         :otsikon-luokka ""
         :arvo-atom (r/wrap lisatyon-lisatieto
@@ -383,7 +386,6 @@
       [:div.col-xs-12.lomakeryhman-rivi-tausta {:style {:width "350px"}}
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto *"
-         :luokka "poista-label-top-margin"
          :vayla-tyyli? true
          :otsikon-luokka ""
          :arvo-atom (r/wrap lisatyon-lisatieto
@@ -504,6 +506,7 @@
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
+        tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
         kulu-lukittu? (or haku-menossa
                         (when erapaivan-hoitovuosi
                           (some #(and
@@ -623,7 +626,6 @@
       [:div.col-xs-12.col-md-6.lisatiedot
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto"
-         :luokka #{}
          :arvo-atom (r/wrap (:lisatieto lomake)
                       #(e! (tiedot/->KulunLisatieto %)))
          :kentta-params {:tyyppi :text
@@ -634,7 +636,7 @@
 
      [:div.row
       [:div.col-xs-12.col-md-2
-       [:div {:style {:max-width "250px"}}
+       [:div.label-ja-alasveto {:style {:max-width "250px"}}
         [:label "Laskun pvm*"]
         [pvm-valinta/pvm-valintakalenteri-inputilla
          {:valitse #(e! (tiedot/->ValitseErapaiva %))
@@ -663,7 +665,6 @@
                          :disabled? kulu-lukittu?
                          :elementin-id "koontilaskun-numero-input"}
          :otsikko "Koontilaskun numero"
-         :luokka #{}
          :arvo-atom (r/wrap
                       (:laskun-numero lomake)
                       #(e! (tiedot/->KoontilaskunNumero %)))}]]]
@@ -691,7 +692,7 @@
          [napit/tallenna
           "Tallenna"
           #(e! (tiedot/->TallennaKulu))
-          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa)}]]
+          {:disabled (or (not lomake-validi?) kulu-lukittu? haku-menossa tehtava-haku-menossa?)}]]
 
         [:span
          [napit/peruuta
@@ -699,19 +700,19 @@
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
           {:disabled haku-menossa}]]
 
-        (when-not haku-menossa
-          [napit/poista "Poista kulu"
-           #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
-              [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
-                                                              (modal/piilota!)
-                                                              (e! (tiedot/->PoistaKulu (:id lomake))))
-                                              :kohdistukset kohdistukset
-                                              :koontilaskun-kuukausi koontilaskun-kuukausi
-                                              :tehtavaryhma tehtavaryhma
-                                              :laskun-pvm (pvm/pvm erapaiva)
-                                              :tehtavaryhmat tehtavaryhmat}])
-           {:style {:margin-left "auto"
-                    :float "right"}}])
+        (when (and (not haku-menossa) (not tehtava-haku-menossa?) (not (nil? (:id lomake))))
+          [:span
+           [napit/poista "Poista kulu"
+            #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?" :otsikon-alle-komp (fn [_] [:hr])}
+               [kulun-poistovarmistus-modaali {:varmistus-fn (fn []
+                                                               (modal/piilota!)
+                                                               (e! (tiedot/->PoistaKulu (:id lomake))))
+                                               :kohdistukset kohdistukset
+                                               :koontilaskun-kuukausi koontilaskun-kuukausi
+                                               :tehtavaryhma tehtavaryhma
+                                               :laskun-pvm (pvm/pvm erapaiva)
+                                               :tehtavaryhmat tehtavaryhmat}])
+            {:style {:margin-left "1rem"}}]])
 
         (when haku-menossa
           [:span.kulu-ladataan

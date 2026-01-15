@@ -61,7 +61,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava (hae-tehtavan-id-nimella "Runkopuiden poisto")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}
                     {:kohdistus-id nil
@@ -69,7 +69,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava -1                            ;; Tämä on "Muu tehtävä"
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}]
      :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
@@ -87,7 +87,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23104")
                      :tehtavaryhma (hae-tehtavaryhman-id-tunnisteella "3d5962b4-c7ca-4750-81f1-f589b9c7c52b") ;; B1 - Talvisuola
-                     :tehtava (hae-tehtavan-id-nimella "Suolaus")
+                     :tehtava (hae-tehtavan-id-nimella "Liukkaudentorjunta suolaamalla (materiaali)")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}
                     {:kohdistus-id nil
@@ -162,7 +162,7 @@
         ;; Luodaan kulu, joka on pakko löytyä aineistosta
         kulu-summa 1000M
         uusi-kulu (uusi-kulu-tehtavalla-kustannukset-testiin urakka-id kulu-summa 2023 urakan-alkupvm)
-        _ (println "uusi-kulu" (pr-str uusi-kulu))
+        _ (println "uusi-kulu: " (pr-str uusi-kulu))
         _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -204,7 +204,7 @@
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset]))))
 
     ;; Varmista, että tehtävät tuli - Tehtävät on kovakoodattu, niin haetaan ne apufunktioilla
-    (is (= (hae-tehtavan-id-nimella "Suolaus") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 0 :kulukohdistus :kohdistus :tehtava])))
+    (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta suolaamalla (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 0 :kulukohdistus :kohdistus :tehtava])))
     (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 1 :kulukohdistus :kohdistus :tehtava])))))
 
 (deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
@@ -477,12 +477,10 @@
 
         ;; Hae päätöksen tiedot
         paatos-tiedot (q-map (format "SELECT * FROM paatos_kattohinta WHERE urakkaid = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitokauden-alkuvuosi))
-        _ (println "Paatos tiedot:" (pr-str paatos-tiedot))
 
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "encoodattu-body analytiikka vastaus;" (pr-str encoodattu-body))
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
                                                          (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))

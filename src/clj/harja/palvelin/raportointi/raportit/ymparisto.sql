@@ -148,16 +148,16 @@ SELECT
     coalesce(mk.yksikko, ml.yksikko) AS materiaali_yksikko,
     coalesce(mk.materiaalityyppi, ml.materiaalityyppi) AS materiaali_tyyppi,
     NULL as kk,
-    SUM(ut.maara) as maara
-FROM urakka_tehtavamaara ut
-         JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+    SUM(v.laskettu_maara) as maara
+FROM urakka_tehtavamaara_yhteenveto v
+         JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
+         JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
-WHERE ut.poistettu IS NOT TRUE
+WHERE v.poistettu IS NOT TRUE
   -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
-  AND ut."hoitokauden-alkuvuosi" = EXTRACT(YEAR from :alkupvm::DATE)
-  AND (:urakka::integer IS NULL OR ut.urakka = :urakka)
+  AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR from :alkupvm::DATE)
+  AND (:urakka::integer IS NULL OR v.urakka = :urakka)
   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
   -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
   AND u.tyyppi = 'teiden-hoito'
@@ -184,18 +184,18 @@ SELECT u.id AS urakka_id,
            END AS materiaali_yksikko,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
        NULL AS kk,
-       SUM(ut.maara) AS maara
-  FROM urakka_tehtavamaara ut
-    JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-    JOIN tehtava tk ON ut.tehtava = tk.id
- WHERE ut.poistettu IS NOT TRUE
+       SUM(v.laskettu_maara) AS maara
+  FROM urakka_tehtavamaara_yhteenveto v
+    JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
+    JOIN tehtava tk ON v.tehtava = tk.id
+ WHERE v.poistettu IS NOT TRUE
    -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
    AND u.tyyppi = 'teiden-hoito'
-   AND (:urakka::INTEGER IS NULL OR ut.urakka = :urakka)
+   AND (:urakka::INTEGER IS NULL OR v.urakka = :urakka)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
-   AND ut."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM :alkupvm::DATE)
-   AND ut.tehtava IN (SELECT id FROM paikkaustehtavat)
+   AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR FROM :alkupvm::DATE)
+   AND v.tehtava IN (SELECT id FROM paikkaustehtavat)
  GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi;
 
 

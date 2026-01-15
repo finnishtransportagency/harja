@@ -228,13 +228,11 @@
                         (when-not aluekohtaisissa?
                           [:div.flex-row.tasaa-alas
                            (when-not haku-kaynnissa?
-                             [:h2 (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
+                             [:h2 {:style {:white-space "nowrap"}} (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
                            (when (and
                                    (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
                                    (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-                             [:div
-                              (when loytyi-kohteita?
-                                {:style {:text-align "end"}})
+                             [:div.flex-row {:style {:justify-content "flex-end"}}
                               (when loytyi-kohteita?
                                 [:span.inline-block
                                  [:form {:style {:margin-left "auto"}
@@ -259,7 +257,8 @@
                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
                               [yleiset/tiedoston-lataus-linkki
                                "Lataa Excel-pohja"
-                               "/excel/harja_paikkauskohteet_pohja.xlsx"]
+                               "/excel/harja_paikkauskohteet_pohja.xlsx"
+                               {:luokat ["padding-top-8"]}]
                               [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
                                {:paksu? true
                                 :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])
@@ -379,7 +378,7 @@
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
        [:div.col-xs-2
-        [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-ely"} "ELY"]
+        [:label {:class "alasvedon-otsikko" :for "filtteri-ely"} "ELY"]
         [valinnat/checkbox-pudotusvalikko valittavat-elyt (fn [ely valittu?]
                                                             (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
          [" ELY valittu" " ELYä valittu"]
@@ -387,7 +386,7 @@
 
      ;; Kohteen tila 
      [:div.col-xs-2
-      [:label.alasvedon-otsikko-vayla "Tila"]
+      [:label.alasvedon-otsikko "Tila"]
       [valinnat/checkbox-pudotusvalikko valittavat-tilat (fn [tila valittu?]
                                                            (e! (t-paikkauskohteet/->FiltteriValitseTila tila valittu?)))
        [" Tila valittu" " Tilaa valittu"]
@@ -396,7 +395,7 @@
      ;; Vuosivalinnat
      [:div.col-xs-2 {:data-cy "paikkauskohde-vuosivalinta"}
       [:label
-       {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
+       {:class "alasvedon-otsikko" :for "filtteri-vuosi"} "Vuosi"]
       [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
                                     :vayla-tyyli? true
                                     :disabled haku-kaynnissa?
@@ -406,7 +405,7 @@
 
      ;; Työmenetelmä 
      [:div.col-xs-4
-      [:label.alasvedon-otsikko-vayla "Työmenetelmä"]
+      [:label.alasvedon-otsikko "Työmenetelmä"]
       [valinnat/checkbox-pudotusvalikko valittavat-tyomenetelmat (fn [tyomenetelma valittu?]
                                                                    (e! (t-paikkauskohteet/->FiltteriValitseTyomenetelma tyomenetelma valittu?)))
        [" Työmenetelmä valittu" " Työmenetelmää valittu"]
@@ -456,4 +455,3 @@
   (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? true)
   (reset! t-paikkauskohteet-kartalle/valitut-kohteet-atom #{})
   [wrap-paikkauskohteet e! app-state])
-

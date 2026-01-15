@@ -453,7 +453,7 @@
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id-thread (thread (when integraatioloki
-                                        (lokita-kutsu integraatioloki resurssi request body)))
+                                        (lokita-kutsu integraatioloki resurssi request body "sahkoposti")))
           parametrit (:params request)
           headerit (:headers request)
           vastaus (aja-virhekasittelyn-kanssa

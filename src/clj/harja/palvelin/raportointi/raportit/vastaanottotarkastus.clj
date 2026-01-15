@@ -121,10 +121,7 @@
        (mapcat
          (fn [kohde]
            (concat [;; Muodosta hallintayksikön otsikko
-                    {:otsikko (str
-                                (format "%02d"
-                                  (-> kohde second first :hallintayksikko_id)) " "
-                                (-> kohde second first :hallintayksikko_nimi)) :leveys 10}]
+                    {:otsikko (-> kohde second first :hallintayksikko_nimi) :leveys 10}]
              (map fn-formatoi-kohdetiedot (second kohde))))
          kohteet))]))
 
@@ -257,7 +254,7 @@
                                       rivit)
         elyttain-jaoteltu (group-by :hallintayksikko_nimi rivit)
         formatoi-elyt-fn (fn [ely]
-                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
+                           (let [elyrivi {:otsikko (first ely)}
                                  kohteet-lista (mapv (fn [kohde] (apurit/pkluokka-rivi kohde false false)) (second ely))
                                  ely-yhteensa (reduce (fn [yht-rivi rivi]
                                                         (let [pk1 (:pk1 rivi)
@@ -318,7 +315,7 @@
         elyttain-jaoteltu (group-by :hallintayksikko_nimi urakkarivit)
 
         formatoi-elyt-fn (fn [ely]
-                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
+                           (let [elyrivi {:otsikko (first ely)}
                                  urakat-lista (mapv
                                                 (fn [rivi]
                                                   (pkluokka-yotyo-rivi rivi false false))
@@ -377,7 +374,7 @@
                           urakan-sanktiot)
         elyjaottelu-rivit (group-by :hallintayksikko_nimi (concat [] muut-kustannukset urakan-sanktiot))
         formatoi-elyt-fn (fn [ely]
-                           (let [elyrivi {:otsikko (str (:elynumero (first (second ely))) " " (first ely))}
+                           (let [elyrivi {:otsikko (first ely)}
                                  rivi-lista (mapv (fn [rivi]
                                                     (let [kohdetiedot (when-not (:selite rivi)
                                                                         (yllapitokohteet-domain/fmt-kohteen-nimi-ja-yhaid-opt rivi))]
