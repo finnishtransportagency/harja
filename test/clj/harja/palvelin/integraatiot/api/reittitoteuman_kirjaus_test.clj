@@ -450,7 +450,7 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                         (-> "test/resurssit/api/reittitoteuma_monta.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_monta.json"
                            slurp
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID1__" (str ulkoinen-id-1))
@@ -460,10 +460,10 @@
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
     (odota-reittipisteet toteuma-id)
     (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))]
-      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy"])))
-    (let [toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
-      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy"])))))
+    (let [toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))]
+      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "harja-api"])))
+    (let [toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
+      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy" "harja-api"])))))
 
 (deftest tarkista-toteuman-tallentaminen-paasopimukselle
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)

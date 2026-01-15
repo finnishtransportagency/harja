@@ -62,7 +62,7 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
-                                                (-> "test/resurssit/api/pistetoteuma_monta.json"
+                                                (-> "test/resurssit/api/toteumat/pistetoteuma_monta.json"
                                                     slurp
                                                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID1__" (str ulkoinen-id-1))
@@ -73,12 +73,12 @@
                                                     (.replace "__TOTEUMA2_TYYPPI__" "kokonaishintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma1-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
-          toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
+          toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
           toteuma1-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma1-id))))]
-      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "kokonaishintainen"]))
+      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "kokonaishintainen" "harja-api"]))
       (is (= (count toteuma1-tehtava-idt) 1)))
     (let [toteuma2-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
-          toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
+          toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
           toteuma2-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma2-id))))]
-      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Ry" "kokonaishintainen"]))
+      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Ry" "kokonaishintainen" "harja-api"]))
       (is (= (count toteuma2-tehtava-idt) 1)))))
