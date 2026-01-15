@@ -37,6 +37,15 @@ set -euo pipefail
 # POISTO:
 #   sh/git-worktree/poista-worktree.sh <haara-nimi>
 #
+# TIETOKANTA (tärkeä huomio):
+#   Worktree:t käyttävät oletuksena samaa lokaalista dev-tietokantaa.
+#   Jos ajat useaa worktree:tä rinnakkain tai vaihdat branchia jossa on eri migraatiot,
+#   saatat aiheuttaa migraatio-/data-konflikteja.
+#
+#   Suositus:
+#     - Aja tarvittaessa: $HARJA_DIR/tietokanta/devdb_restart.sh
+#     - Älä pidä kahta worktree:tä samaan aikaan samassa kannassa ilman selkeää syytä.
+#
 #═══════════════════════════════════════════════════════════════════════════════
 
 # Värit
@@ -95,6 +104,21 @@ usage() {
     exit 1
 }
 
+validoi_haaran_nimi() {
+    local nimi="$1"
+
+    if [ -z "$nimi" ]; then
+        echo -e "${PUNAINEN}❌ Haaran nimi puuttuu${EI_VARIA}"
+        exit 1
+    fi
+
+    if [[ "$nimi" =~ [[:space:]] ]]; then
+        echo -e "${PUNAINEN}❌ Haaran nimi ei saa sisältää välilyöntejä: '$nimi'${EI_VARIA}"
+        echo -e "${KELTAINEN}   Vinkki: käytä '-' tai '_' välilyöntien sijaan.${EI_VARIA}"
+        exit 1
+    fi
+}
+
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
     usage
 fi
@@ -104,6 +128,7 @@ fi
 # shellcheck disable=SC1091
 source "$( dirname "${BASH_SOURCE[0]}" )/../harja_dir.sh" || exit
 HAARAN_NIMI="$1"
+validoi_haaran_nimi "$HAARAN_NIMI"
 PROJEKTIN_JUURI="$HARJA_DIR"
 YLAKANSIO="$(dirname "$PROJEKTIN_JUURI")"
 
@@ -116,8 +141,8 @@ fi
 
 
 
-# Sanitoi haaran nimi
-TURVALLINEN_HAARAN_NIMI=$(echo "$HAARAN_NIMI" | sed 's/[\/:]/-/g')
+# Sanitoi haaran nimi worktree-kansion nimeksi (ei välilyöntejä tai erikoismerkkejä)
+TURVALLINEN_HAARAN_NIMI=$(printf '%s' "$HAARAN_NIMI" | sed 's#[^[:alnum:]._-]#-#g')
 WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
 
 echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
