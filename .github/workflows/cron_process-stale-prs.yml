@@ -47,7 +47,8 @@ jobs:
           debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
-          stale-pr-message: "Tämä PR on ollut avoin 3 päivää ilman kommentteja tai päivityksiä, joten se merkitään vanhentuneeksi. Voit perua merkinnän kommentoimalla tai päivittämällä PR:ää."
+          # Ei lisätä PR:iin automaattista kommenttia vanhentumisesta
+          stale-pr-message: -1
           # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
           days-before-pr-close: -1
           days-before-close: -1
