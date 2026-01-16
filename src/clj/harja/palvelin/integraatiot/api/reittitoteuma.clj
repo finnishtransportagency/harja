@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -332,17 +333,23 @@ maksimi-linnuntien-etaisyys 200)
     (doseq [sopimus-id sopimus-idt]
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
+    (let [alkanut (get-in data [:reittitoteuma :toteuma :alkanut])
+          toteuma-alkanut (aika-string->java-sql-date alkanut)]
+      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
       db
       urakka-id
       (get-in data [:reittitoteuma :toteuma :tehtavat])))
   (doseq [reittitoteuma (:reittitoteumat data)]
-    (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
-    (toteuman-validointi/tarkista-tehtavat
-      db
-      urakka-id
-      (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat]))))
+     (let [alkanut (get-in reittitoteuma [:reittitoteuma :toteuma :alkanut])
+           toteuma-alkanut (aika-string->java-sql-date alkanut)]
+       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
+     (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
+     (toteuman-validointi/tarkista-tehtavat
+       db
+       urakka-id
+       (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat]))))
 
 (defn kirjaa-toteuma [db db-replica {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

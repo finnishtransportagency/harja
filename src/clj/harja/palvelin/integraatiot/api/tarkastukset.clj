@@ -12,7 +12,7 @@
     [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
     [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
     [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-    [harja.kyselyt.tarkastukset :as q-tarkastukset]
+    [harja.kyselyt.tarkastukset :as q-tarkastukset] [harja.kyselyt.urakat :as urakat-q]
     [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
     [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]))
 
@@ -45,10 +45,23 @@
                                     urakka-id, ulkoinen-id)}]})
       (throw (IllegalArgumentException.)))))
 
+(defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id]
+  (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-loppupvm (:loppupvm urakka)]
+    (when (and urakan-loppupvm tarkastus-aika)
+      (let [sallittu-viimeinen-pvm (pvm/paivan-lopussa (pvm/ajan-muokkaus urakan-loppupvm true 1 :paiva))]
+        (when (pvm/jalkeen? tarkastus-aika sallittu-viimeinen-pvm)
+          (throw (IllegalArgumentException.
+                   (str "Urakka on päättynyt. Tarkastuksen aika " tarkastus-aika " on sallitun kirjaamispäivän " sallittu-viimeinen-pvm " jälkeen"))))))))
+
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (varmista-etta-ulkoinen-id-on-uniikki db tyyppi urakka-id data)
+    (doseq [t (:tarkastukset data)
+            :let [tarkastus (:tarkastus t)
+                  aika (json/aika-string->java-sql-timestamp (get tarkastus :aika))]]
+      (vaadi-tarkastus-urakan-aikana db aika urakka-id))
     (let [varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 

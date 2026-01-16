@@ -1,6 +1,17 @@
 (ns harja.palvelin.palvelut.toteumat-tarkistukset
   (:require [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
+
+(defn vaadi-toteuma-urakan-aikana [db toteuma-alkanut urakka-id]
+  (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-loppupvm (:loppupvm urakka)]
+    (when (and urakan-loppupvm toteuma-alkanut)
+      (let [sallittu-viimeinen-pvm (pvm/paivan-lopussa (pvm/ajan-muokkaus urakan-loppupvm true 1 :paiva))]
+        (when (pvm/jalkeen? toteuma-alkanut sallittu-viimeinen-pvm)
+          (throw (IllegalArgumentException.
+                 (str "Urakka on päättynyt. Toteuman aloitusaika " toteuma-alkanut " on sallitun kirjaamispäivän " sallittu-viimeinen-pvm " jälkeen"))))))))
 
 (defn vaadi-toteuma-ei-jarjestelman-luoma [db toteuma-id]
   (log/debug "Tarkistetaan, ettei toteuma " toteuma-id " ole järjestelmästä tullut")
