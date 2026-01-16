@@ -30,6 +30,10 @@ set -euo pipefail
 #   - Jos haara tukee worktreeta: etsii vapaan portin 3001-3020
 #   - Jos haara ei tue worktreeta: käyttää porttia 3000
 #
+# FRONTEND REPL -PORTTI (Figwheel):
+#   - Jos haara tukee FRONTEND_REPL_PORT-asetusta: etsii vapaan portin 3449-3499
+#   - Muuten: käyttää porttia 3449
+#
 # KÄYNNISTYS:
 #   cd ../harja-worktree-<haara-nimi>
 #   ./kaynnista-kaikki.sh
@@ -71,6 +75,50 @@ etsi_vapaa_portti() {
     # Jos kaikki portit varattu, palauta virhe
     echo ""
     return 1
+}
+
+etsi_vapaa_frontend_repl_portti() {
+    local alku_portti=3449
+    local loppu_portti=3499
+
+    for portti in $(seq $alku_portti $loppu_portti); do
+        if ! lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "$portti"
+            return 0
+        fi
+    done
+
+    echo ""
+    return 1
+}
+
+tukeeko_dynaamista_porttia() {
+    local worktree_kansio="$1"
+
+    if [ -d "$worktree_kansio/sh/git-worktree" ]; then
+        return 0
+    fi
+
+    if [ -f "$worktree_kansio/asetukset.edn" ] && grep -q "HARJA_HTTP_PORTTI" "$worktree_kansio/asetukset.edn" 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+
+tukeeko_dynaamista_frontend_repl_porttia() {
+    local worktree_kansio="$1"
+
+    if [ -f "$worktree_kansio/src/clj-dev/harja/tyokalut/figwheel_konffi.clj" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+portti_varattu() {
+    local portti="$1"
+    lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1
 }
 
 # Funktio kysymään tietokannan uudelleenkäynnistyksestä
@@ -186,7 +234,7 @@ git worktree add "$WORKTREE_KANSIO" "$HAARAN_NIMI"
 
 # Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
 if [ -z "$HTTP_PORTTI" ]; then
-    if [ -d "$WORKTREE_KANSIO/sh/git-worktree" ]; then
+    if tukeeko_dynaamista_porttia "$WORKTREE_KANSIO"; then
         # Branch tukee worktreeta, etsi vapaa portti
         echo -e "${SININEN}Etsitään vapaata porttia rangesta 3001-3020...${EI_VARIA}"
         HTTP_PORTTI=$(etsi_vapaa_portti)
@@ -203,11 +251,55 @@ if [ -z "$HTTP_PORTTI" ]; then
         HTTP_PORTTI=3000
         echo -e "${KELTAINEN}⚠️  Branch ei tue worktree-toiminnallisuutta${EI_VARIA}"
         echo -e "${SININEN}   Käytetään porttia: $HTTP_PORTTI${EI_VARIA}"
+
+        if portti_varattu "$HTTP_PORTTI"; then
+            echo ""
+            echo -e "${PUNAINEN}❌ Portti $HTTP_PORTTI on jo käytössä.${EI_VARIA}"
+            echo -e "${KELTAINEN}   Tämä branch ei tue HARJA_HTTP_PORTTI-asetusta, joten Harja yrittää käynnistyä porttiin 3000.${EI_VARIA}"
+            echo -e "${KELTAINEN}   Vapauta portti 3000 tai käytä branchia, jossa worktree-tuki/portin valinta on mukana.${EI_VARIA}"
+            echo ""
+            echo -e "${KELTAINEN}Siivotaan luotu worktree pois.${EI_VARIA}"
+            cd "$PROJEKTIN_JUURI"
+            git worktree remove "$WORKTREE_KANSIO" --force || true
+            exit 1
+        fi
     fi
     echo ""
 fi
 
+# Päätä Figwheelin frontend REPL -portti
+if tukeeko_dynaamista_frontend_repl_porttia "$WORKTREE_KANSIO"; then
+    echo -e "${SININEN}Etsitään vapaata frontend REPL -porttia rangesta 3449-3499...${EI_VARIA}"
+    FRONTEND_REPL_PORTTI=$(etsi_vapaa_frontend_repl_portti)
+    if [ -z "$FRONTEND_REPL_PORTTI" ]; then
+        echo -e "${PUNAINEN}❌ Ei vapaita portteja rangesta 3449-3499!${EI_VARIA}"
+        echo -e "${KELTAINEN}Sulje joitain Figwheel-instansseja tai aseta FRONTEND_REPL_PORT käsin.${EI_VARIA}"
+        cd "$PROJEKTIN_JUURI"
+        git worktree remove "$WORKTREE_KANSIO" --force
+        exit 1
+    fi
+    echo -e "${VIHREA}✓ Löydettiin vapaa frontend REPL -portti: $FRONTEND_REPL_PORTTI${EI_VARIA}"
+else
+    FRONTEND_REPL_PORTTI=3449
+    echo -e "${KELTAINEN}⚠️  Branch ei tue FRONTEND_REPL_PORT-asetusta${EI_VARIA}"
+    echo -e "${SININEN}   Käytetään frontend REPL -porttia: $FRONTEND_REPL_PORTTI${EI_VARIA}"
+
+    if portti_varattu "$FRONTEND_REPL_PORTTI"; then
+        echo ""
+        echo -e "${PUNAINEN}❌ Portti $FRONTEND_REPL_PORTTI on jo käytössä.${EI_VARIA}"
+        echo -e "${KELTAINEN}   Tämä branch ei tue FRONTEND_REPL_PORT-asetusta, joten Figwheel yrittää käynnistyä porttiin 3449.${EI_VARIA}"
+        echo -e "${KELTAINEN}   Vapauta portti 3449 tai käytä branchia, jossa FRONTEND_REPL_PORT-tuki on mukana.${EI_VARIA}"
+        echo ""
+        echo -e "${KELTAINEN}Siivotaan luotu worktree pois.${EI_VARIA}"
+        cd "$PROJEKTIN_JUURI"
+        git worktree remove "$WORKTREE_KANSIO" --force || true
+        exit 1
+    fi
+fi
+echo ""
+
 echo -e "${KELTAINEN}HTTP-portti:${EI_VARIA}    $HTTP_PORTTI"
+echo -e "${KELTAINEN}Frontend REPL-portti:${EI_VARIA} $FRONTEND_REPL_PORTTI"
 echo ""
 
 # Asenna npm-riippuvuudet
@@ -305,12 +397,15 @@ WORKTREE_KANSIO="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 # Aseta worktree-spesifiset ympäristömuuttujat
 export HARJA_HTTP_PORTTI=$HTTP_PORTTI
 export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORTTI"
+export FRONTEND_REPL_PORT=$FRONTEND_REPL_PORTTI
 
 echo "🚀 Käynnistetään Harja worktree..."
 echo "   Backend käynnistetään taustaprosessina"
 echo "   Frontend käynnistyy tässä terminaalissa"
-echo "   Portti: \$HARJA_HTTP_PORTTI"
-echo "   URL: http://localhost:\$HARJA_HTTP_PORTTI"
+echo "   Backend-portti: \$HARJA_HTTP_PORTTI"
+echo "   Backend URL: http://localhost:\$HARJA_HTTP_PORTTI"
+echo "   Frontend (Figwheel) portti: \$FRONTEND_REPL_PORT"
+echo "   Frontend (Figwheel) URL: http://localhost:\$FRONTEND_REPL_PORT"
 echo ""
 
 # Käynnistä backend taustalle
@@ -346,7 +441,8 @@ fi
 echo ""
 echo "🎨 Käynnistetään frontend..."
 echo "   (Backend pyörii taustalla)"
-echo "http://localhost:\$HARJA_HTTP_PORTTI "
+echo "Frontend (Figwheel): http://localhost:\$FRONTEND_REPL_PORT"
+echo "Backend: http://localhost:\$HARJA_HTTP_PORTTI"
 
 
 # Käynnistä frontend interaktiivisesti
