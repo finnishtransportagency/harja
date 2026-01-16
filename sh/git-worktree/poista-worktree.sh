@@ -34,6 +34,9 @@ set -euo pipefail
 #   Jos ajat useaa worktree:tä rinnakkain tai vaihdat branchia jossa on eri migraatiot,
 #   saatat aiheuttaa migraatio-/data-konflikteja.
 #
+#   Jos worktree on luotu `luo-uusi-worktree.sh` skriptillä, worktreellä voi olla oma
+#   tietokanta-kontti. Tämä skripti yrittää poistaa sen, jos `.tietokanta.env` löytyy.
+#
 #═══════════════════════════════════════════════════════════════════════════════
 
 # Värit
@@ -146,6 +149,31 @@ echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${SININEN}Peruttu.${EI_VARIA}"
     exit 0
+fi
+
+echo ""
+echo -e "${SININEN}🐘 Poistetaan worktreen tietokanta (jos käytössä)...${EI_VARIA}"
+
+if [ -f "$WORKTREE_KANSIO/.tietokanta.env" ]; then
+    # shellcheck disable=SC1091
+    source "$WORKTREE_KANSIO/.tietokanta.env"
+
+    if [ -n "${POSTGRESQL_NAME:-}" ]; then
+        if command -v docker >/dev/null 2>&1; then
+            if docker inspect "$POSTGRESQL_NAME" >/dev/null 2>&1; then
+                docker rm -f "$POSTGRESQL_NAME" >/dev/null 2>&1 || true
+                echo -e "${VIHREA}✓ Poistettiin tietokanta-kontti: $POSTGRESQL_NAME${EI_VARIA}"
+            else
+                echo -e "${KELTAINEN}   (Tietokanta-konttia ei löydy: $POSTGRESQL_NAME)${EI_VARIA}"
+            fi
+        else
+            echo -e "${KELTAINEN}⚠️  docker ei ole saatavilla tässä ympäristössä, ohitetaan.${EI_VARIA}"
+        fi
+    else
+        echo -e "${KELTAINEN}   (POSTGRESQL_NAME puuttuu .tietokanta.env -tiedostosta, ohitetaan)${EI_VARIA}"
+    fi
+else
+    echo -e "${KELTAINEN}   (.tietokanta.env puuttuu, ohitetaan)${EI_VARIA}"
 fi
 
 echo ""

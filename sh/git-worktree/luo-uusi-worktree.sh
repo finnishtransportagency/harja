@@ -42,13 +42,14 @@ set -euo pipefail
 #   sh/git-worktree/poista-worktree.sh <haara-nimi>
 #
 # TIETOKANTA (tärkeä huomio):
-#   Worktree:t käyttävät oletuksena samaa lokaalista dev-tietokantaa.
-#   Jos ajat useaa worktree:tä rinnakkain tai vaihdat branchia jossa on eri migraatiot,
-#   saatat aiheuttaa migraatio-/data-konflikteja.
+#   Tämä skripti varaa worktree:lle oman PostgreSQL-kontin ja oman host-portin.
+#   Tämä vähentää migraatio-/data-konflikteja, kun useita worktree:tä ajetaan rinnakkain.
 #
-#   Suositus:
-#     - Aja tarvittaessa: $HARJA_DIR/tietokanta/devdb_restart.sh
-#     - Älä pidä kahta worktree:tä samaan aikaan samassa kannassa ilman selkeää syytä.
+#   Tietokanta-portti:
+#     - Etsitään vapaa portti rangesta 5433-5499
+#
+#   Kontin nimi:
+#     - Muodostetaan worktree-haaran nimestä (POSTGRESQL_NAME)
 #
 #═══════════════════════════════════════════════════════════════════════════════
 
@@ -92,6 +93,21 @@ etsi_vapaa_frontend_repl_portti() {
     return 1
 }
 
+etsi_vapaa_tietokanta_portti() {
+    local alku_portti=5433
+    local loppu_portti=5499
+
+    for portti in $(seq $alku_portti $loppu_portti); do
+        if ! lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "$portti"
+            return 0
+        fi
+    done
+
+    echo ""
+    return 1
+}
+
 tukeeko_dynaamista_porttia() {
     local worktree_kansio="$1"
 
@@ -123,15 +139,20 @@ portti_varattu() {
 
 # Funktio kysymään tietokannan uudelleenkäynnistyksestä
 kysy_tietokannan_uudelleenkaynnistys() {
-    echo -e "${KELTAINEN}Suositus: Aja tietokannan uudelleenkäynnistys ennen käynnistystä:${EI_VARIA}"
+    local worktree_kansio="$1"
+    local tietokanta_portti="$2"
+    local postgresql_name="$3"
+
+    echo -e "${KELTAINEN}Suositus: Rakenna worktree:n tietokanta uudelleen ennen käynnistystä:${EI_VARIA}"
     echo ""
-    echo -e "${SININEN}   $PROJEKTIN_JUURI/tietokanta/devdb_restart.sh${EI_VARIA}"
+    echo -e "${SININEN}   docker rm -f \"${postgresql_name}\"${EI_VARIA}"
+    echo -e "${SININEN}   HARJA_TIETOKANTA_PORTTI=${tietokanta_portti} POSTGRESQL_NAME=${postgresql_name} ${worktree_kansio}/tietokanta/devdb_up.sh${EI_VARIA}"
     echo ""
-    echo -e "${KELTAINEN}Oletko jo ajanut tietokannan uudelleenkäynnistyksen? [y/N]${EI_VARIA}"
+    echo -e "${KELTAINEN}Oletko jo ajanut tietokannan uudelleen? [y/N]${EI_VARIA}"
     read -p "" -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${KELTAINEN}💡 Muista ajaa komento ennen worktreen käynnistystä!${EI_VARIA}"
+        echo -e "${KELTAINEN}💡 Muista ajaa komennot ennen worktreen käynnistystä!${EI_VARIA}"
         echo ""
     else
         echo -e "${VIHREA}✓ Hyvä, jatketaan...${EI_VARIA}"
@@ -329,8 +350,27 @@ else
 fi
 echo ""
 
+echo -e "${SININEN}Etsitään vapaata tietokantaporttia rangesta 5433-5499...${EI_VARIA}"
+TIETOKANTA_PORTTI=$(etsi_vapaa_tietokanta_portti)
+if [ -z "$TIETOKANTA_PORTTI" ]; then
+    echo -e "${PUNAINEN}❌ Ei vapaita tietokantaportteja rangesta 5433-5499!${EI_VARIA}"
+    echo -e "${KELTAINEN}Sulje joitain paikallisia PostgreSQL-instansseja tai vapauta portteja.${EI_VARIA}"
+    cd "$PROJEKTIN_JUURI"
+    git worktree remove "$WORKTREE_KANSIO" --force
+    exit 1
+fi
+
+POSTGRESQL_NAME="harjadb-${TURVALLINEN_HAARAN_NIMI}"
+POSTGRESQL_NAME="${POSTGRESQL_NAME:0:60}"
+
+echo -e "${VIHREA}✓ Löydettiin vapaa tietokantaportti: $TIETOKANTA_PORTTI${EI_VARIA}"
+echo -e "${VIHREA}✓ Tietokanta-kontin nimi: $POSTGRESQL_NAME${EI_VARIA}"
+echo ""
+
 echo -e "${KELTAINEN}HTTP-portti:${EI_VARIA}    $HTTP_PORTTI"
 echo -e "${KELTAINEN}Frontend REPL-portti:${EI_VARIA} $FRONTEND_REPL_PORTTI"
+echo -e "${KELTAINEN}Tietokanta-portti:${EI_VARIA} $TIETOKANTA_PORTTI"
+echo -e "${KELTAINEN}Tietokanta-kontti:${EI_VARIA} $POSTGRESQL_NAME"
 echo ""
 
 # Asenna npm-riippuvuudet
@@ -390,14 +430,14 @@ PAAHARAN_VIIMEINEN=$(hae_viimeisin_migraatio "$PROJEKTIN_JUURI/tietokanta/src/ma
 
 if [ "$WORKTREE_MIGRAATIOT" -gt "$PAAHARAN_MIGRAATIOT" ]; then
     echo -e "${KELTAINEN}⚠️  Huomattu $((WORKTREE_MIGRAATIOT - PAAHARAN_MIGRAATIOT)) uutta migraatiotiedostoa!${EI_VARIA}"
-    kysy_tietokannan_uudelleenkaynnistys
+    kysy_tietokannan_uudelleenkaynnistys "$WORKTREE_KANSIO" "$TIETOKANTA_PORTTI" "$POSTGRESQL_NAME"
 elif [ "$WORKTREE_MIGRAATIOT" -lt "$PAAHARAN_MIGRAATIOT" ]; then
     echo -e "${KELTAINEN}⚠️  Worktreessä on vähemmän migraatioita kuin päähaarassa!${EI_VARIA}"
     echo -e "${KELTAINEN}   Worktree: $WORKTREE_MIGRAATIOT, Päähaara: $PAAHARAN_MIGRAATIOT${EI_VARIA}"
     echo -e "${KELTAINEN}   Viimeinen worktreessä: $WORKTREE_VIIMEINEN${EI_VARIA}"
     echo -e "${KELTAINEN}   Viimeinen päähaarassa: $PAAHARAN_VIIMEINEN${EI_VARIA}"
     echo ""
-    kysy_tietokannan_uudelleenkaynnistys
+    kysy_tietokannan_uudelleenkaynnistys "$WORKTREE_KANSIO" "$TIETOKANTA_PORTTI" "$POSTGRESQL_NAME"
 elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRAATIOT" -gt 0 ]; then
     # Tarkista vielä että viimeiset migraatiot täsmäävät
     if [ "$WORKTREE_VIIMEINEN" != "$PAAHARAN_VIIMEINEN" ]; then
@@ -405,7 +445,7 @@ elif [ "$WORKTREE_MIGRAATIOT" -eq "$PAAHARAN_MIGRAATIOT" ] && [ "$WORKTREE_MIGRA
         echo -e "${KELTAINEN}   Viimeinen worktreessä: $WORKTREE_VIIMEINEN${EI_VARIA}"
         echo -e "${KELTAINEN}   Viimeinen päähaarassa: $PAAHARAN_VIIMEINEN${EI_VARIA}"
         echo ""
-        kysy_tietokannan_uudelleenkaynnistys
+        kysy_tietokannan_uudelleenkaynnistys "$WORKTREE_KANSIO" "$TIETOKANTA_PORTTI" "$POSTGRESQL_NAME"
     else
         echo -e "${VIHREA}✓ Migraatiot täsmäävät${EI_VARIA}"
         echo ""
@@ -419,6 +459,12 @@ fi
 # Luo käynnistysskripti worktreelle
 echo -e "${SININEN}⚙️  Luodaan käynnistysskripti...${EI_VARIA}"
 
+cat > "$WORKTREE_KANSIO/.tietokanta.env" << EOF
+export HARJA_TIETOKANTA_HOST="127.0.0.1"
+export HARJA_TIETOKANTA_PORTTI="$TIETOKANTA_PORTTI"
+export POSTGRESQL_NAME="$POSTGRESQL_NAME"
+EOF
+
 cat > "$WORKTREE_KANSIO/kaynnista-kaikki.sh" << EOF
 #!/usr/bin/env bash
 set -euo pipefail
@@ -430,6 +476,15 @@ export HARJA_HTTP_PORTTI=$HTTP_PORTTI
 export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORTTI"
 export FRONTEND_REPL_PORT=$FRONTEND_REPL_PORTTI
 
+# Lue worktree-kohtaiset tietokanta-asetukset
+if [ -f "\$WORKTREE_KANSIO/.tietokanta.env" ]; then
+    # shellcheck disable=SC1091
+    source "\$WORKTREE_KANSIO/.tietokanta.env"
+else
+    echo "❌ Tietokanta-asetustiedosto puuttuu: \$WORKTREE_KANSIO/.tietokanta.env"
+    exit 1
+fi
+
 echo "🚀 Käynnistetään Harja worktree..."
 echo "   Backend käynnistetään taustaprosessina"
 echo "   Frontend käynnistyy tässä terminaalissa"
@@ -437,7 +492,32 @@ echo "   Backend-portti: \$HARJA_HTTP_PORTTI"
 echo "   Backend URL: http://localhost:\$HARJA_HTTP_PORTTI"
 echo "   Frontend (Figwheel) portti: \$FRONTEND_REPL_PORT"
 echo "   Frontend (Figwheel) URL: http://localhost:\$FRONTEND_REPL_PORT"
+echo "   Tietokanta portti: \$HARJA_TIETOKANTA_PORTTI"
+echo "   Tietokanta kontti: \$POSTGRESQL_NAME"
 echo ""
+
+# Käynnistä tietokanta (tai varmista että se on käynnissä)
+if ! command -v docker >/dev/null 2>&1; then
+    echo "❌ docker ei löydy PATH:sta. Asenna Docker Desktop tai varmista että docker on käytettävissä."
+    exit 1
+fi
+
+echo "🐘 Varmistetaan tietokanta..."
+if docker inspect "\$POSTGRESQL_NAME" >/dev/null 2>&1; then
+    if docker ps --format '{{.Names}}' | grep -Fx "\$POSTGRESQL_NAME" >/dev/null 2>&1; then
+        echo "   ✓ Tietokanta-kontti on jo käynnissä: \$POSTGRESQL_NAME"
+    else
+        echo "   🔁 Käynnistetään olemassa oleva tietokanta-kontti: \$POSTGRESQL_NAME"
+        docker start "\$POSTGRESQL_NAME" >/dev/null
+        until docker exec "\$POSTGRESQL_NAME" pg_isready >/dev/null 2>&1; do
+            sleep 0.5
+        done
+        echo "   ✓ Tietokanta käynnissä"
+    fi
+else
+    echo "   🆕 Luodaan ja alustetaan tietokanta (tämä voi kestää hetken)..."
+    HARJA_TIETOKANTA_PORTTI="\$HARJA_TIETOKANTA_PORTTI" POSTGRESQL_NAME="\$POSTGRESQL_NAME" "\$WORKTREE_KANSIO/tietokanta/devdb_up.sh"
+fi
 
 # Käynnistä backend taustalle
 echo "🔧 Käynnistetään backend taustalle..."
