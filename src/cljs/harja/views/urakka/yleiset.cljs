@@ -62,6 +62,10 @@
               uudet-yhteyshenkilot)
             res (<! (tiedot/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
+        (reset! paivystajat/yhteyshenkilot-haettu? false)
+        (go (reset! paivystajat/paivystajaksi-merkityt
+                    (reverse (sort-by :loppu
+                                      (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
         true)))
 
 
