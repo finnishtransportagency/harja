@@ -167,6 +167,34 @@ validoi_haaran_nimi() {
     fi
 }
 
+varmista_turvallinen_polku() {
+    local polku="$1"
+
+    if [ -z "$polku" ]; then
+        echo -e "${PUNAINEN}❌ Turvavirhe: tyhjä polku${EI_VARIA}"
+        exit 1
+    fi
+
+    # Estä vaarallisten polkujen käyttö
+    case "$polku" in
+        "$YLAKANSIO"|"$YLAKANSIO/"|/|.)
+            echo -e "${PUNAINEN}❌ Turvavirhe: epäilyttävä worktree-polku: $polku${EI_VARIA}"
+            exit 1
+            ;;
+    esac
+
+    # Varmista että polku alkaa oikealla tavalla
+    case "$polku" in
+        "$YLAKANSIO"/harja-worktree-*)
+            ;;
+        *)
+            echo -e "${PUNAINEN}❌ Turvavirhe: worktree-polku ei näytä oikealta: $polku${EI_VARIA}"
+            echo -e "${KELTAINEN}   Odotettu prefix: $YLAKANSIO/harja-worktree-${EI_VARIA}"
+            exit 1
+            ;;
+    esac
+}
+
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
     usage
 fi
@@ -193,6 +221,9 @@ fi
 TURVALLINEN_HAARAN_NIMI=$(printf '%s' "$HAARAN_NIMI" | sed 's#[^[:alnum:]._-]#-#g')
 WORKTREE_KANSIO="${YLAKANSIO}/harja-worktree-${TURVALLINEN_HAARAN_NIMI}"
 
+# Validoi polku ennen jatkamista
+varmista_turvallinen_polku "$WORKTREE_KANSIO"
+
 echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
 echo -e "${SININEN}  Harja Git Worktree luonti${EI_VARIA}"
 echo -e "${SININEN}═══════════════════════════════════════════════════════════${EI_VARIA}"
@@ -205,15 +236,15 @@ fi
 echo ""
 
 # Tarkista onko haara olemassa
-if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
-    echo -e "${PUNAINEN}❌ Haaraa '$HAARAN_NIMI' ei löydy!${EI_VARIA}"
+if ! git rev-parse --verify "${HAARAN_NIMI}" >/dev/null 2>&1; then
+    echo -e "${PUNAINEN}❌ Haaraa '${HAARAN_NIMI}' ei löydy!${EI_VARIA}"
     echo -e "${KELTAINEN}Haetaan remote-haarat...${EI_VARIA}"
     git fetch --all
     
-    if ! git rev-parse --verify "$HAARAN_NIMI" >/dev/null 2>&1; then
-        if git rev-parse --verify "origin/$HAARAN_NIMI" >/dev/null 2>&1; then
-            echo -e "${SININEN}Löydettiin remote-haara: origin/$HAARAN_NIMI${EI_VARIA}"
-            HAARAN_NIMI="origin/$HAARAN_NIMI"
+    if ! git rev-parse --verify "${HAARAN_NIMI}" >/dev/null 2>&1; then
+        if git rev-parse --verify "origin/${HAARAN_NIMI}" >/dev/null 2>&1; then
+            echo -e "${SININEN}Löydettiin remote-haara: origin/${HAARAN_NIMI}${EI_VARIA}"
+            HAARAN_NIMI="origin/${HAARAN_NIMI}"
         else
             echo -e "${PUNAINEN}❌ Haaraa ei löydy edes remotesta!${EI_VARIA}"
             exit 1
@@ -230,7 +261,7 @@ fi
 
 # Luo worktree
 echo -e "${SININEN}📁 Luodaan worktree...${EI_VARIA}"
-git worktree add "$WORKTREE_KANSIO" "$HAARAN_NIMI"
+git worktree add "${WORKTREE_KANSIO}" "${HAARAN_NIMI}"
 
 # Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
 if [ -z "$HTTP_PORTTI" ]; then
@@ -310,16 +341,16 @@ if npm ci; then
     echo -e "${VIHREA}   ✓ npm-riippuvuudet asennettu${EI_VARIA}"
 else
     echo -e "${PUNAINEN}❌ npm ci epäonnistui!${EI_VARIA}"
-    echo -e "${KELTAINEN}Yritetään npm install...${EI_VARIA}"
-    if npm install; then
-        echo -e "${VIHREA}   ✓ npm-riippuvuudet asennettu (npm install)${EI_VARIA}"
-    else
-        echo -e "${PUNAINEN}❌ npm install epäonnistui!${EI_VARIA}"
-        echo -e "${KELTAINEN}Puhdistetaan worktree...${EI_VARIA}"
-        cd "$PROJEKTIN_JUURI"
-        git worktree remove "$WORKTREE_KANSIO" --force
-        exit 1
-    fi
+    echo -e "${PUNAINEN}⚠️  KRIITTINEN: npm ci on pakollinen riippuvuuksien asentamiseen${EI_VARIA}"
+    echo -e "${KELTAINEN}   Syitä epäonnistumiseen:${EI_VARIA}"
+    echo -e "${KELTAINEN}   - package-lock.json puuttuu tai on korruptoitunut${EI_VARIA}"
+    echo -e "${KELTAINEN}   - Node.js-versio ei ole yhteensopiva${EI_VARIA}"
+    echo -e "${KELTAINEN}   - npm cache on korruptoitunut (kokeile: npm cache clean --force)${EI_VARIA}"
+    echo ""
+    echo -e "${KELTAINEN}Puhdistetaan luotu worktree...${EI_VARIA}"
+    cd "$PROJEKTIN_JUURI"
+    git worktree remove "$WORKTREE_KANSIO" --force
+    exit 1
 fi
 cd "$PROJEKTIN_JUURI"
 
@@ -410,7 +441,7 @@ echo ""
 
 # Käynnistä backend taustalle
 echo "🔧 Käynnistetään backend taustalle..."
-lein do clean, compile, repl :headless :host 0.0.0.0 > "\$WORKTREE_KANSIO/backend.log" 2>&1 &
+lein do clean, compile, repl :headless :host 127.0.0.1 > "\$WORKTREE_KANSIO/backend.log" 2>&1 &
 BACKEND_PID=\$!
 echo "\$BACKEND_PID" > "\$WORKTREE_KANSIO/.backend.pid"
 echo "   Backend PID: \$BACKEND_PID"
