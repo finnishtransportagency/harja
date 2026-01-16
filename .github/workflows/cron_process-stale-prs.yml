@@ -34,6 +34,8 @@ permissions:
   contents: read
   # Vaaditaan oikeus PR:ien käsittelyyn, jotta voidaan lisätä kommentteja tai sulkea PR automaattisesti
   pull-requests: write
+  # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja, tässä sitä tarvitaan cachen luomiseen ja poistamiseen
+  actions: write
 
 jobs:
   # Note: https://github.com/actions/stale
