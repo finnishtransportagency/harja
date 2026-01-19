@@ -7,6 +7,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]))
 
 (def kayttaja "destia")
+(def kayttaja-yit "yit-rakennus")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -18,10 +19,11 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-kokonaishintainen-pistetoteuma
-  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        _ (anna-kirjoitusoikeus kayttaja)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
                          (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                            slurp
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -36,7 +38,7 @@
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
                                (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                  slurp
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -54,12 +56,13 @@
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
 
 (deftest tallenna-usea-pistetoteuma
-  (let [ulkoiset-idt (tyokalut/hae-usea-vapaa-toteuma-ulkoinen-id 2)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        ulkoiset-idt (tyokalut/hae-usea-vapaa-toteuma-ulkoinen-id 2)
         ulkoinen-id-1 (first ulkoiset-idt)
         ulkoinen-id-2 (second ulkoiset-idt)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        _ (anna-kirjoitusoikeus kayttaja)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
                                                 (-> "test/resurssit/api/pistetoteuma_monta.json"
                                                     slurp
                                                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
