@@ -46,13 +46,19 @@
       (throw (IllegalArgumentException.)))))
 
 (defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id]
-  (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))
-        urakan-loppupvm (:loppupvm urakka)]
-    (when (and urakan-loppupvm tarkastus-aika)
-      (let [sallittu-viimeinen-pvm (pvm/paivan-lopussa (pvm/ajan-muokkaus urakan-loppupvm true 1 :paiva))]
-        (when (pvm/jalkeen? tarkastus-aika sallittu-viimeinen-pvm)
-          (throw (IllegalArgumentException.
-                   (str "Urakka on päättynyt. Tarkastuksen aika " tarkastus-aika " on sallitun kirjaamispäivän " sallittu-viimeinen-pvm " jälkeen"))))))))
+  (when tarkastus-aika
+    (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))
+          urakan-loppupvm (:loppupvm urakka)]
+      (when urakan-loppupvm
+        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
+                                       (pvm/ajan-muokkaus true 1 :paiva)
+                                       pvm/paivan-lopussa
+                                       pvm/millisekunteina)
+              tarkastus-aika-ms (pvm/millisekunteina (pvm/joda-timeksi tarkastus-aika))]
+          (when (> tarkastus-aika-ms sallittu-viimeinen-pvm)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+virheellinen-paivamaara+
+                                :viesti "Urakka on päättynyt ja kirjaaminen estetty."}]})))))))
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
