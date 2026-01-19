@@ -1499,7 +1499,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] merge verkon-tiedot))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärät lisätiedot.")))
+                                       "on virheelliset lisätiedot: Massamenekki")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
