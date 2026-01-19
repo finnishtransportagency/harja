@@ -50,7 +50,7 @@ jobs:
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
           # Ei lisätä PR:iin automaattista kommenttia vanhentumisesta
-          stale-pr-message: -1
+          stale-pr-message: ''
           # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
           days-before-pr-close: -1
           days-before-close: -1
