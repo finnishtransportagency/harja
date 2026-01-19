@@ -12,7 +12,7 @@
             [harja.domain.reittipiste :as rp])
   (:import (java.util Date)))
 
-(def kayttaja "destia")
+(def kayttaja "yit-rakennus")
 (def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
@@ -33,7 +33,9 @@
     (if (empty? vastaus) id (recur))))
 
 (deftest tallenna-pistetoteuma
-  (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        _ (println "KÄYTETTY URAKKA:" (first (q (str "SELECT id, nimi, alkupvm, loppupvm FROM urakka WHERE id = " urakka))))
+        ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         _ (anna-kirjoitusoikeus kayttaja-jvh)
@@ -80,7 +82,8 @@
       (is (empty? toteuma-id)))))
 
 (deftest tallenna-ja-poista-reittitoteuma
-  (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-jvh)
         fn-tee-kutsu (fn []
