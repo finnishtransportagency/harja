@@ -102,22 +102,22 @@ jobs:
             
             return formattedList;
 
-#      - name: Send a summary of stale PRs into Slack
-#        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
-#        # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
-#        if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
-#        with:
-#          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-#          webhook-type: incoming-webhook
-#          payload: |
-#            {
-#              "blocks": [
-#                {
-#                  "type": "section",
-#                  "text": {
-#                    "type": "mrkdwn",
-#                    "text": ":please-cat: Katselmointia tai muutoksia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
-#                  }
-#                }
-#              ]
-#            }
+      - name: Send a summary of stale PRs into Slack
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+        # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
+        if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":please-cat: Katselmointia tai muutoksia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
+                  }
+                }
+              ]
+            }
