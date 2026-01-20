@@ -101,17 +101,29 @@
           :urakkaroolit {39 #{"vastuuhenkilo"}}}
         (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
           "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
-                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"))))
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          nil))))
 
 (deftest kayttajaroolit-rajapintavastauksesta-ei-kaadu-virheellisilla-vastauksilla
   (testing "MIAM-vastauksen parsinta ei kaadu nil/tyhjä/virheellinen JSON"
     (let [db (:db jarjestelma)]
-      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db nil)))
-      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "")))
-      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "not-json")))
-      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{}")))
-      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":null}")))
-      (is (= {:roolit #{}, :urakkaroolit {}, :organisaatioroolit {}} (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":[{\"Role\":null}]}"))))))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db nil nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "not-json" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{}" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":null}" nil)))
+      (is (= {:roolit #{}, :urakkaroolit {}, :organisaatioroolit {}}
+            (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":[{\"Role\":null}]}" nil))))))
+
+(deftest kayttajaroolit-rajapintavastauksesta-ja-asetuksista
+  (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
+          :roolit #{"Jarjestelmavastaava", "Tilaajan_Asiantuntija"}
+          :urakkaroolit {39 #{"vastuuhenkilo"}}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
+
 
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"

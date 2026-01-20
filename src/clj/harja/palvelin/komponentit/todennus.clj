@@ -153,7 +153,7 @@
 
    Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
    tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä."
-  [db vastaus]
+  [db vastaus ryhmat-asetuksista]
   (cond
     ;; Tarkista onko vastaus nil tai tyhjä string
     (or (nil? vastaus) (str/blank? vastaus))
@@ -173,7 +173,11 @@
           ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
           (let [ryhmat (->> table1
                          (map #(get % "Role"))
-                         (str/join ","))]
+                         (str/join ","))
+                ;; Lisätään mahdolliset ryhmät asetuksista
+                ryhmat (if (and (not (nil? ryhmat-asetuksista)) (not (= "" ryhmat-asetuksista)))
+                         (str ryhmat "," ryhmat-asetuksista)
+                         ryhmat)]
             (kayttajan-roolit
               (partial q/hae-urakan-id-sampo-idlla db)
               (partial q/hae-urakoitsijan-id-ytunnuksella db)
@@ -355,7 +359,8 @@
                      ryhmat)
                    ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
                    (kayttajaroolit-rajapintavastauksesta db
-                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)))
+                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
+                     ryhmat))
           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
