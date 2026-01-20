@@ -152,19 +152,36 @@
    - vastaus: JSON-muotoinen merkkijono MIAM-rajapinnasta, tai nil jos kutsu epäonnistui
 
    Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
-   tai nil jos vastaus on nil."
+   tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä."
   [db vastaus]
-  (let [vastaus-map (json/read-str vastaus)
-        ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
-        ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
-        ryhmat (->> (get vastaus-map "Table1")
-                 (map #(get % "Role"))
-                 (str/join ","))]
-    (kayttajan-roolit
-      (partial q/hae-urakan-id-sampo-idlla db)
-      (partial q/hae-urakoitsijan-id-ytunnuksella db)
-      oikeudet/roolit
-      ryhmat)))
+  (cond
+    ;; Tarkista onko vastaus nil tai tyhjä string
+    (or (nil? vastaus) (str/blank? vastaus))
+    nil
+
+    ;; Yritä parsea JSON ja tarkista sisältö
+    :else
+    (try
+      (let [vastaus-map (json/read-str vastaus)
+            table1 (get vastaus-map "Table1")]
+        ;; Tarkista onko Table1 olemassa ja ei-tyhjä
+        (if (or (nil? table1) (empty? table1))
+          (do
+            (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
+            nil)
+          ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
+          ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
+          (let [ryhmat (->> table1
+                         (map #(get % "Role"))
+                         (str/join ","))]
+            (kayttajan-roolit
+              (partial q/hae-urakan-id-sampo-idlla db)
+              (partial q/hae-urakoitsijan-id-ytunnuksella db)
+              oikeudet/roolit
+              ryhmat))))
+      (catch Exception e
+        (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
+        nil))))
 
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
