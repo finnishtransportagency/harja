@@ -175,9 +175,7 @@
                          (map #(get % "Role"))
                          (str/join ","))
                 ;; Lisätään mahdolliset ryhmät asetuksista
-                ryhmat (if (and (not (nil? ryhmat-asetuksista)) (not (= "" ryhmat-asetuksista)))
-                         (str ryhmat "," ryhmat-asetuksista)
-                         ryhmat)]
+                ryhmat (str/join "," (remove nil? [ryhmat ryhmat-asetuksista]))]
             (kayttajan-roolit
               (partial q/hae-urakan-id-sampo-idlla db)
               (partial q/hae-urakoitsijan-id-ytunnuksella db)
