@@ -91,8 +91,7 @@
    urakoitsijan id muutetaan harjan id:ksi kutsumalla annettuja urakan-id
    ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
-  (let [_ (println "kayttajan-roolit :: oam-groups: " oam-groups)
-        roolit-ja-linkit (->> (str/split oam-groups #",")
+  (let [roolit-ja-linkit (->> (str/split oam-groups #",")
                            (keep (partial ryhman-rooli-ja-linkki roolit)))
         ;; Uudelleenohjaa käyttäjä jos todennus epäonnistuu
         roolit-ja-linkit (if (= oam-groups "failed")
@@ -155,48 +154,44 @@
    Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
    tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä."
   [db vastaus ryhmat-asetuksista]
-  (cond
-    ;; Tarkista onko vastaus nil tai tyhjä string
-    (or (nil? vastaus) (str/blank? vastaus))
-    ;; Jos vastaus on nil/tyhjä, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
-    (when ryhmat-asetuksista
-      (kayttajan-roolit
-        (partial q/hae-urakan-id-sampo-idlla db)
-        (partial q/hae-urakoitsijan-id-ytunnuksella db)
-        oikeudet/roolit
-        ryhmat-asetuksista))
+  (let [roolit-asetuksista (when ryhmat-asetuksista
+                             (kayttajan-roolit
+                               (partial q/hae-urakan-id-sampo-idlla db)
+                               (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                               oikeudet/roolit
+                               ryhmat-asetuksista))]
+    (cond
+      ;; Tarkista onko vastaus nil tai tyhjä string
+      (or (nil? vastaus) (str/blank? vastaus))
+      ;; Jos vastaus on nil/tyhjä, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
+      (when ryhmat-asetuksista roolit-asetuksista)
 
-    ;; Yritä parsea JSON ja tarkista sisältö
-    :else
-    (try
-      (let [vastaus-map (json/read-str vastaus)
-            table1 (get vastaus-map "Table1")]
-        ;; Tarkista onko Table1 olemassa ja ei-tyhjä
-        (if (or (nil? table1) (empty? table1))
-          (do
-            (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
-            ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
-            (when ryhmat-asetuksista
+      ;; Yritä parsea JSON ja tarkista sisältö
+      :else
+      (try
+        (let [vastaus-map (json/read-str vastaus)
+              table1 (get vastaus-map "Table1")]
+          ;; Tarkista onko Table1 olemassa ja ei-tyhjä
+          (if (or (nil? table1) (empty? table1))
+            (do
+              (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
+              ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
+              (when ryhmat-asetuksista roolit-asetuksista))
+            ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
+            ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
+            (let [ryhmat (->> table1
+                           (map #(get % "Role"))
+                           (str/join ","))
+                  ;; Lisätään mahdolliset ryhmät asetuksista
+                  ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]
               (kayttajan-roolit
                 (partial q/hae-urakan-id-sampo-idlla db)
                 (partial q/hae-urakoitsijan-id-ytunnuksella db)
                 oikeudet/roolit
-                ryhmat-asetuksista)))
-          ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
-          ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
-          (let [ryhmat (->> table1
-                         (map #(get % "Role"))
-                         (str/join ","))
-                ;; Lisätään mahdolliset ryhmät asetuksista
-                ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]
-            (kayttajan-roolit
-              (partial q/hae-urakan-id-sampo-idlla db)
-              (partial q/hae-urakoitsijan-id-ytunnuksella db)
-              oikeudet/roolit
-              ryhmat))))
-      (catch Exception e
-        (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
-        nil))))
+                ryhmat))))
+        (catch Exception e
+          (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
+          nil)))))
 
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
@@ -361,8 +356,7 @@
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
-    (let [_ (println "*** Ryhmät ennen roolien hakua: " ryhmat)
-          roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
+    (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
                    ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
                    (kayttajan-roolit
                      (partial q/hae-urakan-id-sampo-idlla db)
@@ -370,12 +364,9 @@
                      oikeudet/roolit
                      ryhmat)
                    ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
-                   (do
-                     (println "*** Haetaan roolit MIAM-rajapinnasta käyttäjälle: " kayttajanimi)
-                     (kayttajaroolit-rajapintavastauksesta db
-                       (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
-                       ryhmat)))
-          _ (println "*** Roolit - roolien haun jälkeen: " roolit (contains? (:roolit roolit) "Jarjestelmavastaava"))
+                   (kayttajaroolit-rajapintavastauksesta db
+                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
+                     ryhmat))
           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
