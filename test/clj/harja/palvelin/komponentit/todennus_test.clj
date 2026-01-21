@@ -409,3 +409,39 @@
       ;; Siivoa testi-käyttäjä lopuksi
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
 
+(deftest varmista-kayttajatiedot-miam-rajapinnasta-test-2
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        ;; MIAM-asetukset kuten ne tulevat asetukset.edn tiedostosta, mutta testi-osoitteilla
+        miam-asetukset {:url "https://testi-miam.example.com/api/v1/users"
+                        :apiavain "test-api-key-12345"}
+        testi-kayttajanimi "miam-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "MIAM"
+                        "oam_user_last_name" "Testaaja"
+                        "oam_user_mail" "miam@example.com"
+                        "oam_user_mobile" "0501234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava"}
+        ;; Mockattu MIAM-vastaus
+        miam-vastaus (cheshire/encode {})]
+
+    (testing "Sähkeheaderit mutta ei miamista mitään testi"
+      ;; Mockataan HTTP-kysely
+      (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
+                    todennus/hae-kayttajaroolit-rajapinnasta (fn [db integraatioloki miam kayttajanimi] miam-vastaus)]
+        (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
+              _ (println "kayttaja on" kayttaja)
+              kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+          (is (some? kayttaja) "Käyttäjä palautetaan")
+          (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+          (is (= testi-kayttajanimi (:kayttajanimi kayttaja)))
+          (is (= "MIAM" (:etunimi kayttaja)))
+          (is (= "Testaaja" (:sukunimi kayttaja)))
+          (is (= "miam@example.com" (:sahkoposti kayttaja)))
+          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
+          (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
+
+      ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))

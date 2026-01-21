@@ -162,7 +162,12 @@
   (cond
     ;; Tarkista onko vastaus nil tai tyhjä string
     (or (nil? vastaus) (str/blank? vastaus))
-    nil
+    ;; Jos on nil/tyhjä, niin palauta vain mahdolliset sähke-headereista saadut roolit
+    (kayttajan-roolit
+      (partial q/hae-urakan-id-sampo-idlla db)
+      (partial q/hae-urakoitsijan-id-ytunnuksella db)
+      oikeudet/roolit
+      ryhmat-asetuksista)
 
     ;; Yritä parsea JSON ja tarkista sisältö
     :else
@@ -173,19 +178,19 @@
         (if (or (nil? table1) (empty? table1))
           (do
             (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
-            nil)
+            ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit
+            (kayttajan-roolit
+              (partial q/hae-urakan-id-sampo-idlla db)
+              (partial q/hae-urakoitsijan-id-ytunnuksella db)
+              oikeudet/roolit
+              ryhmat-asetuksista))
           ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
           ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
           (let [ryhmat (->> table1
                          (map #(get % "Role"))
                          (str/join ","))
-                _ (println "****** ryhmat MIAM rajapinnasta: " ryhmat)
-                _ (println "****** ryhmat asetuksista: " ryhmat-asetuksista)
                 ;; Lisätään mahdolliset ryhmät asetuksista
-
-                ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))
-                _ (println "****** yhteiset ryhmat: " ryhmat)
-                ]
+                ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]
             (kayttajan-roolit
               (partial q/hae-urakan-id-sampo-idlla db)
               (partial q/hae-urakoitsijan-id-ytunnuksella db)
