@@ -2,7 +2,6 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [harja.ui.bootstrap :as bs]
             [harja.pvm :as pvm]
-            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
@@ -39,12 +38,16 @@
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
     (komp/luo
-      (fn [{:keys [id] :as ur}]
+      (fn [{:keys [id alkupvm] :as ur}]
+        (let [tehtavat-maarat-ominaisuus? (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
+              urakka-2025+? (and alkupvm (>= (pvm/vuosi alkupvm) 2025))
+              nayta-uusi-tehtavat-maarat? (and urakka-2025+? tehtavat-maarat-ominaisuus?)
+              nayta-vanha-tehtavat? (or (not urakka-2025+?) (not tehtavat-maarat-ominaisuus?))]
 
-        [:span.suunnittelu
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :suunnittelu)
-                   :on-change #(nav/aseta-valittu-valilehti! :suunnittelu %)}
+          [:span.suunnittelu
+           [bs/tabs {:style :tabs :classes "tabs-taso2"
+                     :active (nav/valittu-valilehti-atom :suunnittelu)
+                     :on-change #(nav/aseta-valittu-valilehti! :suunnittelu %)}
 
           "Tarjouksen tiedot"
           :tarjous
@@ -75,7 +78,8 @@
           :tehtavat
           (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                      (valilehti-mahdollinen? :tehtavat ur)
-                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                     (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                     nayta-vanha-tehtavat?)
             ^{:key "tehtavat"}
             [tehtavat/tehtavat])
 
@@ -84,8 +88,8 @@
           (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                   (valilehti-mahdollinen? :tehtavat ur)
                   (istunto/ominaisuus-kaytossa? :mhu-urakka)
-                  (istunto/ominaisuus-kaytossa? :tehtavat-maarat))
-            ^{:key "tehtavat"}
+              nayta-uusi-tehtavat-maarat?)
+            ^{:key "tehtavat-maarat"}
             [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
@@ -124,6 +128,6 @@
           "Kiintiöt"
           :kiintiot
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
-                  (valilehti-mahdollinen? :kiintiot ur))
+                     (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])]])))))
