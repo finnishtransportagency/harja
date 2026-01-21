@@ -97,10 +97,7 @@
         ;; Uudelleenohjaa käyttäjä jos todennus epäonnistuu
         roolit-ja-linkit (if (= oam-groups "failed")
                            [[{:nimi "failed" :kuvaus "Todennus epäonnistui." :osapuoli nil :linkki nil} nil]]
-                           roolit-ja-linkit)
-        _ (println "**** kayttajan-roolit :: roolit" {:roolit (yleisroolit roolit-ja-linkit)
-                                                      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
-                                                      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)})]
+                           roolit-ja-linkit)]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
@@ -145,8 +142,7 @@
                                                      {"Content-Type" "application/json"}
                                                      {"x-api-key" (:apiavain miam)})}
                           {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                      (kasittele-miam-vastaus status body))))
-        _ (println "hae-kayttajaroolit-rajapinnasta :: vastaus: " vastaus)]
+                      (kasittele-miam-vastaus status body))))]
     vastaus))
 
 (defn kayttajaroolit-rajapintavastauksesta
@@ -162,12 +158,13 @@
   (cond
     ;; Tarkista onko vastaus nil tai tyhjä string
     (or (nil? vastaus) (str/blank? vastaus))
-    ;; Jos on nil/tyhjä, niin palauta vain mahdolliset sähke-headereista saadut roolit
-    (kayttajan-roolit
-      (partial q/hae-urakan-id-sampo-idlla db)
-      (partial q/hae-urakoitsijan-id-ytunnuksella db)
-      oikeudet/roolit
-      ryhmat-asetuksista)
+    ;; Jos vastaus on nil/tyhjä, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
+    (when ryhmat-asetuksista
+      (kayttajan-roolit
+        (partial q/hae-urakan-id-sampo-idlla db)
+        (partial q/hae-urakoitsijan-id-ytunnuksella db)
+        oikeudet/roolit
+        ryhmat-asetuksista))
 
     ;; Yritä parsea JSON ja tarkista sisältö
     :else
@@ -178,12 +175,13 @@
         (if (or (nil? table1) (empty? table1))
           (do
             (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
-            ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit
-            (kayttajan-roolit
-              (partial q/hae-urakan-id-sampo-idlla db)
-              (partial q/hae-urakoitsijan-id-ytunnuksella db)
-              oikeudet/roolit
-              ryhmat-asetuksista))
+            ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
+            (when ryhmat-asetuksista
+              (kayttajan-roolit
+                (partial q/hae-urakan-id-sampo-idlla db)
+                (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                oikeudet/roolit
+                ryhmat-asetuksista)))
           ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
           ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
           (let [ryhmat (->> table1

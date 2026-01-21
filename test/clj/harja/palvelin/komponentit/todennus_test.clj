@@ -124,7 +124,6 @@
                          ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
           "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
 
-
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"
     "kid" "7d2ed764-76dd-44c3-b4cf-8cde89fe6e5f"
