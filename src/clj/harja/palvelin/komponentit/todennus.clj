@@ -141,7 +141,8 @@
                                                      {"Content-Type" "application/json"}
                                                      {"x-api-key" (:apiavain miam)})}
                           {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                      (kasittele-miam-vastaus status body))))]
+                      (kasittele-miam-vastaus status body))))
+        _ (println "hae-kayttajaroolit-rajapinnasta :: vastaus: " vastaus)]
     vastaus))
 
 (defn kayttajaroolit-rajapintavastauksesta
@@ -174,8 +175,13 @@
           (let [ryhmat (->> table1
                          (map #(get % "Role"))
                          (str/join ","))
+                _ (println "****** ryhmat MIAM rajapinnasta: " ryhmat)
+                _ (println "****** ryhmat asetuksista: " ryhmat-asetuksista)
                 ;; Lisätään mahdolliset ryhmät asetuksista
-                ryhmat (str/join "," (remove nil? [ryhmat ryhmat-asetuksista]))]
+
+                ryhmat (str/join "," (remove nil? [ryhmat ryhmat-asetuksista]))
+                _ (println "****** yhteiset ryhmat: " ryhmat)
+                ]
             (kayttajan-roolit
               (partial q/hae-urakan-id-sampo-idlla db)
               (partial q/hae-urakoitsijan-id-ytunnuksella db)
@@ -348,7 +354,8 @@
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
-    (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
+    (let [_ (println "*** Ryhmät ennen roolien hakua: " ryhmat)
+          roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
                    ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
                    (kayttajan-roolit
                      (partial q/hae-urakan-id-sampo-idlla db)
@@ -356,9 +363,11 @@
                      oikeudet/roolit
                      ryhmat)
                    ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
-                   (kayttajaroolit-rajapintavastauksesta db
-                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
-                     ryhmat))
+                   (do
+                     (println "*** Haetaan roolit MIAM-rajapinnasta käyttäjälle: " kayttajanimi)
+                     (kayttajaroolit-rajapintavastauksesta db
+                       (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
+                       ryhmat)))
           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
