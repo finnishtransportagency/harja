@@ -91,12 +91,16 @@
    urakoitsijan id muutetaan harjan id:ksi kutsumalla annettuja urakan-id
    ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
-  (let [roolit-ja-linkit (->> (str/split oam-groups #",")
+  (let [_ (println "kayttajan-roolit :: oam-groups: " oam-groups)
+        roolit-ja-linkit (->> (str/split oam-groups #",")
                            (keep (partial ryhman-rooli-ja-linkki roolit)))
         ;; Uudelleenohjaa käyttäjä jos todennus epäonnistuu
         roolit-ja-linkit (if (= oam-groups "failed")
                            [[{:nimi "failed" :kuvaus "Todennus epäonnistui." :osapuoli nil :linkki nil} nil]]
-                           roolit-ja-linkit)]
+                           roolit-ja-linkit)
+        _ (println "**** kayttajan-roolit :: roolit" {:roolit (yleisroolit roolit-ja-linkit)
+                                                      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
+                                                      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)})]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
@@ -179,7 +183,7 @@
                 _ (println "****** ryhmat asetuksista: " ryhmat-asetuksista)
                 ;; Lisätään mahdolliset ryhmät asetuksista
 
-                ryhmat (str/join "," (remove nil? [ryhmat ryhmat-asetuksista]))
+                ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))
                 _ (println "****** yhteiset ryhmat: " ryhmat)
                 ]
             (kayttajan-roolit
@@ -368,6 +372,7 @@
                      (kayttajaroolit-rajapintavastauksesta db
                        (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
                        ryhmat)))
+          _ (println "*** Roolit - roolien haun jälkeen: " roolit (contains? (:roolit roolit) "Jarjestelmavastaava"))
           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)

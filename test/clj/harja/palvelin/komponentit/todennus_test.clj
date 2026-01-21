@@ -376,7 +376,7 @@
                         "oam_user_mail" "miam@example.com"
                         "oam_user_mobile" "0501234567"
                         "oam_organization" "Destia Oy"
-                        "oam_groups" "2234567-8_Paakayttaja"}
+                        "oam_groups" "Jarjestelmavastaava, 2234567-8_Paakayttaja"}
         ;; Mockattu MIAM-vastaus
         miam-vastaus (cheshire/encode
                        {"Table1" [{"CompanyID" "2163026-3"
@@ -403,7 +403,8 @@
           (is (= "MIAM" (:etunimi kayttaja)))
           (is (= "Testaaja" (:sukunimi kayttaja)))
           (is (= "miam@example.com" (:sahkoposti kayttaja)))
-          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
+          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
+          (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
 
       ;; Siivoa testi-käyttäjä lopuksi
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
