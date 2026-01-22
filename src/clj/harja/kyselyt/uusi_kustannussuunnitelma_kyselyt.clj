@@ -523,9 +523,10 @@
         tarjous-data (hae-urakan-hoitovuoden-tarjous db
                        {:urakka_id urakka-id
                         :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi})
+
         tarjous (-> tarjous-data first :tarjous_tavoitehinta)
 
-        hoitovuoden-alun-tavoitehinta (+ tarjous pysyvat-muutokset-maara)
+        hoitovuoden-alun-tavoitehinta (+ (or tarjous 0M) (or pysyvat-muutokset-maara 0M))
 
         hoitovuoden-alun-kattohinta (or (when kattohintakerroin
                                           (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
@@ -826,7 +827,10 @@
         kilpailutettavat-hankinnat-yht (bigdec (or kilpailutettavat-hankinnat-yht 0.0))
         tarjous-hankinnat-yht (bigdec (or tarjous-hankinnat-yht 0.0))
 
+
+
         pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+                                                                                       (or pysyvat-muutokset-maara 0)))
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat + pysyvät muutokset 

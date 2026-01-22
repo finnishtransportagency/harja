@@ -158,17 +158,17 @@
     (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
 
+          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
+          ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
+          ;; mein se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
+          _ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
+
           ;; Riipumatta vahvistuksen onnistumisesta, aseta kattohinta, jos se on annettu
           _ (when (and paivitetty-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit))
               (suunnitelma-q/paivita-kasin-syotetty-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi
                 paivitetty-kattohinta urakan-indeksit
                 (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
                 urakan-parametrit))
-
-          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
-          ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
-          ;; mein se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
-          _ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
 
           ;; Onko hoitovuoden tarjous tallennettu? Jos ei ole, niin ei voida vahvistaa.
           tarjous (tarjous-kyselyt/hae-tarjousrivit-tietokannasta db urakka-id)
@@ -180,11 +180,12 @@
           ;; Tarkistetaan, että kilpailutettavat hankinnat, erillishankinnat, hoidonjohtopalkkiot ja johto-ja hallintokorvaukset täsmää tarjouksen kanssa.
           ;; Muuten ei voida vahvistaa tavoitehintaa.
           puuttuvat-suunnitelmat (suunnitelma-q/puuttuvat-suunnitelmat db urakka-id hoitovuoden-alkuvuosi hoitovuoden-tarjous aiempien-vuosien-pysyvat-muutokset)
-          suunnitelmat-annettu? (if (empty? puuttuvat-suunnitelmat)
-                                  true
-                                  false)
+
+          suunnitelmat-annettu? (if (empty? puuttuvat-suunnitelmat) true false)
+
           _ (when (and suunnitelmat-annettu? indeksi-olemassa? hoitovuoden-tarjous)
               (suunnitelma-q/vahvista-tavoite-ja-kattohinta db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi))
+
           vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
 
           tarjous-puuttuu? (or

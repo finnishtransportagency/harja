@@ -371,7 +371,7 @@
             (assoc rivi :tavoitehinnan-muutos total)))
     muutokset))
 
-(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
+(defn parsi-kirjatut-muutokset-vastaus [vastaus]
   (->> vastaus
     (mapv (fn [rivi]
             (-> rivi
