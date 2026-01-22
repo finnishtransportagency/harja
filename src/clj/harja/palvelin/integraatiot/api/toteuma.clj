@@ -19,7 +19,7 @@
 
   Koneellinen toteuma -> 'harja-api'
   Uusi käsin-toteuma -> 'harja-api-ui'
-  Korjaus käsin-toteuma -> 'harja-api-ui-korjaus'."
+  Korjaus käsin-toteuma -> 'harja-api-korjaus'."
   [lahde uusi?]
   (cond
     (= lahde "koneellinen")
@@ -30,7 +30,7 @@
 
     ;; Aina, kun käsin päivitetään, niin merkataan se käsin päivitetyksi
     (and (not uusi?) (= lahde "kasin"))
-    "harja-api-ui-korjaus"
+    "harja-api-korjaus"
 
     ;; Oletataan, että aineisto tulee koneellisena
     :else
