@@ -40,9 +40,9 @@
         [:div.sisalto
          [:span
           [yleiset/staattinen-linkki-uuteen-valilehteen
-           [:h2 "Harja-uutiset "
+           [:h2 "Harja-ohjeet ja uutiset "
             [ikonit/livicon-external]]
-           "https://finnishtransportagency.github.io/harja/"]]
+           "https://vayla365.sharepoint.com/sites/ExtranetJarjestelmat/SitePages/Harja.aspx"]]
          [:span
           [yleiset/staattinen-linkki-uuteen-valilehteen
            [:h2 "Tietoja henkilötietojesi käsittelystä "
