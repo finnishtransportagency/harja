@@ -115,6 +115,7 @@ hakutiheys-historiakuva 1200000)
             tk/sorateiden-muokkaushoylays false
             tk/sorateiden-polynsidonta false
             tk/sorateiden-tasaus false
+            tk/sorateiden-pinnan-hoito false
             tk/sorastus false
             tk/harjaus false
             tk/paallysteiden-paikkaus false
