@@ -6,19 +6,21 @@
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [throw+]]))
 
-(defn vaadi-toteuma-urakan-aikana [db toteuma-alkanut urakka-id]
-  (when toteuma-alkanut
-    (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))
-          urakan-loppupvm (:loppupvm urakka)]
-      (when urakan-loppupvm
-        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
-                                       (pvm/ajan-muokkaus true 1 :paiva)
-                                       pvm/paivan-lopussa
-                                       pvm/millisekunteina)
-              toteuma-alkanut-ms (pvm/millisekunteina (pvm/joda-timeksi toteuma-alkanut))]
-          (when (> toteuma-alkanut-ms sallittu-viimeinen-pvm)
-            (throw+ {:type virheet/+viallinen-kutsu+
-                     :virheet [{:koodi virheet/+virheellinen-paivamaara+
+(defn vaadi-toteuma-urakan-aikana [db toteuma-alkanut urakka-id ulkoinen-id]  
+  (when toteuma-alkanut  
+    (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))  
+          urakan-loppupvm (:loppupvm urakka)  
+          onko-olemassa (when ulkoinen-id   
+                          (toteumat-q/onko-olemassa-ulkoisella-idlla? db ulkoinen-id urakka-id))]  
+      (when (and urakan-loppupvm (not onko-olemassa))  
+        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm  
+                                       (pvm/ajan-muokkaus true 1 :paiva)  
+                                       pvm/paivan-lopussa  
+                                       pvm/millisekunteina)  
+              toteuma-alkanut-ms (pvm/millisekunteina (pvm/joda-timeksi toteuma-alkanut))]  
+          (when (> toteuma-alkanut-ms sallittu-viimeinen-pvm)  
+            (throw+ {:type virheet/+viallinen-kutsu+  
+                     :virheet [{:koodi virheet/+virheellinen-paivamaara+  
                                 :viesti "Urakka on päättynyt ja kirjaaminen estetty."}]})))))))
 
 (defn vaadi-toteuma-ei-jarjestelman-luoma [db toteuma-id]

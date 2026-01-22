@@ -334,8 +334,9 @@ maksimi-linnuntien-etaisyys 200)
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
     (let [alkanut (get-in data [:reittitoteuma :toteuma :alkanut])
-          toteuma-alkanut (aika-string->java-sql-date alkanut)]
-      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
+          toteuma-alkanut (aika-string->java-sql-date alkanut)
+          ulkoinen-id (get-in data [:reittitoteuma :toteuma :tunniste :id])]
+      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
       db
@@ -343,8 +344,9 @@ maksimi-linnuntien-etaisyys 200)
       (get-in data [:reittitoteuma :toteuma :tehtavat])))
   (doseq [reittitoteuma (:reittitoteumat data)]
      (let [alkanut (get-in reittitoteuma [:reittitoteuma :toteuma :alkanut])
-           toteuma-alkanut (aika-string->java-sql-date alkanut)]
-       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
+           toteuma-alkanut (aika-string->java-sql-date alkanut)
+           ulkoinen-id (get-in reittitoteuma [:reittitoteuma :toteuma :tunniste :id])]
+       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
      (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
      (toteuman-validointi/tarkista-tehtavat
        db

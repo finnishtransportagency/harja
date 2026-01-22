@@ -50,16 +50,18 @@
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:pistetoteuma data)
     (let [alkanut (get-in data [:pistetoteuma :toteuma :alkanut])
-          toteuma-alkanut (aika-string->java-sql-date alkanut)]
-      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
+          toteuma-alkanut (aika-string->java-sql-date alkanut)
+          ulkoinen-id (get-in data [:pistetoteuma :toteuma :tunniste :id])]
+      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
     (toteuman-validointi/tarkista-tehtavat
       db
       urakka-id
       (get-in data [:pistetoteuma :toteuma :tehtavat])))
   (doseq [pistetoteuma (:pistetoteumat data)]
      (let [alkanut (get-in pistetoteuma [:pistetoteuma :toteuma :alkanut])
-           toteuma-alkanut (aika-string->java-sql-date alkanut)]
-       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id))
+           toteuma-alkanut (aika-string->java-sql-date alkanut)
+           ulkoinen-id (get-in pistetoteuma [:pistetoteuma :toteuma :tunniste :id])]
+       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
      (toteuman-validointi/tarkista-tehtavat
        db
        urakka-id
