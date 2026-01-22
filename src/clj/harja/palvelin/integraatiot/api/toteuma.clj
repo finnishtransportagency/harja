@@ -29,7 +29,11 @@
     "harja-api-ui"
 
     ;; Aina, kun käsin päivitetään, niin merkataan se käsin päivitetyksi
-    (and (not uusi?) (= lahde "kasin"))
+    (and (not uusi?) (= lahde "korjaus"))
+    "harja-api-korjaus"
+
+    ;; Jos lähdettä ei ole annettu, mutta päivitetään, niin oletetaan että se on korjaus
+    (and (not uusi?) (nil? lahde))
     "harja-api-korjaus"
 
     ;; Oletataan, että aineisto tulee koneellisena

@@ -118,8 +118,8 @@
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "harja-api"]))
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
@@ -127,7 +127,7 @@
             vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
                                (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                  slurp
-                                 (.replace "__LAHDE__" "koneellinen")
+                                 (.replace "__LAHDE__" "korjaus")
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
@@ -138,13 +138,13 @@
               {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                           (columns ::rp/toteuman-reittipisteet)
                                                           {::rp/toteuma-id toteuma-id}))
-              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
               toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
               toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id)))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy", "harja-api-korjaus"]))
           (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 3))
           (is (= (count toteuma-materiaali-idt) 1))
@@ -189,7 +189,7 @@
         ;; Nyt hash pitäisi muuttua ja muokattu -aikaleima päivittyä
         toteumajson2 (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                        slurp
-                       (.replace "__LAHDE__" "koneellinen")
+                       (.replace "__LAHDE__" "korjaus")
                        (.replace "__SOPIMUS_ID__" (str sopimus-id))
                        (.replace "__ID__" (str ulkoinen-id))
                        (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
@@ -269,14 +269,14 @@
             {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                         (columns ::rp/toteuman-reittipisteet)
                                                         {::rp/toteuma-id toteuma-id}))
-            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
             toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
             toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
             toteuman-paivitetty-materiaali (q-map (str "SELECT nimi, maara FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id))
             materiaalimaara-paivitetty (apply + (map :maara toteuman-paivitetty-materiaali))]
-        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "harja-api-korjaus"]))
         (is (= (count reittipisteet) 4))
         (is (= (count toteuma-tehtava-idt) 3))
         (is (= (count toteuma-materiaali-idt) 1))
@@ -307,14 +307,14 @@
             {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                         (columns ::rp/toteuman-reittipisteet)
                                                         {::rp/toteuma-id toteuma-id}))
-            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
             toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
             toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
             toteuman-paivitetty-materiaali (q-map (str "SELECT nimi, maara FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id))
             materiaalimaara-paivitetty (apply + (map :maara toteuman-paivitetty-materiaali))]
-        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Kutomakoneen Ajomiehet Oy"]))
+        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Kutomakoneen Ajomiehet Oy" "harja-api-korjaus"]))
         (is (= (count reittipisteet) 4))
         (is (= (count toteuma-tehtava-idt) 3))
         (is (= (count toteuma-materiaali-idt) 1))

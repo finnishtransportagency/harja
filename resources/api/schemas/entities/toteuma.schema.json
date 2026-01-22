@@ -22,7 +22,8 @@
       "required": false,
       "enum": [
         "koneellinen",
-        "kasin"
+        "kasin",
+        "korjaus"
       ]
     },
     "sopimusId": {
