@@ -41,6 +41,8 @@
          (s/optional-key :tiedosto) s/Str
          :kayttajatunnus s/Str
          :salasana s/Str}
+   (s/optional-key :kayttajaroolit) {:url s/Str
+                                     :apiavain s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
          (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword
