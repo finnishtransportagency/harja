@@ -24,11 +24,13 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn poista-reittitoteuma [toteuma-id ulkoinen-id]
-  (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
-  (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
-  (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
-  (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+(defn poista-reittitoteuma [toteuma-id ulkoinen-id urakka-id]
+  (when toteuma-id
+    (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
+    (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
+    (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id)))
+  (when (and ulkoinen-id urakka-id)
+    (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id " AND urakka = " urakka-id))))
 
 (deftest tallenna-epaonnistuva-viivageometria
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -156,7 +158,7 @@
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-          (poista-reittitoteuma toteuma-id ulkoinen-id))))))
+          (poista-reittitoteuma toteuma-id ulkoinen-id urakka))))))
 
 (deftest tallenna-yksittainen-reittitoteuma-sama-hash
   (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
@@ -329,7 +331,7 @@
         ))
 
     ;; Poistetaan toteuma kannasta
-    (poista-reittitoteuma toteuma-id ulkoinen-id)))
+    (poista-reittitoteuma toteuma-id ulkoinen-id urakka)))
 
 (deftest tallenna-soratiehoitoluokalle-reittitoteuma
   (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
@@ -371,7 +373,7 @@
             (is (= (count reitti-materiaali-idt) 1))
             (is (= reitti-hoitoluokka 2)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-        (poista-reittitoteuma toteuma-id ulkoinen-id)))))
+        (poista-reittitoteuma toteuma-id ulkoinen-id urakka)))))
 
 (deftest tallenna-talvisuolausta-pyoratielle
   (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
@@ -415,7 +417,7 @@
           ;; Osa pisteistä osuu lähemmäksi ajoväylän vieressä olevalle kevyen liikenteen väylälle.
           (is (= reitti-hoitoluokka 6))))
 
-      (poista-reittitoteuma toteuma-id ulkoinen-id))))
+      (poista-reittitoteuma toteuma-id ulkoinen-id urakka))))
 
 (deftest tallenna-yksittainen-reittitoteuma-ilman-sopimusta-paivittaa-cachen
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
@@ -481,7 +483,7 @@
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuman-sopimus-id (ffirst (q (str "SELECT sopimus FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= sopimus-id toteuman-sopimus-id) "Toteuma kirjattiin pääsopimukselle")
-      (poista-reittitoteuma toteuma-id ulkoinen-id))))
+      (poista-reittitoteuma toteuma-id ulkoinen-id urakka))))
 
 (deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
@@ -768,7 +770,7 @@
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-          (poista-reittitoteuma toteuma-id ulkoinen-id))
+          (poista-reittitoteuma toteuma-id ulkoinen-id urakka))
         (is (= hoitoluokittaiset-eka-kutsun-jalkeen
               hoitoluokittaiset-toka-kutsun-jalkeen
               hoitoluokittaiset-kolmannen-kutsun-jalkeen) "hoitoluokittaiset samat kaikkien kutsujen jälkeen")
@@ -866,7 +868,7 @@
             (is (= (count reitti-materiaali-idt) 1))
             (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-        (poista-reittitoteuma toteuma-id ulkoinen-id))
+        (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id))
       ;; hoitoluokittaisten ja sopparin matskun käyttöjen cachen päivittyessä oikein, eivät 1. ja 2. kutsun jälkeiset tilat ole samat
       (is (not= hoitoluokittaiset-eka-kutsun-jalkeen
             hoitoluokittaiset-toisen-kutsun-jalkeen))
@@ -942,3 +944,94 @@
 
     (is (= 4.62M toteuma-reittipiste-suola-1) "Suolan määrä toteuma_reittipiste-taulussa täsmää alussa")
     (is (= 3.62M toteuma-reittipiste-suola-2) "Suolan määrä toteuma_reittipiste-taulussa täsmää alussa")))
+
+(deftest reittitoteuma-paattyneeseen-urakkaan-estetaan
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        myohainen-pvm "2019-10-02T12:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (rand-int 100000000)
+        toteuma-id (atom nil)
+        ;; Yritä luoda uusi reittitoteuma urakan päättymisen jälkeen
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
+                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                    slurp
+                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                    (.replace "__ID__" (str ulkoinen-id))
+                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                    (.replace "2016-01-30T12:00:00Z" myohainen-pvm)
+                    (.replace "2016-01-30T14:00:00Z" myohainen-pvm)
+                    (.replace "2016-01-30T13:00:00Z" myohainen-pvm)))
+        virheet (-> vastaus :body (cheshire/decode true) :virheet)]
+    (reset! toteuma-id (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id))))
+    ;; Odotetaan virhe
+    (is (= 400 (:status vastaus)))
+    (is (= "virheellinen-paivamaara" (-> virheet first :virhe :koodi)))
+    ;; Varmistetaan että toteumaa ei luotu kantaan
+    (is (empty? (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id))))
+    ;; Siivous
+    (poista-reittitoteuma @toteuma-id ulkoinen-id urakka-id)))
+
+(deftest reittitoteuma-urakan-viimeisena-sallittuna-paivana
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        viimeinen-sallittu-pvm "2019-10-01T15:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (rand-int 100000000)
+        toteuma-id (atom nil)
+        ;; Yritä luoda reittitoteuma urakan viimeisenä sallittuna päivänä (loppupvm + 1)
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
+                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                    slurp
+                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                    (.replace "__ID__" (str ulkoinen-id))
+                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                    (.replace "2016-01-30T12:00:00Z" viimeinen-sallittu-pvm)
+                    (.replace "2016-01-30T14:00:00Z" viimeinen-sallittu-pvm)
+                    (.replace "2016-01-30T13:00:00Z" viimeinen-sallittu-pvm)))]
+    (reset! toteuma-id (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id))))
+    ;; Odotetaan onnistuminen
+    (is (= 200 (:status vastaus)))
+    ;; Varmistetaan että toteuma luotiin kantaan
+    (is (some? @toteuma-id))
+    ;; Siivotaan luotu toteuma
+    (poista-reittitoteuma @toteuma-id ulkoinen-id urakka-id)))
+
+(deftest reittitoteuma-paivitys-paattyneeseen-urakkaan-sallitaan
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (rand-int 100000000)
+        ;; Luo reittitoteuma ensin urakan aikana
+        alkuperainen-pvm "2015-05-23T12:00:00+03:00"
+        toteuma-id (atom nil)
+        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
+                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                    slurp
+                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                    (.replace "__ID__" (str ulkoinen-id))
+                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                    (.replace "2016-01-30T12:00:00Z" alkuperainen-pvm)
+                    (.replace "2016-01-30T14:00:00Z" alkuperainen-pvm)
+                    (.replace "2016-01-30T13:00:00Z" alkuperainen-pvm)))]
+    ;; Varmista että alkuperäinen luonti onnistui
+    (is (= 200 (:status vastaus)))
+    (reset! toteuma-id (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id))))
+    (is (some? @toteuma-id))
+    ;; Nyt päivitä toteuma päivämäärällä joka on urakan päättymisen jälkeen
+    (let [myohassa-pvm "2019-10-02T12:00:00+03:00" ;; Urakan loppupvm + 2 päivää
+          paivitys-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
+                             (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                               slurp
+                               (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                               (.replace "__ID__" (str ulkoinen-id))
+                               (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                               (.replace "2016-01-30T12:00:00Z" myohassa-pvm)
+                               (.replace "2016-01-30T14:00:00Z" myohassa-pvm)
+                               (.replace "2016-01-30T13:00:00Z" myohassa-pvm)))]
+      ;; Päivityksen pitäisi onnistua, vaikka päivämäärä on urakan päättymisen jälkeen
+      (is (= 200 (:status paivitys-vastaus)))
+      ;; Varmista että toteuma on edelleen olemassa
+      (is (some? (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id)))))
+      ;; Siivotaan luotu toteuma
+      (poista-reittitoteuma @toteuma-id ulkoinen-id urakka-id))))

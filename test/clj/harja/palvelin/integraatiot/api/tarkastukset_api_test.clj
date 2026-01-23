@@ -320,3 +320,37 @@
           poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))
+
+(deftest tarkastus-paattyneeseen-urakkaan-estetään
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        myohainen-pvm "2019-10-02T12:00:00Z" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        id (hae-vapaa-tarkastus-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        json-data (-> "test/resurssit/api/talvihoitotarkastus.json"
+                    slurp
+                    (.replace "__PVM__" myohainen-pvm)
+                    (.replace "__ID__" (str id))
+                    (.replace "2015-02-02T15:01:00Z" myohainen-pvm))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         json-data)
+        tarkastus-kannassa (ffirst (q (str "SELECT id FROM tarkastus WHERE ulkoinen_id = " id)))]
+    (is (= 400 (:status vastaus)))
+    (is (some #(= "virheellinen-paivamaara" (get-in % ["virhe" "koodi"]))
+              (get-in (json/read-str (:body vastaus)) ["virheet"])))
+    (is (nil? tarkastus-kannassa))))
+
+(deftest tarkastus-urakan-viimeisena-sallittuna-paivana
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        viimeinen-sallittu-pvm "2019-10-01T15:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        id (hae-vapaa-tarkastus-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        json-data (-> "test/resurssit/api/talvihoitotarkastus.json"
+                    slurp
+                    (.replace "__PVM__" viimeinen-sallittu-pvm)
+                    (.replace "__ID__" (str id))
+                    (.replace "2015-02-02T15:01:00Z" viimeinen-sallittu-pvm))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         json-data)
+        tarkastus-kannassa (ffirst (q (str "SELECT id FROM tarkastus WHERE ulkoinen_id = " id)))]
+    (is (= 200 (:status vastaus)))
+    (is (some? tarkastus-kannassa))))
