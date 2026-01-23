@@ -76,6 +76,7 @@
    "Sorateiden muokkaushöyläys"]
   [sorateiden-polynsidonta "sorateiden polynsidonta" "Sorateiden pölynsidonta"]
   [sorateiden-tasaus "sorateiden tasaus" "Sorateiden tasaus"]
+  [sorateiden-pinnan-hoito "sorateiden pinnan hoito" "Sorateiden pinnan hoito"]
   [sorastus "sorastus" "Sorastus"]
   [paallysteiden-paikkaus "paallysteiden paikkaus" "Päällysteiden paikkaus"]
   [paallysteiden-juotostyot "paallysteiden juotostyot"
@@ -135,6 +136,7 @@
           sorateiden-polynsidonta
           sorastus
           sorateiden-tasaus
+          sorateiden-pinnan-hoito
           sorateiden-muokkaushoylays
           paallysteiden-paikkaus
           paallysteiden-juotostyot

@@ -1,2 +1,2 @@
--- Lisätään miamin integraatiokysely käyttäjien roolien hakemista varten
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('miam', 'hae-kayttajan-roolit') ON CONFLICT DO NOTHING ;
+-- Lisää "sorateiden pinnan hoito" suoritettavatehtava-enumiin
+ALTER TYPE suoritettavatehtava ADD VALUE 'sorateiden pinnan hoito' AFTER 'sorateiden polynsidonta';
