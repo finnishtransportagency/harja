@@ -872,7 +872,7 @@
     ;; Tallenna kustannussuunnitelma ja tarjous
     (tallenna-kustannussuunnitelma-ja-tarjous!
       urakka-id hoitovuoden-alkuvuosi
-      (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019)
+      (:johto-ja-hallintokorvaukset-2019  apurit/johto-ja-hallinto-tietomalli-2019)
       apurit/tarjous-tietomalli-2019)
     ;; Varmista että laskutusraja on NULL ennen vahvistusta
     (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
