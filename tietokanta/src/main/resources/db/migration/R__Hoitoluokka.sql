@@ -1,8 +1,9 @@
 -- Hoitoluokka taulun hakuja varten
 
--- Päättelee pisteen sijainnin perusteella hoitoluokan. Sijaintiin lisätään on 10 metrin puskuri.
--- Hoitoluokkaehdokkaita ovat ne hoitoluokat, jotka osuvat pisteen puskuroituun sijaintiin.
--- Ehdokkaista valitaan ylempi hoitoluokka. Kun lähistöllä on usean hoitourakan teitä kuten risteyksissä ja rampeilla usein on,
+-- Päättelee pisteen sijainnin perusteella hoitoluokan. Sijaintiin lisätään puskuri pyöristämällä pisteen etäisyys hoitoluokkageometrioihin.
+-- Näin saadaan hoitoluokkaehdokkaaksi paitsi lähin myös muut riittävän lähellä olevat hoitoluokkageometriat.
+-- Ehdokkaista valitaan ylempi hoitoluokka.
+-- Kun lähistöllä on usean hoitourakan teitä kuten risteyksissä ja rampeilla usein on,
 -- saattaa päätelty hoitoluokka olla ylempi kuin tie, jolla todellisuudessa tehtiin töitä. Tämä on hyväksytty
 -- sivuoire siitä, että halutaan välttää pisteen sijoittaminen liian matalalle hoitoluokalle.
 -- Sorateillä puskurin vaikutus näyttää testien mukaan olemattomalta.
