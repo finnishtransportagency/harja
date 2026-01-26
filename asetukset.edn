@@ -50,6 +50,11 @@
        :tiedosto "dev-resources/fim.edn"
        :kayttajatunnus ""
        :salasana ""}
+
+ ;; MIAM käyttäjäroolit
+ :kayttajaroolit {:url "https://localhost:3001/miam/harja/user/roles?uid="
+                  :apiavain ""}
+
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        :testidata? true
@@ -206,6 +211,7 @@
  ;; :reittitarkistukset
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  ;; :kustannussuunnitelma-tarjous - sallittu vain gc ja local ympäristöissä tällä hetkellä, muualla estetty
+ ;; :header-roolit - Jos nämä on kytketty pois, niin käyttäjäroolit haetaan miam käyttäjärajapinnasta
  :pois-kytketyt-ominaisuudet #{; :tietyoilmoitusten-lahetys
                                :itmf
                                :sonja-uudelleen-kaynnistys
@@ -219,7 +225,8 @@
                                ;; Sampoapi, vai apisampo? 
                                ;; Ei tartte kehitysmoodissa
                                :sampo-api
-                               :api-sampo}
+                               :api-sampo
+                               :header-roolit}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

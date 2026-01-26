@@ -1,10 +1,13 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [clojure.string :as str]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
             [slingshot.slingshot :refer [throw+]]
             [clojure.data.json :as json]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
@@ -20,9 +23,12 @@
      (component/start
       (component/system-map
        :db (tietokanta/luo-tietokanta testitietokanta)
+        :integraatioloki (component/using
+                           (integraatioloki/->Integraatioloki nil)
+                           [:db])
        :todennus (component/using
                   (todennus/http-todennus)
-                  [:db])))))
+                  [:db :integraatioloki])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -88,6 +94,35 @@
                          :urakkaroolit       {14303 #{"ELY_Urakanvalvoja"}
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
+
+(deftest kayttajaroolit-rajapinnasta-test
+  (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
+          :roolit #{}
+          :urakkaroolit {39 #{"vastuuhenkilo"}}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          nil))))
+
+(deftest kayttajaroolit-rajapintavastauksesta-ei-kaadu-virheellisilla-vastauksilla
+  (testing "MIAM-vastauksen parsinta ei kaadu nil/tyhjä/virheellinen JSON"
+    (let [db (:db jarjestelma)]
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db nil nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "not-json" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{}" nil)))
+      (is (nil? (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":null}" nil)))
+      (is (= {:roolit #{}, :urakkaroolit {}, :organisaatioroolit {}}
+            (todennus/kayttajaroolit-rajapintavastauksesta db "{\"Table1\":[{\"Role\":null}]}" nil))))))
+
+(deftest kayttajaroolit-rajapintavastauksesta-ja-asetuksista
+  (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
+          :roolit #{"Jarjestelmavastaava", "Tilaajan_Asiantuntija"}
+          :urakkaroolit {39 #{"vastuuhenkilo"}}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
 
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"
@@ -264,6 +299,8 @@
 
 (deftest varmista-kayttajatiedot-test
   (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        miam-asetukset {} ;; Laita asetukset tyhjänä
         testi-kayttajanimi "testi-kayttaja-123"
         testi-headerit {"oam_remote_user" testi-kayttajanimi
                         "oam_user_first_name" "Testi"
@@ -276,7 +313,7 @@
     (testing "Uusi käyttäjä luodaan tietokantaan"
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
 
-      (let [kayttaja (#'todennus/varmista-kayttajatiedot db testi-headerit)
+      (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
 
         (is (some? kayttaja) "Käyttäjä palautetaan")
@@ -293,7 +330,7 @@
       (let [muutetut-headerit (assoc testi-headerit
                                 "oam_user_first_name" "Muutettu"
                                 "oam_user_mail" "uusi@example.com")
-            kayttaja (#'todennus/varmista-kayttajatiedot db muutetut-headerit)
+            kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset muutetut-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
 
         (is (= "Muutettu" (:etunimi kayttaja)))
@@ -310,7 +347,7 @@
                             "oam_user_mobile" "0401234567"
                             "oam_organization" "Lapin elinvoimakeskus"
                             "oam_groups" "ELY_Paakayttaja"}
-            kayttaja (#'todennus/varmista-kayttajatiedot db evk-headerit)
+            kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset evk-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))]
 
         (is (some? kayttaja) "Käyttäjä palautetaan")
@@ -324,3 +361,86 @@
 
     ;; Siivoa testi-käyttäjä lopuksi
     (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
+
+(deftest varmista-kayttajatiedot-miam-rajapinnasta-test
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        ;; MIAM-asetukset kuten ne tulevat asetukset.edn tiedostosta, mutta testi-osoitteilla
+        miam-asetukset {:url "https://testi-miam.example.com/api/v1/users"
+                        :apiavain "test-api-key-12345"}
+        testi-kayttajanimi "miam-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "MIAM"
+                        "oam_user_last_name" "Testaaja"
+                        "oam_user_mail" "miam@example.com"
+                        "oam_user_mobile" "0501234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava, 2234567-8_Paakayttaja"}
+        ;; Mockattu MIAM-vastaus
+        miam-vastaus (cheshire/encode
+                       {"Table1" [{"CompanyID" "2163026-3"
+                                   "Company" "Destia Oy"
+                                   "UserName" testi-kayttajanimi
+                                   "Name" "MIAM Testaaja"
+                                   "Role" "2234567-8_Paakayttaja"
+                                   "StartDate" "1.1.2024 0:00:00"
+                                   "EndDate" "31.12.2029 23:59:59"
+                                   "Agreementname" "Testisopimus"
+                                   "Appname" "HARJA"
+                                   "email" "miam@example.com"}]})]
+
+    (testing "MIAM-käyttäjä luodaan kun MIAM-asetukset on määritelty"
+      ;; Mockataan HTTP-kysely
+      (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
+                    todennus/hae-kayttajaroolit-rajapinnasta (fn [db integraatioloki miam kayttajanimi] miam-vastaus)]
+        (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
+              kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+          (is (some? kayttaja) "Käyttäjä palautetaan")
+          (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+          (is (= testi-kayttajanimi (:kayttajanimi kayttaja)))
+          (is (= "MIAM" (:etunimi kayttaja)))
+          (is (= "Testaaja" (:sukunimi kayttaja)))
+          (is (= "miam@example.com" (:sahkoposti kayttaja)))
+          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
+          (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
+
+      ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
+
+(deftest varmista-kayttajatiedot-miam-rajapinnasta-test-2
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        ;; MIAM-asetukset kuten ne tulevat asetukset.edn tiedostosta, mutta testi-osoitteilla
+        miam-asetukset {:url "https://testi-miam.example.com/api/v1/users"
+                        :apiavain "test-api-key-12345"}
+        testi-kayttajanimi "miam-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "MIAM"
+                        "oam_user_last_name" "Testaaja"
+                        "oam_user_mail" "miam@example.com"
+                        "oam_user_mobile" "0501234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava"}
+        ;; Mockattu MIAM-vastaus
+        miam-vastaus (cheshire/encode {})]
+
+    (testing "Sähkeheaderit mutta ei miamista mitään testi"
+      ;; Mockataan HTTP-kysely
+      (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
+                    todennus/hae-kayttajaroolit-rajapinnasta (fn [db integraatioloki miam kayttajanimi] miam-vastaus)]
+        (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
+              _ (println "kayttaja on" kayttaja)
+              kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
+
+          (is (some? kayttaja) "Käyttäjä palautetaan")
+          (is (some? kayttaja-kannassa) "Käyttäjä löytyy kannasta")
+          (is (= testi-kayttajanimi (:kayttajanimi kayttaja)))
+          (is (= "MIAM" (:etunimi kayttaja)))
+          (is (= "Testaaja" (:sukunimi kayttaja)))
+          (is (= "miam@example.com" (:sahkoposti kayttaja)))
+          (is (= "Destia Oy" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")
+          (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
+
+      ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
