@@ -239,10 +239,17 @@
                                                  #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
                                                :tarkkailun-nimi :db-replica)
                     kehitysmoodi)
+      ;; Integraatioloki
+      :integraatioloki
+      (component/using (integraatioloki/->Integraatioloki
+                         (:paivittainen-lokin-puhdistusaika
+                           (:integraatiot asetukset)))
+        [:db])
 
       :todennus (component/using
-                  (todennus/http-todennus sahke-headerit todennus-varmistus)
-                  [:db])
+                  (todennus/http-todennus sahke-headerit todennus-varmistus (:kayttajaroolit asetukset))
+                  [:db :integraatioloki])
+
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi todennus-varmistus)
                        [:todennus :metriikka :db])
@@ -277,13 +284,6 @@
       :kehitysmoodi (component/using
                       (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
                       [:http-palvelin])
-
-      ;; Integraatioloki
-      :integraatioloki
-      (component/using (integraatioloki/->Integraatioloki
-                         (:paivittainen-lokin-puhdistusaika
-                          (:integraatiot asetukset)))
-        [:db])
 
       :itmf (component/using
               (itmf/luo-itmf (merge (:itmf asetukset)
