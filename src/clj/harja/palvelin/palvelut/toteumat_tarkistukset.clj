@@ -13,11 +13,13 @@
           onko-olemassa (when ulkoinen-id   
                           (toteumat-q/onko-olemassa-ulkoisella-idlla? db ulkoinen-id urakka-id))]  
       (when (and urakan-loppupvm (not onko-olemassa))  
-        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm  
+        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
+                                       pvm/joda-timeksi
+                                       pvm/suomen-aikavyohykkeeseen
                                        (pvm/ajan-muokkaus true 1 :paiva)  
                                        pvm/paivan-lopussa  
                                        pvm/millisekunteina)  
-              toteuma-alkanut-ms (pvm/millisekunteina (pvm/joda-timeksi toteuma-alkanut))]  
+              toteuma-alkanut-ms (.getTime toteuma-alkanut)]
           (when (> toteuma-alkanut-ms sallittu-viimeinen-pvm)  
             (throw+ {:type virheet/+viallinen-kutsu+  
                      :virheet [{:koodi virheet/+virheellinen-paivamaara+  

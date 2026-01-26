@@ -975,7 +975,7 @@
 (deftest reittitoteuma-urakan-viimeisena-sallittuna-paivana
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
-        viimeinen-sallittu-pvm "2019-10-01T15:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        viimeinen-sallittu-pvm "2019-10-01T12:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01 (loppupvm + 1)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         toteuma-id (atom nil)
@@ -1003,7 +1003,7 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         ;; Luo reittitoteuma ensin urakan aikana
-        alkuperainen-pvm "2015-05-23T12:00:00+03:00"
+        alkuperainen-pvm "2015-05-23T12:00:00Z"
         toteuma-id (atom nil)
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
                   (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -1019,7 +1019,7 @@
     (reset! toteuma-id (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id))))
     (is (some? @toteuma-id))
     ;; Nyt päivitä toteuma päivämäärällä joka on urakan päättymisen jälkeen
-    (let [myohassa-pvm "2019-10-02T12:00:00+03:00" ;; Urakan loppupvm + 2 päivää
+    (let [myohassa-pvm "2019-10-02T15:00:00+03:00" ;; Urakan loppupvm + 2 päivää
           paivitys-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
                              (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                slurp

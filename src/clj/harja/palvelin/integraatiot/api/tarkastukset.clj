@@ -45,27 +45,27 @@
                           :viesti (format "Urakassa id:llä: %s on jo raportoitu tarkastus samalla tunnisteella %s, mutta eri aikana. Tunnisteen on oltava yksilöllinen urakan ja tarkastustyypin sisällä."
                                     urakka-id, ulkoinen-id)}]})
       (throw (IllegalArgumentException.)))))
-
-(defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id ulkoinen-id tyyppi]  
-  (when tarkastus-aika  
-    (let [urakka (first (q-urakat/hae-urakka db {:id urakka-id}))  
-          urakan-loppupvm (:loppupvm urakka)  
-          onko-olemassa (when ulkoinen-id   
-                          (first (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla   
-                                  db {:id ulkoinen-id  
-                                       :tyyppi (name tyyppi)  
-                                       :urakka-id urakka-id})))]  
-      (when (and urakan-loppupvm (not onko-olemassa))  
-        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm  
-                                       (pvm/ajan-muokkaus true 1 :paiva)  
-                                       pvm/paivan-lopussa  
-                                       pvm/millisekunteina)  
-              tarkastus-aika-ms (pvm/millisekunteina (pvm/joda-timeksi tarkastus-aika))]  
-          (when (> tarkastus-aika-ms sallittu-viimeinen-pvm)  
-            (throw+ {:type virheet/+viallinen-kutsu+  
-                     :virheet [{:koodi virheet/+virheellinen-paivamaara+  
+(defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id ulkoinen-id tyyppi]
+  (when tarkastus-aika
+    (let [urakka (first (q-urakat/hae-urakka db {:id urakka-id}))
+          urakan-loppupvm (:loppupvm urakka)
+          onko-olemassa (when ulkoinen-id
+                          (first (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla
+                                  db {:id ulkoinen-id
+                                       :tyyppi (name tyyppi)
+                                       :urakka-id urakka-id})))]
+      (when (and urakan-loppupvm (not onko-olemassa))
+        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
+                                       pvm/joda-timeksi
+                                       pvm/suomen-aikavyohykkeeseen
+                                       (pvm/ajan-muokkaus true 1 :paiva)
+                                       pvm/paivan-lopussa
+                                       pvm/millisekunteina)
+              tarkastus-aika-ms (.getTime tarkastus-aika)]
+          (when (> tarkastus-aika-ms sallittu-viimeinen-pvm)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+virheellinen-paivamaara+
                                 :viesti "Urakka on päättynyt ja kirjaaminen estetty."}]})))))))
-
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
