@@ -392,7 +392,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                        (.toLowerCase @term)) 0))
                                                           vaihtoehdot))
                                            disabled? (contains? disabled-vaihtoehdot itemi)]
-                                       (when (not disabled?)
+                                       ;; Validoinnin vuoksi alasvetovalikkoon ei päästetä nil itemeitä
+                                       (when (and (not disabled?) (not (nil? itemi)))
                                          (valitse-fn itemi)
                                          (reset! auki? false))))))))))]
     (komp/luo
