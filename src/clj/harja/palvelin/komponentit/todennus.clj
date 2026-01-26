@@ -102,7 +102,17 @@
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
 
 (defn kasittele-miam-vastaus
-  "Logita mahdollinen virhe."
+  "Käsittelee MIAM-rajapinnan HTTP-vastauksen ja palauttaa vastauksen bodyn onnistumisen tapauksessa.
+
+  Parametrit:
+  - status: HTTP-statuskoodi (numero)
+  - body: Vastauksen body (merkkijono)
+
+  Palauttaa:
+  - body, jos statuskoodi on 200
+  - nil, jos statuskoodi on muu kuin 200 tai käsittelyssä tapahtuu virhe
+
+  Virhetilanteet lokitetaan."
   [status body]
 
   (try
@@ -128,7 +138,10 @@
    - kayttajanimi: Käyttäjätunnus, jonka roolit haetaan
 
    Palauttaa JSON-muotoisen merkkijonon, joka sisältää käyttäjän roolit MIAM-rajapinnasta,
-   tai nil jos rajapintakutsu epäonnistuu."
+   tai nil jos rajapintakutsu epäonnistuu.
+
+   Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset on hyvä pitää miam rajapinnan kutsu pois päältä,
+   vaikka rooleja, ei tulisikaan headereista"
   [db integraatioloki miam kayttajanimi]
   (let [;; Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset
         ;; on hyvä pitää miam rajapinnan kutsu pois päältä - vaikka rooleja, ei tulisikaan headereista
@@ -152,7 +165,15 @@
    - vastaus: JSON-muotoinen merkkijono MIAM-rajapinnasta, tai nil jos kutsu epäonnistui
 
    Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
-   tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä."
+   tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä.
+
+   Rajanpinnasta saadaan vastaus tyyliin:
+   {\"Table1\": [{ \"CompanyID\": \"<y-tunnus>\", \"Company\": \"<yrityksen nimi>\", \"UserName\": \"<käyttäjän käyttäjätunnus>\", \"Name\": \"<Käyttäjän nimi>\",
+                   \"Role\": \"<ytunnus_Paakayttaja>\",
+                   \"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste <yrityksen nimi>\",
+                   \"Appname\": \"HARJA\", \"email\": \"<käyttäjän sähköpostiosoite>\" }]}
+
+   "
   [db vastaus ryhmat-asetuksista]
   (let [roolit-asetuksista (when ryhmat-asetuksista
                              (kayttajan-roolit
