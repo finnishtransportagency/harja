@@ -48,7 +48,7 @@
 (defn takuupvm-valinnat
   [nykyinen-takuupvm]
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
-        valinnat (for [vuotta (range 1 4)]
+        valinnat (for [vuotta (range 1 11)]
                    {:pvm (pvm/vuoden-viim-pvm (+ vuotta nykyinen-vuosi))
                     :fmt (str vuotta (if (= 1 vuotta)
                                        " vuosi"
