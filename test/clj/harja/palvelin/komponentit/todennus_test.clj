@@ -1,6 +1,7 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [clojure.string :as str]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
@@ -95,13 +96,15 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
+(def default-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
+
 (deftest kayttajaroolit-rajapinnasta-test
   (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
           :roolit #{}
           :urakkaroolit {39 #{"vastuuhenkilo"}}}
         (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
-          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
-                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          default-miam-vastaus
           nil))))
 
 (deftest kayttajaroolit-rajapintavastauksesta-ei-kaadu-virheellisilla-vastauksilla
@@ -120,9 +123,27 @@
           :roolit #{"Jarjestelmavastaava", "Tilaajan_Asiantuntija"}
           :urakkaroolit {39 #{"vastuuhenkilo"}}}
         (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
-          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
-                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          default-miam-vastaus
           "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
+
+(deftest miam-uudelleenyritys-with-redefs-test
+  (let [yrityskerrat (atom 0)
+        mock-integraatio (fn [db integraatioloki nimi toiminto ulkoinen-id context-fn]
+                           (swap! yrityskerrat inc)
+                           (if (< @yrityskerrat 5)
+                             nil
+                             (context-fn {})))]
+
+    (with-redefs [integraatiotapahtuma/suorita-integraatio mock-integraatio
+                  integraatiotapahtuma/laheta (fn [konteksti http http-asetukset] {:body default-miam-vastaus :headers "headers" :status 200})]
+      (let [vastaus (todennus/hae-kayttajaroolit-rajapinnasta
+                      (:db jarjestelma)
+                      (:integraatioloki jarjestelma)
+                      {:timeout 500
+                       :max-yritykset 5}
+                      "feikki-kayttaja")]
+        (is (= 5 @yrityskerrat) "Viisi yritystä tehtiin")
+        (is (some? vastaus) "Vastaus saatiin lopulta")))))
 
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"

@@ -143,19 +143,29 @@
    Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset on hyvä pitää miam rajapinnan kutsu pois päältä,
    vaikka rooleja, ei tulisikaan headereista"
   [db integraatioloki miam kayttajanimi]
-  (let [;; Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset
-        ;; on hyvä pitää miam rajapinnan kutsu pois päältä - vaikka rooleja, ei tulisikaan headereista
-        vastaus (integraatiotapahtuma/suorita-integraatio
-                  db integraatioloki "miam" "hae-kayttajan-roolit" nil
-                  (fn [konteksti]
-                    (let [http-asetukset {:metodi :GET
-                                          :url (str (:url miam) kayttajanimi)
-                                          :otsikot (merge
-                                                     {"Content-Type" "application/json"}
-                                                     {"x-api-key" (:apiavain miam)})}
-                          {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                      (kasittele-miam-vastaus status body))))]
-    vastaus))
+  (let [timeout (get miam :timeout 30000) ;; Jos ympäristöön ei ole asetettu mitään, niin 30sek defaulttina
+        max-yritykset (get miam :max-yritykset 10)] ;; Jos ympäristöön ei ole asetettu mitään, niin 10 yritystä defaulttina
+
+    ;; Yritetään uudestaan maksimi määrään asti yrityksiä, jos kutsu epäonnistuu
+    (loop [yritys 1]
+      (let [vastaus (integraatiotapahtuma/suorita-integraatio
+                      db integraatioloki "miam" "hae-kayttajan-roolit" nil
+                      (fn [konteksti]
+                        (let [http-asetukset {:metodi :GET
+                                              :url (str (:url miam) kayttajanimi)
+                                              :timeout timeout
+                                              :otsikot (merge
+                                                         {"Content-Type" "application/json"}
+                                                         {"x-api-key" (:apiavain miam)})}
+                              {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                          (kasittele-miam-vastaus status body))))]
+        (if (or vastaus (>= yritys max-yritykset))
+          vastaus
+          (do
+            (log/warn (str "MIAM-kutsu epäonnistui, yritetään uudelleen (" yritys "/" max-yritykset ")"))
+            ;; Pidetään ihan pieni tauko ennen seuraavaa yritystä
+            (Thread/sleep (* yritys 200))
+            (recur (inc yritys))))))))
 
 (defn kayttajaroolit-rajapintavastauksesta
   "Parsii käyttäjäroolit MIAM-rajapinnan JSON-vastauksesta ja muuntaa ne Harjan ryhmärakenteeksi.
