@@ -214,9 +214,10 @@
           (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
           nil)))))
 
-;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
+;; Pidetään käyttäjätietoja muistissa 2h, jotta ei tarvitse koko ajan hakea tietokannasta tai miam-rajapinnasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
-(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
+;; Eli, kun cache hittiä ei ensimmäisen sivulautauksen voi olla, niin tietokantaa ja miam-rajapintaa kutsutaan neljä kertaa.
+(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000))))
 
 (defn- pura-header-arvo
   "KOKA lähettää ääkkösellisen headerin muodossa \"=?UTF?B?...base64...?=\"."
