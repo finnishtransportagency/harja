@@ -450,6 +450,47 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
+;; Atomilla seurataan käynnissä olevia hakuja
+(def odottavat-kutsut-atom (atom {}))
+
+(defn- hae-tai-odota-kayttajatietoja
+  "Hakee käyttäjätiedot tai odottaa käynnissä olevaa hakua samalle käyttäjälle.
+   Estää samanaikaiset MIAM-kutsut samalle käyttäjälle."
+  [db integraatioloki miam oam-tiedot]
+  (let [kayttajanimi (get oam-tiedot "oam_remote_user")
+        ;; Luodaan promise tai haetaan olemassa oleva atomisesti
+        ;; Palautetaan [promise uusi?] jossa uusi? kertoo luotiinko uusi promise
+        [vastaus-promise uusi?]
+        (let [p (promise)]
+          (if-let [olemassa? (get @odottavat-kutsut-atom kayttajanimi)]
+            [olemassa? false]
+            ;; Yritä lisätä uusi promise atomisesti
+            (let [result (swap! odottavat-kutsut-atom
+                           (fn [pending]
+                             (if (contains? pending kayttajanimi)
+                               pending
+                               (assoc pending kayttajanimi p))))]
+              ;; Tarkista lisättiinkö meidän promise vai oliko toinen thread nopeampi
+              (if (identical? p (get result kayttajanimi))
+                [p true]
+                [(get result kayttajanimi) false]))))]
+
+    ;; Jos tämä thread loi promisen, sen täytyy deliveroida se
+    (if uusi?
+      (do
+        (deliver vastaus-promise
+          (try
+            (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)
+            (catch Throwable t
+              (log/error t "Virhe käyttäjätietojen haussa")
+              (throw t))
+            (finally
+              ;; Siivotaan promise pois atomista
+              (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
+        @vastaus-promise)
+      ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
+      @vastaus-promise)))
+
 (defn koka->kayttajatiedot
   ([db integraatioloki miam headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db integraatioloki miam headerit oikeudet kehitysmoodi? nil))
@@ -457,12 +498,15 @@
    (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
-       (get (swap! kayttajatiedot-cache-atom #(cache/through
-                                                (fn [oam-tiedot]
-                                                  (varmista-kayttajatiedot db integraatioloki miam oam-tiedot))
-                                                %
-                                                oam-tiedot))
-         oam-tiedot)
+       ;; Tarkista ensin cachesta
+       (if-let [cached (cache/lookup @kayttajatiedot-cache-atom oam-tiedot)]
+         ;; Cache-osuma, palauta arvo
+         cached
+         ;; Cache-huti, hae tai odota (hakuja tehdään vain yksi, muut säikeet odottavat sen valmistumista)
+         (let [result (hae-tai-odota-kayttajatietoja db integraatioloki miam oam-tiedot)]
+           ;; Tallenna cacheen
+           (swap! kayttajatiedot-cache-atom cache/miss oam-tiedot result)
+           result))
        (catch Throwable t
          (log/error t "Käyttäjätietojen varmistuksessa virhe!"))))))
 

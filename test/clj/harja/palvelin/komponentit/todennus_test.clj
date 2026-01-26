@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [cheshire.core :as cheshire]
+            [clojure.core.cache :as cache]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [clojure.string :as str]
@@ -464,4 +465,138 @@
           (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
 
       ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
+
+(deftest miam-uudelleen-yritys-logiikka-testi
+  (testing "MIAM-kutsu uudelleenyritys timeout/virhe-tilanteessa"
+    ;; Tämä testi varmistaa että hae-kayttajaroolit-rajapinnasta yrittää uudelleen
+    ;; max-yritykset kertaa kun MIAM-rajapintakutsu epäonnistuu.
+    ;; Timeout-tilannetta simuloidaan palauttamalla virheellinen HTTP-statuskoodi (503)
+    ;; joka aiheuttaa saman uudelleenyrityslogiikan kuin todellinen timeout.
+    (let [yrityskerrat (atom 0)
+          mock-integraatio (fn [_ _ _ _ _ context-fn]
+                             (swap! yrityskerrat inc)
+                             ;; Kutsutaan context-fn ja palautetaan sen tulos
+                             (context-fn {}))
+          mock-http-laheta (fn [_ _ _]
+                             ;; Simuloi epäonnistunut kutsu palauttamalla virheellinen statuskoodi
+                             ;; Timeout aiheuttaisi poikkeuksen, mutta virhestatuskin aiheuttaa uudelleenyrityksen
+                             {:body "Service unavailable" :headers {} :status 503})]
+
+      (with-redefs [integraatiotapahtuma/suorita-integraatio mock-integraatio
+                    integraatiotapahtuma/laheta mock-http-laheta]
+        ;; Asetetaan lyhyt timeout ja vähän yrityksiä
+        (let [miam-asetukset {:timeout 100 ; 100ms timeout (ei käytetä tässä testissä)
+                              :max-yritykset 3}
+              tulos (todennus/hae-kayttajaroolit-rajapinnasta
+                      (:db jarjestelma)
+                      (:integraatioloki jarjestelma)
+                      miam-asetukset
+                      "timeout-testi-kayttaja")]
+
+          ;; Virheelliset statuskoodit aiheuttavat nil-vastauksen kaikissa yrityksissä
+          (is (nil? tulos)
+              "Virhe-tilanne pitäisi johtaa nil-vastaukseen")
+
+          ;; Varmistetaan että yritettiin max-yritykset kertaa
+          (is (= 3 @yrityskerrat)
+              "Pitäisi yrittää uudelleen max-yritykset verran kun virhe tapahtuu"))))))
+
+(deftest samanaikaiset-kayttajatietohaut-test
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        miam-asetukset {}
+        testi-kayttajanimi "samanaikainen-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "Testi"
+                        "oam_user_last_name" "Käyttäjä"
+                        "oam_user_mail" "testi@example.com"
+                        "oam_user_mobile" "0401234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava"}
+        kutsulaskuri (atom 0)]
+
+    (testing "Samanaikaiset kutsut aiheuttavat vain yhden tietokantakutsun"
+      ;; Siivoa cache ja pending requests
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 60000))) ;; minuutti = 60 sek
+      (reset! todennus/odottavat-kutsut-atom {})
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      ;; Mockataan varmista-kayttajatiedot laskemaan kutsut
+      (with-redefs [todennus/varmista-kayttajatiedot
+                    (fn [db integraatioloki miam oam-tiedot]
+                      (swap! kutsulaskuri inc)
+                      (Thread/sleep 100) ; Simuloi hidas kutsu
+                      {:kayttajanimi testi-kayttajanimi
+                       :etunimi "Testi"
+                       :sukunimi "Käyttäjä"})]
+
+        ;; Käynnistä 4 samanaikaista kutsua
+        (let [futuurit (doall
+                         (for [_ (range 4)]
+                           (do
+                             (println "Käynnistetään kutsu...")
+                             (future
+                                 (todennus/koka->kayttajatiedot
+                                   db integraatioloki miam-asetukset
+                                   testi-headerit nil false)))))]
+
+          ;; Odota että kaikki valmistuvat
+          (doseq [f futuurit]
+            (do
+              (println "Odotellaan timeouttia...")
+              (deref f 1000 :timeout)))
+
+          ;; Tarkista että vain yksi kutsu tehtiin
+          (is (= 1 @kutsulaskuri) "Pitäisi olla vain yksi kutsu vaikka tehtiin 4 samanaikaista"))))
+
+    (testing "Cache estää toistuvat kutsut"
+      (reset! kutsulaskuri 0)
+
+      ;; Tee uusi kutsu (cachen pitäisi toimia)
+      (todennus/koka->kayttajatiedot
+        db integraatioloki miam-asetukset
+        testi-headerit nil false)
+
+      (is (= 0 @kutsulaskuri) "Ei pitäisi tehdä uutta kutsua koska cache toimii"))
+
+    ;; Siivoa
+    (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
+
+(deftest kayttajatietohaku-cache-toimii-test
+  (testing "Käyttäjätiedot cachetaan ja toinen haku tulee cachesta"
+    (let [db (:db jarjestelma)
+          integraatioloki (:integraatioloki jarjestelma)
+          miam-asetukset {}
+          testi-kayttajanimi "cache-testi"
+          testi-headerit {"oam_remote_user" testi-kayttajanimi
+                          "oam_user_first_name" "Cache"
+                          "oam_user_last_name" "Testi"
+                          "oam_user_mail" "cache@example.com"
+                          "oam_user_mobile" "0401234567"
+                          "oam_organization" "Destia Oy"
+                          "oam_groups" "Jarjestelmavastaava"}
+          kutsulaskuri (atom 0)]
+
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl 60000))
+      (reset! todennus/odottavat-kutsut-atom {})
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      (with-redefs [todennus/varmista-kayttajatiedot
+                    (fn [db integraatioloki miam oam-tiedot]
+                      (swap! kutsulaskuri inc)
+                      {:kayttajanimi testi-kayttajanimi})]
+
+        ;; Ensimmäinen haku
+        (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset
+          testi-headerit nil false nil)
+        (is (= 1 @kutsulaskuri) "Ensimmäinen haku kutsuu tietokantaa")
+
+        ;; Toinen haku - pitäisi tulla cachesta
+        (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset
+          testi-headerit nil false nil)
+        (is (= 1 @kutsulaskuri) "Toinen haku tulee cachesta, ei uutta tietokantakutsua"))
+
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000)))
+      (reset! todennus/odottavat-kutsut-atom {})
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
