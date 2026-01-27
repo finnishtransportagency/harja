@@ -849,32 +849,50 @@
 
     {:kulut kulut}))
 
-(defn hae-tiemerkkinnan-kustannukset [db {:keys [alkuaika loppuaika] :as parametrit}]
+(defn hae-tiemerkkinnan-kustannukset
+  "Haetaan tiemerkinnän kustannukset urakkakohtaisesti analytiikkaa varten."
+  [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API tiemerkinnän kustannukset :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit false)
-  (let [korjauskustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-korjauskustannukset db
-                              {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-                               :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
-        yllapitokohdekustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset db
-                                    {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-                                     :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
-        yllapitokohdekustannukset (mapv #(update % :sopimusvuosi (fn [sopimusvuosi]
-                                                            ;; Käytännössä tuotannossa on aina yksi vuosi sopimusvuosi-sarakkeessa. Jos sattuisi olemaan kaksi,
-                                                            ;; otetaan suurempi arvo, koska se on aina kuluva vuosi, koska päällystyskohteita ei voi hakea tulevalle vuodelle YHA:sta
-                                                             (if sopimusvuosi
-                                                               (apply max (konversio/pgarray->vector sopimusvuosi))
-                                                               nil))) yllapitokohdekustannukset)
-        ;; Muutetaan kenttien nimet analytiikan odottamaan muotoon
-        yllapitokohdekustannukset (map #(konversio/alaviiva->rakenne %) yllapitokohdekustannukset)
+  (let [;; Hae distinct urakat kannasta
+        urakat-kannassa (kustannusten-kirjaus-kyselyt/analytiikalle-tiemerkintaurakat-kannasta db
+                          {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                           :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
 
-        paikkauskohdekustannukset (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset db
-                                    {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-                                     :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
-        ;; Muutetaan kenttien nimet analytiikan odottamaan muotoon
-        paikkauskohdekustannukset (map #(konversio/alaviiva->rakenne %) paikkauskohdekustannukset)]
-    {:tiemerkinnan-kustannukset {:korjauskustannukset korjauskustannukset
-                                 :yllapitokohdekustannukset yllapitokohdekustannukset
-                                 :paikkauskohdekustannukset paikkauskohdekustannukset}}))
+        ;; Hae kustannukset ryhmiteltynä urakkakohtaisesti
+        tiemerkinnan-kustannukset
+        (mapv (fn [{:keys [urakkaid urakkanro]}]
+                (let [korjauskustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-korjauskustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})
+
+                      yllapitokohdekustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})
+
+                      paikkauskohdekustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})]
+
+                  {:urakkaid urakkaid
+                   :urakkanro urakkanro
+                   :korjauskustannukset (mapv konversio/alaviiva->rakenne korjauskustannukset)
+                   :yllapitokohdekustannukset (mapv #(-> %
+                                                       konversio/alaviiva->rakenne
+                                                       (update :sopimusvuosi
+                                                         (fn [sv]
+                                                           (when sv
+                                                             (apply max (konversio/pgarray->vector sv))))))
+                                                yllapitokohdekustannukset)
+                   :paikkauskohdekustannukset (mapv konversio/alaviiva->rakenne paikkauskohdekustannukset)}))
+          urakat-kannassa)]
+    {:tiemerkinnan-kustannukset tiemerkinnan-kustannukset}))
 
 (defn hae-paikkauskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paikkauskohteet :: parametrit" (pr-str parametrit))

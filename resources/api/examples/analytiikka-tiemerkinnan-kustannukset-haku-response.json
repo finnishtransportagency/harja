@@ -1,63 +1,61 @@
 {
-  "tiemerkinnan-kustannukset": {
-    "korjauskustannukset": [
-      {
-        "urakkaid": 98765,
-        "urakkatunnus": "UR-2023-001",
-        "sopimusvuosi": 2023,
-        "kustannus": 125000.50,
-        "pk1%": null,
-        "pk2%": null,
-        "pk3%": null,
-        "korjauskustannus-luotu": "2023-01-15T10:00:00Z",
-        "korjauskustannus-muokattu": "2023-06-20T15:30:00Z"
-      }
-    ],
-    "yllapitokohdekustannukset": [
-      {
-        "urakkaid": 98765,
-        "urakkatunnus": "UR-2023-001",
-        "sopimusvuosi": 2023,
-        "nimi": "Esimerkkikohde 1",
-        "kohdenumero": 123456,
-        "sijainti": {
-          "tie": 1,
-          "alkuosa": 1,
-          "alkuetaisyys": 1,
-          "loppuosa": 1,
-          "loppuetaisyys": 1
-        },
-        "linjamerkinnat": 85000.00,
-        "pienmerkinnat": 40500.00,
-        "jyrsinnat": 17800.75,
-        "muut-kustannukset": 7000.00,
-        "yllapitokohde-poistettu": false,
-        "yllapitokohde-kustannus-luotu": "2023-01-15T10:00:00Z",
-        "yllapitokohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
-      }
-    ],
-    "paikkauskohdekustannukset": [
-      {
-        "urakkaid": 98765,
-        "urakkatunnus": "UR-2023-001",
-        "sopimusvuosi": 2023,
-        "nimi": "Esimerkkikohde 1",
-        "kohdenumero": 123456,
-        "sijainti": {
-          "tie": 1,
-          "alkuosa": 1,
-          "alkuetaisyys": 1,
-          "loppuosa": 1,
-          "loppuetaisyys": 1
-        },
-        "linjamerkinnat": 85000.00,
-        "pienmerkinnat": 40500.00,
-        "jyrsinnat": 17800.75,
-        "muut-kustannukset": 7000.00,
-        "paikkauskohde-poistettu": false,
-        "paikkauskohde-kustannus-luotu": "2023-01-15T10:00:00Z",
-        "paikkauskohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
-      }
-    ]
-  }
+  "tiemerkinnan-kustannukset": [
+    {
+      "urakkaid": 98765,
+      "urakkanro": "UR-2023-001",
+      "korjauskustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "kustannus": 125000.50,
+          "pk1%": null,
+          "pk2%": null,
+          "pk3%": null,
+          "korjauskustannus-luotu": "2023-01-15T10:00:00Z",
+          "korjauskustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ],
+      "yllapitokohdekustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "nimi": "Esimerkkikohde 1",
+          "kohdenumero": 123456,
+          "sijainti": {
+            "tie": 1,
+            "alkuosa": 1,
+            "alkuetaisyys": 1,
+            "loppuosa": 1,
+            "loppuetaisyys": 1
+          },
+          "linjamerkinnat": 85000.00,
+          "pienmerkinnat": 40500.00,
+          "jyrsinnat": 17800.75,
+          "muut-kustannukset": 7000.00,
+          "yllapitokohde-poistettu": false,
+          "yllapitokohde-kustannus-luotu": "2023-01-15T10:00:00Z",
+          "yllapitokohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ],
+      "paikkauskohdekustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "nimi": "Esimerkkikohde 1",
+          "kohdenumero": 123456,
+          "sijainti": {
+            "tie": 1,
+            "alkuosa": 1,
+            "alkuetaisyys": 1,
+            "loppuosa": 1,
+            "loppuetaisyys": 1
+          },
+          "linjamerkinnat": 85000.00,
+          "pienmerkinnat": 40500.00,
+          "jyrsinnat": 17800.75,
+          "muut-kustannukset": 7000.00,
+          "paikkauskohde-poistettu": false,
+          "paikkauskohde-kustannus-luotu": "2023-01-15T10:00:00Z",
+          "paikkauskohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ]
+    }
+  ]
 }

@@ -4,290 +4,274 @@
   "additionalProperties": false,
   "properties": {
     "tiemerkinnan-kustannukset": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "korjauskustannukset": {
-          "type": "array",
-          "description": "Lista korjauskustannuksista",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "urakkaid": {
-                "type": "integer",
-                "description": "Urakan tunniste"
+      "type": "array",
+      "description": "Lista urakoiden tiemerkinnan kustannuksista",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urakkaid": {
+            "type": "integer",
+            "description": "Urakan tunniste"
+          },
+          "urakkanro": {
+            "type": "string",
+            "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+          },
+          "korjauskustannukset": {
+            "type": "array",
+            "description": "Lista korjauskustannuksista sopimusvuosittain",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi"
+                },
+                "kustannus": {
+                  "type": "number",
+                  "description": "Korjauskustannusten kokonaissumma euroina"
+                },
+                "pk1%": {
+                  "type": ["number", "null"],
+                  "description": "PK1-luokan prosenttiosuus kokonaiskustannuksista"
+                },
+                "pk2%": {
+                  "type": ["number", "null"],
+                  "description": "PK2-luokan prosenttiosuus kokonaiskustannuksista"
+                },
+                "pk3%": {
+                  "type": ["number", "null"],
+                  "description": "PK3-luokan prosenttiosuus kokonaiskustannuksista"
+                },
+                "korjauskustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Korjauskustannuksen luontiaika"
+                },
+                "korjauskustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Korjauskustannuksen muokkausaika"
+                }
               },
-              "urakkatunnus": {
-                "type": "string",
-                "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+              "required": [
+                "sopimusvuosi",
+                "kustannus",
+                "pk1%",
+                "pk2%",
+                "pk3%",
+                "korjauskustannus-luotu",
+                "korjauskustannus-muokattu"
+              ]
+            }
+          },
+          "yllapitokohdekustannukset": {
+            "type": "array",
+            "description": "Lista ylläpitokohteen kustannuksista sopimusvuosittain",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi"
+                },
+                "nimi": {
+                  "type": "string",
+                  "description": "Ylläpitokohteen nimi"
+                },
+                "kohdenumero": {
+                  "type": ["string", "integer"],
+                  "description": "Ylläpitokohteen numero"
+                },
+                "sijainti": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tie": {
+                      "type": "integer",
+                      "description": "Tien numero"
+                    },
+                    "alkuosa": {
+                      "type": "integer",
+                      "description": "Alkuosa"
+                    },
+                    "alkuetaisyys": {
+                      "type": "integer",
+                      "description": "Alkuetäisyys"
+                    },
+                    "loppuosa": {
+                      "type": "integer",
+                      "description": "Loppuosa"
+                    },
+                    "loppuetaisyys": {
+                      "type": "integer",
+                      "description": "Loppuetäisyys"
+                    }
+                  },
+                  "required": [
+                    "tie",
+                    "alkuosa",
+                    "alkuetaisyys",
+                    "loppuosa",
+                    "loppuetaisyys"
+                  ]
+                },
+                "linjamerkinnat": {
+                  "type": "number",
+                  "description": "Linjamerkintöjen kustannukset euroina"
+                },
+                "pienmerkinnat": {
+                  "type": "number",
+                  "description": "Pienmerkintöjen kustannukset euroina"
+                },
+                "jyrsinnat": {
+                  "type": "number",
+                  "description": "Jyrsintöjen kustannukset euroina"
+                },
+                "muut-kustannukset": {
+                  "type": "number",
+                  "description": "Muut kustannukset euroina"
+                },
+                "yllapitokohde-poistettu": {
+                  "type": "boolean",
+                  "description": "Onko ylläpitokohde poistettu"
+                },
+                "yllapitokohde-kustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Ylläpitokohteen kustannuksen luontiaika"
+                },
+                "yllapitokohde-kustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Ylläpitokohteen kustannuksen muokkausaika"
+                }
               },
-              "sopimusvuosi": {
-                "type": "integer",
-                "description": "Kustannusvuosi"
+              "required": [
+                "sopimusvuosi",
+                "nimi",
+                "kohdenumero",
+                "sijainti",
+                "linjamerkinnat",
+                "pienmerkinnat",
+                "jyrsinnat",
+                "muut-kustannukset",
+                "yllapitokohde-poistettu",
+                "yllapitokohde-kustannus-luotu",
+                "yllapitokohde-kustannus-muokattu"
+              ]
+            }
+          },
+          "paikkauskohdekustannukset": {
+            "type": "array",
+            "description": "Lista paikkauskohteen kustannuksista sopimusvuosittain",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi"
+                },
+                "nimi": {
+                  "type": "string",
+                  "description": "Paikkauskohteen nimi"
+                },
+                "kohdenumero": {
+                  "type": ["string", "integer"],
+                  "description": "Paikkauskohteen numero"
+                },
+                "sijainti": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tie": {
+                      "type": "integer",
+                      "description": "Tien numero"
+                    },
+                    "alkuosa": {
+                      "type": "integer",
+                      "description": "Alkuosa"
+                    },
+                    "alkuetaisyys": {
+                      "type": "integer",
+                      "description": "Alkuetäisyys"
+                    },
+                    "loppuosa": {
+                      "type": "integer",
+                      "description": "Loppuosa"
+                    },
+                    "loppuetaisyys": {
+                      "type": "integer",
+                      "description": "Loppuetäisyys"
+                    }
+                  },
+                  "required": [
+                    "tie",
+                    "alkuosa",
+                    "alkuetaisyys",
+                    "loppuosa",
+                    "loppuetaisyys"
+                  ]
+                },
+                "linjamerkinnat": {
+                  "type": "number",
+                  "description": "Linjamerkintöjen kustannukset euroina"
+                },
+                "pienmerkinnat": {
+                  "type": "number",
+                  "description": "Pienmerkintöjen kustannukset euroina"
+                },
+                "jyrsinnat": {
+                  "type": "number",
+                  "description": "Jyrsintöjen kustannukset euroina"
+                },
+                "muut-kustannukset": {
+                  "type": "number",
+                  "description": "Muut kustannukset euroina"
+                },
+                "paikkauskohde-poistettu": {
+                  "type": "boolean",
+                  "description": "Onko paikkauskohde poistettu"
+                },
+                "paikkauskohde-kustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Paikkauskohteen kustannuksen luontiaika"
+                },
+                "paikkauskohde-kustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Paikkauskohteen kustannuksen muokkausaika"
+                }
               },
-              "kustannus": {
-                "type": "number",
-                "description": "Korjauskustannusten kokonaissumma euroina. Tämä on korjauskustannus-taulun kustannus-kenttä, ei laskettu summa."
-              },
-              "pk1%": {
-                "type": "number",
-                "description": "PK1-luokan prosenttiosuus kokonaiskustannuksista."
-              },
-              "pk2%": {
-                "type": "number",
-                "description": "PK2-luokan prosenttiosuus kokonaiskustannuksista."
-              },
-              "pk3%": {
-                "type": "number",
-                "description": "PK3-luokan prosenttiosuus kokonaiskustannuksista."
-              },
-              "korjauskustannus-luotu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Korjauskustannuksen luontiaika"
-              },
-              "korjauskustannus-muokattu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Korjauskustannuksen muokkausaika"
-              }
-            },
-            "required": [
-              "urakkaid",
-              "urakkatunnus",
-              "sopimusvuosi",
-              "kustannus",
-              "pk1%",
-              "pk2%",
-              "pk3%",
-              "korjauskustannus-luotu",
-              "korjauskustannus-muokattu"
-            ]
+              "required": [
+                "sopimusvuosi",
+                "nimi",
+                "kohdenumero",
+                "sijainti",
+                "linjamerkinnat",
+                "pienmerkinnat",
+                "jyrsinnat",
+                "muut-kustannukset",
+                "paikkauskohde-poistettu",
+                "paikkauskohde-kustannus-luotu",
+                "paikkauskohde-kustannus-muokattu"
+              ]
+            }
           }
         },
-        "paikkauskohdekustannukset": {
-          "type": "array",
-          "description": "Lista paikkauskohteen kustannuksista",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "urakkaid": {
-                "type": "integer",
-                "description": "Urakan tunniste"
-              },
-              "urakkatunnus": {
-                "type": "string",
-                "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
-              },
-              "sopimusvuosi": {
-                "type": "integer",
-                "description": "Kustannusvuosi"
-              },
-              "nimi": {
-                "type": "string",
-                "description": "Paikkauskohteen nimi"
-              },
-              "kohdenumero": {
-                "type": "string",
-                "description": "Paikkauskohteen numero"
-              },
-              "sijainti": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "tie": {
-                    "type": "integer",
-                    "description": "Tien numero"
-                  },
-                  "alkuosa": {
-                    "type": "integer",
-                    "description": "Alkuosa"
-                  },
-                  "alkuetaisyys": {
-                    "type": "integer",
-                    "description": "Alkuetäisyys"
-                  },
-                  "loppuosa": {
-                    "type": "integer",
-                    "description": "Loppuosa"
-                  },
-                  "loppuetaisyys": {
-                    "type": "integer",
-                    "description": "Loppuetäisyys"
-                  }
-                },
-                "required": [
-                  "tie",
-                  "alkuosa",
-                  "alkuetaisyys",
-                  "loppuosa",
-                  "loppuetaisyys"
-                ]
-              },
-              "linjamerkinnat": {
-                "type": "number",
-                "description": "Linjamerkintöjen kustannukset euroina"
-              },
-              "pienmerkinnat": {
-                "type": "number",
-                "description": "Pienmerkintöjen kustannukset euroina"
-              },
-              "jyrsinnat": {
-                "type": "number",
-                "description": "Jyrsintöjen kustannukset euroina"
-              },
-              "muut-kustannukset": {
-                "type": "number",
-                "description": "Muut kustannukset euroina"
-              },
-              "paikkauskohde-poistettu": {
-                "type": "boolean",
-                "description": "Onko paikkauskohde poistettu"
-              },
-              "paikkauskohde-kustannus-luotu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Paikkauskohteen kustannuksen luontiaika"
-              },
-              "paikkauskohde-kustannus-muokattu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Paikkauskohteen kustannuksen muokkausaika"
-              }
-            },
-            "required": [
-              "urakkaid",
-              "urakkatunnus",
-              "sopimusvuosi",
-              "nimi",
-              "kohdenumero",
-              "sijainti",
-              "linjamerkinnat",
-              "pienmerkinnat",
-              "jyrsinnat",
-              "muut-kustannukset",
-              "paikkauskohde-poistettu",
-              "paikkauskohde-kustannus-luotu",
-              "paikkauskohde-kustannus-muokattu"
-            ]
-          }
-        },
-        "yllapitokohdekustannukset": {
-          "type": "array",
-          "description": "Lista ylläpitokohteen kustannuksista",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "urakkaid": {
-                "type": "integer",
-                "description": "Urakan tunniste"
-              },
-              "urakkatunnus": {
-                "type": "string",
-                "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
-              },
-              "sopimusvuosi": {
-                "type": "integer",
-                "description": "Kustannusvuosi"
-              },
-              "nimi": {
-                "type": "string",
-                "description": "Ylläpitokohteen nimi"
-              },
-              "kohdenumero": {
-                "type": "string",
-                "description": "Ylläpitokohteen numero"
-              },
-              "sijainti": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "tie": {
-                    "type": "integer",
-                    "description": "Tien numero"
-                  },
-                  "alkuosa": {
-                    "type": "integer",
-                    "description": "Alkuosa"
-                  },
-                  "alkuetaisyys": {
-                    "type": "integer",
-                    "description": "Alkuetäisyys"
-                  },
-                  "loppuosa": {
-                    "type": "integer",
-                    "description": "Loppuosa"
-                  },
-                  "loppuetaisyys": {
-                    "type": "integer",
-                    "description": "Loppuetäisyys"
-                  }
-                },
-                "required": [
-                  "tie",
-                  "alkuosa",
-                  "alkuetaisyys",
-                  "loppuosa",
-                  "loppuetaisyys"
-                ]
-              },
-              "linjamerkinnat": {
-                "type": "number",
-                "description": "Linjamerkintöjen kustannukset euroina"
-              },
-              "pienmerkinnat": {
-                "type": "number",
-                "description": "Pienmerkintöjen kustannukset euroina"
-              },
-              "jyrsinnat": {
-                "type": "number",
-                "description": "Jyrsintöjen kustannukset euroina"
-              },
-              "muut-kustannukset": {
-                "type": "number",
-                "description": "Muut kustannukset euroina"
-              },
-              "yllapitokohde-poistettu": {
-                "type": "boolean",
-                "description": "Onko ylläpitokohde poistettu"
-              },
-              "yllapitokohde-kustannus-luotu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Ylläpitokohteen kustannuksen luontiaika"
-              },
-              "yllapitokohde-kustannus-muokattu": {
-                "type": "string",
-                "format": "date-time",
-                "description": "Ylläpitokohteen kustannuksen muokkausaika"
-              }
-            },
-            "required": [
-              "urakkaid",
-              "urakkatunnus",
-              "sopimusvuosi",
-              "nimi",
-              "kohdenumero",
-              "sijainti",
-              "linjamerkinnat",
-              "pienmerkinnat",
-              "jyrsinnat",
-              "muut-kustannukset",
-              "yllapitokohde-poistettu",
-              "yllapitokohde-kustannus-luotu",
-              "yllapitokohde-kustannus-muokattu"
-            ]
-          }
-        }
-      },
-      "required": [
-        "korjauskustannukset",
-        "paikkauskohdekustannukset",
-        "yllapitokohdekustannukset"
-      ]
+        "required": [
+          "urakkaid",
+          "urakkanro",
+          "korjauskustannukset",
+          "yllapitokohdekustannukset",
+          "paikkauskohdekustannukset"
+        ]
+      }
     }
   },
   "required": [

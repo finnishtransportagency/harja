@@ -12,4 +12,4 @@
   hae-paikkauskustannus lisaa-tiemerkinta-paikkauskohde-kustannuskirjaus!
   paivita-tiemerkinta-paikkauskohde-kustannuskirjaus!
   hae-analytiikalle-tiemerkinta-korjauskustannukset hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset
-  hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset)
+  hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset  analytiikalle-tiemerkintaurakat-kannasta)
