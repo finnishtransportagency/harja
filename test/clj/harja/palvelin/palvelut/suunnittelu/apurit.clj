@@ -183,11 +183,11 @@
              {:yhteensa 0, :maksukausi nil, :jarjestys 3, :rahavaraus-id 3, :toimenkuva-id nil, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :osio "tavoitehintaiset-rahavaraukset", :poistettu nil,
               :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa 2000} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id nil}
              {:yhteensa 0, :maksukausi nil, :eperhoitovuosi erillishankinnat-yht, :jarjestys 4, :rahavaraus-id nil, :toimenkuva-id nil, :nimi "Erillishankinnat", :osio "erillishankinnat", :poistettu nil,
-              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa erillishankinnat-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id 380, :tehtava-id nil}
+              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa erillishankinnat-yht} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa erillishankinnat-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id 380, :tehtava-id nil}
              {:yhteensa 0, :maksukausi nil, :eperhoitovuosi hoidonjohtopalkkiot-yht, :jarjestys 5, :rahavaraus-id nil, :toimenkuva-id nil, :nimi "Hoidonjohtopalkkio", :osio "hoidonjohtopalkkio", :poistettu nil,
-              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa hoidonjohtopalkkiot-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id 19434}
+              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa hoidonjohtopalkkiot-yht} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa hoidonjohtopalkkiot-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id 19434}
              {:yhteensa 0, :maksukausi "vuosi", :jarjestys 2, :rahavaraus-id nil, :toimenkuva-id 33, :nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus", :poistettu nil,
-              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa johto-ja-hallintokorvaukset-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id nil}], :urakka-id urakka})
+              :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa johto-ja-hallintokorvaukset-yht} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa johto-ja-hallintokorvaukset-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id nil}], :urakka-id urakka})
 
 
 (defn tallenna-kustannussuunnitelma-ja-tarjous!
