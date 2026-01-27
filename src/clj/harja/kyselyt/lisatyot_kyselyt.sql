@@ -1,4 +1,5 @@
 -- name: hae-urakan-lisatyot
+
 SELECT rivi,
        kulu,
        k.urakka,
