@@ -1,5 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.apurit
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]))
 
 (def tarjous-tietomalli-2019 {:tarjous [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil
                                          :hoitovuosittaiset-arvot [{:vuosi 2021 :summa 0.00} {:vuosi 2022 :summa 0.00} {:vuosi 2023 :summa 10.00} {:vuosi 2024 :summa 20.00} {:vuosi 2025 :summa 30.00}] :yhteensa 60.00}
@@ -186,3 +188,37 @@
               :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa hoidonjohtopalkkiot-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id 19434}
              {:yhteensa 0, :maksukausi "vuosi", :jarjestys 2, :rahavaraus-id nil, :toimenkuva-id 33, :nimi "Vastuunalainen työnjohtaja", :osio "johto-ja-hallintokorvaus", :poistettu nil,
               :hoitovuosittaiset-arvot (list {:vuosi 2026, :summa 0} {:vuosi 2029, :summa 0} {:vuosi 2028, :summa 0} {:vuosi 2025, :summa johto-ja-hallintokorvaukset-yht} {:vuosi 2027, :summa 0}), :tehtavaryhma-id nil, :tehtava-id nil}], :urakka-id urakka})
+
+
+(defn tallenna-kustannussuunnitelma-ja-tarjous!
+  "Tallentaa kustannussuunnitelman ja tarjouksen testikäyttöön.
+   Palauttaa urakan id:n."
+  [db kayttaja urakka-id hoitovuoden-alkuvuosi johto-ja-hallinto-tietomalli]
+  ;; Kilpailutettavat hankinnat
+  (let [h-tietomalli (poista-yhteenvetorivi-toimenpiteilta hankinnat-tietomalli)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+        h-tietomalli (paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
+        kattohintakerroin 1.1
+        erillishankinnat-yht (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
+        hoidonjohto-yht (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
+        jjh-yht (apply + (map :summa johto-ja-hallinto-tietomalli))
+        tarjous (generoi-tarjous-tasmaa-kustannuksia
+                  urakka-id
+                  erillishankinnat-yht
+                  hoidonjohto-yht
+                  jjh-yht)
+        vahvistetut-vuodet #{}]
+    (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id
+      hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+    ;; Erillishankinnat
+    (uusi-kust-kyselyt/tallenna-erillishankinnat db kayttaja urakka-id
+      (:erillishankinnat erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+    ;; Hoidonjohtopalkkiot
+    (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id
+      (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+    ;; Johto- ja hallintokorvaukset
+    (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id
+      johto-ja-hallinto-tietomalli hoitovuoden-alkuvuosi)
+    ;; Tarjous
+    (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+      db urakka-id (:id kayttaja) kattohintakerroin tarjous vahvistetut-vuodet)))
