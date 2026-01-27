@@ -8,6 +8,7 @@
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
             [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
     (fn [_]
@@ -24,6 +25,7 @@
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
+
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 

@@ -12,6 +12,7 @@
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
             [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
 
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
     (fn [_]
@@ -32,7 +33,9 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
+
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+
 
 
 (deftest kustannussuunnitelma-vahvistus-2025-toimii
@@ -51,7 +54,7 @@
         jjh-yht (apply +
                   (map :summa (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025)))
 
-        vahvista-kustus-fn (fn [vahvista?]
+        vahvista-kustis-fn (fn [vahvista?]
                              (kutsu-palvelua (:http-palvelin jarjestelma)
                                :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+
                                {:urakka-id urakka-id
@@ -85,15 +88,57 @@
 
             ;; Osiot tallennettu, tallenna tarjous
             _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma) urakka-id (:id +kayttaja-jvh+)
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
                 kattohintakerroin tarjous vahvistetut-vuodet)
 
             ;; Nyt on osiot ja tarjous, kutsu vahvistusta
-            vastaus (vahvista-kustus-fn true)
+            vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
         (is (= (set virhe) #{"Hoidonjohtopalkkiot"}) "Hoidonjohtopalkkiot ovat puutteellisena")))
+
+
+    (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (jjh)"
+      (let [tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
+                      urakka-id
+                      erillishankinnat-yht
+                      hoidonjohto-yht
+                      (+ jjh-yht 200))
+
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
+                kattohintakerroin tarjous vahvistetut-vuodet)
+
+            vastaus (vahvista-kustis-fn true)
+            virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
+        (is (some? vastaus) "Vastaus pitäisi olla olemassa")
+        (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
+        (is (= (set virhe) #{"Johto-ja-hallintokorvaukset"}) "Johto-ja-hallintokorvaukset ovat puutteellisena")))
+
+
+    (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (Erillishankinnat)"
+      (let [tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
+                      urakka-id
+                      (+ erillishankinnat-yht 1)
+                      hoidonjohto-yht
+                      jjh-yht)
+
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
+                kattohintakerroin tarjous vahvistetut-vuodet)
+
+            vastaus (vahvista-kustis-fn true)
+            virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
+        (is (some? vastaus) "Vastaus pitäisi olla olemassa")
+        (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
+        (is (= (set virhe) #{"Erillishankinnat"}) "Erillishankinnat ovat puutteellisena")))
 
 
     (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (kaikki)"
@@ -104,10 +149,12 @@
                       (+ jjh-yht 200))
 
             _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma) urakka-id (:id +kayttaja-jvh+)
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
                 kattohintakerroin tarjous vahvistetut-vuodet)
 
-            vastaus (vahvista-kustus-fn true)
+            vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
@@ -124,10 +171,12 @@
                       jjh-yht)
 
             _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma) urakka-id (:id +kayttaja-jvh+)
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
                 kattohintakerroin tarjous vahvistetut-vuodet)
 
-            vastaus (vahvista-kustus-fn true)
+            vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
 
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
@@ -178,6 +227,14 @@
                                 :valittu-hoitokausi (first +hoitokaudet+)
                                 :muutos muutos-payload}))
 
+
+        vahvista-kustis-fn (fn [vahvista? hoitovuoden-alkuvuosi]
+                             (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                                :vahvista? vahvista?}))
+
         hae-tavoitehinta-fn (fn [hoitokausi]
                               (:tavoitehinta
                                 (first (q-map
@@ -185,7 +242,7 @@
                                                     FROM urakka_tavoite
                                                     WHERE urakka = %s AND hoitokausi = %s" urakka-id hoitokausi)))))]
 
-    (testing "Tavoitehinta päivittyy edellisen vuoden muutosvaikutuksilla"
+    (testing "Tavoitehinta päivittyy oikein kun muutos tallennetaan"
       (let [_ (tallenna-muutos-fn)
             muutos-payload-eurot-2025 (->>
                                         (:kustannusvaikutukset muutos-payload)
@@ -198,9 +255,9 @@
 
 
     (testing "Tavoitehinta päivittyy oikein kun tarjous tallennetaan"
-      (let [erillishankinnat 500.00M
+      (let [jjh 260.00M
             hoidonjohto 300.00M
-            jjh 260.00M ;; satunnaisia arvoja 
+            erillishankinnat 500.00M
             tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
                       urakka-id
                       erillishankinnat
@@ -208,7 +265,9 @@
                       jjh)
 
             _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma) urakka-id (:id +kayttaja-jvh+)
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
                 kattohintakerroin tarjous vahvistetut-vuodet)
 
             muutos-payload-eurot-2025 (->>
@@ -216,10 +275,49 @@
                                         (filter #(= 2025 (:hoitokauden_alkuvuosi %)))
                                         (map :summa)
                                         (apply +))
+
             tavoitehinta-2026 (hae-tavoitehinta-fn 2)
+
             odotettu-tavoitehinta (+ muutos-payload-eurot-2025
                                     erillishankinnat
                                     hoidonjohto
                                     jjh)]
         (is (= (bigdec odotettu-tavoitehinta) (bigdec tavoitehinta-2026))
-          "Tavoitehinnan pitäisi olla edellisen vuoden pysyvät muutokset + tarjous")))))
+          "Tavoitehinnan pitäisi olla =(edellisen vuoden pysyvät muutokset + tarjous)")))
+
+
+    (testing "Tavoitehinta päivittyy myös vahvistuksen yhteydessä"
+      (let [jjh 260.00M
+            hoidonjohto 300.00M
+            erillishankinnat 500.00M
+            tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
+                      urakka-id
+                      erillishankinnat
+                      hoidonjohto
+                      jjh)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
+                (:db jarjestelma)
+                urakka-id
+                (:id +kayttaja-jvh+)
+                kattohintakerroin tarjous vahvistetut-vuodet)
+
+            muutos-payload-eurot-2025 (->>
+                                        (:kustannusvaikutukset muutos-payload)
+                                        (filter #(= 2025 (:hoitokauden_alkuvuosi %)))
+                                        (map :summa)
+                                        (apply +))
+
+            odotettu-tavoitehinta (+ muutos-payload-eurot-2025
+                                    erillishankinnat
+                                    hoidonjohto
+                                    jjh)
+
+            _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka-id 2))
+            tavoitehinta-2026-ennen-vahvistusta (hae-tavoitehinta-fn 2)
+            _ (is (nil? tavoitehinta-2026-ennen-vahvistusta) "Tavoitehinta poistettiin, pitäisi olla nil")
+
+
+            _ (vahvista-kustis-fn true 2026)
+            tavoitehinta-2026-vahvistuksen-jalkeen (hae-tavoitehinta-fn 2)]
+        (is (= (bigdec odotettu-tavoitehinta) (bigdec tavoitehinta-2026-vahvistuksen-jalkeen))
+          "Tavoitehinnan pitäisi olla =(edellisen vuoden pysyvät muutokset + tarjous) vahvistuksen jälkeen")))))

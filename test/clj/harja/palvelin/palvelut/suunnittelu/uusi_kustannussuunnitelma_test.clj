@@ -368,6 +368,7 @@
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
 
+
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-ei-toimi
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+ {:jee "jee"})
@@ -377,6 +378,7 @@
 
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :hoidonjohtopalkkiot)")))))
+
 
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii
   (let [db (:db jarjestelma)
@@ -411,6 +413,7 @@
                                                    hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))]
     (is (nil? (:error vastaus)))
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
+
 
 (deftest tallenna-hoidonjohtopalkkiot-tuleville-vuosille-toimi
   (let [db (:db jarjestelma)
@@ -447,6 +450,7 @@
     (is (nil? (:error vastaus)))
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
 
+
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-ei-toimi2
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -458,6 +462,7 @@
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-hoidonjohtopalkkiot kysely ei ole validi.")))
     ;; Urakka-id puuttuu
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)")))))
+
 
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-toimii-2
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -512,6 +517,7 @@
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
+
 ;; Johto- ja hallintokorvaukset
 (deftest tallenna-johto-ja-hallintokorvaukset-2019-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -534,6 +540,7 @@
     (is (= (bigdec (round2 tietomallin-summa 2)) (bigdec (round2 vastaus-summa 2))))
     ;; Viimeinen rivi on "Muut kulut"
     (is (= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
+
 
 (deftest kopioi-johto-ja-hallintokorvaukset-2019-tuleville-vuosille-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -569,6 +576,7 @@
     (is (= (bigdec (round2 2 tietomallin-summa)) (bigdec (round2 2 (apply + (map :tuntipalkka toimenkuvat-seuraava-vuosi))))))
     ;; Viimeinen rivi on "Muut kulut"
     (is (= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
+
 
 (deftest muokkaa-johto-ja-hallintokorvaukset-2025-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
@@ -609,6 +617,7 @@
     ;; Viimeinen rivi ei ole "Muut kulut" - -25 urakoilla ei ole muita kuluja
     (is (not= "Muut kulut" (:toimenkuva (last (get-in vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))))
 
+
 (deftest kopioi-johto-ja-hallintokorvaukset-2025-tuleville-vuosille-toimii
   (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
         hoitovuoden-alkuvuosi 2025
@@ -638,6 +647,7 @@
                                                                   (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
                                             urakka-id seuraava-vuosi (inc seuraava-vuosi)))]
     (is (= (bigdec (round2 2 vastaus-summa)) (bigdec (round2 2 (apply + (map :tuntipalkka toimenkuvat-seuraava-vuosi))))))))
+
 
 (deftest muokkaa-johto-ja-hallintokorvaukset-2019-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -679,6 +689,7 @@
                                    (flatten (map :kuukaudet (get-in muokattu-vastaus [:kustannussuunnitelma :johto-ja-hallintokorvaukset])))))]
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+
 
 (deftest vahvista-tavoite-ja-kattohinta-ei-onnistu
   (let [db (:db jarjestelma)
@@ -731,6 +742,7 @@
                  "Erillishankinnat"
                  "Hoidonjohtopalkkiot"
                  "Johto-ja-hallintokorvaukset"]))]))
+
 
 (deftest vahvista-ja-kumoa-tavoite-ja-kattohinta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -864,6 +876,7 @@
         ;; Hankintatoimenpiteet (onko_mhu_hankintatoimenpide(t.koodi) = true).
         _ (is (every? #(not (nil? (:indeksikorjaus_vahvistettu %))) jalkeen-kiinteat-rivit) "Kaikilla kiinteähintaisilla riveillä pitäisi olla indeksi vahvistettu")]))
 
+
 (deftest testaa-kasin-syotettava-kattohinta-2021-urakalle
   (let [kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -924,6 +937,7 @@
         odotettu-kattohinta (* kattohintakerroin tavoitehinta)
         _ (is (= (bigdec (round2 kattohinta 2)) (bigdec (round2 odotettu-kattohinta 2)))
             (str "Kattohinnan pitäisi olla " kattohintakerroin " x tavoitehinta. Tavoitehinta: " tavoitehinta ", odotettu kattohinta: " odotettu-kattohinta ", todellinen kattohinta: " kattohinta))]))
+
 
 (deftest testaa-kasin-syotettava-kattohinta-2019-urakalle
   (let [db (:db jarjestelma)
