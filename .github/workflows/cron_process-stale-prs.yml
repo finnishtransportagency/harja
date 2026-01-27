@@ -43,14 +43,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Find and label stale PRs
-        id: find-stale-prs
+        id: label-stale-prs
         uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
           debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
           days-before-pr-stale: 3
           # Ei lisätä PR:iin automaattista kommenttia vanhentumisesta
-          stale-pr-message: -1
+          stale-pr-message: ''
           # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
           days-before-pr-close: -1
           days-before-close: -1
@@ -62,19 +62,35 @@ jobs:
           # Älä merkitse issueita vanhentuneiksi, seurataan vain avoimia PR:iä
           days-before-issue-stale: -1
           days-before-issue-close: -1
-      - name: Format Stale PRs list
-        if: ${{ steps.find-stale-prs.outputs.staled-issues-prs != '' && steps.find-stale-prs.outputs.staled-issues-prs != '[]' }}
+
+      - name: Get and format all PRs labeled as Stale
         id: stale-prs-list
         uses: actions/github-script@v8
-        env:
-          STALE_PRS: ${{ steps.find-stale-prs.outputs.staled-issues-prs }}
         with:
           script: |
-            const stalePRs = JSON.parse(process.env.STALE_PRS);
+            const { data: pullRequests } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100,
+            });
+
+            const stalePRs = pullRequests.filter(pr => 
+            pr.labels.some(label => label.name === 'Stale')
+            );
+            
+            console.log(`Found ${stalePRs.length} stale PR(s).`);
+            console.log(stalePRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
+            
             const formattedList = stalePRs
               .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
               .join('\\n');
+            
+            console.log("Formatted Stale PRs List:");
+            console.log(formattedList);
+            
             return formattedList;
+
       - name: Send a summary of stale PRs into Slack
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
         # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
