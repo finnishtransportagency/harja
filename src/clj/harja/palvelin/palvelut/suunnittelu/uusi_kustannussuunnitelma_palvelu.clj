@@ -157,7 +157,6 @@
   (jdbc/with-db-transaction [db db]
     (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
-
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
           ;; mein se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 

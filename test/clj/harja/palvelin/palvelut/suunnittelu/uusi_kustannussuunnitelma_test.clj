@@ -4,7 +4,6 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [clojure.string :as str]
-            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
@@ -17,7 +16,6 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
-
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -42,21 +40,6 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 
-
-
-(def johto-ja-hallinto-tietomalli-2025 {:johto-ja-hallintokorvaukset-2025 [{:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 10 :kalenterikuukausi "Lokakuu 2024"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 11 :kalenterikuukausi "Marraskuu 2024"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2024 :kuukausi 12 :kalenterikuukausi "Joulukuu 2024"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 1 :kalenterikuukausi "Tammikuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 2 :kalenterikuukausi "Helmikuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 3 :kalenterikuukausi "Maaliskuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 4 :kalenterikuukausi "Huhtikuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 5 :kalenterikuukausi "Toukokuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 6 :kalenterikuukausi "Kesäkuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 7 :kalenterikuukausi "Heinäkuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 8 :kalenterikuukausi "Elokuu 2025"}
-                                                                           {:summa 58 :summa_indeksikorjattu 85.2 :vuosi 2025 :kuukausi 9 :kalenterikuukausi "Syyskuu 2025"}]})
-
 (defn urakkakohtaiset-toimenpideinstanssit-toimenpiteille
   "Tietomallissa toimenpideinstanssi on kovakoodattu. Aseta toimenpideinstanssi-id urakkakohtaisista toimenpiteistä."
   [h-tietomalli urakkakohtaiset-toimenpiteet]
@@ -67,6 +50,7 @@
                (assoc toimenpide :toimenpideinstanssi-id (:toimenpideinstanssi-id tpi))
                toimenpide)))
       (:toimenpiteet h-tietomalli))))
+
 
 (deftest hae-kilpailutettavat-hankinnat-tietokannasta-onnistuneesti
   (testing "Hoitovuosi 2024"
@@ -86,7 +70,7 @@
       (is (= (count (:toimenpiteet hankinnat)) 7))
       (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
-      (is (= (:alkukausi (last (:toimenpiteet hankinnat))) 600M))))
+      (is (= (:kaikki-alkukausi (last (:toimenpiteet hankinnat))) 600M))))
 
   (testing "Pysyvät muutokset 2025"
     (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -100,6 +84,7 @@
       (is (= {:tavoitehinnan-muutos 1000
               :tavoitehinnan-muutos-indeksikorjattu 1374.0} (select-keys (first pysyvat-muutokset)
                                                               [:tavoitehinnan-muutos :tavoitehinnan-muutos-indeksikorjattu]))))))
+
 
 (deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti-2021-urakalle
   (let [db (:db jarjestelma)
@@ -117,6 +102,7 @@
 
     (is (= (bigdec tietomallin-alkukausisumma) (bigdec (:summa (first alkukausi-tietokannasta)))))))
 
+
 (deftest tallenna-kilpailutettavat-hankinnat-tietokantaan-onnistuneesti-2019-urakalle
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
@@ -133,6 +119,7 @@
 
     (is (= (bigdec tietomallin-alkukausisumma) (bigdec (:summa (first alkukausi-tietokannasta)))))))
 
+
 (deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-ei-toimi
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+ {:jee "jee"})
@@ -141,6 +128,7 @@
                     {:error (.getMessage e)}))]
 
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-kilpailutettavat-hankinnat kysely ei ole validi.")))))
+
 
 (deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-toimii
   (let [db (:db jarjestelma)
@@ -173,6 +161,7 @@
     (is (true? (nil? (:error vastaus))))
     (is (= (bigdec alkukausi-summa-vastauksesta) (bigdec (apply + (map :summa alkukausi-tietokannasta)))))))
 
+
 (deftest tallenna-kilpailutettavat-hankinnat-rajapinnasta-tuleville-vuosille-toimii
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -191,7 +180,9 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
         toimenkuvat (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
-        alkukausi-vastauksesta (apply + (map :kaikki-alkukausi toimenkuvat))
+        alkukausi-vastauksesta (bigdec (apply + (keep :alkukausi toimenkuvat)))
+
+
 
         ;; Vastauksesta saatiin kilpailutettavat hankinnat vuodelle 2021
         ;; Haetaan kilpailutettavat hankinnat myös tuleville vuosille ja tarkistetaan, että ne on kopioitu oikein
@@ -201,6 +192,7 @@
                                          sopimus-id (inc hoitovuoden-alkuvuosi)))
         tietokantasumma (bigdec (:summa (first alkukausi-tietokannasta)))]
     (is (= (bigdec alkukausi-vastauksesta) tietokantasumma))))
+
 
 ;; Erillishankinnat
 (deftest tallenna-erillishankinnat-tietokantaan-onnistuneesti
@@ -229,6 +221,7 @@
 
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-tietokannasta)))))))
 
+
 (deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi
   (let [vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-erillishankinnat +kayttaja-jvh+ {:jee "jee"})
@@ -238,6 +231,7 @@
 
     (is (true? (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi.")))
     (is (true? (str/includes? (:error vastaus) "failed: (contains? % :erillishankinnat)")))))
+
 
 (deftest tallenna-erillishankinnat-rajapinnasta-ei-toimi2
   (let [vastaus (try
@@ -250,6 +244,7 @@
     (is (str/includes? (:error vastaus) "Palvelun :tallenna-erillishankinnat kysely ei ole validi."))
     ;; Urakka-id puuttuu
     (is (str/includes? (:error vastaus) "failed: (contains? % :urakka-id)"))))
+
 
 (deftest tallenna-erillishankinnat-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -267,6 +262,7 @@
     ;; Ei ole erroreita
     (is (nil? (:error vastaus)))
     (is (= (bigdec tietomallin-summa) (bigdec vastaus-summa)))))
+
 
 (deftest kopioi-erillishankinnat-tuleville-vuosille-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -309,6 +305,7 @@
     (is (= (bigdec tietomallin-summa) (bigdec vastaus-summa)))
     (is (= (bigdec tietomallin-summa) (bigdec (:summa (first erillishankinnat-seuraava-vuosi)))))))
 
+
 (deftest muokkaa-erillishankinnat-rajapinnasta-toimii
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Tallenna ensin tietomallin tiedot
@@ -343,6 +340,7 @@
         muokattu-vastaus-summa (apply + (map :summa (get-in muokattu-vastaus [:kustannussuunnitelma :erillishankinnat])))]
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
+
 
 ;; Hoidonjohtopalkkiot
 (deftest tallenna-hoidonjohtopalkkiot-tietokantaan-onnistuneesti
@@ -578,7 +576,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2025
+                    :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2025
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))
                   (catch Exception e
@@ -617,7 +615,7 @@
         ;; Tallenna ensin tietomallin tiedot
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge johto-ja-hallinto-tietomalli-2025
+                    :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2025
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                                                                                  :kopioi-tuleville-vuosille? true}))
@@ -803,19 +801,25 @@
                              {:error (.getMessage e)}))]
       (is (false? (get-in kumous-vastaus [:kustannussuunnitelma :vahvistettu?])) "Vahvistettu pitäisi olla false"))))
 
+
 (defn- tallenna-kustannussuunnitelma-ja-tarjous!
   "Tallentaa kustannussuunnitelman ja tarjouksen testikäyttöön.
    Palauttaa urakan id:n."
-  [urakka-id hoitovuoden-alkuvuosi johto-ja-hallinto-tietomalli tarjous-tietomalli]
+  [urakka-id hoitovuoden-alkuvuosi johto-ja-hallinto-tietomalli]
   ;; Kilpailutettavat hankinnat
   (let [h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
         kayttaja-id (:id +kayttaja-jvh+)
         kattohintakerroin 1.1
-        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
-        vuodet (tarjous-kyselyt/vuodet-tietomallista tarjous-tietomalli)
-        tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        erillishankinnat-yht (apply + (map :summa (:erillishankinnat apurit/erillishankinnat-tietomalli)))
+        hoidonjohto-yht (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
+        jjh-yht (apply + (map :summa johto-ja-hallinto-tietomalli))
+        tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
+                  urakka-id
+                  erillishankinnat-yht
+                  hoidonjohto-yht
+                  jjh-yht)
         vahvistetut-vuodet #{}]
     (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
       hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
@@ -844,17 +848,21 @@
 (deftest laskutusraja-paivittyy-tavoite-ja-kattohinnan-vahvistuksessa
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitovuoden-alkuvuosi 2025]
+
     ;; Aseta laskutusraja käyttöön
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+
     ;; Tallenna kustannussuunnitelma ja tarjous
     (tallenna-kustannussuunnitelma-ja-tarjous!
       urakka-id hoitovuoden-alkuvuosi
-      (:johto-ja-hallintokorvaukset-2025 johto-ja-hallinto-tietomalli-2025)
-      apurit/tarjous-tietomalli-2025)
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+
     ;; Varmista että laskutusraja on NULL ennen vahvistusta
     (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
+
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
     ;; Tarkista että laskutusraja on asetettu
     (let [laskutusraja (hae-urakan-laskutusraja urakka-id)
           tavoitehinta_indeksikorotettu (:tavoitehinta_indeksikorjattu
@@ -867,15 +875,18 @@
 (deftest laskutusraja-ei-paivity-kun-laskutusraja_kaytossa-false
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026") ;; -21 alkanut urakka
         hoitovuoden-alkuvuosi 2024]
+
     ;; Varmista että laskutusraja_kaytossa = FALSE
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = FALSE WHERE urakkaid = " urakka-id)
+
     ;; Tallenna kustannussuunnitelma ja tarjous
     (tallenna-kustannussuunnitelma-ja-tarjous!
       urakka-id hoitovuoden-alkuvuosi
-      (:johto-ja-hallintokorvaukset-2019  apurit/johto-ja-hallinto-tietomalli-2019)
-      apurit/tarjous-tietomalli-2019)
+      (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019))
+
     ;; Varmista että laskutusraja on NULL ennen vahvistusta
     (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
+
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
     (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL kun laskutusraja_kaytossa = FALSE")))
@@ -883,13 +894,15 @@
 (deftest laskutusraja-nollataan-kun-vahvistus-kumotaan
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitovuoden-alkuvuosi 2025]
+
     ;; Varmista että laskutusraja_kaytossa = TRUE
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+
     ;; Tallenna kustannussuunnitelma ja tarjous
     (tallenna-kustannussuunnitelma-ja-tarjous!
       urakka-id hoitovuoden-alkuvuosi
-      (:johto-ja-hallintokorvaukset-2025 johto-ja-hallinto-tietomalli-2025)
-      apurit/tarjous-tietomalli-2025)
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
     (is (not (nil? (hae-urakan-laskutusraja urakka-id))) "Laskutusrajan pitäisi olla asetettu")
