@@ -10,9 +10,9 @@
   (when toteuma-alkanut  
     (let [urakka (first (urakat-q/hae-urakka db {:id urakka-id}))  
           urakan-loppupvm (:loppupvm urakka)  
-          onko-olemassa (when ulkoinen-id   
+          onko-olemassa? (when ulkoinen-id   
                           (toteumat-q/onko-olemassa-ulkoisella-idlla? db ulkoinen-id urakka-id))]  
-      (when (and urakan-loppupvm (not onko-olemassa))  
+      (when (and urakan-loppupvm (not onko-olemassa?))  
         (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
                                        pvm/joda-timeksi
                                        pvm/suomen-aikavyohykkeeseen
