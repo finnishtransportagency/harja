@@ -6,6 +6,8 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.testi :refer :all]
             [clojure.string :as str]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c :refer [from-sql-time]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
@@ -118,20 +120,14 @@
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
 
         korvausinvestointi (first (q-map (format "SELECT id, toimenpide FROM toimenpideinstanssi WHERE nimi = '%s' and urakka = %s"
-                                           "Oulu MHU MHU Korvausinvestointi TP" urakka-id)))
+                                           "Oulu MHU Talvihoito TP" urakka-id)))
 
         hk_alkupvm "2021-10-01"
         hk_loppupvm "2022-09-30"
         _ (lisaa-kulu-urakalle 444 "2022-10-02" urakka-id (:id korvausinvestointi) nil "lisatyo")
         hk_alkupvm2 "2022-10-01"
-        aikavali_alkupvm "2019-10-01"
         hk_loppupvm2  "2023-09-30"
-        aikavali_loppupvm "2020-09-30"
-        _ (println "id urakka:" urakka-id)
-        toimenpide-id-1 47
-        toimenpide-id-2 48
-        ;;toimenpide-nimi-1 (hae-toimenpide-nimi toimenpide-id-1)
-        ;;toimenpide-nimi-2 (hae-toimenpide-nimi toimenpide-id-2)
+
 
         erapaiva (pvm/->pvm "16.10.2022")
         koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
@@ -144,6 +140,16 @@
 
         talvihoitokulu (luo-kulu urakka-id "lisatyo" erapaiva "lisatyo" koontilaskun-kuukausi talvihoitosumma
                          toimenpideinstanssi-id tehtavaryhma-id tehtava-id nil)
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :lisatyo
+                   :konteksti "urakka"
+                   :urakka-id urakka-id
+                   :parametrit {:alkupvm (c/to-date (t/local-date 2022 10 1))
+                                :loppupvm (c/to-date (t/local-date 2023 9 30))}})
+        _ (println "vastaus: " vastaus)
 
         #_ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id
