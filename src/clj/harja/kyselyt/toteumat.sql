@@ -1303,7 +1303,7 @@ group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
--- name: hae-toteumat-ilman-gps-analytiikalle
+-- name: hae-toteumat-ilman-reittipisteita-analytiikalle
 SELECT t.toteuma_tunniste_id,  
        t.toteuma_sopimus_id,  
        t.toteuma_alkanut,  
@@ -1331,8 +1331,7 @@ SELECT t.toteuma_tunniste_id,
 FROM analytiikka_toteumat t  
 WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)  
     OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))  
-ORDER BY t.toteuma_alkanut ASC  
-LIMIT 100000; 
+ORDER BY t.toteuma_alkanut ASC; 
 
 -- name: paivita-palautettu-analytiikalle-aikaleima!
 UPDATE analytiikka_toteumat

@@ -285,13 +285,13 @@
                       toteumat)})]
     toteumat))
 
-(defn palauta-toteumat-ilman-gps
+(defn palauta-toteumat-ilman-reittipisteita
   "Haetaan toteumat ilman GPS-dataa"
   [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
   (log/info "Analytiikka API, toteumien haku ilman GPS-dataa, parametrit: " (pr-str parametrit))
-  (tarkista-haun-parametrit parametrit true)
+  (tarkista-haun-parametrit parametrit false)
   (let [alkudb (System/currentTimeMillis)
-        toteumat (toteuma-kyselyt/hae-toteumat-ilman-gps-analytiikalle db {:alkuaika alkuaika
+        toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
                                                                            :loppuaika loppuaika})
         maara (count toteumat)
         loppudb (System/currentTimeMillis)
@@ -1159,12 +1159,12 @@
           :analytiikka)))
     
     (julkaise-reitti
-      http :analytiikka-toteumat-ilman-gps
-      (GET "/api/analytiikka/toteumat-ilman-gps/:alkuaika/:loppuaika" request
+      http :analytiikka-toteumat-ilman-reittipisteita
+      (GET "/api/analytiikka/toteumat-ilman-reittipisteita/:alkuaika/:loppuaika" request
         (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
           :analytiikka-hae-toteumat request
           (fn [parametrit kayttaja db]
-            (palauta-toteumat-ilman-gps db parametrit kayttaja))
+            (palauta-toteumat-ilman-reittipisteita db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet  
           :analytiikka)))
 

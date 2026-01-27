@@ -20,7 +20,7 @@
   paivita-toteuman-reittigeometria<! paivita-toteuma-materiaali! paivita-palautettu-analytiikalle-aikaleima!
   lisaa-toteumalle-jsonhash! hae-toteuman-reittipisteet paivita-toteuma-ulkoisella-idlla<! toteuman-id-ulkoisella-idlla
   hae-poistettavien-toteumien-alkanut-ulkoisella-idlla poista-toteumat-ulkoisilla-idlla-ja-luojalla!
-  hae-toteuman-perustiedot-ulkoisella-idlla hae-toteumat-ilman-gps-analytiikalle)
+  hae-toteuman-perustiedot-ulkoisella-idlla hae-toteumat-ilman-reittipisteita-analytiikalle)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
