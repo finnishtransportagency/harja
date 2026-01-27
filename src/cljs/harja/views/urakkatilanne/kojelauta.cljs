@@ -93,7 +93,7 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href "#"
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/laadunseuranta/laatupoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                  :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :laadunseuranta
                                                                                                                :taso3 :laatupoikkeamat})}
@@ -102,7 +102,7 @@
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href "#"
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/turvallisuuspoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                  :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :turvallisuuspoikkeamat
                                                                                                                :taso3 nil})}
@@ -115,7 +115,7 @@
   (let [{:keys [luvatut_pisteet toteutuneet_pisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valitavoitteet/lupaukset?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (or (nil? luvatut_pisteet) (nil? toteutuneet_pisteet))
@@ -136,7 +136,7 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry välikatselmukseen"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valikatselmus?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
       [:div.tavoitehintapaatos
        (if (and (nil? tavoitehinnan_muutospaatos) (nil? tavoitehinnan_muutospaatos))
@@ -173,7 +173,7 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/suunnittelu/kustannussuunnitelma?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                               :taso2 :suunnittelu
                                                                                                               :taso3 :kustannussuunnitelma})}

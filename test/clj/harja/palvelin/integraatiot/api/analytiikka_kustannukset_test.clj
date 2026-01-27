@@ -495,40 +495,42 @@
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
 (deftest hae-kustannussuunnitelma-onnistuu-test
-  (let [;; Pakotetaan urakaksi Oulu MHU
-        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+  (let [;; Hae kaikki MHU urakat
+        urakkalistaus (q-map "SELECT id, nimi FROM urakka WHERE tyyppi = 'teiden-hoito'")]
+    (doseq [urakka urakkalistaus]
+      (let [urakka-id (:id urakka)
 
-        ;; Kiinteät kustannukset kannasta
-        kiinteat-kulut-kannasta (:summa (first (q-map
-                                                 (format "SELECT SUM(kit.summa) as summa
+            ;; Kiinteät kustannukset kannasta
+            kiinteat-kulut-kannasta (:summa (first (q-map
+                                                     (format "SELECT COALESCE(SUM(kit.summa), 0) as summa
                                              FROM kiinteahintainen_tyo kit
                                             WHERE kit.sopimus =  (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
 
-        ;; Arvioidut kustannukset kannasta
-        arvioidut-kulut-kannasta (:summa (first (q-map
-                                                  (format "SELECT SUM(kt.summa) as summa
+            ;; Arvioidut kustannukset kannasta
+            arvioidut-kulut-kannasta (:summa (first (q-map
+                                                      (format "SELECT COALESCE(SUM(kt.summa), 0) as summa
                                               FROM kustannusarvioitu_tyo kt
                                              WHERE kt.sopimus = (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
 
-        ;; Johto-ja-hallintokorvaukset kannasta
-        johto-ja-hallintokulut-kannasta (:summa (first (q-map
-                                                         (format "SELECT SUM(jjh.tuntipalkka * jjh.tunnit) as summa
+            ;; Johto-ja-hallintokorvaukset kannasta
+            johto-ja-hallintokulut-kannasta (:summa (first (q-map
+                                                             (format "SELECT COALESCE(SUM(jjh.tuntipalkka * jjh.tunnit), 0) as summa
                                                      FROM johto_ja_hallintokorvaus jjh
                                                     WHERE jjh.\"urakka-id\" = %s;" urakka-id))))
 
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        kiinteat-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
-                                               (get-in encoodattu-body [:suunnitellut-kustannukset :kiinteat-kustannukset])))
-        arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
-                                                (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
-        johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
-                                                            (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset])))]
+            vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+            encoodattu-body (cheshire/decode (:body vastaus) true)
+            kiinteat-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                                   (get-in encoodattu-body [:suunnitellut-kustannukset :kiinteat-kustannukset])))
+            arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                                    (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
+            johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
+                                                                (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset])))]
 
-    (is (= 200 (:status vastaus)))
-    (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
-    (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)))
-    (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))
+        (is (= 200 (:status vastaus)))
+        (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
+        (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)))
+        (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))))
 
 (deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
   (let [;; Pakotetaan urakaksi Oulu MHU

@@ -666,6 +666,11 @@ SELECT urakka.id
 FROM urakka
 WHERE sampoid = :sampoid;
 
+-- name: hae-urakkatyyppi-sampoidlla
+SELECT tyyppi
+FROM urakka
+WHERE sampoid = :sampoid;
+
 -- name: aseta-urakoitsija-sopimuksen-kautta!
 -- Asettaa urakalle urakoitsijan sopimuksen Sampo id:n avulla
 UPDATE urakka
