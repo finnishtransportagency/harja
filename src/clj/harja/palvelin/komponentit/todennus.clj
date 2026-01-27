@@ -144,7 +144,7 @@
    vaikka rooleja, ei tulisikaan headereista"
   [db integraatioloki miam kayttajanimi]
   (let [timeout (get miam :timeout 30000) ;; Jos ympäristöön ei ole asetettu mitään, niin 30sek defaulttina
-        max-yritykset (get miam :max-yritykset 10)] ;; Jos ympäristöön ei ole asetettu mitään, niin 10 yritystä defaulttina
+        max-yritykset (get miam :max-yritykset 3)] ;; Jos ympäristöön ei ole asetettu mitään, niin 3 yritystä defaulttina
 
     ;; Yritetään uudestaan maksimi määrään asti yrityksiä, jos kutsu epäonnistuu
     (loop [yritys 1]
