@@ -15,8 +15,7 @@
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         otsikko "Lisätyöraportti"
         taulukon-otsikko "Lisätöiden kulukohdistukset"
-        raportin-tiedot (->> (hae-urakan-lisatyot db {:urakka urakka-id :alkupvm alkupvm :loppupvm loppupvm})
-                          (sort-by :erapaiva))]
+        raportin-tiedot (hae-urakan-lisatyot db {:urakka urakka-id :alkupvm alkupvm :loppupvm loppupvm})]
     [:raportti {:nimi otsikko
                 :otsikon-koko :keskikoko
                 :raportin-yleiset-tiedot {:raportin-nimi otsikko
