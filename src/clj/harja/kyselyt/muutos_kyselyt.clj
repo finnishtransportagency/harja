@@ -3,3 +3,5 @@
 
 
 (defqueries "harja/kyselyt/muutos_kyselyt.sql")
+
+(declare hae-urakan-hoitovuoden-kirjatut-muutokset)
