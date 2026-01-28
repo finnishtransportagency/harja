@@ -7,11 +7,11 @@
             [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.varmista-kayttajalta :as varmista]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -22,7 +22,9 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
 (defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                             tehtavat-ja-maarat kopioi-tuleville-vuosille? onko-muutoksia?]
+         tehtavat kopioi-tuleville-vuosille? onko-muutoksia?
+         {:keys [puuttuvat-lkm puuttuvat-tehtava-idt puuttuvat-tekstit nayta-puuttuvat-lista? toggle-nayta-puuttuvat-lista!
+           nayta-vain-puuttuvat? kopiointi-tuleville-tehty?]}]
   [:div.flex-row {:style {:justify-content "right"}}
    [:div.painikkeet.text-right
     [:div.grid-status-viestit
@@ -46,20 +48,65 @@
        [:div.status-viesti.ei-muutoksia
         "Ei tallennettuja muutoksia"])]]
 
+   (when (or (pos? (or puuttuvat-lkm 0))
+             (and tallennustila? kopioi-tuleville-vuosille?))
+     [:div.painikkeet.text-right.grid-status-viestit {:style {:margin-left "1rem"}}
+      [:div.flex-row {:style {:gap "0.75rem" :align-items "center" :justify-content "flex-end" :flex-wrap "wrap"}}
+       (when (pos? (or puuttuvat-lkm 0))
+         [:<> 
+          [:span {:style {:white-space "nowrap"}} (str "Puuttuvat: " puuttuvat-lkm " kpl")]
+          [:span
+           [napit/yleinen-toissijainen (if nayta-vain-puuttuvat? "Näytä kaikki" "Näytä vain puuttuvat")
+            #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
+            {:disabled (or tallennus-kesken? false)
+             :vayla-tyyli? false
+             :data-cy "btn-nayta-vain-puuttuvat"}]]
+          [:span
+           [napit/yleinen-ensisijainen (str "Aseta puuttuvat 0:ksi (" puuttuvat-lkm ")")
+            #(e! (tiedot/->AsetaPuuttuvatNollaksi puuttuvat-tehtava-idt))
+            {:disabled (or tallennus-kesken? false (not tallennustila?))
+             :vayla-tyyli? false
+             :data-cy "btn-aseta-puuttuvat-nollaksi"}]]
+          [:span
+           [yleiset/linkki (if nayta-puuttuvat-lista? "Piilota lista" "Näytä lista")
+            toggle-nayta-puuttuvat-lista!
+            {:luokka "klikattava alleviivaa"
+             :data-cy "linkki-puuttuvat-nayta-lista"}]]])
+
+       (when (and tallennustila? kopioi-tuleville-vuosille?)
+         [:<> 
+          [:span {:style {:white-space "nowrap"}}
+           (str "Kopiointi tuleville hoitovuosille: " (if kopiointi-tuleville-tehty? "tehty" "ei tehty"))]
+          [:span
+           [napit/yleinen-toissijainen "Kopioi nyt"
+            #(varmista/varmista-kayttajalta
+               {:otsikko "Kopioidaanko tuleville hoitovuosille?"
+                :sisalto [:div
+                          [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille."]]
+                :hyvaksy "Kopioi ja tallenna"
+                :peruuta-txt "Peruuta"
+                :napit [:tallenna :peruuta]
+             :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavat tehtavat true)))})
+            {:disabled (or tallennus-kesken? false)
+             :vayla-tyyli? false
+             :data-cy "btn-kopioi-nyt"}]]])]
+
+      (when (and (pos? (or puuttuvat-lkm 0)) (true? nayta-puuttuvat-lista?))
+        (let [esimerkit (take 5 puuttuvat-tekstit)
+              loput (- (count puuttuvat-tekstit) (count esimerkit))]
+          [:div {:style {:margin-top "0.5rem" :text-align "left"}}
+           [:div "Asetetaan 0 näille tehtäville:"]
+           [:ul {:style {:margin "0.25rem 0 0.25rem 1.25rem"}}
+            (for [t esimerkit]
+              ^{:key t} [:li t])]
+           (when (pos? loput)
+             [:div (str "ja " loput " muuta")])]))])
+
    (if tallennustila?
      [:div.painikkeet.text-right.grid-status-viestit
-      (when kopioi-tuleville-vuosille?
-        [:span {:style {:margin-left "1rem"}}
-         [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
-          #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat true))
-          {:disabled (or tallennus-kesken? false)
-           :luokka "ikoni-16"
-           :vayla-tyyli? false
-           :ikoni (ikonit/action-copy)
-           :data-cy "btn-kopioi-tuleville-hoitovuosille"}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
-        #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
+        #(e! (tiedot/->TallennaTehtavat tehtavat false))
         {:disabled (or tallennus-kesken? false)}]]
       [:span
        [napit/yleinen-toissijainen "Peruuta"
@@ -226,12 +273,25 @@
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kaynnissa? tallennustila? tallennus-yritetty? viimeisin-muokkaus viimeisin-muokkaaja
                          tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
-  (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
-        valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
-        onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
-    [:div#vayla
-     [:div.row
-      [:h1 "Tehtävät ja määrät"]]
+  (r/with-let [nayta-puuttuvat-lista? (r/atom false)]
+    (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
+          valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
+          onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)
+          nayta-vain-puuttuvat? (boolean (:nayta-vain-puuttuvat? app))
+          puuttuvat-rivit (filter tiedot/puuttuuko-tarjous-maara? tehtavat-ja-maarat)
+          puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat tehtavat-ja-maarat)
+          puuttuvat-lkm (count puuttuvat-tehtava-idt)
+          puuttuvat-tekstit (->> puuttuvat-rivit
+                              (map (fn [{:keys [nimi tehtavaryhmaotsikko]}]
+                                     (if tehtavaryhmaotsikko
+                                       (str nimi " (" tehtavaryhmaotsikko ")")
+                                       (str nimi))))
+                              distinct
+                              vec)
+          kaikki-tehtavat (:kaikki-tehtavat app)]
+      [:div#vayla
+       [:div.row
+        [:h1 "Tehtävät ja määrät"]]
 
      [:div.flex-row {:style {:justify-content "space-between"}}
       [:div.filtteri
@@ -259,16 +319,23 @@
             :taso3 nil})
         {:luokka "klikattava alleviivaa"}]]]
 
-     [tallennus-painikkeet e! tallennus-kaynnissa? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
-      (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
+       [tallennus-painikkeet e! tallennus-kaynnissa? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja kaikki-tehtavat
+      (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?
+      {:puuttuvat-lkm puuttuvat-lkm
+       :puuttuvat-tehtava-idt puuttuvat-tehtava-idt
+       :puuttuvat-tekstit puuttuvat-tekstit
+       :nayta-puuttuvat-lista? @nayta-puuttuvat-lista?
+       :toggle-nayta-puuttuvat-lista! #(swap! nayta-puuttuvat-lista? not)
+         :nayta-vain-puuttuvat? nayta-vain-puuttuvat?
+         :kopiointi-tuleville-tehty? (boolean (:kopiointi-tuleville-tehty? app))}]
 
      (when tallennustila?
        [yleiset/info-laatikko :neutraali
         "Syötä kaikkiin tehtäviin määrät. Jos tehtävälle ei ole määrää, syötä 0"
         "" "100%" {:luokka "ala-margin-16"}])
 
-    [tehtava-taulukko e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
-     [debug/debug app]]))
+       [tehtava-taulukko e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
+       [debug/debug app]])))
 
 (defn tehtavat-maarat* [e! _]
   (let [{:keys [sisaan ulos]}

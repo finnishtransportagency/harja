@@ -35,6 +35,8 @@
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
+(defrecord ToggleNaytaVainPuuttuvat [])
+(defrecord AsetaPuuttuvatNollaksi [tehtava-idt])
 
 (defn hae-tehtavat-ja-maarat [_parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
@@ -76,6 +78,33 @@
   [tehtavat]
   (boolean (some puuttuuko-tarjous-maara? tehtavat)))
 
+(defn- suodata-vain-puuttuvat
+  "Suodattaa listan niin, että mukaan jäävät puuttuvat tehtävät ja niiden väliotsikot.
+   Huom: Tämä suodatin ei muokkaa tallennettavaa payloadia, vain näkymää." 
+  [tehtavat]
+  (let [puuttuvat (filter puuttuuko-tarjous-maara? tehtavat)
+        ryhmat (into #{} (keep :tehtavaryhmaotsikko) puuttuvat)]
+    (filter (fn [{:keys [valiotsikko] :as rivi}]
+              (or (and (some? valiotsikko)
+                       (contains? ryhmat valiotsikko))
+                  (puuttuuko-tarjous-maara? rivi)))
+      tehtavat)))
+
+(defn- paivita-naytettavat-tehtavat
+  "Päivittää app-staten näkymässä näytettävät tehtävät kaikken tehtävien perusteella.
+  Haku (>= 2 merkkiä) ja Näytä vain puuttuvat -suodatin vaikuttavat vain tähän listaan." 
+  [app]
+  (let [kaikki (or (:kaikki-tehtavat app) [])
+        haku (:haku app)
+        haku-aktiivinen? (and (some? haku) (>= (count haku) 2))
+        tehtavat (if haku-aktiivinen?
+                   (filtteroi-tehtavat haku kaikki)
+                   kaikki)
+        tehtavat (if (true? (:nayta-vain-puuttuvat? app))
+                   (suodata-vain-puuttuvat tehtavat)
+                   tehtavat)]
+    (assoc app :tehtavat-ja-maarat tehtavat)))
+
 (extend-protocol tuck/Event
 
   HaeTehtavatJaMaarat
@@ -88,8 +117,9 @@
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tallennus-yritetty? false)
-      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
       (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :kopiointi-tuleville-tehty? false)
+      (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
@@ -114,7 +144,9 @@
           {:onnistui ->TallennaTehtavatOnnistui
            :epaonnistui ->TallennaTehtavatEpaonnistui
            :paasta-virhe-lapi? true})
-        (assoc app :tallennus-kaynnissa? true))))
+        (-> app
+          (assoc :tallennus-kaynnissa? true)
+          (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))))))
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -125,8 +157,9 @@
       (assoc :tallennustila? false)
       (assoc :tallennus-yritetty? false)
       (assoc :tallentamattomia-muutoksia? false)
-      (assoc :tehtavat-ja-maarat (filtteroi-tehtavat (:haku app) (:tehtavat vastaus)))
       (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :kopiointi-tuleville-tehty? (boolean (:viimeisin-tallennus-kopioi-tuleville? app)))
+      (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (synkronoi-muutokset-muutokset-atomiin!)))
 
@@ -144,10 +177,11 @@
                                           (if muokattu-tehtava
                                             (conj acc muokattu-tehtava)
                                             (conj acc alkuperainen-tehtava))))
-                                [] (:tehtavat-ja-maarat app))]
+                                [] (:kaikki-tehtavat app))]
       (-> app
         (assoc :tallentamattomia-muutoksia? true)
-        (assoc :tehtavat-ja-maarat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (assoc :kaikki-tehtavat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (paivita-naytettavat-tehtavat)
         (synkronoi-muutokset-muutokset-atomiin!))))
 
   ToggleTallennusTila
@@ -158,16 +192,9 @@
 
   FiltteroiTehtavat
   (process-event [{hakuehto :hakuehto} app]
-    ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
-    (if (>= (count hakuehto) 2)
-      (let [tehtavat (:tehtavat-ja-maarat app)
-            f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
-        (-> app
-          (assoc :haku hakuehto)
-          (assoc :tehtavat-ja-maarat f-tehtavat)))
-      (-> app
-        (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
-        (assoc :haku hakuehto))))
+    (-> app
+      (assoc :haku hakuehto)
+      (paivita-naytettavat-tehtavat)))
 
   PeruutaTallennus
   (process-event [_ app]
@@ -184,7 +211,39 @@
                 app)]
       (if (contains? (:avatut-tehtavaryhmat app) valiotsikko)
         (assoc app :avatut-tehtavaryhmat (disj (:avatut-tehtavaryhmat app) valiotsikko))
-        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko)))))
+        (assoc app :avatut-tehtavaryhmat (conj (:avatut-tehtavaryhmat app) valiotsikko)))))
+
+  ToggleNaytaVainPuuttuvat
+  (process-event [_ app]
+    (let [uusi-arvo (not (boolean (:nayta-vain-puuttuvat? app)))
+          puuttuvat-ryhmat (when uusi-arvo
+                             (into #{}
+                               (keep :tehtavaryhmaotsikko)
+                               (filter puuttuuko-tarjous-maara? (:kaikki-tehtavat app))))]
+      (-> app
+        (assoc :nayta-vain-puuttuvat? uusi-arvo)
+        (cond-> puuttuvat-ryhmat
+          (update :avatut-tehtavaryhmat (fnil into #{}) puuttuvat-ryhmat))
+        (paivita-naytettavat-tehtavat))))
+
+  AsetaPuuttuvatNollaksi
+  (process-event [{tehtava-idt :tehtava-idt} app]
+    (let [tehtava-idt (or tehtava-idt #{})
+          paivitetty (mapv (fn [rivi]
+                             (if (and (contains? tehtava-idt (:tehtava_id rivi))
+                                      (puuttuuko-tarjous-maara? rivi))
+                               (assoc rivi :tarjous_maara 0)
+                               rivi))
+                      (:kaikki-tehtavat app))
+          n (count tehtava-idt)]
+      (when (pos? n)
+        (viesti/nayta-toast! (str "Asetettiin 0 arvo " n " tehtävälle.") :onnistunut))
+      (-> app
+        (assoc :tallentamattomia-muutoksia? (or (pos? n) (:tallentamattomia-muutoksia? app)))
+        (assoc :kaikki-tehtavat paivitetty)
+        (assoc :tallennus-yritetty? false)
+        (paivita-naytettavat-tehtavat)
+        (synkronoi-muutokset-muutokset-atomiin!))))
 
   NollaaTehtavatJaMaaratMuutokset
   (process-event [_ app]
