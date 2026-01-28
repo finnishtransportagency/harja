@@ -122,7 +122,7 @@
 
                  ;; -- Karttatasot front-end
                  ;; TODO: Päivitys suurempiin versioihin vaatii siirtymisen shadow-cljs:ään
-                 [cljsjs/openlayers "4.0.1-1"]
+                 [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "5.4.1"]
