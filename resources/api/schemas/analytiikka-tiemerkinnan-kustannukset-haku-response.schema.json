@@ -14,13 +14,13 @@
             "type": "integer",
             "description": "Urakan tunniste"
           },
-          "urakkanro": {
+          "urakkatunnus": {
             "type": "string",
             "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
           },
           "korjauskustannukset": {
             "type": "array",
-            "description": "Lista korjauskustannuksista sopimusvuosittain",
+            "description": "Tiemerkintäurakan toteutuneet korjauskustannukset. Kustannukset kirjataan Harjassa sopimusvuosikohtaisina kokonaissummina.",
             "items": {
               "type": "object",
               "additionalProperties": false,
