@@ -144,7 +144,8 @@
    vaikka rooleja, ei tulisikaan headereista"
   [db integraatioloki miam kayttajanimi]
   (let [timeout (get miam :timeout 30000) ;; Jos ympäristöön ei ole asetettu mitään, niin 30sek defaulttina
-        max-yritykset (get miam :max-yritykset 3)] ;; Jos ympäristöön ei ole asetettu mitään, niin 3 yritystä defaulttina
+        max-yritykset (get miam :max-yritykset 3) ;; Jos ympäristöön ei ole asetettu mitään, niin 3 yritystä defaulttina
+        sleep-ms (get miam :sleep-ms 5000)] ;; Jos ympäristöön ei ole asetettu mitään, niin 5s defaulttina
 
     ;; Yritetään uudestaan maksimi määrään asti yrityksiä, jos kutsu epäonnistuu
     (loop [yritys 1]
@@ -162,9 +163,9 @@
         (if (or vastaus (>= yritys max-yritykset))
           vastaus
           (do
-            (log/warn (str "MIAM-kutsu epäonnistui, yritetään uudelleen (" yritys "/" max-yritykset ")"))
+            (log/warn (str "MIAM-kutsu epäonnistui, yritetään uudelleen "sleep-ms" päästä:  (" yritys "/" max-yritykset ")"))
             ;; Pidetään ihan pieni tauko ennen seuraavaa yritystä
-            (Thread/sleep (* yritys 200))
+            (Thread/sleep (* yritys sleep-ms))
             (recur (inc yritys))))))))
 
 (defn kayttajaroolit-rajapintavastauksesta
@@ -227,7 +228,8 @@
 ;; Pidetään käyttäjätietoja muistissa 2h, jotta ei tarvitse koko ajan hakea tietokannasta tai miam-rajapinnasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
 ;; Eli, kun cache hittiä ei ensimmäisen sivulautauksen voi olla, niin tietokantaa ja miam-rajapintaa kutsutaan neljä kertaa.
-(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000))))
+(def cache-ttl-minuutit 120)
+(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* cache-ttl-minuutit 60 1000))))
 
 (defn- pura-header-arvo
   "KOKA lähettää ääkkösellisen headerin muodossa \"=?UTF?B?...base64...?=\"."
