@@ -270,6 +270,31 @@
         (is (= 0 nulleja)
             (str "Kantaan ei saa tallentua NULL-maaria. NULL-riveja: " nulleja))))))
 
+(deftest palvelu-ei-hyvaksy-puuttuvia-sopimuksen-maaria
+  (testing "Palvelu palauttaa selkeän virheen jos payloadissa on nil tarjous_maara"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          nil-tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))
+          tehtavat (mapv (fn [t]
+                           (if (= (:tehtava_id t) nil-tehtava-id)
+                             (assoc t :tarjous_maara nil)
+                             t))
+                     kaikki-rivit)
+          tiedot {:urakka-id urakka-id
+                  :tehtavat tehtavat
+                  :kopioi-tuleville-vuosille? false
+                  :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                       (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}]
+      (is (some? nil-tehtava-id) "Testidata: löytyi tehtävä jonka määrä voidaan asettaa nil")
+
+      (is (thrown-with-msg?
+            IllegalArgumentException
+            #"Syötä määrä\. Jos tehtävälle ei ole määrää, syötä 0"
+            (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))))))
+
 (deftest muutokset-sisaltavat-oikeat-kentat
   (testing "Muutokset-kentässä on edellinen_maara, maaramuutos ja uusi_maara oikein"
     (let [db (:db jarjestelma)

@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
@@ -8,11 +9,25 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]))
 
+(def ^:private puuttuva-tarjousmaara-virheviesti
+  "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0")
+
+(defn- vaadi-ettei-puuttuvia-tarjousmaaria!
+  [{:keys [tehtavat]}]
+  (when (some (fn [{:keys [valiotsikko tehtava_id tarjous_maara]}]
+                (and (nil? valiotsikko)
+                     (some? tehtava_id)
+                     (or (nil? tarjous_maara)
+                         (and (string? tarjous_maara) (str/blank? tarjous_maara)))))
+          tehtavat)
+    (throw (IllegalArgumentException. puuttuva-tarjousmaara-virheviesti))))
+
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
    Palautetaan tallennetut tehtävät ja määrät."
   [db kayttaja {:keys [urakka-id kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
+  (vaadi-ettei-puuttuvia-tarjousmaaria! tiedot)
   (jdbc/with-db-transaction [db db]
     (let [hk-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)

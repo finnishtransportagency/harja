@@ -1,5 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [tuck.core :as tuck]
@@ -125,17 +126,29 @@
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (or
                                                 (not (nil? (:valiotsikko rivi)))
                                                 (contains? avatut-tehtavaryhmat (:tehtavaryhmaotsikko rivi))))
                              tehtavat-ja-maarat)
+    puuttuvat-tarjous-maarat (if tallennus-yritetty?
+               (tiedot/puuttuvat-tarjous-maarat tehtavat-ja-maarat)
+               #{})
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
                           "valiotsikko-tausta korkea"))
+        tarjousmaara-solun-luokka (fn [arvo rivi]
+                                   (let [perus (solun-luokka-fn arvo rivi)
+                 puuttuu? (and tallennus-yritetty?
+                    (nil? (:valiotsikko rivi))
+                                                    (some? (:tehtava_id rivi))
+                                                    (contains? puuttuvat-tarjous-maarat (:tehtava_id rivi)))
+                                         luokat (remove nil? [perus (when puuttuu? "sisaltaa-virheen")])]
+                                     (when-not (empty? luokat)
+                                       (str/join " " luokat))))
         sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
@@ -155,17 +168,20 @@
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
                    {:otsikko "Sopimuksen määrä" :leveys "12.5%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
+                    :jos-tyhja "—"
+                    :validoi (when tallennus-yritetty?
+                              [[:ei-tyhja "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0"]])
                     :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
-                    :solun-luokka solun-luokka-fn}
+                    :solun-luokka tarjousmaara-solun-luokka}
                    {:otsikko "Muutoksen vaikutus" :leveys "12.5%"
                     :nimi :muutos_maaramuutos
                     :solun-luokka solun-luokka-fn
                     :tasaa :oikea
                     :tyyppi :komponentti
-                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos] :as rivi}]
+                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos]}]
                                    (if tehtava_id
                                      [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
                                      [:span]))}
@@ -173,7 +189,7 @@
                     :tyyppi :komponentti
                     :solun-luokka solun-luokka-fn
                     :tasaa :oikea
-                    :komponentti (fn [{:keys [tehtava_id yhteensa] :as rivi}]
+                    :komponentti (fn [{:keys [tehtava_id yhteensa]}]
                                    (if tehtava_id
                                      [:span yhteensa]
                                      [:span]))}
@@ -208,7 +224,7 @@
        sarakkeet
        tehtavat-ja-maarat])))
 
-(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
+(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kaynnissa? tallennustila? tallennus-yritetty? viimeisin-muokkaus viimeisin-muokkaaja
                          tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
@@ -243,13 +259,15 @@
             :taso3 nil})
         {:luokka "klikattava alleviivaa"}]]]
 
-     [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
+     [tallennus-painikkeet e! tallennus-kaynnissa? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
      (when tallennustila?
-       [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."])
+       [yleiset/info-laatikko :neutraali
+        "Syötä kaikkiin tehtäviin määrät. Jos tehtävälle ei ole määrää, syötä 0"
+        "" "100%" {:luokka "ala-margin-16"}])
 
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
+    [tehtava-taulukko e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
 (defn tehtavat-maarat* [e! _]
