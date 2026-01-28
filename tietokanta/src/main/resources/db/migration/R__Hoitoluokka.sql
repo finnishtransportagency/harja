@@ -1,16 +1,23 @@
 -- Hoitoluokka taulun hakuja varten
 
+-- Päättelee pisteen sijainnin perusteella hoitoluokan. Sijaintiin lisätään puskuri pyöristämällä pisteen etäisyys hoitoluokkageometrioihin.
+-- Näin saadaan hoitoluokkaehdokkaaksi paitsi lähin myös muut riittävän lähellä olevat hoitoluokkageometriat.
+-- Ehdokkaista valitaan ylempi hoitoluokka.
+-- Kun lähistöllä on usean hoitourakan teitä kuten risteyksissä ja rampeilla usein on,
+-- saattaa päätelty hoitoluokka olla ylempi kuin tie, jolla todellisuudessa tehtiin töitä. Tämä on hyväksytty
+-- sivuoire siitä, että halutaan välttää pisteen sijoittaminen liian matalalle hoitoluokalle.
+-- Sorateillä puskurin vaikutus näyttää testien mukaan olemattomalta.
 CREATE OR REPLACE FUNCTION hoitoluokka_pisteelle
-  (piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER, kielletyt_hoitoluokat INTEGER[])
-  RETURNS INTEGER
+(piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER, kielletyt_hoitoluokat INTEGER[])
+    RETURNS INTEGER
 AS $$
-SELECT hoitoluokka
-  FROM hoitoluokka
- WHERE ST_DWithin(geometria, piste, treshold) AND
-       tietolajitunniste = tietolaji AND
-       hoitoluokka != ALL(kielletyt_hoitoluokat)
- ORDER BY ST_Length(ST_ShortestLine(geometria, piste)) ASC
- LIMIT 1;
+    SELECT hoitoluokka
+    FROM hoitoluokka
+    WHERE ST_DWithin(geometria, piste, treshold)
+      AND tietolajitunniste = tietolaji
+      AND hoitoluokka != ALL (kielletyt_hoitoluokat)
+    ORDER BY ROUND(ST_Length(ST_ShortestLine(geometria, piste))::INTEGER, -1) ASC, hoitoluokka ASC
+    LIMIT 1;
 $$ LANGUAGE SQL IMMUTABLE;
 
 -- Vanhan ja uuden talvihoitoluokan mäppäys päivämäärän perusteella
