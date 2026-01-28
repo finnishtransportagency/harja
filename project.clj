@@ -58,7 +58,7 @@
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
                  [ring/ring-core "1.14.2"]
-                 [compojure "1.7.1"]
+                 [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "1.1.234"]
