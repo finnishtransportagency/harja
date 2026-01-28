@@ -881,7 +881,7 @@
                          :urakkaid urakkaid})]
 
                   {:urakkaid urakkaid
-                   :urakkanro urakkanro
+                   :urakkatunnus urakkanro
                    :korjauskustannukset (mapv konversio/alaviiva->rakenne korjauskustannukset)
                    :yllapitokohdekustannukset (mapv #(-> %
                                                        konversio/alaviiva->rakenne
