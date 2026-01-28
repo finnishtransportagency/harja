@@ -19,18 +19,12 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :db-replica (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
-          :hae-muutoksen-tiedot (component/using
-                                  (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                                  [:http-palvelin :db])
-
-          :tallenna-muutos (component/using
-                             (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                             [:http-palvelin :db])
-
+          :muutokset (component/using
+                       (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                       [:http-palvelin :db])
           :kulut (component/using
                    (kulut/->Kulut)
                    [:http-palvelin :db])
-
           :kustannusten-seuranta (component/using
                                    (kustannusten-seuranta/->KustannustenSeuranta)
                                    [:http-palvelin :db :db-replica])))))
