@@ -41,6 +41,7 @@
   [harja.palvelin.raportointi.raportit.toimenpidepaivat]
   [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
   [harja.palvelin.raportointi.raportit.indeksitarkistus]
+  [harja.palvelin.raportointi.raportit.lisatyo]
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
@@ -194,6 +195,13 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Materiaaliraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.materiaali/suorita
+    :urakkatyyppi #{:hoito :teiden-hoito}}
+
+   {:nimi         :lisatyo
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"urakka"}
+    :kuvaus       "Lisätyöraportti"
+    :suorita      #'harja.palvelin.raportointi.raportit.lisatyo/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :laatupoikkeamaraportti
