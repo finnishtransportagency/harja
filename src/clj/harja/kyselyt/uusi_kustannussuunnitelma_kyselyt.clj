@@ -514,7 +514,6 @@
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
 
-
         ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
         pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
 
