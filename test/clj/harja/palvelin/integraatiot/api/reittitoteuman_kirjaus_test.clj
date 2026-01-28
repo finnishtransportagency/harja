@@ -965,7 +965,7 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
@@ -987,8 +987,9 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -1007,8 +1008,9 @@
         ulkoinen-id (rand-int 100000000)
         alkuperainen-pvm "2015-05-23T12:00:00Z"
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -1020,8 +1022,9 @@
     (is (some? toteuma-id))
     (let [myohassa-pvm "2019-10-02T15:00:00+03:00"
           paivitys-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                             (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                             (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                slurp
+                               (.replace "__LAHDE__" "koneellinen")
                                (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                (.replace "__ID__" (str ulkoinen-id))
                                (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
