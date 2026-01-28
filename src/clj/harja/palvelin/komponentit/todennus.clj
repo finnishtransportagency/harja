@@ -102,7 +102,17 @@
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))
 
 (defn kasittele-miam-vastaus
-  "Logita mahdollinen virhe."
+  "Käsittelee MIAM-rajapinnan HTTP-vastauksen ja palauttaa vastauksen bodyn onnistumisen tapauksessa.
+
+  Parametrit:
+  - status: HTTP-statuskoodi (numero)
+  - body: Vastauksen body (merkkijono)
+
+  Palauttaa:
+  - body, jos statuskoodi on 200
+  - nil, jos statuskoodi on muu kuin 200 tai käsittelyssä tapahtuu virhe
+
+  Virhetilanteet lokitetaan."
   [status body]
 
   (try
@@ -128,21 +138,39 @@
    - kayttajanimi: Käyttäjätunnus, jonka roolit haetaan
 
    Palauttaa JSON-muotoisen merkkijonon, joka sisältää käyttäjän roolit MIAM-rajapinnasta,
-   tai nil jos rajapintakutsu epäonnistuu."
+   tai nil jos rajapintakutsu epäonnistuu.
+
+   Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset on hyvä pitää miam rajapinnan kutsu pois päältä,
+   vaikka rooleja, ei tulisikaan headereista"
   [db integraatioloki miam kayttajanimi]
-  (let [;; Lokaalisti ja muuallakin, missä tiedot ovat puutteelliset
-        ;; on hyvä pitää miam rajapinnan kutsu pois päältä - vaikka rooleja, ei tulisikaan headereista
-        vastaus (integraatiotapahtuma/suorita-integraatio
-                  db integraatioloki "miam" "hae-kayttajan-roolit" nil
-                  (fn [konteksti]
-                    (let [http-asetukset {:metodi :GET
-                                          :url (str (:url miam) kayttajanimi)
-                                          :otsikot (merge
-                                                     {"Content-Type" "application/json"}
-                                                     {"x-api-key" (:apiavain miam)})}
-                          {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                      (kasittele-miam-vastaus status body))))]
-    vastaus))
+  (let [timeout (get miam :timeout 30000) ;; Jos ympäristöön ei ole asetettu mitään, niin 30sek defaulttina
+        max-yritykset (get miam :max-yritykset 3) ;; Jos ympäristöön ei ole asetettu mitään, niin 3 yritystä defaulttina
+        sleep-ms (get miam :sleep-ms 5000)] ;; Jos ympäristöön ei ole asetettu mitään, niin 5s defaulttina
+
+    ;; Yritetään uudestaan maksimi määrään asti yrityksiä, jos kutsu epäonnistuu
+    (loop [yritys 1]
+      (let [vastaus (try
+                      (integraatiotapahtuma/suorita-integraatio
+                       db integraatioloki "miam" "hae-kayttajan-roolit" nil
+                       (fn [konteksti]
+                         (let [http-asetukset {:metodi :GET
+                                               :url (str (:url miam) kayttajanimi)
+                                               :timeout timeout
+                                               :otsikot (merge
+                                                          {"Content-Type" "application/json"}
+                                                          {"x-api-key" (:apiavain miam)})}
+                               {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                           (kasittele-miam-vastaus status body))))
+                      (catch Exception e
+                        (log/error e "MIAM-kutsu epäonnistui poikkeukseen")
+                        nil))]
+        (if (or vastaus (>= yritys max-yritykset))
+          vastaus
+          (do
+            (log/warn (str "MIAM-kutsu epäonnistui, yritetään uudelleen "sleep-ms" päästä:  (" yritys "/" max-yritykset ")"))
+            ;; Pidetään ihan pieni tauko ennen seuraavaa yritystä
+            (Thread/sleep (* yritys sleep-ms))
+            (recur (inc yritys))))))))
 
 (defn kayttajaroolit-rajapintavastauksesta
   "Parsii käyttäjäroolit MIAM-rajapinnan JSON-vastauksesta ja muuntaa ne Harjan ryhmärakenteeksi.
@@ -152,7 +180,15 @@
    - vastaus: JSON-muotoinen merkkijono MIAM-rajapinnasta, tai nil jos kutsu epäonnistui
 
    Palauttaa käyttäjän roolit Harjan formaatissa (yleis-, urakka- ja organisaatioroolit),
-   tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä."
+   tai nil jos vastaus on nil, tyhjä, epävalidi JSON tai ei sisällä tarvittavia kenttiä.
+
+   Rajanpinnasta saadaan vastaus tyyliin:
+   {\"Table1\": [{ \"CompanyID\": \"<y-tunnus>\", \"Company\": \"<yrityksen nimi>\", \"UserName\": \"<käyttäjän käyttäjätunnus>\", \"Name\": \"<Käyttäjän nimi>\",
+                   \"Role\": \"<ytunnus_Paakayttaja>\",
+                   \"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste <yrityksen nimi>\",
+                   \"Appname\": \"HARJA\", \"email\": \"<käyttäjän sähköpostiosoite>\" }]}
+
+   "
   [db vastaus ryhmat-asetuksista]
   (let [roolit-asetuksista (when ryhmat-asetuksista
                              (kayttajan-roolit
@@ -180,7 +216,8 @@
             ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
             ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
             (let [ryhmat (->> table1
-                           (map #(get % "Role"))
+                           (keep #(get % "Role"))
+                           (remove str/blank?)      ; poista tyhjät
                            (str/join ","))
                   ;; Lisätään mahdolliset ryhmät asetuksista
                   ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]
@@ -193,9 +230,11 @@
           (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
           nil)))))
 
-;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
+;; Pidetään käyttäjätietoja muistissa 2h, jotta ei tarvitse koko ajan hakea tietokannasta tai miam-rajapinnasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
-(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000))))
+;; Eli, kun cache hittiä ei ensimmäisen sivulautauksen voi olla, niin tietokantaa ja miam-rajapintaa kutsutaan neljä kertaa.
+(def cache-ttl-minuutit 120)
+(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* cache-ttl-minuutit 60 1000))))
 
 (defn- pura-header-arvo
   "KOKA lähettää ääkkösellisen headerin muodossa \"=?UTF?B?...base64...?=\"."
@@ -418,6 +457,47 @@
   (or (and oikeudet (oikeudet kayttaja))
       koka-headerit))
 
+;; Atomilla seurataan käynnissä olevia hakuja
+(def odottavat-kutsut-atom (atom {}))
+
+(defn- hae-tai-odota-kayttajatietoja
+  "Hakee käyttäjätiedot tai odottaa käynnissä olevaa hakua samalle käyttäjälle.
+   Estää samanaikaiset MIAM-kutsut samalle käyttäjälle."
+  [db integraatioloki miam oam-tiedot]
+  (let [kayttajanimi (get oam-tiedot "oam_remote_user")
+        ;; Luodaan promise tai haetaan olemassa oleva atomisesti
+        ;; Palautetaan [promise uusi?] jossa uusi? kertoo luotiinko uusi promise
+        [vastaus-promise uusi?]
+        (let [p (promise)]
+          (if-let [olemassa? (get @odottavat-kutsut-atom kayttajanimi)]
+            [olemassa? false]
+            ;; Yritä lisätä uusi promise atomisesti
+            (let [result (swap! odottavat-kutsut-atom
+                           (fn [pending]
+                             (if (contains? pending kayttajanimi)
+                               pending
+                               (assoc pending kayttajanimi p))))]
+              ;; Tarkista lisättiinkö meidän promise vai oliko toinen thread nopeampi
+              (if (identical? p (get result kayttajanimi))
+                [p true]
+                [(get result kayttajanimi) false]))))]
+
+    ;; Jos tämä thread loi promisen, sen täytyy deliveroida se
+    (if uusi?
+      (do
+        (deliver vastaus-promise
+          (try
+            (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)
+            (catch Throwable t
+              (log/error t "Virhe käyttäjätietojen haussa")
+              (throw t))
+            (finally
+              ;; Siivotaan promise pois atomista
+              (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
+        @vastaus-promise)
+      ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
+      @vastaus-promise)))
+
 (defn koka->kayttajatiedot
   ([db integraatioloki miam headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db integraatioloki miam headerit oikeudet kehitysmoodi? nil))
@@ -425,12 +505,15 @@
    (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
          oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
      (try
-       (get (swap! kayttajatiedot-cache-atom #(cache/through
-                                                (fn [oam-tiedot]
-                                                  (varmista-kayttajatiedot db integraatioloki miam oam-tiedot))
-                                                %
-                                                oam-tiedot))
-         oam-tiedot)
+       ;; Tarkista ensin cachesta
+       (if-let [cached (cache/lookup @kayttajatiedot-cache-atom oam-tiedot)]
+         ;; Cache-osuma, palauta arvo
+         cached
+         ;; Cache-huti, hae tai odota (hakuja tehdään vain yksi, muut säikeet odottavat sen valmistumista)
+         (let [result (hae-tai-odota-kayttajatietoja db integraatioloki miam oam-tiedot)]
+           ;; Tallenna cacheen
+           (swap! kayttajatiedot-cache-atom cache/miss oam-tiedot result)
+           result))
        (catch Throwable t
          (log/error t "Käyttäjätietojen varmistuksessa virhe!"))))))
 
