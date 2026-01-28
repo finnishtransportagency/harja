@@ -149,17 +149,21 @@
 
     ;; Yritetään uudestaan maksimi määrään asti yrityksiä, jos kutsu epäonnistuu
     (loop [yritys 1]
-      (let [vastaus (integraatiotapahtuma/suorita-integraatio
-                      db integraatioloki "miam" "hae-kayttajan-roolit" nil
-                      (fn [konteksti]
-                        (let [http-asetukset {:metodi :GET
-                                              :url (str (:url miam) kayttajanimi)
-                                              :timeout timeout
-                                              :otsikot (merge
-                                                         {"Content-Type" "application/json"}
-                                                         {"x-api-key" (:apiavain miam)})}
-                              {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                          (kasittele-miam-vastaus status body))))]
+      (let [vastaus (try
+                      (integraatiotapahtuma/suorita-integraatio
+                       db integraatioloki "miam" "hae-kayttajan-roolit" nil
+                       (fn [konteksti]
+                         (let [http-asetukset {:metodi :GET
+                                               :url (str (:url miam) kayttajanimi)
+                                               :timeout timeout
+                                               :otsikot (merge
+                                                          {"Content-Type" "application/json"}
+                                                          {"x-api-key" (:apiavain miam)})}
+                               {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                           (kasittele-miam-vastaus status body))))
+                      (catch Exception e
+                        (log/error e "MIAM-kutsu epäonnistui poikkeukseen")
+                        nil))]
         (if (or vastaus (>= yritys max-yritykset))
           vastaus
           (do
@@ -212,7 +216,8 @@
             ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
             ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
             (let [ryhmat (->> table1
-                           (map #(get % "Role"))
+                           (keep #(get % "Role"))
+                           (remove str/blank?)      ; poista tyhjät
                            (str/join ","))
                   ;; Lisätään mahdolliset ryhmät asetuksista
                   ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]

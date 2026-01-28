@@ -100,6 +100,9 @@
 (def default-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
                          ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
 
+(def semi-virheellinen-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
+
 (deftest kayttajaroolit-rajapinnasta-test
   (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
           :roolit #{}
@@ -127,6 +130,36 @@
           default-miam-vastaus
           "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
 
+(deftest kayttajaroolit-virheellisesta-rajapintavastauksesta
+  (is (= {:organisaatioroolit {}
+          :roolit #{"Jarjestelmavastaava"
+                    "Tilaajan_Asiantuntija"}
+          :urakkaroolit {}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          semi-virheellinen-miam-vastaus
+          "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
+
+(deftest miam-virhetilanteet
+  (testing "MIAM palauttaa 401"
+    (with-redefs [integraatiotapahtuma/laheta
+                  (fn [_ _ _] {:status 401 :body "Unauthorized"})]
+      (is (nil? (todennus/hae-kayttajaroolit-rajapinnasta (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  {:timeout 100
+                   :max-yritykset 2
+                   :sleep-ms 100}
+                  "feikki-kayttaja")))))
+
+  (testing "MIAM palauttaa viallisen JSON:n"
+    (with-redefs [integraatiotapahtuma/laheta
+                  (fn [_ _ _] {:status 200 :body "{invalid json"})]
+      (is (nil? (todennus/hae-kayttajaroolit-rajapinnasta (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  {:timeout 100
+                   :max-yritykset 2
+                   :sleep-ms 100}
+                  "feikki-kayttaja"))))))
+
 (deftest miam-uudelleenyritys-with-redefs-test
   (let [yrityskerrat (atom 0)
         mock-integraatio (fn [db integraatioloki nimi toiminto ulkoinen-id context-fn]
@@ -141,7 +174,8 @@
                       (:db jarjestelma)
                       (:integraatioloki jarjestelma)
                       {:timeout 500
-                       :max-yritykset 5}
+                       :max-yritykset 5
+                       :sleep-ms 100}
                       "feikki-kayttaja")]
         (is (= 5 @yrityskerrat) "Viisi yritystä tehtiin")
         (is (some? vastaus) "Vastaus saatiin lopulta")))))
@@ -487,7 +521,8 @@
                     integraatiotapahtuma/laheta mock-http-laheta]
         ;; Asetetaan lyhyt timeout ja vähän yrityksiä
         (let [miam-asetukset {:timeout 100 ; 100ms timeout (ei käytetä tässä testissä)
-                              :max-yritykset 3}
+                              :max-yritykset 3
+                              :sleep-ms 100}
               tulos (todennus/hae-kayttajaroolit-rajapinnasta
                       (:db jarjestelma)
                       (:integraatioloki jarjestelma)
