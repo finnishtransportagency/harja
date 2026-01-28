@@ -507,7 +507,9 @@
 
 
 (defn paivita-tavoite-ja-kattohinta
-  "<kirjoita tähän uusi kuvaus>"
+  "Lasketaan tarjouksen, sekä muutosten perusteella.
+  = tarjous + aiempien vuosien pysyvät muutokset
+  Hankintakustannukset eivät vaikuta tähän laskentaan."
   [db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
