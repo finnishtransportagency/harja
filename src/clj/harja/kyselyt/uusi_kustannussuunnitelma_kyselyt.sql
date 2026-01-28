@@ -30,6 +30,9 @@ WHERE m.urakka = :urakka
   AND mmk.toimenpideinstanssi = :toimenpideinstanssi-id
   AND m.poistettu IS NOT TRUE
   AND m.tyyppi = 'pysyva'
+  -- TALVIHOITO, LIIKENNEYMPÄRISTÖN HOITO 
+  -- SORATEIDENHOITO, PÄÄLLYSTEIDEN PAIKKAUS
+  -- YLLÄPITO, KORVAUSINVESTOINTI
   AND tp.koodi IN ('23104', '23116', '23124', '20107', '20191', '14301')
   AND (extract(YEAR FROM m.voimassa_alkaen) < :vuosi
   AND mmk.hoitokauden_alkuvuosi = :vuosi::INTEGER);

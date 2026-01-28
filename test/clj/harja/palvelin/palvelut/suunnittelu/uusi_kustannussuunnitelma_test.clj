@@ -787,7 +787,6 @@
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
-        ;_ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
 
         ;; Lisätään erillishankinnat
         _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
@@ -798,9 +797,7 @@
         ;; Lisätään johto- ja hallintokorvaukset
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
             (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
-        ;; Tavoitehinta lasketaan erillisellä funktiolla, jos kustsutaan tallennuksia suoraan kyselyfunktioilla eikä rajapinnan kautta
-        ;_ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta (:db jarjestelma) kayttaja-id urakka-id hoitovuoden-alkuvuosi)
-
+        ;; Tarjous
         _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
             (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
 
@@ -879,6 +876,7 @@
         tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
                   urakka-id
                   ;; Passataan vaikka hankintojen summa 
+                  ;; Hankintoja ei välttämättä tähän tarvi, sillä tavoitehinta on tarjous + pysyvät.
                   hankinnat-yhteensa
                   0
                   0)

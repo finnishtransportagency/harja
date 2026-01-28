@@ -142,7 +142,7 @@
         (is (= (set virhe) #{"Erillishankinnat"}) "Erillishankinnat ovat puutteellisena")))
 
 
-    (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (kaikki)"
+    (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (monta virhettä)"
       (let [tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
                       urakka-id
                       (+ erillishankinnat-yht 200)

@@ -264,11 +264,7 @@
                                                                                                                  (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) summa))
                                                                                         :luoja kayttaja-id})))]
                     db-budjetoitu-rahavaraus))
-            rahavaraukset-tarjouksesta)
-
-        ;; Koska kustannusarvioitu_tyo taulu muuttuu, niin lasketaan valitun vuoden tavoitehinta uusiksi.
-        ;_ (uk-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi vuositarjous))
-        ]))
+            rahavaraukset-tarjouksesta)]))
 
 (defn tallenna-tarjouksen-toimenkuvat [db vuositarjous tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id]
   (let [vuosittaiset-toimenkuvat (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:hoitokauden_alkuvuosi %)) toimenkuvatlistaus)

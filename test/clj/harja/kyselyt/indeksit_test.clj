@@ -64,9 +64,6 @@
        urakka tuntipalkka vuosi kuukausi)))
 
 (defn lisaa-urakka-tavoite [{:keys [urakka hoitokausi tavoitehinta kattohinta]}]
-  (println "lisaa-urakka-tavoite" urakka hoitokausi tavoitehinta kattohinta)
-  (println (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta) VALUES (%s, %s, %s, %s)"
-             urakka hoitokausi tavoitehinta kattohinta))
   (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s"
        urakka hoitokausi))
   (i (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta) VALUES (%s, %s, %s, %s)"
