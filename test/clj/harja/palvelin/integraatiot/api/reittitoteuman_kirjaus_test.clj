@@ -108,7 +108,7 @@
               (range)))))))
 
 (deftest tallenna-yksittainen-reittitoteuma
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
@@ -161,7 +161,7 @@
           (poista-reittitoteuma toteuma-id ulkoinen-id urakka))))))
 
 (deftest tallenna-yksittainen-reittitoteuma-sama-hash
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
@@ -210,7 +210,7 @@
 
 
 (deftest tallenna-yksittainen-reittitoteuma-vanhalla-talvisuola-materiaalilla
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ;; Talvisuola, rakeinen NaCl - materiaalikoodi id
         materiaalikoodi-id (ffirst (q (str "select id from materiaalikoodi where nimi = 'Talvisuola, rakeinen NaCl';")))
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
@@ -334,7 +334,7 @@
     (poista-reittitoteuma toteuma-id ulkoinen-id urakka)))
 
 (deftest tallenna-soratiehoitoluokalle-reittitoteuma
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
@@ -376,7 +376,7 @@
         (poista-reittitoteuma toteuma-id ulkoinen-id urakka)))))
 
 (deftest tallenna-talvisuolausta-pyoratielle
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         kayttaja "yit_pk2"
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka " AND paasopimus IS NULL"))
@@ -446,7 +446,7 @@
 
 
 (deftest tallenna-usea-reittitoteuma
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoiset-idt (tyokalut/hae-usea-vapaa-toteuma-ulkoinen-id 2)
         ulkoinen-id-1 (first ulkoiset-idt)
         ulkoinen-id-2 (second ulkoiset-idt)
@@ -469,7 +469,7 @@
       (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy"])))))
 
 (deftest tarkista-toteuman-tallentaminen-paasopimukselle
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
@@ -714,7 +714,7 @@
     (is (= 200 (:status toinen-vastaus-lisays)))))
 
 (deftest paivita-reittitoteuma-monesti-hoitoluokittaiset-summat-paivitetaan-oikein
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
@@ -946,7 +946,7 @@
     (is (= 3.62M toteuma-reittipiste-suola-2) "Suolan määrä toteuma_reittipiste-taulussa täsmää alussa")))
 
 (deftest reittitoteuma-paattyneeseen-urakkaan-estetaan
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         myohainen-pvm "2019-10-02T12:00:00+03:00"
         _ (anna-kirjoitusoikeus kayttaja-yit)
@@ -968,7 +968,7 @@
     (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id)))
 
 (deftest reittitoteuma-urakan-viimeisena-sallittuna-paivana
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         viimeinen-sallittu-pvm "2019-10-01T12:00:00+03:00"
         _ (anna-kirjoitusoikeus kayttaja-yit)
@@ -988,7 +988,7 @@
     (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id)))
 
 (deftest reittitoteuma-paivitys-paattyneeseen-urakkaan-sallitaan
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)

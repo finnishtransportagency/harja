@@ -45,6 +45,7 @@
                           :viesti (format "Urakassa id:llä: %s on jo raportoitu tarkastus samalla tunnisteella %s, mutta eri aikana. Tunnisteen on oltava yksilöllinen urakan ja tarkastustyypin sisällä."
                                     urakka-id, ulkoinen-id)}]})
       (throw (IllegalArgumentException.)))))
+
 (defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id ulkoinen-id tyyppi]
   (when tarkastus-aika
     (let [urakka (first (q-urakat/hae-urakka db {:id urakka-id}))
@@ -66,6 +67,7 @@
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+virheellinen-paivamaara+
                                 :viesti "Urakka on päättynyt ja kirjaaminen estetty."}]})))))))
+
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
