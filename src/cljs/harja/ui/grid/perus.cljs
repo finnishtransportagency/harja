@@ -67,7 +67,8 @@
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
                fokus-id [id nimi]
-               elementin-id (or elementin-id (str rivi-index))]
+               oma-luokka (if (fn? elementin-id) (elementin-id rivi) elementin-id)
+               elementin-id (or oma-luokka (str rivi-index))]
 
            ;; muokattava? -> voiko muokata yksittäistä saraketta
            ;; voi-muokata-riviä? -> voiko muokata yksittäistä riviä
