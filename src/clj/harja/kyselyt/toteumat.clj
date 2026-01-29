@@ -14,13 +14,14 @@
   {:positional? true})
 
 (declare luo-erilliskustannus<! onko-olemassa-ulkoisella-idlla onko-toteumalla-suolausta hae-pisteen-hoitoluokat
-  luo-toteuma<! poista-toteuma! luodun-toteuman-id hae-toteuman-hash siirra-toteumat-analytiikalle
+  luo-toteuma<! poista-toteuma! luo-toteuma_tehtava<! luodun-toteuman-id hae-toteuman-hash siirra-toteumat-analytiikalle
   hae-reitittomat-mutta-reittipisteelliset-toteumat hae-reitittomat-mutta-osoitteelliset-toteumat
   hae-reittitoteumat-analytiikalle luo-toteuma-materiaali<! hae-toteuman-alkanut-pvm-idlla paivita-toteuma<!
   paivita-toteuman-reittigeometria<! paivita-toteuma-materiaali! paivita-palautettu-analytiikalle-aikaleima!
   lisaa-toteumalle-jsonhash! hae-toteuman-reittipisteet paivita-toteuma-ulkoisella-idlla<! toteuman-id-ulkoisella-idlla
   hae-poistettavien-toteumien-alkanut-ulkoisella-idlla poista-toteumat-ulkoisilla-idlla-ja-luojalla!
-  hae-toteuman-perustiedot-ulkoisella-idlla)
+  hae-toteuman-perustiedot-ulkoisella-idlla poista-toteuma_tehtava-toteuma-idlla!
+  poista-toteuma-materiaali-toteuma-idlla!)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)

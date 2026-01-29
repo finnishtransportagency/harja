@@ -58,7 +58,7 @@
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
                  [ring/ring-core "1.14.2"]
-                 [compojure "1.7.1"]
+                 [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "1.1.234"]
@@ -74,7 +74,7 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.8"]
+                 [org.postgresql/postgresql "42.7.9"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -122,7 +122,7 @@
 
                  ;; -- Karttatasot front-end
                  ;; TODO: Päivitys suurempiin versioihin vaatii siirtymisen shadow-cljs:ään
-                 [cljsjs/openlayers "4.0.1-1"]
+                 [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "5.4.1"]

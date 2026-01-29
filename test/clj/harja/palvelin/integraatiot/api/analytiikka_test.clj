@@ -446,3 +446,46 @@
     (is (= (get-in lahetetty-turpo [:sijainti :tie :aet]) (get-in turpo [:tapahtumapaikka :tieaet])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :losa]) (get-in turpo [:tapahtumapaikka :tielosa])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :let]) (get-in turpo [:tapahtumapaikka :tielet])))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-alkuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/abc/2023")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/xyz")] kayttaja-analytiikka portti)]
+    ;; API palauttaa 500 kun konversio->int epäonnistuu
+    (is (= 500 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-alkuvuosi-suurempi-kuin-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2023/2020")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-onnistunut-kutsu-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/2023")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että palautetaan urakan tiedot
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :urakka))
+        (is (contains? ensimmainen :urakka-id))
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-tietojen-validointi-test
+  ;; Testaa että tehtävämäärät haetaan oikein
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2019/2024")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että ainakin joiltain urakoilta löytyy suunnitelmia
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))
+        (when (seq (:vuosittaiset-suunnitelmat ensimmainen))
+          (let [vuosi (first (:vuosittaiset-suunnitelmat ensimmainen))]
+            (is (contains? vuosi :hoitokauden-alkuvuosi))
+            (is (contains? vuosi :suunnitellut-tehtavat))
+            (is (sequential? (:suunnitellut-tehtavat vuosi)))))))))

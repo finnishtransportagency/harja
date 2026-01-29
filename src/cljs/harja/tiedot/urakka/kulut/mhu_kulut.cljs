@@ -79,6 +79,13 @@
 
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
+(def muu-tehtava
+  {:id -1
+   :nimi "Muu tehtävä (ei määrämitattava)"
+   :jarjestys 99999
+   :emo nil
+   :maaramitattava? true})
+
 (def vuoden-paatoksen-kulun-tyypit
   {:tavoitepalkkio "Tavoitepalkkio"
    :tavoitehinnan-ylitys "Urakoitsija maksaa tavoitehinnan ylityksestä"
@@ -172,7 +179,11 @@
                                               (assoc :toimenpide toimenpide)
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
-                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
+                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
+                                              (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
+                                                                      (:muu-tehtava-kaytossa kohdistus))
+                                                                muu-tehtava
+                                                                (:tehtava kohdistus))))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
@@ -424,7 +435,10 @@
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
-    (assoc-in app [:lomake :kohdistukset nro :tehtava] tehtava))
+    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)]
+      (-> app
+        (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
+        (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))))
 
   KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]

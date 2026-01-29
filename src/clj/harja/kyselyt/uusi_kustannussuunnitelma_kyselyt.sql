@@ -15,6 +15,28 @@ WHERE sopimus = :sopimus-id
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
   AND toimenpideinstanssi = :toimenpideinstanssi-id;
 
+-- name: hae-pysyvat-hankintakus-muutokset 
+SELECT
+    mmk.muutos,
+    :vuosi::INTEGER              AS vuosi,
+    NULL::INTEGER                AS kuukausi,
+    mmk.summa,
+    mmk.toimenpideinstanssi
+FROM mhu_muutos_kustannusvaikutus mmk
+         JOIN mhu_muutos m ON m.id = mmk.muutos
+         JOIN toimenpideinstanssi tpi ON tpi.id = mmk.toimenpideinstanssi
+         JOIN toimenpide tp ON tp.id = tpi.toimenpide
+WHERE m.urakka = :urakka
+  AND mmk.toimenpideinstanssi = :toimenpideinstanssi-id
+  AND m.poistettu IS NOT TRUE
+  AND m.tyyppi = 'pysyva'
+  -- TALVIHOITO, LIIKENNEYMPÄRISTÖN HOITO 
+  -- SORATEIDENHOITO, PÄÄLLYSTEIDEN PAIKKAUS
+  -- YLLÄPITO, KORVAUSINVESTOINTI
+  AND tp.koodi IN ('23104', '23116', '23124', '20107', '20191', '14301')
+  AND (extract(YEAR FROM m.voimassa_alkaen) < :vuosi
+  AND mmk.hoitokauden_alkuvuosi = :vuosi::INTEGER);
+
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
        CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
@@ -88,6 +110,7 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
+
 -- name: hae-kuukauden-erillishankinta
 SELECT id,
        kuukausi,
@@ -100,6 +123,24 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+
+-- name: hae-tallennetun-kuukauden-erillishankinta
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+ FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id
+  AND vuosi = :vuosi
+  AND kuukausi = :kuukausi
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id;
 
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
@@ -161,6 +202,26 @@ SELECT id,
        muokkaaja
 FROM johto_ja_hallintokorvaus
 WHERE id = :id;
+
+
+-- name: hae-tallennettu-kuukauden-johto-ja-hallintokorvaus
+SELECT id,
+       kuukausi,
+       vuosi,
+       tunnit,
+       tuntipalkka,
+       tuntipalkka_indeksikorjattu,
+       "urakka-id",
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja
+ FROM johto_ja_hallintokorvaus
+WHERE "urakka-id" = :urakka-id
+  AND kuukausi = :kuukausi
+  AND vuosi = :vuosi
+  AND "toimenkuva-id" = :toimenkuva-id;
+
 
 -- name: hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
 -- Käytetään -24 ja aiemmin alkaville urakoille, kun yksittäisellä toimenkuvalla on kaikki merkitys
@@ -391,6 +452,9 @@ WHERE urakka = :urakka-id
 -- name: lisaa-tavoite-ja-kattohinta<!
 INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
 VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
+
+-- name: hae-urakan-hoitovuoden-tarjous
+SELECT * FROM tarjous WHERE urakka_id = :urakka_id AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
 -- name: indeksikorjaukset-vahvistettu?
 -- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,

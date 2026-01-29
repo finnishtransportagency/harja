@@ -9,7 +9,10 @@
   [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app}]
 
   [(lomake/ryhma {:otsikko "Perustiedot"}
-     (lomake/rivi
+     ;; TODO: Muutostyön alityypin valinta on toistaiseksi poistettu käytöstä, koska vain 'erillisrahoitus' on sallittu vaihtoehto.
+     ;;       Erillisrahoitus-alityyppi asetetaan oletuksena muutoslomake.cljs 'alusta-lomakkeen-pohjatiedot'-funktiossa.
+     ;;       Kun alityypin valinta otetaan takaisin käyttöön, poista oletusarvon asetus pohjatietojen alustuksesta.
+     #_(lomake/rivi
        {:otsikko "Kyseessä on"
         :nimi :alityyppi
         :tyyppi :radio-group

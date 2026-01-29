@@ -103,6 +103,7 @@
 
           ;; Taulukon kentät
           [{:otsikko "Tehtävä"
+            :elementin-id #(str (:tehtava-id %) (gensym))
             :nimi :tehtava
             :tyyppi :valinta
             :muokattava? (constantly voi-muokata?)
