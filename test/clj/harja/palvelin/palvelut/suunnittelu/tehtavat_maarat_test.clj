@@ -296,15 +296,20 @@
             (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))))))
 
 (deftest hae-tehtavat-ja-maarat-palauttaa-tulevien-hoitovuosien-yhteenvedon
-  (testing "Palautetaan tulevien hoitovuosien yhteenveto (syötettyjä vuosia / tulevia vuosia)"
+  (testing "Palautetaan tulevien hoitovuosien yhteenveto (syötettyjä vuosia / valmiita vuosia / tulevia vuosia)"
     (let [db (:db jarjestelma)
           urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
           hoitokauden-alkuvuosi 2021
           haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
           kaikki-rivit (:tehtavat haettu)
-          tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))
+          tehtava-idt (->> kaikki-rivit
+                           (filter #(some? (:tehtava_id %)))
+                           (map :tehtava_id)
+                           distinct)
+          tehtava-id (first tehtava-idt)
           tulevat-vuodet [2022 2023 2024 2025]
-          vuosi-jossa-syotettyja 2023]
+          vuosi-jossa-syotettyja 2023
+          valmis-vuosi 2024]
 
       (is (some? tehtava-id) "Testidata: löytyi tehtävä joka kuuluu näkymään")
 
@@ -313,15 +318,20 @@
                  urakka-id
                  (clojure.string/join ", " tulevat-vuodet)))
 
-      ;; Syötetään yhdelle tulevalle vuodelle yksi rivi (riittää, koska yhteenveto on exists-pohjainen).
+      ;; Syötetään yhdelle tulevalle vuodelle yksi rivi (riittää "syötetty"-laskentaan).
       (varmista-tarjousrivi! urakka-id vuosi-jossa-syotettyja tehtava-id)
+
+      ;; Tehdään yhdestä tulevasta hoitovuodesta täysin valmis: luodaan tarjousrivi kaikille tehtäville.
+      (doseq [tehtava-id tehtava-idt]
+        (varmista-tarjousrivi! urakka-id valmis-vuosi tehtava-id))
 
       (let [tiedot {:urakka-id urakka-id
                     :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
                                          (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}
             vastaus (tm-palvelu/hae-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
         (is (= {:tulevia-vuosia-yhteensa 4
-                :tulevia-vuosia-joissa-syotettyja 1}
+        :tulevia-vuosia-joissa-syotettyja 2
+        :tulevia-vuosia-valmiina 1}
                (:tulevat-hoitovuodet-yhteenveto vastaus))
             (str "Yhteenveto väärin. Palautui: " (pr-str (:tulevat-hoitovuodet-yhteenveto vastaus))))))))
 
