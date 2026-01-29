@@ -1,20 +1,10 @@
 (ns harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat-siirto-test
   (:require [clojure.test :refer :all]
-            [clojure.data :refer [diff]]
-            [taoensso.timbre :as log]
-            [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.fim-test :as fim-test]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.pvm :refer [luo-pvm]]
-            [clj-time.core :as t]
             [clj-time.coerce :as t-coerce]
-            [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.palvelut.urakat :as urakat]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konversio])
   (:use org.httpkit.fake))
@@ -75,3 +65,63 @@
     (is (= 363 (count ajastetut-tehtavat-logit)) "Yksi ajastettu tehtävä on logitettu.")
     (is (= true (:onnistunut (first ajastetut-tehtavat-logit))))
     (is (= true (:onnistunut (last ajastetut-tehtavat-logit))))))
+
+(deftest viimeisin-ajokerta-paivittyy-ajastetut-tehtavat-tauluun
+  ;; Tämä testi varmistaa, että kun toteumat siirretään analytiikalle,
+  ;; ajastetut_tehtavat tauluun kirjataan onnistunut suoritus oikealla ajankohdalla.
+  ;; Tämä on tärkeää, jotta seuraava ajokerta tietää mistä jatkaa.
+  (let [testitietokanta (:db jarjestelma)
+
+        ;; Määritellään testiajanjakso: yksi päivä vuodelta 2016
+        alkupaiva (pvm/luo-pvm 2016 0 1)
+        loppupaiva (pvm/luo-pvm 2016 0 1)
+        alkuaika-sql (t-coerce/to-sql-time (pvm/paivan-alussa alkupaiva))
+        loppuaika-sql (t-coerce/to-sql-time (pvm/paivan-lopussa loppupaiva))
+
+        ;; Siivotaan ensin mahdolliset vanhat testidatat kyseiseltä päivältä
+        _ (u "DELETE FROM analytiikka_toteumat WHERE toteuma_alkanut >= '2016-01-01' AND toteuma_alkanut < '2016-01-02'")
+        _ (u "DELETE FROM ajastetut_tehtavat WHERE suoritusyritys_aika >= '2016-01-01' AND suoritusyritys_aika < '2016-01-02'")
+
+        ;; Haetaan tilanne ennen siirtoa - ei pitäisi olla yhtään riviä
+        logit-ennen (q-map "SELECT * FROM ajastetut_tehtavat
+                            WHERE tyyppi = 'siirra_toteumat_analytiikalle'
+                            AND suoritusyritys_aika >= '2016-01-01'
+                            AND suoritusyritys_aika < '2016-01-02'")
+
+        ;; Ajetaan toteumien siirto
+        _ (analytiikan-toteumat/siirra-toteumat testitietokanta alkuaika-sql loppuaika-sql)
+
+        ;; Haetaan tilanne siirron jälkeen
+        logit-jalkeen (q-map "SELECT * FROM ajastetut_tehtavat
+                              WHERE tyyppi = 'siirra_toteumat_analytiikalle'
+                              AND suoritusyritys_aika >= '2016-01-01'
+                              AND suoritusyritys_aika < '2016-01-02'")
+
+        ;; Otetaan talteen ensimmäinen (ja ainoa) logirivi
+        logi (first logit-jalkeen)]
+
+    ;; Varmista, että ennen siirtoa ei ollut lokeja
+    (is (= 0 (count logit-ennen))
+        "Ennen siirtoa ei pitäisi olla ajastetut_tehtavat -rivejä testiajanjaksolle")
+
+    ;; Varmista, että siirron jälkeen on täsmälleen yksi lokirivi
+    (is (= 1 (count logit-jalkeen))
+        "Siirron jälkeen pitäisi olla täsmälleen yksi ajastetut_tehtavat -rivi")
+
+    ;; Tarkista, että lokirivissä on oikea tyyppi
+    (is (= "siirra_toteumat_analytiikalle" (:tyyppi logi))
+        "Lokirivin tyyppi pitää olla 'siirra_toteumat_analytiikalle'")
+
+    ;; Tarkista, että siirto merkittiin onnistuneeksi
+    (is (= true (:onnistunut logi))
+        "Siirto pitää olla merkitty onnistuneeksi")
+
+    ;; Tarkista, että virhe-kenttä on nil (ei virhettä)
+    (is (nil? (:virhe logi))
+        "Onnistuneessa siirrossa ei saa olla virhe-kenttää")
+
+    ;; Tarkista, että suoritusyritys_aika on asetettu (tämä on se 'viimeisin ajokerta')
+    (is (not (nil? (:suoritusyritys_aika logi)))
+        "Suoritusyritys_aika (viimeisin ajokerta) pitää olla asetettu")))
+
+
