@@ -235,13 +235,22 @@
                                (assoc rivi :tarjous_maara 0)
                                rivi))
                       (:kaikki-tehtavat app))
-          n (count tehtava-idt)]
+          n (count tehtava-idt)
+          nayta-vain-puuttuvat? (true? (:nayta-vain-puuttuvat? app))
+          puuttuvia-jaljella? (onko-puuttuvia-tarjous-maaria? paivitetty)
+          palaa-kaikkiin? (and nayta-vain-puuttuvat? (not puuttuvia-jaljella?))]
       (when (pos? n)
-        (viesti/nayta-toast! (str "Asetettiin 0 arvo " n " tehtävälle.") :onnistunut))
+        (viesti/nayta-toast!
+          (if palaa-kaikkiin?
+            (str "Asetettiin 0 arvo " n " tehtävälle. Näytetään kaikki tehtävät.")
+            (str "Asetettiin 0 arvo " n " tehtävälle."))
+          :onnistunut))
       (-> app
         (assoc :tallentamattomia-muutoksia? (or (pos? n) (:tallentamattomia-muutoksia? app)))
         (assoc :kaikki-tehtavat paivitetty)
         (assoc :tallennus-yritetty? false)
+        (cond-> palaa-kaikkiin?
+          (assoc :nayta-vain-puuttuvat? false))
         (paivita-naytettavat-tehtavat)
         (synkronoi-muutokset-muutokset-atomiin!))))
 
