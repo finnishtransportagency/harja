@@ -131,20 +131,38 @@ WITH urakan_vuodet AS (
                (:hoitokauden_alkuvuosi::INTEGER + 1),
                (SELECT viimeinen_hoitokauden_alkuvuosi FROM urakan_vuodet)
            )::INTEGER AS hoitokauden_alkuvuosi
-     )
-SELECT COUNT(*) AS tulevia_vuosia_yhteensa,
-       COUNT(*) FILTER (
-         WHERE EXISTS (
+     ),
+
+     vuosien_tila AS (
+    SELECT tv.hoitokauden_alkuvuosi,
+           EXISTS (
                SELECT 1
                  FROM urakka_tehtavamaara ut
                       JOIN nakymaan_kuuluvat_tehtavat nt
                         ON nt.id = ut.tehtava
                 WHERE ut.urakka = :urakkaid
-                  AND ut."hoitokauden-alkuvuosi" = tulevat_vuodet.hoitokauden_alkuvuosi
+                  AND ut."hoitokauden-alkuvuosi" = tv.hoitokauden_alkuvuosi
+                  AND ut.poistettu IS NOT TRUE
                 LIMIT 1
-             )
-       ) AS tulevia_vuosia_joissa_syotettyja
-  FROM tulevat_vuodet;
+           ) AS vuosi_syotetty,
+           NOT EXISTS (
+               SELECT 1
+                 FROM nakymaan_kuuluvat_tehtavat nt
+                WHERE NOT EXISTS (
+                          SELECT 1
+                            FROM urakka_tehtavamaara ut
+                           WHERE ut.urakka = :urakkaid
+                             AND ut."hoitokauden-alkuvuosi" = tv.hoitokauden_alkuvuosi
+                             AND ut.tehtava = nt.id
+                             AND ut.poistettu IS NOT TRUE
+                      )
+           ) AS vuosi_valmis
+      FROM tulevat_vuodet tv
+     )
+SELECT COUNT(*)                                  AS tulevia_vuosia_yhteensa,
+       COUNT(*) FILTER (WHERE vuosi_syotetty)    AS tulevia_vuosia_joissa_syotettyja,
+       COUNT(*) FILTER (WHERE vuosi_valmis)      AS tulevia_vuosia_valmiina
+  FROM vuosien_tila;
 
 -- name: hae-menneiden-hoitovuosien-tilayhteenveto
 WITH urakan_vuodet AS (

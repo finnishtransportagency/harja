@@ -14,19 +14,22 @@
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
 
 (defn hae-tulevien-hoitovuosien-yhteenveto
-  "Palauttaa tulevien hoitovuosien syöttötilanteen yhteenvedon.
+  "Palauttaa tulevien hoitovuosien yhteenvedon.
 
   Määritelmä:
   - tulevat hoitovuodet = valittu hoitovuosi + 1 .. urakan viimeinen hoitovuosi
-  - syötettyjä = kannassa on vähintään yksi urakka_tehtavamaara-rivi kyseiselle vuodelle
-    tehtävälle joka kuuluu Tehtävät ja määrät -näkymään." 
+  - syötettyjä = kannassa on vähintään yksi (ei-poistettu) urakka_tehtavamaara-rivi kyseiselle vuodelle
+    tehtävälle joka kuuluu Tehtävät ja määrät -näkymään
+  - valmis = jokaiselle Tehtävät ja määrät -näkymään kuuluvalle tehtävälle löytyy (ei-poistettu) urakka_tehtavamaara-rivi kyseiselle vuodelle." 
   [db urakka-id hoitokauden-alkuvuosi]
   (let [tulos (first (hae-tulevien-hoitovuosien-syottoyhteenveto db {:urakkaid urakka-id
                                                                     :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
         tulevia-yhteensa (long (or (:tulevia_vuosia_yhteensa tulos) 0))
-        tulevia-joissa-syotettyja (long (or (:tulevia_vuosia_joissa_syotettyja tulos) 0))]
+        tulevia-joissa-syotettyja (long (or (:tulevia_vuosia_joissa_syotettyja tulos) 0))
+        tulevia-valmiina (long (or (:tulevia_vuosia_valmiina tulos) 0))]
     {:tulevia-vuosia-yhteensa tulevia-yhteensa
-     :tulevia-vuosia-joissa-syotettyja tulevia-joissa-syotettyja}))
+     :tulevia-vuosia-joissa-syotettyja tulevia-joissa-syotettyja
+     :tulevia-vuosia-valmiina tulevia-valmiina}))
 
 (defn hae-menneiden-hoitovuosien-yhteenveto
   "Palauttaa menneiden hoitovuosien valmiustilanteen yhteenvedon.
