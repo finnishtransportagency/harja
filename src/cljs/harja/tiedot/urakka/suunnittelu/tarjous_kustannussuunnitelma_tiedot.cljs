@@ -317,7 +317,8 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)))
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :uusi-toimenkuva-valittavana false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -370,14 +371,14 @@
                                   :yhteensa (+ alkukausi loppukausi)
                                   :yhteensa-indeksikorjattu nil})))
                        muuttuneet)
+
           yhteenveto {:nimi "Yhteensä"
-                      :alkukausi (apply + (map :alkukausi muuttuneet))
-                      :alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
-                      :loppukausi (apply + (map :loppukausi muuttuneet))
-                      :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
-                      :yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
-                      :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
-                      :pysyvat-muutokset "Ei muutoksia"
+                      :kaikki-alkukausi (apply + (map :alkukausi muuttuneet))
+                      :kaikki-alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
+                      :kaikki-loppukausi (apply + (map :loppukausi muuttuneet))
+                      :kaikki-loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
+                      :kaikki-yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
+                      :kaikki-yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
                       :viimeisin-muokkaus (:viimeisin-muokkaus (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))
                       :viimeisin-muokkaaja (:viimeisin-muokkaaja (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))}
           muuttuneet (conj muuttuneet yhteenveto)]

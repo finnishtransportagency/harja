@@ -550,17 +550,21 @@
   Olettaa saavansa parametrit kaikki vuosina:
   valittu-hk: vvvv
   hoitovuodet: esim. [2012 2013 2014 2015 2016]"
-  [valittu-hk hoitovuodet vuosi-termi]
-  (assert (and (int? valittu-hk) (every? int? hoitovuodet)) "Valittu-hk ja hoitovuodet pitää olla numeroita.")
+  ([valittu-hk hoitovuodet vuosi-termi]
+   (hoitokauden-jarjestysluku-ja-alku-ja-loppupvm valittu-hk hoitovuodet vuosi-termi true))
+  ([valittu-hk hoitovuodet vuosi-termi nayta-alku-ja-loppu-pvm?]
+   (assert (and (int? valittu-hk) (every? int? hoitovuodet)) "Valittu-hk ja hoitovuodet pitää olla numeroita.")
 
-  (let [monesko (first (keep-indexed (fn [i hk]
-                                       (if (and (int? valittu-hk)
-                                             (< valittu-hk 10))
-                                         valittu-hk
-                                         (when (= hk valittu-hk)
-                                           (inc (int i)))))
-                         hoitovuodet))]
-    (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi) " (" (pvm/pvm (pvm/hoitokauden-alkupvm valittu-hk)) " \u2212 " (pvm/pvm (pvm/hoitokauden-loppupvm (inc valittu-hk))) ")")))
+   (let [monesko (first (keep-indexed (fn [i hk]
+                                        (if (and (int? valittu-hk)
+                                              (< valittu-hk 10))
+                                          valittu-hk
+                                          (when (= hk valittu-hk)
+                                            (inc (int i)))))
+                          hoitovuodet))]
+     (str (when monesko (str monesko ". ")) (str/lower-case vuosi-termi)
+       (when nayta-alku-ja-loppu-pvm?
+         (str " (" (pvm/pvm (pvm/hoitokauden-alkupvm valittu-hk)) " \u2212 " (pvm/pvm (pvm/hoitokauden-loppupvm (inc valittu-hk))) ")"))))))
 
 #?(:cljs
    (def desimaali-fmt
@@ -684,6 +688,43 @@
                #?(:cljs (catch js/Object _ arvo))
                #?(:clj (catch Exception _ arvo)))]
     arvo))
+
+(defn pyorista-desimaaliin
+  "Pyöristää luvun haluttuun desimaalitarkkuuteen käyttäen HALF_UP pyöristystaktiikkaa.
+   
+   Käyttää Math/round -funktiota, joka pyöristää lähimpään kokonaislukuun:
+   - 0.5 pyöristyy ylöspäin 1:ksi
+   - -0.5 pyöristyy ylöspäin 0:ksi (kohti positiivista ääretöntä)
+   
+   Parametrit:
+   - arvo: Pyöristettävä desimaaliluku
+   - desimaalien-maara: Kuinka monen desimaalin tarkkuuteen pyöristetään (0-n)
+   
+   Palauttaa:
+   - Luvun pyöristettynä haluttuun desimaalitarkkuuteen
+   
+   Esimerkit:
+   (pyorista-desimaaliin 3.14159 2)  => 3.14
+   (pyorista-desimaaliin 3.14159 0)  => 3.0
+   (pyorista-desimaaliin 0.12345 1)  => 0.1
+   (pyorista-desimaaliin 12.345 1)   => 12.3
+   
+   Edge-caset ja huomioitavaa:
+   - Käyttää Math/round joka pyöristää .5 arvot YLÖSPÄIN (HALF_UP)
+     * 2.5 => 3, 3.5 => 4, -2.5 => -2
+   - Jos tarvitaan eri pyöristystaktiikkaa (esim. HALF_EVEN/pankkiirit pyöristys),
+     käytä Java BigDecimal luokkaa CLJ:ssä tai toteuta custom logiikka CLJS:ssä
+   - Liukulukujen rajoitteet: Hyvin suurilla tai pienillä luvuilla saattaa esiintyä
+     IEEE 754 liukulukujen tarkkuusongelmia
+   - Nolla desimaalilla palauttaa kokonaisluvun double-muodossa (esim. 3.0 ei 3)"
+  [arvo desimaalien-maara]
+  {:pre [(number? arvo)
+         (integer? desimaalien-maara)
+         (>= desimaalien-maara 0)]}
+  (let [kerroin #?(:clj (Math/pow 10 desimaalien-maara)
+                   :cljs (js/Math.pow 10 desimaalien-maara))]
+    #?(:clj (/ (Math/round (* arvo kerroin)) kerroin)
+       :cljs (/ (js/Math.round (* arvo kerroin)) kerroin))))
 
 (defn trimmaa-normaali-luku
   "Monet formatointifunktiot formatoivat luvut ikään kuin ne olisivat rahoja. Eli kahteen desimaaliin.

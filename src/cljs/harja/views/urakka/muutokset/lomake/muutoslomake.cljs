@@ -12,12 +12,37 @@
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.ui.yleiset :as yleiset]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
     ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
     [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
     [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
     [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
+
+(defn poista-muutos-varmistus
+  [e! muutos]
+  (let [vahvistus-tiedot (cond
+                           ;; JJH-muutos
+                           (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+                           {:sisalto [:div "Muutoksen poistaminen poistaa myös Harjan automaattisesti luomat maksuerät."]}
+
+                           ;; Erillisrahoitettu muutostyö
+                           (and (= (:tyyppi muutos) "muutostyo")
+                             (= (:alityyppi muutos) :erillisrahoitus))
+                           {:sisalto [:div "Muutostyölle ei voi poistamisen jälkeen kohdistaa kuluja"]}
+
+                           ;; Pysyvä muutos, muu muutostyö ja kaikki muut mahdolliset muutostyypit (default)
+                           :else
+                           {:sisalto [:div "Haluatko varmasti poistaa muutoksen?"]})]
+
+    ;; Näytä vahvistusdialogi
+    (varmista-kayttajalta/varmista-kayttajalta
+      (merge {:otsikko "Poistetaanko muutos?"
+              :hyvaksy "Poista"
+              :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}
+        vahvistus-tiedot))))
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
@@ -49,13 +74,25 @@
                       (not voi-tallentaa?)
                       muutoksen-tiedot-haku-kaynnissa?)
                   true
-                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
+                  false)}]
 
     [napit/peruuta "Peruuta"
      #(do
         (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
         (e! (t-yhteiset/->MuokkaaMuutosta nil)))
      {:disabled tallennus-kesken?}]
+
+    (when (:id muutos)
+      ;; TODO: Tehdään tästä erillisessä PR:ssä yleinen pattern, joka korvaa vanhentuneen napit/poista komponentin.
+      ;;       Figman Design libraryn mukaisessa tyylissä ei ole lainkaan vanhentunutta punaista napit/poista nappia, vaan
+      ;;       tämä uusi toissijainen nappi, joka on tyyliltään hillitty, kaikille toissijaisille toiminnoille sopiva nappi.
+      [napit/yleinen-toissijainen
+       "Poista muutos"
+       #(poista-muutos-varmistus e! muutos)
+       {:ikoni [ikonit/livicon-trash] :paksu? true
+        :disabled (or
+                    tallennus-kesken?
+                    muutoksen-tiedot-haku-kaynnissa?)}])
 
     (when (or
             tallennus-kesken?

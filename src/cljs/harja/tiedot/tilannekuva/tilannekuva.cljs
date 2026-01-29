@@ -115,6 +115,7 @@ hakutiheys-historiakuva 1200000)
             tk/sorateiden-muokkaushoylays false
             tk/sorateiden-polynsidonta false
             tk/sorateiden-tasaus false
+            tk/sorateiden-pinnan-hoito false
             tk/sorastus false
             tk/harjaus false
             tk/paallysteiden-paikkaus false
@@ -122,8 +123,9 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :valaistus {tk/huoltokierros false
-                 tk/ryhmavaihto false
+     :valaistus {tk/ryhmavaihto false
+                 tk/huoltokierros false
+                 tk/valaistusurakoiden-tarkastusajo false
                  tk/muut-valaistusurakoiden-toimenpiteet false}
      :alueet oletusalueet
      :tieluvat {tk/tieluvat false}}))

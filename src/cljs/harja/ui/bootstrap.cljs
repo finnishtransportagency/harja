@@ -21,62 +21,64 @@ The following keys are supported in the configuration:
   [{:keys [active style classes on-change]} & alternating-title-and-component]
   (let [tarkista-aktiivinen-tabi (fn [active alternating-title-and-component]
                                    (let [tab-nimet (keep #(when (not (nil? (nth % 2)))
-                                                           (nth % 1))
-                                                         (partition 3 alternating-title-and-component))]
+                                                            (nth % 1))
+                                                     (partition 3 alternating-title-and-component))]
                                      (when-not (some #{@active} tab-nimet)
                                        (when-let [eka-tabi (first tab-nimet)]
-                                         (reset! active eka-tabi)))))]
+                                         ;; Renderaa ensin nykyinen frame, ennen kuin kutsut reset!
+                                         ;; Tästä tulee muuten stack-overflow
+                                         (js/setTimeout #(reset! active eka-tabi) 0)))))]
     (tarkista-aktiivinen-tabi active alternating-title-and-component)
     (komp/luo
-     (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
-                         (tarkista-aktiivinen-tabi active alternating-title-and-component)))
-     (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
-       (let [style-class (case (or style :tabs)
-                           :pills "nav-pills"
-                           :tabs (str "nav-tabs " classes))
-             tabs (filter #(not (nil? (nth % 2)))
-                          (partition 3 alternating-title-and-component))
-             [active-tab-title active-tab-keyword active-component]
-             (or (first (filter #(= @active (nth % 1)) tabs))
-                 (first tabs))
-             vaihda-aktiivinen-tabi (fn [keyword event]
-                                      (.preventDefault event)
-                                      (if on-change
-                                        (on-change keyword)
-                                        (reset! active keyword)))]
-         (if (empty? tabs)
-           [:span "Ei käyttöoikeutta."]
-           [:span
-            [:ul.nav {:class style-class}
-             (for [[title keyword] tabs]
-               ^{:key title}
-               [:li {:class (when (= keyword active-tab-keyword)
-                              "active")}
-                [:a.klikattava (merge
-                                 {:tabIndex "0"
-                                  :on-click #(vaihda-aktiivinen-tabi keyword %)
-                                  :on-key-down #(when (dom/enter-nappain? %)
-                                                  (vaihda-aktiivinen-tabi keyword %))}
-                                 (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
-                                       cy-title (-> title
-                                                    str
-                                                    (clj-str/replace #"ä" "a")
-                                                    (clj-str/replace #"ö" "o"))]
-                                   (if tabs-taso
-                                     {:data-cy (str tabs-taso "-" cy-title)}
-                                     {:data-cy cy-title})))
-                 title]])]
-            [:div.valilehti active-component]]))))))
+      (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
+                          (tarkista-aktiivinen-tabi active alternating-title-and-component)))
+      (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
+        (let [style-class (case (or style :tabs)
+                            :pills "nav-pills"
+                            :tabs (str "nav-tabs " classes))
+              tabs (filter #(not (nil? (nth % 2)))
+                     (partition 3 alternating-title-and-component))
+              [active-tab-title active-tab-keyword active-component]
+              (or (first (filter #(= @active (nth % 1)) tabs))
+                (first tabs))
+              vaihda-aktiivinen-tabi (fn [keyword event]
+                                       (.preventDefault event)
+                                       (if on-change
+                                         (on-change keyword)
+                                         (reset! active keyword)))]
+          (if (empty? tabs)
+            [:span "Ei käyttöoikeutta."]
+            [:span
+             [:ul.nav {:class style-class}
+              (for [[title keyword] tabs]
+                ^{:key title}
+                [:li {:class (when (= keyword active-tab-keyword)
+                               "active")}
+                 [:a.klikattava (merge
+                                  {:tabIndex "0"
+                                   :on-click #(vaihda-aktiivinen-tabi keyword %)
+                                   :on-key-down #(when (dom/enter-nappain? %)
+                                                   (vaihda-aktiivinen-tabi keyword %))}
+                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+                                        cy-title (-> title
+                                                   str
+                                                   (clj-str/replace #"ä" "a")
+                                                   (clj-str/replace #"ö" "o"))]
+                                    (if tabs-taso
+                                      {:data-cy (str tabs-taso "-" cy-title)}
+                                      {:data-cy cy-title})))
+                  title]])]
+             [:div.valilehti active-component]]))))))
 
 (defn navbar
   "A Bootstrap navbar component"
   [options header & items]
   (let [collapse-state (atom "collapse.in")
         toggle! #(swap! collapse-state
-                        (fn [s]
-                          (if (= s "collapse")
-                            "collapse.in"
-                            "collapse")))]
+                   (fn [s]
+                     (if (= s "collapse")
+                       "collapse.in"
+                       "collapse")))]
     (fn [options header & items]
       [:nav.navbar.navbar-default {:role "navigation"
                                    :class (:luokka options)}
@@ -85,7 +87,7 @@ The following keys are supported in the configuration:
         ;; Brand and toggle get grouped for better mobile display
         [:div.navbar-header
          [:button.navbar-toggle.collapsed {:type "button"
-                                           :on-click toggle!}  ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                                           :on-click toggle!} ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
           [:span.sr-only "Toggle navigation"]
           [:span.icon-bar]
           [:span.icon-bar]
@@ -101,20 +103,20 @@ The following keys are supported in the configuration:
                 ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
                 ^{:key (hash item)}
                 [:li {:class (str (when false "active")
-                                  " "
-                                  (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
+                               " "
+                               (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
                  item])])
            (when right-items
              [:ul.nav.navbar-nav.navbar-right
               (for [item right-items]
                 ^{:key (hash item)}
                 [:li {:class (str (when false "active")
-                                  " "
-                                  (:context (meta (first item))))}
+                               " "
+                               (:context (meta (first item))))}
                  item])])])]])))
 
 (defn ^{:context "dropdown"}
-dropdown
+  dropdown
   "A dropdown menu."
   [title items]
   [:span
@@ -158,6 +160,6 @@ Opts can have the following keys:
                          (:class options) " panel-default")}
     (when title
       [:div.panel-heading
-       [:h2.musta title]])
+       [:h1.musta title]])
     [:div.panel-body
      content]]))

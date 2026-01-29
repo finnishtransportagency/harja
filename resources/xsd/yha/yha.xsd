@@ -373,6 +373,7 @@
             </xs:element>
             <xs:element name="massa" type="massa" nillable="true" minOccurs="0"/>
             <xs:element name="murske" type="murske" nillable="true" minOccurs="0"/>
+            <xs:element name="rc-prosentti" type="xs:integer" nillable="true" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -422,14 +423,7 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="rc-prosentti" minOccurs="0" maxOccurs="1">
-                <xs:simpleType>
-                    <xs:restriction base="xs:decimal">
-                        <xs:minInclusive value="0"/>
-                        <xs:maxInclusive value="100"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
+            <xs:element name="rc-prosentti" type="xs:integer" nillable="true" minOccurs="0"/>
             <xs:element name="kokonaismassamaara" nillable="true" minOccurs="0" type="xs:decimal">
                 <xs:annotation>
                     <xs:documentation>
@@ -521,7 +515,6 @@
             </xs:element>
         </xs:sequence>
     </xs:complexType>
-
 
     <xs:complexType name="runkoaine">
         <xs:sequence>
@@ -1184,6 +1177,7 @@
             </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
+
     <xs:simpleType name="alustan-verkon-tarkoitus">
         <xs:restriction base="xs:integer">
             <xs:enumeration value="1">
@@ -1218,6 +1212,7 @@
             </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
+
     <xs:simpleType name="alustan-verkon-sijainti">
         <xs:restriction base="xs:integer">
             <xs:enumeration value="1">
@@ -1622,6 +1617,27 @@
                 <xs:annotation>
                     <xs:documentation>
                         (UUSIO) RA, Asfalttirouhe
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="4">
+                <xs:annotation>
+                    <xs:documentation>
+                        (UUSIO) Betonimurske I
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="5">
+                <xs:annotation>
+                    <xs:documentation>
+                        (UUSIO) Betonimurske II
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="6">
+                <xs:annotation>
+                    <xs:documentation>
+                        Muu
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>

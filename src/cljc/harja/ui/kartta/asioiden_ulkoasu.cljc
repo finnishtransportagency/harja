@@ -238,6 +238,7 @@
    ;; tilannekuva/valaistus
    #{"RYHMÄVAIHTO"} [(viiva-mustalla-rajalla puhtaat/musta-raja) "turkoosi"]
    #{"HUOLTOKIERROS"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"VALAISTUSURAKOIDEN TARKASTUSAJO"} [(viiva-mustalla-rajalla puhtaat/tummanvihrea) "tummanvihrea"]
    #{"MUUT VALAISTUSURAKOIDEN TOIMENPITEET"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
    ;; tilannekuva/yllapito
    #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/musta-raja) "musta"]

@@ -321,9 +321,11 @@
     "tavoitehinnan-ylitys" "Tavoitehinnan ylitys"
     "kattohinnan-ylitys" "Kattohinnan ylitys"
     "tavoitehinnan-alitus" "Tavoitehinnan alitus"
+    "tavoitehinnan-muutokset" "Tavoitehinnan muutokset"
     "lupausbonus" "Lupausbonus"
     "lupaussanktio" "Lupaussanktio"
     "bonus" "Lupausbonus"
     "sanktio" "Lupaussanktio"
+    "taytetty" "Lupaus täytetty"
 
     "tuntematon tyyppi"))

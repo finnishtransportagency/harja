@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.suunnittelu.tehtavat-maarat-tiedot
-  (:require [harja.tiedot.urakka :as u]
+  (:require [clojure.string :as str]
+            [harja.tiedot.urakka :as u]
             [harja.ui.viesti :as viesti]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -26,6 +27,7 @@
 (defrecord TallennaTehtavatEpaonnistui [vastaus])
 
 (defrecord ToggleTallennusTila [])
+(defrecord FiltteroiTehtavat [hakuehto])
 (defrecord PeruutaTallennus [])
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
@@ -38,6 +40,17 @@
     {:onnistui ->HaeTehtavatJaMaaratOnnistui
      :epaonnistui ->HaeTehtavatJaMaaratEpaonnistui
      :paasta-virhe-lapi? true}))
+
+(defn filtteroi-tehtavat
+  "Palauttaa tehtavat, joiden nimi sisältää hakuehdon (case insensitive)."
+  [hakuehto tehtavat]
+  (if hakuehto
+    (filter (fn [tehtava]
+              (str/includes?
+                (str/lower-case (:nimi tehtava))
+                (str/lower-case hakuehto)))
+      tehtavat)
+    tehtavat))
 
 (extend-protocol tuck/Event
 
@@ -52,6 +65,7 @@
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :kaikki-tehtavat (:tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
@@ -75,12 +89,14 @@
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneest.")
+    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
 
     (-> app
       (assoc :tallennus-kaynnissa? false)
+      (assoc :tallennustila? false)
       (assoc :tallentamattomia-muutoksia? false)
-      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
+      (assoc :tehtavat-ja-maarat (filtteroi-tehtavat (:haku app) (:tehtavat vastaus)))
+      (assoc :kaikki-tehtavat (:tehtavat vastaus))
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
       (synkronoi-muutokset-muutokset-atomiin!)))
 
@@ -92,19 +108,41 @@
 
   PaivitaTehtavatGrid
   (process-event [{tehtavat :tehtavat} app]
-    (-> app
-      (assoc :tallentamattomia-muutoksia? true)
-      (assoc :tehtavat-ja-maarat (sort-by :jarjestys tehtavat))
-      (synkronoi-muutokset-muutokset-atomiin!)))
+    (let [muokatut-tehtavat tehtavat
+          yhdistetyt-tehtavat (reduce (fn [acc alkuperainen-tehtava]
+                                        (let [muokattu-tehtava (first (filter #(= (:nimi %) (:nimi alkuperainen-tehtava)) muokatut-tehtavat))]
+                                          (if muokattu-tehtava
+                                            (conj acc muokattu-tehtava)
+                                            (conj acc alkuperainen-tehtava))))
+                                [] (:tehtavat-ja-maarat app))]
+      (-> app
+        (assoc :tallentamattomia-muutoksia? true)
+        (assoc :tehtavat-ja-maarat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (synkronoi-muutokset-muutokset-atomiin!))))
 
   ToggleTallennusTila
   (process-event [_ app]
     (assoc app :tallennustila? (not (:tallennustila? app))))
 
+  FiltteroiTehtavat
+  (process-event [{hakuehto :hakuehto} app]
+    ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
+    (if (>= (count hakuehto) 2)
+      (let [tehtavat (:tehtavat-ja-maarat app)
+            f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
+        (-> app
+          (assoc :haku hakuehto)
+          (assoc :tehtavat-ja-maarat f-tehtavat)))
+      (-> app
+        (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
+        (assoc :haku hakuehto))))
+
   PeruutaTallennus
   (process-event [_ app]
     (hae-tehtavat-ja-maarat nil)
-    (assoc app :tallennustila? (not (:tallennustila? app))))
+    (-> app
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tallennustila? (not (:tallennustila? app)))))
 
   AvaaRivi
   (process-event [{valiotsikko :valiotsikko} app]

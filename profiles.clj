@@ -60,9 +60,6 @@
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                             "dev-resources/tmp"
                                             "resources"]
-                 :less ^:replace {:source-paths ["dev-resources/less/application"
-                                                 "dev-resources/less/laadunseuranta/application"]
-                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))}
                  :jvm-opts ["-Xverify:none"]
                  :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
                  :clean-targets ^{:protect false
@@ -104,7 +101,7 @@
                             [com.taoensso/truss "1.12.0"]
                             [com.taoensso/timbre "6.5.0"]]
              :source-paths ["test/cljs" "test/doo" "test/shared-cljs"]}
- :prod-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
+ :prod-cljs {:source-paths ^:replace ["src/clj" "src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]}
 
  ;; -- Laadunseuranta --
  ;; Ainoastaan laadunseurantaan liittyvät riippuvuudet

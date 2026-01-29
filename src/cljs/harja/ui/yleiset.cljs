@@ -392,7 +392,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                        (.toLowerCase @term)) 0))
                                                           vaihtoehdot))
                                            disabled? (contains? disabled-vaihtoehdot itemi)]
-                                       (when (not disabled?)
+                                       ;; Validoinnin vuoksi alasvetovalikkoon ei päästetä nil itemeitä
+                                       (when (and (not disabled?) (not (nil? itemi)))
                                          (valitse-fn itemi)
                                          (reset! auki? false))))))))))]
     (komp/luo
@@ -409,7 +410,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
-              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
+              nappi-id (or elementin-id (str "btn-hoitokausivalinta" "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title)))
               ryhmitellyt-vaihtoehdot (atom [])
               ryhmittely-fn (fn []
                               (when ryhmittely
@@ -479,7 +480,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
-     [:label.alasvedon-otsikko-vayla otsikko]
+     [:label.alasvedon-otsikko otsikko]
      [:label.alasvedon-otsikko otsikko])
    [livi-pudotusvalikko optiot valinnat]])
 
@@ -888,26 +889,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
            [ikonit/sulje]])]))))
 
 (defn nayta-virheet
-  [tyyppi virheet]
-  (assert
-    (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
-    "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-  [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
-         :style {:white-space "pre-line"}}
-   [:div.infolaatikon-ikoni
-    (case tyyppi
-      :varoitus (ikonit/livicon-warning-sign)
-      :onnistunut (ikonit/livicon-check)
-      :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
-      :huolto (ikonit/livicon-wrench))]
+  ([tyyppi virheet]
+   (nayta-virheet tyyppi virheet "Lomakkeella virheitä:"))
+  ([tyyppi virheet otsikko]
+   (assert
+     (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
+     "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
+   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
+          :style {:white-space "pre-line"}}
+    [:div.infolaatikon-ikoni
+     (case tyyppi
+       :varoitus (ikonit/livicon-warning-sign)
+       :onnistunut (ikonit/livicon-check)
+       :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
+       :huolto (ikonit/livicon-wrench))]
 
-   [:div.infolaatikon-teksti
-    [:div {:style {:display "flex"
-                   :flex-direction "column"
-                   :white-space "pre-line" :color +vari-black-default+}}
-     "Lomakkeella virheitä:"
-     (doall (for* [v (distinct virheet)]
-              [:span (str "- " v)]))]]])
+    [:div.infolaatikon-teksti
+     [:div {:style {:display "flex"
+                    :flex-direction "column"
+                    :white-space "pre-line" :color +vari-black-default+}}
+      otsikko
+      (doall (for* [v (distinct virheet)]
+               [:span (str "- " v)]))]]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -1167,7 +1170,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.alasvedon-otsikko-vayla "Tieosoite"]
+       [:label.alasvedon-otsikko "Tieosoite"]
        [:div
         [:div.varusteet.tr-osoite-flex
          [osio tie "Tie"]

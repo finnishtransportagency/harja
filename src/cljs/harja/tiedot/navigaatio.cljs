@@ -35,8 +35,6 @@
 (def valittu-valilehti reitit/valittu-valilehti)
 (def valittu-valilehti-atom reitit/valittu-valilehti-atom)
 
-(def valittu-sivu (reaction (get @reitit/url-navigaatio :sivu)))
-
 (declare kasittele-url! paivita-url valitse-urakka! aseta-valittu-valilehti-varmistuksella!)
 
 
@@ -155,12 +153,12 @@
 
 (defonce murupolku-nakyvissa? (reaction (and
                                           (not @raportit/raportit-nakymassa?)
-                                          (not= @valittu-sivu :tilannekuva)
-                                          (not= @valittu-sivu :info)
-                                          (not= @valittu-sivu :tienpidon-luvat)
-                                          (not= @valittu-sivu :urakoiden-tilanne)
-                                          (not= @valittu-sivu :about)
-                                          (not= @valittu-sivu :hallinta))))
+                                          (not= (@reitit/url-navigaatio :sivu) :tilannekuva)
+                                          (not= (@reitit/url-navigaatio :sivu) :info)
+                                          (not= (@reitit/url-navigaatio :sivu) :tienpidon-luvat)
+                                          (not= (@reitit/url-navigaatio :sivu) :urakoiden-tilanne)
+                                          (not= (@reitit/url-navigaatio :sivu) :about)
+                                          (not= (@reitit/url-navigaatio :sivu) :hallinta))))
 
 (defonce kartan-extent (atom nil))
 
@@ -590,10 +588,17 @@
   (go
     (let [uri (Uri/parse url)
           polku (.getPath uri)
-          parametrit (.getQueryData uri)]
-      (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
-      (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
-      (reset! valittu-ilmoitus-id (some-> parametrit (.get "i") js/parseInt))
+          parametrit (.getQueryData uri)
+          hy-id-urlista (some-> parametrit (.get "hy") js/parseInt)
+          hallintayksikko-id-vaihtui? (not (= hy-id-urlista @valittu-hallintayksikko-id))
+          u-id-urlista (some-> parametrit (.get "u") js/parseInt)
+          i-id-urlista (some-> parametrit (.get "i") js/parseInt)]
+      (when hallintayksikko-id-vaihtui?
+        (reset! valittu-hallintayksikko-id hy-id-urlista))
+      (when-not (= u-id-urlista @valittu-urakka-id)
+        (reset! valittu-urakka-id u-id-urlista))
+      (when-not (= i-id-urlista @valittu-ilmoitus-id)
+        (reset! valittu-ilmoitus-id i-id-urlista))
       ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
       ;; väylämuodon hallintayksiköt
       (when (= polku "urakat/yleiset")
@@ -602,12 +607,11 @@
                      {:arvo :vesivayla}
                      {:arvo :hoito})]
           (vaihda-vaylamuoto! arvo)))
-      (when @valittu-hallintayksikko-id
+      (when hallintayksikko-id-vaihtui?
         (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
-      (swap! reitit/url-navigaatio
-        reitit/tulkitse-polku polku)
+      (swap! reitit/url-navigaatio reitit/tulkitse-polku polku)
       ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
       (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
               (.get parametrit "valittu-jarjestelma")

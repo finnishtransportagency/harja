@@ -133,7 +133,7 @@
     (is (= (select-keys vastauksen-vanha-paivystaja [:organisaatio :vastuuhenkilo :varahenkilo :matkapuhelin :tyopuhelin :id])
           {:id ismon-paivystys-id
            :matkapuhelin "+358234567"
-           :organisaatio {:id 14
+           :organisaatio {:id 24
                           :nimi "YIT Rakennus Oy"
                           :tyyppi :urakoitsija}
            :tyopuhelin "+358765432"
@@ -221,3 +221,98 @@
     (is (= (nth uudet-yhteystiedot 2) (:matkapuhelin odotetut-yhteystiedot)))
     (is (= (nth uudet-yhteystiedot 3) (:sahkoposti odotetut-yhteystiedot)))
     (is (= (nth uudet-yhteystiedot 4) (:organisaatio-id odotetut-yhteystiedot)))))
+
+(deftest olemassaoleva-yhteyshenkilo-paivystajaksi
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        ;; Haetaan olemassa oleva yhteyshenkilö urakasta
+        yhteyshenkilo-id (ffirst (q "SELECT id FROM yhteyshenkilo
+                                     WHERE etunimi = 'Jouko' AND sukunimi = 'Kasslin'"))
+        paivystaja {:id -1  ;; Uusi päivystys
+                    :yhteyshenkilo_id yhteyshenkilo-id  ;; Linkitetään olemassa olevaan
+                    :vastuuhenkilo true
+                    :alku (pvm/->pvm "1.1.2026")
+                    :loppu (pvm/->pvm "1.1.2030")}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [paivystaja]
+                   :poistettu []})]
+    ;; Tarkistetaan että päivystys luotiin
+    (is (some #(= (:yhteyshenkilo_id %) yhteyshenkilo-id) vastaus))
+    ;; Tarkistetaan ettei luotu uutta yhteyshenkilöä
+    (is (= 1 (ffirst (q (str "SELECT COUNT(*) FROM yhteyshenkilo
+                              WHERE id = " yhteyshenkilo-id)))))))
+
+(deftest olemassaolevan-yhteyshenkilon-tiedot-nakyy-paivystajassa
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yhteyshenkilo-id (ffirst (q "SELECT id FROM yhteyshenkilo
+                                     WHERE sahkoposti = 'JoukoKasslin@gustr.com'"))
+        paivystaja {:id -1
+                    :yhteyshenkilo_id yhteyshenkilo-id
+                    :vastuuhenkilo false
+                    :alku (pvm/->pvm "1.1.2026")
+                    :loppu (pvm/->pvm "1.1.2030")}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [paivystaja]
+                   :poistettu []})
+        lisatty-paivystaja (first (filter #(= (:sahkoposti %) "JoukoKasslin@gustr.com") vastaus))]
+    ;; Yhteyshenkilön tiedot näkyvät päivystäjällä
+    (is (= "Jouko" (:etunimi lisatty-paivystaja)))
+    (is (= "Kasslin" (:sukunimi lisatty-paivystaja)))))
+
+(deftest linkitetyn-yhteyshenkilon-tietoja-ei-paiviteta
+  ;; Varmistetaan ettei päivystäjän tallennuksen yhteydessä
+  ;; muuteta olemassa olevan yhteyshenkilön tietoja
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yhteyshenkilo-id (ffirst (q "SELECT id FROM yhteyshenkilo
+                                     WHERE sahkoposti = 'JoukoKasslin@gustr.com'"))
+        alkuperainen-puhelin (ffirst (q (str "SELECT matkapuhelin FROM yhteyshenkilo
+                                              WHERE id = " yhteyshenkilo-id)))
+        paivystaja {:id -1
+                    :yhteyshenkilo_id yhteyshenkilo-id
+                    :matkapuhelin "9999999999"  ;; Yritetään muuttaa puhelinnumeroa
+                    :vastuuhenkilo true
+                    :alku (pvm/->pvm "1.1.2026")
+                    :loppu (pvm/->pvm "1.1.2030")}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-urakan-paivystajat
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :paivystajat [paivystaja]
+             :poistettu []})
+        uusi-puhelin (ffirst (q (str "SELECT matkapuhelin FROM yhteyshenkilo
+                                      WHERE id = " yhteyshenkilo-id)))]
+    ;; Puhelinnumero ei muuttunut
+    (is (= alkuperainen-puhelin uusi-puhelin))))
+
+(deftest paivystajan-poisto-ei-poista-linkitettya-yhteyshenkiloa
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yhteyshenkilo-id (ffirst (q "SELECT id FROM yhteyshenkilo
+                                     WHERE sahkoposti = 'JoukoKasslin@gustr.com'"))
+        ;; Luodaan ensin päivystys
+        paivystaja {:id -1
+                    :yhteyshenkilo_id yhteyshenkilo-id
+                    :vastuuhenkilo true
+                    :alku (pvm/->pvm "1.1.2026")
+                    :loppu (pvm/->pvm "1.1.2030")}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-paivystajat
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :paivystajat [paivystaja]
+                   :poistettu []})
+        paivystys-id (:id (first vastaus))
+        ;; Poistetaan päivystys
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-urakan-paivystajat
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :paivystajat []
+             :poistettu [paivystys-id]})]
+    ;; Yhteyshenkilö on yhä olemassa
+    (is (= 1 (ffirst (q (str "SELECT COUNT(*) FROM yhteyshenkilo
+                              WHERE id = " yhteyshenkilo-id)))))))

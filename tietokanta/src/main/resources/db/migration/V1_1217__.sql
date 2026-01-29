@@ -1,12 +1,6 @@
-CREATE TYPE ajastetuntehtavan_tyyppi AS ENUM ('siirra_toteumat_analytiikalle');
-
-CREATE TABLE ajastetut_tehtavat
-(
-    tyyppi                  ajastetuntehtavan_tyyppi not null,
-    suoritusyritys_aika     timestamp,
-    onnistunut              boolean,
-    viimeisin_onnistunut    timestamp
-);
-
-INSERT INTO ajastetut_tehtavat (tyyppi) VALUES ('siirra_toteumat_analytiikalle');
-
+-- Korjaa reunapalteen poiston yksikkö vastaamaan tehtävä- ja määräluettelon yksikköä
+UPDATE tehtava
+SET yksikko            = 'jm',
+    suunnitteluyksikko = 'jm'
+WHERE nimi = 'Reunapalteen poisto'
+  AND emo = (select id from toimenpide where koodi = '23116'); -- Liikenneympäristön hoito

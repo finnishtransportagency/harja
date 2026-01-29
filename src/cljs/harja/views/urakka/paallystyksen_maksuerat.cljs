@@ -38,12 +38,15 @@
             voi-tayttaa-maksueratunnuksen?
             (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)]
         [:div.paallystyksen-maksuerat
-         [valinnat/urakan-vuosi valittu-urakka {:vayla-tyyli? true}]
-         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
+         [:h1 "Maksuerät"]
+
+         [:div.flex-row {:style {:justify-content "flex-start"}}
+          [valinnat/urakan-vuosi valittu-urakka]
+          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+          [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]]
+
          [grid/grid
-          {:otsikko "Maksuerät"
-           :tyhja (if (nil? maksuerat)
+          {:tyhja (if (nil? maksuerat)
                     [y/ajax-loader "Haetaan maksueriä..."]
                     "Ei maksueriä")
            :voi-lisata? false
@@ -52,8 +55,8 @@
            :tallenna (if voi-muokata?
                        #(go (e! (tiedot/->TallennaMaksuerat
                                   (merge valinnat
-                                         {:yllapitokohteet (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
-                            (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
+                                    {:yllapitokohteet (mapv tiedot/maksuerarivi-tallennusmuotoon %)})))
+                          (<! (tapahtumat/odota! :paallystyksen-maksuerat-tallennettu)))
                        :ei-mahdollinen)
            :tallennus-ei-mahdollinen-tooltip
            (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
@@ -78,9 +81,9 @@
            {:otsikko "Lasku\u00ADtuksen maksuerä\u00ADtunnus" :leveys 10 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat
-              (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
-                                                        :kohdenumero (:kohdenumero valinnat)})
-              (yllapitokohde-domain/jarjesta-yllapitokohteet))]]))))
+            (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
+                                                      :kohdenumero (:kohdenumero valinnat)})
+            (yllapitokohde-domain/jarjesta-yllapitokohteet))]]))))
 
 (defn maksuerat []
   (komp/luo

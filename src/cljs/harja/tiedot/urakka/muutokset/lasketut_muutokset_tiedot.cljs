@@ -53,10 +53,6 @@
                 :haku-kaynnissa? false
                 :tehtava-maaramuutokset vastaus)]
 
-      ;; TODO: Kannattaa ehkä refaktoroida logiikkaa backend-palvelun puolelle pidemmän päälle, jotta vältämme
-      ;;       turhia raskaita kyselyitä.
-      ;;       Käyttöliittymään täytyy päivittää koosteita muutoksista, joten tallennuksen jälkeen on haettava
-      ;;       viimeisimmät tiedot. Tehdään nyt näin helpoimman kautta ja palataan asiaan.
       ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app
@@ -121,10 +117,6 @@
                 :haku-kaynnissa? false
                 :tehtava-maaramuutokset vastaus)]
 
-      ;; TODO: Kannattaa ehkä refaktoroida logiikkaa backend-palvelun puolelle pidemmän päälle, jotta vältämme
-      ;;       turhia raskaita kyselyitä.
-      ;;       Käyttöliittymään täytyy päivittää koosteita muutoksista, joten tallennuksen jälkeen on haettava
-      ;;       viimeisimmät tiedot. Tehdään nyt näin helpoimman kautta ja palataan asiaan.
       ;; Laukaise lopuksi efekti, joka hakee urakan viimeisimmät muutostiedot koostenäkymään
       ;; Antaa viimeisimmän app-tilan eventille
       (tuck/fx app

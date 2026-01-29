@@ -1,6 +1,57 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
+\i testidata/__Toimenpide_Kopio_01.sql 
+\i testidata/__Materiaaliluokka_Kopio_01.sql
+\i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
+\i testidata/__Tehtavaryhma_Kopio_01.sql
+\i testidata/__Materiaalikoodi_Kopio_01.sql
+\i testidata/__Tehtava_Kopio_01.sql
+\i testidata/__Rahavaraus_Kopio_01.sql
+
+-- Synkkaa sequenssit, koska ladattiin datat prodin id:illä
+SELECT setval(
+  pg_get_serial_sequence('toimenpide', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM toimenpide)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtava', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtava)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtavaryhma', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtavaryhma)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('tehtavaryhmaotsikko', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM tehtavaryhmaotsikko)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('materiaaliluokka', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM materiaaliluokka)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('materiaalikoodi', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM materiaalikoodi)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('rahavaraus', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM rahavaraus)
+);
+
+SELECT setval(
+  pg_get_serial_sequence('rahavaraus_tehtava', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM rahavaraus_tehtava)
+);
+
 -- Luodaan apufunktiot testidatalle
 \i testidata/apufunktiot.sql
 
@@ -43,15 +94,15 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Lisätään ELY numerot hallintayksiköille
 
-UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD';
-UPDATE organisaatio SET elynumero=2 WHERE lyhenne='VAR';
-UPDATE organisaatio SET elynumero=3 WHERE lyhenne='KAS';
-UPDATE organisaatio SET elynumero=4 WHERE lyhenne='PIR';
-UPDATE organisaatio SET elynumero=8 WHERE lyhenne='POS';
-UPDATE organisaatio SET elynumero=9 WHERE lyhenne='KES';
-UPDATE organisaatio SET elynumero=10 WHERE lyhenne='EPO';
-UPDATE organisaatio SET elynumero=12 WHERE lyhenne='POP';
-UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
+UPDATE organisaatio SET elynumero=1 WHERE lyhenne='UUD' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=2 WHERE lyhenne='VAR' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=3 WHERE lyhenne='KAS' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=4 WHERE lyhenne='PIR' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=8 WHERE lyhenne='POS' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=9 WHERE lyhenne='KES' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=10 WHERE lyhenne='EPO' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=12 WHERE lyhenne='POP' and tyyppi = 'hallintayksikko';
+UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP' and tyyppi = 'hallintayksikko';
 
 -- Lisätään indeksejä
 \i testidata/indeksit.sql
@@ -68,6 +119,9 @@ SELECT paivita_pohjavesialueet();
 \i testidata/rajoitusalueet.sql
 
 \i testidata/hoitoluokat.sql
+
+-- Tehtävämigraatiot testidataan 
+\i testidata/tehtavamuutokset.sql
 
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
@@ -200,9 +254,6 @@ SELECT paivita_pohjavesialueet();
 
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
-
--- Kulujen muita tarpeita
-\i testidata/kulut/kulutarpeita.sql
 
 -- Tilaajan-konsultti organisaatio
 \i testidata/tilaajan-konsultit.sql

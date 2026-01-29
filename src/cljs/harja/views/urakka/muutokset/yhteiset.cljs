@@ -86,11 +86,14 @@
 
 (defn +rivi-muutos-voimassa+
   ([urakan-hoitokaudet valittu-hoitokausi]
-   (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi true))
-  ([urakan-hoitokaudet valittu-hoitokausi pakota-valittuun-hoitokauteen?]
+   (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi {}))
+  ([urakan-hoitokaudet valittu-hoitokausi {:keys [pakota-valittuun-hoitokauteen? voi-muokata?]
+                                           :or {pakota-valittuun-hoitokauteen? true
+                                                voi-muokata? true} :as opts}]
    {:otsikko "Voimassa alkaen"
     :nimi :voimassa_alkaen
     :tyyppi :pvm
+    :muokattava? (constantly voi-muokata?)
     :pakollinen? true
     ;; Rajoita valinta hoitokaudelle 
     :validoi [(fn [valittu-pvm]
