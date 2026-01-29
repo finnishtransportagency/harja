@@ -295,6 +295,70 @@
             #"Syötä määrä\. Jos tehtävälle ei ole määrää, syötä 0"
             (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))))))
 
+(deftest hae-tehtavat-ja-maarat-palauttaa-tulevien-hoitovuosien-yhteenvedon
+  (testing "Palautetaan tulevien hoitovuosien yhteenveto (syötettyjä vuosia / tulevia vuosia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2021
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))
+          tulevat-vuodet [2022 2023 2024 2025]
+          vuosi-jossa-syotettyja 2023]
+
+      (is (some? tehtava-id) "Testidata: löytyi tehtävä joka kuuluu näkymään")
+
+      ;; Tyhjennetään tulevien hoitovuosien määrät, jotta testistä tulee deterministinen.
+      (u (format "DELETE FROM urakka_tehtavamaara\n                        WHERE urakka = %s\n                          AND \"hoitokauden-alkuvuosi\" IN (%s)"
+                 urakka-id
+                 (clojure.string/join ", " tulevat-vuodet)))
+
+      ;; Syötetään yhdelle tulevalle vuodelle yksi rivi (riittää, koska yhteenveto on exists-pohjainen).
+      (varmista-tarjousrivi! urakka-id vuosi-jossa-syotettyja tehtava-id)
+
+      (let [tiedot {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                         (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}
+            vastaus (tm-palvelu/hae-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
+        (is (= {:tulevia-vuosia-yhteensa 4
+                :tulevia-vuosia-joissa-syotettyja 1}
+               (:tulevat-hoitovuodet-yhteenveto vastaus))
+            (str "Yhteenveto väärin. Palautui: " (pr-str (:tulevat-hoitovuodet-yhteenveto vastaus))))))))
+
+(deftest hae-tehtavat-ja-maarat-palauttaa-menneiden-hoitovuosien-yhteenvedon
+  (testing "Palautetaan menneiden hoitovuosien yhteenveto (valmiita / menneitä vuosia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2025
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-idt (->> kaikki-rivit
+                           (filter #(some? (:tehtava_id %)))
+                           (map :tehtava_id)
+                           distinct)
+          menneet-vuodet [2021 2022 2023 2024]
+          valmis-vuosi 2023]
+
+      (is (seq tehtava-idt) "Testidata: löytyy tehtäviä jotka kuuluvat näkymään")
+
+      ;; Tyhjennetään menneiden hoitovuosien määrät, jotta testistä tulee deterministinen.
+      (u (format "DELETE FROM urakka_tehtavamaara\n                        WHERE urakka = %s\n                          AND \"hoitokauden-alkuvuosi\" IN (%s)"
+                 urakka-id
+                 (clojure.string/join ", " menneet-vuodet)))
+
+      ;; Tehdään yhdestä menneestä hoitovuodesta täysin valmis: luodaan tarjousrivi kaikille tehtäville.
+      (doseq [tehtava-id tehtava-idt]
+        (varmista-tarjousrivi! urakka-id valmis-vuosi tehtava-id))
+
+      (let [tiedot {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                         (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}
+            vastaus (tm-palvelu/hae-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
+        (is (= {:menneita-vuosia-yhteensa 4
+                :menneita-vuosia-valmiina 1}
+               (:menneet-hoitovuodet-yhteenveto vastaus))
+            (str "Yhteenveto väärin. Palautui: " (pr-str (:menneet-hoitovuodet-yhteenveto vastaus))))))))
+
 (deftest muutokset-sisaltavat-oikeat-kentat
   (testing "Muutokset-kentässä on edellinen_maara, maaramuutos ja uusi_maara oikein"
     (let [db (:db jarjestelma)

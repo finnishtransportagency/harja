@@ -70,23 +70,50 @@
 (defn- tilanne-kortti
   [e! {:keys [tallennustila? tallennus-kaynnissa?]
        :as app}
-   tehtavat-ja-maarat kaikki-tehtavat kopiointi-relevantti?]
+   _tehtavat-ja-maarat kaikki-tehtavat kopiointi-relevantti?]
   (let [nayta-vain-puuttuvat? (boolean (:nayta-vain-puuttuvat? app))
         ;; Puuttuvat lasketaan aina koko datasta, jotta suodatin ei "tyhjennä" näkymää.
         puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat kaikki-tehtavat)
         puuttuvat-lkm (count puuttuvat-tehtava-idt)
-        kopiointi-tehty? (boolean (:kopiointi-tuleville-tehty? app))]
+        {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja] :as tulevat-yhteenveto}
+        (:tulevat-hoitovuodet-yhteenveto app)
+        {:keys [menneita-vuosia-yhteensa menneita-vuosia-valmiina] :as _menneet-yhteenveto}
+        (:menneet-hoitovuodet-yhteenveto app)
+        tulevia-vuosia-yhteensa (or tulevia-vuosia-yhteensa 0)
+        tulevia-vuosia-joissa-syotettyja (or tulevia-vuosia-joissa-syotettyja 0)
+        menneita-vuosia-yhteensa (or menneita-vuosia-yhteensa 0)
+        menneita-vuosia-valmiina (or menneita-vuosia-valmiina 0)
+        tuleville-on-jo-syotettyja? (pos? tulevia-vuosia-joissa-syotettyja)
+        kopioi-napin-teksti (if tuleville-on-jo-syotettyja? "Kopioi (korvaa)" "Kopioi nyt")
+        taman-hoitovuoden-teksti (if (zero? puuttuvat-lkm)
+                                  "✓ Tämä hoitovuosi: Valmis (puuttuvia sopimuksen määriä: 0)"
+                                  (str "⚠ Tämä hoitovuosi: Kesken (puuttuvia sopimuksen määriä: " puuttuvat-lkm ")"))
+        menneet-teksti (when (pos? menneita-vuosia-yhteensa)
+                        (str "Menneet: " menneita-vuosia-valmiina "/" menneita-vuosia-yhteensa " valmiina"))
+        tulevat-teksti (when (some? tulevat-yhteenveto)
+                        (if (zero? tulevia-vuosia-yhteensa)
+                          "Tulevat: ei tulevia"
+                          (str "Tulevat: " tulevia-vuosia-joissa-syotettyja "/" tulevia-vuosia-yhteensa " täytetty")))]
     [yleiset/info-laatikko :neutraali
      [:div
       [:div.flex-row {:style {:justify-content "space-between" :align-items "flex-start" :gap "1rem"}}
        [:div
-      [:div.body-text.strong "Tilanne"]]
+         [:div.body-text.strong "Tilanne"]]
 
        (when tallennus-kaynnissa?
          [:div [ajax-loader-pieni]])]
       
       [:div {:style {:margin-top "0.5rem"}}
-       [:div (str "Puuttuvia sopimuksen määriä: " puuttuvat-lkm " kpl")]
+       [:div taman-hoitovuoden-teksti]
+
+       (when (or menneet-teksti tulevat-teksti)
+         [:div
+          (when menneet-teksti
+            [:span menneet-teksti])
+          (when (and menneet-teksti tulevat-teksti)
+            [:span " · "])
+          (when tulevat-teksti
+            [:span tulevat-teksti])])
 
        (when (pos? puuttuvat-lkm)
          [:div.body-text {:style {:margin-top "0.25rem"}}
@@ -115,23 +142,32 @@
 
       (when kopiointi-relevantti?
         [:div {:style {:margin-top "0.75rem"}}
-         [:div (str "Kopiointi tuleville hoitovuosille: " (if kopiointi-tehty? "tehty" "ei tehty"))]
          (if tallennustila?
            [:div {:style {:margin-top "0.5rem"}}
-            [napit/yleinen-toissijainen "Kopioi nyt"
+            [napit/yleinen-toissijainen kopioi-napin-teksti
              #(varmista/varmista-kayttajalta
                 {:otsikko "Kopioidaanko tuleville hoitovuosille?"
                  :sisalto [:div
-                           [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille."]]
+                           [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille."]
+                           (when tuleville-on-jo-syotettyja?
+                             [:div {:style {:margin-top "0.5rem"}}
+                              "Huom: kopiointi korvaa tulevien hoitovuosien nykyiset määrät."])]
                  :hyvaksy "Kopioi ja tallenna"
                  :peruuta-txt "Peruuta"
                  :napit [:tallenna :peruuta]
                  :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavat kaikki-tehtavat true)))})
              {:disabled (or tallennus-kaynnissa? false)
               :vayla-tyyli? false
-              :data-cy "btn-kopioi-nyt"}]]
+              :data-cy "btn-kopioi-nyt"}]
+
+            [:div.body-text {:style {:margin-top "0.25rem"}}
+             "Kopioi tämän hoitovuoden määrät tuleville hoitovuosille."]
+
+            (when tuleville-on-jo-syotettyja?
+              [:div.body-text {:style {:margin-top "0.25rem"}}
+               "Huom: korvaa tulevien hoitovuosien nykyiset määrät."])]
            [:div.body-text {:style {:margin-top "0.25rem"}}
-            "Kopiointi on saatavilla muokkaustilassa."])])]
+            "Voit kopioida tämän hoitovuoden määrät tuleville hoitovuosille muokkaustilassa."])])]
      nil "100%" {:luokka "ala-margin-16"}]))
 
 

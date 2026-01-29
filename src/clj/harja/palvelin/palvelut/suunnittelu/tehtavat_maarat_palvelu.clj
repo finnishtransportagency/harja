@@ -43,7 +43,12 @@
 (defn hae-tehtavat-ja-maarat [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id (pvm/vuosi (first (:valittu-hoitokausi tiedot))))))
+    (let [hoitokauden-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))]
+      (-> (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          (assoc :tulevat-hoitovuodet-yhteenveto
+                 (tehtavat-maarat-kyselyt/hae-tulevien-hoitovuosien-yhteenveto db urakka-id hoitokauden-alkuvuosi))
+          (assoc :menneet-hoitovuodet-yhteenveto
+                 (tehtavat-maarat-kyselyt/hae-menneiden-hoitovuosien-yhteenveto db urakka-id hoitokauden-alkuvuosi))))))
 
 (defrecord TehtavatJaMaarat []
   component/Lifecycle

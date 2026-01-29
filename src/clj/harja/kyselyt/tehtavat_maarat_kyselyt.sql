@@ -90,6 +90,124 @@ WHERE ut.urakka = :urakkaid
 ORDER BY viimeisin_muokkaus DESC
 LIMIT 1;
 
+-- name: hae-tulevien-hoitovuosien-syottoyhteenveto
+WITH urakan_vuodet AS (
+    SELECT date_part('year', u.alkupvm)::INTEGER       AS urakan_alkuvuosi,
+           (date_part('year', u.loppupvm)::INTEGER - 1) AS viimeinen_hoitokauden_alkuvuosi
+      FROM urakka u
+     WHERE u.id = :urakkaid
+     ),
+
+     nakymaan_kuuluvat_tehtavat AS (
+    SELECT t.id
+      FROM tehtavaryhma tr
+           JOIN tehtavaryhmaotsikko tro
+             ON tr.tehtavaryhmaotsikko_id = tro.id
+           JOIN tehtava t
+             ON tr.id = t.tehtavaryhma
+            AND t."mhu-tehtava?" IS TRUE
+            AND t.poistettu IS NOT TRUE
+            AND t.piilota IS NOT TRUE
+           JOIN toimenpide tp
+             ON t.emo = tp.id
+     WHERE (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND t.suunnitteluyksikko IS NOT NULL
+       AND t.suunnitteluyksikko != 'euroa'
+       AND NOT EXISTS (
+             SELECT 1
+               FROM rahavaraus_urakka rvu
+                    JOIN rahavaraus_tehtava rt
+                      ON rvu.rahavaraus_id = rt.rahavaraus_id
+              WHERE rvu.urakka_id = :urakkaid
+                AND rt.tehtava_id = t.id
+           )
+     ),
+
+     tulevat_vuodet AS (
+    SELECT generate_series(
+               (:hoitokauden_alkuvuosi::INTEGER + 1),
+               (SELECT viimeinen_hoitokauden_alkuvuosi FROM urakan_vuodet)
+           )::INTEGER AS hoitokauden_alkuvuosi
+     )
+SELECT COUNT(*) AS tulevia_vuosia_yhteensa,
+       COUNT(*) FILTER (
+         WHERE EXISTS (
+               SELECT 1
+                 FROM urakka_tehtavamaara ut
+                      JOIN nakymaan_kuuluvat_tehtavat nt
+                        ON nt.id = ut.tehtava
+                WHERE ut.urakka = :urakkaid
+                  AND ut."hoitokauden-alkuvuosi" = tulevat_vuodet.hoitokauden_alkuvuosi
+                LIMIT 1
+             )
+       ) AS tulevia_vuosia_joissa_syotettyja
+  FROM tulevat_vuodet;
+
+-- name: hae-menneiden-hoitovuosien-tilayhteenveto
+WITH urakan_vuodet AS (
+    SELECT date_part('year', u.alkupvm)::INTEGER AS urakan_alkuvuosi
+      FROM urakka u
+     WHERE u.id = :urakkaid
+     ),
+
+     nakymaan_kuuluvat_tehtavat AS (
+    SELECT t.id AS tehtava_id
+      FROM tehtavaryhma tr
+           JOIN tehtavaryhmaotsikko tro
+             ON tr.tehtavaryhmaotsikko_id = tro.id
+           JOIN tehtava t
+             ON tr.id = t.tehtavaryhma
+            AND t."mhu-tehtava?" IS TRUE
+            AND t.poistettu IS NOT TRUE
+            AND t.piilota IS NOT TRUE
+           JOIN toimenpide tp
+             ON t.emo = tp.id
+     WHERE (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= (SELECT urakan_alkuvuosi FROM urakan_vuodet))
+       AND t.suunnitteluyksikko IS NOT NULL
+       AND t.suunnitteluyksikko != 'euroa'
+       AND NOT EXISTS (
+             SELECT 1
+               FROM rahavaraus_urakka rvu
+                    JOIN rahavaraus_tehtava rt
+                      ON rvu.rahavaraus_id = rt.rahavaraus_id
+              WHERE rvu.urakka_id = :urakkaid
+                AND rt.tehtava_id = t.id
+           )
+     ),
+
+     menneet_vuodet AS (
+    SELECT generate_series(
+               (SELECT urakan_alkuvuosi FROM urakan_vuodet),
+           (:hoitokauden_alkuvuosi::INTEGER - 1)
+           )::INTEGER AS hoitokauden_alkuvuosi
+     ),
+
+     vuosien_tila AS (
+    SELECT mv.hoitokauden_alkuvuosi,
+           NOT EXISTS (
+               SELECT 1
+                 FROM nakymaan_kuuluvat_tehtavat nt
+                WHERE NOT EXISTS (
+                          SELECT 1
+                            FROM urakka_tehtavamaara ut
+                           WHERE ut.urakka = :urakkaid
+                             AND ut."hoitokauden-alkuvuosi" = mv.hoitokauden_alkuvuosi
+                             AND ut.tehtava = nt.tehtava_id
+                             AND ut.poistettu IS NOT TRUE
+                      )
+           ) AS vuosi_valmis
+      FROM menneet_vuodet mv
+     )
+SELECT COUNT(*)                                 AS menneita_vuosia_yhteensa,
+       COUNT(*) FILTER (WHERE vuosi_valmis)     AS menneita_vuosia_valmiina
+  FROM vuosien_tila;
+
 -- name: hae-tarjous-tehtava-idlla
 SELECT id, urakka as urakka_id, tehtava as tehtava_id, maara, muokattu, muokkaaja
   FROM urakka_tehtavamaara

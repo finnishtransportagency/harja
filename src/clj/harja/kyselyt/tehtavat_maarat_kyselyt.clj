@@ -9,7 +9,38 @@
 (declare hae-maaramitattavat-tehtavat
   hae-tarjous-tehtava-idlla
   hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
+  hae-tulevien-hoitovuosien-syottoyhteenveto
+  hae-menneiden-hoitovuosien-tilayhteenveto
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
+
+(defn hae-tulevien-hoitovuosien-yhteenveto
+  "Palauttaa tulevien hoitovuosien syöttötilanteen yhteenvedon.
+
+  Määritelmä:
+  - tulevat hoitovuodet = valittu hoitovuosi + 1 .. urakan viimeinen hoitovuosi
+  - syötettyjä = kannassa on vähintään yksi urakka_tehtavamaara-rivi kyseiselle vuodelle
+    tehtävälle joka kuuluu Tehtävät ja määrät -näkymään." 
+  [db urakka-id hoitokauden-alkuvuosi]
+  (let [tulos (first (hae-tulevien-hoitovuosien-syottoyhteenveto db {:urakkaid urakka-id
+                                                                    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        tulevia-yhteensa (long (or (:tulevia_vuosia_yhteensa tulos) 0))
+        tulevia-joissa-syotettyja (long (or (:tulevia_vuosia_joissa_syotettyja tulos) 0))]
+    {:tulevia-vuosia-yhteensa tulevia-yhteensa
+     :tulevia-vuosia-joissa-syotettyja tulevia-joissa-syotettyja}))
+
+(defn hae-menneiden-hoitovuosien-yhteenveto
+  "Palauttaa menneiden hoitovuosien valmiustilanteen yhteenvedon.
+
+  Määritelmä:
+  - menneet hoitovuodet = urakan alkamisvuosi .. (valittu hoitovuosi - 1)
+  - valmis = jokaiselle Tehtävät ja määrät -näkymään kuuluvalle tehtävälle löytyy urakka_tehtavamaara-rivi kyseiselle vuodelle." 
+  [db urakka-id hoitokauden-alkuvuosi]
+  (let [tulos (first (hae-menneiden-hoitovuosien-tilayhteenveto db {:urakkaid urakka-id
+                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+        menneita-yhteensa (long (or (:menneita_vuosia_yhteensa tulos) 0))
+        menneita-valmiina (long (or (:menneita_vuosia_valmiina tulos) 0))]
+    {:menneita-vuosia-yhteensa menneita-yhteensa
+     :menneita-vuosia-valmiina menneita-valmiina}))
 
 (defn tallenna-tarjouksen-tehtavat-ja-maarat [db urakka-id kayttaja-id hk-alkuvuosi tehtavat]
   (doseq [{:keys [tehtava_id tarjous_maara]} (remove :valiotsikko tehtavat)]

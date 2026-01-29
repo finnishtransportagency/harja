@@ -60,13 +60,13 @@
 (defn puuttuuko-tarjous-maara?
   [{:keys [valiotsikko tehtava_id tarjous_maara]}]
   (and (nil? valiotsikko)
-       (some? tehtava_id)
-       (or (nil? tarjous_maara)
-           (and (string? tarjous_maara) (str/blank? tarjous_maara)))))
+    (some? tehtava_id)
+    (or (nil? tarjous_maara)
+      (and (string? tarjous_maara) (str/blank? tarjous_maara)))))
 
 (defn puuttuvat-tarjous-maarat
   "Palauttaa setin tehtävä_id:itä, joilta puuttuu sopimuksen määrä (nil/tyhjä).
-   Käytetään näkymässä korostamaan puuttuvat kentät." 
+   Käytetään näkymässä korostamaan puuttuvat kentät."
   [tehtavat]
   (into #{}
     (keep (fn [tehtava]
@@ -80,19 +80,19 @@
 
 (defn- suodata-vain-puuttuvat
   "Suodattaa listan niin, että mukaan jäävät puuttuvat tehtävät ja niiden väliotsikot.
-   Huom: Tämä suodatin ei muokkaa tallennettavaa payloadia, vain näkymää." 
+   Huom: Tämä suodatin ei muokkaa tallennettavaa payloadia, vain näkymää."
   [tehtavat]
   (let [puuttuvat (filter puuttuuko-tarjous-maara? tehtavat)
         ryhmat (into #{} (keep :tehtavaryhmaotsikko) puuttuvat)]
     (filter (fn [{:keys [valiotsikko] :as rivi}]
               (or (and (some? valiotsikko)
-                       (contains? ryhmat valiotsikko))
-                  (puuttuuko-tarjous-maara? rivi)))
+                    (contains? ryhmat valiotsikko))
+                (puuttuuko-tarjous-maara? rivi)))
       tehtavat)))
 
 (defn- paivita-naytettavat-tehtavat
   "Päivittää app-staten näkymässä näytettävät tehtävät kaikken tehtävien perusteella.
-  Haku (>= 2 merkkiä) ja Näytä vain puuttuvat -suodatin vaikuttavat vain tähän listaan." 
+  Haku (>= 2 merkkiä) ja Näytä vain puuttuvat -suodatin vaikuttavat vain tähän listaan."
   [app]
   (let [kaikki (or (:kaikki-tehtavat app) [])
         haku (:haku app)
@@ -118,6 +118,8 @@
       (assoc :haku-kaynnissa? false)
       (assoc :tallennus-yritetty? false)
       (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :tulevat-hoitovuodet-yhteenveto (:tulevat-hoitovuodet-yhteenveto vastaus))
+      (assoc :menneet-hoitovuodet-yhteenveto (:menneet-hoitovuodet-yhteenveto vastaus))
       (assoc :kopiointi-tuleville-tehty? false)
       (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
@@ -231,10 +233,10 @@
     (let [tehtava-idt (or tehtava-idt #{})
           paivitetty (mapv (fn [rivi]
                              (if (and (contains? tehtava-idt (:tehtava_id rivi))
-                                      (puuttuuko-tarjous-maara? rivi))
+                                   (puuttuuko-tarjous-maara? rivi))
                                (assoc rivi :tarjous_maara 0)
                                rivi))
-                      (:kaikki-tehtavat app))
+                       (:kaikki-tehtavat app))
           n (count tehtava-idt)
           nayta-vain-puuttuvat? (true? (:nayta-vain-puuttuvat? app))
           puuttuvia-jaljella? (onko-puuttuvia-tarjous-maaria? paivitetty)
