@@ -111,6 +111,12 @@
                "johto-ja-hallintokorvaus" (assoc rivi
                                             :johto-ja-hallintokorvaukset
                                             (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+               ;; Asetetaan default arvo erillisrahoitetulle muutostyölle
+               ;; TODO: Normaalisti default-arvo tulisi lomake_muutostyo.cljs:ssä oletusarvona alityypin radio-group valinnasta
+               ;;       Mutta, koska alityypin valinta on toistaiseksi poistettu käytöstä, asetetaan se tässä default-arvoksi
+               ;;       Poista tämä, kun alityypin valinta otetaan takaisin käyttöön muutostyo-lomakkeessa.
+               "muutostyo" (assoc rivi
+                             :alityyppi :erillisrahoitus)
                rivi)]
     rivi))
 
