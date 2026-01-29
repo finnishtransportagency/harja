@@ -71,7 +71,7 @@ FROM ONLY mhu_muutos m
          LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
 WHERE m.urakka = :urakka
   AND 
-    CASE 
+    CASE  
         WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
             (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
              m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
