@@ -1,6 +1,8 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [cheshire.core :as cheshire]
+            [clojure.core.cache :as cache]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [clojure.string :as str]
             [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
@@ -95,13 +97,18 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
+(def default-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
+
+(def semi-virheellinen-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
+                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
+
 (deftest kayttajaroolit-rajapinnasta-test
   (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
           :roolit #{}
           :urakkaroolit {39 #{"vastuuhenkilo"}}}
         (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
-          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
-                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          default-miam-vastaus
           nil))))
 
 (deftest kayttajaroolit-rajapintavastauksesta-ei-kaadu-virheellisilla-vastauksilla
@@ -120,9 +127,58 @@
           :roolit #{"Jarjestelmavastaava", "Tilaajan_Asiantuntija"}
           :urakkaroolit {39 #{"vastuuhenkilo"}}}
         (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
-          "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"1242141-KITT3_vastuuhenkilo\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
-                         ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\",\"Role\": \"2163026-3_Paakayttaja\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}"
+          default-miam-vastaus
           "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
+
+(deftest kayttajaroolit-virheellisesta-rajapintavastauksesta
+  (is (= {:organisaatioroolit {}
+          :roolit #{"Jarjestelmavastaava"
+                    "Tilaajan_Asiantuntija"}
+          :urakkaroolit {}}
+        (todennus/kayttajaroolit-rajapintavastauksesta (:db jarjestelma)
+          semi-virheellinen-miam-vastaus
+          "Jarjestelmavastaava,Tilaajan_Asiantuntija"))))
+
+(deftest miam-virhetilanteet
+  (testing "MIAM palauttaa 401"
+    (with-redefs [integraatiotapahtuma/laheta
+                  (fn [_ _ _] {:status 401 :body "Unauthorized"})]
+      (is (nil? (todennus/hae-kayttajaroolit-rajapinnasta (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  {:timeout 100
+                   :max-yritykset 2
+                   :sleep-ms 100}
+                  "feikki-kayttaja")))))
+
+  (testing "MIAM palauttaa viallisen JSON:n"
+    (with-redefs [integraatiotapahtuma/laheta
+                  (fn [_ _ _] {:status 200 :body "{invalid json"})]
+      (is (nil? (todennus/hae-kayttajaroolit-rajapinnasta (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  {:timeout 100
+                   :max-yritykset 2
+                   :sleep-ms 100}
+                  "feikki-kayttaja"))))))
+
+(deftest miam-uudelleenyritys-with-redefs-test
+  (let [yrityskerrat (atom 0)
+        mock-integraatio (fn [db integraatioloki nimi toiminto ulkoinen-id context-fn]
+                           (swap! yrityskerrat inc)
+                           (if (< @yrityskerrat 5)
+                             nil
+                             (context-fn {})))]
+
+    (with-redefs [integraatiotapahtuma/suorita-integraatio mock-integraatio
+                  integraatiotapahtuma/laheta (fn [konteksti http http-asetukset] {:body default-miam-vastaus :headers "headers" :status 200})]
+      (let [vastaus (todennus/hae-kayttajaroolit-rajapinnasta
+                      (:db jarjestelma)
+                      (:integraatioloki jarjestelma)
+                      {:timeout 500
+                       :max-yritykset 5
+                       :sleep-ms 100}
+                      "feikki-kayttaja")]
+        (is (= 5 @yrityskerrat) "Viisi yritystä tehtiin")
+        (is (some? vastaus) "Vastaus saatiin lopulta")))))
 
 (def testi-cognito-headerit-entraid
   [{"typ" "JWT"
@@ -443,4 +499,139 @@
           (is (= "Jarjestelmavastaava" (first (:roolit kayttaja))) "Käyttäjä on järjestelmävastaava")))
 
       ;; Siivoa testi-käyttäjä lopuksi
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
+
+(deftest miam-uudelleen-yritys-logiikka-testi
+  (testing "MIAM-kutsu uudelleenyritys timeout/virhe-tilanteessa"
+    ;; Tämä testi varmistaa että hae-kayttajaroolit-rajapinnasta yrittää uudelleen
+    ;; max-yritykset kertaa kun MIAM-rajapintakutsu epäonnistuu.
+    ;; Timeout-tilannetta simuloidaan palauttamalla virheellinen HTTP-statuskoodi (503)
+    ;; joka aiheuttaa saman uudelleenyrityslogiikan kuin todellinen timeout.
+    (let [yrityskerrat (atom 0)
+          mock-integraatio (fn [_ _ _ _ _ context-fn]
+                             (swap! yrityskerrat inc)
+                             ;; Kutsutaan context-fn ja palautetaan sen tulos
+                             (context-fn {}))
+          mock-http-laheta (fn [_ _ _]
+                             ;; Simuloi epäonnistunut kutsu palauttamalla virheellinen statuskoodi
+                             ;; Timeout aiheuttaisi poikkeuksen, mutta virhestatuskin aiheuttaa uudelleenyrityksen
+                             {:body "Service unavailable" :headers {} :status 503})]
+
+      (with-redefs [integraatiotapahtuma/suorita-integraatio mock-integraatio
+                    integraatiotapahtuma/laheta mock-http-laheta]
+        ;; Asetetaan lyhyt timeout ja vähän yrityksiä
+        (let [miam-asetukset {:timeout 100 ; 100ms timeout (ei käytetä tässä testissä)
+                              :max-yritykset 3
+                              :sleep-ms 100}
+              tulos (todennus/hae-kayttajaroolit-rajapinnasta
+                      (:db jarjestelma)
+                      (:integraatioloki jarjestelma)
+                      miam-asetukset
+                      "timeout-testi-kayttaja")]
+
+          ;; Virheelliset statuskoodit aiheuttavat nil-vastauksen kaikissa yrityksissä
+          (is (nil? tulos)
+              "Virhe-tilanne pitäisi johtaa nil-vastaukseen")
+
+          ;; Varmistetaan että yritettiin max-yritykset kertaa
+          (is (= 3 @yrityskerrat)
+              "Pitäisi yrittää uudelleen max-yritykset verran kun virhe tapahtuu"))))))
+
+(deftest samanaikaiset-kayttajatietohaut-test
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        miam-asetukset {}
+        testi-kayttajanimi "samanaikainen-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "Testi"
+                        "oam_user_last_name" "Käyttäjä"
+                        "oam_user_mail" "testi@example.com"
+                        "oam_user_mobile" "0401234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava"}
+        kutsulaskuri (atom 0)]
+
+    (testing "Samanaikaiset kutsut aiheuttavat vain yhden tietokantakutsun"
+      ;; Siivoa cache ja pending requests
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 60000))) ;; minuutti = 60 sek
+      (reset! todennus/odottavat-kutsut-atom {})
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      ;; Mockataan varmista-kayttajatiedot laskemaan kutsut
+      (with-redefs [todennus/varmista-kayttajatiedot
+                    (fn [db integraatioloki miam oam-tiedot]
+                      (swap! kutsulaskuri inc)
+                      (Thread/sleep 100) ; Simuloi hidas kutsu
+                      {:kayttajanimi testi-kayttajanimi
+                       :etunimi "Testi"
+                       :sukunimi "Käyttäjä"})]
+
+        ;; Käynnistä 4 samanaikaista kutsua
+        (let [futuurit (doall
+                         (for [_ (range 4)]
+                           (do
+                             (println "Käynnistetään kutsu...")
+                             (future
+                                 (todennus/koka->kayttajatiedot
+                                   db integraatioloki miam-asetukset
+                                   testi-headerit nil false)))))]
+
+          ;; Odota että kaikki valmistuvat
+          (doseq [f futuurit]
+            (do
+              (println "Odotellaan timeouttia...")
+              (deref f 1000 :timeout)))
+
+          ;; Tarkista että vain yksi kutsu tehtiin
+          (is (= 1 @kutsulaskuri) "Pitäisi olla vain yksi kutsu vaikka tehtiin 4 samanaikaista"))))
+
+    (testing "Cache estää toistuvat kutsut"
+      (reset! kutsulaskuri 0)
+
+      ;; Tee uusi kutsu (cachen pitäisi toimia)
+      (todennus/koka->kayttajatiedot
+        db integraatioloki miam-asetukset
+        testi-headerit nil false)
+
+      (is (= 0 @kutsulaskuri) "Ei pitäisi tehdä uutta kutsua koska cache toimii"))
+
+    ;; Siivoa
+    (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
+
+(deftest kayttajatietohaku-cache-toimii-test
+  (testing "Käyttäjätiedot cachetaan ja toinen haku tulee cachesta"
+    (let [db (:db jarjestelma)
+          integraatioloki (:integraatioloki jarjestelma)
+          miam-asetukset {}
+          testi-kayttajanimi "cache-testi"
+          testi-headerit {"oam_remote_user" testi-kayttajanimi
+                          "oam_user_first_name" "Cache"
+                          "oam_user_last_name" "Testi"
+                          "oam_user_mail" "cache@example.com"
+                          "oam_user_mobile" "0401234567"
+                          "oam_organization" "Destia Oy"
+                          "oam_groups" "Jarjestelmavastaava"}
+          kutsulaskuri (atom 0)]
+
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl 60000))
+      (reset! todennus/odottavat-kutsut-atom {})
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      (with-redefs [todennus/varmista-kayttajatiedot
+                    (fn [db integraatioloki miam oam-tiedot]
+                      (swap! kutsulaskuri inc)
+                      {:kayttajanimi testi-kayttajanimi})]
+
+        ;; Ensimmäinen haku
+        (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset
+          testi-headerit nil false nil)
+        (is (= 1 @kutsulaskuri) "Ensimmäinen haku kutsuu tietokantaa")
+
+        ;; Toinen haku - pitäisi tulla cachesta
+        (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset
+          testi-headerit nil false nil)
+        (is (= 1 @kutsulaskuri) "Toinen haku tulee cachesta, ei uutta tietokantakutsua"))
+
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000)))
+      (reset! todennus/odottavat-kutsut-atom {})
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
