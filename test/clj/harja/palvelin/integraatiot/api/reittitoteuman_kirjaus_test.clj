@@ -967,6 +967,7 @@
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
                   (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
