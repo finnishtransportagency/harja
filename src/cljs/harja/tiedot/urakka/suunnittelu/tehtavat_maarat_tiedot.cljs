@@ -81,14 +81,25 @@
 (defn- suodata-vain-puuttuvat
   "Suodattaa listan niin, että mukaan jäävät puuttuvat tehtävät ja niiden väliotsikot.
    Huom: Tämä suodatin ei muokkaa tallennettavaa payloadia, vain näkymää."
-  [tehtavat]
-  (let [puuttuvat (filter puuttuuko-tarjous-maara? tehtavat)
+  [tehtavat lukitut-puuttuvat-tehtava-idt]
+  (let [lukitus-kaytossa? (seq lukitut-puuttuvat-tehtava-idt)
+        puuttuu? (fn [rivi]
+                   (if lukitus-kaytossa?
+                     (contains? lukitut-puuttuvat-tehtava-idt (:tehtava_id rivi))
+                     (puuttuuko-tarjous-maara? rivi)))
+        puuttuvat (filter (fn [rivi]
+                            (and (nil? (:valiotsikko rivi))
+                                 (some? (:tehtava_id rivi))
+                                 (puuttuu? rivi)))
+                    tehtavat)
         ryhmat (into #{} (keep :tehtavaryhmaotsikko) puuttuvat)]
     (filter (fn [{:keys [valiotsikko] :as rivi}]
               (or (and (some? valiotsikko)
-                    (contains? ryhmat valiotsikko))
-                (puuttuuko-tarjous-maara? rivi)))
-      tehtavat)))
+                       (contains? ryhmat valiotsikko))
+                  (and (nil? valiotsikko)
+                       (some? (:tehtava_id rivi))
+                       (puuttuu? rivi))))
+            tehtavat)))
 
 (defn- paivita-naytettavat-tehtavat
   "Päivittää app-staten näkymässä näytettävät tehtävät kaikken tehtävien perusteella.
@@ -101,7 +112,7 @@
                    (filtteroi-tehtavat haku kaikki)
                    kaikki)
         tehtavat (if (true? (:nayta-vain-puuttuvat? app))
-                   (suodata-vain-puuttuvat tehtavat)
+                   (suodata-vain-puuttuvat tehtavat (:lukitut-puuttuvat-tehtava-idt app))
                    tehtavat)]
     (assoc app :tehtavat-ja-maarat tehtavat)))
 
@@ -114,16 +125,21 @@
 
   HaeTehtavatJaMaaratOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
+    (let [kaikki-tehtavat (:tehtavat vastaus)
+          lukitut-puuttuvat-tehtava-idt (when (true? (:nayta-vain-puuttuvat? app))
+                                         (puuttuvat-tarjous-maarat kaikki-tehtavat))]
+      (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tallennus-yritetty? false)
-      (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :kaikki-tehtavat kaikki-tehtavat)
+      (cond-> (true? (:nayta-vain-puuttuvat? app))
+        (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
       (assoc :tulevat-hoitovuodet-yhteenveto (:tulevat-hoitovuodet-yhteenveto vastaus))
       (assoc :menneet-hoitovuodet-yhteenveto (:menneet-hoitovuodet-yhteenveto vastaus))
       (assoc :kopiointi-tuleville-tehty? false)
       (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus)))))
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -154,16 +170,21 @@
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
 
-    (-> app
+    (let [kaikki-tehtavat (:tehtavat vastaus)
+          lukitut-puuttuvat-tehtava-idt (when (true? (:nayta-vain-puuttuvat? app))
+                                         (puuttuvat-tarjous-maarat kaikki-tehtavat))]
+      (-> app
       (assoc :tallennus-kaynnissa? false)
       (assoc :tallennustila? false)
       (assoc :tallennus-yritetty? false)
       (assoc :tallentamattomia-muutoksia? false)
-      (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :kaikki-tehtavat kaikki-tehtavat)
+      (cond-> (true? (:nayta-vain-puuttuvat? app))
+        (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
       (assoc :kopiointi-tuleville-tehty? (boolean (:viimeisin-tallennus-kopioi-tuleville? app)))
       (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (synkronoi-muutokset-muutokset-atomiin!)))
+      (synkronoi-muutokset-muutokset-atomiin!))))
 
   TallennaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -218,12 +239,18 @@
   ToggleNaytaVainPuuttuvat
   (process-event [_ app]
     (let [uusi-arvo (not (boolean (:nayta-vain-puuttuvat? app)))
+          lukitut-puuttuvat-tehtava-idt (when uusi-arvo
+                                         (puuttuvat-tarjous-maarat (:kaikki-tehtavat app)))
           puuttuvat-ryhmat (when uusi-arvo
                              (into #{}
                                (keep :tehtavaryhmaotsikko)
                                (filter puuttuuko-tarjous-maara? (:kaikki-tehtavat app))))]
       (-> app
         (assoc :nayta-vain-puuttuvat? uusi-arvo)
+        (cond-> uusi-arvo
+          (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
+        (cond-> (not uusi-arvo)
+          (dissoc :lukitut-puuttuvat-tehtava-idt))
         (cond-> puuttuvat-ryhmat
           (update :avatut-tehtavaryhmat (fnil into #{}) puuttuvat-ryhmat))
         (paivita-naytettavat-tehtavat))))
@@ -252,7 +279,9 @@
         (assoc :kaikki-tehtavat paivitetty)
         (assoc :tallennus-yritetty? false)
         (cond-> palaa-kaikkiin?
-          (assoc :nayta-vain-puuttuvat? false))
+          (assoc :nayta-vain-puuttuvat? false)
+          palaa-kaikkiin?
+          (dissoc :lukitut-puuttuvat-tehtava-idt))
         (paivita-naytettavat-tehtavat)
         (synkronoi-muutokset-muutokset-atomiin!))))
 
