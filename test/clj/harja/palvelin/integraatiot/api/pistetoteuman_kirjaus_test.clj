@@ -19,42 +19,83 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest tallenna-kokonaishintainen-pistetoteuma
+(deftest tallenna-kokonaishintainen-pistetoteuma-koneellinen
   (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
-                         (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                            (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "kokonaishintainen"]))
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "kokonaishintainen" "harja-api"]))
       (is (= (count toteuma-tehtava-idt) 1))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
-                               (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                               (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                                  slurp
+                                 (.replace "__LAHDE__" "korjaus")
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
                                  (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
         (is (= 200 (:status vastaus-paivitys)))
-        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen"]))
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen" "harja-api-korjaus"]))
           (is (= (count toteuma-tehtava-idt) 1)))
 
         (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
         (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id " AND urakka = " urakka))))))
+
+(deftest tallenna-kokonaishintainen-pistetoteuma-kasin
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        payload (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
+                  slurp
+                  (.replace "__LAHDE__" "kasin")
+                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                  (.replace "__ID__" (str ulkoinen-id))
+                  (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                  (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen"))
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti payload)]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "kokonaishintainen" "harja-api-ui"]))
+      (is (= (count toteuma-tehtava-idt) 1))
+
+      ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
+                               (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
+                                 slurp
+                                 (.replace "__LAHDE__" "korjaus")
+                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 (.replace "__ID__" (str ulkoinen-id))
+                                 (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
+                                 (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
+        (is (= 200 (:status vastaus-paivitys)))
+        (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))]
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "kokonaishintainen" "harja-api-korjaus"]))
+          (is (= (count toteuma-tehtava-idt) 1)))
+
+        (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
+        (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+        (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))))
 
 (defn poista-pistetoteuma [toteuma-id ulkoinen-id urakka-id]
   (when toteuma-id
@@ -71,7 +112,7 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja-yit portti
-                                                (-> "test/resurssit/api/pistetoteuma_monta.json"
+                                                (-> "test/resurssit/api/toteumat/pistetoteuma_monta.json"
                                                     slurp
                                                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID1__" (str ulkoinen-id-1))
@@ -82,14 +123,14 @@
                                                     (.replace "__TOTEUMA2_TYYPPI__" "kokonaishintainen")))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma1-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
-          toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
+          toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))
           toteuma1-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma1-id))))]
-      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "kokonaishintainen"]))
+      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "kokonaishintainen" "harja-api"]))
       (is (= (count toteuma1-tehtava-idt) 1)))
     (let [toteuma2-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
-          toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
+          toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, tyyppi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))
           toteuma2-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma2-id))))]
-      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Ry" "kokonaishintainen"]))
+      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Ry" "kokonaishintainen" "harja-api"]))
       (is (= (count toteuma2-tehtava-idt) 1)))))
 
 (deftest pistetoteuma-paattyneeseen-urakkaan-estetaan
@@ -100,8 +141,9 @@
         myohainen-pvm "2019-10-02T12:00:00+03:00"
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/piste"] kayttaja-yit portti
-                 (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                 (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                    slurp
+                   (.replace "__LAHDE__" "koneellinen")
                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
                    (.replace "__ID__" (str ulkoinen-id))
                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -121,8 +163,9 @@
         viimeinen-sallittu-pvm "2019-10-01T12:00:00+03:00"
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/piste"] kayttaja-yit portti
-                 (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                 (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                    slurp
+                   (.replace "__LAHDE__" "koneellinen")
                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
                    (.replace "__ID__" (str ulkoinen-id))
                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -141,8 +184,9 @@
         alkuperainen-pvm "2019-09-30T12:00:00+03:00"
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-luonti (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/piste"] kayttaja-yit portti
-                         (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -151,12 +195,13 @@
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
     (is (= 200 (:status vastaus-luonti)) "Pistetoteuman luonti urakan aikana onnistuu")
     (is toteuma-id "Toteuma tallentui kantaan")
-    
+
     ;; Päivitetään toteumaa urakan päättymisen jälkeen - uusi päivämäärä on päättymisen jälkeen
     (let [myohassa-pvm "2019-10-02T12:00:00+03:00"
           vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/piste"] kayttaja-yit portti
-                             (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
+                             (-> "test/resurssit/api/toteumat/pistetoteuma_yksittainen.json"
                                slurp
+                               (.replace "__LAHDE__" "koneellinen")
                                (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                (.replace "__ID__" (str ulkoinen-id))
                                (.replace "__SUORITTAJA_NIMI__" "Päivitetty Nimi")

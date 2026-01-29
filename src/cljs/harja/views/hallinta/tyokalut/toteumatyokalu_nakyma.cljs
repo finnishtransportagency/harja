@@ -11,7 +11,7 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot])
+            [harja.tiedot.hallinta.tyokalut.toteumatyokalu-tiedot :as tiedot])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -107,6 +107,11 @@
         :otsikko "Ulkoinen id"
         :tyyppi :numero
         :pituus-max 40
+        :pakollinen? true}
+       {:nimi :lahde
+        :otsikko "Lähde"
+        :tyyppi :valinta
+        :valinnat ["koneellinen", "kasin"]
         :pakollinen? true}
        {:nimi :sopimusid
         :otsikko "Sopimusid"

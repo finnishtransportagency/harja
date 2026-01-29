@@ -100,8 +100,9 @@
             (map
               (fn [ulkoinen-id]
                 #(tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                   (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                   (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                      slurp
+                     (.replace "__LAHDE__" "koneellinen")
                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
                      (.replace "__ID__" (str ulkoinen-id))
                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))))
@@ -113,21 +114,23 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy" "harja-api"]))
 
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
       (let [_ (anna-kirjoitusoikeus kayttaja-jvh)
             vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-jvh portti
-                               (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                               (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                  slurp
+                                 (.replace "__LAHDE__" "korjaus")
                                  (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                  (.replace "__ID__" (str ulkoinen-id))
                                  (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
@@ -138,13 +141,13 @@
               {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                           (columns ::rp/toteuman-reittipisteet)
                                                           {::rp/toteuma-id toteuma-id}))
-              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
               toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
               toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id)))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy", "harja-api-korjaus"]))
           (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 3))
           (is (= (count toteuma-materiaali-idt) 1))
@@ -165,8 +168,9 @@
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
-        toteumajson (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+        toteumajson (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                       slurp
+                      (.replace "__LAHDE__" "koneellinen")
                       (.replace "__SOPIMUS_ID__" (str sopimus-id))
                       (.replace "__ID__" (str ulkoinen-id))
                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
@@ -187,8 +191,9 @@
 
         ;; Tehdään pieni muutos jsoniin ja lähetetään se uudestaan
         ;; Nyt hash pitäisi muuttua ja muokattu -aikaleima päivittyä
-        toteumajson2 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+        toteumajson2 (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                        slurp
+                       (.replace "__LAHDE__" "korjaus")
                        (.replace "__SOPIMUS_ID__" (str sopimus-id))
                        (.replace "__ID__" (str ulkoinen-id))
                        (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
@@ -269,14 +274,14 @@
             {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                         (columns ::rp/toteuman-reittipisteet)
                                                         {::rp/toteuma-id toteuma-id}))
-            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
             toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
             toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
             toteuman-paivitetty-materiaali (q-map (str "SELECT nimi, maara FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id))
             materiaalimaara-paivitetty (apply + (map :maara toteuman-paivitetty-materiaali))]
-        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy" "harja-api-korjaus"]))
         (is (= (count reittipisteet) 4))
         (is (= (count toteuma-tehtava-idt) 3))
         (is (= (count toteuma-materiaali-idt) 1))
@@ -307,14 +312,14 @@
             {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
                                                         (columns ::rp/toteuman-reittipisteet)
                                                         {::rp/toteuma-id toteuma-id}))
-            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
             toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
             toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
             toteuman-paivitetty-materiaali (q-map (str "SELECT nimi, maara FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id))
             materiaalimaara-paivitetty (apply + (map :maara toteuman-paivitetty-materiaali))]
-        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Kutomakoneen Ajomiehet Oy"]))
+        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Kutomakoneen Ajomiehet Oy" "harja-api-korjaus"]))
         (is (= (count reittipisteet) 4))
         (is (= (count toteuma-tehtava-idt) 3))
         (is (= (count toteuma-materiaali-idt) 1))
@@ -453,7 +458,7 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
-                         (-> "test/resurssit/api/reittitoteuma_monta.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_monta.json"
                            slurp
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID1__" (str ulkoinen-id-1))
@@ -463,10 +468,10 @@
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
     (odota-reittipisteet toteuma-id)
     (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))]
-      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy"])))
-    (let [toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
-      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy"])))))
+    (let [toteuma1-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-1)))]
+      (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy" "harja-api"])))
+    (let [toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi, lahde FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
+      (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy" "harja-api"])))))
 
 (deftest tarkista-toteuman-tallentaminen-paasopimukselle
   (let [urakka (hae-oulun-alueurakan-2014-2019-id)
@@ -474,8 +479,9 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
@@ -487,11 +493,11 @@
 
 (deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         _ (anna-kirjoitusoikeus "LX123456789")
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] "LX123456789" portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 403 (:status vastaus-lisays)))))
@@ -504,8 +510,9 @@
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         _ (anna-kirjoitusoikeus kayttaja-yit)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
@@ -520,9 +527,10 @@
         _ (anna-kirjoitusoikeus annettu-kayttaja)
         vastaus (tyokalut/post-kutsu
                   ["/api/urakat/" urakka-id "/toteumat/reitti"] annettu-kayttaja portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
                     (.replace "2016-01-30" uusi-aika)
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
@@ -672,8 +680,9 @@
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus (tyokalut/post-kutsu
                   ["/api/urakat/" 666 "/toteumat/reitti"] kayttaja portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
@@ -698,15 +707,17 @@
 
         _ (anna-kirjoitusoikeus kayttaja)
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" oulun-alueurakka-id "/toteumat/reitti"] kayttaja portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                         (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                            slurp
+                           (.replace "__LAHDE__" "koneellinen")
                            (.replace "__SOPIMUS_ID__" (str oulun-sopimus-id))
                            (.replace "__ID__" (str ulkoinen-id))
                            (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))
         _ (is (= 200 (:status vastaus-lisays)))
         toinen-vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" kajaanin-alueurakka-id "/toteumat/reitti"] kayttaja portti
-                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                   slurp
+                                  (.replace "__LAHDE__" "koneellinen")
                                   (.replace "__SOPIMUS_ID__" (str kajaanin-sopimus-id))
                                   (.replace "__ID__" (str ulkoinen-id))
                                   (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]
@@ -721,8 +732,9 @@
         reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja-yit portti sopimus-id ulkoinen-id]
                                                   (let [aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
                                                         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
-                                                                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                                                     slurp
+                                                                    (.replace "__LAHDE__" "koneellinen")
                                                                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                                     (.replace "__ID__" (str ulkoinen-id))
                                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
@@ -792,8 +804,9 @@
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
         _ (anna-kirjoitusoikeus kayttaja)
-        toteuma (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+        toteuma (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                   slurp
+                  (.replace "__LAHDE__" "koneellinen")
                   (.replace "__SOPIMUS_ID__" (str sopimus-id))
                   (.replace "__ID__" (str ulkoinen-id))
                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
@@ -952,8 +965,9 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -974,8 +988,9 @@
         _ (anna-kirjoitusoikeus kayttaja-yit)
         ulkoinen-id (rand-int 100000000)
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -994,8 +1009,9 @@
         ulkoinen-id (rand-int 100000000)
         alkuperainen-pvm "2015-05-23T12:00:00Z"
         vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                     slurp
+                    (.replace "__LAHDE__" "koneellinen")
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
                     (.replace "__ID__" (str ulkoinen-id))
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
@@ -1007,8 +1023,9 @@
     (is (some? toteuma-id))
     (let [myohassa-pvm "2019-10-02T15:00:00+03:00"
           paivitys-vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                             (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                             (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                                slurp
+                               (.replace "__LAHDE__" "koneellinen")
                                (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                (.replace "__ID__" (str ulkoinen-id))
                                (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
