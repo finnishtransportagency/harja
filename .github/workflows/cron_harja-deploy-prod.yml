@@ -67,10 +67,10 @@ jobs:
       status: ${{ steps.deployment-check.outputs.status }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get latest successful build
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: latest-successful-build
         with:
           retries: 3
@@ -92,7 +92,7 @@ jobs:
       # Yrittää löytää viimeisimmän onnistuneen deploymentin kohdeympäristöön.
       # Palauttaa tyhjän ouputin, jos deploymenttia ei löydy, mutta ei merkitse steppiä epäonnistuneeksi.
       - name: Get latest GitHub deployment by latest successful build commit SHA
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: latest-deployment
         env:
           ## Scriptin käyttämät ympäristömuuttujat ##
@@ -209,10 +209,10 @@ jobs:
       deployments: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Replace latest deployment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
           DEPLOYMENT_REF: ${{ needs.get-latest-successful-build.outputs.commit-sha }}

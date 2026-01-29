@@ -154,7 +154,7 @@
                id=\"TESTITPKTPI2\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
                name=\"TESTITPKTPI2\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
-               vv_operation=\"31114\">
+               vv_operation=\"23103\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")
@@ -183,7 +183,7 @@
   ([] (tuo-urakka nil))
   ([sampo-id]
    (let [sanoma (if sampo-id
-                  (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id )
+                  (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id)
                   +testi-hoitourakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
@@ -192,7 +192,7 @@
   ([] (tuo-maanteiden-hoidon-urakka nil))
   ([sampo-id]
    (let [sanoma (if sampo-id
-                  (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id )
+                  (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id)
                   +testi-maanteiden-hoidon-urakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))

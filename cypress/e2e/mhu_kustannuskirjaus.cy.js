@@ -1,4 +1,5 @@
 let timeout = 60000;
+let clicktimeout = 2000;
 let avaaKulujenKohdistus = (urakanNimi) => {
     cy.visit('/');
     cy.get('.ladataan-harjaa', {timeout: timeout}).should('not.exist')
@@ -33,8 +34,8 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
     cy.get('h1').contains('Kulujen kohdistus');
 
-    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
-    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(clicktimeout).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(clicktimeout).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
     if (Array.isArray(kuluTaiKulut)) {
@@ -76,7 +77,7 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
             cy.focused().blur({force: true})
         });
         cy.get('#kohdistuksen-summa-0').should('have.value', '999,00');
-        tallennaJaTarkistaKulu('Talvihoito laaja TPI');
+        tallennaJaTarkistaKulu('TALVIHOITO');
 
 
         // TODO: Kun seuraavan kerran kehitetään kulujen Cypress testejä, niin lisää kulun poisto vielä tähän samaan.

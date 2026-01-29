@@ -39,7 +39,7 @@
       nav/+urakkatyypit+)]
    [:div
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko-vayla {:for "elyhaku"} "Hallintayksikkö"]
+     [:label.alasvedon-otsikko {:for "elyhaku"} "Hallintayksikkö"]
      [kentat/tee-kentta
       {:input-id "elyhaku" :tyyppi :haku
        :nayta #(hal/elynumero-ja-nimi %)
@@ -70,7 +70,7 @@
      (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko-vayla {:for "urakkahaku"} "Hae urakkaa"]
+     [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
      [kentat/tee-kentta
       {:input-id "urakkahaku" :tyyppi :haku
        :nayta :nimi
@@ -93,7 +93,7 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href "#"
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/laadunseuranta/laatupoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                  :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :laadunseuranta
                                                                                                                :taso3 :laatupoikkeamat})}
@@ -102,7 +102,7 @@
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href "#"
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/turvallisuuspoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                  :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :turvallisuuspoikkeamat
                                                                                                                :taso3 nil})}
@@ -115,7 +115,7 @@
   (let [{:keys [luvatut_pisteet toteutuneet_pisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valitavoitteet/lupaukset?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (or (nil? luvatut_pisteet) (nil? toteutuneet_pisteet))
@@ -124,7 +124,8 @@
 
 (defn valikatselmus-sarake
   [rivi]
-  (let [{:keys [urakan_alkuvuosi tavoitehintaalituspaatos tavoitehintaylityspaatos kattohintapaatos lupauspaatos hoitokauden_alkuvuosi]} rivi
+  (let [{:keys [urakan_alkuvuosi tavoitehintaalituspaatos tavoitehintaylityspaatos kattohintapaatos
+                lupauspaatos hoitokauden_alkuvuosi tavoitehinnan_muutospaatos]} rivi
         edellisen-hoitokauden-alkuvuosi (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))) 1)
         ;; 15.11. on takaraja, milloin edellisen hoitokauden välikatselmus pitää olla tehtynä (edellinen --> kuluva hk -1)
         valikatselmuksen-takaraja-ohi? (or
@@ -135,23 +136,28 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry välikatselmukseen"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valikatselmus?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
+      [:div.tavoitehintapaatos
+       (if (and (nil? tavoitehinnan_muutospaatos) (nil? tavoitehinnan_muutospaatos))
+         (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
+           {:fmt-fn (constantly "Ei tavoitehinnan\u00ADmuutospäätöstä")})
+         (yleiset/tila-indikaattori "valmis"
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi tavoitehinnan_muutospaatos))}))]
+
       [:div.tavoitehintapaatos
        (if (and (nil? tavoitehintaalituspaatos) (nil? tavoitehintaylityspaatos))
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
            {:fmt-fn (constantly "Ei tavoitehinta\u00ADpäätöstä")})
          (yleiset/tila-indikaattori "valmis"
            {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi (or tavoitehintaalituspaatos tavoitehintaylityspaatos)))}))]
-      ;; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
-      ;; 2021 ja jälkeen riittää kertoa onko tavoitehintapäätös tehty
+
+      ; ennen vuotta 2021 alkaneissa urakoissa kattohintapäätös ei ollut kytköksissä tavoitehintapäätökseen, niin näytetään tämä tieto vain silloin
+      ;; 2021 ja jälkeen riittää kertoa onko kattohintapäätös tehty. Jos sitä ei ole aloitettu, niin ei oleteta, että se tehdään
       [:div.kattohintapaatos
-       (when (< urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+)
-         (if (nil? kattohintapaatos)
-           (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
-             {:fmt-fn (constantly "Ei kattohinta\u00ADpäätöstä")})
-           (yleiset/tila-indikaattori "valmis"
-             {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))})))]
+       (when (and (> urakan_alkuvuosi tiedot/+kattohintapaatos-kynnysvuosi+) (not (nil? kattohintapaatos)))
+         (yleiset/tila-indikaattori "valmis"
+           {:fmt-fn (constantly (kustannusten-seuranta-tiedot/valikatselmuksen-paatostyypin-nimi kattohintapaatos))}))]
 
       [:div.lupauspaatokset
        (if (nil? lupauspaatos)
@@ -167,7 +173,7 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava.alleviivaa {:href "#"
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/suunnittelu/kustannussuunnitelma?&hy=" (:ely_id rivi) "&u=" (:id rivi))
                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                               :taso2 :suunnittelu
                                                                                                               :taso3 :kustannussuunnitelma})}

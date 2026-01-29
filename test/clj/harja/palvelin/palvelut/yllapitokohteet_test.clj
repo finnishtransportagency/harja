@@ -1772,7 +1772,7 @@
                                   :matkapuhelin "042 220 6892"
                                   :etunimi "Vihtori"
                                   :organisaatio {:tyyppi :urakoitsija
-                                                 :id 14
+                                                 :id 24
                                                  :nimi "YIT Rakennus Oy"
                                                  :lyhenne nil}
                                   :tyopuhelin nil
@@ -1785,7 +1785,7 @@
                                   :matkapuhelin "042 805 1911"
                                   :etunimi "Reijo"
                                   :organisaatio {:tyyppi :urakoitsija
-                                                 :id 14
+                                                 :id 24
                                                  :nimi "YIT Rakennus Oy"
                                                  :lyhenne nil}
                                   :tyopuhelin nil

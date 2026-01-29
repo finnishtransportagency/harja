@@ -7,8 +7,13 @@
 
 (declare onko-olemassa-yhteyshenkilo-ulkoisella-idlla onko-olemassa-paivystys-jossa-yhteyshenkilona-id
   onko-olemassa-paivystys-ulkoisella-idlla hae-urakan-taman-hetkiset-paivystajat
-  luo-yhteyshenkilo<! paivita-yhteyshenkilo<!
-  hae-kaynissa-olevien-urakoiden-paivystykset hae-urakat-paivystystarkistukseen)
+  luo-yhteyshenkilo<! paivita-yhteyshenkilo<! liita-yhteyshenkilo-urakkaan<!
+  hae-kaynissa-olevien-urakoiden-paivystykset hae-urakat-paivystystarkistukseen
+  poista-paivystaja! luo-paivystys<! paivita-paivystys!
+  hae-paivystyksen-yhteyshenkilo-id hae-paivystyksen-alkupvm-idlla
+  hae-urakan-vastuuhenkilot luo-urakan-vastuuhenkilo<! poista-urakan-vastuuhenkilot-roolille!
+  hae-urakan-yleinen-puh-ja-sposti liita-sampon-yhteyshenkilo-urakkaan<! irrota-sampon-yhteyshenkilot-urakalta!
+  onko-yhteyshenkilo-liitetty-muualle poista-yhteyshenkilo-idlla!)
 
 (defn onko-olemassa-yhteyshenkilo-ulkoisella-idlla? [db ulkoinen-id]
   (:exists (first (onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))

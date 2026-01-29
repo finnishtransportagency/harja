@@ -54,10 +54,10 @@
          [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
        (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
        (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
-      [:div pistelukujen-muutos " %"]]]))
+      [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]]))
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :hoidonjohtopalkkion-muutos
+  (let [paatos-avain :indeksikorjaus
         paatos-tehty? (some? (:id paatos))
 
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
@@ -71,7 +71,7 @@
           [:div
            [:div.flex-row.lista-rivi
             [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
-            [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
+            [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Tavoitehinnan muutokset"]
@@ -79,7 +79,7 @@
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta"]
-            [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
+            [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Indeksin pistelukujen muutos"]

@@ -1,19 +1,23 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
-  (:require [tuck.core :as tuck]
-            [clojure.string :as str]
-            [reagent.core :refer [atom]]
+  (:require
+    [clojure.string :as str]
+    [reagent.core :refer [atom]]
+    [taoensso.timbre :as log]
+    [tuck.core :as tuck]
 
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.ui.nakymasiirrin :as siirrin]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.viesti :as viesti]
+    [harja.ui.liitteet :as liitteet]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
+    [harja.ui.nakymasiirrin :as siirrin]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tyokalut.tuck :as tuck-apurit]))
 
 
 (defonce ^{:private true}
@@ -24,18 +28,14 @@
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
-                     :kirjatut-muutokset nil
-                     :aiempien-hoitovuosien-pysyvat-muutokset nil
-                     :tehtava-maaramuutokset nil
-                     :rahavarausten-muutokset nil
                      :tavoitehinnan-muutokset nil
                      :suunniteltujen-maarien-muutokset nil
                      :budjettitavoitteet nil
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
-                                           :lasketut-muutokset true
-                                           :rahavarausten-muutokset true
-                                           :tavoitehinnan-muutokset true
-                                           :suunniteltujen-maarien-muutokset true}})
+                                           :lasketut-muutokset false
+                                           :rahavarausten-muutokset false
+                                           :tavoitehinnan-muutokset false
+                                           :suunniteltujen-maarien-muutokset false}})
 
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
@@ -47,6 +47,12 @@
 (def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
 
 (defonce nakymassa? (atom false))
+
+(defn nayta-muutokset-sivu? []
+  (boolean
+    (and
+      @u/valittu-aikavali
+      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
@@ -71,21 +77,15 @@
     (< (pvm/vuosi (first valittu-hoitokausi))
       muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
 
-(defn hoitovuoden-indeksikorjaus-vahvistettu?
-  [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi] :as budjettitavoitteet} hoitovuosi]
-  (let [hoitokauden-alkuvuosi (some-> hoitovuosi (first) (pvm/vuosi))
-        indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
-    indeksikorjaus-vahvistettu?))
-
-
 ;; --- Tuck-eventit ja käsittelijät ---
 ;; Hae muutostiedot
-(defrecord HaeUrakanMuutostiedot [])
+(defrecord HaeUrakanMuutostiedot [tyyppi])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
+(defrecord ValidoiLomake [lomake])
 (defrecord PaivitaLomake [lomake])
 
 (defrecord MuokkaaMuutosta [rivi])
@@ -93,6 +93,10 @@
 (defrecord TallennaMuutos [muutos])
 (defrecord TallennaMuutosOnnistui [vastaus])
 (defrecord TallennaMuutosEpaonnistui [vastaus])
+(defrecord PoistaMuutos [muutos])
+(defrecord PoistaMuutosOnnistui [vastaus])
+(defrecord PoistaMuutosEpaonnistui [vastaus])
+
 
 (defrecord HaeMuutoksenTiedot [muutos])
 (defrecord HaeMuutoksenTiedotOnnistui [vastaus muutos valittu-hoitokausi])
@@ -122,7 +126,8 @@
   (tuck-apurit/post! app :hae-urakan-muutostiedot
     {:urakka-id (-> @tila/yleiset :urakka :id)
      :hoitokaudet @u/valitun-urakan-hoitokaudet
-     :valittu-hoitokausi (:valittu-hoitokausi app)}
+     :valittu-hoitokausi (:valittu-hoitokausi app)
+     :laskenta-automatiikka? (:laskenta-automatiikka? app)}
     {:onnistui ->HaeUrakanMuutostiedotOnnistui
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
@@ -166,21 +171,94 @@
     ;; Pysyvien muutosten aputietoja
     :toimenpiteiden-tehtavat))
 
+
+(defn validoi-pysyvan-muutoksen-vaikutukset
+  [muokattava-muutos]
+  (let [mahdolliset-hoitovuodet (get-in muokattava-muutos [:mahdolliset-hoitovuodet-lomakkeella])
+        alkuvuodet (mapv #(some-> % (first) (pvm/vuosi)) mahdolliset-hoitovuodet)
+        rivit (:toimenpiteiden-tiedot muokattava-muutos)]
+
+    (assert (vector? alkuvuodet) "Lomakkeen hoitovuodet puuuttuvat")
+
+    ;; Käydään jokainen toimenpideinstanssi läpi joka hoitovuodelta, ja tarkastetaan onko tavoitehinnan muutos tai
+    ;; tehtävän määrämuutos syötetty.
+    ;; Jos molemmat syötetty -> OK
+    ;; Jos vain toinen syötetty -> Virhetila
+    ;; Palautetaan lista virheellisistä toimenpideinstansseista, joista toinen tarpeellinen tieto puuttuu.
+    (mapcat
+      (fn [rivi]
+        (for [alkuvuosi alkuvuodet
+              :let [kv (some
+                         #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) (:kustannusvaikutukset rivi))
+                    tjm (filter
+                          #(and (= alkuvuosi (:hoitokauden_alkuvuosi %)) (not (:poistettu %)))
+                          (:tehtavat_ja_maarat rivi))
+                    kv-syotetty? (and kv (number? (:summa kv)) (not= 0 (:summa kv)))
+                    tjm-syotetty? (some #(and
+                                           (and (number? (:maaramuutos %)) (number? (:tehtava %)))
+                                           ;; Validi tehtävä-id (> 0) JA määrämuutos pitää olla syötettynä
+                                           (and (pos? (:tehtava %)) (not= 0 (:maaramuutos %)))) tjm)
+                    toinen-syotetty? (or kv-syotetty? tjm-syotetty?)
+                    molemmat-ok? (and kv-syotetty? tjm-syotetty?)]
+              ;; Luodaan virhe-map, vain jos toinen vaadituista asioista on syötetty
+              :when (and toinen-syotetty? (not molemmat-ok?))]
+          {:toimenpideinstanssi (:toimenpideinstanssi rivi)
+           :toimenpide (:toimenpide rivi)
+           :alkuvuosi alkuvuosi
+           :puuttuu (if kv-syotetty? :maaramuutos :tavoitehinnan-muutos)}))
+      rivit)))
+
+(defn koosta-pysyvan-muutoksen-lomake-virheet [tpi-vetolaatikoiden-virheet]
+  (mapv
+    (fn [virhe]
+      (str (:alkuvuosi virhe) " / Toimenpide '" (:toimenpide virhe) "': "
+        (case (:puuttuu virhe)
+          :tavoitehinnan-muutos "Tavoitehinnan muutos"
+          :maaramuutos "Vaikutus tehtävämäärään")
+        " puuttuu."))
+    (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
+
+(defn koosta-lomakkeen-validaatio-virheet [lomake]
+  (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %)))))
+
+(defn validoi-lomake [lomake]
+  (let [pysyvan-muutoksen-virheet (if (= (:tyyppi lomake) "pysyva")
+                                    (validoi-pysyvan-muutoksen-vaikutukset lomake)
+                                    [])
+        lomake-virheet (concat
+                         (koosta-lomakkeen-validaatio-virheet lomake)
+                         (koosta-pysyvan-muutoksen-lomake-virheet pysyvan-muutoksen-virheet))]
+    lomake-virheet))
+
 (extend-protocol tuck/Event
   HaeUrakanMuutostiedot
-  (process-event [_ app]
-    (hae-urakan-muutostiedot
-      (assoc
-        (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat)
-        :haku-kaynnissa? true
-        :valittu-hoitokausi @u/valittu-hoitokausi
-        :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)))
+  (process-event [{:keys [tyyppi]} app]
+    "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
+    jos tyyppi annetaan, tämän osion väkänen pysyy auki tallennuksen läpi."
+    (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
+          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))]
+      (hae-urakan-muutostiedot
+        (as-> (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat) app
+          (assoc app
+            :haku-kaynnissa? true
+            :laskenta-automatiikka? laskenta-automatiikka?
+            :valittu-hoitokausi @u/valittu-hoitokausi
+            :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet)
 
+          (if tyyppi
+            ;; Tyyppi passattiin, pidä tämä väkänen auki
+            ;; Vähennetään sitä, että sivu ei pompi sinne tänne kun käyttäjä painaa tallenna. 
+            (assoc-in app [:taulukko-nakyvissa? tyyppi] true)
+            ;; Ei passattu tyyppiä, (esim kun näkymä avataan) -> cleanaa näkymä
+            (assoc app
+              :kirjatut-muutokset nil
+              :tehtava-maaramuutokset nil
+              :rahavarausten-muutokset nil
+              :aiempien-hoitovuosien-pysyvat-muutokset nil))))))
 
   HaeUrakanMuutostiedotOnnistui
   (process-event [{:keys [vastaus]} app]
     (vastaus-haku-onnistui app vastaus))
-
 
   HaeUrakanMuutostiedotEpaonnistui
   (process-event [_ app]
@@ -194,21 +272,21 @@
 
   ;; Hakee olemassaolevan muutoksen kaikki tiedot muokkausta varten
   HaeMuutoksenTiedot
-  (process-event [{:keys [muutos]} app]
+  (process-event [{:keys [muutos]}
+                  {:keys [valittu-hoitokausi] :as app}]
     (if (:id muutos)
       (do
-        (let [valittu-hoitokausi (:valittu-hoitokausi app)]
-          (tuck-apurit/post! :hae-muutoksen-tiedot
-            {:urakka-id @nav/valittu-urakka-id
-             :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
-             :muutos {:id (:id muutos)
-                      :versio (:versio muutos)
-                      :tyyppi (:tyyppi muutos)
-                      :liite-idt (into #{}
-                                   (map :id (:liitteet muutos)))}}
-            {:onnistui ->HaeMuutoksenTiedotOnnistui
-             :onnistui-parametrit [muutos valittu-hoitokausi]
-             :epaonnistui ->HaeMuutoksenTiedotEpaonnistui}))
+        (tuck-apurit/post! :hae-muutoksen-tiedot
+          {:urakka-id @nav/valittu-urakka-id
+           :hoitokauden-alkuvuosi (get-in app [:muokattava-muutos :hoitovuosi])
+           :muutos {:id (:id muutos)
+                    :versio (:versio muutos)
+                    :tyyppi (:tyyppi muutos)
+                    :liite-idt (into #{}
+                                 (map :id (:liitteet muutos)))}}
+          {:onnistui ->HaeMuutoksenTiedotOnnistui
+           :onnistui-parametrit [muutos valittu-hoitokausi]
+           :epaonnistui ->HaeMuutoksenTiedotEpaonnistui})
         (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
       app))
 
@@ -264,58 +342,83 @@
                 (assoc app :muokattava-muutos rivi))]
       (assoc app
         :lomake-virheet nil
-        :voi-tallentaa? true
         :tallenna-painettu? false)))
 
 
   MuokkaaJohtoJaHallintoMuutosta
   (process-event [{:keys [rivi]} app]
     (-> app
+      ;; Tarkoituksella asetetaan trueksi
+      ;; tallenna-painettu? sekä lomakevirheet validoivat voidaanko tallentaa (saavutettavuus)
       (assoc :voi-tallentaa? true)
       (assoc-in [:muokattava-muutos :johto-ja-hallintokorvaukset] rivi)))
 
-  PaivitaLomake
+  ValidoiLomake
   (process-event [{:keys [lomake]} app]
-    (let [lomake-virheet (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %))))
-          virheita? (empty? (-> lomake ::lomake/virheet vals))]
+    ;; Haetaan viimeisin lomakedata suoraan app-tilasta
+    (let [lomake-virheet (validoi-lomake lomake)]
       (assoc app
         :voi-tallentaa? true
-        :lomakkeella-virheita? (boolean virheita?)
         :lomake-virheet lomake-virheet
-        :muokattava-muutos (lomake/ilman-lomaketietoja lomake))))
+        :lomakkeella-virheita? (boolean (seq lomake-virheet)))))
+
+  ;; PäivitäLomake-eventtiä kutsutaan aina, kun lomakkeen peruskenttiä muutetaan tai hoitovuotta vaihdetaan
+  PaivitaLomake
+  (process-event [{:keys [lomake]} app]
+    (tuck/fx
+      (assoc app
+        :voi-tallentaa? true
+        :muokattava-muutos (lomake/ilman-lomaketietoja lomake))
+      ;; Viivästytetään lomakkeen validointia.
+      ;; Ei validoida lomaketa joka näppäimenpainalluksella tai muutoksella.
+      ;; Debounce-timer resetoituu sisäisesti, mikäli uusi muutos tulee ennen timeouttia (kunhan :id määritetty)
+      {:tuck.effect/type :debounce
+       :id :paivita-lomake-validaatio
+       :event #(->ValidoiLomake lomake)
+       :timeout 500}))
 
   TallennaMuutos
   (process-event [{:keys [muutos]}
-                  {:keys [lomake-virheet] :as app}]
+                  {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
-          puuttuvat-pakolliset-kentat (map
-                                        #(get pakolliset-kentat-fmt %)
-                                        (lomake/puuttuvat-pakolliset-kentat muutos))
-          muutos (-> muutos
-                   (lomake/ilman-lomaketietoja)
-                   (muutos-ilman-ui-tietoja))
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
                   ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
                   (filter #(and
                              (some? (:tavoitehinnan-muutos %))
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
+          muutos (assoc muutos :kulut kulut)
 
-          muutos (assoc muutos :kulut kulut)]
+          puuttuvat-pakolliset-kentat (map
+                                        #(get pakolliset-kentat-fmt %)
+                                        (lomake/puuttuvat-pakolliset-kentat muutos))
+          ;; Pysyvän muutoksen vaikutusten validointi on erikoistapaus, se pitää suorittaa vielä
+          ;; tallennuksen yhteydessä. Tämä siksi, että pysyvän muutoksen grid ym. on irtaallaan lomakkeen
+          ;; normaalista päivityslogiikasta, ja muutoksia tilaan tulee muistakin eventeistä kuin PaivitaLomake-eventistä.
+          ;; Lomakkeen validointia ei kannata viljellä jokaisen pysyvän muutoksen Tuck-eventin yhteyteen, koska
+          ;; se lisää turhaa kompleksisuutta ja fragiiliutta.
+          lomake-virheet (validoi-lomake muutos)
+
+          ;; Siivotaan lomakeen ylimääräiset tiedot pois ennen lähettämistä backendille
+          muutos-payload (-> muutos
+                           (lomake/ilman-lomaketietoja)
+                           (muutos-ilman-ui-tietoja))]
 
       (if (or
             (some? (vals lomake-virheet))
             (seq puuttuvat-pakolliset-kentat))
         (-> app
-          (assoc :voi-tallentaa? false)
           (assoc :tallenna-painettu? true)
+          (assoc :lomake-virheet lomake-virheet)
+          (assoc :lomakkeella-virheita? (boolean (seq lomake-virheet)))
           (assoc-in [:muokattava-muutos :puuttuvat-pakolliset-kentat] puuttuvat-pakolliset-kentat))
         (do
           (tuck-apurit/post! :tallenna-muutos
             {:urakka-id (:id urakka)
              :valittu-hoitokausi (:valittu-hoitokausi app)
              :hoitokaudet @u/valitun-urakan-hoitokaudet
-             :muutos muutos}
+             :laskenta-automatiikka? laskenta-automatiikka?
+             :muutos muutos-payload}
             {:onnistui ->TallennaMuutosOnnistui
              :epaonnistui ->TallennaMuutosEpaonnistui
              :paasta-virhe-lapi? true})
@@ -338,6 +441,48 @@
     (viesti/nayta-toast! (str "Muutoksen tallentaminen epäonnistui! "
                            (get-in vastaus [:response :virhe])) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :tallennus-kesken? false))
+
+  PoistaMuutos
+  (process-event [{:keys [muutos]}
+                  {:keys [laskenta-automatiikka?] :as app}]
+    (let [muutos-id (:id muutos)
+          urakka (:urakka @tila/yleiset)]
+      (tuck-apurit/post! :poista-muutos
+        {:muutos-id muutos-id
+         :urakka-id (:id urakka)
+         :valittu-hoitokausi (:valittu-hoitokausi app)
+         :hoitokaudet @u/valitun-urakan-hoitokaudet
+         :laskenta-automatiikka? laskenta-automatiikka?}
+        {:onnistui ->PoistaMuutosOnnistui
+         :epaonnistui ->PoistaMuutosEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc app :tallennus-kesken? true)))
+
+  PoistaMuutosOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+
+    (-> app
+      ;; Resetoi muutoslomake onnistuneen poistamisen jälkeen, jotta lomake suljetaan
+      (assoc
+        :viimeksi-valittu nil
+        :muokattava-muutos nil
+        :tallennus-kesken? false)
+      (vastaus-haku-onnistui vastaus)))
+
+  PoistaMuutosEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (let [virhe-str (get-in vastaus [:response :virhe] "Tuntematon virhe")]
+      (modal/nayta!
+        {:otsikko "Muutosta ei voitu poistaa"
+         :footer [napit/sulje #(modal/piilota!)]}
+        [:div (str virhe-str)])
+
+      ;; Näytä myös toast-viesti, jotta käyttäjä varmasti huomaa virheen tapahtuneen
+      ;; Avattu modal antaa tarkempaa lisätietoa.
+      (viesti/nayta-toast! (str "Muutoksen poistaminen epäonnistui!") :varoitus viesti/viestin-nayttoaika-keskipitka)
+
+      (assoc app :tallennus-kesken? false)))
 
 
   ;; Liitteet

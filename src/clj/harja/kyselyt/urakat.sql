@@ -32,10 +32,11 @@ WHERE u.harjassa_luotu IS TRUE
 ORDER BY u.alkupvm DESC, u.nimi;
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssi<!
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm, luoja, luotu)
 VALUES (:urakka_id, :nimi, (SELECT id
                             FROM toimenpide
-                            WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm);
+                            WHERE nimi = :toimenpide_nimi), :alkupvm, :loppupvm,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'), NOW());
 
 -- name: luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<!
 INSERT INTO toimenpideinstanssi_vesivaylat ("toimenpideinstanssi-id", vaylatyyppi)
@@ -263,9 +264,10 @@ FROM urakka u
 WHERE hallintayksikko = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
-           OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
-                'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-               OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+           OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+               OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = org.id)));
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
@@ -661,6 +663,11 @@ WHERE urakkanro = :urakkanro
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä
 SELECT urakka.id
+FROM urakka
+WHERE sampoid = :sampoid;
+
+-- name: hae-urakkatyyppi-sampoidlla
+SELECT tyyppi
 FROM urakka
 WHERE sampoid = :sampoid;
 
@@ -1232,7 +1239,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.loppupvm > NOW();
 
 -- name: hae-urakan-hoitokaudet
-SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);
+SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id::INTEGER);
 
 -- name: listaa-urakat-analytiikalle-hoitovuosittain
 -- Haetaan kaikki urakat ilman geometriatietoja

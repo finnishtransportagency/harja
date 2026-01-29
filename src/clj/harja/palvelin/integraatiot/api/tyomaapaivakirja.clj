@@ -396,7 +396,7 @@
                                 (:id (tyomaapaivakirja-kyselyt/lisaa-tyomaapaivakirja<! db tyomaapaivakirja))
                                 (catch Exception e
                                   (throw+ {:type virheet/+duplikaatti-tyomaapaivakirja+ :virheet [{:koodi virheet/+duplikaatti-tyomaapaivakirja-virhe-koodi+
-                                                                                                   :viesti "Duplikaatti versio ja päivämäärä"}]}))))
+                                                                                                   :viesti "Duplikaatti versio ja päivämäärä. Käytä HTTP PUT-metodia päivittääksesi olemassa olevan päiväkirjan."}]}))))
 
         ;; Tallennetaan jokainen osio omalla versionumerolla.
         _ (tallenna-kalusto db data versio tyomaapaivakirja-id urakka-id)

@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -110,7 +110,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -124,6 +124,49 @@ jobs:
       - name: Lint
         continue-on-error: true
         run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+
+  # Validoi että oikeudet EDN-tiedostot ovat ajan tasalla
+  validate-oikeudet-edn:
+    name: "Validoi oikeudet EDN-tiedostot"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup clojure environment
+        uses: ./.github/actions/setup-build-env-and-tools
+
+      - name: Generoi EDN-tiedostot uudelleen
+        run: lein run -m harja.tyokalut.oikeudet-edn-export
+
+      - name: Tarkista että EDN-tiedostot ovat ajan tasalla
+        run: |
+          if ! git diff --quiet resources/roolit.edn resources/oikeudet.edn; then
+            echo "❌ EDN-tiedostot eivät ole ajan tasalla Excelin kanssa!"
+            echo ""
+            echo "Excel-tiedosto resources/roolit.xlsx on muuttunut, mutta"
+            echo "EDN-tiedostot (roolit.edn ja oikeudet.edn) eivät ole päivitetty."
+            echo ""
+            echo "Korjaa ongelma JOKO:"
+            echo ""
+            echo "1️⃣  Käynnistä Harja uudelleen paikallisesti (SUOSITUS):"
+            echo "    - EDN:t generoidaan automaattisesti käynnistyksessä"
+            echo "    - Katso lokista: ✅ Oikeudet-EDN:t generoitu onnistuneesti"
+            echo "    - Committaa: git add resources/*.edn && git commit -m \"Päivitä oikeudet\""
+            echo ""
+            echo "2️⃣  TAI aja manuaalinen komento:"
+            echo "    lein run -m harja.tyokalut.oikeudet-edn-export"
+            echo "    git add resources/roolit.edn resources/oikeudet.edn"
+            echo "    git commit -m \"Päivitä oikeudet\""
+            echo ""
+            echo "Muutokset:"
+            git diff resources/roolit.edn resources/oikeudet.edn
+            exit 1
+          fi
+          echo "✅ EDN-tiedostot ovat ajan tasalla"
 
   # Build job
   build-harja:
@@ -141,7 +184,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -176,7 +219,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only the latest is needed)
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: artifact
         with:
           script: |
@@ -196,7 +239,7 @@ jobs:
               })
 
       - name: Upload a new build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
@@ -214,7 +257,7 @@ jobs:
       checks: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get the build artifact name
         id: artifact-name
@@ -225,7 +268,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           # Download to the same directory as the uberjar is built to
@@ -291,7 +334,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -341,7 +384,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -391,7 +434,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -435,7 +478,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -499,7 +542,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -531,7 +574,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v7.0.0
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./
@@ -582,7 +625,7 @@ jobs:
           echo +++++++++++++++++++
           echo
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: cache-npm
         with:
           path: node_modules
@@ -623,14 +666,14 @@ jobs:
           detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           retention-days: 4
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: cypress-videos-${{ matrix.browser }}

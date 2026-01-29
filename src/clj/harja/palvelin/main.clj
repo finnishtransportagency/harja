@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tehtavat-maarat-palvelu]
     [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
@@ -78,6 +79,7 @@
     [harja.palvelin.palvelut.hallinta.tarjoushinnat :as tarjoushinnat-hallinta]
     [harja.palvelin.palvelut.hallinta.lupaukset-palvelu :as lupaukset-hallinta]
     [harja.palvelin.palvelut.hallinta.ajastukset-palvelu :as ajastukset-hallinta]
+    [harja.palvelin.palvelut.hallinta.raporttityokalu-palvelu :as raporttityokalu-hallinta]
     [harja.palvelin.palvelut.hallinta.paallystysilmoitukset-hallinta-palvelu :as paallystysilmoitukset-hallinta]
     [harja.palvelin.palvelut.hallinta.tieosoitteet-palvelu :as tieosoitteet-hallinta]
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
@@ -237,10 +239,17 @@
                                                  #{:paivitystiheys-ms :replikoinnin-max-viive-ms})
                                                :tarkkailun-nimi :db-replica)
                     kehitysmoodi)
+      ;; Integraatioloki
+      :integraatioloki
+      (component/using (integraatioloki/->Integraatioloki
+                         (:paivittainen-lokin-puhdistusaika
+                           (:integraatiot asetukset)))
+        [:db])
 
       :todennus (component/using
-                  (todennus/http-todennus sahke-headerit todennus-varmistus)
-                  [:db])
+                  (todennus/http-todennus sahke-headerit todennus-varmistus (:kayttajaroolit asetukset))
+                  [:db :integraatioloki])
+
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin kehitysmoodi todennus-varmistus)
                        [:todennus :metriikka :db])
@@ -275,13 +284,6 @@
       :kehitysmoodi (component/using
                       (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
                       [:http-palvelin])
-
-      ;; Integraatioloki
-      :integraatioloki
-      (component/using (integraatioloki/->Integraatioloki
-                         (:paivittainen-lokin-puhdistusaika
-                          (:integraatiot asetukset)))
-        [:db])
 
       :itmf (component/using
               (itmf/luo-itmf (merge (:itmf asetukset)
@@ -489,6 +491,9 @@
       :uusi-kustannussuunnitelma (component/using
                                    (uusi-kustannussuunnitelma-palvelu/->UusiKustannussuunnitelmaPalvelu)
                                    [:http-palvelin :db])
+      :tehtavat-maarat (component/using
+                 (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
+                 [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -856,6 +861,11 @@
       :ajastukset-hallinta
       (component/using
         (ajastukset-hallinta/->AjastuksetHallinta)
+        [:http-palvelin :db])
+
+      :raporttityokalu-hallinta
+      (component/using
+        (raporttityokalu-hallinta/->RaporttityokaluHallinta)
         [:http-palvelin :db])
       
       :paallystysilmoitukset-hallinta

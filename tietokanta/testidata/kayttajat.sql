@@ -1,4 +1,4 @@
-INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('tero','Tero','Toripolliisi','tero.toripolliisi@example.com','0405127232', (SELECT id FROM organisaatio WHERE lyhenne='POP'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('tero','Tero','Toripolliisi','tero.toripolliisi@example.com','0405127232', (SELECT id FROM organisaatio WHERE lyhenne='POP' and tyyppi = 'hallintayksikko'));
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('jvh','Jalmari','Järjestelmävastuuhenkilö','jalmari@example.com', '040123456789', (SELECT id FROM organisaatio WHERE lyhenne='Livi'));
 INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
@@ -37,11 +37,11 @@ INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisa
 -- Kemin alueurakan Urakan urakanvalvoja ELY-keskusksesta, jonka käyttöoikeuksia on rajoitettu
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
 ('ELYKeminLaatu','ELYKeppi','ELYLappi','elykeppi@example.com', '123123123',
- (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
+ (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'));
 -- Lapin elyn tilaajakäyttäjä, joka vio tilata testeissä paikkauskohteita lapin alueella
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
 ('tilaaja','ELY','tilaaja','tilaaja@example.org', '434532345',
- (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
+ (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'));
 -- Analytiikan apien testaamiseksi tarvittava käyttäjä
 INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, api_oikeudet, jarjestelma) VALUES
           ('etunimi', 'sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'),

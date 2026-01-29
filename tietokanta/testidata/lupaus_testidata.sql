@@ -44,24 +44,24 @@ VALUES
     ('Turvallisuus ja osaamisen kehittäminen', 4, 2019, NOW()),
     ('Viestintä ja tienkäyttäjäasiakkaan palvelu', 5, 2019, NOW());
 
--- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta: Aktiivinen Kajaani Testi, Aktiivinen Oulu Testi
--- Tehään Lupauksien kannalta Aktiivinen Kajaani Testi urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
+-- Lupausryhmien linkitys urakkaan 2024 alkaville urakoille linkkitaulun kautta: POP MHU Suomussalmi 2024-2029 ja, POP MHU Suomussalmi 2024-2029 KOPIO
+-- Tehdään Lupauksien kannalta POP MHU Suomussalmi 2024-2029 urakka Espoon ja Vantaan kaltaiseksi vaativaksi urakaksi.
 
 -- Linkitetään Kajaani
 DO $$
     DECLARE
         tarkistus_lapaisty BOOLEAN;
-        urakka_id_kajaani INTEGER;
+        urakka_id_suomussalmi INTEGER;
 
     BEGIN
-        urakka_id_kajaani = (SELECT id FROM urakka WHERE nimi = 'Aktiivinen Kajaani Testi' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
+        urakka_id_suomussalmi = (SELECT id FROM urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029' AND  EXTRACT(YEAR FROM urakka.alkupvm) = 2024);
 
         -- Tarkista löytyykö ympäristöstä
-        IF urakka_id_kajaani IS NULL THEN
-            RAISE EXCEPTION 'Kajaanin urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
+        IF urakka_id_suomussalmi IS NULL THEN
+            RAISE EXCEPTION 'Suomussalmen urakkaa ei löytynyt lupauksia varten. Tämä on ei ole OK!!.';
             tarkistus_lapaisty := FALSE;
         ELSE
-            RAISE NOTICE 'Kajaanin urakka linkitetty lupauksiin!';
+            RAISE NOTICE 'Suomussalmen urakka linkitetty lupauksiin!';
             tarkistus_lapaisty := TRUE;
         END IF;
 
@@ -69,30 +69,30 @@ DO $$
             INSERT INTO lupausryhma_urakka(lupausryhma_id, urakka_id) VALUES
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Kannustavat alihankintasopimukset' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Toiminnan suunnitelmallisuus' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Laadunvarmistus ja reagointikyky' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Turvallisuus ja osaamisen kehittäminen' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani),
+ urakka_id_suomussalmi),
 -- Suomussalmi
 ((SELECT id FROM lupausryhma WHERE otsikko = 'Viestintä ja tienkäyttäjäasiakkaan palvelu' and "urakan-alkuvuosi" = 2024 and "rivin-tunnistin-selite" = 'Espoo ja Vantaa'),
- urakka_id_kajaani);
+ urakka_id_suomussalmi);
         END IF;
     END $$;
 
--- Linkitetään kaikki muut 2024 paitsi Kajaani
+-- Linkitetään kaikki muut 2024 paitsi POP MHU Suomussalmi 2024-2029
 INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
 SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
 FROM urakka
          JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
 WHERE lupausryhma."urakan-alkuvuosi" = 2024
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen'
-  AND urakka.nimi NOT LIKE 'Aktiivinen Kajaani Testi';
+  AND urakka.nimi NOT LIKE 'POP MHU Suomussalmi 2024-2029';
 
 INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
 SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
@@ -272,3 +272,125 @@ FROM urakka
          JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
 WHERE lupausryhma."urakan-alkuvuosi" = 2025
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen';
+
+-- ============================================================================
+-- KAJAANI 2025-2030 URAKAN LUPAUS- JA TAVOITEHINTA TESTIDATA
+-- ============================================================================
+DO $$
+    DECLARE
+        kajaani_urakka_id INTEGER;
+        kajaani_kayttaja_id INTEGER;
+        kajaani_alkuvuosi INTEGER := 2025;
+        
+    BEGIN
+        -- Hae Kajaani 2025 urakan ID
+        kajaani_urakka_id := (SELECT id FROM urakka 
+                              WHERE nimi = 'POP MHU Kajaani 2025-2030' 
+                              AND EXTRACT(YEAR FROM alkupvm) = 2025);
+        
+        -- Hae sopiva käyttäjä
+        kajaani_kayttaja_id := (SELECT id FROM kayttaja 
+                                WHERE kayttajanimi = 'yit_uuvh' 
+                                LIMIT 1);
+        
+        -- Tarkista että urakka löytyi
+        IF kajaani_urakka_id IS NULL THEN
+            RAISE NOTICE 'HUOM: Kajaani 2025 urakkaa ei löytynyt, ohitetaan lupaus_sitoutuminen ja urakka_tavoite lisäykset';
+            RETURN;
+        END IF;
+        
+        RAISE NOTICE 'Lisätään lupaus_sitoutuminen ja urakka_tavoite Kajaani 2025 urakalle (ID: %)', kajaani_urakka_id;
+        
+        -- ========================================================================
+        -- 1. LUPAUS_SITOUTUMINEN
+        -- ========================================================================
+        -- Urakoitsija sitoutuu 80 pisteeseen (esimerkki)
+        INSERT INTO lupaus_sitoutuminen ("urakka-id", pisteet, luoja, luotu)
+        VALUES (kajaani_urakka_id, 80, kajaani_kayttaja_id, NOW())
+        ON CONFLICT DO NOTHING;
+        
+        -- ========================================================================
+        -- 2. URAKKA_TAVOITE - 5 HOITOKAUTTA
+        -- ========================================================================
+        -- Hoitokausi 1: 2025-2026 (alkaa 1.10.2025)
+        INSERT INTO urakka_tavoite(
+            urakka, 
+            hoitokausi, 
+            tarjous_tavoitehinta, 
+            tavoitehinta, 
+            kattohinta, 
+            tavoitehinta_indeksikorjattu, 
+            kattohinta_indeksikorjattu, 
+            luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 
+            1, 
+            8500000,  -- Tarjous tavoitehinta (8.5M€)
+            9000000,  -- Tavoitehinta (9M€)
+            9900000,  -- Kattohinta (9.9M€, 110% tavoitehinnasta)
+            testidata_indeksikorjaa(9000000, kajaani_alkuvuosi, 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(9900000, kajaani_alkuvuosi, 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 2: 2026-2027
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 2, 8500000, 9000000, 9900000,
+            testidata_indeksikorjaa(9000000, (1 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(9900000, (1 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 3: 2027-2028
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 3, 8500000, 9200000, 10120000,
+            testidata_indeksikorjaa(9200000, (2 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10120000, (2 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 4: 2028-2029
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 4, 8500000, 9500000, 10450000,
+            testidata_indeksikorjaa(9500000, (3 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10450000, (3 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        -- Hoitokausi 5: 2029-2030
+        INSERT INTO urakka_tavoite(
+            urakka, hoitokausi, tarjous_tavoitehinta, tavoitehinta, kattohinta, 
+            tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, luotu
+        )
+        VALUES (
+            kajaani_urakka_id, 5, 8500000, 9800000, 10780000,
+            testidata_indeksikorjaa(9800000, (4 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            testidata_indeksikorjaa(10780000, (4 + kajaani_alkuvuosi), 10, kajaani_urakka_id), 
+            NOW()
+        )
+        ON CONFLICT DO NOTHING;
+        
+        RAISE NOTICE 'Kajaani 2025 urakan lupaus_sitoutuminen ja urakka_tavoite lisätty onnistuneesti!';
+        
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'VIRHE Kajaani 2025 testidatan lisäyksessä: %', SQLERRM;
+    END
+$$ LANGUAGE plpgsql;

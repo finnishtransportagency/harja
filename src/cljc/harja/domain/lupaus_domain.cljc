@@ -1,7 +1,10 @@
 (ns harja.domain.lupaus-domain
-  (:require [harja.pvm :as pvm]
-            [clojure.set :as set]
-            [harja.domain.roolit :as roolit]))
+  (:require
+   [clojure.set :as set]
+   [harja.domain.oikeudet :as oikeudet]
+   [harja.domain.roolit :as roolit]
+   [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
+   [harja.pvm :as pvm]))
 
 (defn numero->kirjain [numero]
   (case numero
@@ -31,6 +34,9 @@
 
 (defn yksittainen? [lupaus]
   (= "yksittainen" (:lupaustyyppi lupaus)))
+
+(defn kustannusennuste? [lupaus]
+  (kustannusennuste-domain/kustannusennuste? lupaus))
 
 (defn hylatyt [vastaukset]
   (filter #(false? (:vastaus %)) vastaukset))
@@ -98,55 +104,19 @@
   (or (:pisteet (viimeisin-vastaus vastaukset))
       kyselypisteet))
 
-(defn kustannusennuste->ennuste
-  "Laskee kustannusennusteen ennusteen kuukausittaisten kustannusennusteiden perusteella.
-   Jos kaikki kuukaudet eivät ole täytetty, palauttaa viimeisimmän annetun ennusteen.
-   Jos dataa ei löydy, palauttaa 0."
-  [{:keys [lupaus-kuukaudet]}]
-  (let [;; Hae kaikki kuukaudet, joissa on kustannusennusteita
-        kuukaudet-pisteilla (->> lupaus-kuukaudet
-                              (filter #(get-in % [:kustannusennuste :pisteet]))
-                              (sort-by :kuukausi))
-        ;; Jos on annettu kustannusennusteita, käytä viimeisintä
-        viimeisin-pisteet (when (seq kuukaudet-pisteilla)
-                            (get-in (last kuukaudet-pisteilla) [:kustannusennuste :pisteet]))]
-    ;; Palauta 0 jos ei ole dataa, muuten viimeisin pistemäärä
-    (or viimeisin-pisteet 0)))
-
-(defn kustannusennuste->toteuma
-  "Laskee kustannusennusteen toteuman kun se on mahdollista.
-   Toteuma = keskiarvo kaikista kustannusennustekuukausista joissa on pisteitä.
-   Jos ei ole pisteitä ollenkaan, palauttaa 0.
-   
-   HUOM: Toteuma lasketaan vain kun kaikki ennustekuukaudet on ohitettu ajallisesti.
-   Tämän tarkistuksen tulee tapahtua kutsuvassa koodissa hoitovuoden tilan perusteella."
-  [{:keys [lupaus-kuukaudet hoitovuosi-paattynyt?]}] 
-    (when hoitovuosi-paattynyt?
-      ;; Hae kaikki kuukaudet joissa on kustannusennusteita ja pisteitä
-      (let [kuukaudet-pisteilla (->> lupaus-kuukaudet
-                                  (filter #(get-in % [:kustannusennuste :pisteet]))
-                                  (map #(get-in % [:kustannusennuste :pisteet])))]
-        (if (seq kuukaudet-pisteilla)
-          ;; Laske keskiarvo vain niistä kuukausista joissa on pisteitä
-          (let [keskiarvo (/ (reduce + kuukaudet-pisteilla) (count kuukaudet-pisteilla))]
-            #?(:clj (Math/round (double keskiarvo))
-               :cljs (js/Math.round keskiarvo)))
-          ;; Jos ei ole pisteitä ollenkaan, palauta 0
-          0))))
-
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->ennuste lupaus)
     "kysely" (kysely->ennuste lupaus)
     "monivalinta" (monivalinta->ennuste lupaus)
-    "kustannusennuste" (kustannusennuste->ennuste lupaus)))
+    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->ennuste lupaus)))
 
 (defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->toteuma lupaus)
     "kysely" (monivalinta->toteuma lupaus)
     "monivalinta" (monivalinta->toteuma lupaus)
-    "kustannusennuste" (kustannusennuste->toteuma lupaus)))
+    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->toteuma lupaus)))
 
 (defn lupaus->maksimipisteet
   "Palauttaa lupauksen maksimipisteet lupaustyypistä riippumatta.
@@ -547,12 +517,35 @@
 
 (defn kayttaja-saa-vastata?
   "Saako käyttäjä vastata annettuun kuukauteen.
-  Tilaajan käyttäjä saa vastata sekä päättäviin että kirjauskuukausiin.
-  Urakoitsijan käyttäjä saa vastata vain kirjauskuukausiin."
-  [kayttaja lupaus-kuukausi]
+  
+  Excel (roolit.xlsx) määrittää kaikki oikeudet - katso dokumentaatio excelistä tai oikeudet.cljc"
+  [kayttaja lupaus-kuukausi lupaustyyppi urakka-id]
   (and (vastauskuukausi? lupaus-kuukausi)
-       (or (:kirjauskuukausi? lupaus-kuukausi)
-           (roolit/tilaajan-kayttaja? kayttaja))))
+    (boolean
+      ;; Ota huomioon että lupaus-kuukausi voi olla sekä päättävä-kuukausi? että kirjauskuukausi?
+      (cond
+        ;; Päättävät kuukaudet: Excel määrittää erikoisoikeudet
+        (:paattava-kuukausi? lupaus-kuukausi)
+        (case lupaustyyppi
+          ;; Kustannusennuste: Excel määrittää kuka saa (W,kustannusennuste)
+          "kustannusennuste"
+          (oikeudet/on-muu-oikeus? "kustannusennuste"
+                                   oikeudet/urakat-lupaukset
+                                   urakka-id
+                                   kayttaja)
+          
+          ;; Muut lupaukset: Excel määrittää kuka saa tehdä päätöksiä (W,päätös)
+          (oikeudet/on-muu-oikeus? "päätös"
+                                   oikeudet/urakat-lupaukset
+                                   urakka-id
+                                   kayttaja))
+        
+        ;; Kirjauskuukaudet: perustason kirjoitusoikeus riittää (Excel: W)
+        (:kirjauskuukausi? lupaus-kuukausi)
+        (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset urakka-id kayttaja)
+        
+        ;; Ei kirjaus- eikä päättävä kuukausi
+        :else false))))
 
 (defn ennusteen-tila->saa-vastata? [ennusteen-tila]
   ;; Vastauksia ei saa enää muuttaa välikatselmuksen jälkeen.
@@ -673,133 +666,6 @@
   [urakka]
   (-> urakka :alkupvm pvm/vuosi vuosi-19-20?))
 
-(defn validoi-kustannusennuste-syotteet
-  "Validoi että kaikki syötteet ovat valideja laskentaa varten"
-  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta 
-           ennustettu-kustannus toteutunut-kustannus
-           hoitovuoden-alun-tavoitehinta] :as syotteet}]
-  {:pre [syotteet]}
-  (cond
-    (not (every? number? [ennustettu-tavoitehinta toteutunut-tavoitehinta 
-                          ennustettu-kustannus toteutunut-kustannus
-                          hoitovuoden-alun-tavoitehinta]))
-    {:virhe "Kaikki arvot on oltava numeroita"}
-
-    (zero? hoitovuoden-alun-tavoitehinta)
-    {:virhe "Hoitovuoden tavoitehinta ei voi olla nolla (nollajako)"}
-
-    (neg? hoitovuoden-alun-tavoitehinta)
-    {:virhe "Hoitovuoden tavoitehinta ei voi olla negatiivinen"}
-
-    :else
-    {:ok true}))
-
-(defn turvallinen-jako
-  "Turvallinen jakolasku joka välttää BigDecimal-ongelmat ja toimii sekä CLJ että CLJS:ssä"
-  [a b]
-  (if (zero? b)
-    0.0
-    #?(:clj (double (/ (double a) (double b)))
-       :cljs (/ a b))))
-
-(defn laske-kustannusennusteen-tarkkuus
-  "Laskee kustannusennusteen tarkkuuden ja palauttaa tietokantaan tallennettavan muodon."
-  [{:keys [ennustettu-tavoitehinta toteutunut-tavoitehinta
-           ennustettu-kustannus toteutunut-kustannus
-           hoitovuoden-alun-tavoitehinta] :as syotteet}]
-  (let [validointi (validoi-kustannusennuste-syotteet syotteet)]
-    (if (:virhe validointi)
-      validointi
-      (let [te (double ennustettu-tavoitehinta)
-            tt (double toteutunut-tavoitehinta)
-            ke (double ennustettu-kustannus)
-            kt (double toteutunut-kustannus)
-            th (double hoitovuoden-alun-tavoitehinta)
-
-            ;; Laskentavaiheet
-            tavoitehinta-ero (turvallinen-jako (- te tt) th)
-            kustannus-ero (turvallinen-jako (- ke kt) th)
-            riski-ero (turvallinen-jako (- (- ke te) (- kt tt)) th)
-
-            ;; Lopputulos
-            tarkkuus (+ (* tavoitehinta-ero 0.05)
-                        (* kustannus-ero 0.05)
-                        (* riski-ero 0.9))
-            tarkkuus-prosentti (/ (Math/round (* tarkkuus 1000.0)) 10.0)
-
-            ;; Tallennettava data
-            kaava-versio "v1.0"
-            kaava-teksti "x = [(Te - Tt)/Th × 0.05 + (Ke - Kt)/Th × 0.05 + [(Ke - Te) - (Kt - Tt)]/Th × 0.9]"
-
-            parametrit {:Te te :Tt tt :Ke ke :Kt kt :Th th
-                        :kertoimet {:tavoitehinta-kerroin 0.05
-                                    :kustannus-kerroin 0.05
-                                    :riski-kerroin 0.9}}
-
-            vaiheet {:vaihe-1 {:kuvaus "Tavoitehinnan ero"
-                               :kaava "(Te - Tt) / Th"
-                               :laskenta (str "(" te " - " tt ") / " th)
-                               :tulos tavoitehinta-ero}
-                     :vaihe-2 {:kuvaus "Kustannuksen ero"
-                               :kaava "(Ke - Kt) / Th"
-                               :laskenta (str "(" ke " - " kt ") / " th)
-                               :tulos kustannus-ero}
-                     :vaihe-3 {:kuvaus "Riskin ero"
-                               :kaava "[(Ke - Te) - (Kt - Tt)] / Th"
-                               :laskenta (str "[(" ke " - " te ") - (" kt " - " tt ")] / " th)
-                               :tulos riski-ero}
-                     :vaihe-4 {:kuvaus "Lopputulos"
-                               :kaava "vaihe-1 × 0.05 + vaihe-2 × 0.05 + vaihe-3 × 0.9"
-                               :laskenta (str tavoitehinta-ero " × 0.05 + " kustannus-ero " × 0.05 + " riski-ero " × 0.9")
-                               :tulos tarkkuus}
-                     :lopputulos-prosentti tarkkuus-prosentti}]
-
-        {:tarkkuus-prosentti tarkkuus-prosentti
-         :laskentakaava-versio kaava-versio
-         :laskentakaava-teksti kaava-teksti
-         :laskentakaava-parametrit parametrit
-         :laskentakaava-vaiheet vaiheet}))))
-
-(defn maarita-kustannusennuste-pisteet-kovakoodattu
-  "Määrittää pisteet tarkkuuden ja kuukauden perusteella.
-   Kuukausikohtaiset raja-arvot määrittävät pistemäärän."
-  [tarkkuus-prosentti kuukausi]
-  {:pre [(number? tarkkuus-prosentti) (number? kuukausi)]}
-  (let [tarkkuus-itseisarvo (Math/abs tarkkuus-prosentti)]
-    (case kuukausi
-      ;; Lokakuu: ≤ 7,0% = 8p, ≤ 9,0% = 4p, > 9,0% = 1p
-      10 (cond
-           (<= tarkkuus-itseisarvo 7.0) 8
-           (<= tarkkuus-itseisarvo 9.0) 4
-           :else 1)
-
-      ;; Tammikuu: ≤ 4,0% = 8p, ≤ 6,0% = 4p, > 6,0% = 1p
-      1 (cond
-          (<= tarkkuus-itseisarvo 4.0) 8
-          (<= tarkkuus-itseisarvo 6.0) 4
-          :else 1)
-
-      ;; Huhtikuu: ≤ 2,0% = 8p, ≤ 3,0% = 4p, > 3,0% = 1p
-      4 (cond
-          (<= tarkkuus-itseisarvo 2.0) 8
-          (<= tarkkuus-itseisarvo 3.0) 4
-          :else 1)
-
-      ;; Kesäkuu: ≤ 1,0% = 8p, ≤ 2,0% = 4p, > 2,0% = 1p
-      6 (cond
-          (<= tarkkuus-itseisarvo 1.0) 8
-          (<= tarkkuus-itseisarvo 2.0) 4
-          :else 1)
-
-      ;; Elokuu: samat arvot kuin lokakuu
-      8 (cond
-          (<= tarkkuus-itseisarvo 7.0) 8
-          (<= tarkkuus-itseisarvo 9.0) 4
-          :else 1)
-
-      ;; Muut kuukaudet - oletusarvo
-      0)))
-
 (defn odottaa-urakoitsijan-kannanottoa?
   "Odottaako 19/20 alkanut urakka urakoitsijan kannanottoa."
   [kuukausipisteet]
@@ -816,3 +682,5 @@
         (filter :odottaa-vastausta?)
         first
         boolean))))
+
+
