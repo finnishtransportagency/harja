@@ -27,10 +27,12 @@
    Palautetaan tallennetut tehtävät ja määrät."
   [db kayttaja {:keys [urakka-id kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
-  (vaadi-ettei-puuttuvia-tarjousmaaria! tiedot)
   (jdbc/with-db-transaction [db db]
     (let [hk-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
+          merkitse-valmiiksi? (:merkitse-valmiiksi? tiedot)
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
+          _ (when merkitse-valmiiksi?
+              (vaadi-ettei-puuttuvia-tarjousmaaria! tiedot))
           _ (doseq [vuosi vuodet]
               (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) vuosi (:tehtavat tiedot)))
           ;; Merkitään sopimuksen tehtävämäärät tallennetuksi 

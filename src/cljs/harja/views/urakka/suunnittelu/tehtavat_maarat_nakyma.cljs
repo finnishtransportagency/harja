@@ -51,7 +51,13 @@
     (if tallennustila?
       [:<>
        [:span {:style {:margin-left "1rem"}}
-        [napit/yleinen-ensisijainen "Tallenna"
+        [napit/hyvaksy "Tallenna ja merkitse valmiiksi"
+         #(e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat false))
+         {:disabled (or tallennus-kesken? false)
+          :vayla-tyyli? true
+          :data-cy "btn-tallenna-ja-merkitse-valmiiksi"}]]
+      [:span {:style {:margin-left "1rem"}}
+       [napit/yleinen-ensisijainen "Tallenna keskeneräisenä"
          #(e! (tiedot/->TallennaTehtavat kaikki-tehtavat false))
          {:disabled (or tallennus-kesken? false)
           :data-cy "btn-tallenna-tehtavat-ja-maarat"}]]
@@ -75,6 +81,7 @@
         ;; Puuttuvat lasketaan aina koko datasta, jotta suodatin ei "tyhjennä" näkymää.
         puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat kaikki-tehtavat)
         puuttuvat-lkm (count puuttuvat-tehtava-idt)
+          valmiiksi-yritetty? (and (true? (:tallennus-yritetty? app)) (pos? puuttuvat-lkm))
         {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja tulevia-vuosia-valmiina]
          :as tulevat-yhteenveto}
         (:tulevat-hoitovuodet-yhteenveto app)
@@ -124,6 +131,16 @@
          [:div.body-text.strong {:style {:margin-top "0.75rem"}}
           "Puuttuvat määrät"])
 
+       (when (and tallennustila? valmiiksi-yritetty?)
+         [:div {:style {:margin-top "0.5rem"}}
+          [:div.body-text.strong
+           (str "Et voi merkitä valmiiksi – "
+                (if (= 1 puuttuvat-lkm)
+                  "puuttuu vielä 1 sopimuksen määrä"
+                  (str "puuttuu vielä " puuttuvat-lkm " sopimuksen määrää")))]
+          [:div.body-text {:style {:margin-top "0.25rem"}}
+           "Täydennä puuttuvat kentät tai aseta 0. Voit tallentaa muutokset myös keskeneräisenä."]])
+
        (when (pos? puuttuvat-lkm)
          [:div.body-text {:style {:margin-top "0.25rem"}}
           "Jos tehtävälle ei ole määrää, syötä 0."])
@@ -149,6 +166,17 @@
          [:div.body-text {:style {:margin-top "0.5rem"}}
           "Täydennä puuttuvat muokkaustilassa."])]
 
+      (when (and (not tallennustila?) nayta-vain-puuttuvat?)
+        [:div {:style {:margin-top "0.75rem"}}
+         [:div.body-text.strong
+          (str "Suodatin aktiivinen: Näytetään vain puuttuvat (" puuttuvat-lkm ")")]
+         [:div {:style {:margin-top "0.25rem"}}
+          [napit/yleinen-toissijainen "Näytä kaikki"
+           #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
+           {:disabled (or tallennus-kaynnissa? false)
+            :vayla-tyyli? false
+            :data-cy "btn-nayta-kaikki-ei-muokkaustilassa"}]]])
+
       (when kopiointi-relevantti?
         [:div {:style {:margin-top "0.75rem"}}
          [:div.body-text.strong "Kopiointi tuleville hoitovuosille"]
@@ -158,14 +186,14 @@
              #(varmista/varmista-kayttajalta
                 {:otsikko "Kopioidaanko tuleville hoitovuosille?"
                  :sisalto [:div
-                           [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille."]
+                      [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille ja merkitään tämä hoitovuosi valmiiksi."]
                            (when tuleville-on-jo-syotettyja?
                              [:div {:style {:margin-top "0.5rem"}}
                               "Huom: kopiointi korvaa tulevien hoitovuosien nykyiset määrät."])]
-                 :hyvaksy "Kopioi ja tallenna"
+                :hyvaksy "Kopioi ja merkitse valmiiksi"
                  :peruuta-txt "Peruuta"
                  :napit [:tallenna :peruuta]
-                 :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavat kaikki-tehtavat true)))})
+                    :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat true)))})
              {:disabled (or tallennus-kaynnissa? false)
               :vayla-tyyli? false
               :data-cy "btn-kopioi-nyt"}]

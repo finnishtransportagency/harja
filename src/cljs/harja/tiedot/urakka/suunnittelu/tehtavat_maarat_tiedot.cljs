@@ -6,9 +6,6 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]))
 
-(def ^:private puuttuva-tarjousmaara-virheviesti
-  "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0")
-
 (defonce nakymassa? (atom false))
 
 ;; Muutosten seuranta
@@ -26,6 +23,7 @@
 (defrecord HaeTehtavatJaMaaratEpaonnistui [vastaus parametrit])
 
 (defrecord TallennaTehtavat [tehtavat kopioi-tuleville-vuosille?])
+(defrecord TallennaTehtavatJaMerkitseValmiiksi [tehtavat kopioi-tuleville-vuosille?])
 (defrecord TallennaTehtavatOnnistui [vastaus])
 (defrecord TallennaTehtavatEpaonnistui [vastaus])
 
@@ -131,6 +129,7 @@
       (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tallennus-yritetty? false)
+      (assoc :valmiiksi-validointi nil)
       (assoc :kaikki-tehtavat kaikki-tehtavat)
       (cond-> (true? (:nayta-vain-puuttuvat? app))
         (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
@@ -143,32 +142,84 @@
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (or (get-in vastaus [:response :virhe])
+                             (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)))
+                       :varoitus
+                       viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :haku-kaynnissa? false)))
 
   TallennaTehtavat
   (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
-    (if (onko-puuttuvia-tarjous-maaria? tehtavat)
-      (do
-        (viesti/nayta-toast! puuttuva-tarjousmaara-virheviesti :varoitus viesti/viestin-nayttoaika-keskipitka)
-        (assoc app :tallennus-yritetty? true))
-      (do
-        (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
-          {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-           :tehtavat tehtavat
-           :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
-           :valittu-hoitokausi @u/valittu-hoitokausi}
-          {:onnistui ->TallennaTehtavatOnnistui
-           :epaonnistui ->TallennaTehtavatEpaonnistui
-           :paasta-virhe-lapi? true})
-        (-> app
-          (assoc :tallennus-kaynnissa? true)
-          (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))))))
+    (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+       :tehtavat tehtavat
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :merkitse-valmiiksi? false
+       :valittu-hoitokausi @u/valittu-hoitokausi}
+      {:onnistui ->TallennaTehtavatOnnistui
+       :epaonnistui ->TallennaTehtavatEpaonnistui
+       :paasta-virhe-lapi? true})
+    (-> app
+      (assoc :tallennus-kaynnissa? true)
+      (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))
+      (assoc :viimeisin-tallennus-merkitse-valmiiksi? false)))
+
+  TallennaTehtavatJaMerkitseValmiiksi
+  (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
+    (let [puuttuvat-idt (puuttuvat-tarjous-maarat tehtavat)
+          puuttuvat-lkm (count puuttuvat-idt)
+          puuttuu? (pos? puuttuvat-lkm)
+          puuttuvat-teksti (if (= 1 puuttuvat-lkm)
+                             "Puuttuu vielä 1 sopimuksen määrä."
+                             (str "Puuttuu vielä " puuttuvat-lkm " sopimuksen määrää."))
+          ohje "Täydennä puuttuvat kentät tai aseta 0. Voit myös käyttää 'Näytä vain puuttuvat'."]
+      (if puuttuu?
+        (do
+          (viesti/nayta-toast! (str puuttuvat-teksti " " ohje) :varoitus viesti/viestin-nayttoaika-keskipitka)
+          (-> app
+            (assoc :tallennus-yritetty? true)
+            (assoc :valmiiksi-validointi {:puuttuvat-tehtava-idt puuttuvat-idt
+                                          :puuttuvat-lkm puuttuvat-lkm})
+            (assoc :viimeisin-tallennus-merkitse-valmiiksi? true)))
+        (do
+          (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+            {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+             :tehtavat tehtavat
+             :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+             :merkitse-valmiiksi? true
+             :valittu-hoitokausi @u/valittu-hoitokausi}
+            {:onnistui ->TallennaTehtavatOnnistui
+             :epaonnistui ->TallennaTehtavatEpaonnistui
+             :paasta-virhe-lapi? true})
+          (-> app
+            (assoc :tallennus-kaynnissa? true)
+            (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))
+            (assoc :viimeisin-tallennus-merkitse-valmiiksi? true))))))
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
+    (let [kopioi-tuleville? (true? (:viimeisin-tallennus-kopioi-tuleville? app))
+          merkitse-valmiiksi? (true? (:viimeisin-tallennus-merkitse-valmiiksi? app))
+          puuttuvat-lkm (count (puuttuvat-tarjous-maarat (:tehtavat vastaus)))
+          varoitus? (and (not merkitse-valmiiksi?) (pos? puuttuvat-lkm))
+          viesti (cond
+                  (and kopioi-tuleville? merkitse-valmiiksi?)
+                  "Määrät kopioitiin tuleville hoitovuosille, tallennettiin ja tämä hoitovuosi merkittiin valmiiksi."
+
+                  merkitse-valmiiksi?
+                  "Tiedot tallennettiin ja tämä hoitovuosi merkittiin valmiiksi."
+
+                  varoitus?
+                  (str "Muutokset tallennettiin. Puuttuu vielä " puuttuvat-lkm " sopimuksen määrää. Täydennä ja paina Tallenna ja merkitse valmiiksi.")
+
+                  :else
+                  (if kopioi-tuleville?
+                    "Määrät kopioitiin tuleville hoitovuosille ja tallennettiin."
+                    "Muutokset tallennettiin."))
+          tyyppi (if varoitus? :varoitus :onnistui)
+          kesto (when varoitus? viesti/viestin-nayttoaika-keskipitka)]
+      (viesti/nayta-toast! viesti tyyppi kesto))
 
     (let [kaikki-tehtavat (:tehtavat vastaus)
           lukitut-puuttuvat-tehtava-idt (when (true? (:nayta-vain-puuttuvat? app))
@@ -177,6 +228,7 @@
       (assoc :tallennus-kaynnissa? false)
       (assoc :tallennustila? false)
       (assoc :tallennus-yritetty? false)
+      (assoc :valmiiksi-validointi nil)
       (assoc :tallentamattomia-muutoksia? false)
       (assoc :kaikki-tehtavat kaikki-tehtavat)
       (cond-> (true? (:nayta-vain-puuttuvat? app))
@@ -188,7 +240,10 @@
 
   TallennaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (or (get-in vastaus [:response :virhe])
+                             (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)))
+                       :varoitus
+                       viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :tallennus-kaynnissa? false)))
 
