@@ -11,16 +11,42 @@
 
 (defn siirra-toteumat
   "Toteumat siirretään aina myöhään yöllä, jotta edellisen päivän kaikki toteumat ehtivät muodostua.
-  Funktio olettaa, että sitä ajetaan ajastetusti yöllä, joten käytetän - nyt - hetkeä defaulttina."
+  Funktio olettaa, että sitä ajetaan ajastetusti yöllä, joten käytetän - nyt - hetkeä defaulttina.
+  Siirretään kaikki ne toteumat, jotka on muodostuneet (lisätty) tai päivitetty edellisen ajokerran jälkeen.
+  Edellinen ajokerta saadaan ajastetut_tehtavat taulusta."
   [db & args]
   (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
-        annettu-nyt (first args)
-        nyt (or annettu-nyt nil)]
+        viimeisin-ajokerta (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle")
+        _ (log/info "Viimeisin onnistunut ajokerta analytiikan_toteumat siirrossa:" viimeisin-ajokerta)
+        annettu-alkuaika (first args)                       ;; Annetaan testeissä
+        annettu-loppuaika (second args)                     ;; Annetaan testeissä
+        alkuaika (or annettu-alkuaika                       ;; Käytetään testeissä
+                   viimeisin-ajokerta                       ;; Saatiin tietokanansta
+                   (pvm/ajan-muokkaus pvm/nyt true 1 :paiva) ;; Ensimmäisellä kerralla siirretään viimeisen päivän toteumat
+                   )
+        alkuaika-sql (if (= "java.sql.Timestamp" (type alkuaika))
+                       alkuaika
+                       (konversio/sql-timestamp alkuaika))
+        loppuaika (or
+                    annettu-loppuaika                     ;; Käytetään testeissä
+                    pvm/nyt                                 ;; Nykyhetki muulloin
+                    )
+        loppuaika-sql (if (= "java.sql.Timestamp" (type loppuaika))
+                        loppuaika
+                        (konversio/sql-timestamp loppuaika))]
     (try
-        (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt (konversio/sql-timestamp nyt)})
-        (ajastetut-tehtavat-kyselyt/paivita-ajastetun-tehtavan-onnistuminen! db true "siirra_toteumat_analytiikalle")
-        (ajastetut-tehtavat-kyselyt/paivita-viimeisin-onnistuminen! db "siirra_toteumat_analytiikalle")
-      (catch Exception e (ajastetut-tehtavat-kyselyt/paivita-ajastetun-tehtavan-onnistuminen! db false "siirra_toteumat_analytiikalle")))))
+      (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:alkuaika alkuaika-sql :loppuaika loppuaika-sql})
+      (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle",
+                                                               :ajankohta loppuaika-sql,
+                                                               :onnistunut true,
+                                                               :virhe nil})
+      (log/info "Toteumien siirto analytiikan_toteumat tauluun onnistui aikaväliltä: " alkuaika-sql " - " loppuaika-sql)
+      (catch Exception e
+        (log/error e "Toteumien siirto analytiikan_toteumat tauluun epäonnistui. ERROR:" e)
+        (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle",
+                                                                 :ajankohta loppuaika-sql,
+                                                                 :onnistunut false,
+                                                                 :virhe e})))))
 
 (defn- ajasta [db]
   (log/info "Ajastetaan toteumien siirto analytiikan_toteumat tauluun joka päivä.")

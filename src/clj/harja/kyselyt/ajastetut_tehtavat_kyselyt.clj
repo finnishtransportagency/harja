@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/ajastetut_tehtavat_kyselyt.sql"
   {:positional? true})
 
-(declare paivita-ajastetun-tehtavan-onnistuminen! paivita-viimeisin-onnistuminen!)
+(declare lisaa_ajastettu_tehtava! hae-viimeisin-onnistunut-ajokerta)
