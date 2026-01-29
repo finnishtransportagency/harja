@@ -75,25 +75,27 @@
         ;; Puuttuvat lasketaan aina koko datasta, jotta suodatin ei "tyhjennä" näkymää.
         puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat kaikki-tehtavat)
         puuttuvat-lkm (count puuttuvat-tehtava-idt)
-        {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja] :as tulevat-yhteenveto}
+        {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja tulevia-vuosia-valmiina]
+         :as tulevat-yhteenveto}
         (:tulevat-hoitovuodet-yhteenveto app)
         {:keys [menneita-vuosia-yhteensa menneita-vuosia-valmiina] :as _menneet-yhteenveto}
         (:menneet-hoitovuodet-yhteenveto app)
         tulevia-vuosia-yhteensa (or tulevia-vuosia-yhteensa 0)
         tulevia-vuosia-joissa-syotettyja (or tulevia-vuosia-joissa-syotettyja 0)
+        tulevia-vuosia-valmiina (or tulevia-vuosia-valmiina 0)
         menneita-vuosia-yhteensa (or menneita-vuosia-yhteensa 0)
         menneita-vuosia-valmiina (or menneita-vuosia-valmiina 0)
         tuleville-on-jo-syotettyja? (pos? tulevia-vuosia-joissa-syotettyja)
         kopioi-napin-teksti (if tuleville-on-jo-syotettyja? "Kopioi (korvaa)" "Kopioi nyt")
-        taman-hoitovuoden-teksti (if (zero? puuttuvat-lkm)
-                                  "✓ Tämä hoitovuosi: Valmis (puuttuvia sopimuksen määriä: 0)"
-                                  (str "⚠ Tämä hoitovuosi: Kesken (puuttuvia sopimuksen määriä: " puuttuvat-lkm ")"))
+        taman-hoitovuosi-valmis? (zero? puuttuvat-lkm)
+        taman-hoitovuoden-tila (if taman-hoitovuosi-valmis? "valmis" "kesken")
+        taman-hoitovuoden-tila-teksti (if taman-hoitovuosi-valmis? "Valmis" "Kesken")
         menneet-teksti (when (pos? menneita-vuosia-yhteensa)
                         (str "Menneet: " menneita-vuosia-valmiina "/" menneita-vuosia-yhteensa " valmiina"))
         tulevat-teksti (when (some? tulevat-yhteenveto)
                         (if (zero? tulevia-vuosia-yhteensa)
                           "Tulevat: ei tulevia"
-                          (str "Tulevat: " tulevia-vuosia-joissa-syotettyja "/" tulevia-vuosia-yhteensa " täytetty")))]
+                          (str "Tulevat: " tulevia-vuosia-valmiina "/" tulevia-vuosia-yhteensa " valmiina")))]
     [yleiset/info-laatikko :neutraali
      [:div
       [:div.flex-row {:style {:justify-content "space-between" :align-items "flex-start" :gap "1rem"}}
@@ -104,7 +106,10 @@
          [:div [ajax-loader-pieni]])]
       
       [:div {:style {:margin-top "0.5rem"}}
-       [:div taman-hoitovuoden-teksti]
+       [:div.flex-row.alkuun {:style {:gap "0.5rem" :flex-wrap "wrap" :align-items "center"}}
+        [:span "Tämä hoitovuosi:"]
+        [yleiset/tila-indikaattori taman-hoitovuoden-tila {:fmt-fn (constantly taman-hoitovuoden-tila-teksti)}]
+        [:span (str "(puuttuvia sopimuksen määriä: " puuttuvat-lkm ")")]]
 
        (when (or menneet-teksti tulevat-teksti)
          [:div
@@ -115,12 +120,16 @@
           (when tulevat-teksti
             [:span tulevat-teksti])])
 
+       (when (and tallennustila? (or (pos? puuttuvat-lkm) nayta-vain-puuttuvat?))
+         [:div.body-text.strong {:style {:margin-top "0.75rem"}}
+          "Puuttuvat määrät"])
+
        (when (pos? puuttuvat-lkm)
          [:div.body-text {:style {:margin-top "0.25rem"}}
           "Jos tehtävälle ei ole määrää, syötä 0."])
 
        (when (and tallennustila? (or (pos? puuttuvat-lkm) nayta-vain-puuttuvat?))
-         [:div.flex-row {:style {:margin-top "0.5rem" :gap "0.75rem" :flex-wrap "wrap"}}
+         [:div.flex-row.alkuun {:style {:margin-top "0.5rem" :gap "0.75rem" :flex-wrap "wrap"}}
           [:span
            [napit/yleinen-toissijainen (if nayta-vain-puuttuvat? "Näytä kaikki" "Näytä vain puuttuvat")
             #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
@@ -142,6 +151,7 @@
 
       (when kopiointi-relevantti?
         [:div {:style {:margin-top "0.75rem"}}
+         [:div.body-text.strong "Kopiointi tuleville hoitovuosille"]
          (if tallennustila?
            [:div {:style {:margin-top "0.5rem"}}
             [napit/yleinen-toissijainen kopioi-napin-teksti
