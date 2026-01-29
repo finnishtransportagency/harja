@@ -286,51 +286,46 @@
     toteumat))
 
 (defn palauta-toteumat-ilman-reittipisteita
-  "Haetaan toteumat ilman GPS-dataa"
+  "Haetaan toteumat ilman reittipisteitä annettujen alku- ja loppuajan puitteissa."
   [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
-  (log/info "Analytiikka API, toteumien haku ilman GPS-dataa, parametrit: " (pr-str parametrit))
-  (tarkista-haun-parametrit parametrit false)
+  (log/info "Analytiikka API, toteumien haku ilman reittipisteitä, parametrit: " (pr-str parametrit))
+  ;;Rajoitetaan haku yhteen vuorokauteen
+  (tarkista-haun-parametrit parametrit true)
   (let [alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
-                                                                           :loppuaika loppuaika})
+                                                                                      :loppuaika loppuaika})
         maara (count toteumat)
         loppudb (System/currentTimeMillis)
-        _ (log/info "Analytiikka-toteumat ilman GPS db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
+        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
 
-        ;; Rajoitetaan määrä 
-        _ (when (>= maara 100000)
-            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" maara "kpl"))
-
-        toteumat (when (< maara 100000)
-                   (->> toteumat
-                     (map (fn [toteuma]
-                            (-> toteuma
-                              (update :toteumatehtavat konversio/jsonb->clojuremap)
-                              (update :toteumamateriaalit konversio/jsonb->clojuremap))))
-                     (map #(update % :toteumatehtavat
-                             (fn [rivit]
-                               (keep
-                                 (fn [r]
+        toteumat (->> toteumat
+                   (map (fn [toteuma]
+                          (-> toteuma
+                            (update :toteumatehtavat konversio/jsonb->clojuremap)
+                            (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+                   (map #(update % :toteumatehtavat
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (-> r
+                                   (clojure.set/rename-keys db-tehtavat->avaimet)
+                                   (konversio/alaviiva->rakenne)))
+                               rivit))))
+                   (map #(update % :toteumamateriaalit
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (when (not (nil? (:f1 r)))
                                    (-> r
-                                     (clojure.set/rename-keys db-tehtavat->avaimet)
-                                     (konversio/alaviiva->rakenne)))
-                                 rivit))))
-                     (map #(update % :toteumamateriaalit
-                             (fn [rivit]
-                               (keep
-                                 (fn [r]
-                                   (when (not (nil? (:f1 r)))
-                                     (-> r
-                                       (clojure.set/rename-keys db-materiaalit->avaimet)
-                                       (konversio/alaviiva->rakenne))))
-                                 rivit))))
-                     (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
-                                                       :toteumatehtavat :toteuma_tehtavat}))))
-        toteumat (when (< maara 100000)
-                   {:toteumat
-                    (map (fn [toteuma]
-                           (konversio/alaviiva->rakenne toteuma))
-                      toteumat)})]
+                                     (clojure.set/rename-keys db-materiaalit->avaimet)
+                                     (konversio/alaviiva->rakenne))))
+                               rivit))))
+                   (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
+                                                     :toteumatehtavat :toteuma_tehtavat})))
+        toteumat {:toteumat
+                  (map (fn [toteuma]
+                         (konversio/alaviiva->rakenne toteuma))
+                    toteumat)}]
     toteumat))
 
 (defn palauta-materiaalit
