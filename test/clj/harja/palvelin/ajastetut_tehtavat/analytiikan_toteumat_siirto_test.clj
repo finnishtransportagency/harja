@@ -29,7 +29,7 @@
         loppupaiva (pvm/luo-pvm 2015 11 31)
         ;; HAetaan vain vuoden 2015 toteumat ja siivotaan varalta kaikki 2015 vuoden mahdollisesti siirretyt toteumat pois
         _ (u "DELETE FROM analytiikka_toteumat WHERE toteuma_alkanut > '2014-12-31' AND toteuma_alkanut < '2016-01-01'")
-        _ (u "DELETE FROM ajastetut_tehtavat WHERE suoritusyritys_aika > '2014-12-31' AND suoritusyritys_aika < '2016-01-01'")
+        _ (u "DELETE FROM ajastetut_tehtavat WHERE alkuaika_valilta >= '2014-12-31' AND loppuaika_valilta <= '2016-01-01'")
         hae-maarat (fn []
                      [(first (first (q "SELECT count(*) FROM toteuma WHERE alkanut > '2014-12-31' AND alkanut < '2016-01-01'")))
                       (first (first (q "SELECT count(*) FROM analytiikka_toteumat WHERE toteuma_alkanut > '2014-12-31' AND toteuma_alkanut < '2016-01-01'")))])
@@ -48,7 +48,7 @@
         ;; Haetaan kantaan logitetut ajastetut tehtävät
         ajastetut-tehtavat-logit (q-map (format "SELECT * FROM ajastetut_tehtavat
                                       WHERE tyyppi = 'siirra_toteumat_analytiikalle'
-                                      AND suoritusyritys_aika between '%s' AND '%s'"
+                                      AND loppuaika_valilta between '%s' AND '%s'"
                                       alkupaiva loppupaiva))]
 
     ;; Varmista toteumien siirto
@@ -80,13 +80,13 @@
 
         ;; Siivotaan ensin mahdolliset vanhat testidatat kyseiseltä päivältä
         _ (u "DELETE FROM analytiikka_toteumat WHERE toteuma_alkanut >= '2016-01-01' AND toteuma_alkanut < '2016-01-02'")
-        _ (u "DELETE FROM ajastetut_tehtavat WHERE suoritusyritys_aika >= '2016-01-01' AND suoritusyritys_aika < '2016-01-02'")
+        _ (u "DELETE FROM ajastetut_tehtavat WHERE alkuaika_valilta >= '2016-01-01' AND loppuaika_valilta < '2016-01-02'")
 
         ;; Haetaan tilanne ennen siirtoa - ei pitäisi olla yhtään riviä
         logit-ennen (q-map "SELECT * FROM ajastetut_tehtavat
                             WHERE tyyppi = 'siirra_toteumat_analytiikalle'
-                            AND suoritusyritys_aika >= '2016-01-01'
-                            AND suoritusyritys_aika < '2016-01-02'")
+                            AND loppuaika_valilta >= '2016-01-01'
+                            AND loppuaika_valilta < '2016-01-02'")
 
         ;; Ajetaan toteumien siirto
         _ (analytiikan-toteumat/siirra-toteumat testitietokanta alkuaika-sql loppuaika-sql)
@@ -94,9 +94,10 @@
         ;; Haetaan tilanne siirron jälkeen
         logit-jalkeen (q-map "SELECT * FROM ajastetut_tehtavat
                               WHERE tyyppi = 'siirra_toteumat_analytiikalle'
-                              AND suoritusyritys_aika >= '2016-01-01'
-                              AND suoritusyritys_aika < '2016-01-02'")
+                              AND loppuaika_valilta >= '2016-01-01'
+                              AND loppuaika_valilta < '2016-01-02'")
 
+        _ (println "logit-jalkeen:" logit-jalkeen)
         ;; Otetaan talteen ensimmäinen (ja ainoa) logirivi
         logi (first logit-jalkeen)]
 
@@ -108,10 +109,6 @@
     (is (= 1 (count logit-jalkeen))
         "Siirron jälkeen pitäisi olla täsmälleen yksi ajastetut_tehtavat -rivi")
 
-    ;; Tarkista, että lokirivissä on oikea tyyppi
-    (is (= "siirra_toteumat_analytiikalle" (:tyyppi logi))
-        "Lokirivin tyyppi pitää olla 'siirra_toteumat_analytiikalle'")
-
     ;; Tarkista, että siirto merkittiin onnistuneeksi
     (is (= true (:onnistunut logi))
         "Siirto pitää olla merkitty onnistuneeksi")
@@ -121,7 +118,7 @@
         "Onnistuneessa siirrossa ei saa olla virhe-kenttää")
 
     ;; Tarkista, että suoritusyritys_aika on asetettu (tämä on se 'viimeisin ajokerta')
-    (is (not (nil? (:suoritusyritys_aika logi)))
+    (is (not (nil? (:loppuaika_valilta logi)))
         "Suoritusyritys_aika (viimeisin ajokerta) pitää olla asetettu")))
 
 

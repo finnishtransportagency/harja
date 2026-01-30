@@ -17,9 +17,10 @@
   (jdbc/with-db-transaction [tx db]
     (toteuma-kyselyt/siirra-toteumat-analytiikalle tx {:alkuaika alkuaika-sql :loppuaika loppuaika-sql})
     (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! tx {:tyyppi "siirra_toteumat_analytiikalle"
-                                                              :ajankohta loppuaika-sql
-                                                              :onnistunut true
-                                                              :virhe nil})
+                                                             :alkuaika_valilta alkuaika-sql
+                                                             :loppuaika_valilta loppuaika-sql
+                                                             :onnistunut true
+                                                             :virhe nil})
     true))
 
 (defn siirra-toteumat
@@ -31,7 +32,7 @@
   Siirto tehdään transaktion sisällä ja yritetään maksimissaan 3 kertaa virhetilanteessa."
   [db & args]
   (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
-        viimeisin-ajokerta (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle")
+        viimeisin-ajokerta (:loppuaika_valilta (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle"))
         _ (log/info "Viimeisin onnistunut ajokerta analytiikan_toteumat siirrossa:" viimeisin-ajokerta)
 
         ;; Jotta ei varmasti menetetä yhtään muokattua tai lisättyä toteumaa, niin otetaan viimeisin ajokerta mukaan isommalla pensselillä, eli poistetaan siitä vielä 3h.
@@ -60,7 +61,8 @@
           ;; Olettaa, että virhe on joka kerta sama. Virhe siis logitetaan vain kerran ja se otetaan viimeisestä yrityksestä.
           (log/error (str "Toteumien siirto analytiikan_toteumat tauluun epäonnistui " max-yritykset " yrityksen jälkeen. ERROR:" viimeisin-virhe))
           (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle"
-                                                                   :ajankohta loppuaika-sql
+                                                                   :alkuaika_valilta alkuaika-sql
+                                                                   :loppuaika_valilta loppuaika-sql
                                                                    :onnistunut false
                                                                    :virhe (str viimeisin-virhe)}))
 
