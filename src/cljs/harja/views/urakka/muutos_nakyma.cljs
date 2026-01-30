@@ -55,6 +55,10 @@
 
      nakyma-vanha?
      [:<>
+      [yleiset/varoitus-vihje
+       (str
+         "Muutosten luokittelu on muuttunut hoitovuodesta 2025-26 alkaen. "
+         "Tämä hoitovuosi noudattaa vanhaa kirjaustapaa ja luokittelua.") nil :alert]
       [vaikutukset/muutosten-vaikutukset-vanha e! app]
       [muutoslistaus e! app]]
 

@@ -34,8 +34,8 @@
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
                                            :lasketut-muutokset false
                                            :rahavarausten-muutokset false
-                                           :tavoitehinnan-muutokset false
-                                           :suunniteltujen-maarien-muutokset false}})
+                                           :tavoitehinnan-muutokset true
+                                           :suunniteltujen-maarien-muutokset true}})
 
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
