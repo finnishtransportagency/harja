@@ -58,8 +58,8 @@ BEGIN
                    LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                    LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                    JOIN urakka u ON t.urakka = u.id
-         WHERE (t.muokattu BETWEEN loppuaika AND loppuaika)
-            OR (tm.muokattu BETWEEN loppuaika AND loppuaika)
+         WHERE (t.muokattu BETWEEN alkuaika AND loppuaika)
+            OR (tm.muokattu BETWEEN alkuaika AND loppuaika)
          GROUP BY t.id, t.luotu, u.id
         LOOP
         -- Käytetään poista - lisää uuusiksi, menetelmää, koska update lauseessa ei voi käyttää group by komentoa
