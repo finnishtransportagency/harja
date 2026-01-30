@@ -82,7 +82,7 @@
            nil
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
            onko-hankinnat-muutoksia?))
 
        [:div.row
@@ -124,7 +124,7 @@
             nil
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
             onko-hankinnat-muutoksia?)])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
@@ -239,7 +239,7 @@
               #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:erillishankinnat tulevaisuudessa-arvoja?)
             onko-erillishankinnat-muutoksia?)])
 
        [:div.row
@@ -272,7 +272,7 @@
              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:erillishankinnat tulevaisuudessa-arvoja?)
            onko-erillishankinnat-muutoksia?))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
@@ -325,7 +325,7 @@
               #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-            tulevaisuudessa-arvoja?
+            (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
             onko-hoidonjohtopalkkio-muutoksia?)])
 
        [:div.row
@@ -358,7 +358,7 @@
              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-           tulevaisuudessa-arvoja?
+           (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
 (defn- pysyvat-muutokset-grid* [e! muutokset valittu-hoitokausi]
