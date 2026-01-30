@@ -1361,7 +1361,7 @@
     (poista-palvelut http
       :analytiikka-toteumat
       :analytiikka-toteumat-koko
-      :analytiikka-toteumat-ilman-gps
+      :analytiikka-toteumat-ilman-reittipisteita
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet

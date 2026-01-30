@@ -1,6 +1,6 @@
 {  
   "$schema": "http://json-schema.org/draft-07/schema#",  
-  "title": "Analytiikka, toteumien palautus ilman GPS-dataa",  
+  "title": "Analytiikka, toteumien palautus ilman reittipisteitä",  
   "description": "Skeema analytiikan /api/analytiikka/toteumat-ilman-gps endpointille, joka palauttaa toteumat ilman GPS-reittitietoja. Skeema on dokumentaatioksi eikä käytössä ajonaikaisesti suorituskykysyistä.",  
   "type": "object",  
   "properties": {  
