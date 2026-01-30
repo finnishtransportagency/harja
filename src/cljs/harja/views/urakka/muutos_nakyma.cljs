@@ -4,11 +4,11 @@
   (:require
     [tuck.core :as tuck]
     [harja.tiedot.urakka :as u]
+    [harja.ui.yleiset :as yleiset]
     [harja.ui.komponentti :as komp]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.views.urakka.valinnat :as urakka-valinnat]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-    [harja.ui.yleiset :as yleiset]
 
     ;; Vanhat urakat 
     [harja.views.urakka.muutokset.vanhat-urakat.suunniteltujen-maarien-muutokset :as suunnitellut]

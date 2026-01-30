@@ -1,23 +1,22 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
   (:require
+    [tuck.core :as tuck]
     [clojure.string :as str]
     [reagent.core :refer [atom]]
-    [taoensso.timbre :as log]
-    [tuck.core :as tuck]
 
     [harja.pvm :as pvm]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
     [harja.ui.lomake :as lomake]
     [harja.ui.viesti :as viesti]
     [harja.ui.liitteet :as liitteet]
-    [harja.ui.modal :as modal]
-    [harja.ui.napit :as napit]
-    [harja.ui.nakymasiirrin :as siirrin]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.ui.nakymasiirrin :as siirrin]
     [harja.tiedot.urakka.urakka :as tila]
-    [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]))
 
 
 (defonce ^{:private true}
@@ -82,8 +81,11 @@
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
 
-;; Vanha näkymä 
+;; Vanhojen urakoiden näkymä 
 (defrecord HaeVanhanUrakanMuutokset [])
+(defrecord HaeValikatselmuksenTiedot [])
+(defrecord HaeValikatselmuksenTiedotOnnistui [vastaus])
+(defrecord HaeValikatselmuksenTiedotEpaonnistui [vastaus])
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
@@ -134,15 +136,18 @@
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
 (defn- vastaus-haku-onnistui [app vastaus]
-  (assoc app
-    :haku-kaynnissa? false
-    :kirjatut-muutokset (:kirjatut-muutokset vastaus)
-    :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
-    :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
-    :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
-    :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
-    :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
-    :budjettitavoitteet (:budjettitavoitteet vastaus)))
+  (let [hoitokauden-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)
+        tavoitehinnan-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))]
+
+    (assoc app
+      :haku-kaynnissa? false
+      :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+      :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
+      :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
+      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
+      :tavoitehinnan-muutokset tavoitehinnan-muutokset
+      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+      :budjettitavoitteet (:budjettitavoitteet vastaus))))
 
 
 (defn pienin-hoitokauden-alkuvuosi-jossa-kirjauksia
@@ -252,7 +257,31 @@
 
   HaeVanhanUrakanMuutokset
   (process-event [_ app]
+    (tuck/fx
+      app
+      {:tuck.effect/type :debounce
+       :event ->HaeValikatselmuksenTiedot
+       :timeout 0}
+      app))
+
+  HaeValikatselmuksenTiedot
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-valikatselmuksen-tiedot-hoitovuodelle
+      {:urakkaid (-> @tila/yleiset :urakka :id)
+       :hoitovuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)}
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :haku-kaynnissa? true))
+
+  HaeValikatselmuksenTiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (vastaus-haku-onnistui app vastaus))
+
+  HaeValikatselmuksenTiedotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tavoitehinnan muutosten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
+
 
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
