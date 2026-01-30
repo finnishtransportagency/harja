@@ -121,6 +121,8 @@ FROM tehtavaryhma tr
        JOIN toimenpide tp ON t.emo = tp.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
+   -- Rajaa johto- ja hallinto pois, jos muutokset on käytössä 
+   AND (:muutokset-kaytossa? IS FALSE OR tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54'))
    AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
