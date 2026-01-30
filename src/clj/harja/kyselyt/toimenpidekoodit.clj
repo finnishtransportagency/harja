@@ -5,4 +5,4 @@
   {:positional? true})
 
 (declare hae-tehtava-tunnisteella listaa-tehtavat listaa-tehtavaryhmat listaa-toimenpiteet-analytiikalle
-  onko-kaytossa? onko-olemassa? hae-tehtavan-nopeusrajoitus)
+  onko-kaytossa? onko-olemassa? hae-tehtavan-nopeusrajoitus hae-tehtava-apitunnisteella)

@@ -330,7 +330,8 @@ SET alkanut           = :alkanut,
   poistettu           = FALSE,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
-  tyokoneen_lisatieto = :tyokoneen-lisatieto
+  tyokoneen_lisatieto = :tyokoneen-lisatieto,
+  lahde               = :lahde::lahde
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -1302,6 +1303,36 @@ WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_m
 group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
+
+-- name: hae-toteumat-ilman-reittipisteita-analytiikalle
+SELECT t.toteuma_tunniste_id,  
+       t.toteuma_sopimus_id,  
+       t.toteuma_alkanut,  
+       t.toteuma_paattynyt,  
+       t.toteuma_alueurakkanumero,  
+       t.toteuma_suorittaja_ytunnus,  
+       t.toteuma_suorittaja_nimi,  
+       t.toteuma_toteumatyyppi,  
+       t.toteuma_lisatieto,  
+       t.toteumatehtavat,  
+       t.toteumamateriaalit,  
+       t.toteuma_tiesijainti_numero,  
+       t.toteuma_tiesijainti_aosa,  
+       t.toteuma_tiesijainti_aet,  
+       t.toteuma_tiesijainti_losa,  
+       t.toteuma_tiesijainti_let,  
+       t.toteuma_muutostiedot_luotu,  
+       t.toteuma_muutostiedot_luoja,  
+       t.toteuma_muutostiedot_muokattu,  
+       t.toteuma_muutostiedot_muokkaaja,  
+       t.tyokone_tyokonetyyppi,  
+       t.tyokone_tunnus,  
+       t.urakkaid,  
+       t.poistettu  
+FROM analytiikka_toteumat t  
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)  
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))  
+ORDER BY t.toteuma_alkanut ASC; 
 
 -- name: paivita-palautettu-analytiikalle-aikaleima!
 UPDATE analytiikka_toteumat
