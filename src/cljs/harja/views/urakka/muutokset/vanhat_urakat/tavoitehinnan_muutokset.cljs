@@ -14,7 +14,7 @@
             [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]))
 
 
-(defn tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset haku-kaynnissa?] :as app}]
+(defn tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset haku-kaynnissa? tavoitehinnan-muutokset-yhteensa] :as app}]
 
   (let [hy (-> @tila/yleiset :urakka :hallintayksikko :id)
         urakka-id (-> @tila/yleiset :urakka :id)
@@ -23,7 +23,7 @@
      {:taulukon-avain :tavoitehinnan-muutokset
       :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
       :otsikko "Tavoitehinnan muutokset"
-      :summa (reduce + 0 (map :tavoitehinnan-muutos tavoitehinnan-muutokset))
+      :summa (or tavoitehinnan-muutokset-yhteensa 0)
       :toiminnot (fn [e! app]
                    [:div {:style {:display "flex" :column-gap "10px"}}
                     [:div.col-xs-12.body-text "Tavoitehinnan muutokset ovat saatavilla myös Välikatselmuksessa. "
