@@ -286,6 +286,8 @@
                 kayttaja
                 urakka-id)
             (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu))
+
+        uusi? (= 0 (::valikatselmus/oikaisun-id tiedot))
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
@@ -293,8 +295,15 @@
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
                                       ::muokkaustiedot/muokattu (pvm/nyt)
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
-                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (if (::valikatselmus/oikaisun-id tiedot)
+                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+
+        oikaisu-specql (if uusi?
+                         (dissoc oikaisu-specql ::valikatselmus/oikaisun-id)
+                         oikaisu-specql)]
+
+    (if (and
+          (not uusi?)
+          (::valikatselmus/oikaisun-id tiedot))
       (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
       (valikatselmus-q/tee-oikaisu db oikaisu-specql))
     ;; Hae välikatselmuksen tiedot
@@ -503,15 +512,15 @@
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
           validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
-                       (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon." ))
+                       (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon."))
                        validaatio)
 
           validaatio (if (> (:urakoitsija_maksaa paatos) (:ylityksen_maara paatos))
-                       (conj validaatio (str "Urakoitsijan maksu ylittää maksimiarvon." ))
+                       (conj validaatio (str "Urakoitsijan maksu ylittää maksimiarvon."))
                        validaatio)
 
           validaatio (if (> (+ (:urakoitsija_maksaa paatos) (:siirrettava_maara paatos)) (:ylityksen_maara paatos))
-                       (conj validaatio (str "Urakoitsijan ja siirrettävä määrä ylittää maksimiarvon." ))
+                       (conj validaatio (str "Urakoitsijan ja siirrettävä määrä ylittää maksimiarvon."))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
@@ -536,7 +545,7 @@
                     (heita-virhe (str (string/join ", " validaatio)))
                     (do
                       (paatos-kyselyt/tee-kattohinnan-ylityspaatos db paatos)
-                ;; Hae välikatselmuksen tiedot
+                      ;; Hae välikatselmuksen tiedot
                       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)})))]
       vastaus)))
 
@@ -608,7 +617,7 @@
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
               (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos db paatos))
-        
+
           ;; Laske lopullinen lupausten kustannusennuste kun välikatselmus on tehty
           _ (let [toteutunut-tavoitehinta (:tavoitehinta_jalkeen paatos)
                   kustannukset-jarjestettyna (hae-kustannukset-jarjestettyna

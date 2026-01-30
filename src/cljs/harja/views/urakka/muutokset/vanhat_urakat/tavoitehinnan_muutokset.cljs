@@ -8,6 +8,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.ui.grid.protokollat :as grid-protokollat]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
@@ -19,6 +21,7 @@
   (let [hy (-> @tila/yleiset :urakka :hallintayksikko :id)
         urakka-id (-> @tila/yleiset :urakka :id)
         valittu-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)]
+
     [kehystetty-avattava-grid e! app
      {:taulukon-avain :tavoitehinnan-muutokset
       :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
@@ -45,8 +48,22 @@
           :tallenna-vain-muokatut true
           :voi-poistaa? (constantly true)
           :mahdollista-rivin-valinta? false
-          :tallenna (fn [a]
-                      (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaOikaisut a))}
+          :tallenna (fn [rivit]
+                      (tuck-apurit/e-kanavalla! e! t-yhteiset/->TallennaOikaisut
+                        (keep (fn [r]
+                                (let [id (::valikatselmus/oikaisun-id r)
+                                      uusi? (neg-int? id)
+                                      poistettu? (:poistettu r)]
+                                  (when (and (not (and uusi? poistettu?))
+                                          (::valikatselmus/summa r)
+                                          (::valikatselmus/selite r))
+                                    (cond-> r
+                                      uusi? (assoc
+                                              ::valikatselmus/oikaisun-id 0
+                                              :harja.domain.urakka/id urakka-id
+                                              ::valikatselmus/hoitokauden-alkuvuosi valittu-alkuvuosi)
+                                      poistettu? (assoc ::muokkaustiedot/poistettu? true)))))
+                          rivit)))}
 
          [{:otsikko "Muutos"
            :nimi ::valikatselmus/otsikko
@@ -54,16 +71,18 @@
            :valinnat (into [] (valikatselmus/luokat @nav/valittu-urakka))
            :validoi [[:ei-tyhja "Valitse arvo"]]
            :leveys 20
-           :elementin-id (str "luokka-" (gensym))
+           :elementin-id #(str (::valikatselmus/oikaisun-id % (gensym)))
            :aria-label "Muutos"}
 
           {:otsikko "Perustelu"
            :nimi ::valikatselmus/selite
+           :validoi [[:ei-tyhja "Kirjoita oikaisun perustelu"]]
            :tyyppi :text
            :leveys 35}
 
           {:otsikko "Vaikutus € (+/-)"
            :nimi ::valikatselmus/summa
+           :validoi [[:ei-tyhja "Anna oikaisulle vaikutus"]]
            :tyyppi :numero
            :fmt fmt/euro-opt
            :tasaa :oikea
