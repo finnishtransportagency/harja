@@ -16,7 +16,8 @@
     [harja.ui.nakymasiirrin :as siirrin]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tyokalut.tuck :as tuck-apurit]
-    [harja.tiedot.urakka.siirtymat :as siirtymat]))
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.domain.kulut.valikatselmus :as valikatselmus]))
 
 
 (defonce ^{:private true}
@@ -140,7 +141,9 @@
 
 (defn- vastaus-haku-onnistui [app vastaus]
   (let [hoitokauden-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)
-        tavoitehinnan-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))]
+        tavoitehinnan-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
+        tavoitehinnan-muutokset-yhteensa (reduce + 0
+                                           (map ::valikatselmus/summa tavoitehinnan-muutokset))]
 
     (assoc app
       :haku-kaynnissa? false
@@ -148,7 +151,9 @@
       :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
       :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
       :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
-      :tavoitehinnan-muutokset tavoitehinnan-muutokset
+      :tavoitehinnan-muutokset (or tavoitehinnan-muutokset [])
+      :tavoitehinnan-muutokset-yhteensa tavoitehinnan-muutokset-yhteensa
+      :hoitovuoden-indeksikorjattu-tavoitehinta (-> vastaus :yhteenveto :budjettitavoite :tavoitehinta-indeksikorjattu)
       :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
       :budjettitavoitteet (:budjettitavoitteet vastaus))))
 

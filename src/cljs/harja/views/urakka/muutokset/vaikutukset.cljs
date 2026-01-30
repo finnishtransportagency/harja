@@ -77,7 +77,8 @@
 
 (defn muutosten-vaikutukset-vanha
   "Yhteenveto muutosten vaikutuksista."
-  [_e! {:keys [valittu-hoitokausi haku-kaynnissa?] :as _app}]
+  [_e! {:keys [valittu-hoitokausi haku-kaynnissa?
+               hoitovuoden-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset-yhteensa] :as _app}]
   [:div.muutosten-vaikutus
    (into []
      (concat
@@ -85,15 +86,17 @@
                          :tietorivi-luokka "padding-8"}
         [:h2 "Muutosten vaikutus tavoitehintaan"] ""]
 
-       ["Hoitovuoden alun indeksikorjattu tavoitehinta"
-        (fmt/euro-opt true true 77777M)
+       (if haku-kaynnissa?
+         [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
+         ["Hoitovuoden alun indeksikorjattu tavoitehinta"
+          (fmt/euro-opt true true hoitovuoden-indeksikorjattu-tavoitehinta)
 
 
-        ^{:viiva-rivin-alle? true}
-        [:div "Tavoitehinnan muutokset"]
-        (fmt/euro-opt true true 77777M)
+          ^{:viiva-rivin-alle? true}
+          [:div "Tavoitehinnan muutokset"]
+          (fmt/euro-opt true true tavoitehinnan-muutokset-yhteensa)
 
-        [:b "Yhteensä"]
-        [:b (fmt/euro-opt true true 77777M)]
+          [:b "Yhteensä"]
+          [:b (fmt/euro-opt true true (+ hoitovuoden-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset-yhteensa))]
 
-        ""]))])
+          ""])))])

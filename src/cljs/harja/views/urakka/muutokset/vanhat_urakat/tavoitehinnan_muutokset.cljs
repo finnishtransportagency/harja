@@ -9,11 +9,12 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]))
 
 
-(defn tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset] :as app}]
+(defn tavoitehinnan-muutokset [e! {:keys [tavoitehinnan-muutokset haku-kaynnissa?] :as app}]
 
   (let [hy (-> @tila/yleiset :urakka :hallintayksikko :id)
         urakka-id (-> @tila/yleiset :urakka :id)
@@ -35,7 +36,9 @@
       (fn [e! app]
         [grid/grid
          {:tunniste ::valikatselmus/oikaisun-id
-          :tyhja "Ei tavoitehinnan muutoksia."
+          :tyhja (if haku-kaynnissa?
+                   [ajax-loader-pieni "Haku käynnissä..."]
+                   "Aikavälille ei löytynyt tuloksia.")
           :luokat ["tavoitehinnan-muutokset-grid"]
           :voi-lisata? true
           :voi-kumota? false
