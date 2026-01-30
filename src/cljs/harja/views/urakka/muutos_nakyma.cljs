@@ -112,16 +112,16 @@
        suunniteltujen-maarien-muutokset])}])
 
 
-(defn muutoslistaus [e! app]
+(defn muutoslistaus [e! {:keys [nakyma-uusi? nakyma-vanha?] :as app}]
   [:div.muutoslistaus
    (when (:valittu-hoitokausi app)
-     (if (t-yhteiset/ennen-muutoksien-kayttoonotto? (:valittu-hoitokausi app))
-       ;; Tähän 1.10.2024 tai sitä aiemmiun alkaneiden hoitokausien " legacy " muutostoiminnot
+     (cond
+       nakyma-vanha?
        [:span.muutostiedot
         [tavoitehinnan-muutokset e! app]
         [suunniteltujen-maarien-muutokset e! app]]
 
-       ;; Tähän 1.10.2025 tai sitä myöhemmin alkavien hoitokausien uudet muutostoiminnot
+       nakyma-uusi?
        [:span.uudet-muutostiedot
         [kirjatut-muutokset/kirjatut-muutokset e! app]
         [lasketut-muutokset/lasketut-muutokset e! app]
@@ -177,6 +177,7 @@
     nil
     {:luokka "vihje-indeksikorjaus"}] ""])
 
+
 (defn- muutosten-vaikutus
   "Yhteenveto muutosten vaikutuksista."
   [_e! {:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa?] :as _app}]
@@ -194,34 +195,36 @@
            (muutosten-vaikutus-sisalto-rivit* budjettitavoitteet valittu-hoitokausi indeksikorjaus-vahvistettu?))))]))
 
 
-(defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa?] :as app}]
+(defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa? nakyma-uusi? nakyma-vanha?] :as app}]
   [:div.valinnat-ja-listaus
    [:h1 "Muutosten hallinta"]
    [:div.otsikko-ja-hoitokausi
 
-    ;; TODO:  
-    ;; Jos vanhoille hoitovuosille toteutetaan osiot, kaikki nayta-muutokset-sivu? kutsut voi poistaa 
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
-     #(when (t-yhteiset/nayta-muutokset-sivu?)
-        ;; Älä tee turhia kutsuja, jos sivua ei näytetä 
-        (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))) haku-kaynnissa? false]]
+     #(e! (t-yhteiset/->AlustaNakyma)) haku-kaynnissa? false]]
 
-   (if (t-yhteiset/nayta-muutokset-sivu?)
+   (cond
+     nakyma-uusi?
      [:<>
       [muutosten-vaikutus e! app]
       [muutoslistaus e! app]]
-     ;; Tämä näytetään, jos 2025 aikaisempi hoitovuosi valittuna
+
+     nakyma-vanha?
+     [:div ".."]
+
+     :else
      [yleiset/varoitus-vihje
-      "Muutokset ovat käytössä hoitovuodesta 2025 alkaen." nil :alert])])
+      "Muutokset ovat käytössä hoitovuodesta 2023 alkaen." nil :alert])
+   ;;
+   ])
 
 
 (defn muutokset-alempi-valilehti*
   [e! _app]
   (komp/luo
     (komp/lippu t-yhteiset/nakymassa?)
-    (komp/sisaan #(when (t-yhteiset/nayta-muutokset-sivu?)
-                    (e! (t-yhteiset/->HaeUrakanMuutostiedot nil))))
+    (komp/sisaan #(e! (t-yhteiset/->AlustaNakyma)))
     (fn [e!
          {:keys [muokattava-muutos] :as app}]
       [:span.muutokset-sivu

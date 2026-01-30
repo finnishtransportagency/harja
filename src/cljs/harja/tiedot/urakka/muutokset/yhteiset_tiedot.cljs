@@ -44,15 +44,18 @@
 
 (def +indeksikorjausta-ei-vahvistettu-txt+ "Ei saatavilla")
 (def +muutosten-vaikutus-yhteensa-ei-saatavilla+ "Ei saatavilla")
-(def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
+(def uudet-muutokset-kaytossa-alkuvuosi 2025)
+(def vanhat-muutokset-kaytossa-alkuvuosi 2023)
+
 
 (defonce nakymassa? (atom false))
 
-(defn nayta-muutokset-sivu? []
+
+(defn nayta-muutokset-sivu? [alkuvuosi]
   (boolean
     (and
       @u/valittu-aikavali
-      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))))
+      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) alkuvuosi))))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
@@ -70,18 +73,17 @@
                 normalisoidut-avaimet)]
     (apply array-map parit)))
 
-(defn ennen-muutoksien-kayttoonotto?
-  "Aika ennen muutoksien käyttöönottohoitovuotta"
-  [valittu-hoitokausi]
-  (when valittu-hoitokausi
-    (< (pvm/vuosi (first valittu-hoitokausi))
-      muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
-
 ;; --- Tuck-eventit ja käsittelijät ---
+;; Init
+(defrecord AlustaNakyma [])
+
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [tyyppi])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
+
+;; Vanha näkymä 
+(defrecord HaeVanhanUrakanMuutokset [])
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
@@ -231,6 +233,27 @@
     lomake-virheet))
 
 (extend-protocol tuck/Event
+
+  AlustaNakyma
+  (process-event [_ app]
+    (let [uusi? (nayta-muutokset-sivu? uudet-muutokset-kaytossa-alkuvuosi)
+          vanha? (and (not uusi?)
+                   (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))]
+      (tuck/fx
+        (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)
+        (cond
+          uusi?
+          {:tuck.effect/type :debounce
+           :event #(->HaeUrakanMuutostiedot nil)}
+
+          vanha?
+          {:tuck.effect/type :debounce
+           :event #(->HaeVanhanUrakanMuutokset)}))))
+
+  HaeVanhanUrakanMuutokset
+  (process-event [_ app]
+    app)
+
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
     "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
