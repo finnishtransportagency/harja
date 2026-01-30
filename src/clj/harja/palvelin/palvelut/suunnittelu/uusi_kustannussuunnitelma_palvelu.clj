@@ -53,7 +53,6 @@
           rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           ;; Hae erillishankinnat
           erillishankinnat (suunnitelma-q/hae-erillishankinnat db sopimus-id urakka-id hoitovuoden-alkuvuosi)
-
           ;; Hae johto- ja hallintokorvaukset - Eli toimenkuvien kustannukset
           toimenkuvat-tarjouksesta (filter #(= (:osio %) "johto-ja-hallintokorvaus") (:tarjous tarjous))
           johto-ja-hallintokorvaukset
@@ -78,8 +77,11 @@
           hoitovuoden-alun-kattohinta (:kattohinta tavoitetiedot)
           hoitovuoden-alun-indeksikorjattu-kattohinta (:kattohinta_indeksikorjattu tavoitetiedot)
 
-          ;; Haetaan tieto, että onko tulevilla hoitovuosilla mitään arvoja tallennettuna.
-          tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi)
+          ;; Haetaan osio-kohtaisesti onko tulevilla hoitovuosilla >0 euroja tallennettuna 
+          tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-loppuvuosi)
+          tulevaisuudessa-arvoja (into {}
+                                   (map (juxt :tyyppi :arvoja?))
+                                   tulevaisuudessa-arvoja)
 
           hoitovuoden-alun-tavoitehinta (:tavoitehinta tavoitetiedot)
 
@@ -87,7 +89,11 @@
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
-             :tulevaisuudessa-arvoja? tulevaisuudessa-arvoja
+             :tulevaisuudessa-arvoja? {:muut (get tulevaisuudessa-arvoja "muut" false)
+                                       :johto-ja-hallintokorvaukset (get tulevaisuudessa-arvoja "jjh" false)
+                                       :hoidonjohtopalkkiot (get tulevaisuudessa-arvoja "hoidonjohto" false)
+                                       :erillishankinnat (get tulevaisuudessa-arvoja "erillishankinnat" false)
+                                       :kilpailutettavat-hankinnat (get tulevaisuudessa-arvoja "hankinnat" false)}
              :viimeinen-hoitovuosi? viimeinen-hoitovuosi?
              :kustannussuunnitelma {:kilpailutettavat-hankinnat {:toimenpiteet kiinteat}
                                     :rahavaraukset rahavaraukset
