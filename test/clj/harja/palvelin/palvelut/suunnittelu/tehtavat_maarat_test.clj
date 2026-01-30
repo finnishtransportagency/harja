@@ -239,6 +239,163 @@
           (is (= (:tarjous_maara tehtava2) 20M) "Ise 1-ajorat (eli tehtävä2) määrä on tallennettu oikein")
           (is (= (:tarjous_maara tehtava3) 30M) "Ise rampit (eli tehtävä3) määrä on tallennettu oikein"))))))
 
+(deftest ei-tallenna-nulleja-sopimuksen-maariin
+  (testing "Tallennus ei saa kirjoittaa NULL-maaria niille tehtäville joihin ei ole koskettu"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          kayttaja-id (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtavarivit (filter (fn [rivi]
+                                (some? (:tehtava_id rivi)))
+                       kaikki-rivit)
+          muokattava-tehtava-id (:tehtava_id (first tehtavarivit))
+          nil-tehtava-id (:tehtava_id (second tehtavarivit))
+          tehtavat (mapv (fn [t]
+                           (cond
+                             (= (:tehtava_id t) muokattava-tehtava-id) (assoc t :tarjous_maara 100M)
+                             (= (:tehtava_id t) nil-tehtava-id) (assoc t :tarjous_maara nil)
+                             :else t))
+                    kaikki-rivit)]
+
+      (is (some? muokattava-tehtava-id) "Testidata: löytyi muokattava tehtävä")
+      (is (some? nil-tehtava-id) "Testidata: löytyi toinen tehtävä, jolle asetetaan nil")
+
+      (tm-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id kayttaja-id hoitokauden-alkuvuosi tehtavat)
+
+      (let [nulleja (or (:lkm (first (q-map (format "SELECT COUNT(*) AS lkm\n                                             FROM urakka_tehtavamaara\n                                            WHERE urakka = %s\n                                              AND \"hoitokauden-alkuvuosi\" = %s\n                                              AND maara IS NULL"
+                                            urakka-id hoitokauden-alkuvuosi))))
+                    0)]
+        (is (= 0 nulleja)
+            (str "Kantaan ei saa tallentua NULL-maaria. NULL-riveja: " nulleja))))))
+
+(deftest palvelu-ei-hyvaksy-puuttuvia-sopimuksen-maaria
+  (testing "Palvelu palauttaa selkeän virheen jos payloadissa on nil tarjous_maara ja yritetään merkitä valmiiksi"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          nil-tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))
+          tehtavat (mapv (fn [t]
+                           (if (= (:tehtava_id t) nil-tehtava-id)
+                             (assoc t :tarjous_maara nil)
+                             t))
+                     kaikki-rivit)
+          tiedot {:urakka-id urakka-id
+                  :tehtavat tehtavat
+                  :kopioi-tuleville-vuosille? false
+              :merkitse-valmiiksi? true
+                  :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                       (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}]
+      (is (some? nil-tehtava-id) "Testidata: löytyi tehtävä jonka määrä voidaan asettaa nil")
+
+      (is (thrown-with-msg?
+            IllegalArgumentException
+            #"Syötä määrä\. Jos tehtävälle ei ole määrää, syötä 0"
+            (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))))))
+
+(deftest palvelu-hyvaksyy-puuttuvia-sopimuksen-maaria-kun-ei-merkitse-valmiiksi
+  (testing "Salliva tallennus ei estä tallentamista vaikka payloadissa olisi nil tarjous_maara"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          nil-tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))
+          tehtavat (mapv (fn [t]
+                           (if (= (:tehtava_id t) nil-tehtava-id)
+                             (assoc t :tarjous_maara nil)
+                             t))
+                     kaikki-rivit)
+          tiedot {:urakka-id urakka-id
+                  :tehtavat tehtavat
+                  :kopioi-tuleville-vuosille? false
+                  :merkitse-valmiiksi? false
+                  :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                       (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}]
+
+      (is (some? nil-tehtava-id) "Testidata: löytyi tehtävä jonka määrä voidaan asettaa nil")
+
+      (let [vastaus (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
+        (is (map? vastaus) (str "Tallennuksen pitäisi palauttaa vastaus-map, palautui: " (pr-str vastaus)))
+        (is (contains? vastaus :tehtavat) "Tallennuksen pitäisi palauttaa :tehtavat")))))
+
+(deftest hae-tehtavat-ja-maarat-palauttaa-tulevien-hoitovuosien-yhteenvedon
+  (testing "Palautetaan tulevien hoitovuosien yhteenveto (syötettyjä vuosia / valmiita vuosia / tulevia vuosia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2021
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-idt (->> kaikki-rivit
+                           (filter #(some? (:tehtava_id %)))
+                           (map :tehtava_id)
+                           distinct)
+          tehtava-id (first tehtava-idt)
+          tulevat-vuodet [2022 2023 2024 2025]
+          vuosi-jossa-syotettyja 2023
+          valmis-vuosi 2024]
+
+      (is (some? tehtava-id) "Testidata: löytyi tehtävä joka kuuluu näkymään")
+
+      ;; Tyhjennetään tulevien hoitovuosien määrät, jotta testistä tulee deterministinen.
+      (u (format "DELETE FROM urakka_tehtavamaara\n                        WHERE urakka = %s\n                          AND \"hoitokauden-alkuvuosi\" IN (%s)"
+                 urakka-id
+                 (clojure.string/join ", " tulevat-vuodet)))
+
+      ;; Syötetään yhdelle tulevalle vuodelle yksi rivi (riittää "syötetty"-laskentaan).
+      (varmista-tarjousrivi! urakka-id vuosi-jossa-syotettyja tehtava-id)
+
+      ;; Tehdään yhdestä tulevasta hoitovuodesta täysin valmis: luodaan tarjousrivi kaikille tehtäville.
+      (doseq [tehtava-id tehtava-idt]
+        (varmista-tarjousrivi! urakka-id valmis-vuosi tehtava-id))
+
+      (let [tiedot {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                         (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}
+            vastaus (tm-palvelu/hae-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
+        (is (= {:tulevia-vuosia-yhteensa 4
+        :tulevia-vuosia-joissa-syotettyja 2
+        :tulevia-vuosia-valmiina 1}
+               (:tulevat-hoitovuodet-yhteenveto vastaus))
+            (str "Yhteenveto väärin. Palautui: " (pr-str (:tulevat-hoitovuodet-yhteenveto vastaus))))))))
+
+(deftest hae-tehtavat-ja-maarat-palauttaa-menneiden-hoitovuosien-yhteenvedon
+  (testing "Palautetaan menneiden hoitovuosien yhteenveto (valmiita / menneitä vuosia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2025
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-idt (->> kaikki-rivit
+                           (filter #(some? (:tehtava_id %)))
+                           (map :tehtava_id)
+                           distinct)
+          menneet-vuodet [2021 2022 2023 2024]
+          valmis-vuosi 2023]
+
+      (is (seq tehtava-idt) "Testidata: löytyy tehtäviä jotka kuuluvat näkymään")
+
+      ;; Tyhjennetään menneiden hoitovuosien määrät, jotta testistä tulee deterministinen.
+      (u (format "DELETE FROM urakka_tehtavamaara\n                        WHERE urakka = %s\n                          AND \"hoitokauden-alkuvuosi\" IN (%s)"
+                 urakka-id
+                 (clojure.string/join ", " menneet-vuodet)))
+
+      ;; Tehdään yhdestä menneestä hoitovuodesta täysin valmis: luodaan tarjousrivi kaikille tehtäville.
+      (doseq [tehtava-id tehtava-idt]
+        (varmista-tarjousrivi! urakka-id valmis-vuosi tehtava-id))
+
+      (let [tiedot {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                         (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}
+            vastaus (tm-palvelu/hae-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot)]
+        (is (= {:menneita-vuosia-yhteensa 4
+                :menneita-vuosia-valmiina 1}
+               (:menneet-hoitovuodet-yhteenveto vastaus))
+            (str "Yhteenveto väärin. Palautui: " (pr-str (:menneet-hoitovuodet-yhteenveto vastaus))))))))
+
 (deftest muutokset-sisaltavat-oikeat-kentat
   (testing "Muutokset-kentässä on edellinen_maara, maaramuutos ja uusi_maara oikein"
     (let [db (:db jarjestelma)
