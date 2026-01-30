@@ -86,6 +86,9 @@
 (defrecord HaeValikatselmuksenTiedot [])
 (defrecord HaeValikatselmuksenTiedotOnnistui [vastaus])
 (defrecord HaeValikatselmuksenTiedotEpaonnistui [vastaus])
+(defrecord TallennaOikaisut [oikaisut])
+(defrecord TallennaOikaisutOnnistui [vastaus])
+(defrecord TallennaOikaisutEpaonnistui [vastaus])
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
@@ -282,6 +285,29 @@
     (viesti/nayta-toast! "Tavoitehinnan muutosten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
     app)
 
+  TallennaOikaisut
+  (process-event [{:keys [oikaisut]} app]
+    (tuck/fx
+      (do
+        (doseq [oikaisu oikaisut]
+          (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+            oikaisu
+            {:onnistui ->TallennaOikaisutOnnistui
+             :epaonnistui ->TallennaOikaisutEpaonnistui
+             :paasta-virhe-lapi? true}))
+        (assoc app :haku-kaynnissa? true))
+      {:tuck.effect/type :debounce
+       :event ->HaeValikatselmuksenTiedot
+       :timeout 0}))
+
+  TallennaOikaisutOnnistui
+  (process-event [{:keys [vastaus]} app]
+    app)
+
+  TallennaOikaisutEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Oikaisun tallentaminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
 
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
