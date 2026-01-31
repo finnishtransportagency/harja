@@ -4,25 +4,28 @@
             [harja.pvm :as pvm]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
+            [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
             [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]))
 
 
-(defn suunniteltujen-maarien-muutokset [e! {:keys [suunniteltujen-maarien-muutokset] :as app}]
+(defn suunniteltujen-maarien-muutokset [e! {:keys [suunniteltujen-maarien-muutokset haku-kaynnissa?] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :suunniteltujen-maarien-muutokset
     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :suunniteltujen-maarien-muutokset))
     :otsikko "Suunniteltujen määrien muutokset"
-    :summa :ei-summaa
+    :summa 0
     :toiminnot (fn [e! app]
-                 [::span
-                  [napit/uusi "Lisää muutos" #(e! (t-yhteiset/->LisaaSuunniteltujenMaarienMuutos))]])
+                 #_[::span
+                    [napit/uusi "Lisää muutos" #(e! (t-yhteiset/->LisaaSuunniteltujenMaarienMuutos))]])
     :taulukko
     (fn [e! app]
       [grid/grid
        {:tunniste :id
         :luokat ["suunniteltujen-maarien-muutokset-grid"]
-        :tyhja "Ei suunniteltujen määrien muutoksia."
+        :tyhja (if haku-kaynnissa?
+                 [ajax-loader-pieni "Haku käynnissä..."]
+                 "Aikavälille ei löytynyt tuloksia.")
         :voi-lisata? false
         :voi-kumota? false
         :voi-poistaa? (constantly false)
@@ -52,4 +55,4 @@
          :komponentti (fn [rivi]
                         [napit/muokkaa "Muokkaa"
                          #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
-       suunniteltujen-maarien-muutokset])}])
+       []])}])

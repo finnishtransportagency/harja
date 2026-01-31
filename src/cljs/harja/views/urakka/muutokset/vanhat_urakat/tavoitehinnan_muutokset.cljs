@@ -27,8 +27,8 @@
       :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :tavoitehinnan-muutokset))
       :otsikko "Tavoitehinnan muutokset"
       :summa (or tavoitehinnan-muutokset-yhteensa 0)
-      :toiminnot (fn [e! app]
-                   [:div {:style {:display "flex" :column-gap "10px"}}
+      :toiminnot (fn [_ _]
+                   [:div.tavoitehinnan-muutokset-valinnat
                     [:div.col-xs-12.body-text "Tavoitehinnan muutokset ovat saatavilla myös Välikatselmuksessa. "
                      [:a.klikattava.alleviivaa
                       {:href (str "/#urakat/valikatselmus?&hy=" hy "&u=" urakka-id)

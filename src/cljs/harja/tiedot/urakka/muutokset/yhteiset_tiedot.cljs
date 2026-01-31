@@ -251,15 +251,13 @@
   (process-event [_ app]
     (let [uusi? (nayta-muutokset-sivu? uudet-muutokset-kaytossa-alkuvuosi)
           vanha? (and (not uusi?)
-                   (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))]
-      (tuck/fx
-        (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)
-        (cond
-          uusi?
+                   (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))
+          app (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)]
+      (tuck/fx app
+        (if uusi?
           {:tuck.effect/type :debounce
            :event #(->HaeUrakanMuutostiedot nil)}
 
-          vanha?
           {:tuck.effect/type :debounce
            :event #(->HaeVanhanUrakanMuutokset)}))))
 
@@ -269,8 +267,7 @@
       app
       {:tuck.effect/type :debounce
        :event ->HaeValikatselmuksenTiedot
-       :timeout 0}
-      app))
+       :timeout 0}))
 
   HaeValikatselmuksenTiedot
   (process-event [_ app]
