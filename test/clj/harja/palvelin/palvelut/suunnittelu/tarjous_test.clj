@@ -69,10 +69,7 @@
         ;; Poistetaan yhteensä rivi
         tarjousrivit (filter #(not= "yhteensa" (:osio %)) tarjousrivit)
         ;; Lisätään uusi yhteensä rivi
-        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit} false)
-
-        _ (println "v:: " tarjous)
-        ]
+        tarjous (tarjous-kyselyt/lisaa-yhteenvetorivi-tarjoukseen {:tarjous tarjousrivit} false)]
     tarjous))
 
 (defn ota-toimenkuvat-ja-poista-id [tarjous]
@@ -236,8 +233,7 @@
         tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
         tietokantajohto-ja-hallintokorvaukset (q-map (format "SELECT * from tarjous_johto_ja_hallintokorvaus
                                                  WHERE osio = 'johto-ja-hallintokorvaus'
-                                                   AND urakka_id = %s" urakka-id))
-        _ (println "tietokantajohto-ja-hallintokorvaukset:" (pr-str tietokantajohto-ja-hallintokorvaukset))]
+                                                   AND urakka_id = %s" urakka-id))]
 
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantajohto-ja-hallintokorvaukset) 11) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle. Paitsi valmistelukausi ennen urakka-ajan alkua on vain yhdessä vuodessa.")))

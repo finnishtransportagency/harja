@@ -97,7 +97,6 @@
                               AND loppuaika_valilta >= '2016-01-01'
                               AND loppuaika_valilta < '2016-01-02'")
 
-        _ (println "logit-jalkeen:" logit-jalkeen)
         ;; Otetaan talteen ensimmäinen (ja ainoa) logirivi
         logi (first logit-jalkeen)]
 

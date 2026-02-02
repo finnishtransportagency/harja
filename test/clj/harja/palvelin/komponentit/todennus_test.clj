@@ -486,7 +486,6 @@
       (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
                     todennus/hae-kayttajaroolit-rajapinnasta (fn [db integraatioloki miam kayttajanimi] miam-vastaus)]
         (let [kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset testi-headerit)
-              _ (println "kayttaja on" kayttaja)
               kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi testi-kayttajanimi}))]
 
           (is (some? kayttaja) "Käyttäjä palautetaan")
