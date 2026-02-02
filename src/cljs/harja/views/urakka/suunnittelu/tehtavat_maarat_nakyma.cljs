@@ -1,5 +1,5 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :as r]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [tuck.core :as tuck]
@@ -92,9 +92,8 @@
 (defn muutoksen-vaikutus-fn [arvo]
   (cond
     (nil? arvo) "-"
-    (pos? arvo) (str "+" arvo)
-    (neg? arvo) (str arvo)
-    :else arvo))
+    (pos? arvo) (str "+" (fmt/desimaaliluku-opt arvo 2))
+    :else (fmt/desimaaliluku-opt arvo 2)))
 
 (defn tehtava-vetolaatikko
   "Näyttää tehtävän muutokset vetolatikossa"
@@ -166,23 +165,20 @@
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka solun-luokka-fn}
-                   {:otsikko "Pysyvät muutokset (+/-)" :leveys "12.5%"
-                    :nimi :muutos_maaramuutos
-                    :solun-luokka solun-luokka-fn
-                    :tasaa :oikea
-                    :tyyppi :komponentti
-                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos] :as rivi}]
-                                   (if tehtava_id
-                                     [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
-                                     [:span]))}
-                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
-                    :tyyppi :komponentti
-                    :solun-luokka solun-luokka-fn
-                    :tasaa :oikea
-                    :komponentti (fn [{:keys [tehtava_id yhteensa] :as rivi}]
-                                   (if tehtava_id
-                                     [:span (fmt/desimaaliluku-opt yhteensa 2)]
-                                     [:span]))}
+                     {:otsikko "Pysyvät muutokset (+/-)" :leveys "12.5%"
+                      :nimi :muutos_maaramuutos
+                      :solun-luokka solun-luokka-fn
+                      :tasaa :oikea
+                      :tyyppi :numero
+                      :desimaalien-maara 2
+                      :muokattava? (constantly false)
+                      :fmt muutoksen-vaikutus-fn}
+                     {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
+                      :tyyppi :numero
+                      :desimaalien-maara 2
+                      :muokattava? (constantly false)
+                      :solun-luokka solun-luokka-fn
+                      :tasaa :oikea}
                    {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
