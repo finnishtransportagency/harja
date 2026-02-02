@@ -323,10 +323,7 @@
     "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
     jos tyyppi annetaan, tämän osion väkänen pysyy auki tallennuksen läpi."
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
-          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))
-
-          _ (println "alkuvuosi =" urakan-alkuvuosi " laskenta-automatiikka?=" laskenta-automatiikka?)
-          ]
+          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))]
       (hae-urakan-muutostiedot
         (as-> (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat) app
           (assoc app
