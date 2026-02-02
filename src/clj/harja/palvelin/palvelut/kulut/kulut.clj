@@ -402,14 +402,15 @@
               muutostyo (assoc muutostyo :muutos (:muutos kohdistusrivi))
               muutostyo-voimassa-alkaen (:voimassa_alkaen muutostyo)
 
-              budjetoitu-summa (:budjetoitu_summa muutostyo) ;; Muutostyölle kirjattu summa 
-              kirjattu-summa (:kirjattu_summa muutostyo) ;; Muutostyölle tähän mennessä kirjattujen kulujen summa 
-              lisatty-budjetti (- kokonaissumma edellinen-maara)
-              lisatty-budjetti (+ kirjattu-summa lisatty-budjetti) ;; Tällä kululla muutostyölle lisättävä summa
-              budjettia-jaljella (- budjetoitu-summa lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
+              budjetoitu-summa (:budjetoitu_summa muutostyo) ;; Muutostyölle kirjattu tavoitehinnan muutos 
+              kirjattu-summa (:kirjattu_summa muutostyo) ;; Muutostyölle tähän mennessä kirjattujen kulut yht 
+              lisatty-budjetti (- (or kokonaissumma 0) (or edellinen-maara 0))
+              lisatty-budjetti (+ (or kirjattu-summa 0) (or lisatty-budjetti 0)) ;; Tällä kululla budjettiin lisättävä summa
+              budjettia-jaljella (- (or budjetoitu-summa 0) lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
 
-              budjetti-ylittyy? (boolean
-                                  (when budjettia-jaljella (< budjettia-jaljella 0M)))
+              muutos-budjetti-ylittyy? (if-not (:muutos muutostyo) false
+                                         (boolean
+                                           (when budjettia-jaljella (< budjettia-jaljella 0M))))
 
               yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
                               (first (q/tarkista-kohdistuksen-yhteensopivuus db
@@ -440,7 +441,7 @@
                                            true)]
 
           (if (and
-                (not budjetti-ylittyy?)
+                (not muutos-budjetti-ylittyy?)
                 muutostyo-voimassa? muutostyo-erapaiva-validi? yhteensopiva?)
             (as-> kohdistusrivi kohdistus
               (update kohdistus :summa big/unwrap)
@@ -477,7 +478,7 @@
                                             (pvm/pvm (second muutostyo-hk))
                                             ".")}]})
 
-              budjetti-ylittyy?
+              muutos-budjetti-ylittyy?
               (throw+ {:type virheet/+viallinen-kutsu+
                        :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                                   :viesti (str
