@@ -347,6 +347,29 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
+(defonce ^:private varoitetut-numerokentta-oletukset (atom #{}))
+
+(defn- varoita-numerokentan-oletusdesimaalit!
+  "Dev-only varoitus: jos :numero-kentälle ei anneta eksplisiittistä formatointia
+  (kokonaisluku?/desimaalien-maara/min-desimaalit/max-desimaalit/fmt), päädytään
+  +desimaalin-oletus-tarkkuus+ -käytökseen.
+
+  Tämä auttaa löytämään kohdat, joissa integer-semantiikka on jäänyt määrittelemättä
+  (esim. pitäisi olla :kokonaisluku tai :lkm)."
+  [{:keys [nimi otsikko] :as kentta}]
+  (when ^boolean js/goog.DEBUG
+    (let [id (str (or nimi "-") "|" (or otsikko "-") "|" (hash (dissoc kentta :fmt :hae :aseta :komponentti)))]
+      (when-not (contains? @varoitetut-numerokentta-oletukset id)
+        (swap! varoitetut-numerokentta-oletukset conj id)
+        (js/console.warn
+          (str "[harja.ui.kentat] :numero käyttää oletusdesimaaleja ("
+               +desimaalin-oletus-tarkkuus+
+               ") ilman eksplisiittistä tarkkuutta/semantiikkaa. "
+               "Harkitse :kokonaisluku/:lkm tai määritä :desimaalien-maara/:min-desimaalit/:max-desimaalit/:fmt. "
+               "nimi=" (pr-str nimi) ", otsikko=" (pr-str otsikko))
+          (clj->js (select-keys kentta [:tyyppi :nimi :otsikko :desimaalien-maara :min-desimaalit :max-desimaalit :kokonaisluku?]))
+          (.-stack (js/Error. "numerokentta-oletusdesimaalit")))))))
+
 (defn numero-fmt [{:keys [kokonaisluku? desimaalien-maara min-desimaalit max-desimaalit fmt] :as kentta}]
   (cond
     fmt
@@ -362,7 +385,9 @@
     #(fmt/desimaaliluku-opt % min-desimaalit max-desimaalit false)
 
     :else
-    nil))
+    (do
+      (varoita-numerokentan-oletusdesimaalit! kentta)
+      nil)))
 
 ;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
 ;; ks. harja.fmt/desimaali-fmt
@@ -418,7 +443,7 @@
                                     input-luokka (str " " input-luokka)
                                     veda-oikealle? (str " veda-oikealle"))
                            :style (when (and veda-oikealle? yksikko)
-                                    {:padding-right (str "calc(19px + " (count yksikko) "ch")})
+                                    {:padding-right (str "calc(19px + " (count yksikko) "ch)")})
                            :type "text"
                            :disabled disabled?
                            :auto-complete (if disabloi-autocomplete? "off" "on")
@@ -497,6 +522,32 @@
              (normalisoi-numero (fmt @data) salli-whitespace?))
      (when yksikko
        (str " " yksikko))]))
+
+(defmethod tee-kentta :kokonaisluku [kentta data]
+  [tee-kentta (assoc kentta
+                :tyyppi :numero
+                :kokonaisluku? true)
+   data])
+
+(defmethod nayta-arvo :kokonaisluku [kentta data]
+  [nayta-arvo (assoc kentta
+                :tyyppi :numero
+                :kokonaisluku? true)
+   data])
+
+(defmethod tee-kentta :lkm [kentta data]
+  [tee-kentta (assoc kentta
+                :tyyppi :numero
+                :kokonaisluku? true
+                :vaadi-ei-negatiivinen? true)
+   data])
+
+(defmethod nayta-arvo :lkm [kentta data]
+  [nayta-arvo (assoc kentta
+                :tyyppi :numero
+                :kokonaisluku? true
+                :vaadi-ei-negatiivinen? true)
+   data])
 
 (defmethod tee-kentta :negatiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-negatiivinen? true
