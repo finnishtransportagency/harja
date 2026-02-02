@@ -402,11 +402,11 @@
               muutostyo (assoc muutostyo :muutos (:muutos kohdistusrivi))
               muutostyo-voimassa-alkaen (:voimassa_alkaen muutostyo)
 
-              budjetoitu-summa (:budjetoitu_summa muutostyo) ;; Muutostyölle kirjattu tavoitehinnan muutos 
-              kirjattu-summa (:kirjattu_summa muutostyo) ;; Muutostyölle tähän mennessä kirjattujen kulut yht 
-              lisatty-budjetti (- (or kokonaissumma 0) (or edellinen-maara 0))
-              lisatty-budjetti (+ (or kirjattu-summa 0) (or lisatty-budjetti 0)) ;; Tällä kululla budjettiin lisättävä summa
-              budjettia-jaljella (- (or budjetoitu-summa 0) lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
+              budjetoitu-summa (or (:budjetoitu_summa muutostyo) 0) ;; Muutostyölle kirjattu tavoitehinnan muutos 
+              kirjattu-summa (or (:kirjattu_summa muutostyo) 0) ;; Muutostyölle tähän mennessä kirjattujen kulut yht 
+              lisatty-budjetti (- kokonaissumma edellinen-maara)
+              lisatty-budjetti (+ kirjattu-summa lisatty-budjetti) ;; Tällä kululla budjettiin lisättävä summa
+              budjettia-jaljella (- budjetoitu-summa lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
 
               muutos-budjetti-ylittyy? (if-not (:valittu-muutostyo kohdistusrivi) false
                                          (boolean
