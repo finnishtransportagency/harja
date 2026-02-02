@@ -27,6 +27,16 @@
       "type": "string",
       "format": "date-time",
       "required": false
+    },
+    "lahde": {
+      "id": "urn:harja/lahde",
+      "type": "string",
+      "enum": [
+        "kasin",
+        "koneellinen",
+        "koneellinen, kasin muokattu"
+      ],
+      "required": false
     }
   }
 }
