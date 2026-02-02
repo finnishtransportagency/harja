@@ -45,7 +45,7 @@
 (def +indeksikorjausta-ei-vahvistettu-txt+ "Ei saatavilla")
 (def +muutosten-vaikutus-yhteensa-ei-saatavilla+ "Ei saatavilla")
 (def uudet-muutokset-kaytossa-alkuvuosi 2025)
-(def vanhat-muutokset-kaytossa-alkuvuosi 2023)
+(def vanhat-muutokset-kaytossa-alkuvuosi 2021)
 
 
 (defonce nakymassa? (atom false))
@@ -252,14 +252,18 @@
     (let [uusi? (nayta-muutokset-sivu? uudet-muutokset-kaytossa-alkuvuosi)
           vanha? (and (not uusi?)
                    (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))
+          ei-kaytossa? (and (not uusi?) (not vanha?))
           app (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)]
-      (tuck/fx app
-        (if uusi?
-          {:tuck.effect/type :debounce
-           :event #(->HaeUrakanMuutostiedot nil)}
 
-          {:tuck.effect/type :debounce
-           :event #(->HaeVanhanUrakanMuutokset)}))))
+      (if ei-kaytossa?
+        app
+        (tuck/fx app
+          (if uusi?
+            {:tuck.effect/type :debounce
+             :event #(->HaeUrakanMuutostiedot nil)}
+
+            {:tuck.effect/type :debounce
+             :event #(->HaeVanhanUrakanMuutokset)})))))
 
   HaeVanhanUrakanMuutokset
   (process-event [_ app]
@@ -276,7 +280,10 @@
        :hoitovuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)}
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
-    (assoc app :haku-kaynnissa? true))
+    (assoc app
+      :haku-kaynnissa? true
+      :valittu-hoitokausi @u/valittu-hoitokausi
+      :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))
 
   HaeValikatselmuksenTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
@@ -316,7 +323,10 @@
     "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
     jos tyyppi annetaan, tämän osion väkänen pysyy auki tallennuksen läpi."
     (let [urakan-alkuvuosi (some->> @u/valitun-urakan-hoitokaudet first first pvm/vuosi)
-          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))]
+          laskenta-automatiikka? (boolean (>= urakan-alkuvuosi 2025))
+
+          _ (println "alkuvuosi =" urakan-alkuvuosi " laskenta-automatiikka?=" laskenta-automatiikka?)
+          ]
       (hae-urakan-muutostiedot
         (as-> (tuck-apurit/nollaa-tuck-tila app nollatut-valinnat) app
           (assoc app

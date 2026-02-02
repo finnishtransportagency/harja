@@ -22,9 +22,9 @@
     [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
 
 
-(defn muutoslistaus [e! {:keys [nakyma-uusi? nakyma-vanha?] :as app}]
+(defn muutoslistaus [e! {:keys [nakyma-uusi? nakyma-vanha? valittu-hoitokausi] :as app}]
   [:div.muutoslistaus
-   (when (:valittu-hoitokausi app)
+   (if valittu-hoitokausi
      (cond
        nakyma-vanha?
        [:span.muutostiedot
@@ -35,7 +35,8 @@
        [:span.uudet-muutostiedot
         [kirjatut-muutokset/kirjatut-muutokset e! app]
         [lasketut-muutokset/lasketut-muutokset e! app]
-        [rahavarausten-muutokset/rahavarausten-muutokset e! app]]))])
+        [rahavarausten-muutokset/rahavarausten-muutokset e! app]])
+     [:div "Ei hoitokautta valittuna."])])
 
 
 (defn muutosten-hallinta-sisalto [e! {:keys [haku-kaynnissa? nakyma-uusi? nakyma-vanha?] :as app}]
@@ -64,7 +65,9 @@
 
      :else
      [yleiset/varoitus-vihje
-      "Muutokset ovat käytössä hoitovuodesta 2023 alkaen." nil :alert])])
+      (str
+        "Muutokset ovat käytössä hoitovuodesta "
+        t-yhteiset/vanhat-muutokset-kaytossa-alkuvuosi " alkaen.") nil :alert])])
 
 
 (defn muutokset-alempi-valilehti*
