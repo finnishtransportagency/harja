@@ -6,6 +6,7 @@
             [slingshot.slingshot :refer [throw+]]
 
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.domain.mhu :as mhu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -750,11 +751,23 @@
           (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi maaramuutos) true))))))
 
 
-(defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi]
+(defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi kustannusvaikutukset]
   ;; Jos tehdään muutostyö jolle voi kirjata kuluja 
   ;; -> tämän jälkeen vaihdetaan voimassa_alkaen päivää 
   ;; -> pitää tarkistaa voidaanko näin tehdä, esim jos kuluja on jo kirjattu
-  (let [vuosi (when voimassa_alkaen (pvm/vuosi voimassa_alkaen))
+  ;; Sama tarkastus budjetille (tavoitehinnan muutos)
+  (let [tavoitehinnan-muutos (apply + (keep #(:summa %) kustannusvaikutukset))
+        jo-kirjatut-kulut (muutos-kyselyt/muutostyolle-jo-kirjatut-kulut-yhteensa db
+                            {:muutos id
+                             :tyyppi (cond
+                                       (= alityyppi "erillisrahoitus")
+                                       "erillisrahoitettu-muutos"
+                                       :else nil)})
+
+        budjetti-ylittyy? (boolean (when (and tavoitehinnan-muutos jo-kirjatut-kulut)
+                                     (> (bigdec jo-kirjatut-kulut) (bigdec tavoitehinnan-muutos))))
+
+        vuosi (when voimassa_alkaen (pvm/vuosi voimassa_alkaen))
         kk (when voimassa_alkaen (pvm/kuukausi voimassa_alkaen))
         paiva (when voimassa_alkaen (pvm/paiva voimassa_alkaen))
         voimassa-alkaen-sql (when voimassa_alkaen (str vuosi "-" kk "-" paiva))
@@ -770,7 +783,15 @@
                    :voimassa voimassa-alkaen-sql})
         kuluja-kirjattu? (boolean vastaus)]
 
-    (when kuluja-kirjattu?
+    (cond
+      budjetti-ylittyy?
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                          :viesti (str
+                                    "Muutostyön budjetti ylittyy. "
+                                    "Kuluja on jo kirjattu yhteensä " (fmt/euro-opt jo-kirjatut-kulut))}]})
+
+      kuluja-kirjattu?
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                           :viesti (str
@@ -841,7 +862,7 @@
             tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
         (cond
           tyyppi-muutostyo?
-          (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi)
+          (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi kustannusvaikutukset)
 
           tyyppi-pysyva?
           ;; Estä tallennus, mikäli yritetään muokata lukittua pysyvän muutoksen voimassa_alkaen päivämäärää

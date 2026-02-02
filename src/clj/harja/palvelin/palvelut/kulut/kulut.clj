@@ -1,11 +1,10 @@
 (ns harja.palvelin.palvelut.kulut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
-  (:require [com.stuartsierra.component :as component]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
-            [harja.fmt :as fmt]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+  (:require [clojure.string :as str]
             [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+            [com.stuartsierra.component :as component]
+
             [harja.kyselyt
              [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]
@@ -14,17 +13,20 @@
              [urakat :as urakka-kyselyt]
              [tehtavaryhmat :as tehtavaryhma-kyselyt]
              [konversio :as konv]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.big :as big]
             [harja.domain.kulut :as kulut]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tyokalut.big :as big]
-            [harja.palvelin.palvelut.kulut.pdf :as kpdf]
             [harja.palvelin.palvelut.urakat :as urakat]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.palvelut.kulut.pdf :as kpdf]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
-            [harja.pvm :as pvm])
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 
@@ -481,7 +483,7 @@
                                   :viesti (str
                                             "Tallennus epäonnistui. "
                                             "Erillisrahoitetun muutostyön budjetti ylittyy. "
-                                            "Budjetissa jäljellä: " (fmt/euro-opt budjettia-jaljella))}]})
+                                            "Budjetin ylitys: " (fmt/euro-opt (Math/abs (double budjettia-jaljella))))}]})
 
               :else
               (throw+ {:type virheet/+viallinen-kutsu+

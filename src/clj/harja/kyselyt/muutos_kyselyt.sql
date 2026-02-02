@@ -263,6 +263,16 @@ WHERE
   AND k.erapaiva < :voimassa::DATE
   AND kk.muutos = :muutos;
 
+-- name: muutostyolle-jo-kirjatut-kulut-yhteensa
+-- single?: true
+SELECT COALESCE(SUM(kk.summa), 0) AS kirjattu_summa
+ FROM kulu k
+         JOIN kulu_kohdistus kk ON kk.kulu = k.id
+WHERE
+    kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE
+  AND kk.muutos = :muutos;
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
