@@ -208,8 +208,7 @@
                     (into virheet
                       (concat
                         (when-not indeksi-olemassa?
-                          [(str "Indeksit puuttuvat hoitovuodelle " hoitovuoden-alkuvuosi
-                             ". Indeksit on lisättävä ennen vahvistusta.")])
+                          [(str "Hoitovuoden " hoitovuoden-alkuvuosi " indeksikerroin ei ole vielä saatavilla.")])
 
                         (when (seq puuttuvat-suunnitelmat)
                           (map #(str %) puuttuvat-suunnitelmat)))))]

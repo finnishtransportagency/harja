@@ -464,7 +464,27 @@
 
         hoitovuoden-alun-kattohinta (or paivitetty-hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta 0)
         hoitovuoden-alun-indeksikorjattu-kattohinta (or hoitovuoden-alun-indeksikorjattu-kattohinta 0)
-        hoitovuoden-alun-kattohinta-atom (r/atom hoitovuoden-alun-kattohinta)]
+        hoitovuoden-alun-kattohinta-atom (r/atom hoitovuoden-alun-kattohinta)
+
+        indeksi-puuttuu-teksti "Ei indeksiä"
+        hk-indeksikorjattu-tavhinta-teksti (str
+                                             "Hoitovuoden alun indeksikorjattu tavoitehinta ("
+                                             (if (seq indeksikerroin-str) indeksikerroin-str "0,0")
+                                             " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")
+
+        hk-indeksikorjattu-tavoitehinta (if (seq indeksikerroin-str)
+                                          (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+                                          indeksi-puuttuu-teksti)
+
+        hk-indeksikorjattu-kattohinta-teksti (str
+                                               "Hoitovuoden alun indeksikorjattu kattohinta ("
+                                               (if (seq indeksikerroin-str) indeksikerroin-str "0,0")
+                                               " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")
+
+        hk-indeksikorjattu-kattohinta (if (seq indeksikerroin-str)
+                                        (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)
+                                        indeksi-puuttuu-teksti)]
+
     [:div#tavoite-ja-kattohinta-elementti.row.kustannussuunnitelma-osio.kapea-osio
      [:div.row
       [:div.col-xs-12
@@ -491,8 +511,8 @@
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true ero-tarjoukseen)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
-       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti hk-indeksikorjattu-tavhinta-teksti]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right hk-indeksikorjattu-tavoitehinta]]]
      ;; Osalla urakoista kattohinta syötetään käsin.
      (if-not muokkaa-kattohinta-kasin
        [:div.row
@@ -524,8 +544,8 @@
 
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu kattohinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-kattohinta) ")")]
-       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-kattohinta)]]]
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti hk-indeksikorjattu-kattohinta-teksti]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right hk-indeksikorjattu-kattohinta]]]
 
      [:div.row {:style {:margin-top "2rem"}}
       [:div.col-xs-12
@@ -546,7 +566,7 @@
      (when vahvistus-virhe
        [:div.row {:style {:margin-bottom "1rem"}}
         [:div.col-xs-12
-         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Suunnitellut kustannukset eivät täsmää tarjouksen tietoihin:"]]])]))
+         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Tavoite- ja kattohintaa ei voi vahvistaa:"]]])]))
 
 (defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))

@@ -371,7 +371,7 @@
                             {:error (.getMessage e)}))
 
         _ (is (= (get-in vastaus-indeksi [:kustannussuunnitelma :vahvistus-virhe])
-                ["Indeksit puuttuvat hoitovuodelle 2024. Indeksit on lisättävä ennen vahvistusta."
+                ["Hoitovuoden 2024 indeksikerroin ei ole vielä saatavilla."
                  "Erillishankinnat"
                  "Hoidonjohtopalkkiot"
                  "Johto-ja-hallintokorvaukset"]))]))
