@@ -854,10 +854,7 @@
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
-  :fmt                                  kentän näyttämis-fn. Ottaa argumenttina kentän arvon. Jos puuttuu,
-                                        arvo renderöidään `nayta-arvo`-multimethodilla (:tyyppi perusteella,
-                                        oletus `:default` -> `str`). Sama oletus koskee myös muokkaustilassa
-                                        ei-muokattavia soluja.
+  :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
