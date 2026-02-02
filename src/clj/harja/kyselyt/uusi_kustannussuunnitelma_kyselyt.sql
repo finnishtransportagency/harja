@@ -289,7 +289,7 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtava = :tehtava-id;
 
--- name: hae-kuukauden-hoidonjohtopalkkio
+-- name: hae-olemassa-oleva-hoidonjohtopalkkio
 SELECT id,
        kuukausi,
        vuosi,
@@ -298,8 +298,12 @@ SELECT id,
        toimenpideinstanssi,
        tehtava,
        sopimus
-FROM kustannusarvioitu_tyo
-WHERE id = :id;
+ FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id 
+  AND vuosi = :vuosi 
+  AND kuukausi = :kuukausi
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtava = :tehtava-id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
@@ -559,45 +563,58 @@ SELECT id, nimi, yksikko, suunnitteluyksikko, tehtavaryhma, luoja, luotu, muokka
    AND poistettu IS NOT TRUE;
 
 -- name: tulevilla-hoitovuosilla-arvoja?
--- Käyttöliittymässä on mahdollista kopioida nykyisen hoitovuoden arvot tuleville hoitovuosille.
--- Tämä kysely tarkistaa, onko tulevilla hoitovuosilla jo arvoja, jotta käyttäjää osataan varoittaa arvojen menettämisestä.
--- Ensin toimenkuvat
-SELECT COUNT(jjh.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM johto_ja_hallintokorvaus jjh
+-------------------------------- Johto ja hallinto
+SELECT 'jjh' AS tyyppi, 
+       SUM(jjh.tuntipalkka) > 0 AS "arvoja?"
+ FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
-  AND ((jjh.vuosi > :vuosi AND jjh.kuukausi IN (10, 11, 12))
-    OR (jjh.vuosi > :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
+  AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+GROUP BY tyyppi
 UNION ALL
--- Erillishankinnat
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
+-------------------------------- Hoidonjohtopalkkiot
+SELECT 'hoidonjohto' AS tyyppi,
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
+WHERE sopimus = :sopimus-id
+  AND (CONCAT(vuosi, '-', kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND toimenpideinstanssi = :hoidon-johdon-tpi-id
+  AND tehtava = :tehtava-id
+GROUP BY tyyppi
+UNION ALL
+-------------------------------- Erillishankinnat
+SELECT 'erillishankinnat' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
 WHERE kt.sopimus = :sopimus-id
-  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
   AND kt.tehtavaryhma = :erillishankinnat-tehtavaryhma-id
+GROUP BY tyyppi
 UNION ALL
--- Muut kulut
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
+-------------------------------- Muut kulut
+SELECT 'muut' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
          JOIN tehtava t ON kt.tehtava = t.id AND t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Muut kulut
 WHERE kt.sopimus = :sopimus-id
-  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
+GROUP BY tyyppi
 UNION ALL
--- Rahavaraukset
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
-    WHERE kt.rahavaraus_id IS NOT NULL
-    AND kt.sopimus = :sopimus-id
-    AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-        OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
--- Hankinnat
+-------------------------------- Rahavaraukset
+SELECT 'rahavaraukset' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
+WHERE kt.rahavaraus_id IS NOT NULL
+  AND kt.sopimus = :sopimus-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+GROUP BY tyyppi
+-------------------------------- Hankinnat
 UNION ALL
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kiinteahintainen_tyo kt
-WHERE ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+SELECT 'hankinnat' AS tyyppi,
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kiinteahintainen_tyo kt
+WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND toimenpideinstanssi IN (:hankinnan-toimenpideinstanssit)
-  AND sopimus = :sopimus-id;
+  AND sopimus = :sopimus-id
+GROUP BY tyyppi;

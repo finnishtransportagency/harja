@@ -197,7 +197,6 @@
     (is (= (bigdec alkukausi-vastauksesta) tietokantasumma))))
 
 
-;; Erillishankinnat
 (deftest tallenna-erillishankinnat-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -345,7 +344,6 @@
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
 
-;; Hoidonjohtopalkkiot
 (deftest tallenna-hoidonjohtopalkkiot-tietokantaan-onnistuneesti
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -419,14 +417,18 @@
 
 
 (deftest tallenna-hoidonjohtopalkkiot-tuleville-vuosille-toimi
-  (let [db (:db jarjestelma)
+  (let [hoitovuoden-alkuvuosi 2021
+        seuraava-vuosi 2023
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
-        hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
-                                         {:urakka urakka-id
-                                          :koodi "23151"})))
-        tehtava-id (:id (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"})))
-        hoitovuoden-alkuvuosi 2021
+        hae-tulevaisuudessa-arvoja-fn (fn [vuosi]
+                                        (kutsu-palvelua
+                                          (:http-palvelin jarjestelma)
+                                          :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+
+                                          {:urakka-id urakka-id :hoitovuoden-alkuvuosi vuosi}))
+
+        kustannussuunnitelma (hae-tulevaisuudessa-arvoja-fn seuraava-vuosi)
+        tulevaisuudessa-arvoja-ennen? (get-in kustannussuunnitelma [:tulevaisuudessa-arvoja? :hoidonjohtopalkkiot])
+
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+
                     (merge {:urakka-id urakka-id
@@ -437,21 +439,11 @@
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
 
-        tietomallin-summa (apply + (map :summa (:hoidonjohtopalkkiot apurit/hoidonjohtopalkkiot-tietomalli)))
-
-        seuraava-vuosi (inc hoitovuoden-alkuvuosi)
-        hoidonjohtopalkkiot-tietokannasta (q-map (format "SELECT SUM(summa) as summa
-                                                            FROM kustannusarvioitu_tyo
-                                                           WHERE sopimus = %s
-                                                             AND toimenpideinstanssi = %s
-                                                             AND tehtava = %s
-                                                             AND (
-                                                                  (vuosi = %s AND kuukausi in (10,11,12)) OR
-                                                                  (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
-                                                   sopimus-id hoidonjohto-tpi-id tehtava-id
-                                                   seuraava-vuosi (inc seuraava-vuosi)))]
+        kustannussuunnitelma (hae-tulevaisuudessa-arvoja-fn seuraava-vuosi)
+        tulevaisuudessa-arvoja-jalkeen? (get-in kustannussuunnitelma [:tulevaisuudessa-arvoja? :hoidonjohtopalkkiot])]
     (is (nil? (:error vastaus)))
-    (is (= (bigdec tietomallin-summa) (bigdec (:summa (first hoidonjohtopalkkiot-tietokannasta)))))))
+    (is (false? tulevaisuudessa-arvoja-ennen?))
+    (is (true? tulevaisuudessa-arvoja-jalkeen?))))
 
 
 (deftest tallenna-hoidonjohtopalkkiot-rajapinnasta-ei-toimi2
