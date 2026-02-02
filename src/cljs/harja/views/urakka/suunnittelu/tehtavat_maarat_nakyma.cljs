@@ -68,7 +68,7 @@
      [:div.painikkeet.text-right.grid-status-viestit
       [:span {:style {:margin-left "1rem"}}
        [napit/muokkaa
-       "Muokkaa sopimuksen määriä"
+         "Muokkaa alkuperäisen sopimuksen määriä"
         #(e! (tiedot/->ToggleTallennusTila))
         {:data-cy "btn-muokkaa-sopimuksen-maaria"}]]])])
 
@@ -118,12 +118,13 @@
         :tunniste :id
         :voi-kumota? false}
        [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
-        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
+        {:otsikko "Pysyvät muutokset (+/-)" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
          :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
-        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
+
 
 (defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
@@ -154,13 +155,18 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                   {:otsikko "Sopimuksen määrä" :leveys "12.5%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
-                    :muokattava? #(and
+                     {:otsikko "Alkuperäisen sopimuksen määrä"
+                      :leveys "12.5%"
+                      :nimi :tarjous_maara
+                      :tyyppi :positiivinen-numero
+                      :desimaalien-maara 2
+                      :tasaa :oikea
+                      :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%"
+                   {:otsikko "Pysyvät muutokset (+/-)" :leveys "12.5%"
                     :nimi :muutos_maaramuutos
                     :solun-luokka solun-luokka-fn
                     :tasaa :oikea
@@ -175,7 +181,7 @@
                     :tasaa :oikea
                     :komponentti (fn [{:keys [tehtava_id yhteensa] :as rivi}]
                                    (if tehtava_id
-                                     [:span yhteensa]
+                                     [:span (fmt/desimaaliluku-opt yhteensa 2)]
                                      [:span]))}
                    {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
@@ -215,7 +221,7 @@
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
     [:div#vayla
      [:div.row
-      [:h1 "Tehtävät ja määrät"]]
+      [:h1 "Tehtävä ja määräluettelo"]]
 
      [:div.flex-row {:style {:justify-content "space-between"}}
       [:div.filtteri
@@ -234,7 +240,7 @@
                                  :toiminta-f #(e! (tiedot/->FiltteroiTehtavat %))}
               (r/atom haku)]]]]
      [:div.flex-row
-      [:span "Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla. "
+                [:span "Pysyvät muutokset sopimuksen määriin kirjataan muutokset-sivulla. "
        [yleiset/linkki "Siirry muutokset-sivulle"
         #(siirtymat/siirry-annettuun-valilehteen
            @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
