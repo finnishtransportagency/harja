@@ -712,3 +712,38 @@ WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND m.poistettu IS FALSE 
 ORDER BY m.id DESC;
+
+
+-- name: hae-suunniteltujen-maarien-muutokset 
+-- Vanhojen näkymien suunnitellut määrät
+-- TODO ... 
+SELECT
+    o.otsikko                       AS toimenpide,
+    tk.id                           AS tehtava_id,
+    tk.nimi                         AS tehtava,
+    tk.suunnitteluyksikko           AS yksikko,
+    ut.maara                        AS suunniteltu_maara,
+    st.maara                        AS sopimus_maara,
+    ut."hoitokauden-alkuvuosi"      AS hoitovuosi,
+    COALESCE(COALESCE(st.maara, 0) - ut.maara, 0) AS muutos_maara
+FROM tehtava tk
+         JOIN tehtavaryhma tr_alataso
+              ON tr_alataso.id = tk.tehtavaryhma
+         JOIN tehtavaryhmaotsikko o
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id
+         LEFT JOIN sopimus_tehtavamaara st
+                   ON st.tehtava = tk.id
+                       AND st.urakka = 36
+                       AND st.hoitovuosi = 2023
+         JOIN urakka_tehtavamaara ut
+              ON ut.tehtava = tk.id
+WHERE
+    ut.urakka = 36
+  AND ut."hoitokauden-alkuvuosi" = 2023
+  AND ut.poistettu IS NOT TRUE
+  AND tk."maaramitattava?" IS TRUE
+  AND ut.maara > 0
+  AND COALESCE(COALESCE(st.maara, 0) - ut.maara, 0) > 0.0
+ORDER BY
+    o.otsikko,
+    tk.nimi;

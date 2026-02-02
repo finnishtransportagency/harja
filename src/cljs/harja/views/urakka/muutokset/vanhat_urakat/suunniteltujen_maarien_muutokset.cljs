@@ -32,27 +32,36 @@
         :voi-muokata? true}
 
        ;; Taulukon kentät
-       [{:otsikko "Muutoksen syy"
+       [{:otsikko "Tehtävä"
          :nimi :syy
          :tyyppi :string
          :leveys 15}
 
-        {:otsikko "Muutokset"
+        {:otsikko "Lisätieto"
          :nimi :muutokset
          :tyyppi :string
          :leveys 35}
 
-        {:otsikko "Lisätieto"
-         :nimi :lisatieto
+        {:otsikko "Yksikkö"
+         :nimi :yksikko
          :tyyppi :string
+         :muokattava? (constantly false)
+         :leveys 13}
+
+        {:otsikko "Tarjouksen määrä"
+         :nimi :suunniteltu_maara
+         :tyyppi :numero
+         :fmt #(fmt/desimaaliluku-opt % 0 3 true)
+         :muokattava? (constantly false)
          :leveys 15}
 
-        {:otsikko "" :nimi
-         :toiminnot :tyyppi
-         :komponentti
-         :leveys 10
-         :tasaa :oikea
-         :komponentti (fn [rivi]
-                        [napit/muokkaa "Muokkaa"
-                         #(e! (t-yhteiset/->MuokkaaMuutosta rivi))])}]
+        {:otsikko "Muutos (+/-)"
+         :nimi :maaramuutos
+         :tyyppi :numero
+         :fmt (fn [maaramuutos]
+                (if (> maaramuutos 0)
+                  (str "+" (fmt/desimaaliluku-opt maaramuutos 0 2 true))
+                  (fmt/desimaaliluku-opt maaramuutos 0 2 true)))
+         :muokattava? (constantly false)
+         :leveys 15}]
        []])}])
