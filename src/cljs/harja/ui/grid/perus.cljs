@@ -132,7 +132,15 @@
 
              [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
                             (when solun-luokka (solun-luokka arvo rivi)))}
-              ((or fmt str) (hae rivi))])))})))
+              (cond
+                (= tyyppi :komponentti) (apply komponentti rivi {:index index
+                                                                 :muokataan? false}
+                                          komponentti-args)
+                (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
+                                                                                :muokataan? false}]
+                                                       komponentti-args))
+                fmt (fmt arvo)
+                :else [nayta-arvo sarake (vain-luku-atomina arvo)])])))})))
 
 (defn etsi-seuraava-input
   "Etsii seuraavan input-elementin annetun rivin suunnassa (:eteen tai :taakse).
@@ -854,7 +862,10 @@
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
-  :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
+  :fmt                                  kentän näyttämis-fn. Ottaa argumenttina kentän arvon. Jos puuttuu,
+                                        arvo renderöidään `nayta-arvo`-multimethodilla (:tyyppi perusteella,
+                                        oletus `:default` -> `str`). Sama oletus koskee myös muokkaustilassa
+                                        ei-muokattavia soluja.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
