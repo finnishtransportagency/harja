@@ -33,7 +33,7 @@
 (defrecord AvaaRivi [valiotsikko])
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
 
-(defn hae-tehtavat-ja-maarat [parametrit]
+(defn hae-tehtavat-ja-maarat [_parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
     {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
      :valittu-hoitokausi @u/valittu-hoitokausi}
@@ -52,6 +52,17 @@
       tehtavat)
     tehtavat))
 
+(def ^:private puuttuva-tarjousmaara-viesti
+  "Syötä määrä tai aseta 0. Tyhjää arvoa ei voi tallentaa.")
+
+(defn- puuttuuko-tarjous-maara?
+  "True jos tehtäväriviltä puuttuu sopimuksen määrä (nil/tyhjä)."
+  [{:keys [valiotsikko tehtava_id tarjous_maara]}]
+  (and (nil? valiotsikko)
+       (some? tehtava_id)
+       (or (nil? tarjous_maara)
+           (and (string? tarjous_maara) (str/blank? tarjous_maara)))))
+
 (extend-protocol tuck/Event
 
   HaeTehtavatJaMaarat
@@ -61,7 +72,7 @@
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
-  (process-event [{vastaus :vastaus parametrit :parametrit} app]
+  (process-event [{vastaus :vastaus} app]
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
@@ -70,22 +81,30 @@
       (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
 
   HaeTehtavatJaMaaratEpaonnistui
-  (process-event [{vastaus :vastaus parametrit :parametrit} app]
+  (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :haku-kaynnissa? false)))
 
   TallennaTehtavat
   (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
-    (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
-      {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
-       :tehtavat tehtavat
-       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
-       :valittu-hoitokausi @u/valittu-hoitokausi}
-      {:onnistui ->TallennaTehtavatOnnistui
-       :epaonnistui ->TallennaTehtavatEpaonnistui
-       :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kaynnissa? true))
+    (if (some puuttuuko-tarjous-maara? tehtavat)
+      (do
+        (viesti/nayta-toast!
+          puuttuva-tarjousmaara-viesti
+          :varoitus
+          viesti/viestin-nayttoaika-keskipitka)
+        app)
+      (do
+        (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+          {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+           :tehtavat tehtavat
+           :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+           :valittu-hoitokausi @u/valittu-hoitokausi}
+          {:onnistui ->TallennaTehtavatOnnistui
+           :epaonnistui ->TallennaTehtavatEpaonnistui
+           :paasta-virhe-lapi? true})
+        (assoc app :tallennus-kaynnissa? true))))
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
