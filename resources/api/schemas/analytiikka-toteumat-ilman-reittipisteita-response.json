@@ -64,7 +64,8 @@
                   "muokkaaja": {"type": "string"}  
                 },  
                 "additionalProperties": false  
-              }  
+              },
+              "poistettu": {"type": "boolean"}
             },  
             "additionalProperties": true  
           }  
