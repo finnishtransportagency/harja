@@ -117,10 +117,12 @@
         :tunniste :id
         :voi-kumota? false}
        [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
-        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt % 2)}
         {:otsikko "Pysyvät muutokset (+/-)" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
          :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
-        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt % 2)}
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
@@ -156,6 +158,7 @@
                                      [:div.body-text.strong valiotsikko]))}
                      {:otsikko "Alkuperäisen sopimuksen määrä"
                       :leveys "12.5%"
+                      :fmt #(fmt/desimaaliluku-opt % 2)
                       :nimi :tarjous_maara
                       :tyyppi :positiivinen-numero
                       :desimaalien-maara 2
@@ -178,8 +181,9 @@
                       :desimaalien-maara 2
                       :muokattava? (constantly false)
                       :solun-luokka solun-luokka-fn
-                      :tasaa :oikea}
-                   {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
+                        :tasaa :oikea
+                        :fmt #(fmt/desimaaliluku-opt % 2)}
+                     {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid

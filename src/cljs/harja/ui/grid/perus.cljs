@@ -132,15 +132,7 @@
 
              [:td {:class (y/luokat "ei-muokattava" tasaus-luokka (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
                             (when solun-luokka (solun-luokka arvo rivi)))}
-              (cond
-                (= tyyppi :komponentti) (apply komponentti rivi {:index index
-                                                                 :muokataan? false}
-                                          komponentti-args)
-                (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
-                                                                                :muokataan? false}]
-                                                       komponentti-args))
-                fmt (fmt arvo)
-                :else [nayta-arvo sarake (vain-luku-atomina arvo)])])))})))
+              ((or fmt str) (hae rivi))])))})))
 
 (defn etsi-seuraava-input
   "Etsii seuraavan input-elementin annetun rivin suunnassa (:eteen tai :taakse).
