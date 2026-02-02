@@ -408,9 +408,13 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
       (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
@@ -458,6 +462,7 @@
       (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
@@ -475,16 +480,22 @@
 
   JaaErillishankinnatTasan
   (process-event [{:keys [summa elementti]} app]
-    (let [erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           erillishankinnat (map-indexed (fn [indeksi rivi]
-                                          (merge rivi
-                                            {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                             :summa_indeksikorjattu nil}))
+                                          (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                summa-indeksikorjattu (when indeksikerroin
+                                                                        (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                            (merge rivi
+                                              {:summa summa
+                                               :summa_indeksikorjattu summa-indeksikorjattu})))
                              erillishankinnat)]
       (scrollaa-muutoksiin elementti)
-      (assoc-in app [:kustannussuunnitelma :erillishankinnat] erillishankinnat)))
+      (-> app
+        (assoc :onko-erillishankinnat-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :erillishankinnat] erillishankinnat))))
 
   PaivitaHoidonjohtopalkkiot
   (process-event
@@ -513,9 +524,13 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
@@ -533,16 +548,22 @@
 
   JaaHoidonjohtopalkkiotTasan
   (process-event [{:keys [summa hoidonjohtopalkkio-elementti]} app]
-    (let [hoidonjohtopalkkiot (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          hoidonjohtopalkkiot (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           hoidonjohtopalkkiot (map-indexed (fn [indeksi rivi]
-                                             (merge rivi
-                                               {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                                :summa_indeksikorjattu nil}))
+                                             (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                   summa-indeksikorjattu (when indeksikerroin
+                                                                           (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                               (merge rivi
+                                                 {:summa summa
+                                                  :summa_indeksikorjattu summa-indeksikorjattu})))
                                 hoidonjohtopalkkiot)]
       (scrollaa-muutoksiin hoidonjohtopalkkio-elementti)
-      (assoc-in app [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot)))
+      (-> app
+        (assoc :onko-hoidonjohtopalkkio-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot))))
 
   PaivitaJohtoJaHallintokorvaukset
   (process-event
@@ -589,8 +610,12 @@
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
       (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
@@ -608,16 +633,25 @@
 
   JaaJohtoJaHallintokorvauksetTasan
   (process-event [{:keys [summa johto-ja-hallintokorvaukset-elementti]} app]
-    (let [johto-ja-hallintokorvaukset (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          johto-ja-hallintokorvaukset (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           johto-ja-hallintokorvaukset (map-indexed (fn [indeksi rivi]
-                                                     (merge rivi
-                                                       {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                                        :summa_indeksikorjattu nil}))
+                                                     (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                           summa-indeksikorjattu (when indeksikerroin
+                                                                                   (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                                       (merge rivi
+                                                         {:summa summa
+                                                          :summa_indeksikorjattu summa-indeksikorjattu})))
                                         johto-ja-hallintokorvaukset)]
       (scrollaa-muutoksiin johto-ja-hallintokorvaukset-elementti)
-      (assoc-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset)))
+
+
+
+      (-> app
+        (assoc :onko-jjh-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset))))
 
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [_ app]
