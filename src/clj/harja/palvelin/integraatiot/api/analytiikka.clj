@@ -285,6 +285,49 @@
                       toteumat)})]
     toteumat))
 
+(defn palauta-toteumat-ilman-reittipisteita
+  "Haetaan toteumat ilman reittipisteitä annettujen alku- ja loppuajan puitteissa."
+  [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  (log/info "Analytiikka API, toteumien haku ilman reittipisteitä, parametrit: " (pr-str parametrit))
+  ;;Rajoitetaan haku yhteen vuorokauteen
+  (tarkista-haun-parametrit parametrit true)
+  (let [alkudb (System/currentTimeMillis)
+        toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
+                                                                                      :loppuaika loppuaika})
+        maara (count toteumat)
+        loppudb (System/currentTimeMillis)
+        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
+
+        toteumat (->> toteumat
+                   (map (fn [toteuma]
+                          (-> toteuma
+                            (update :toteumatehtavat konversio/jsonb->clojuremap)
+                            (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+                   (map #(update % :toteumatehtavat
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (-> r
+                                   (clojure.set/rename-keys db-tehtavat->avaimet)
+                                   (konversio/alaviiva->rakenne)))
+                               rivit))))
+                   (map #(update % :toteumamateriaalit
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (when (not (nil? (:f1 r)))
+                                   (-> r
+                                     (clojure.set/rename-keys db-materiaalit->avaimet)
+                                     (konversio/alaviiva->rakenne))))
+                               rivit))))
+                   (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
+                                                     :toteumatehtavat :toteuma_tehtavat})))
+        toteumat {:toteumat
+                  (map (fn [toteuma]
+                         (konversio/alaviiva->rakenne toteuma))
+                    toteumat)}]
+    toteumat))
+
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
   [db _ _]
@@ -1109,6 +1152,16 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
+    
+    (julkaise-reitti
+      http :analytiikka-toteumat-ilman-reittipisteita
+      (GET "/api/analytiikka/toteumat-ilman-reittipisteita/:alkuaika/:loppuaika" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toteumat request
+          (fn [parametrit kayttaja db]
+            (palauta-toteumat-ilman-reittipisteita db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet  
+          :analytiikka)))
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
@@ -1308,6 +1361,7 @@
     (poista-palvelut http
       :analytiikka-toteumat
       :analytiikka-toteumat-koko
+      :analytiikka-toteumat-ilman-reittipisteita
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet
