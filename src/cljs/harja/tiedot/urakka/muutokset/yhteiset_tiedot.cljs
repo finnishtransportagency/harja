@@ -386,9 +386,10 @@
                   {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-                  ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                  (filter #(and
-                             (some? (:tavoitehinnan-muutos %))
+                  ;; Salli 0 arvo, jos kulu-id on olemassa (se poistetaan)
+                  ;; Muuten vaadi, että tavoitehinnan muutos ei ole 0.
+                  (filter #(or
+                             (:kulu-id %)
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
           muutos (assoc muutos :kulut kulut)

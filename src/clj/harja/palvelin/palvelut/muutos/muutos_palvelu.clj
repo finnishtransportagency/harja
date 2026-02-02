@@ -595,34 +595,56 @@
                         :laskun_numero (:laskun-numero rivi)
                         :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi (:pvm rivi) (:alkupvm urakka))
                         :kokonaissumma (:tavoitehinnan-muutos rivi)}
+                  tavoitehinnan-muutos (:tavoitehinnan-muutos rivi)
                   ;; 1.10.2025 ja jälkeen alkavissa urakassa vaaditaan negatiivinen summa näiden muutosten kuluissa
                   _ (when (and
                             (= :vahennys
                               (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm urakka)))
-                            (> (:tavoitehinnan-muutos rivi) 0))
+                            (> tavoitehinnan-muutos 0))
                       (throw (Error. "1.10.2025 tai sen jälkeen alkavissa urakoissa Johto- ja hallintokorvausmuutoksen kulut voivat olla vain vähennyksiä eli miinusmerkkisiä.")))
                   ;; jotta saadaan talteen muutoshistoria, aina luodaan uusi kulu ja sen kohdistus, vanhat merkitään poistetuksi
-                  kulu-id-db (:id (kulu-kyselyt/luo-kulu<! db kulu))
-                  ;; luodaan aina uusi kohdistus, jos kyseessä "päivitys", poistetaan vanha kohdistus jotta jää historia talteen
-                  kulu-kohdistus-db (muutos-kyselyt/luo-jjh-kulun-kohdistus<! db
-                                      {:kulu kulu-id-db
-                                       :summa (:tavoitehinnan-muutos rivi)
-                                       :toimenpideinstanssi hoidon-johto-tpi-id
-                                       :kayttaja (:id kayttaja)
-                                       :tyyppi "jjh-muutos"})]]
+                  kulu-id-db (when (not= tavoitehinnan-muutos 0)
+                               (:id (kulu-kyselyt/luo-kulu<! db kulu)))]]
+
+      ;; luodaan aina uusi kohdistus, jos kyseessä "päivitys", poistetaan vanha kohdistus jotta jää historia talteen
+      (when kulu-id-db
+        (muutos-kyselyt/luo-jjh-kulun-kohdistus<! db
+          {:kulu kulu-id-db
+           :summa (:tavoitehinnan-muutos rivi)
+           :toimenpideinstanssi hoidon-johto-tpi-id
+           :kayttaja (:id kayttaja)
+           :tyyppi "jjh-muutos"}))
+
+      (cond
+        ;; Esim voimassa alkaen pvm muutettiin, rivi muuttui nollaksi -> poista 
+        (and (:kulu-id rivi) (= tavoitehinnan-muutos 0))
+        (poista-vanhat-kulutiedot! db kayttaja rivi)
+
+        ;; Päivitetään olemassa oleva 
+        (and
+          kulu-id-db
+          (:kulu-id rivi)
+          (not= tavoitehinnan-muutos 0))
+        (do
+          (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
+                                                            :muutos (:id muutos-id-ja-versio)
+                                                            :vanha-kulu (:kulu-id rivi)
+                                                            :uusi-kulu kulu-id-db})
+          (poista-vanhat-kulutiedot! db kayttaja rivi))
+
+        ;; Tehdään uusi 
+        (and kulu-id-db (not (:kulu-id rivi)))
+        (do
+          (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                         :muutos (:id muutos-id-ja-versio)
+                                                         :kulu kulu-id-db})
+          (poista-vanhat-kulutiedot! db kayttaja rivi)))
+
 
       ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
       ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
       ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
-      (if (:kulu-id rivi)
-        (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
-                                                          :muutos (:id muutos-id-ja-versio)
-                                                          :vanha-kulu (:kulu-id rivi)
-                                                          :uusi-kulu kulu-id-db})
-        (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
-                                                       :muutos (:id muutos-id-ja-versio)
-                                                       :kulu kulu-id-db}))
-      (poista-vanhat-kulutiedot! db kayttaja rivi))))
+      )))
 
 
 (defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]

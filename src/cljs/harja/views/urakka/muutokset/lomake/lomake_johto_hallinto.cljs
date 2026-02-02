@@ -31,7 +31,25 @@
         :hae #(fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi urakan-hoitokaudet "Hoitovuosi")}
 
        (yhteiset/+rivi-muutoksen-syy+)
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi))
+
+       (merge
+         (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
+         {:aseta (fn [rivi arvo]
+                   (let [jjh-muutokset (:johto-ja-hallintokorvaukset rivi)
+                         jjh-muutokset (reduce-kv (fn [acc k v]
+                                                    ;; Jos rivi ei osu voimassa alkaen pvm, nollaa tavoitehinnan muutos
+                                                    (assoc acc k (if (and
+                                                                       (not= 0 (:tavoitehinnan-muutos v))
+                                                                       (pvm/ennen? (:pvm v) arvo))
+                                                                   (assoc v :tavoitehinnan-muutos 0)
+                                                                   v)))
+                                         {}
+                                         jjh-muutokset)]
+
+                     (-> rivi
+                       (assoc :voimassa_alkaen arvo)
+                       (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
+                       (assoc :johto-ja-hallintokorvaukset jjh-muutokset))))}))
 
      (first (yhteiset/liite-kentta e! app))
 
@@ -40,7 +58,6 @@
         :uusi-rivi? true
         :komponentti (fn [_rivi]
                        [yleiset/ajax-loader "Haetaan muutoksen tietoja..."])}
-
        {:nimi :johto-ja-hallintokorvaus-muutokset
         :otsikko ""
         :palstoja 2
@@ -48,13 +65,13 @@
         :uusi-rivi? true
         :komponentti
         (fn [_e! _]
-          [:span
-           [:hr]
+          [:span [:hr]
            [:h3 "Muutokset tavoitehintaan ja kuluihin"]
 
            [grid/muokkaus-grid
             {:tunniste :pvm
              :luokat ["johto-ja-hallintokorvaus-muutokset-grid"]
+             :jarjesta :pvm
              :piilota-toiminnot? true
              :voi-lisata? false
              :voi-kumota? false
@@ -64,7 +81,6 @@
              :rivi-jalkeen [{:teksti "Yhteensä" :sarakkeita 1 :luokka "yhteensa"}
                             {:teksti (fmt/euro-opt summa) :tasaa :oikea :luokka "yhteensa"}]}
 
-            ;; Taulukon kentät
             [{:otsikko "Kalenterikuukausi"
               :nimi :pvm
               :tyyppi :string
@@ -80,7 +96,13 @@
               :tyyppi :numero
               :fmt fmt/euro-opt
               :tasaa :oikea
-              :leveys 8}]
+              :leveys 8
+              :muokattava? (fn [r]
+                             ;; Ei ole muokattava, jos ei osu voimassa alkaen sisään
+                             (let [voimassa (:voimassa_alkaen muokattava-muutos)
+                                   rivi-voimassa? (boolean (when voimassa
+                                                             (pvm/ennen? voimassa (:pvm r))))]
+                               rivi-voimassa?))}]
             rivit-atom]
 
            [yleiset/info-laatikko :neutraali
