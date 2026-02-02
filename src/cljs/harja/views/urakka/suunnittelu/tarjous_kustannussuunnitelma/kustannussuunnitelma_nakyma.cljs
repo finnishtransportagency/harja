@@ -361,7 +361,7 @@
            (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
-(defn- pysyvat-muutokset-grid* [e! muutokset]
+(defn- pysyvat-muutokset-grid* [e! muutokset valittu-hoitokausi]
   [grid/grid
    {:tunniste :id
     :luokat ["kirjatut-muutokset-grid"]
@@ -413,10 +413,10 @@
                      (fn []
                        (let [muutokset-e! (tuck/control tila/muutokset)]
                          ;; Siirry muutoslomakkeelle, käyttäen muutosten omaa tilakontrolleria
-                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi))))])}]
+                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi valittu-hoitokausi))))])}]
    muutokset])
 
-(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app}]
+(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma hoitokauden-alkuvuosi] :as app}]
   (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -434,7 +434,9 @@
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
        (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
-         [pysyvat-muutokset-grid* e! muutokset]
+         ;; Täytyy passata näin, sillä valittu-hoitokausi on jostain syystä: 20280930 T 000000
+         ;; Kun pysyvän muutoksen lomake haluaa sen: 20280930 T 235959
+         [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]
 
          ;; Mhu-muutokset ei käytössä, näytetään placeholder
          [:div.row
