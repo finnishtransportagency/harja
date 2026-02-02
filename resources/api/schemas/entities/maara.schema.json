@@ -14,12 +14,6 @@
       "type": "number",
       "minimum": 0,
       "required": true
-    },
-    "pitoisuus": {
-      "id": "urn:harja/pitoisuus",
-      "type": "number",
-      "minimum": 0,
-      "required": false
     }
   }
 }

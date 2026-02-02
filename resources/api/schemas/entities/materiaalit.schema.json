@@ -18,6 +18,14 @@
         "required": true,
         "additionalProperties": false,
         "$ref": "file:resources/api/schemas/entities/maara.schema.json"
+      },
+      "lahdemateriaali": {
+        "id": "urn:harja/materiaalit/0/lahdemateriaali",
+        "type": "object",
+        "required": false,
+        "additionalProperties": false,
+        "$ref": "file:resources/api/schemas/entities/lahdemateriaali.schema.json"
+
       }
     }
   }
