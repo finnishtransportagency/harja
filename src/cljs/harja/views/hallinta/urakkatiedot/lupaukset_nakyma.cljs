@@ -243,7 +243,7 @@
                 :tunniste :id
                 :rivi-klikattu #(e! (tiedot/->ValitseKustannusennuste %))}
                [{:otsikko "Määräpäivä" :nimi :maarapaiva :tyyppi :pvm :leveys 1}
-                {:otsikko "Kuukausi" :nimi :kuukausi :tyyppi :numero :leveys 0.5}
+                  {:otsikko "Kuukausi" :nimi :kuukausi :tyyppi :kokonaisluku :leveys 0.5}
                 {:otsikko "Ennustettu tavoitehinta (€)" :nimi :ennustettu_tavoitehinta :tyyppi :numero :leveys 1}
                 {:otsikko "Ennustetut kustannukset (€)" :nimi :ennustetut_kustannukset :tyyppi :numero :leveys 1}
                 {:otsikko "Pisteet" :nimi :lasketut_pisteet :tyyppi :numero :leveys 1 :desimaalien-maara 2}

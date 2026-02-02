@@ -65,15 +65,15 @@
         :leveys 1}
        {:otsikko "Alusten lkm"
         :nimi ::lt-alus/lkm
-        :tyyppi :positiivinen-numero
+        :tyyppi :lkm
         :leveys 1}
        {:otsikko "Matkustajia"
         :nimi ::lt-alus/matkustajalkm
-        :tyyppi :positiivinen-numero
+        :tyyppi :lkm
         :leveys 1}
        {:otsikko "Nippuluku"
         :nimi ::lt-alus/nippulkm
-        :tyyppi :positiivinen-numero
+        :tyyppi :lkm
         :leveys 1}
        {:otsikko "Edellinen tapahtuma"
         :nimi ::lt/aika
@@ -181,15 +181,15 @@
        :nimi ::lt-alus/lkm
        :oletusarvo 1
        :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
-       :tyyppi :positiivinen-numero
+       :tyyppi :lkm
        :leveys 1}
       {:otsikko "Matkustajia"
        :nimi ::lt-alus/matkustajalkm
-       :tyyppi :positiivinen-numero
+       :tyyppi :lkm
        :leveys 1}
       {:otsikko "Nippuluku"
        :nimi ::lt-alus/nippulkm
-       :tyyppi :positiivinen-numero
+       :tyyppi :lkm
        :leveys 1}]
      alukset-atom]))
 
@@ -364,7 +364,7 @@
                        {:otsikko "Itsepalveluiden lukumäärä"
                         :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
                         :pakollinen? true
-                        :tyyppi :positiivinen-numero
+                        :tyyppi :lkm
                         :hae (constantly (::toiminto/lkm osa))
                         :aseta (fn [rivi arvo]
                                  (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))}))
