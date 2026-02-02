@@ -80,7 +80,7 @@
 
         ;; Siivotaan ensin mahdolliset vanhat testidatat kyseiseltä päivältä
         _ (u "DELETE FROM analytiikka_toteumat WHERE toteuma_alkanut >= '2016-01-01' AND toteuma_alkanut < '2016-01-02'")
-        _ (u "DELETE FROM ajastetut_tehtavat WHERE alkuaika_valilta >= '2016-01-01' AND loppuaika_valilta < '2016-01-02'")
+        _ (u "DELETE FROM ajastetut_tehtavat WHERE loppuaika_valilta >= '2016-01-01' AND loppuaika_valilta < '2016-01-02'")
 
         ;; Haetaan tilanne ennen siirtoa - ei pitäisi olla yhtään riviä
         logit-ennen (q-map "SELECT * FROM ajastetut_tehtavat
