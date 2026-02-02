@@ -408,7 +408,7 @@
               lisatty-budjetti (+ (or kirjattu-summa 0) (or lisatty-budjetti 0)) ;; Tällä kululla budjettiin lisättävä summa
               budjettia-jaljella (- (or budjetoitu-summa 0) lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
 
-              muutos-budjetti-ylittyy? (if-not (:muutos muutostyo) false
+              muutos-budjetti-ylittyy? (if-not (:valittu-muutostyo kohdistusrivi) false
                                          (boolean
                                            (when budjettia-jaljella (< budjettia-jaljella 0M))))
 
