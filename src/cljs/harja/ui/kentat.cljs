@@ -1541,10 +1541,10 @@
                    "flex-start"
                    "flex-end")
             top (if alaotsikot?
-                  "2px"
-                  "0px")]
+                  "1px"
+                  "16px")]
         [:div
-         [:div.tierekisteriosoite-flex
+         [:div.tierekisteriosoite-flex {:style {:height "60px"}}
           [osio alaotsikot? tie "Tie"]
           [osio alaotsikot? aosa "Aosa"]
           [osio alaotsikot? aet "Aet"]
@@ -1555,7 +1555,7 @@
           (when virhe
             [:div virhe])
           (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+            [:div {:style {:padding-left "16px" :padding-top top}}
              [:div.karttavalinta
               karttavalinta]])]]))))
 
