@@ -178,7 +178,7 @@
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
   (let [erillisrahoitettu-muutostyo (hae-muutostyot)
-
+        erillisrahoitettu-muutostyo (assoc erillisrahoitettu-muutostyo :tavoitehinnan-muutos 10000M)
         ;; Kulu joka tallennetaan kantaan
         uusi-muutos-kulu {:kokonaissumma 188,
                           :kohdistukset [{:rivi 0
@@ -281,10 +281,32 @@
            eräpäivä ei voi olla erillä hoitokaudella muutostyön voimassaolosta")))
 
 
+    (testing "Muutostyön kulun kirjaus heittää virheen, budjetti ylittyy"
+      (let [odotettu-poikkeus "Tallennus epäonnistui. Erillisrahoitetun muutostyön budjetti ylittyy"
+            kulu-erapaiva (pvm/->pvm "03.10.2025")
+            uusi-muutos-kulu (paivita-erapaivat-fn "2025-10-01" kulu-erapaiva)
+
+            uusi-muutos-kulu (-> uusi-muutos-kulu
+                               ;; Laita summaksi yli budjetin (budjetti = tavoitehinnan muutos)
+                               (assoc :kokonaissumma 100000M)
+                               (update :kohdistukset #(assoc-in % [0 :summa] 100000M)))
+
+            vastaus (try
+                      (kutsu-palvelua
+                        (:http-palvelin jarjestelma)
+                        :tallenna-kulu +kayttaja-jvh+
+                        {:urakka-id +urakka+
+                         :kulu-kohdistuksineen uusi-muutos-kulu})
+                      (catch Exception e e))]
+        (is
+          (true? (str/includes? vastaus odotettu-poikkeus))
+          "Odotettu virhe heitetään, 
+           erillisrahoitetun muutostyön budjetti ylittyy")))
+
+
     (testing "Tallennus validointi toimii, kun kuluja on jo kirjattu (erillisrahoitus)"
       (let [virheellinen-voimassa-alkaen (pvm/->pvm "11.11.2025")
             odotettu-poikkeus "Muutostyölle on jo kirjattu kuluja ennen 11.11.2025"
-
             muutos erillisrahoitettu-muutostyo
             muutos (assoc muutos
                      :tyyppi "muutostyo"
@@ -304,4 +326,31 @@
         (is
           (true? (str/includes? vastaus odotettu-poikkeus))
           "Odotettu virhe heitetään, 
-           voimassa ennen ei voi asettaa kirjattujen kulujen eräpäivien jälkeen")))))
+           voimassa ennen ei voi asettaa kirjattujen kulujen eräpäivien jälkeen")))
+
+
+    (testing "Tallennus validointi toimii, budjetti ylittyy (erillisrahoitus)"
+      (let [virheellinen-voimassa-alkaen (pvm/->pvm "11.11.2025")
+            odotettu-poikkeus "Muutostyön budjetti ylittyy."
+
+            muutos erillisrahoitettu-muutostyo
+            muutos (assoc muutos
+                     :tyyppi "muutostyo"
+                     :alityyppi :erillisrahoitus
+                     :tavoitehinnan-muutos 0M ;; Ei voi olla 0, kun kuluja on jo kirjattu
+                     :voimassa_alkaen virheellinen-voimassa-alkaen)
+
+            payload {:muutos muutos
+                     :urakka-id +urakka+
+                     :hoitokaudet +hoitokaudet+
+                     :valittu-hoitokausi (last +hoitokaudet+)}
+
+            vastaus (try
+                      (kutsu-palvelua
+                        (:http-palvelin jarjestelma)
+                        :tallenna-muutos +kayttaja-jvh+ payload)
+                      (catch Exception e e))]
+        (is
+          (true? (str/includes? vastaus odotettu-poikkeus))
+          "Odotettu virhe heitetään, 
+           tavoitehinnan muutos ei voi olla 0, kun kuluja on jo kirjattu")))))
