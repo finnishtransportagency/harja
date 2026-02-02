@@ -306,9 +306,10 @@
           mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
           hoitovuosi-lomakkeelle (if (and hyppaa-hoitovuoteen? lomakkeen-hoitokausi)
                                    lomakkeen-hoitokausi
-                                   (or (when aikaisin-hoitovuosi-jossa-kirjauksia
-                                         (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
-                                     (first mahdolliset-hoitovuodet-lomakkeella)))
+                                   (or
+                                     (when aikaisin-hoitovuosi-jossa-kirjauksia
+                                       (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
+                                     valittu-hoitokausi))
 
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app

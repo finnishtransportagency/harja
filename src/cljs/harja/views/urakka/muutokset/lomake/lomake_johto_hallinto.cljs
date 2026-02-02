@@ -38,6 +38,7 @@
                    (let [jjh-muutokset (:johto-ja-hallintokorvaukset rivi)
                          jjh-muutokset (reduce-kv (fn [acc k v]
                                                     ;; Jos rivi ei osu voimassa alkaen pvm, nollaa tavoitehinnan muutos
+                                                    ;; Tämä poistaa myös kirjatun kulun, jos sellainen on kirjattu 
                                                     (assoc acc k (if (and
                                                                        (not= 0 (:tavoitehinnan-muutos v))
                                                                        (pvm/ennen? (:pvm v) arvo))

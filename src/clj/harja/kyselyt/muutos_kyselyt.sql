@@ -705,8 +705,17 @@ SELECT  DISTINCT ON (m.id)
         m.tyyppi, 
         m.alityyppi,
         m.nimi, 
-        m.voimassa_alkaen
+        m.voimassa_alkaen,
+        mmk.summa AS budjetoitu_summa,
+        COALESCE(kk.kirjattu_summa, 0) AS kirjattu_summa
  FROM mhu_muutos m
+ JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id
+ LEFT JOIN (
+     SELECT muutos, SUM(summa) AS kirjattu_summa
+     FROM kulu_kohdistus
+     WHERE poistettu IS NOT TRUE
+     GROUP BY muutos
+ ) kk ON kk.muutos = m.id
 WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND m.urakka =  :urakka
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
