@@ -115,7 +115,7 @@
 ;; -- Siirtymät ja muut UI-toiminnot --
 ;; - Siirtymä esimerkiksi kustannussuunnitelmasta muutoksiin suoraan lomakkeelle
 (defrecord SiirryMuutosNakymaan [])
-(defrecord SiirryPysyvanMuutoksenMuokkauslomakkeelle [muutos])
+(defrecord SiirryPysyvanMuutoksenMuokkauslomakkeelle [muutos valittu-hoitokausi])
 
 (defn scrollaa-viimeksi-valitulle-riville []
   (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
@@ -296,6 +296,7 @@
                    valittu-hoitokausi :valittu-hoitokausi} app]
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
+          hyppaa-hoitovuoteen? (get-in app [:muokattava-muutos :hyppaa-hoitovuoteen?])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
           toimenpiteiden-tehtavat (:toimenpiteiden-tehtavat vastaus)
           ;; Lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
@@ -303,9 +304,12 @@
           ;; Jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
           aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
           mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
-          hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
-                                       (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
-                                   (first mahdolliset-hoitovuodet-lomakkeella))
+          hoitovuosi-lomakkeelle (if (and hyppaa-hoitovuoteen? lomakkeen-hoitokausi)
+                                   lomakkeen-hoitokausi
+                                   (or (when aikaisin-hoitovuosi-jossa-kirjauksia
+                                         (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
+                                     (first mahdolliset-hoitovuodet-lomakkeella)))
+
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
                 ;; Disabloi tallennus, enabloituu itsestään jos lomaketta muutetaan
@@ -542,7 +546,7 @@
     app)
 
   SiirryPysyvanMuutoksenMuokkauslomakkeelle
-  (process-event [{muutos :muutos} app]
+  (process-event [{:keys [muutos valittu-hoitokausi]} app]
     ;; Suoritetaan peräkkäisinä efekteinä viivästettynä
     ;; Ensin siirtymä ja sitten muutoslomakkeen alustus
     (tuck/fx
@@ -551,5 +555,5 @@
        :event ->SiirryMuutosNakymaan
        :timeout 0}
       {:tuck.effect/type :debounce
-       :event #(->MuokkaaMuutosta muutos)
+       :event #(->MuokkaaMuutosta (assoc muutos :hoitovuosi valittu-hoitokausi :hyppaa-hoitovuoteen? true))
        :timeout 100})))
