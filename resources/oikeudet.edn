@@ -528,6 +528,23 @@
    "Tilaajan_laadunvalvoja" #{"R*"},
    "Tilaajan_turvallisuusvastaava" #{"R*"},
    "vastuuhenkilo" #{"R"}}}
+ {:sym raportit-lisatyoraportti,
+  :osio "Raportit",
+  :nakyma "Lisätyöraportti",
+  :taso1 "raportit-lisatyoraportti",
+  :kuvaus "Osio 'Raportit' näkymä 'Lisätyöraportti'",
+  :roolien-oikeudet
+  {"ELY_Kayttaja" #{"R*"},
+   "ELY_Paakayttaja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*"},
+   "Jarjestelmavastaava" #{"R*"},
+   "Kayttaja" #{"R+"},
+   "Paakayttaja" #{"R+"},
+   "Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Asiantuntija" #{"R*"},
+   "Tilaajan_Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "vastuuhenkilo" #{"R"}}}
  {:sym raportit-mhupaikkaustenyhteenveto,
   :osio "Raportit",
   :nakyma "MHUPaikkaustenyhteenveto",
