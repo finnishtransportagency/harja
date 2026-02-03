@@ -68,7 +68,7 @@
           :data-cy "btn-peruuta-tehtavat-ja-maarat"}]]]
       [:span {:style {:margin-left "1rem"}}
        [napit/muokkaa
-        "Muokkaa sopimuksen määriä"
+        "Muokkaa alkuperäisen sopimuksen määriä"
         #(e! (tiedot/->ToggleTallennusTila))
         {:data-cy "btn-muokkaa-sopimuksen-maaria"}]])]])
 
@@ -229,9 +229,8 @@
 (defn muutoksen-vaikutus-fn [arvo]
   (cond
     (nil? arvo) "-"
-    (pos? arvo) (str "+" arvo)
-    (neg? arvo) (str arvo)
-    :else arvo))
+    (pos? arvo) (str "+" (fmt/desimaaliluku-opt arvo 2))
+    :else (fmt/desimaaliluku-opt arvo 2)))
 
 (defn tehtava-vetolaatikko
   "Näyttää tehtävän muutokset vetolatikossa"
@@ -255,10 +254,12 @@
         :tunniste :id
         :voi-kumota? false}
        [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
-        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt % 2)}
+        {:otsikko "Pysyvät muutokset (+/-)" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
          :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
-        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt % 2)}
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
@@ -269,17 +270,17 @@
                                                 (not (nil? (:valiotsikko rivi)))
                                                 (contains? avatut-tehtavaryhmat (:tehtavaryhmaotsikko rivi))))
                              tehtavat-ja-maarat)
-    puuttuvat-tarjous-maarat (if tallennus-yritetty?
-               (tiedot/puuttuvat-tarjous-maarat tehtavat-ja-maarat)
-               #{})
+        puuttuvat-tarjous-maarat (if tallennus-yritetty?
+                                   (tiedot/puuttuvat-tarjous-maarat tehtavat-ja-maarat)
+                                   #{})
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
                           "valiotsikko-tausta korkea"))
         tarjousmaara-solun-luokka (fn [arvo rivi]
                                    (let [perus (solun-luokka-fn arvo rivi)
-                 puuttuu? (and tallennus-yritetty?
-                    (nil? (:valiotsikko rivi))
+                                         puuttuu? (and tallennus-yritetty?
+                                                    (nil? (:valiotsikko rivi))
                                                     (some? (:tehtava_id rivi))
                                                     (contains? puuttuvat-tarjous-maarat (:tehtava_id rivi)))
                                          luokat (remove nil? [perus (when puuttuu? "sisaltaa-virheen")])]
@@ -303,7 +304,13 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                   {:otsikko "Sopimuksen määrä" :leveys "12.5%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
+                   {:otsikko "Alkuperäisen sopimuksen määrä"
+                    :leveys "12.5%"
+                    :fmt #(fmt/desimaaliluku-opt % 2)
+                    :nimi :tarjous_maara
+                    :tyyppi :positiivinen-numero
+                    :desimaalien-maara 2
+                    :tasaa :oikea
                     :jos-tyhja "—"
                     :validoi (when tallennus-yritetty?
                               [[:ei-tyhja "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0"]])
@@ -312,7 +319,8 @@
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka tarjousmaara-solun-luokka}
-                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%"
+                   {:otsikko "Pysyvät muutokset (+/-)"
+                    :leveys "12.5%"
                     :nimi :muutos_maaramuutos
                     :solun-luokka solun-luokka-fn
                     :tasaa :oikea
@@ -321,13 +329,15 @@
                                    (if tehtava_id
                                      [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
                                      [:span]))}
-                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
+                   {:otsikko "Muuttunut määrä"
+                    :leveys "12.5%"
+                    :nimi :yhteensa
                     :tyyppi :komponentti
                     :solun-luokka solun-luokka-fn
                     :tasaa :oikea
                     :komponentti (fn [{:keys [tehtava_id yhteensa]}]
                                    (if tehtava_id
-                                     [:span yhteensa]
+                                     [:span (fmt/desimaaliluku-opt yhteensa 2)]
                                      [:span]))}
                    {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
@@ -368,7 +378,7 @@
         kaikki-tehtavat (:kaikki-tehtavat app)]
     [:div#vayla
      [:div.row
-      [:h1 "Tehtävät ja määrät"]]
+      [:h1 "Tehtävä ja määräluettelo"]]
 
      [:div.flex-row {:style {:justify-content "space-between"}}
       [:div.filtteri
@@ -387,7 +397,7 @@
                                  :toiminta-f #(e! (tiedot/->FiltteroiTehtavat %))}
               (r/atom haku)]]]]
      [:div.flex-row
-      [:span "Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla. "
+                [:span "Pysyvät muutokset sopimuksen määriin kirjataan muutokset-sivulla. "
        [yleiset/linkki "Siirry muutokset-sivulle"
         #(siirtymat/siirry-annettuun-valilehteen
            @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)

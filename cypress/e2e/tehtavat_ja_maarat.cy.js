@@ -66,8 +66,8 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
     })
 
     it('Avaa tehtävä- ja määräluettelo', () => {
-        cy.get('h1').contains('Tehtävät ja määrät').should('be.visible');
-        cy.get('span').contains('Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla.').should('be.visible');
+        cy.get('h1').contains('Tehtävä ja määräluettelo').should('be.visible');
+        cy.get('span').contains('Pysyvät muutokset sopimuksen määriin kirjataan muutokset-sivulla.').should('be.visible');
 
         cy.get('table.grid').contains('Ise 2-ajorat.').should('be.visible');
         cy.get('table.grid').contains('Ise 1-ajorat.').should('be.visible');
@@ -77,7 +77,7 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
 
     });
 
-    it('Muokkaa sopimuksen määriä', () => {
+    it('Muokkaa alkuperäisen sopimuksen määriä', () => {
         cy.intercept('POST', '_/tallenna-tehtavat-ja-maarat').as('tallenna');
 
         cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').click();
