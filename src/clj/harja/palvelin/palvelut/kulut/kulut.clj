@@ -175,6 +175,20 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user (:urakka-id hakuehdot))
   (hae-kulut-kohdistuksineen db hakuehdot))
 
+(defn hae-hoitokauden-kulujen-summa
+  "Palauttaa hoitokauden kulujen summan laskutusrajaa varten."
+  [db user {:keys [urakka-id alkupvm loppupvm]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
+  (let [kulut (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
+                                                       :alkupvm alkupvm
+                                                       :loppupvm loppupvm})
+        ;; Lasketaan summa kaikista kohdistuksista
+        summa (reduce (fn [acc kulu]
+                        (+ acc (or (:summa kulu) 0)))
+                      0
+                      kulut)]
+    summa))
+
 (defn hae-kulu-kohdistuksineen
   "Hakee yksittäisen kulun tiedot kohdistuksineen."
   [db user {:keys [urakka-id id]}]
@@ -563,6 +577,23 @@
                                                                     tulos)))))]
     urakan-rahavaraukset))
 
+(defn hae-urakan-laskutusraja [db user {:keys [urakka-id hoitovuosi]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (log/debug "hae-laskutusraja :: hoitovuosi: " hoitovuosi)
+  (when (nil? hoitovuosi)
+    (throw (IllegalArgumentException. "Hoitovuosi ei voi olla nil")))
+  (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException.
+                     (str "Virheellinen urakka-id " urakka-id))))
+        hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuosi)
+        laskutusraja-rivi (first (q/hae-urakan-laskutusraja db {:urakka-id urakka-id
+                                                                 :hoitokausinro hoitokausinro}))
+        laskutusraja (:laskutusraja laskutusraja-rivi)
+        laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)]
+    {:laskutusraja laskutusraja
+     :laskutusraja-kaytossa laskutusraja-kaytossa?}))
+
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -659,6 +690,12 @@
       (julkaise-palvelu http :hae-urakan-rahavaraukset
         (fn [user hakuehdot]
           (hae-urakan-rahavaraukset db user hakuehdot)))
+      (julkaise-palvelu http :hae-hoitokauden-kulujen-summa
+        (fn [user hakuehdot]
+          (hae-hoitokauden-kulujen-summa db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-laskutusraja
+        (fn [user hakuehdot]
+          (hae-urakan-laskutusraja db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -675,7 +712,8 @@
       :poista-kulun-liite
       :tarkista-laskun-numeron-paivamaara
       :hae-urakan-hintapaatokset
-      :hae-urakan-rahavaraukset)
+      :hae-urakan-rahavaraukset
+      :hae-hoitokauden-kulujen-summa)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)
