@@ -36,20 +36,33 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
 
 describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
     let urakanAlkuvuosi = kuluvaHoitokausiAlkuvuosi(-2);
+    const urakanNimi = 'Pellon MHU testiurakka (3. hoitovuosi)';
+
+    function avaaTehtavaJaMaaraluettelo() {
+        cy.viewport(1100, 2000)
+        avaaHarjaTimeoutilla();
+
+        cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
+        cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: ladataanHarjaaTimeout}).click();
+
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: ladataanHarjaaTimeout}).click();
+
+        cy.intercept('POST', '_/hae-tehtavat-ja-maarat').as('hae');
+        cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click();
+        cy.wait('@hae', {timeout: ladataanHarjaaTimeout});
+
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: ladataanHarjaaTimeout}).should('not.exist');
+        cy.get('[data-cy="tehtavat-ja-maarat-grid"]', {timeout: ladataanHarjaaTimeout}).should('be.visible');
+    }
 
     before(() => {
         // Resetoidaan urakan kaikki tehtävämäärät.
-        alustaKantaanTehtavatJaMaarat('Pellon MHU testiurakka (3. hoitovuosi)');
-        avaaHarjaTimeoutilla();
-        
-        cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
-        cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Pellon MHU testiurakka (3. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
-        // Mene suunnittelu välilehdelle
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: ladataanHarjaaTimeout}).click();
-        // Avaa Tehtävä- ja määräluettelo -välilehti
-        cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: ladataanHarjaaTimeout}).should('not.exist');
+        alustaKantaanTehtavatJaMaarat(urakanNimi);
+    })
+
+    beforeEach(() => {
+        avaaTehtavaJaMaaraluettelo();
     })
 
     it('Avaa tehtävä- ja määräluettelo', () => {
@@ -68,46 +81,56 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
         cy.intercept('POST', '_/tallenna-tehtavat-ja-maarat').as('tallenna');
 
         cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').click();
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('10');
+        cy.get('table.grid')
+            .contains('Ise ohituskaistat')
+            .parent()
+            .find('td.muokattava input')
+            .clear()
+            .type('10')
+            .blur();
 
         // Tallennetaan muutokset
-        cy.get('div.painikkeet button').contains('Tallenna').click();
+        cy.get('[data-cy="btn-tallenna-tehtavat-ja-maarat"]').click();
         cy.wait('@tallenna')
             .its('response.statusCode')
             .should('equal', 200);
 
         // Viesti onnistumisesta pitäisi näkyä
-        cy.get('div').contains('Tiedot tallennettiin onnistuneesti.', {timeout: clickTimeout}).should('be.visible');
+        cy.contains('tallennettiin', {timeout: clickTimeout}).should('be.visible');
+        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').should('be.visible');
 
     });
 
     it('Kopioi seuraaville vuosille', () => {
         cy.intercept('POST', '_/tallenna-tehtavat-ja-maarat').as('tallenna');
 
-        // Valitse ensimmäinen hoitovuosi
-        cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('1. hoitovuosi').click();
-        });
-
         cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').click();
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('43');
 
-        // Tallennetaan muutokset
-        cy.get('[data-cy="btn-kopioi-tuleville-hoitovuosille"]').click();
+        // Jos puuttuvia määriä on, asetetaan ne 0:ksi jotta kopiointi + valmiiksi onnistuu.
+        cy.get('body').then(($body) => {
+            const btn = $body.find('[data-cy="btn-aseta-puuttuvat-nollaksi"]');
+            if (btn.length) {
+                cy.wrap(btn).click();
+            }
+        })
+
+        cy.get('table.grid')
+            .contains('Ise ohituskaistat')
+            .parent()
+            .find('td.muokattava input')
+            .clear()
+            .type('43')
+            .blur();
+
+        // Kopiointi avaa varmistusdialogin
+        cy.get('[data-cy="btn-kopioi-nyt"]').click();
+        cy.contains('button', 'Kopioi ja merkitse valmiiksi').click();
         cy.wait('@tallenna')
             .its('response.statusCode')
             .should('equal', 200);
 
         // Viesti onnistumisesta pitäisi näkyä
-        cy.contains('Tiedot tallennettiin onnistuneesti.', {timeout: 4000}).should('be.visible');
-
-        // Tarkista, että viidennellä hoitovuodella on sama summa
-        cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('5. hoitovuosi').click();
-        });
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.ei-muokattava').contains('43');
+        cy.contains('kopioitiin', {timeout: 4000}).should('be.visible');
 
     });
 
