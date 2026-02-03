@@ -181,7 +181,7 @@
                                               (assoc :valittu-muutostyo valittu-muutostyo)
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
                                               (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
-                                                                      (:muu-tehtava-kaytossa kohdistus))
+                                                                    (:muu-tehtava-kaytossa kohdistus))
                                                                 muu-tehtava
                                                                 (:tehtava kohdistus))))))
                                     kohdistukset))))
@@ -616,7 +616,8 @@
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-        {:urakka-id (:id hakuparametrit)}
+        {:urakka-id (:id hakuparametrit)
+         :muutokset-kaytossa? (istunto/ominaisuus-kaytossa? :mhu-muutokset)}
         {:onnistui ->ToimenpidehakuOnnistui
          :epaonnistui ->KutsuEpaonnistui
          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
