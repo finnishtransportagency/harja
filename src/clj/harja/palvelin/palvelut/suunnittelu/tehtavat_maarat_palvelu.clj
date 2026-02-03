@@ -13,6 +13,13 @@
   "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0")
 
 (defn- vaadi-ettei-puuttuvia-tarjousmaaria!
+  "Validointi tehdään vain, kun käyttäjä merkitsee tehtävä- ja määräluettelon valmiiksi.
+
+  'Valmis' tarkoittaa, että kaikille varsinaisille (ei väliotsikoille) tehtäville on annettu määrä.
+  Jos tehtävälle ei kuulu määrää, käyttäjän tulee syöttää 0 – ei jättää arvoa tyhjäksi.
+
+  Tällä estetään keskeneräisen/epäyhtenäisen tiedon tallentuminen 'valmiiksi' merkittynä.
+  Huom: tallennus ilman valmiiksi-merkitsemistä sallii puuttuvat määrät luonnostilassa."
   [{:keys [tehtavat]}]
   (when (some (fn [{:keys [valiotsikko tehtava_id tarjous_maara]}]
                 (and (nil? valiotsikko)
