@@ -264,11 +264,88 @@
 
       (tm-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id kayttaja-id hoitokauden-alkuvuosi tehtavat)
 
-      (let [nulleja (or (:lkm (first (q-map (format "SELECT COUNT(*) AS lkm\n                                             FROM urakka_tehtavamaara\n                                            WHERE urakka = %s\n                                              AND \"hoitokauden-alkuvuosi\" = %s\n                                              AND maara IS NULL"
-                                            urakka-id hoitokauden-alkuvuosi))))
-                    0)]
+        (let [nulleja (or (:lkm (first (q-map (format (str "SELECT COUNT(*) AS lkm\n"
+                               "  FROM urakka_tehtavamaara\n"
+                               " WHERE urakka = %s\n"
+                               "   AND \"hoitokauden-alkuvuosi\" = %s\n"
+                               "   AND tehtava = %s\n"
+                               "   AND maara IS NULL")
+                          urakka-id hoitokauden-alkuvuosi nil-tehtava-id))))
+              0)]
         (is (= 0 nulleja)
-            (str "Kantaan ei saa tallentua NULL-maaria. NULL-riveja: " nulleja))))))
+          (str "Tallennus ei saa luoda NULL-maaraa tehtavalle " nil-tehtava-id ". NULL-riveja: " nulleja))))))
+
+(defn- hae-urakka-tehtavamaara-tila
+  [urakka-id hoitokauden-alkuvuosi tehtava-id]
+  (first
+    (q-map (format (str "SELECT COUNT(*) AS lkm, MAX(maara) AS maara\n"
+                        "  FROM urakka_tehtavamaara\n"
+                        " WHERE urakka = %s\n"
+                        "   AND \"hoitokauden-alkuvuosi\" = %s\n"
+                        "   AND tehtava = %s")
+                   urakka-id hoitokauden-alkuvuosi tehtava-id))))
+
+(defn- aseta-tehtavan-tarjousmaara
+  [kaikki-rivit tehtava-id arvo]
+  (mapv (fn [t]
+          (if (= (:tehtava_id t) tehtava-id)
+            (assoc t :tarjous_maara arvo)
+            t))
+        kaikki-rivit))
+
+(defn- assert-tallennus-ohittaa-tarjousmaarat
+  [db urakka-id kayttaja-id hoitokauden-alkuvuosi kaikki-rivit tehtava-id arvot arvo-kuvaus]
+  (doseq [arvo arvot]
+    (let [ennen (hae-urakka-tehtavamaara-tila urakka-id hoitokauden-alkuvuosi tehtava-id)
+          tehtavat (aseta-tehtavan-tarjousmaara kaikki-rivit tehtava-id arvo)
+          tulos (try
+                  (tm-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id kayttaja-id hoitokauden-alkuvuosi tehtavat)
+                  :ok
+                  (catch Throwable t t))
+          jalkeen (hae-urakka-tehtavamaara-tila urakka-id hoitokauden-alkuvuosi tehtava-id)
+          virhe (when (instance? Throwable tulos)
+                  (str (.getName (class tulos)) ": " (.getMessage ^Throwable tulos)))]
+
+      (is (= :ok tulos)
+          (str "Tallennus ei saa kaatua arvolla " (pr-str arvo) ". Virhe: " virhe))
+      (is (= (:lkm ennen) (:lkm jalkeen))
+          (str arvo-kuvaus " ei saa lisätä rivejä. Ennen: " (pr-str ennen) ", jälkeen: " (pr-str jalkeen)))
+      (is (= (:maara ennen) (:maara jalkeen))
+          (str arvo-kuvaus " ei saa muuttaa arvoa. Ennen: " (pr-str ennen) ", jälkeen: " (pr-str jalkeen))))))
+
+(deftest tallenna-tarjouksen-tehtavat-ja-maarat-ei-kaadu-tyhjalla-tai-blank-stringilla
+  (testing "Tyhjä/blank string käsitellään kuten puuttuva arvo (ei kaadu eikä tee muutoksia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          kayttaja-id (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))]
+
+      (is (some? tehtava-id) "Testidata: löytyi tehtävä joka kuuluu näkymään")
+
+      (assert-tallennus-ohittaa-tarjousmaarat
+        db urakka-id kayttaja-id hoitokauden-alkuvuosi kaikki-rivit tehtava-id
+        ["" "   "]
+        "Tyhjä/blank"))))
+
+(deftest tallenna-tarjouksen-tehtavat-ja-maarat-ei-kaadu-ei-numeerisella-stringilla
+  (testing "Ei-numeerinen string ohitetaan (ei kaadu eikä tee muutoksia)"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          kayttaja-id (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))]
+
+      (is (some? tehtava-id) "Testidata: löytyi tehtävä joka kuuluu näkymään")
+
+      (assert-tallennus-ohittaa-tarjousmaarat
+        db urakka-id kayttaja-id hoitokauden-alkuvuosi kaikki-rivit tehtava-id
+        ["abc" "12a" "0,1"]
+        "Ei-numeerinen arvo"))))
 
 (deftest palvelu-ei-hyvaksy-puuttuvia-sopimuksen-maaria
   (testing "Palvelu palauttaa selkeän virheen jos payloadissa on nil tarjous_maara ja yritetään merkitä valmiiksi"
@@ -295,6 +372,36 @@
             IllegalArgumentException
             #"Syötä määrä\. Jos tehtävälle ei ole määrää, syötä 0"
             (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))))))
+
+(deftest palvelu-ei-hyvaksy-blank-stringia-merkitse-valmiiksi-tilassa
+  (testing "Palvelu hylkää blank-stringin kun merkitse-valmiiksi? on true"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtava-id (:tehtava_id (first (filter #(some? (:tehtava_id %)) kaikki-rivit)))]
+
+      (is (some? tehtava-id) "Testidata: löytyi tehtävä jonka määrä voidaan asettaa")
+
+      (doseq [arvo ["" "   "]]
+        (let [tehtavat (mapv (fn [t]
+                               (if (= (:tehtava_id t) tehtava-id)
+                                 (assoc t :tarjous_maara arvo)
+                                 t))
+                         kaikki-rivit)
+              tiedot {:urakka-id urakka-id
+                      :tehtavat tehtavat
+                      :kopioi-tuleville-vuosille? false
+                      :merkitse-valmiiksi? true
+                      :valittu-hoitokausi [(hoitokauden-alku-pvm hoitokauden-alkuvuosi)
+                                           (hoitokauden-loppu-pvm hoitokauden-alkuvuosi)]}]
+
+          (is (thrown-with-msg?
+                IllegalArgumentException
+                #"Syötä määrä\. Jos tehtävälle ei ole määrää, syötä 0"
+                (tm-palvelu/tallenna-tehtavat-ja-maarat db +kayttaja-jvh+ tiedot))
+              (str "Blank-string " (pr-str arvo) " pitää hylätä merkitse-valmiiksi-tilassa")))))))
 
 (deftest palvelu-hyvaksyy-puuttuvia-sopimuksen-maaria-kun-ei-merkitse-valmiiksi
   (testing "Salliva tallennus ei estä tallentamista vaikka payloadissa olisi nil tarjous_maara"
