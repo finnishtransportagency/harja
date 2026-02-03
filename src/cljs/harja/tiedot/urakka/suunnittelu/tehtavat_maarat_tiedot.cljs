@@ -88,7 +88,8 @@
 
   TallennaTehtavat
   (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
-    (if (some puuttuuko-tarjous-maara? tehtavat)
+    (if (and (not kopioi-tuleville-vuosille?)
+             (some puuttuuko-tarjous-maara? tehtavat))
       (do
         (viesti/nayta-toast!
           puuttuva-tarjousmaara-viesti
