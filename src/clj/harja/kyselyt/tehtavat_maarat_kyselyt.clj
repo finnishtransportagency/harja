@@ -1,5 +1,6 @@
 (ns harja.kyselyt.tehtavat-maarat-kyselyt
-  (:require [harja.kyselyt.konversio :as konversio]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.tyokalut.big :as big]
             [jeesql.core :refer [defqueries]]))
 
@@ -12,6 +13,18 @@
   hae-tulevien-hoitovuosien-syottoyhteenveto
   hae-menneiden-hoitovuosien-tilayhteenveto
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
+
+(defn- parsi-tarjous-maara
+  "Palauttaa BigDecimalin, tai nil jos arvo puuttuu/blank tai string ei ole numeerinen.
+  String-arvot trimmataan." 
+  [tarjous-maara]
+  (when-some [arvo (if (string? tarjous-maara)
+                     (not-empty (str/trim tarjous-maara))
+                     tarjous-maara)]
+    (try
+      (bigdec arvo)
+      (catch NumberFormatException _
+        nil))))
 
 (defn hae-tulevien-hoitovuosien-yhteenveto
   "Palauttaa tulevien hoitovuosien yhteenvedon.
@@ -49,11 +62,10 @@
   (doseq [{:keys [tehtava_id tarjous_maara]} (remove :valiotsikko tehtavat)]
     ;; Tallennetaan vain tehtävät, joille on annettu arvo.
     ;; Tämä estää tilanteen, jossa nil päätyy urakka_tehtavamaara.maara-kenttään.
-    (when-some [tarjous-maara-arvo tarjous_maara]
-      (let [tarjous-maara (bigdec tarjous-maara-arvo)
-            dbtehtava (first (hae-tarjous-tehtava-idlla db {:tehtavaid tehtava_id
-                                                            :urakkaid urakka-id
-                                                            :hoitokauden-alkuvuosi hk-alkuvuosi}))
+    (when-some [tarjous-maara (parsi-tarjous-maara tarjous_maara)]
+      (let [dbtehtava (first (hae-tarjous-tehtava-idlla db {:tehtavaid tehtava_id
+                                                           :urakkaid urakka-id
+                                                           :hoitokauden-alkuvuosi hk-alkuvuosi}))
             db-maara (:maara dbtehtava)
             sama-maara? (big/bigdecimal-arvot-samat? tarjous-maara db-maara)]
         (cond
