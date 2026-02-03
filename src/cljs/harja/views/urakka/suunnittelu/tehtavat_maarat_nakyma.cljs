@@ -81,7 +81,7 @@
         ;; Puuttuvat lasketaan aina koko datasta, jotta suodatin ei "tyhjennä" näkymää.
         puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat kaikki-tehtavat)
         puuttuvat-lkm (count puuttuvat-tehtava-idt)
-          valmiiksi-yritetty? (and (true? (:tallennus-yritetty? app)) (pos? puuttuvat-lkm))
+        valmiiksi-yritetty? (and (true? (:tallennus-yritetty? app)) (pos? puuttuvat-lkm))
         {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja tulevia-vuosia-valmiina]
          :as tulevat-yhteenveto}
         (:tulevat-hoitovuodet-yhteenveto app)
@@ -96,36 +96,74 @@
         kopioi-napin-teksti (if tuleville-on-jo-syotettyja? "Kopioi (korvaa)" "Kopioi nyt")
         taman-hoitovuosi-valmis? (zero? puuttuvat-lkm)
         taman-hoitovuoden-tila (if taman-hoitovuosi-valmis? "valmis" "kesken")
-        taman-hoitovuoden-tila-teksti (if taman-hoitovuosi-valmis? "Valmis" "Kesken")
+        taman-hoitovuoden-tila-teksti (if taman-hoitovuosi-valmis? "Määrät syötetty" "Määriä puuttuu")
+        menneet-valmiina? (= menneita-vuosia-valmiina menneita-vuosia-yhteensa)
+        tulevat-valmiina? (= tulevia-vuosia-valmiina tulevia-vuosia-yhteensa)
+        kaikki-hoitovuodet-valmiina? (and taman-hoitovuosi-valmis? menneet-valmiina? tulevat-valmiina?)
+        kaikki-hoitovuodet-tila (if kaikki-hoitovuodet-valmiina? "valmis" "kesken")
+        kaikki-hoitovuodet-tila-teksti (if kaikki-hoitovuodet-valmiina? "Määrät syötetty" "Määriä puuttuu")
         menneet-teksti (when (pos? menneita-vuosia-yhteensa)
-                        (str "Menneet: " menneita-vuosia-valmiina "/" menneita-vuosia-yhteensa " valmiina"))
+                         (str "Menneet: " menneita-vuosia-valmiina "/" menneita-vuosia-yhteensa " valmiina"))
         tulevat-teksti (when (some? tulevat-yhteenveto)
-                        (if (zero? tulevia-vuosia-yhteensa)
-                          "Tulevat: ei tulevia"
-                          (str "Tulevat: " tulevia-vuosia-valmiina "/" tulevia-vuosia-yhteensa " valmiina")))]
-    [yleiset/info-laatikko :neutraali
+                         (if (zero? tulevia-vuosia-yhteensa)
+                           "Tulevat: ei tulevia"
+                           (str "Tulevat: " tulevia-vuosia-valmiina "/" tulevia-vuosia-yhteensa " valmiina")))
+        ;; Laatikon tyyppi: vihreä vain kun kaikki hoitovuodet ovat kunnossa
+        laatikon-tyyppi (if kaikki-hoitovuodet-valmiina? :onnistunut :neutraali)]
+    [yleiset/info-laatikko laatikon-tyyppi
      [:div
       [:div.flex-row {:style {:justify-content "space-between" :align-items "flex-start" :gap "1rem"}}
        [:div
-         [:div.body-text.strong "Tilanne"]]
+        [:div.body-text.strong "Tilanne"]]
 
        (when tallennus-kaynnissa?
          [:div [ajax-loader-pieni]])]
-      
+
       [:div {:style {:margin-top "0.5rem"}}
+       (when (pos? puuttuvat-lkm)
+         [:div.body-text.strong {:style {:margin-bottom "0.25rem"}}
+          (if (= 1 puuttuvat-lkm)
+            "Puuttuu 1 alkuperäisen sopimuksen määrä"
+            (str "Puuttuu " puuttuvat-lkm " alkuperäisen sopimuksen määrää"))])
+
        [:div.flex-row.alkuun {:style {:gap "0.5rem" :flex-wrap "wrap" :align-items "center"}}
         [:span "Tämä hoitovuosi:"]
         [yleiset/tila-indikaattori taman-hoitovuoden-tila {:fmt-fn (constantly taman-hoitovuoden-tila-teksti)}]
-        [:span (str "(puuttuvia sopimuksen määriä: " puuttuvat-lkm ")")]]
+        ]
 
-       (when (or menneet-teksti tulevat-teksti)
-         [:div
+        [:div.flex-row.alkuun {:style {:gap "0.5rem" :flex-wrap "wrap" :align-items "center" :margin-top "0.25rem"}}
+         [:span "Kaikki hoitovuodet:"]
+         [yleiset/tila-indikaattori kaikki-hoitovuodet-tila {:fmt-fn (constantly kaikki-hoitovuodet-tila-teksti)}]]
+
+       ;; Selkeä tekstierottelu: tämä hoitovuosi vs kaikki hoitovuodet
+       (when taman-hoitovuosi-valmis?
+         [:div.body-text {:style {:margin-top "0.5rem"}}
+          (cond
+            kaikki-hoitovuodet-valmiina?
+            "Kaikkien hoitovuosien alkuperäisen sopimuksen määrät on syötetty."
+
+            tallennustila?
+            [:<>
+             [:span "Tämän hoitovuoden alkuperäisen sopimuksen määrät on syötetty. Voit nyt "]
+             [:strong "tallentaa ja merkitä valmiiksi"]
+             [:span "."]]
+
+            :else
+            "Tämän hoitovuoden alkuperäisen sopimuksen määrät on syötetty, mutta kaikkien hoitovuosien määrät eivät ole vielä syötetty.")])
+
+       (when (and nayta-vain-puuttuvat? (zero? puuttuvat-lkm))
+         [:div.body-text {:style {:margin-top "0.25rem"}}
+          "Suodatin on päällä, mutta puuttuvia määriä ei ole – näkymä voi näyttää tyhjältä. Valitse Näytä kaikki nähdäksesi koko listan."])
+
+       (when (and taman-hoitovuosi-valmis?
+                  (not kaikki-hoitovuodet-valmiina?)
+                  (or menneet-teksti tulevat-teksti))
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong "Muut hoitovuodet"]
           (when menneet-teksti
-            [:span menneet-teksti])
-          (when (and menneet-teksti tulevat-teksti)
-            [:span " · "])
+            [:div.body-text {:style {:margin-top "0.25rem"}} menneet-teksti])
           (when tulevat-teksti
-            [:span tulevat-teksti])])
+            [:div.body-text {:style {:margin-top "0.25rem"}} tulevat-teksti])])
 
        (when (and tallennustila? (or (pos? puuttuvat-lkm) nayta-vain-puuttuvat?))
          [:div.body-text.strong {:style {:margin-top "0.75rem"}}
@@ -135,13 +173,13 @@
          [:div {:style {:margin-top "0.5rem"}}
           [:div.body-text.strong
            (str "Et voi merkitä valmiiksi – "
-                (if (= 1 puuttuvat-lkm)
-                  "puuttuu vielä 1 sopimuksen määrä"
-                  (str "puuttuu vielä " puuttuvat-lkm " sopimuksen määrää")))]
+             (if (= 1 puuttuvat-lkm)
+               "puuttuu vielä 1 sopimuksen määrä"
+               (str "puuttuu vielä " puuttuvat-lkm " sopimuksen määrää")))]
           [:div.body-text {:style {:margin-top "0.25rem"}}
-           "Täydennä puuttuvat kentät tai aseta 0. Voit tallentaa muutokset myös keskeneräisenä."]])
+           "Täytä alkuperäisen sopimuksen puuttuvat määrät tai aseta 0. Voit tallentaa muutokset myös keskeneräisenä."]])
 
-       (when (pos? puuttuvat-lkm)
+       (when (and tallennustila? (pos? puuttuvat-lkm))
          [:div.body-text {:style {:margin-top "0.25rem"}}
           "Jos tehtävälle ei ole määrää, syötä 0."])
 
@@ -151,7 +189,7 @@
            [napit/yleinen-toissijainen (if nayta-vain-puuttuvat? "Näytä kaikki" "Näytä vain puuttuvat")
             #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
             {:disabled (or tallennus-kaynnissa?
-                          (and (not nayta-vain-puuttuvat?) (zero? puuttuvat-lkm)))
+                         (and (not nayta-vain-puuttuvat?) (zero? puuttuvat-lkm)))
              :vayla-tyyli? false
              :data-cy "btn-nayta-vain-puuttuvat"}]]
           (when (pos? puuttuvat-lkm)
@@ -164,48 +202,55 @@
 
        (when (and (not tallennustila?) (pos? puuttuvat-lkm))
          [:div.body-text {:style {:margin-top "0.5rem"}}
-          "Täydennä puuttuvat muokkaustilassa."])]
-
-      (when (and (not tallennustila?) nayta-vain-puuttuvat?)
-        [:div {:style {:margin-top "0.75rem"}}
-         [:div.body-text.strong
-          (str "Suodatin aktiivinen: Näytetään vain puuttuvat (" puuttuvat-lkm ")")]
-         [:div {:style {:margin-top "0.25rem"}}
-          [napit/yleinen-toissijainen "Näytä kaikki"
-           #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
-           {:disabled (or tallennus-kaynnissa? false)
-            :vayla-tyyli? false
-            :data-cy "btn-nayta-kaikki-ei-muokkaustilassa"}]]])
-
-      (when kopiointi-relevantti?
-        [:div {:style {:margin-top "0.75rem"}}
-         [:div.body-text.strong "Kopiointi tuleville hoitovuosille"]
-         (if tallennustila?
+          [:div
+           "Täytä alkuperäisen sopimuksen määrät muokkaustilassa."
            [:div {:style {:margin-top "0.5rem"}}
-            [napit/yleinen-toissijainen kopioi-napin-teksti
-             #(varmista/varmista-kayttajalta
-                {:otsikko "Kopioidaanko tuleville hoitovuosille?"
-                 :sisalto [:div
-                      [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille ja merkitään tämä hoitovuosi valmiiksi."]
-                           (when tuleville-on-jo-syotettyja?
-                             [:div {:style {:margin-top "0.5rem"}}
-                              "Huom: kopiointi korvaa tulevien hoitovuosien nykyiset määrät."])]
+            [napit/muokkaa
+             "Muokkaa alkuperäisen sopimuksen määriä"
+             #(e! (tiedot/->ToggleTallennusTila))
+             {:data-cy "btn-muokkaa-sopimuksen-maaria-tilannekortti"}]]]])
+
+       (when (and (not tallennustila?) nayta-vain-puuttuvat?)
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong
+           (str "Suodatin aktiivinen: Näytetään vain puuttuvat (" puuttuvat-lkm ")")]
+          [:div {:style {:margin-top "0.25rem"}}
+           [napit/yleinen-toissijainen "Näytä kaikki"
+            #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
+            {:disabled (or tallennus-kaynnissa? false)
+             :vayla-tyyli? false
+             :data-cy "btn-nayta-kaikki-ei-muokkaustilassa"}]]])
+
+       (when (and tallennustila? kopiointi-relevantti?)
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong "Kopiointi tuleville hoitovuosille"]
+          [:div {:style {:margin-top "0.5rem"}}
+           [napit/yleinen-toissijainen kopioi-napin-teksti
+            #(varmista/varmista-kayttajalta
+               {:otsikko "Kopioidaanko tuleville hoitovuosille?"
+                :sisalto [:div
+                          [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille ja merkitään tämä hoitovuosi valmiiksi."]
+                          (when tuleville-on-jo-syotettyja?
+                            [:div {:style {:margin-top "0.5rem"}}
+                             "Huom: kopiointi korvaa tulevien hoitovuosien nykyiset määrät."])]
                 :hyvaksy "Kopioi ja merkitse valmiiksi"
-                 :peruuta-txt "Peruuta"
-                 :napit [:tallenna :peruuta]
-                    :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat true)))})
-             {:disabled (or tallennus-kaynnissa? false)
-              :vayla-tyyli? false
-              :data-cy "btn-kopioi-nyt"}]
+                :peruuta-txt "Peruuta"
+                :napit [:tallenna :peruuta]
+                :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat true)))})
+            {:disabled (or tallennus-kaynnissa? (pos? puuttuvat-lkm))
+             :vayla-tyyli? false
+             :data-cy "btn-kopioi-nyt"}]
 
-            [:div.body-text {:style {:margin-top "0.25rem"}}
-             "Kopioi tämän hoitovuoden määrät tuleville hoitovuosille."]
-
-            (when tuleville-on-jo-syotettyja?
-              [:div.body-text {:style {:margin-top "0.25rem"}}
-               "Huom: korvaa tulevien hoitovuosien nykyiset määrät."])]
            [:div.body-text {:style {:margin-top "0.25rem"}}
-            "Voit kopioida tämän hoitovuoden määrät tuleville hoitovuosille muokkaustilassa."])])]
+            "Kopioi tämän hoitovuoden määrät tuleville hoitovuosille."]
+
+           (when (pos? puuttuvat-lkm)
+             [:div.body-text {:style {:margin-top "0.25rem"}}
+              "Täytä alkuperäisen sopimuksen puuttuvat määrät (tai aseta 0) ennen kopiointia."])
+
+           (when tuleville-on-jo-syotettyja?
+             [:div.body-text {:style {:margin-top "0.25rem"}}
+              "Huom: korvaa tulevien hoitovuosien nykyiset määrät."])]])]]
      nil "100%" {:luokka "ala-margin-16"}]))
 
 
