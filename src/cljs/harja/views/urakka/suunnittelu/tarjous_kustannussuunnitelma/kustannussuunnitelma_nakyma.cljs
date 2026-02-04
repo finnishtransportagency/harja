@@ -445,7 +445,7 @@
            [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]])]]]))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe] :as app}]
+                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe vanha-urakka?] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                 hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin-str
                 kattohintakerroin hoitovuoden-alun-kattohinta
@@ -456,7 +456,9 @@
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
-        tarjouksen-maara (or (:summa (first tarjous-yht-rivi)) 0)
+        tarjouksen-maara (if-not vanha-urakka?
+                           (or (:summa (first tarjous-yht-rivi)) 0)
+                           (or (-> tarjous first :tarjous_tavoitehinta) 0))
         pysyvat-muutokset-maara (or pysyvat-muutokset-maara 0)
         hoitovuoden-alun-tavoitehinta (or hoitovuoden-alun-tavoitehinta 0)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0)
@@ -466,7 +468,7 @@
         hoitovuoden-alun-indeksikorjattu-kattohinta (or hoitovuoden-alun-indeksikorjattu-kattohinta 0)
         hoitovuoden-alun-kattohinta-atom (r/atom hoitovuoden-alun-kattohinta)
 
-        indeksi-puuttuu-teksti "Ei indeksiä"
+        indeksi-puuttuu-teksti "Indeksejä ei vielä saatavilla"
         hk-indeksikorjattu-tavhinta-teksti (str
                                              "Hoitovuoden alun indeksikorjattu tavoitehinta ("
                                              (if (seq indeksikerroin-str) indeksikerroin-str "0,0")
