@@ -45,7 +45,7 @@ cd "$HARJA_DIR"
 # Välttää 3449-porttikollisiot kun useita Figwheel-instansseja ajetaan rinnakkain.
 # Generoitu tiedosto: figwheel_conf/luodut/dev-portti.cljs.edn (ei soti worktreeiden kanssa)
 # Esim: FRONTEND_REPL_PORT=3455 bash ./kaynnista_harja_front_dev.sh
-FRONTEND_BUILD=""
+FIGWHEEL_BUILD_KONFFI=""
 if [[ -n "${FRONTEND_REPL_PORT:-}" ]]; then
   if [[ ! "${FRONTEND_REPL_PORT}" =~ ^[0-9]+$ ]]; then
     echo "❌ FRONTEND_REPL_PORT ei ole numero: '${FRONTEND_REPL_PORT}'" >&2
@@ -61,26 +61,27 @@ if [[ -n "${FRONTEND_REPL_PORT:-}" ]]; then
     "$HARJA_DIR/figwheel_conf/luodut/dev-portti.cljs.edn" \
     "$FRONTEND_REPL_PORT"
 
-  FRONTEND_BUILD="figwheel_conf/luodut/dev-portti"
+  FIGWHEEL_BUILD_KONFFI="figwheel_conf/luodut/dev-portti"
 fi
 
 # Käynnistä frontend-kehitysympäristö:
-# - npm run less: LESS-tyylien automaattinen käännös (taustalla)
+ # npm run less =  aloittaa package.json npm skriptin nimeltä "less", joka on .less tarkkailu
+# lein trampoline build-dev  =  aloittaa frontti (.cljs) compilauksen 
 # - Figwheel: ClojureScript-kääntäjä + hot-reload dev-server
 if [[ "$ENV_PROFILE" = "true" ]]
 then
   # +dev-ymparisto profiililla: lataa asetukset.edn (tietokanta-asetukset yms)
   npm run less & 
-  if [[ -n "$FRONTEND_BUILD" ]]; then
-    lein trampoline with-profile +dev-ymparisto with-env-vars run -m figwheel.main -b "$FRONTEND_BUILD" -r
+  if [[ -n "$FIGWHEEL_BUILD_KONFFI" ]]; then
+    lein trampoline with-profile +dev-ymparisto with-env-vars run -m figwheel.main -b "$FIGWHEEL_BUILD_KONFFI" -r
   else
     lein trampoline build-dev
   fi
 else
   # Ilman profiilia: nopeampi käynnistys, ei lataa asetuksia
   npm run less & 
-  if [[ -n "$FRONTEND_BUILD" ]]; then
-    lein trampoline run -m figwheel.main -b "$FRONTEND_BUILD" -r
+  if [[ -n "$FIGWHEEL_BUILD_KONFFI" ]]; then
+    lein trampoline run -m figwheel.main -b "$FIGWHEEL_BUILD_KONFFI" -r
   else
     lein trampoline build-dev-no-env
   fi
