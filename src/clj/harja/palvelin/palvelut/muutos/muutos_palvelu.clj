@@ -759,10 +759,7 @@
   (let [tavoitehinnan-muutos (apply + (keep #(:summa %) kustannusvaikutukset))
         jo-kirjatut-kulut (muutos-kyselyt/muutostyolle-jo-kirjatut-kulut-yhteensa db
                             {:muutos id
-                             :tyyppi (cond
-                                       (= alityyppi "erillisrahoitus")
-                                       "erillisrahoitettu-muutos"
-                                       :else nil)})
+                             :tyyppi (when (= alityyppi "erillisrahoitus") "erillisrahoitettu-muutos")})
 
         budjetti-ylittyy? (boolean (when (and tavoitehinnan-muutos jo-kirjatut-kulut)
                                      (> (bigdec jo-kirjatut-kulut) (bigdec tavoitehinnan-muutos))))
