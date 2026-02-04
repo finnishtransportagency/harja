@@ -261,7 +261,7 @@ FROM urakka u
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE hallintayksikko = :hallintayksikko
+WHERE u.hallintayksikko = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
            OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
