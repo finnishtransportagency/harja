@@ -189,9 +189,10 @@
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
-                                              (assoc :tehtava (when (and (nil? (:tehtava-id kohdistus))
-                                                                      (:muu-tehtava-kaytossa kohdistus))
-                                                                muu-tehtava)))))
+                                              (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
+                                                                    (:muu-tehtava-kaytossa kohdistus))
+                                                                muu-tehtava
+                                                                (:tehtava kohdistus))))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
@@ -443,7 +444,10 @@
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
-    (assoc-in app [:lomake :kohdistukset nro :tehtava] tehtava))
+    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)]
+      (-> app
+        (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
+        (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))))
 
   KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
@@ -686,7 +690,8 @@
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-        {:urakka-id (:id hakuparametrit)}
+        {:urakka-id (:id hakuparametrit)
+         :muutokset-kaytossa? (istunto/ominaisuus-kaytossa? :mhu-muutokset)}
         {:onnistui ->ToimenpidehakuOnnistui
          :epaonnistui ->KutsuEpaonnistui
          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]

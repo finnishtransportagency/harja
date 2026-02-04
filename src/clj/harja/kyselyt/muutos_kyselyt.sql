@@ -71,7 +71,7 @@ FROM ONLY mhu_muutos m
          LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
 WHERE m.urakka = :urakka
   AND 
-    CASE 
+    CASE  
         WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
             (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
              m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
@@ -261,6 +261,16 @@ WHERE
 	kk.tyyppi = :tyyppi::kohdistustyyppi
   AND kk.poistettu IS FALSE  
   AND k.erapaiva < :voimassa::DATE
+  AND kk.muutos = :muutos;
+
+-- name: muutostyolle-jo-kirjatut-kulut-yhteensa
+-- single?: true
+SELECT COALESCE(SUM(kk.summa), 0) AS kirjattu_summa
+ FROM kulu k
+         JOIN kulu_kohdistus kk ON kk.kulu = k.id
+WHERE
+    kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE
   AND kk.muutos = :muutos;
 
 -- name: luo-jjh-kulun-kohdistus<!
@@ -705,8 +715,17 @@ SELECT  DISTINCT ON (m.id)
         m.tyyppi, 
         m.alityyppi,
         m.nimi, 
-        m.voimassa_alkaen
+        m.voimassa_alkaen,
+        mmk.summa AS budjetoitu_summa,
+        COALESCE(kk.kirjattu_summa, 0) AS kirjattu_summa
  FROM mhu_muutos m
+ JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id
+ LEFT JOIN (
+     SELECT muutos, SUM(summa) AS kirjattu_summa
+     FROM kulu_kohdistus
+     WHERE poistettu IS NOT TRUE
+     GROUP BY muutos
+ ) kk ON kk.muutos = m.id
 WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND m.urakka =  :urakka
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)

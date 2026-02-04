@@ -446,3 +446,125 @@
     (is (= (get-in lahetetty-turpo [:sijainti :tie :aet]) (get-in turpo [:tapahtumapaikka :tieaet])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :losa]) (get-in turpo [:tapahtumapaikka :tielosa])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :let]) (get-in turpo [:tapahtumapaikka :tielet])))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-alkuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/abc/2023")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/xyz")] kayttaja-analytiikka portti)]
+    ;; API palauttaa 500 kun konversio->int epäonnistuu
+    (is (= 500 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-alkuvuosi-suurempi-kuin-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2023/2020")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-onnistunut-kutsu-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/2023")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että palautetaan urakan tiedot
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :urakka))
+        (is (contains? ensimmainen :urakka-id))
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-tietojen-validointi-test
+  ;; Testaa että tehtävämäärät haetaan oikein
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2019/2024")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että ainakin joiltain urakoilta löytyy suunnitelmia
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))
+        (when (seq (:vuosittaiset-suunnitelmat ensimmainen))
+          (let [vuosi (first (:vuosittaiset-suunnitelmat ensimmainen))]
+            (is (contains? vuosi :hoitokauden-alkuvuosi))
+            (is (contains? vuosi :suunnitellut-tehtavat))
+            (is (sequential? (:suunnitellut-tehtavat vuosi)))))))))
+
+;; Testit toteumat-ilman-reittipisteita API:lle
+
+(defn validoi-vastaus-ilman-reittipistetta
+  "Varmistaa että vastaus sisältää odotetut kentät ilman reittipisteitä"
+  [vastaus-teksti]
+  (is (str/includes? vastaus-teksti "toteumat"))
+  (is (str/includes? vastaus-teksti "toteuma"))
+  (is (str/includes? vastaus-teksti "materiaalit"))
+  (is (str/includes? vastaus-teksti "tehtavat"))
+  (is (str/includes? vastaus-teksti "poistettu"))
+  (is (str/includes? vastaus-teksti "muutostiedot"))
+  (is (not (str/includes? vastaus-teksti "reitti"))))
+
+(deftest toteuma-haku-ilman-reittipistetta-aikavali-rajoitus
+  (let [alku "2004-10-19T00:00:00+03"
+        loppu "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        sallittu-haku (api-tyokalut/get-kutsu
+                        [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku "/" loppu)]
+                        kayttaja-analytiikka portti)
+        alku-pitka "2004-10-19T00:00:00+03"
+        loppu-pitka "2004-10-21T02:00:00+03"
+        hylattava-haku (api-tyokalut/get-kutsu
+                         [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-pitka "/" loppu-pitka)]
+                         kayttaja-analytiikka portti)]
+    (is (= 200 (:status sallittu-haku)))
+    (validoi-vastaus-ilman-reittipistetta (:body sallittu-haku))
+    (is (= 400 (:status hylattava-haku)))
+    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))))
+
+(deftest toteuma-haku-ilman-reittipistetta-perustoiminnallisuus
+  (let [alku-aika "2004-10-19T00:00:00+03"
+        loppu-aika "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        tulos (api-tyokalut/get-kutsu
+                [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-aika "/" loppu-aika)]
+                kayttaja-analytiikka portti)]
+    (is (= 200 (:status tulos)))
+    (validoi-vastaus-ilman-reittipistetta (:body tulos))))
+
+(deftest toteuma-haku-ilman-reittipistetta-puutteelliset-oikeudet
+  (let [alku-aika "2004-10-19T00:00:00+03"
+        loppu-aika "2004-10-20T00:00:00+03"
+        hylattava (api-tyokalut/get-kutsu
+                    [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-aika "/" loppu-aika)]
+                    kayttaja-yit portti)]
+    (is (= 403 (:status hylattava)))
+    (is (str/includes? (:body hylattava) "virheet"))
+    (is (str/includes? (:body hylattava) "kayttajalla-puutteelliset-oikeudet"))))
+
+(deftest toteuma-haku-ilman-reittipistetta-virheellinen-aikaformaatti
+  (let [vaara-alku "2005-01-01T00:00:00"
+        oikea-loppu "2005-12-31T21:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        virheellinen (api-tyokalut/get-kutsu
+                       [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" vaara-alku "/" oikea-loppu)]
+                       kayttaja-analytiikka portti)]
+    (is (= 400 (:status virheellinen)))
+    (is (str/includes? (:body virheellinen) "Alkuaika väärässä muodossa"))))
+
+(deftest toteuma-haku-ilman-reittipistetta-oikeustarkastus
+  (let [alku-hetki "2015-01-19T00:00:00+03"
+        loppu-hetki "2015-01-19T21:00:00+03"
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        _ (anna-kirjoitusoikeus kayttaja-analytiikka)
+        _ (anna-tielupaoikeus kayttaja-analytiikka)
+        kielletty (api-tyokalut/get-kutsu
+                    [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-hetki "/" loppu-hetki)]
+                    kayttaja-analytiikka portti)]
+    (is (= 403 (:status kielletty)))
+    (is (str/includes? (:body kielletty) "Käyttäjätunnuksella puutteelliset oikeudet"))
+    (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+    (anna-analytiikkaoikeus kayttaja-analytiikka)
+    (let [sallittu (api-tyokalut/get-kutsu
+                     [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-hetki "/" loppu-hetki)]
+                     kayttaja-analytiikka portti)]
+      (is (= 200 (:status sallittu)))
+      (validoi-vastaus-ilman-reittipistetta (:body sallittu)))))

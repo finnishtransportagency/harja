@@ -57,8 +57,8 @@
   [:tr.klikattava
    {:on-click (fn [] (e! (tiedot/->AvaaKulu id)))}
    [:td.col-xs-1 (str (when erapaiva (pvm/pvm erapaiva)))]
-   [:td.col-xs-1.sailyta-rivilla (if maksuera-alias (str "HA" maksuera " / " maksuera-alias) (str "HA" maksuera))]
-   [:td.col-xs-4 toimenpide-nimi]
+   [:td.col-xs-2.sailyta-rivilla (if maksuera-alias (str "HA" maksuera " / " maksuera-alias) (str "HA" maksuera))]
+   [:td.col-xs-3 toimenpide-nimi]
    [:td.col-xs-4 tehtavaryhma-nimi]
    [:td.col-xs-1.tasaa-oikealle.sailyta-rivilla (fmt/euro-opt summa)]
    [:td.col-xs-1.tasaa-oikealle (when-not (empty? liitteet) [ikonit/harja-icon-action-add-attachment])]])
@@ -133,8 +133,8 @@
       [:thead
        [:tr
         [:th.col-xs-1 "Pvm"]
-        [:th.col-xs-1 "Maksuerä"]
-        [:th.col-xs-4 "Toimenpide"]
+        [:th.col-xs-2 "Maksuerä"]
+        [:th.col-xs-3 "Toimenpide"]
         [:th.col-xs-4 "Tehtäväryhmä"]
         [:th.col-xs-1.tasaa-oikealle "Määrä"]
         [:th.col-xs-1 ""]]]

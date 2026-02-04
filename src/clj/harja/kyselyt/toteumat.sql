@@ -330,7 +330,8 @@ SET alkanut           = :alkanut,
   poistettu           = FALSE,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
-  tyokoneen_lisatieto = :tyokoneen-lisatieto
+  tyokoneen_lisatieto = :tyokoneen-lisatieto,
+  lahde               = :lahde::lahde
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -455,7 +456,7 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
        tk.nimi                                   AS tehtava,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.maara)                             AS suunniteltu_maara,
+       SUM(ut.laskettu_maara)                    AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
        tk.suunnitteluyksikko                     AS yk,
        CASE
@@ -467,8 +468,8 @@ FROM tehtava tk
      -- Alataso on linkitetty toimenpidekoodiin
      JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
      JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+     LEFT JOIN urakka_tehtavamaara_yhteenveto ut ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                    AND tk.id = ut.tehtava
      LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
      JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
@@ -1302,6 +1303,36 @@ WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_m
 group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
+
+-- name: hae-toteumat-ilman-reittipisteita-analytiikalle
+SELECT t.toteuma_tunniste_id,  
+       t.toteuma_sopimus_id,  
+       t.toteuma_alkanut,  
+       t.toteuma_paattynyt,  
+       t.toteuma_alueurakkanumero,  
+       t.toteuma_suorittaja_ytunnus,  
+       t.toteuma_suorittaja_nimi,  
+       t.toteuma_toteumatyyppi,  
+       t.toteuma_lisatieto,  
+       t.toteumatehtavat,  
+       t.toteumamateriaalit,  
+       t.toteuma_tiesijainti_numero,  
+       t.toteuma_tiesijainti_aosa,  
+       t.toteuma_tiesijainti_aet,  
+       t.toteuma_tiesijainti_losa,  
+       t.toteuma_tiesijainti_let,  
+       t.toteuma_muutostiedot_luotu,  
+       t.toteuma_muutostiedot_luoja,  
+       t.toteuma_muutostiedot_muokattu,  
+       t.toteuma_muutostiedot_muokkaaja,  
+       t.tyokone_tyokonetyyppi,  
+       t.tyokone_tunnus,  
+       t.urakkaid,  
+       t.poistettu  
+FROM analytiikka_toteumat t  
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)  
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))  
+ORDER BY t.toteuma_alkanut ASC; 
 
 -- name: paivita-palautettu-analytiikalle-aikaleima!
 UPDATE analytiikka_toteumat
