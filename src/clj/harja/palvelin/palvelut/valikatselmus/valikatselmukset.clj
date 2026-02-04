@@ -295,17 +295,13 @@
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
                                       ::muokkaustiedot/muokattu (pvm/nyt)
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
-                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-
-        oikaisu-specql (if uusi?
-                         (dissoc oikaisu-specql ::valikatselmus/oikaisun-id)
-                         oikaisu-specql)]
+                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
 
     (if (and
           (not uusi?)
           (::valikatselmus/oikaisun-id tiedot))
       (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
-      (valikatselmus-q/tee-oikaisu db oikaisu-specql))
+      (valikatselmus-q/tee-oikaisu db (dissoc oikaisu-specql ::valikatselmus/oikaisun-id)))
     ;; Hae välikatselmuksen tiedot
     (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})))
 

@@ -60,7 +60,7 @@
 
 (defn muutosten-vaikutukset-uusi
   "Yhteenveto muutosten vaikutuksista."
-  [_e! {:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa?] :as _app}]
+  [{:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa?] :as _app}]
   (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
         indeksikorjaus-vahvistettu? (muutos-domain/hoitovuoden-indeksikorjaus-vahvistettu?
                                       tavoitehinta-indeksikorjattu-per-hoitovuosi valittu-hoitokausi)]
@@ -77,8 +77,8 @@
 
 (defn muutosten-vaikutukset-vanha
   "Yhteenveto muutosten vaikutuksista."
-  [_e! {:keys [valittu-hoitokausi haku-kaynnissa?
-               hoitovuoden-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset-yhteensa] :as _app}]
+  [{:keys [valittu-hoitokausi haku-kaynnissa?
+           hoitovuoden-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset-yhteensa] :as _app}]
   [:div.muutosten-vaikutus
    (into []
      (concat

@@ -29,7 +29,9 @@
        nakyma-vanha?
        [:span.muutostiedot
         [tavoitehinta/tavoitehinnan-muutokset e! app]
-        [suunnitellut/suunniteltujen-maarien-muutokset e! app]]
+        ;; Toistaiseksi piiloitettu, ei ole vielä toteutusta, eikä speksiä.
+        ;; [suunnitellut/suunniteltujen-maarien-muutokset e! app]
+        ]
 
        nakyma-uusi?
        [:span.uudet-muutostiedot
@@ -51,7 +53,7 @@
    (cond
      nakyma-uusi?
      [:<>
-      [vaikutukset/muutosten-vaikutukset-uusi e! app]
+      [vaikutukset/muutosten-vaikutukset-uusi app]
       [muutoslistaus e! app]]
 
      nakyma-vanha?
@@ -60,7 +62,7 @@
        (str
          "Muutosten luokittelu on muuttunut hoitovuodesta 2025-26 alkaen. "
          "Tämä hoitovuosi noudattaa vanhaa kirjaustapaa ja luokittelua.") nil :alert]
-      [vaikutukset/muutosten-vaikutukset-vanha e! app]
+      [vaikutukset/muutosten-vaikutukset-vanha app]
       [muutoslistaus e! app]]
 
      :else

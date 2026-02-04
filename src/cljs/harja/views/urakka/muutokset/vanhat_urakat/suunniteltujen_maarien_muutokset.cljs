@@ -9,14 +9,16 @@
             [harja.views.urakka.muutokset.yhteiset :as yhteiset :refer [kehystetty-avattava-grid]]))
 
 
-(defn suunniteltujen-maarien-muutokset [e! {:keys [suunniteltujen-maarien-muutokset haku-kaynnissa?] :as app}]
+(defn suunniteltujen-maarien-muutokset
+  "Ei toteutusta vielä, tässä pohjakoodia"
+  [e! {:keys [suunniteltujen-maarien-muutokset haku-kaynnissa?] :as app}]
   [kehystetty-avattava-grid e! app
    {:taulukon-avain :suunniteltujen-maarien-muutokset
     :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :suunniteltujen-maarien-muutokset))
     :otsikko "Suunniteltujen määrien muutokset"
     :summa 0
     :toiminnot (fn [e! app]
-                 #_[::span
+                 #_[:span
                     [napit/uusi "Lisää muutos" #(e! (t-yhteiset/->LisaaSuunniteltujenMaarienMuutos))]])
     :taulukko
     (fn [e! app]
