@@ -801,17 +801,31 @@
       (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
             toimenpide (:toimenpide rivi)
             [sallittut-avaimet pakolliset-avaimet] (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet rivi)
-            rivi-ja-kaikki-lisaparametrit (if (and (empty? (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi))
-                                                   (set/subset? pakolliset-avaimet (-> annetut-lisaparams keys set)))
+            puuttuvat-pakolliset-avaimet (set/difference pakolliset-avaimet (-> annetut-lisaparams keys set))
+            ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi)
+            formatoi-avaimet (fn [avaimet]
+                              (s/join ", " (map (fn [avain]
+                                                   (or (get-in pot2-domain/alusta-toimenpide-kaikki-lisaavaimet
+                                                               [avain :otsikko])
+                                                       (name avain)))
+                                                avaimet)))
+            rivi-ja-kaikki-lisaparametrit (if (and (empty? ylimaaraiset-avaimet)
+                                                   (empty? puuttuvat-pakolliset-avaimet))
                                             (merge rivi
                                                    {:pot2_id pot2-id}
                                                    (zipmap (keys pot2-domain/alusta-toimenpide-kaikki-lisaavaimet) (repeat nil))
                                                    annetut-lisaparams)
                                             (throw (IllegalArgumentException.
-                                                     (str "Alustassa väärät lisätiedot. Toimenpide = " toimenpide
-                                                          " Odotettu: "
-                                                          (pr-str sallittut-avaimet) " tuli: "
-                                                          (pr-str annetut-lisaparams)))))]
+                                                     (let [virheviestit (cond-> []
+                                                                          (seq puuttuvat-pakolliset-avaimet)
+                                                                          (conj (str "puuttuu pakolliset tiedot: "
+                                                                                     (formatoi-avaimet puuttuvat-pakolliset-avaimet)))
+                                                                          
+                                                                          (seq ylimaaraiset-avaimet)
+                                                                          (conj (str "on virheelliset lisätiedot: "
+                                                                                     (formatoi-avaimet ylimaaraiset-avaimet))))]
+                                                       (str "Alustatoimenpiteellä (toimenpide " toimenpide ") "
+                                                            (s/join " ja " virheviestit))))))]
         (try
           (if (:pot2a_id rivi-ja-kaikki-lisaparametrit)
             (q/paivita-pot2-alusta<! db rivi-ja-kaikki-lisaparametrit)
