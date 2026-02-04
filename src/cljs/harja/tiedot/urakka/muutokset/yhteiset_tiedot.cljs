@@ -53,9 +53,9 @@
 
 (defn nayta-muutokset-sivu? [alkuvuosi]
   (boolean
-    (and
-      @u/valittu-aikavali
-      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) alkuvuosi))))
+    ;; Onko urakan alkuvuosi > x 
+    ;; Eli ei valittu aikaväli, vaan urakan alkuvuosi
+    (>= (some-> @nav/valittu-urakka :alkupvm pvm/vuosi) alkuvuosi)))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
