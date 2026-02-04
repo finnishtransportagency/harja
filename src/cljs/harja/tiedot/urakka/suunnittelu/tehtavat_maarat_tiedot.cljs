@@ -23,6 +23,7 @@
 (defrecord HaeTehtavatJaMaaratEpaonnistui [vastaus parametrit])
 
 (defrecord TallennaTehtavat [tehtavat kopioi-tuleville-vuosille?])
+(defrecord TallennaTehtavatJaMerkitseValmiiksi [tehtavat kopioi-tuleville-vuosille?])
 (defrecord TallennaTehtavatOnnistui [vastaus])
 (defrecord TallennaTehtavatEpaonnistui [vastaus])
 
@@ -32,8 +33,10 @@
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
+(defrecord ToggleNaytaVainPuuttuvat [])
+(defrecord AsetaPuuttuvatNollaksi [tehtava-idt])
 
-(defn hae-tehtavat-ja-maarat [parametrit]
+(defn hae-tehtavat-ja-maarat [_parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
     {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
      :valittu-hoitokausi @u/valittu-hoitokausi}
@@ -52,26 +55,97 @@
       tehtavat)
     tehtavat))
 
+(defn puuttuuko-tarjous-maara?
+  [{:keys [valiotsikko tehtava_id tarjous_maara]}]
+  (and (nil? valiotsikko)
+    (some? tehtava_id)
+    (or (nil? tarjous_maara)
+      (and (string? tarjous_maara) (str/blank? tarjous_maara)))))
+
+(defn puuttuvat-tarjous-maarat
+  "Palauttaa setin tehtävä_id:itä, joilta puuttuu sopimuksen määrä (nil/tyhjä).
+   Käytetään näkymässä korostamaan puuttuvat kentät."
+  [tehtavat]
+  (into #{}
+    (keep (fn [tehtava]
+            (when (puuttuuko-tarjous-maara? tehtava)
+              (:tehtava_id tehtava))))
+    tehtavat))
+
+(defn- onko-puuttuvia-tarjous-maaria?
+  [tehtavat]
+  (boolean (some puuttuuko-tarjous-maara? tehtavat)))
+
+(defn- suodata-vain-puuttuvat
+  "Suodattaa listan niin, että mukaan jäävät puuttuvat tehtävät ja niiden väliotsikot.
+   Huom: Tämä suodatin ei muokkaa tallennettavaa payloadia, vain näkymää."
+  [tehtavat lukitut-puuttuvat-tehtava-idt]
+  (let [lukitus-kaytossa? (seq lukitut-puuttuvat-tehtava-idt)
+        puuttuu? (fn [rivi]
+                   (if lukitus-kaytossa?
+                     (contains? lukitut-puuttuvat-tehtava-idt (:tehtava_id rivi))
+                     (puuttuuko-tarjous-maara? rivi)))
+        puuttuvat (filter (fn [rivi]
+                            (and (nil? (:valiotsikko rivi))
+                                 (some? (:tehtava_id rivi))
+                                 (puuttuu? rivi)))
+                    tehtavat)
+        ryhmat (into #{} (keep :tehtavaryhmaotsikko) puuttuvat)]
+    (filter (fn [{:keys [valiotsikko] :as rivi}]
+              (or (and (some? valiotsikko)
+                       (contains? ryhmat valiotsikko))
+                  (and (nil? valiotsikko)
+                       (some? (:tehtava_id rivi))
+                       (puuttuu? rivi))))
+            tehtavat)))
+
+(defn- paivita-naytettavat-tehtavat
+  "Päivittää app-staten näkymässä näytettävät tehtävät kaikken tehtävien perusteella.
+  Haku (>= 2 merkkiä) ja Näytä vain puuttuvat -suodatin vaikuttavat vain tähän listaan."
+  [app]
+  (let [kaikki (or (:kaikki-tehtavat app) [])
+        haku (:haku app)
+        haku-aktiivinen? (and (some? haku) (>= (count haku) 2))
+        tehtavat (if haku-aktiivinen?
+                   (filtteroi-tehtavat haku kaikki)
+                   kaikki)
+        tehtavat (if (true? (:nayta-vain-puuttuvat? app))
+                   (suodata-vain-puuttuvat tehtavat (:lukitut-puuttuvat-tehtava-idt app))
+                   tehtavat)]
+    (assoc app :tehtavat-ja-maarat tehtavat)))
+
 (extend-protocol tuck/Event
 
   HaeTehtavatJaMaarat
-  (process-event [{parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaarat :: parametrit " (pr-str parametrit))
-    (hae-tehtavat-ja-maarat parametrit)
+  (process-event [{_parametrit :parametrit} app]
+    (hae-tehtavat-ja-maarat nil)
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
-  (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (-> app
+  (process-event [{vastaus :vastaus} app]
+    (let [kaikki-tehtavat (:tehtavat vastaus)
+          lukitut-puuttuvat-tehtava-idt (when (true? (:nayta-vain-puuttuvat? app))
+                                         (puuttuvat-tarjous-maarat kaikki-tehtavat))]
+      (-> app
       (assoc :haku-kaynnissa? false)
-      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
-      (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :tallennus-yritetty? false)
+      (assoc :valmiiksi-validointi nil)
+      (assoc :kaikki-tehtavat kaikki-tehtavat)
+      (cond-> (true? (:nayta-vain-puuttuvat? app))
+        (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
+      (assoc :tulevat-hoitovuodet-yhteenveto (:tulevat-hoitovuodet-yhteenveto vastaus))
+      (assoc :menneet-hoitovuodet-yhteenveto (:menneet-hoitovuodet-yhteenveto vastaus))
+      (assoc :kopiointi-tuleville-tehty? false)
+      (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
+      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus)))))
 
   HaeTehtavatJaMaaratEpaonnistui
-  (process-event [{vastaus :vastaus parametrit :parametrit} app]
-    (viesti/nayta-toast! (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (or (get-in vastaus [:response :virhe])
+                             (str "Tietojen hakeminen epäonnistui: " (pr-str vastaus)))
+                       :varoitus
+                       viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :haku-kaynnissa? false)))
 
@@ -81,28 +155,95 @@
       {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
        :tehtavat tehtavat
        :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :merkitse-valmiiksi? false
        :valittu-hoitokausi @u/valittu-hoitokausi}
       {:onnistui ->TallennaTehtavatOnnistui
        :epaonnistui ->TallennaTehtavatEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kaynnissa? true))
+    (-> app
+      (assoc :tallennus-kaynnissa? true)
+      (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))
+      (assoc :viimeisin-tallennus-merkitse-valmiiksi? false)))
+
+  TallennaTehtavatJaMerkitseValmiiksi
+  (process-event [{tehtavat :tehtavat kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?} app]
+    (let [puuttuvat-idt (puuttuvat-tarjous-maarat tehtavat)
+          puuttuvat-lkm (count puuttuvat-idt)
+          puuttuu? (pos? puuttuvat-lkm)
+          puuttuvat-teksti (if (= 1 puuttuvat-lkm)
+                             "Puuttuu vielä 1 sopimuksen määrä."
+                             (str "Puuttuu vielä " puuttuvat-lkm " sopimuksen määrää."))
+          ohje "Täydennä puuttuvat kentät tai aseta 0. Voit myös käyttää 'Näytä vain puuttuvat'."]
+      (if puuttuu?
+        (do
+          (viesti/nayta-toast! (str puuttuvat-teksti " " ohje) :varoitus viesti/viestin-nayttoaika-keskipitka)
+          (-> app
+            (assoc :tallennus-yritetty? true)
+            (assoc :valmiiksi-validointi {:puuttuvat-tehtava-idt puuttuvat-idt
+                                          :puuttuvat-lkm puuttuvat-lkm})
+            (assoc :viimeisin-tallennus-merkitse-valmiiksi? true)))
+        (do
+          (tuck-apurit/post! :tallenna-tehtavat-ja-maarat
+            {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
+             :tehtavat tehtavat
+             :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+             :merkitse-valmiiksi? true
+             :valittu-hoitokausi @u/valittu-hoitokausi}
+            {:onnistui ->TallennaTehtavatOnnistui
+             :epaonnistui ->TallennaTehtavatEpaonnistui
+             :paasta-virhe-lapi? true})
+          (-> app
+            (assoc :tallennus-kaynnissa? true)
+            (assoc :viimeisin-tallennus-kopioi-tuleville? (boolean kopioi-tuleville-vuosille?))
+            (assoc :viimeisin-tallennus-merkitse-valmiiksi? true))))))
 
   TallennaTehtavatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
+    (let [kopioi-tuleville? (true? (:viimeisin-tallennus-kopioi-tuleville? app))
+          merkitse-valmiiksi? (true? (:viimeisin-tallennus-merkitse-valmiiksi? app))
+          puuttuvat-lkm (count (puuttuvat-tarjous-maarat (:tehtavat vastaus)))
+          varoitus? (and (not merkitse-valmiiksi?) (pos? puuttuvat-lkm))
+          viesti (cond
+                  (and kopioi-tuleville? merkitse-valmiiksi?)
+                  "Määrät kopioitiin tuleville hoitovuosille, tallennettiin ja tämä hoitovuosi merkittiin valmiiksi."
 
-    (-> app
+                  merkitse-valmiiksi?
+                  "Tiedot tallennettiin ja tämä hoitovuosi merkittiin valmiiksi."
+
+                  varoitus?
+                  (str "Muutokset tallennettiin. Puuttuu vielä " puuttuvat-lkm " sopimuksen määrää. Täydennä ja paina Tallenna ja merkitse valmiiksi.")
+
+                  :else
+                  (if kopioi-tuleville?
+                    "Määrät kopioitiin tuleville hoitovuosille ja tallennettiin."
+                    "Muutokset tallennettiin."))
+          tyyppi (if varoitus? :varoitus :onnistui)
+          kesto (when varoitus? viesti/viestin-nayttoaika-keskipitka)]
+      (viesti/nayta-toast! viesti tyyppi kesto))
+
+    (let [kaikki-tehtavat (:tehtavat vastaus)
+          lukitut-puuttuvat-tehtava-idt (when (true? (:nayta-vain-puuttuvat? app))
+                                         (puuttuvat-tarjous-maarat kaikki-tehtavat))]
+      (-> app
       (assoc :tallennus-kaynnissa? false)
       (assoc :tallennustila? false)
+      (assoc :tallennus-yritetty? false)
+      (assoc :valmiiksi-validointi nil)
       (assoc :tallentamattomia-muutoksia? false)
-      (assoc :tehtavat-ja-maarat (filtteroi-tehtavat (:haku app) (:tehtavat vastaus)))
-      (assoc :kaikki-tehtavat (:tehtavat vastaus))
+      (assoc :kaikki-tehtavat kaikki-tehtavat)
+      (cond-> (true? (:nayta-vain-puuttuvat? app))
+        (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
+      (assoc :kopiointi-tuleville-tehty? (boolean (:viimeisin-tallennus-kopioi-tuleville? app)))
+      (paivita-naytettavat-tehtavat)
       (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (synkronoi-muutokset-muutokset-atomiin!)))
+      (synkronoi-muutokset-muutokset-atomiin!))))
 
   TallennaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (or (get-in vastaus [:response :virhe])
+                             (str "Tietojen tallentaminen epäonnistui: " (pr-str vastaus)))
+                       :varoitus
+                       viesti/viestin-nayttoaika-keskipitka)
     (-> app
       (assoc :tallennus-kaynnissa? false)))
 
@@ -114,34 +255,31 @@
                                           (if muokattu-tehtava
                                             (conj acc muokattu-tehtava)
                                             (conj acc alkuperainen-tehtava))))
-                                [] (:tehtavat-ja-maarat app))]
+                                [] (:kaikki-tehtavat app))]
       (-> app
         (assoc :tallentamattomia-muutoksia? true)
-        (assoc :tehtavat-ja-maarat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (assoc :kaikki-tehtavat (sort-by :jarjestys yhdistetyt-tehtavat))
+        (paivita-naytettavat-tehtavat)
         (synkronoi-muutokset-muutokset-atomiin!))))
 
   ToggleTallennusTila
   (process-event [_ app]
-    (assoc app :tallennustila? (not (:tallennustila? app))))
+    (-> app
+      (assoc :tallennustila? (not (:tallennustila? app)))
+      (assoc :tallennus-yritetty? false)))
 
   FiltteroiTehtavat
   (process-event [{hakuehto :hakuehto} app]
-    ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
-    (if (>= (count hakuehto) 2)
-      (let [tehtavat (:tehtavat-ja-maarat app)
-            f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
-        (-> app
-          (assoc :haku hakuehto)
-          (assoc :tehtavat-ja-maarat f-tehtavat)))
-      (-> app
-        (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
-        (assoc :haku hakuehto))))
+    (-> app
+      (assoc :haku hakuehto)
+      (paivita-naytettavat-tehtavat)))
 
   PeruutaTallennus
   (process-event [_ app]
     (hae-tehtavat-ja-maarat nil)
     (-> app
       (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tallennus-yritetty? false)
       (assoc :tallennustila? (not (:tallennustila? app)))))
 
   AvaaRivi
@@ -151,8 +289,59 @@
                 app)]
       (if (contains? (:avatut-tehtavaryhmat app) valiotsikko)
         (assoc app :avatut-tehtavaryhmat (disj (:avatut-tehtavaryhmat app) valiotsikko))
-        (assoc app :avatut-tehtavaryhmat (merge (:avatut-tehtavaryhmat app) valiotsikko)))))
+        (assoc app :avatut-tehtavaryhmat (conj (:avatut-tehtavaryhmat app) valiotsikko)))))
+
+  ToggleNaytaVainPuuttuvat
+  (process-event [_ app]
+    (let [uusi-arvo (not (boolean (:nayta-vain-puuttuvat? app)))
+          lukitut-puuttuvat-tehtava-idt (when uusi-arvo
+                                         (puuttuvat-tarjous-maarat (:kaikki-tehtavat app)))
+          puuttuvat-ryhmat (when uusi-arvo
+                             (into #{}
+                               (keep :tehtavaryhmaotsikko)
+                               (filter puuttuuko-tarjous-maara? (:kaikki-tehtavat app))))]
+      (-> app
+        (assoc :nayta-vain-puuttuvat? uusi-arvo)
+        (cond-> uusi-arvo
+          (assoc :lukitut-puuttuvat-tehtava-idt lukitut-puuttuvat-tehtava-idt))
+        (cond-> (not uusi-arvo)
+          (dissoc :lukitut-puuttuvat-tehtava-idt))
+        (cond-> puuttuvat-ryhmat
+          (update :avatut-tehtavaryhmat (fnil into #{}) puuttuvat-ryhmat))
+        (paivita-naytettavat-tehtavat))))
+
+  AsetaPuuttuvatNollaksi
+  (process-event [{tehtava-idt :tehtava-idt} app]
+    (let [tehtava-idt (or tehtava-idt #{})
+          paivitetty (mapv (fn [rivi]
+                             (if (and (contains? tehtava-idt (:tehtava_id rivi))
+                                   (puuttuuko-tarjous-maara? rivi))
+                               (assoc rivi :tarjous_maara 0)
+                               rivi))
+                       (:kaikki-tehtavat app))
+          n (count tehtava-idt)
+          nayta-vain-puuttuvat? (true? (:nayta-vain-puuttuvat? app))
+          puuttuvia-jaljella? (onko-puuttuvia-tarjous-maaria? paivitetty)
+          palaa-kaikkiin? (and nayta-vain-puuttuvat? (not puuttuvia-jaljella?))]
+      (when (pos? n)
+        (viesti/nayta-toast!
+          (if palaa-kaikkiin?
+            (str "Asetettiin 0 arvo " n " tehtävälle. Näytetään kaikki tehtävät.")
+            (str "Asetettiin 0 arvo " n " tehtävälle."))
+          :onnistunut))
+      (-> app
+        (assoc :tallentamattomia-muutoksia? (or (pos? n) (:tallentamattomia-muutoksia? app)))
+        (assoc :kaikki-tehtavat paivitetty)
+        (assoc :tallennus-yritetty? false)
+        (cond-> palaa-kaikkiin?
+          (assoc :nayta-vain-puuttuvat? false)
+          palaa-kaikkiin?
+          (dissoc :lukitut-puuttuvat-tehtava-idt))
+        (paivita-naytettavat-tehtavat)
+        (synkronoi-muutokset-muutokset-atomiin!))))
 
   NollaaTehtavatJaMaaratMuutokset
   (process-event [_ app]
-    (assoc app :tallentamattomia-muutoksia? false)))
+    (-> app
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :tallennus-yritetty? false))))

@@ -1,16 +1,17 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [tuck.core :as tuck]
             [harja.fmt :as fmt]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.varmista-kayttajalta :as varmista]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -20,57 +21,238 @@
 
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                             tehtavat-ja-maarat kopioi-tuleville-vuosille? onko-muutoksia?]
+(defn- tallennus-status [viimeisin-muokkaus viimeisin-muokkaaja onko-muutoksia?]
+  (cond
+    (and onko-muutoksia? viimeisin-muokkaus)
+    [:<>
+     [:div.status-viesti.tallennettu
+      (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+     [:div.status-viesti.tallentamatta
+      "Tallentamattomia muutoksia"]]
+
+    onko-muutoksia?
+    [:div.status-viesti.tallentamatta
+     "Tallentamattomia muutoksia"]
+
+    viimeisin-muokkaus
+    [:div.status-viesti.tallennettu
+     (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
+
+    :else
+    [:div.status-viesti.ei-muutoksia
+     "Ei tallennettuja muutoksia"]))
+
+(defn- tallennus-painikkeet
+  [e! tallennus-kesken? tallennustila? kaikki-tehtavat viimeisin-muokkaus viimeisin-muokkaaja tallentamattomia-muutoksia?]
   [:div.flex-row {:style {:justify-content "right"}}
    [:div.painikkeet.text-right
     [:div.grid-status-viestit
-     (cond
-       (and onko-muutoksia? viimeisin-muokkaus)
-       [:<>
-        [:div.status-viesti.tallennettu
-         (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
-        [:div.status-viesti.tallentamatta
-         "Tallentamattomia muutoksia"]]
-
-       onko-muutoksia?
-       [:div.status-viesti.tallentamatta
-        "Tallentamattomia muutoksia"]
-
-       viimeisin-muokkaus
-       [:div.status-viesti.tallennettu
-        (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
-
-       :else
-       [:div.status-viesti.ei-muutoksia
-        "Ei tallennettuja muutoksia"])]]
-
-   (if tallennustila?
-     [:div.painikkeet.text-right.grid-status-viestit
-      (when kopioi-tuleville-vuosille?
-        [:span {:style {:margin-left "1rem"}}
-         [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
-          #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat true))
-          {:disabled (or tallennus-kesken? false)
-           :luokka "ikoni-16"
-           :vayla-tyyli? false
-           :ikoni (ikonit/action-copy)
-           :data-cy "btn-kopioi-tuleville-hoitovuosille"}]])
+     (tallennus-status viimeisin-muokkaus viimeisin-muokkaaja tallentamattomia-muutoksia?)]
+    (if tallennustila?
+      [:<>
+       [:span {:style {:margin-left "1rem"}}
+        [napit/hyvaksy "Tallenna ja merkitse valmiiksi"
+         #(e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat false))
+         {:disabled (or tallennus-kesken? false)
+          :vayla-tyyli? true
+          :data-cy "btn-tallenna-ja-merkitse-valmiiksi"}]]
       [:span {:style {:margin-left "1rem"}}
-       [napit/yleinen-ensisijainen "Tallenna"
-        #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
-        {:disabled (or tallennus-kesken? false)}]]
-      [:span
-       [napit/yleinen-toissijainen "Peruuta"
-        #(e! (tiedot/->PeruutaTallennus))
-        {:disabled (or tallennus-kesken? false)}]]]
-
-     [:div.painikkeet.text-right.grid-status-viestit
+       [napit/yleinen-ensisijainen "Tallenna keskeneräisenä"
+         #(e! (tiedot/->TallennaTehtavat kaikki-tehtavat false))
+         {:disabled (or tallennus-kesken? false)
+          :data-cy "btn-tallenna-tehtavat-ja-maarat"}]]
+       [:span
+        [napit/yleinen-toissijainen "Peruuta"
+         #(e! (tiedot/->PeruutaTallennus))
+         {:disabled (or tallennus-kesken? false)
+          :data-cy "btn-peruuta-tehtavat-ja-maarat"}]]]
       [:span {:style {:margin-left "1rem"}}
        [napit/muokkaa
-         "Muokkaa alkuperäisen sopimuksen määriä"
+        "Muokkaa alkuperäisen sopimuksen määriä"
         #(e! (tiedot/->ToggleTallennusTila))
-        {:data-cy "btn-muokkaa-sopimuksen-maaria"}]]])])
+        {:data-cy "btn-muokkaa-sopimuksen-maaria"}]])]])
+
+
+(defn- tilanne-kortti
+  [e! {:keys [tallennustila? tallennus-kaynnissa?]
+       :as app}
+   _tehtavat-ja-maarat kaikki-tehtavat kopiointi-relevantti?]
+  (let [nayta-vain-puuttuvat? (boolean (:nayta-vain-puuttuvat? app))
+        ;; Puuttuvat lasketaan aina koko datasta, jotta suodatin ei "tyhjennä" näkymää.
+        puuttuvat-tehtava-idt (tiedot/puuttuvat-tarjous-maarat kaikki-tehtavat)
+        puuttuvat-lkm (count puuttuvat-tehtava-idt)
+        valmiiksi-yritetty? (and (true? (:tallennus-yritetty? app)) (pos? puuttuvat-lkm))
+        {:keys [tulevia-vuosia-yhteensa tulevia-vuosia-joissa-syotettyja tulevia-vuosia-valmiina]
+         :as tulevat-yhteenveto}
+        (:tulevat-hoitovuodet-yhteenveto app)
+        {:keys [menneita-vuosia-yhteensa menneita-vuosia-valmiina] :as _menneet-yhteenveto}
+        (:menneet-hoitovuodet-yhteenveto app)
+        tulevia-vuosia-yhteensa (or tulevia-vuosia-yhteensa 0)
+        tulevia-vuosia-joissa-syotettyja (or tulevia-vuosia-joissa-syotettyja 0)
+        tulevia-vuosia-valmiina (or tulevia-vuosia-valmiina 0)
+        menneita-vuosia-yhteensa (or menneita-vuosia-yhteensa 0)
+        menneita-vuosia-valmiina (or menneita-vuosia-valmiina 0)
+        tuleville-on-jo-syotettyja? (pos? tulevia-vuosia-joissa-syotettyja)
+        kopioi-napin-teksti (if tuleville-on-jo-syotettyja? "Kopioi (korvaa)" "Kopioi nyt")
+        taman-hoitovuosi-valmis? (zero? puuttuvat-lkm)
+        taman-hoitovuoden-tila (if taman-hoitovuosi-valmis? "valmis" "kesken")
+        taman-hoitovuoden-tila-teksti (if taman-hoitovuosi-valmis? "Määrät syötetty" "Määriä puuttuu")
+        menneet-valmiina? (= menneita-vuosia-valmiina menneita-vuosia-yhteensa)
+        tulevat-valmiina? (= tulevia-vuosia-valmiina tulevia-vuosia-yhteensa)
+        kaikki-hoitovuodet-valmiina? (and taman-hoitovuosi-valmis? menneet-valmiina? tulevat-valmiina?)
+        kaikki-hoitovuodet-tila (if kaikki-hoitovuodet-valmiina? "valmis" "kesken")
+        kaikki-hoitovuodet-tila-teksti (if kaikki-hoitovuodet-valmiina? "Määrät syötetty" "Määriä puuttuu")
+        menneet-teksti (when (pos? menneita-vuosia-yhteensa)
+                         (str "Menneet: " menneita-vuosia-valmiina "/" menneita-vuosia-yhteensa " valmiina"))
+        tulevat-teksti (when (some? tulevat-yhteenveto)
+                         (if (zero? tulevia-vuosia-yhteensa)
+                           "Tulevat: ei tulevia"
+                           (str "Tulevat: " tulevia-vuosia-valmiina "/" tulevia-vuosia-yhteensa " valmiina")))
+        ;; Laatikon tyyppi: vihreä vain kun kaikki hoitovuodet ovat kunnossa
+        laatikon-tyyppi (if kaikki-hoitovuodet-valmiina? :onnistunut :neutraali)]
+    [yleiset/info-laatikko laatikon-tyyppi
+     [:div
+      [:div.flex-row {:style {:justify-content "space-between" :align-items "flex-start" :gap "1rem"}}
+       [:div
+        [:div.body-text.strong "Tilanne"]]
+
+       (when tallennus-kaynnissa?
+         [:div [ajax-loader-pieni]])]
+
+      [:div {:style {:margin-top "0.5rem"}}
+       (when (pos? puuttuvat-lkm)
+         [:div.body-text.strong {:style {:margin-bottom "0.25rem"}}
+          (if (= 1 puuttuvat-lkm)
+            "Puuttuu 1 alkuperäisen sopimuksen määrä"
+            (str "Puuttuu " puuttuvat-lkm " alkuperäisen sopimuksen määrää"))])
+
+       [:div.flex-row.alkuun {:style {:gap "0.5rem" :flex-wrap "wrap" :align-items "center"}}
+        [:span "Tämä hoitovuosi:"]
+        [yleiset/tila-indikaattori taman-hoitovuoden-tila {:fmt-fn (constantly taman-hoitovuoden-tila-teksti)}]
+        ]
+
+        [:div.flex-row.alkuun {:style {:gap "0.5rem" :flex-wrap "wrap" :align-items "center" :margin-top "0.25rem"}}
+         [:span "Kaikki hoitovuodet:"]
+         [yleiset/tila-indikaattori kaikki-hoitovuodet-tila {:fmt-fn (constantly kaikki-hoitovuodet-tila-teksti)}]]
+
+       ;; Selkeä tekstierottelu: tämä hoitovuosi vs kaikki hoitovuodet
+       (when taman-hoitovuosi-valmis?
+         [:div.body-text {:style {:margin-top "0.5rem"}}
+          (cond
+            kaikki-hoitovuodet-valmiina?
+            "Kaikkien hoitovuosien alkuperäisen sopimuksen määrät on syötetty."
+
+            tallennustila?
+            [:<>
+             [:span "Tämän hoitovuoden alkuperäisen sopimuksen määrät on syötetty. Voit nyt "]
+             [:strong "tallentaa ja merkitä valmiiksi"]
+             [:span "."]]
+
+            :else
+            "Tämän hoitovuoden alkuperäisen sopimuksen määrät on syötetty, mutta kaikkien hoitovuosien määrät eivät ole vielä syötetty.")])
+
+       (when (and nayta-vain-puuttuvat? (zero? puuttuvat-lkm))
+         [:div.body-text {:style {:margin-top "0.25rem"}}
+          "Suodatin on päällä, mutta puuttuvia määriä ei ole – näkymä voi näyttää tyhjältä. Valitse Näytä kaikki nähdäksesi koko listan."])
+
+       (when (and taman-hoitovuosi-valmis?
+                  (not kaikki-hoitovuodet-valmiina?)
+                  (or menneet-teksti tulevat-teksti))
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong "Muut hoitovuodet"]
+          (when menneet-teksti
+            [:div.body-text {:style {:margin-top "0.25rem"}} menneet-teksti])
+          (when tulevat-teksti
+            [:div.body-text {:style {:margin-top "0.25rem"}} tulevat-teksti])])
+
+       (when (and tallennustila? (or (pos? puuttuvat-lkm) nayta-vain-puuttuvat?))
+         [:div.body-text.strong {:style {:margin-top "0.75rem"}}
+          "Puuttuvat määrät"])
+
+       (when (and tallennustila? valmiiksi-yritetty?)
+         [:div {:style {:margin-top "0.5rem"}}
+          [:div.body-text.strong
+           (str "Et voi merkitä valmiiksi – "
+             (if (= 1 puuttuvat-lkm)
+               "puuttuu vielä 1 sopimuksen määrä"
+               (str "puuttuu vielä " puuttuvat-lkm " sopimuksen määrää")))]
+          [:div.body-text {:style {:margin-top "0.25rem"}}
+           "Täytä alkuperäisen sopimuksen puuttuvat määrät tai aseta 0. Voit tallentaa muutokset myös keskeneräisenä."]])
+
+       (when (and tallennustila? (pos? puuttuvat-lkm))
+         [:div.body-text {:style {:margin-top "0.25rem"}}
+          "Jos tehtävälle ei ole määrää, syötä 0."])
+
+       (when (and tallennustila? (or (pos? puuttuvat-lkm) nayta-vain-puuttuvat?))
+         [:div.flex-row.alkuun {:style {:margin-top "0.5rem" :gap "0.75rem" :flex-wrap "wrap"}}
+          [:span
+           [napit/yleinen-toissijainen (if nayta-vain-puuttuvat? "Näytä kaikki" "Näytä vain puuttuvat")
+            #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
+            {:disabled (or tallennus-kaynnissa?
+                         (and (not nayta-vain-puuttuvat?) (zero? puuttuvat-lkm)))
+             :vayla-tyyli? false
+             :data-cy "btn-nayta-vain-puuttuvat"}]]
+          (when (pos? puuttuvat-lkm)
+            [:span
+             [napit/yleinen-ensisijainen (str "Aseta puuttuvat 0:ksi (" puuttuvat-lkm ")")
+              #(e! (tiedot/->AsetaPuuttuvatNollaksi puuttuvat-tehtava-idt))
+              {:disabled (or tallennus-kaynnissa? (zero? puuttuvat-lkm))
+               :vayla-tyyli? false
+               :data-cy "btn-aseta-puuttuvat-nollaksi"}]])])
+
+       (when (and (not tallennustila?) (pos? puuttuvat-lkm))
+         [:div.body-text {:style {:margin-top "0.5rem"}}
+          [:div
+           "Täytä alkuperäisen sopimuksen määrät muokkaustilassa."
+           [:div {:style {:margin-top "0.5rem"}}
+            [napit/muokkaa
+             "Muokkaa alkuperäisen sopimuksen määriä"
+             #(e! (tiedot/->ToggleTallennusTila))
+             {:data-cy "btn-muokkaa-sopimuksen-maaria-tilannekortti"}]]]])
+
+       (when (and (not tallennustila?) nayta-vain-puuttuvat?)
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong
+           (str "Suodatin aktiivinen: Näytetään vain puuttuvat (" puuttuvat-lkm ")")]
+          [:div {:style {:margin-top "0.25rem"}}
+           [napit/yleinen-toissijainen "Näytä kaikki"
+            #(e! (tiedot/->ToggleNaytaVainPuuttuvat))
+            {:disabled (or tallennus-kaynnissa? false)
+             :vayla-tyyli? false
+             :data-cy "btn-nayta-kaikki-ei-muokkaustilassa"}]]])
+
+       (when (and tallennustila? kopiointi-relevantti?)
+         [:div {:style {:margin-top "0.75rem"}}
+          [:div.body-text.strong "Kopiointi tuleville hoitovuosille"]
+          [:div {:style {:margin-top "0.5rem"}}
+           [napit/yleinen-toissijainen kopioi-napin-teksti
+            #(varmista/varmista-kayttajalta
+               {:otsikko "Kopioidaanko tuleville hoitovuosille?"
+                :sisalto [:div
+                          [:div "Kopioidaan valitun hoitovuoden sopimuksen määrät kaikille tuleville hoitovuosille ja merkitään tämä hoitovuosi valmiiksi."]
+                          (when tuleville-on-jo-syotettyja?
+                            [:div {:style {:margin-top "0.5rem"}}
+                             "Huom: kopiointi korvaa tulevien hoitovuosien nykyiset määrät."])]
+                :hyvaksy "Kopioi ja merkitse valmiiksi"
+                :peruuta-txt "Peruuta"
+                :napit [:tallenna :peruuta]
+                :toiminto-fn (fn [] (e! (tiedot/->TallennaTehtavatJaMerkitseValmiiksi kaikki-tehtavat true)))})
+            {:disabled (or tallennus-kaynnissa? (pos? puuttuvat-lkm))
+             :vayla-tyyli? false
+             :data-cy "btn-kopioi-nyt"}]
+
+           [:div.body-text {:style {:margin-top "0.25rem"}}
+            "Kopioi tämän hoitovuoden määrät tuleville hoitovuosille."]
+
+           (when (pos? puuttuvat-lkm)
+             [:div.body-text {:style {:margin-top "0.25rem"}}
+              "Täytä alkuperäisen sopimuksen puuttuvat määrät (tai aseta 0) ennen kopiointia."])
+
+           (when tuleville-on-jo-syotettyja?
+             [:div.body-text {:style {:margin-top "0.25rem"}}
+              "Huom: korvaa tulevien hoitovuosien nykyiset määrät."])]])]]
+     nil "100%" {:luokka "ala-margin-16"}]))
+
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
@@ -126,18 +308,29 @@
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
-
-(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
+(defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
         ;; eli ne rivit, joiden valiotsikko ei ole avatut-riveissä
         tehtavat-ja-maarat (filter (fn [rivi] (or
                                                 (not (nil? (:valiotsikko rivi)))
                                                 (contains? avatut-tehtavaryhmat (:tehtavaryhmaotsikko rivi))))
                              tehtavat-ja-maarat)
+        puuttuvat-tarjous-maarat (if tallennus-yritetty?
+                                   (tiedot/puuttuvat-tarjous-maarat tehtavat-ja-maarat)
+                                   #{})
         rivit-joilla-muutos (filter #(nil? (first (:valiotsikko %))) tehtavat-ja-maarat)
         solun-luokka-fn (fn [_arvo rivi]
                           (when (or haku-kaynnissa? (some? (:valiotsikko rivi)))
                           "valiotsikko-tausta korkea"))
+        tarjousmaara-solun-luokka (fn [arvo rivi]
+                                   (let [perus (solun-luokka-fn arvo rivi)
+                                         puuttuu? (and tallennus-yritetty?
+                                                    (nil? (:valiotsikko rivi))
+                                                    (some? (:tehtava_id rivi))
+                                                    (contains? puuttuvat-tarjous-maarat (:tehtava_id rivi)))
+                                         luokat (remove nil? [perus (when puuttuu? "sisaltaa-virheen")])]
+                                     (when-not (empty? luokat)
+                                       (str/join " " luokat))))
         sarakkeet [{:otsikko "" :leveys "1%"
                     :tyyppi :komponentti
                     :komponentti (fn [rivi]
@@ -156,34 +349,42 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                     {:otsikko "Alkuperäisen sopimuksen määrä"
-                      :leveys "12.5%"
-                      :fmt #(fmt/desimaaliluku-opt % 2)
-                      :nimi :tarjous_maara
-                      :tyyppi :positiivinen-numero
-                      :desimaalien-maara 2
-                      :tasaa :oikea
-                      :muokattava? #(and
+                   {:otsikko "Alkuperäisen sopimuksen määrä"
+                    :leveys "12.5%"
+                    :fmt #(fmt/desimaaliluku-opt % 2)
+                    :nimi :tarjous_maara
+                    :tyyppi :positiivinen-numero
+                    :desimaalien-maara 2
+                    :tasaa :oikea
+                    :jos-tyhja "—"
+                    :validoi (when tallennus-yritetty?
+                              [[:ei-tyhja "Syötä määrä. Jos tehtävälle ei ole määrää, syötä 0"]])
+                    :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
-                    :solun-luokka solun-luokka-fn}
-                     {:otsikko "Pysyvät muutokset (+/-)" :leveys "12.5%"
-                      :nimi :muutos_maaramuutos
-                      :solun-luokka solun-luokka-fn
-                      :tasaa :oikea
-                      :tyyppi :numero
-                      :desimaalien-maara 2
-                      :muokattava? (constantly false)
-                      :fmt muutoksen-vaikutus-fn}
-                     {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
-                      :tyyppi :numero
-                      :desimaalien-maara 2
-                      :muokattava? (constantly false)
-                      :solun-luokka solun-luokka-fn
-                        :tasaa :oikea
-                        :fmt #(fmt/desimaaliluku-opt % 2)}
-                     {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
+                    :solun-luokka tarjousmaara-solun-luokka}
+                   {:otsikko "Pysyvät muutokset (+/-)"
+                    :leveys "12.5%"
+                    :nimi :muutos_maaramuutos
+                    :solun-luokka solun-luokka-fn
+                    :tasaa :oikea
+                    :tyyppi :komponentti
+                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos]}]
+                                   (if tehtava_id
+                                     [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
+                                     [:span]))}
+                   {:otsikko "Muuttunut määrä"
+                    :leveys "12.5%"
+                    :nimi :yhteensa
+                    :tyyppi :komponentti
+                    :solun-luokka solun-luokka-fn
+                    :tasaa :oikea
+                    :komponentti (fn [{:keys [tehtava_id yhteensa]}]
+                                   (if tehtava_id
+                                     [:span (fmt/desimaaliluku-opt yhteensa 2)]
+                                     [:span]))}
+                   {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid
@@ -214,11 +415,12 @@
        sarakkeet
        tehtavat-ja-maarat])))
 
-(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
+(defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kaynnissa? tallennustila? tallennus-yritetty?
+                         tehtavat-ja-maarat avatut-tehtavaryhmat haku] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
-        onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
+        onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)
+        kaikki-tehtavat (:kaikki-tehtavat app)]
     [:div#vayla
      [:div.row
       [:h1 "Tehtävä ja määräluettelo"]]
@@ -249,13 +451,12 @@
             :taso3 nil})
         {:luokka "klikattava alleviivaa"}]]]
 
-     [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
-      (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
+     [tilanne-kortti e! app tehtavat-ja-maarat kaikki-tehtavat (not onko-viimeinen-vuosi?)]
 
-     (when tallennustila?
-       [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."])
+  [tallennus-painikkeet e! tallennus-kaynnissa? tallennustila? kaikki-tehtavat
+   (:viimeisin-muokkaus app) (:viimeisin-muokkaaja app) (:tallentamattomia-muutoksia? app)]
 
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
+     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tallennus-yritetty? tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
 (defn tehtavat-maarat* [e! _]
