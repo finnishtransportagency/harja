@@ -275,12 +275,15 @@
         (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app} voimassa-alkaen-lukittu?]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
         hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi)
+        hoitovuosi-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi (some-> hoitovuosi first (pvm/vuosi)))
         voi-muokata? (and
+                       ;; Onko kustis jo vahvistettu 
+                       (not hoitovuosi-vahvistettu?)
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
                        (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
                        ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
@@ -308,9 +311,19 @@
      [:div.pysyvan-muutoksen-grid-header
       (if voi-muokata?
         [yleiset/vihje "Valitse toimenpiteet, joita muutos koskee."]
-        [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
-                         (when (not (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
-                           "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))])
+
+        (cond
+          hoitovuosi-vahvistettu?
+          [yleiset/info-laatikko :vahva-ilmoitus
+           "Hoitovuoden alun tavoitehintoja on vahvistettu"
+           "Peru vahvistukset kirjataksesi muutoksia."
+           nil
+           {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+
+          :else
+          [yleiset/vihje (str "Hoitovuoden tietoja ei voi muokata. "
+                           (when (not (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi))
+                             "Voimassa alkaen-päivämäärä ei ole valitulla hoitovuodella."))]))
 
       [napit/nappi "Kopioi tiedot tuleville hoitovuosille"
        (fn []
@@ -323,6 +336,7 @@
               :toiminto-fn #(kopioi-tuleville-hoitovuosille! e! muokattava-muutos)})
            (kopioi-tuleville-hoitovuosille! e! muokattava-muutos)))
        {:ikoni (ikonit/action-copy)
+        :disabled hoitovuosi-vahvistettu?
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
@@ -334,32 +348,21 @@
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?
               valittu-hoitokausi] :as app}]
 
-  (let [muokataan? (:id muokattava-muutos)
+  (let [muutos-id (:id muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         hoitovuosi (:hoitovuosi muokattava-muutos)
         {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
-        ;; Voimassa-alkaen lukitus tarkastatetaan vain muokkaustilanteessa
-        voimassa-alkaen-lukittu? (if muokataan?
-                                   (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
-                                   false)]
+        voimassa-alkaen-lukittu? (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)]
+
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
 
-       (when
-         voimassa-alkaen-lukittu?
-         {:uusi-rivi? true
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [yleiset/info-laatikko :vahva-ilmoitus
-                          "Hoitovuoden alun tavoitehintoja on vahvistettu"
-                          "Peru vahvistukset muokataksesi voimassa alkaen päivämäärää."
-                          nil
-                          {:ikoni-fn #(ikonit/harja-icon-status-alert)}])})
-
        (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
          {:pakota-valittuun-hoitokauteen? false
-
-          :voi-muokata? (not voimassa-alkaen-lukittu?)})
+          :esta-hoitovuodet tavoitehinta-indeksikorjattu-per-hoitovuosi
+          :voi-muokata? (not (and
+                               (some? muutos-id)
+                               voimassa-alkaen-lukittu?))})
 
        ;; -- Info-laatikot --
        (when (muutos-domain/muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi)

@@ -87,7 +87,7 @@
 (defn +rivi-muutos-voimassa+
   ([urakan-hoitokaudet valittu-hoitokausi]
    (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi {}))
-  ([urakan-hoitokaudet valittu-hoitokausi {:keys [pakota-valittuun-hoitokauteen? voi-muokata?]
+  ([urakan-hoitokaudet valittu-hoitokausi {:keys [pakota-valittuun-hoitokauteen? voi-muokata? esta-hoitovuodet]
                                            :or {pakota-valittuun-hoitokauteen? true
                                                 voi-muokata? true} :as opts}]
    {:otsikko "Voimassa alkaen"
@@ -97,9 +97,10 @@
     :pakollinen? true
     ;; Rajoita valinta hoitokaudelle 
     :validoi [(fn [valittu-pvm]
-                (if pakota-valittuun-hoitokauteen?
+                (cond
                   ;; Katsotaan että voimassa alkaen osuu valittuun hoitokauteen
                   ;; Erityisesti tärkeä muutostyö kirjauksissa 
+                  pakota-valittuun-hoitokauteen?
                   (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
                                                    (pvm/valissa?
                                                      valittu-pvm
@@ -118,7 +119,19 @@
                   ;; Esimerkiksi pysyvässä muutoksessa kevyempi validointi riittää,
                   ;; koska pysyvässä muutoksessa valitaan hoitokausi erikseen ja voimassa-alkaen
                   ;; saa osua mihin tahansa hoitokauteen
-                  (when (nil? valittu-pvm) "Syötä muutoksen voimassaolo pvm")))]
+                  (nil? valittu-pvm)
+                  "Syötä muutoksen voimassaolo pvm"
+
+                  ;; Jos valitun hoitovuoden alun tavoitehinta on vahvistettu, ei sallita
+                  ;; valittua voimassa-alkaen päivämäärää (pysyvä muutos)
+                  esta-hoitovuodet
+                  (when (some (fn [[y a?]]
+                                (and a?
+                                  (let [[alku loppu] (pvm/vuodesta-hoitokausi y)]
+                                    (pvm/valissa? valittu-pvm alku loppu))))
+                          esta-hoitovuodet)
+                    "Valitun hoitovuoden alun tavoitehinta on vahvistettu.")))]
+
     ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
     ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
     :aseta (fn [rivi arvo]
