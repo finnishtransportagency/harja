@@ -125,7 +125,7 @@
   {:pre [(int? urakka-id)]}
   (k/post! :hae-suolatoteumat-tr-valille {:urakka-id urakka-id
                                           :alkupvm alkupvm
-                                          :loppupvm (pvm/ajan-muokkaus loppupvm true 3600)
+                                          :loppupvm (pvm/paivan-lopussa loppupvm)
                                           :tie tie
                                           :alkuosa alkuosa
                                           :alkuet alkuet
@@ -136,7 +136,7 @@
   {:pre [(int? urakka-id)]}
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
                                :alkupvm alkupvm
-                               :loppupvm (pvm/ajan-muokkaus loppupvm true 3600)}))
+                               :loppupvm (pvm/paivan-lopussa loppupvm)}))
 
 (defn hae-toteumien-reitit! [urakka-id toteuma-idt]
   {:pre [(int? urakka-id)]}

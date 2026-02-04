@@ -53,12 +53,12 @@
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.49"]
-                 [http-kit "2.8.0"]
+                 [http-kit "2.8.1"]
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
                  [ring/ring-core "1.14.2"]
-                 [compojure "1.7.1"]
+                 [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "1.1.234"]
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.0" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.1" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -122,7 +122,7 @@
 
                  ;; -- Karttatasot front-end
                  ;; TODO: Päivitys suurempiin versioihin vaatii siirtymisen shadow-cljs:ään
-                 [cljsjs/openlayers "4.0.1-1"]
+                 [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "5.4.1"]
@@ -134,7 +134,7 @@
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
-                 [net.coobird/thumbnailator "0.4.20"]
+                 [net.coobird/thumbnailator "0.4.21"]
 
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.7.4"]

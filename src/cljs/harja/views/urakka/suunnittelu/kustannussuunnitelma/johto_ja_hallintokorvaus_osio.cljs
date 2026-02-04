@@ -91,7 +91,7 @@
      (e! (t/->TallennaJohtoJaHallintokorvaukset
            [(grid/solun-asia solu :tunniste-rajapinnan-dataan)])))))
 
-(defn- nappia-painettu-tallenna! 
+(defn- nappia-painettu-tallenna!
   ([rivit-alla]
    (nappia-painettu-tallenna! rivit-alla nil))
   ([rivit-alla muutos]
@@ -127,7 +127,7 @@
              osat)))))
 
 (defn johto-ja-hallintokorvaus-laskulla-grid []
-  (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"               
+  (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"
         vakiorivit (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                              (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
@@ -637,7 +637,7 @@
                                                (dec (+ (count (t/pohjadatan-versio))
                                                       jarjestysnumero))
                                                kuukausitasolla?)
-                                             (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
+                                           (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
           {}
           (range 1 (inc t/jh-korvausten-omiariveja-lkm)))))
 
@@ -663,14 +663,14 @@
                             :osat [{:tyyppi :rivi
                                     :nimi ::t/yhteenveto
                                     :osat (cond->
-                                              (vec (repeat (if (t/post-2022?) 6 7)
+                                            (vec (repeat (if (t/post-2022?) 6 7)
                                                    {:tyyppi :teksti
                                                     :luokat #{"table-default"}
                                                     :fmt ks-yhteiset/summa-formatointi-uusi}))
                                             true (assoc-in [0 :fmt] nil)
 
                                             (not (t/post-2022?))
-                                            (assoc-in [1 :fmt] 
+                                            (assoc-in [1 :fmt]
                                               (fn [teksti]
                                                 (if (nil? teksti)
                                                   ""
@@ -680,12 +680,12 @@
                                                       teksti))))))}]})
                      (t/pohjadatan-versio))
              :footer (let [osat (vec (repeat (if (t/post-2022?) 6 7)
-                                   {:tyyppi :teksti
-                                    :luokat #{"table-default" "table-default-sum"}
-                                    :fmt ks-yhteiset/yhteenveto-format}))]
+                                       {:tyyppi :teksti
+                                        :luokat #{"table-default" "table-default-sum"}
+                                        :fmt ks-yhteiset/yhteenveto-format}))]
                        (if-not (t/post-2022?)
                          (assoc osat 1 {:tyyppi :tyhja
-                                   :luokat #{"table-default" "table-default-sum"}})
+                                        :luokat #{"table-default" "table-default-sum"}})
                          osat))
              :taulukon-id taulukon-id
              :root-asetus! (fn [g]
@@ -700,13 +700,13 @@
         g (grid/lisaa-rivi! g
             (grid/rivi {:osat
                         (let [osat
-                                    (vec (repeatedly (if (t/post-2022?) 6 7)
-                                           (fn []
-                                             (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
-                                                           :fmt ks-yhteiset/yhteenveto-format}))))]
-                                (if-not (t/post-2022?)
-                                  (update-in osat [1] gov/teksti->tyhja #{"table-default" "table-default-sum" "harmaa-teksti"})
-                                  osat))
+                              (vec (repeatedly (if (t/post-2022?) 6 7)
+                                     (fn []
+                                       (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
+                                                     :fmt ks-yhteiset/yhteenveto-format}))))]
+                          (if-not (t/post-2022?)
+                            (update-in osat [1] gov/teksti->tyhja #{"table-default" "table-default-sum" "harmaa-teksti"})
+                            osat))
                         :koko {:seuraa {:seurattava ::g-pohjat/otsikko
                                         :sarakkeet :sama
                                         :rivit :sama}}
@@ -719,28 +719,28 @@
       (t/johto-ja-hallintokorvaus-yhteenveto-dr)
       (let [kuvaus (vec (concat [:toimenkuva] (when-not (t/post-2022?) [:kk-v]) [:hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]))]
         (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
-                                           :solun-polun-pituus 1
+                                      :solun-polun-pituus 1
                                       :jarjestys [(with-meta kuvaus {:nimi :mapit})]
-                                           :datan-kasittely (fn [otsikot]
-                                                              (mapv (fn [otsikko]
-                                                                      otsikko)
-                                                                (vals otsikot)))}
-                     [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
-                                              :solun-polun-pituus 1
-                                              :datan-kasittely identity}
-                     [::t/indeksikorjattu] {:rajapinta :indeksikorjattu
-                                            :solun-polun-pituus 1
-                                            :datan-kasittely identity}}
+                                      :datan-kasittely (fn [otsikot]
+                                                         (mapv (fn [otsikko]
+                                                                 otsikko)
+                                                           (vals otsikot)))}
+                [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
+                                         :solun-polun-pituus 1
+                                         :datan-kasittely identity}
+                [::t/indeksikorjattu] {:rajapinta :indeksikorjattu
+                                       :solun-polun-pituus 1
+                                       :datan-kasittely identity}}
 
-               (second
-                 (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi]}]
-                           (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-                             [(inc index) (merge grid-kasittelijat
-                                            {[::g-pohjat/data index ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
-                                                                                     :solun-polun-pituus 1
-                                                                                     :datan-kasittely identity}})]))
-                   [0 {}]
-                   (t/pohjadatan-versio))))))))
+          (second
+            (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi]}]
+                      (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                        [(inc index) (merge grid-kasittelijat
+                                       {[::g-pohjat/data index ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
+                                                                                :solun-polun-pituus 1
+                                                                                :datan-kasittely identity}})]))
+              [0 {}]
+              (t/pohjadatan-versio))))))))
 
 
 ;; | -- Gridit päättyy
@@ -823,19 +823,19 @@
       " " (if (> kuukausi 9)
             vuosi
             (inc vuosi))
-      (when 
-          (or
-            (< (inc vuosi) (-> tanaan pvm/vuosi))
-            
-            (and
-              (= (inc vuosi) (-> tanaan pvm/vuosi))
-              (or (< kuukausi (-> tanaan pvm/kuukausi))
-                (< 9 kuukausi )))
+      (when
+        (or
+          (< (inc vuosi) (-> tanaan pvm/vuosi))
 
-            (and                    
-              (= vuosi (-> tanaan pvm/vuosi))                
-              (and (< kuukausi (-> tanaan pvm/kuukausi))
-                (< 9 kuukausi))))          
+          (and
+            (= (inc vuosi) (-> tanaan pvm/vuosi))
+            (or (< kuukausi (-> tanaan pvm/kuukausi))
+              (< 9 kuukausi)))
+
+          (and
+            (= vuosi (-> tanaan pvm/vuosi))
+            (and (< kuukausi (-> tanaan pvm/kuukausi))
+              (< 9 kuukausi))))
         " (mennyt)"))))
 
 (defn- kun-erikseen-syotettava-checkbox-klikattu
@@ -880,7 +880,7 @@
         paivitetyt (jaa-vuosipalkka-kuukausille hoitokausi kopioi-tuleville? (:ennen-urakkaa? rivi) toimenkuvan-maarat (:vuosipalkka rivi))
         rivi (assoc rivi :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
         tiedot @atomi
-        tiedot-muuttuneet? (not= 
+        tiedot-muuttuneet? (not=
                              (get tiedot (:tunniste rivi))
                              rivi)
         tiedot (assoc-in tiedot [(:tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
@@ -951,8 +951,8 @@
   (and @erikseen-syotettava?
     (or
       (and
-         (:ennen-urakkaa? tiedot)
-         (= 1 hoitokausi))
+        (:ennen-urakkaa? tiedot)
+        (= 1 hoitokausi))
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-klikattu-fn [atomi tallenna-fn rivi-atom event]
@@ -1027,8 +1027,8 @@
     (not (get-in tiedot [:erikseen-syotettava? hoitokausi]))
     (or
       (and
-         (:ennen-urakkaa? tiedot)
-         (= 1 hoitokausi))
+        (:ennen-urakkaa? tiedot)
+        (= 1 hoitokausi))
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn tallenna-toimenkuvan-tiedot
@@ -1057,9 +1057,9 @@
             tallenna-fn (if vahvistettu?
                           (constantly nil)
                           (r/partial tallenna-toimenkuvan-tiedot
-                                           data
-                                           {:hoitokausi kuluva-hoitokausi
-                                            :kopioi-tuleville? kopioidaan-tuleville-vuosille?}))
+                            data
+                            {:hoitokausi kuluva-hoitokausi
+                             :kopioi-tuleville? kopioidaan-tuleville-vuosille?}))
             vetolaatikot (luo-vetolaatikot data vahvistettu? tallenna-fn @kaytetty-hoitokausi)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)

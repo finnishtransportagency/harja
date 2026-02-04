@@ -619,7 +619,8 @@
                             :tehtava 17350
                             :uusi_maara nil
                             :versio 2})
-        _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) muutos tehtava-maaramuutos-payload)
+
+        _ (muutos-palvelu/tallenna-muutoksen-tehtavien-maaramuutokset (:db jarjestelma) (:id +kayttaja-jvh+) urakka-id muutos tehtava-maaramuutos-payload)
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
@@ -1762,10 +1763,10 @@
                           :voimassa_alkaen #inst "2025-10-20T10:07:32.000-00:00"
                           :syy "Erillisrahoitettu testimuutos poistoa varten"
                           :nimi "Poistettava erillisrahoitettu muutos"
-                          :tavoitehinnan-muutos 5000
+                          :tavoitehinnan-muutos 5250
                           :kustannusvaikutukset [{:hoitokauden_alkuvuosi 2025
                                                   :kustannuslaji "erillishankinnat"
-                                                  :summa 5000
+                                                  :summa 5250
                                                   :toimenpideinstanssi nil}]}
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
               :tallenna-muutos
@@ -1835,7 +1836,7 @@
           kulu {:kokonaissumma 250
                 :erapaiva (pvm/->pvm "25.10.2025")
                 :kohdistukset [{:tyyppi :erillisrahoitettu-muutos
-                                :valittu-muutostyo luotu-muutos
+                                :valittu-muutostyo (assoc luotu-muutos :budjetoitu_summa 5000)
                                 :toimenpideinstanssi tpi-id
                                 :rivi 0
                                 :summa 250

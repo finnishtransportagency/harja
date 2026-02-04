@@ -6,6 +6,7 @@
             [slingshot.slingshot :refer [throw+]]
 
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.domain.mhu :as mhu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -22,6 +23,7 @@
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
@@ -370,7 +372,7 @@
             (assoc rivi :tavoitehinnan-muutos total)))
     muutokset))
 
-(defn- parsi-kirjatut-muutokset-vastaus [vastaus]
+(defn parsi-kirjatut-muutokset-vastaus [vastaus]
   (->> vastaus
     (mapv (fn [rivi]
             (-> rivi
@@ -594,34 +596,56 @@
                         :laskun_numero (:laskun-numero rivi)
                         :koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi (:pvm rivi) (:alkupvm urakka))
                         :kokonaissumma (:tavoitehinnan-muutos rivi)}
+                  tavoitehinnan-muutos (:tavoitehinnan-muutos rivi)
                   ;; 1.10.2025 ja jälkeen alkavissa urakassa vaaditaan negatiivinen summa näiden muutosten kuluissa
                   _ (when (and
                             (= :vahennys
                               (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm urakka)))
-                            (> (:tavoitehinnan-muutos rivi) 0))
+                            (> tavoitehinnan-muutos 0))
                       (throw (Error. "1.10.2025 tai sen jälkeen alkavissa urakoissa Johto- ja hallintokorvausmuutoksen kulut voivat olla vain vähennyksiä eli miinusmerkkisiä.")))
                   ;; jotta saadaan talteen muutoshistoria, aina luodaan uusi kulu ja sen kohdistus, vanhat merkitään poistetuksi
-                  kulu-id-db (:id (kulu-kyselyt/luo-kulu<! db kulu))
-                  ;; luodaan aina uusi kohdistus, jos kyseessä "päivitys", poistetaan vanha kohdistus jotta jää historia talteen
-                  kulu-kohdistus-db (muutos-kyselyt/luo-jjh-kulun-kohdistus<! db
-                                      {:kulu kulu-id-db
-                                       :summa (:tavoitehinnan-muutos rivi)
-                                       :toimenpideinstanssi hoidon-johto-tpi-id
-                                       :kayttaja (:id kayttaja)
-                                       :tyyppi "jjh-muutos"})]]
+                  kulu-id-db (when (not= tavoitehinnan-muutos 0)
+                               (:id (kulu-kyselyt/luo-kulu<! db kulu)))]]
+
+      ;; luodaan aina uusi kohdistus, jos kyseessä "päivitys", poistetaan vanha kohdistus jotta jää historia talteen
+      (when kulu-id-db
+        (muutos-kyselyt/luo-jjh-kulun-kohdistus<! db
+          {:kulu kulu-id-db
+           :summa (:tavoitehinnan-muutos rivi)
+           :toimenpideinstanssi hoidon-johto-tpi-id
+           :kayttaja (:id kayttaja)
+           :tyyppi "jjh-muutos"}))
+
+      (cond
+        ;; Esim voimassa alkaen pvm muutettiin, rivi muuttui nollaksi -> poista 
+        (and (:kulu-id rivi) (= tavoitehinnan-muutos 0))
+        (poista-vanhat-kulutiedot! db kayttaja rivi)
+
+        ;; Päivitetään olemassa oleva 
+        (and
+          kulu-id-db
+          (:kulu-id rivi)
+          (not= tavoitehinnan-muutos 0))
+        (do
+          (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
+                                                            :muutos (:id muutos-id-ja-versio)
+                                                            :vanha-kulu (:kulu-id rivi)
+                                                            :uusi-kulu kulu-id-db})
+          (poista-vanhat-kulutiedot! db kayttaja rivi))
+
+        ;; Tehdään uusi 
+        (and kulu-id-db (not (:kulu-id rivi)))
+        (do
+          (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
+                                                         :muutos (:id muutos-id-ja-versio)
+                                                         :kulu kulu-id-db})
+          (poista-vanhat-kulutiedot! db kayttaja rivi)))
+
 
       ;; TODO: Korjaa kulun luominen ja päivittäminen, kun teet johto- ja hallintokorvaus muutoksia
       ;;       Pitää pystyä päivittämään vanhaa kulu-riviä siten, että uudet kulutiedot korvaavat vanhat ja versio päivittyy
       ;; FIXME: Tämä on näemmä vielä kesken. Rivin mukana ei tule vielä kulu-id:tä ainakaan testeissä
-      (if (:kulu-id rivi)
-        (muutos-kyselyt/paivita-muutos-kulu-linkitys! db {:versio (:versio muutos-id-ja-versio)
-                                                          :muutos (:id muutos-id-ja-versio)
-                                                          :vanha-kulu (:kulu-id rivi)
-                                                          :uusi-kulu kulu-id-db})
-        (muutos-kyselyt/luo-muutos-kulu-linkitys<! db {:versio (:versio muutos-id-ja-versio)
-                                                       :muutos (:id muutos-id-ja-versio)
-                                                       :kulu kulu-id-db}))
-      (poista-vanhat-kulutiedot! db kayttaja rivi))))
+      )))
 
 
 (defn- tallenna-muutoksen-liitteet [db aiti-muutos-id-ja-versio liitteet]
@@ -689,10 +713,11 @@
 
 (defn tallenna-muutoksen-tehtavien-maaramuutokset
   "Poikkeaminen tehtävä- ja määräluettelon määristä"
-  [db aiti-muutos-id-ja-versio maaramuutokset]
+  [db kayttaja-id urakka-id aiti-muutos-id-ja-versio maaramuutokset]
   (log/debug "Tallennetaan tehtävä- ja määrämuutokset: " maaramuutokset)
 
-  (let [muutos-id (:id aiti-muutos-id-ja-versio)
+  (let [kaikki-muutokset maaramuutokset
+        muutos-id (:id aiti-muutos-id-ja-versio)
         muutos-versio (:versio aiti-muutos-id-ja-versio)
         poistettavat (filter :poistettu maaramuutokset)
         lisattavat-ja-paivitettavat (remove :poistettu maaramuutokset)]
@@ -717,14 +742,29 @@
                               ;;       Ja kuinka monimutkaiseksi useamman muutoksen tietojen yhdistely menee.
                               #_:uusi_maara 0
                               #_:edellinen_maara 0))]
-          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))
+
+    ;; Päivitä tavoite ja kattohinta 
+    (doseq [maaramuutos kaikki-muutokset]
+      (when (and (:hoitokauden_alkuvuosi maaramuutos))
+        (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi maaramuutos)
+          (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi maaramuutos) true))))))
 
 
-(defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi]
+(defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi kustannusvaikutukset]
   ;; Jos tehdään muutostyö jolle voi kirjata kuluja 
   ;; -> tämän jälkeen vaihdetaan voimassa_alkaen päivää 
   ;; -> pitää tarkistaa voidaanko näin tehdä, esim jos kuluja on jo kirjattu
-  (let [vuosi (when voimassa_alkaen (pvm/vuosi voimassa_alkaen))
+  ;; Sama tarkastus budjetille (tavoitehinnan muutos)
+  (let [tavoitehinnan-muutos (apply + (keep #(:summa %) kustannusvaikutukset))
+        jo-kirjatut-kulut (muutos-kyselyt/muutostyolle-jo-kirjatut-kulut-yhteensa db
+                            {:muutos id
+                             :tyyppi (when (= alityyppi "erillisrahoitus") "erillisrahoitettu-muutos")})
+
+        budjetti-ylittyy? (boolean (when (and tavoitehinnan-muutos jo-kirjatut-kulut)
+                                     (> (bigdec jo-kirjatut-kulut) (bigdec tavoitehinnan-muutos))))
+
+        vuosi (when voimassa_alkaen (pvm/vuosi voimassa_alkaen))
         kk (when voimassa_alkaen (pvm/kuukausi voimassa_alkaen))
         paiva (when voimassa_alkaen (pvm/paiva voimassa_alkaen))
         voimassa-alkaen-sql (when voimassa_alkaen (str vuosi "-" kk "-" paiva))
@@ -740,7 +780,15 @@
                    :voimassa voimassa-alkaen-sql})
         kuluja-kirjattu? (boolean vastaus)]
 
-    (when kuluja-kirjattu?
+    (cond
+      budjetti-ylittyy?
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                          :viesti (str
+                                    "Muutostyön budjetti ylittyy. "
+                                    "Kuluja on jo kirjattu yhteensä " (fmt/euro-opt jo-kirjatut-kulut))}]})
+
+      kuluja-kirjattu?
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                           :viesti (str
@@ -811,7 +859,7 @@
             tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
         (cond
           tyyppi-muutostyo?
-          (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi)
+          (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi kustannusvaikutukset)
 
           tyyppi-pysyva?
           ;; Estä tallennus, mikäli yritetään muokata lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
@@ -857,7 +905,7 @@
                                                     (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
                                      maaramuutokset)
                                    maaramuutokset)]
-              (tallenna-muutoksen-tehtavien-maaramuutokset conn aiti-muutos-id-ja-versio maaramuutokset)))
+              (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
           ;; Tallenna kulut
           (case

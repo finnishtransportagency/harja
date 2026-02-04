@@ -16,7 +16,7 @@
             [harja.geo :as geo])
   (:import (java.util Date)))
 
-(def kayttaja "destia")
+(def kayttaja "yit-rakennus")
 (def kayttaja-jvh "jvh")
 
 (def jarjestelma-fixture
@@ -44,7 +44,8 @@
     (if (empty? vastaus) id (recur))))
 
 (deftest tallenna-soratietarkastus
-  (let [pvm (pvm/nyt)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        pvm (pvm/nyt)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         _ (anna-kirjoitusoikeus kayttaja)
         _ (anna-kirjoitusoikeus kayttaja-jvh)
@@ -68,7 +69,8 @@
       (is (-> poista-vastaus :status (= 200))))))
 
 (deftest tallenna-virheellinen-soratietarkastus
-  (let [_ (anna-kirjoitusoikeus kayttaja)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        _ (anna-kirjoitusoikeus kayttaja)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
                                          (-> "test/resurssit/api/soratietarkastus-virhe.json"
                                              slurp))]
@@ -76,7 +78,8 @@
     (is (= "invalidi-json" (some-> vastaus :body json/read-str (get "virheet") first (get "virhe") (get "koodi"))))))
 
 (deftest tallenna-ja-poista-talvihoitotarkastus
-  (let [pvm (pvm/nyt)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        pvm (pvm/nyt)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi, t.pisteet "
                                           "  FROM tarkastus t "
@@ -117,7 +120,8 @@
       (is (empty? poista-tark)))))
 
 (deftest tallenna-ja-poista-tieturvallisuustarkastus
-  (let [pvm (pvm/nyt)
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        pvm (pvm/nyt)
         _ (anna-kirjoitusoikeus kayttaja)
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/tieturvallisuustarkastus"] kayttaja portti
                            (json-sapluunasta "test/resurssit/api/tieturvallisuustarkastus.json" pvm nil))
@@ -156,7 +160,8 @@
       (is (empty? poista-tark)))))
 
 (deftest tarkasta-tarkastajan-lahettaminen
-  (let [tarkastus-idt [6660001 6660002 6660003]
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        tarkastus-idt [6660001 6660002 6660003]
         tarkastustemplate {:tarkastus {:tunniste {:id nil}
                                        :aika "2015-02-02T15:01:00Z"
                                        :alkusijainti {:x 441895 :y 7199136}
@@ -199,7 +204,8 @@
 ;; Tarkastuksen tiedot vain päivitetään
 (deftest tallenna-talvihoitotarkastus-kahdesti
   (testing "Tallenna talvihoitotarkastus kahdesti"
-    (let [pvm (pvm/nyt)
+    (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+          pvm (pvm/nyt)
           id (hae-vapaa-tarkastus-ulkoinen-id)
           liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
           tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
@@ -237,7 +243,8 @@
 ;; Erilaisen liitteen voi kuitenkin lisätä. Varmistetaan tässä, että se toimii
 (deftest tallenna-talvihoitotarkastus-uudella-liitteellä
   (testing "Tallenna talvihoitotarkastus uudella liitteellä"
-    (let [pvm (pvm/nyt)
+    (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+          pvm (pvm/nyt)
           id (hae-vapaa-tarkastus-ulkoinen-id)
           liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
           tarkista-kannasta #(q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
@@ -313,3 +320,37 @@
           poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))
+
+(deftest tarkastus-paattyneeseen-urakkaan-estetään
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        myohainen-pvm "2019-10-02T12:00:00Z" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        id (hae-vapaa-tarkastus-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        json-data (-> "test/resurssit/api/talvihoitotarkastus.json"
+                    slurp
+                    (.replace "__PVM__" myohainen-pvm)
+                    (.replace "__ID__" (str id))
+                    (.replace "2015-02-02T15:01:00Z" myohainen-pvm))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         json-data)
+        tarkastus-kannassa (ffirst (q (str "SELECT id FROM tarkastus WHERE ulkoinen_id = " id)))]
+    (is (= 400 (:status vastaus)))
+    (is (some #(= "virheellinen-paivamaara" (get-in % ["virhe" "koodi"]))
+              (get-in (json/read-str (:body vastaus)) ["virheet"])))
+    (is (nil? tarkastus-kannassa))))
+
+(deftest tarkastus-urakan-viimeisena-sallittuna-paivana
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+        viimeinen-sallittu-pvm "2019-10-01T15:00:00+03:00" ;; Urakan viimeinen sallittu pvm on 2019-10-01
+        id (hae-vapaa-tarkastus-ulkoinen-id)
+        _ (anna-kirjoitusoikeus kayttaja)
+        json-data (-> "test/resurssit/api/talvihoitotarkastus.json"
+                    slurp
+                    (.replace "__PVM__" viimeinen-sallittu-pvm)
+                    (.replace "__ID__" (str id))
+                    (.replace "2015-02-02T15:01:00Z" viimeinen-sallittu-pvm))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         json-data)
+        tarkastus-kannassa (ffirst (q (str "SELECT id FROM tarkastus WHERE ulkoinen_id = " id)))]
+    (is (= 200 (:status vastaus)))
+    (is (some? tarkastus-kannassa))))

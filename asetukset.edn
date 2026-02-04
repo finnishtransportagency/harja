@@ -54,7 +54,9 @@
 
  ;; MIAM käyttäjäroolit
  :kayttajaroolit {:url "https://localhost:3001/miam/harja/user/roles?uid="
-                  :apiavain ""}
+                  :apiavain ""
+                  :timeout 30000
+                  :max-yritykset 3}
 
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
