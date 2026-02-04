@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.toteumatyokalu-tiedot
+(ns harja.tiedot.hallinta.tyokalut.toteumatyokalu-tiedot
   "Toteumatyokalun ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
@@ -32,6 +32,7 @@
                                :json-lahetysaika :lomake
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
+                               :lahde "koneellinen"
                                :sopimusid 19
                                :valittu-materiaali nil
                                :yksikko "t"
@@ -70,6 +71,7 @@
    :reittitoteuma {:toteuma {:tunniste {:id (get-in app [:toteumatiedot :ulkoinen-id])}
                              :suorittaja {:nimi (get-in app [:toteumatiedot :suorittaja-nimi])
                                           :ytunnus "1234567-8"}
+                             :lahde (get-in app [:toteumatiedot :lahde])
                              :sopimusId (get-in app [:toteumatiedot :sopimusid])
                              :alkanut (get-in app [:toteumatiedot :lahetysaika])
                              :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app)))

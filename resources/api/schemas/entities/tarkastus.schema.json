@@ -8,30 +8,35 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
+      "required": true,
+      "description": "Urakoitsijajärjestelmän luoma tunniste tarkastukselle."
     },
     "tarkastusajo": {
       "id": "urn:harja/tarkastusajo",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": false
+      "required": false,
+      "description": "Vanhentunut. Ei tarvitse käyttää."
     },
     "havainnot": {
       "id": "urn:harja/tarkastus/havainnot",
       "required": false,
       "type": "string",
-      "maxLength": 4096
+      "maxLength": 4096,
+      "description": "Lista tarkastusajon aikana tehdyistä, Harjaan lähetettävistä havainnoista."
     },
     "laadunalitus": {
       "id": "urn:harja/tarkastus/laadunalitus",
       "type": "boolean",
-      "required": false
+      "required": false,
+      "description": "True = tarkastusajon aikana havaittiin laadunalitus."
     },
     "naytetaan-urakoitsijalle": {
       "id": "urn:harja/tarkastus/naytetaan-urakoitsijalle",
       "type": "boolean",
-      "required": false
+      "required": false,
+      "description": "True = Tarkastusajon tiedot näytetään Harjassa urakoitsijan käyttäjille. Urakoitsijan apikäyttäjän kirjaamat tarkastusajot näytetään urakoitsijalle aina."
     },
     "liitteet": {
       "id": "urn:harja/liitteet",
@@ -43,27 +48,31 @@
       "id": "urn:harja/talvihoitotarkastus/paivamaara",
       "type": "string",
       "format": "date-time",
-      "required": true
+      "required": true,
+      "description": "Sanomassa välitetyn tarkastusajon tai tarkastusjon osuuden aloitusajankohta."
     },
     "tarkastaja": {
       "id": "urn:harja/talvihoitotarkastus/tarkastaja",
       "type": ["object","null"],
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/henkilo-opt.schema.json",
-      "required": false
+      "required": false,
+      "description": "Tarkastusajon suorittajan nimi."
     },
     "alkusijainti": {
       "id": "urn:harja/talvihoitotarkastus/alkusijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-      "required": true
+      "required": true,
+      "description": "Tarkastusreitin alkupiste. Jos kyseessä on pistemäinen tarkastus (esim.valaistuskohde), pelkän alkupisteen lähettäminen riittää."
     },
     "loppusijainti": {
       "id": "urn:harja/talvihoitotarkastus/loppusijainti",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
+      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
+      "description": "Tarkastusreitin loppupiste. Harja piirtää reitin alku- ja loppupisteen perusteella. Ajettu matka tulee pilkkoa niin, että reitin piirtäminen kahden pisteen perusteella on mahdollista, ja ettei reittiin tule ylimääräisä aukkoja. Harjaan lähetettävän tarkastusajon alku- ja loppupisteen täytyy käytännössä olla samalla tienumerolla."
     }
   }
 }

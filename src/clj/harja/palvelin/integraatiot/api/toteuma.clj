@@ -1,8 +1,6 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [compojure.core :refer [POST GET]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+  (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
@@ -15,6 +13,33 @@
             [clojure.java.jdbc :as jdbc]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
+
+(defn muunna-toteuma-lahde
+  "Muuttaa koneellinen/kasin enum toteuman lähteeksi tietokantaan.
+
+  Koneellinen toteuma -> 'harja-api'
+  Uusi käsin-toteuma -> 'harja-api-ui'
+  Korjaus käsin-toteuma -> 'harja-api-korjaus'."
+  [lahde uusi?]
+  (cond
+    (= lahde "koneellinen")
+    "harja-api"
+
+    (and uusi? (= lahde "kasin"))
+    "harja-api-ui"
+
+    ;; Aina, kun käsin päivitetään, niin merkataan se käsin päivitetyksi
+    (and (not uusi?) (= lahde "korjaus"))
+    "harja-api-korjaus"
+
+    ;; Jos lähdettä ei ole annettu, mutta päivitetään, niin oletetaan että se on korjaus
+    (and (not uusi?) (nil? lahde))
+    "harja-api-korjaus"
+
+    ;; Oletataan, että aineisto tulee koneellisena
+    :else
+    "harja-api"))
+
 
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
   (keep identity
@@ -56,7 +81,8 @@
                       :luoja (:id kirjaaja)
                       :tyokonetyyppi (:tyokonetyyppi tyokone)
                       :tyokonetunniste (:id tyokone)
-                      :tyokoneen-lisatieto (:tunnus tyokone)})
+                      :tyokoneen-lisatieto (:tunnus tyokone)
+                      :lahde (muunna-toteuma-lahde (:lahde toteuma) false)})
         toteuman-id (if paivitetty
                       (:id paivitetty)
                       (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
@@ -120,7 +146,7 @@
          :alkuetaisyys nil
          :loppuosa nil
          :loppuetaisyys nil
-         :lahde "harja-api"
+         :lahde (muunna-toteuma-lahde (:lahde toteuma) true)
          :tyokonetyyppi (:tyokonetyyppi tyokone)
          :tyokonetunniste (:id tyokone)
          :tyokoneen-lisatieto (:tunnus tyokone)})

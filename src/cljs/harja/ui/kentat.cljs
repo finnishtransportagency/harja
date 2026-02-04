@@ -76,7 +76,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni? input-id]} data]
+                                     hakuikoni? input-id piilota-haetaan-teksti-ja-spinner?]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -133,14 +133,11 @@
                                   (when kun-muuttuu (kun-muuttuu v))
                                   (if (> (count v) hae-kun-yli-n-merkkia)
                                     (do (reset! tulokset :haetaan)
+                                      ;; Kun sallitaan kirjoitus, aseta data heti
+                                      (when salli-kirjoitus? (reset! data v))
                                       (go (let [tul (<! (hae lahde v))]
                                             (reset! tulokset tul)
-                                            (reset! valittu-idx nil)
-                                            ;; Jos sallitaan kirjoitus, aseta data kentän arvoksi
-                                            (when (and
-                                                    (empty? tul)
-                                                    salli-kirjoitus?)
-                                              (reset! data v)))))
+                                            (reset! valittu-idx nil))))
                                     (do
                                       (when salli-kirjoitus? (reset! data v))
                                       (reset! tulokset nil)))))
@@ -192,13 +189,15 @@
                idx @valittu-idx]
 
            [:ul.hakukentan-lista.dropdown-menu {:role "menu" :style {:max-height valinta-ul-max-korkeus-px}
-                                                :class (when (and
-                                                               ;; Kun sallitaan oman selitteen asetus, "Ei tuloksia" ei tarvitse näyttää
-                                                               salli-kirjoitus?
-                                                               (not haetaan?)
-                                                               (or
-                                                                 (empty? nykyiset-tulokset)
-                                                                 (nil? nykyiset-tulokset)))
+                                                :class (when (or
+                                                               (and haetaan? piilota-haetaan-teksti-ja-spinner?)
+                                                               (and
+                                                                ;; Kun sallitaan oman selitteen asetus, "Ei tuloksia" ei tarvitse näyttää
+                                                                salli-kirjoitus?
+                                                                (not haetaan?)
+                                                                (or
+                                                                  (empty? nykyiset-tulokset)
+                                                                  (nil? nykyiset-tulokset))))
                                                          "piilotettu-elementti")}
 
             (if haetaan?
@@ -1538,12 +1537,9 @@
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
          karttavalinta virhe piste? vaadi-vali?]
 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
-                  "2px"
-                  "0px")]
+      (let [top (if alaotsikot?
+                  "1px"
+                  "16px")]
         [:div
          [:div.tierekisteriosoite-flex
           [osio alaotsikot? tie "Tie"]
@@ -1556,7 +1552,7 @@
           (when virhe
             [:div virhe])
           (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+            [:div {:style {:padding-left "16px" :padding-top top}}
              [:div.karttavalinta
               karttavalinta]])]]))))
 
