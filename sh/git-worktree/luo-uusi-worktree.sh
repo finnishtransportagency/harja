@@ -476,6 +476,32 @@ export HARJA_HTTP_PORTTI=$HTTP_PORTTI
 export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORTTI"
 export FRONTEND_REPL_PORT=$FRONTEND_REPL_PORTTI
 
+clean() {
+    set +e
+    if [ -f "\$WORKTREE_KANSIO/.backend.pid" ]; then
+        BACKEND_PID=\$(cat "\$WORKTREE_KANSIO/.backend.pid" 2>/dev/null || true)
+        if [ -n "\${BACKEND_PID:-}" ]; then
+            echo ""
+            echo "🛑 Pysäytetään backend (PID: \$BACKEND_PID)..."
+            if kill -0 "\$BACKEND_PID" 2>/dev/null; then
+                cmd=\$(ps -p "\$BACKEND_PID" -o command= 2>/dev/null || true)
+                if [[ "\$cmd" == *lein* || "\$cmd" == *java* ]]; then
+                    kill "\$BACKEND_PID" 2>/dev/null || true
+                    sleep 1
+                    if kill -0 "\$BACKEND_PID" 2>/dev/null; then
+                        kill -KILL "\$BACKEND_PID" 2>/dev/null || true
+                    fi
+                else
+                    echo "   (PID ei näytä backend-prosessilta, ohitetaan tappo: \$cmd)"
+                fi
+            fi
+        fi
+        rm -f "\$WORKTREE_KANSIO/.backend.pid"
+    fi
+}
+
+trap clean EXIT INT TERM HUP
+
 # Lue worktree-kohtaiset tietokanta-asetukset
 if [ -f "\$WORKTREE_KANSIO/.tietokanta.env" ]; then
     # shellcheck disable=SC1091
@@ -577,14 +603,7 @@ echo "Backend: http://localhost:\$HARJA_HTTP_PORTTI"
 # Käynnistä frontend interaktiivisesti
 bash ./kaynnista_harja_front_dev.sh
 
-# Kun frontend lopetetaan, tapa myös backend
-if [ -f "\$WORKTREE_KANSIO/.backend.pid" ]; then
-    BACKEND_PID=\$(cat "\$WORKTREE_KANSIO/.backend.pid")
-    echo ""
-    echo "🛑 Pysäytetään backend (PID: \$BACKEND_PID)..."
-    kill \$BACKEND_PID 2>/dev/null || true
-    rm "\$WORKTREE_KANSIO/.backend.pid"
-fi
+clean
 EOF
 
 chmod +x "$WORKTREE_KANSIO/kaynnista-kaikki.sh"
