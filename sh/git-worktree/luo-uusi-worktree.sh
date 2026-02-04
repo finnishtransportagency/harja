@@ -516,7 +516,25 @@ if docker inspect "\$POSTGRESQL_NAME" >/dev/null 2>&1; then
     fi
 else
     echo "   🆕 Luodaan ja alustetaan tietokanta (tämä voi kestää hetken)..."
-    HARJA_TIETOKANTA_PORTTI="\$HARJA_TIETOKANTA_PORTTI" POSTGRESQL_NAME="\$POSTGRESQL_NAME" "\$WORKTREE_KANSIO/tietokanta/devdb_up.sh"
+    DEVDB_UP="\$WORKTREE_KANSIO/tietokanta/devdb_up.sh"
+    if [ ! -f "\$DEVDB_UP" ]; then
+        echo "❌ Tietokannan käynnistysskripti puuttuu: \$DEVDB_UP"
+        exit 1
+    fi
+
+    if grep -q '\${HARJA_TIETOKANTA_HOST:-harjadb}' "\$DEVDB_UP" \
+        || grep -q '\${HARJA_TIETOKANTA_PORTTI:-5432}:\${HARJA_TIETOKANTA_PORTTI:-5432}' "\$DEVDB_UP"; then
+        echo "❌ Tämä haara sisältää vanhan version skriptistä tietokanta/devdb_up.sh, joka ei tue worktree-tietokantaa oikein."
+        echo "   Oire: Docker yrittää käyttää konttinimenä hostia (esim. 127.0.0.1) ja antaa virheen: No such container: 127.0.0.1"
+        echo ""
+        echo "   Korjaa päivittämällä haara sisältämään devdb_up.sh fixi (PR #4130 / commit 593702bd27)"
+        echo "   tai aja migraatiot käsin oikeaan konttiin:"
+        echo "     docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 \"\$POSTGRESQL_NAME\" /bin/bash -c \"~/aja-migraatiot.sh\""
+        echo "     docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 \"\$POSTGRESQL_NAME\" /bin/bash -c \"~/aja-testidata.sh\""
+        exit 1
+    fi
+
+    HARJA_TIETOKANTA_PORTTI="\$HARJA_TIETOKANTA_PORTTI" POSTGRESQL_NAME="\$POSTGRESQL_NAME" "\$DEVDB_UP"
 fi
 
 # Käynnistä backend taustalle
