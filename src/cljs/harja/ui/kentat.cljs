@@ -1537,14 +1537,11 @@
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
          karttavalinta virhe piste? vaadi-vali?]
 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
+      (let [top (if alaotsikot?
                   "1px"
                   "16px")]
         [:div
-         [:div.tierekisteriosoite-flex {:style {:height "60px"}}
+         [:div.tierekisteriosoite-flex
           [osio alaotsikot? tie "Tie"]
           [osio alaotsikot? aosa "Aosa"]
           [osio alaotsikot? aet "Aet"]
