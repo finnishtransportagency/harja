@@ -23,7 +23,7 @@
   hae-erillishankinta-kuukausittain hae-kuukauden-erillishankinta hae-tallennetun-kuukauden-erillishankinta
   paivita-kuukauden-erillishankinta<! tallenna-kuukauden-erillishankinta<!
   hae-viimeisin-muokkaaja-erillishankinnoille
-  hae-hoidonjohtopalkkiot-kuukausittain hae-kuukauden-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
+  hae-hoidonjohtopalkkiot-kuukausittain hae-olemassa-oleva-hoidonjohtopalkkio hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
   hae-rahavaraus-vuodelta
   paivita-kuukauden-hoidonjohtopalkkio<! tallenna-kuukauden-hoidonjohtopalkkio<!
   hae-johto-ja-hallintokorvaukset-kuukausittain
@@ -788,24 +788,33 @@
                                          {:urakka urakka-id
                                           :koodi "23151"})))
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
+
         ; Tallenna kuukausittaiset summat
         _ (doseq [rivi hoidonjohtopalkkiot]
-            (let [vuosi (if (< (:kuukausi rivi) 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
-                  dbrivi (first (hae-kuukauden-hoidonjohtopalkkio db {:id (:id rivi)}))
-                  _ (if (:id dbrivi)
+            (let [summa (:summa rivi)
+                  kuukausi (:kuukausi rivi)
+                  vuosi (if (< kuukausi 10) (inc hoitovuoden-alkuvuosi) hoitovuoden-alkuvuosi)
+                  dbrivi (first
+                           (hae-olemassa-oleva-hoidonjohtopalkkio db {:sopimus-id sopimus-id
+                                                                      :toimenpideinstanssi-id hoidonjohto-tpi-id
+                                                                      :vuosi vuosi
+                                                                      :kuukausi kuukausi
+                                                                      :tehtava-id (:id tehtava)}))
+                  id (:id dbrivi)
+                  _ (if id
                       (paivita-kuukauden-hoidonjohtopalkkio<! db
-                        {:id (:id dbrivi)
-                         :summa (:summa rivi)
-                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
+                        {:id id
+                         :summa summa
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosi-nro)
                          :muokkaaja (:id kayttaja)})
                       ;; Lisää uusi
                       (tallenna-kuukauden-hoidonjohtopalkkio<! db
                         {:sopimus-id sopimus-id
                          :toimenpideinstanssi-id hoidonjohto-tpi-id
                          :vuosi vuosi
-                         :kuukausi (:kuukausi rivi)
-                         :summa (:summa rivi)
-                         :summa_indeksikorjattu (laske-indeksikorjattu-summa (:summa rivi) urakan-indeksit hoitovuosi-nro)
+                         :kuukausi kuukausi
+                         :summa summa
+                         :summa_indeksikorjattu (laske-indeksikorjattu-summa summa urakan-indeksit hoitovuosi-nro)
                          :tehtava-id (:id tehtava)
                          :luoja (:id kayttaja)}))]))]))
 
@@ -1032,21 +1041,25 @@
              :vahvistaja (:id kayttaja)
              :vahvistus-pvm vahvistus-pvm})]))
 
-(defn onko-tulevilla-hoitovuosilla-arvoja? [db urakka-id sopimus-id hoitovuoden-alkuvuosi]
+(defn onko-tulevilla-hoitovuosilla-arvoja? [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-loppuvuosi]
   (let [hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
                                          {:urakka urakka-id
                                           :koodi "23151"})))
         erillishankinnat-tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
-
-        ;; hankintatoimenpideinstanssit
         hankinnan-toimenpiteet (flatten (map (juxt :toimenpideinstanssi-id) (hae-urakan-toimenpiteet db {:urakkaid urakka-id})))
+        tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
 
+        ;; Ei haittaa, jos loppuvuosi valittuna, palauttaa silloin vaan false
+        alkupvm (str (inc hoitovuoden-alkuvuosi) "-10-01")
+        loppupvm (str urakan-loppuvuosi "-09-30")
         tulevaisuudessa-arvoja (tulevilla-hoitovuosilla-arvoja? db
                                  {:urakka-id urakka-id
+                                  :alkupvm alkupvm
+                                  :loppupvm loppupvm
                                   :sopimus-id sopimus-id
+                                  :tehtava-id (:id tehtava)
                                   :hoidon-johdon-tpi-id hoidonjohto-tpi-id
                                   :hankinnan-toimenpideinstanssit hankinnan-toimenpiteet
-                                  :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)
-                                  :vuosi hoitovuoden-alkuvuosi})]
-    (boolean (some #(true? (:arvoja-tulevilla-hoitovuosilla? %)) tulevaisuudessa-arvoja))))
+                                  :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)})]
+    tulevaisuudessa-arvoja))
 

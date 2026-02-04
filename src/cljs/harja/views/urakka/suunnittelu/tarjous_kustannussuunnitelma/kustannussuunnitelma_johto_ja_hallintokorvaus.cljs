@@ -559,7 +559,7 @@
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
           (when-not viimeinen-hoitovuosi?
             #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
-          tulevaisuudessa-arvoja?
+          (:johto-ja-hallintokorvaukset tulevaisuudessa-arvoja?)
           onko-jjh-muutoksia?)])
 
      [:div.row
@@ -616,5 +616,5 @@
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
           (when-not viimeinen-hoitovuosi?
             #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
-          tulevaisuudessa-arvoja?
+          (:johto-ja-hallintokorvaukset tulevaisuudessa-arvoja?)
           onko-jjh-muutoksia?)])]))
