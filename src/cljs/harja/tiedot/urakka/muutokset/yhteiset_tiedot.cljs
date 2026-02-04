@@ -25,6 +25,7 @@
                      :muutoksen-tiedot-haku-kaynnissa? false
                      :tallennus-kesken? false
                      :voi-tallentaa? false
+                     :testi-nayta-uusi-sivu? false ;; Flagi kehitysympäristöön
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
@@ -76,6 +77,7 @@
 ;; --- Tuck-eventit ja käsittelijät ---
 ;; Init
 (defrecord AlustaNakyma [])
+(defrecord TestiymparistoToggle [])
 
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [tyyppi])
@@ -248,9 +250,13 @@
 (extend-protocol tuck/Event
 
   AlustaNakyma
-  (process-event [_ app]
+  (process-event [_ {:keys [testi-nayta-uusi-sivu?] :as app}]
     (let [uusi? (nayta-muutokset-sivu? uudet-muutokset-kaytossa-alkuvuosi)
-          vanha? (and (not uusi?)
+          ;; testi-nayta-uusi-sivu? 
+          ;; on kehitysympäristön testiominaisuus, jolla voi pakottaa uuden näkymän päälle
+          uusi? (or testi-nayta-uusi-sivu? uusi?)
+          vanha? (and
+                   (not uusi?) (not testi-nayta-uusi-sivu?)
                    (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))
           ei-kaytossa? (and (not uusi?) (not vanha?))
           app (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)]
@@ -264,6 +270,11 @@
 
             {:tuck.effect/type :debounce
              :event #(->HaeVanhanUrakanMuutokset)})))))
+
+  TestiymparistoToggle
+  (process-event [_ app]
+    (let [uusi-nakyma? (not (:testi-nayta-uusi-sivu? app))]
+      (assoc app :testi-nayta-uusi-sivu? uusi-nakyma?)))
 
   HaeVanhanUrakanMuutokset
   (process-event [_ app]

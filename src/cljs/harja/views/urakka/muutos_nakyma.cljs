@@ -3,9 +3,12 @@
   Hallinnoi ja näyttää tarjouksen pohjatietoihin ja tavoitehintaan tehtäviä muutoksia."
   (:require
     [tuck.core :as tuck]
+
+    [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
     [harja.ui.yleiset :as yleiset]
     [harja.ui.komponentti :as komp]
+    [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.views.urakka.valinnat :as urakka-valinnat]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
@@ -49,6 +52,17 @@
     [urakka-valinnat/paivittava-urakkavuosi-tuck
      @u/valittu-aikavali
      #(e! (t-yhteiset/->AlustaNakyma)) haku-kaynnissa? false]]
+
+   ;; Kehitysympäristössä lisätään nappi, jolla voit pomppia näkymien välillä 
+   ;; "Vanhoihin" urakoihin on alunperin tehty testidatat, joten nämä jäivät jyrän alle, siksi tämä  
+   (when (and (k/kehitysymparistossa?) nakyma-vanha?)
+     [:div.margin-vertical-16
+      [napit/yleinen-ensisijainen
+       "TESTIYMPÄRISTÖ: Siirry uuteen"
+       #(do
+          (e! (t-yhteiset/->TestiymparistoToggle))
+          (e! (t-yhteiset/->AlustaNakyma)))
+       {}]])
 
    (cond
      nakyma-uusi?
