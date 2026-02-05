@@ -14,8 +14,8 @@
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
 
     ;; Vanhat urakat 
-    [harja.views.urakka.muutokset.vanhat-urakat.suunniteltujen-maarien-muutokset :as suunnitellut]
     [harja.views.urakka.muutokset.vanhat-urakat.tavoitehinnan-muutokset :as tavoitehinta]
+    [harja.views.urakka.muutokset.vanhat-urakat.suunniteltujen-maarien-muutokset :as suunnitellut]
 
     ;; Osiot / lomake
     [harja.views.urakka.muutokset.vaikutukset :as vaikutukset]
@@ -32,9 +32,9 @@
        nakyma-vanha?
        [:span.muutostiedot
         [tavoitehinta/tavoitehinnan-muutokset e! app]
-        ;; Toistaiseksi piiloitettu, ei ole vielä toteutusta, eikä speksiä.
-        ;; [suunnitellut/suunniteltujen-maarien-muutokset e! app]
-        ]
+        ;; Suunniteltuja määriä ei ole vielä toteutettu.
+        ;; Vanhat urakat eivät näe tätä sivua vielä ollenkaan (urakka.cljs) 
+        #_[suunnitellut/suunniteltujen-maarien-muutokset e! app]]
 
        nakyma-uusi?
        [:span.uudet-muutostiedot
