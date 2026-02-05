@@ -685,6 +685,7 @@
 
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
+
 (deftest testaa-kasin-syotettava-kattohinta-2021-urakalle
   (let [kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -877,7 +878,7 @@
             (:id +kayttaja-jvh+)
             kattohintakerroin tarjous #{})
 
-        ;; Nyt pitäisi tavoitehinta mennä kantaan
+        ;; Nyt pitäisi tavoitehinta mennä kantaan 
         _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
         tavoitetiedot (first (hae-tavoitetiedot urakka-id hoitokausinumero))]
     (is (= (:tavoitehinta tavoitetiedot) hankinnat-yhteensa) "Tavoitehinnan pitäisi vastata hankintojen summaa")
