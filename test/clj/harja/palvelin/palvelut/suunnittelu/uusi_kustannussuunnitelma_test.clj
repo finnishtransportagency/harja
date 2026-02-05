@@ -8,7 +8,6 @@
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
@@ -36,10 +35,7 @@
                                        [:http-palvelin :db])
           :tarjous (component/using
                      (tarjous-palvelu/->Tarjous)
-                     [:http-palvelin :db])
-          :kulut (component/using
-                   (kulut/->Kulut)
-                   [:http-palvelin :db])))))
+                     [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
