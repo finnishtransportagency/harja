@@ -498,7 +498,7 @@
 (def suolatoteumat [{:rivinumero -1, :alkanut #inst "2015-02-16T05:25:22.000-00:00", :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl", :yksikko "t", :kohdistettava false, :materiaalityyppi "talvisuola", :urakkatyyppi "hoito"}, :pvm #inst "2015-02-16T21:00:00.000-00:00", :maara 666, :lisatieto "555", :paattynyt #inst "2015-02-16T05:25:22.000-00:00"}])
 
 (def odotettu-ennen
-  [{:koneellinen false
+  [{:lahde "harja-ui"
     :lisatieto "LYV-toteuma Talvisuola"
     :lukumaara 1
     :maara 200M
@@ -509,7 +509,7 @@
     :tid 1074
     :tmid 15
     :toteumaidt [1074]}
-   {:koneellinen false
+   {:lahde "harja-ui"
     :lisatieto "LYV-toteuma"
     :lukumaara 1
     :maara 1800M
@@ -522,7 +522,7 @@
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 29, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 29, :lukumaara 1, :lahde "harja-ui", :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
 
 
 

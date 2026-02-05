@@ -306,9 +306,10 @@
           mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
           hoitovuosi-lomakkeelle (if (and hyppaa-hoitovuoteen? lomakkeen-hoitokausi)
                                    lomakkeen-hoitokausi
-                                   (or (when aikaisin-hoitovuosi-jossa-kirjauksia
-                                         (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
-                                     (first mahdolliset-hoitovuodet-lomakkeella)))
+                                   (or
+                                     (when aikaisin-hoitovuosi-jossa-kirjauksia
+                                       (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
+                                     valittu-hoitokausi))
 
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
@@ -386,9 +387,10 @@
                   {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-                  ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                  (filter #(and
-                             (some? (:tavoitehinnan-muutos %))
+                  ;; Salli 0 arvo, jos kulu-id on olemassa (se poistetaan)
+                  ;; Muuten vaadi, että tavoitehinnan muutos ei ole 0.
+                  (filter #(or
+                             (:kulu-id %)
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
           muutos (assoc muutos :kulut kulut)
