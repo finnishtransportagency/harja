@@ -82,7 +82,7 @@
            nil
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
            onko-hankinnat-muutoksia?))
 
        [:div.row
@@ -124,7 +124,7 @@
             nil
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
             onko-hankinnat-muutoksia?)])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
@@ -239,7 +239,7 @@
               #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:erillishankinnat tulevaisuudessa-arvoja?)
             onko-erillishankinnat-muutoksia?)])
 
        [:div.row
@@ -272,7 +272,7 @@
              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:erillishankinnat tulevaisuudessa-arvoja?)
            onko-erillishankinnat-muutoksia?))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
@@ -325,7 +325,7 @@
               #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-            tulevaisuudessa-arvoja?
+            (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
             onko-hoidonjohtopalkkio-muutoksia?)])
 
        [:div.row
@@ -358,10 +358,10 @@
              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-           tulevaisuudessa-arvoja?
+           (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
-(defn- pysyvat-muutokset-grid* [e! muutokset]
+(defn- pysyvat-muutokset-grid* [e! muutokset valittu-hoitokausi]
   [grid/grid
    {:tunniste :id
     :luokat ["kirjatut-muutokset-grid"]
@@ -413,10 +413,10 @@
                      (fn []
                        (let [muutokset-e! (tuck/control tila/muutokset)]
                          ;; Siirry muutoslomakkeelle, käyttäen muutosten omaa tilakontrolleria
-                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi))))])}]
+                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi valittu-hoitokausi))))])}]
    muutokset])
 
-(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app}]
+(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma hoitokauden-alkuvuosi] :as app}]
   (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -434,7 +434,9 @@
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
        (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
-         [pysyvat-muutokset-grid* e! muutokset]
+         ;; Täytyy passata näin, sillä valittu-hoitokausi on jostain syystä: 20280930 T 000000
+         ;; Kun pysyvän muutoksen lomake haluaa sen: 20280930 T 235959
+         [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]
 
          ;; Mhu-muutokset ei käytössä, näytetään placeholder
          [:div.row
