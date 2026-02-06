@@ -114,7 +114,6 @@
   Näytetään aikaisintaan 1.3. kuluvan hoitokauden tiedot, edellyttäen, että lämpötilatiedot on jo syötetty. "
   [urakan-loppupvm lampotilat]
   (let [nyt (pvm/nyt)
-        ;nyt #inst "2026-03-04T05:20:24.028-00:00"
         nyt-vuosi (pvm/vuosi nyt)
         nyt-kuukausi (pvm/kuukausi nyt)
         ;; Hoitokausi on valmis vain jos olemme lokakuussa tai myöhemmin

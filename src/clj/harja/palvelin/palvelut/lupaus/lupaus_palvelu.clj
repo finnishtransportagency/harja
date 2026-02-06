@@ -124,7 +124,7 @@
         (do
           ;; Varoita vain, jos kustannusennusten-lupaus vaaditaan urakalle. Ja se vaaditaan vasta -25 ja sen jälkeen
           (when (>= (pvm/vuosi (:alkupvm urakan-tiedot)) 2025)
-            (log/warn "Kustannusennuste-lupausta ei löytynyt urakalle" urakka-id))
+            (log/warn "Kustannusennustelupausta ei löytynyt urakalle" urakka-id))
           {})
         (let [maarapaivat (kustannusennuste-kyselyt/hae-kustannusennuste-maarapaivat
                             db {:lupaus-id (:lupaus-id kustannusennuste-lupaus)
