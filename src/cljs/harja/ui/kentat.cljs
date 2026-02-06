@@ -1538,12 +1538,9 @@
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
          karttavalinta virhe piste? vaadi-vali?]
 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
-                  "2px"
-                  "0px")]
+      (let [top (if alaotsikot?
+                  "1px"
+                  "16px")]
         [:div
          [:div.tierekisteriosoite-flex
           [osio alaotsikot? tie "Tie"]
@@ -1556,7 +1553,7 @@
           (when virhe
             [:div virhe])
           (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+            [:div {:style {:padding-left "16px" :padding-top top}}
              [:div.karttavalinta
               karttavalinta]])]]))))
 

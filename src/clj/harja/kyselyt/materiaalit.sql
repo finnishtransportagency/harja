@@ -405,31 +405,31 @@ SELECT
        sum(tm.maara)                AS maara,
        count(t.id)                  AS lukumaara,
        array_agg(t.id)              AS toteumaidt,
-       (k.jarjestelma = TRUE)       AS koneellinen,
-       CASE WHEN k.jarjestelma = FALSE
+       t.lahde                      AS lahde,
+       -- Vain käsin kirjatuille palautetaan lisätiedot
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN t.lisatieto
             ELSE NULL
            END                                  AS lisatieto,
     -- Käsin luotuja pitää pystyä muokkaamaan, siksi niille tarvitaan toteuman id
-       CASE WHEN k.jarjestelma = FALSE
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN t.id
             ELSE NULL
            END                                  AS tid,
-       CASE WHEN k.jarjestelma = FALSE
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN tm.id
             ELSE -1 -- ei tarvita koneellisille päivitystä
            END                                  AS tmid
 FROM toteuma t
     JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
     JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-    LEFT JOIN kayttaja k ON t.luoja = k.id
 WHERE t.urakka = :urakka
   AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
   AND t.poistettu = FALSE
   AND t.tyyppi = 'kokonaishintainen'
   AND tm.poistettu IS NOT TRUE
   AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid, tmid
+group by mk.id, pvm, t.lahde, t.lisatieto, tid, tmid
 ORDER BY pvm DESC;
 
 -- name: hae-suolamateriaalit
