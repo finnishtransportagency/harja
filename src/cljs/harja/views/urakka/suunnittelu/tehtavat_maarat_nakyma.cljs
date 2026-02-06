@@ -92,8 +92,8 @@
 (defn muutoksen-vaikutus-fn [arvo]
   (cond
     (nil? arvo) "-"
-    (pos? arvo) (str "+" (fmt/desimaaliluku-opt arvo 2))
-    :else (fmt/desimaaliluku-opt arvo 2)))
+    (pos? arvo) (str "+" (fmt/desimaaliluku-opt-ilman-nollia arvo))
+    :else (fmt/desimaaliluku-opt-ilman-nollia arvo)))
 
 (defn tehtava-vetolaatikko
   "Näyttää tehtävän muutokset vetolatikossa"
@@ -118,11 +118,11 @@
         :voi-kumota? false}
        [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
         {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
-         :fmt #(fmt/desimaaliluku-opt % 2)}
+         :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
         {:otsikko "Pysyvät muutokset (+/-)" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
          :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
         {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
-         :fmt #(fmt/desimaaliluku-opt % 2)}
+         :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
 
@@ -158,7 +158,7 @@
                                      [:div.body-text.strong valiotsikko]))}
                      {:otsikko "Alkuperäisen sopimuksen määrä"
                       :leveys "12.5%"
-                      :fmt #(fmt/desimaaliluku-opt % 2)
+                      :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
                       :nimi :tarjous_maara
                       :tyyppi :positiivinen-numero
                       :desimaalien-maara 2
@@ -182,7 +182,7 @@
                       :muokattava? (constantly false)
                       :solun-luokka solun-luokka-fn
                         :tasaa :oikea
-                        :fmt #(fmt/desimaaliluku-opt % 2)}
+                        :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
                      {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
