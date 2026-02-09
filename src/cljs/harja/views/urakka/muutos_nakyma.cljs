@@ -32,8 +32,7 @@
        nakyma-vanha?
        [:span.muutostiedot
         [tavoitehinta/tavoitehinnan-muutokset e! app]
-        ;; Suunniteltuja määriä ei ole vielä toteutettu.
-        ;; Vanhat urakat eivät näe tätä sivua vielä ollenkaan (urakka.cljs) 
+        ;; Suunniteltuja määriä ei ole vielä toteutettu, joten älä näytä
         #_[suunnitellut/suunniteltujen-maarien-muutokset e! app]]
 
        nakyma-uusi?
