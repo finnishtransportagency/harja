@@ -1,6 +1,8 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paallystys-test
   (:require [clojure.java.io :as io]
             [clojure.test :refer :all]
+            [clojure.string :as clj-str]
+            [clojure.set :as clj-set]
             [namespacefy.core :refer [namespacefy]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
@@ -546,6 +548,29 @@
     (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
       (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen) "Ei saa olla mitään uutta kannassa"))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(defn- avain->otsikko
+  [avain]
+  (or (get-in pot2-domain/alusta-toimenpide-kaikki-lisaavaimet [avain :otsikko])
+      (name avain)))
+
+(defn- tallenna-vaara-paallystysilmoitus-ja-palauta-virheviesti
+  [paallystyskohde-id paallystysilmoiuts vuosi]
+  (is (some? paallystyskohde-id))
+  (let [paallystysilmoitus (-> paallystysilmoiuts
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
+        maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+        viesti (try
+                 (tallenna-testipaallystysilmoitus paallystysilmoitus vuosi)
+                 (is false "Tallennuksen piti epäonnistua")
+                 nil
+                 (catch IllegalArgumentException iae
+                   (ex-message iae)))
+        maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+    (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen) "Ei saa olla mitään uutta kannassa")
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)
+    viesti))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
@@ -1374,7 +1399,57 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] dissoc :verkon-sijainti))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärät lisätiedot.")))
+                                       "puuttuu pakolliset tiedot: Verkon sijainti")))
+
+(deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-pakolliset-alustatiedot-puuttuvat
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        testaa-validointi
+        (fn [{:keys [nimi toimenpide asetukset poistettavat-kentat] :as _testi}]
+          (let [alustarivi (-> (first (:alusta pot2-alustatestien-ilmoitus))
+                               (merge {:toimenpide toimenpide} asetukset)
+                               (#(apply dissoc % poistettavat-kentat)))
+                paallystysilmoitus (-> pot2-alustatestien-ilmoitus
+                                       (assoc :alusta [alustarivi]))
+                annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams alustarivi)
+                [_ pakolliset-avaimet] (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet alustarivi)
+                puuttuvat-avaimet (clj-set/difference pakolliset-avaimet (-> annetut-lisaparams keys set))
+                ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet alustarivi)
+                virheviesti (tallenna-vaara-paallystysilmoitus-ja-palauta-virheviesti paallystyskohde-id paallystysilmoitus 2021)]
+            (testing nimi
+              (is (some? virheviesti) "Virheviesti puuttuu")
+              (is (clj-str/includes? virheviesti (str "Alustatoimenpiteellä (toimenpide " toimenpide ")"))
+                  (str "Virheviestissä ei ole toimenpidettä " toimenpide ": " virheviesti))
+              (is (seq puuttuvat-avaimet)
+                  (str "Testidatan pitäisi aiheuttaa puuttuvia pakollisia avaimia: " nimi))
+              (doseq [avain puuttuvat-avaimet]
+                (let [otsikko (avain->otsikko avain)]
+                  (is (clj-str/includes? virheviesti otsikko)
+                      (str "Virheviestissä ei näy puuttuva kenttä '" otsikko "': " virheviesti))))
+              (when (seq ylimaaraiset-avaimet)
+                (doseq [avain ylimaaraiset-avaimet]
+                  (let [otsikko (avain->otsikko avain)]
+                    (is (clj-str/includes? virheviesti otsikko)
+                        (str "Virheviestissä ei näy ylimääräinen kenttä '" otsikko "': " virheviesti))))))))]
+
+    (testaa-validointi {:nimi "MS (23): puuttuu pakollisia kenttiä"
+                        :toimenpide 23
+                        :asetukset {}
+                        :poistettavat-kentat [:lisatty-paksuus :murske]})
+
+    (testaa-validointi {:nimi "SJYR (24): lisätty paksuus pakollinen kun murske annettu"
+                        :toimenpide 24
+                        :asetukset {:kasittelysyvyys 10 :murske 2}
+                        :poistettavat-kentat [:lisatty-paksuus]})
+
+    (testaa-validointi {:nimi "AB (2): puuttuu pakollisia kenttiä"
+                        :toimenpide 2
+                        :asetukset {}
+                        :poistettavat-kentat [:massa :massamenekki]})
+
+    (testaa-validointi {:nimi "MS (23): sekä puuttuvia että ylimääräisiä kenttiä"
+                        :toimenpide 23
+                        :asetukset {:kasittelysyvyys 10}
+                        :poistettavat-kentat [:lisatty-paksuus :murske]})))
 
 (deftest saa-tallentaa-pot2-jos-sama-tr-osoite-samalla-alustatoimenpiteella
   (let [kohteen-nimi "Tärkeä kohde mt20"
@@ -1429,7 +1504,7 @@
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] merge verkon-tiedot))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
-                                       "Alustassa väärät lisätiedot.")))
+                                       "on virheelliset lisätiedot: Massamenekki")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-verkontiedot
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
