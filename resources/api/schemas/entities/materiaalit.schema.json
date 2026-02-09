@@ -24,6 +24,7 @@
         "type": "object",
         "required": false,
         "additionalProperties": false,
+        "description": "Sisältää lähettäjän kirjaamat tiedot materiaalista. Voidaan tarkistaa millä nimellä, yksiköllä ja pitoisuudella materiaali on kirjattu",
         "$ref": "file:resources/api/schemas/entities/lahdemateriaali.schema.json"
 
       }
