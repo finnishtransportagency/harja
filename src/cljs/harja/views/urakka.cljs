@@ -1,6 +1,7 @@
 (ns harja.views.urakka
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
   (:require [harja.ui.bootstrap :as bs]
+            [harja.pvm :as pvm]
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
@@ -38,7 +39,7 @@
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id alkupvm] :as urakka}]
   (case valilehti
     :yleiset true
     :suunnittelu (and
@@ -155,9 +156,13 @@
 
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
-                     (k/kehitysymparistossa?)
-                     (= tyyppi :teiden-hoito))
+                     (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+                     (= tyyppi :teiden-hoito)
+                     ;; Älä näytä ollenkaan alle 25 urakoille toistaiseksi 
+                     (or
+                       ;; Näytä kuitenkin kehitysympäristössä
+                       (k/kehitysymparistossa?)
+                       (>= (pvm/vuosi alkupvm) 2025)))
     false))
 
 (defn urakka
