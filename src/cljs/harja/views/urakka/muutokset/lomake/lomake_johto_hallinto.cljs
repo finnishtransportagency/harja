@@ -35,22 +35,10 @@
        (merge
          (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
          {:aseta (fn [rivi arvo]
-                   (let [jjh-muutokset (:johto-ja-hallintokorvaukset rivi)
-                         jjh-muutokset (reduce-kv (fn [acc k v]
-                                                    ;; Jos rivi ei osu voimassa alkaen pvm, nollaa tavoitehinnan muutos
-                                                    ;; Tämä poistaa myös kirjatun kulun, jos sellainen on kirjattu 
-                                                    (assoc acc k (if (and
-                                                                       (not= 0 (:tavoitehinnan-muutos v))
-                                                                       (pvm/ennen? (:pvm v) arvo))
-                                                                   (assoc v :tavoitehinnan-muutos 0)
-                                                                   v)))
-                                         {}
-                                         jjh-muutokset)]
-
-                     (-> rivi
-                       (assoc :voimassa_alkaen arvo)
-                       (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
-                       (assoc :johto-ja-hallintokorvaukset jjh-muutokset))))}))
+                   (-> rivi
+                     (assoc :voimassa_alkaen arvo)
+                     (assoc :mahdolliset-hoitovuodet-lomakkeella urakan-hoitokaudet)
+                     (assoc :johto-ja-hallintokorvaukset (:johto-ja-hallintokorvaukset rivi))))}))
 
      (first (yhteiset/liite-kentta e! app))
 
@@ -98,12 +86,7 @@
               :fmt fmt/euro-opt
               :tasaa :oikea
               :leveys 8
-              :muokattava? (fn [r]
-                             ;; Ei ole muokattava, jos ei osu voimassa alkaen sisään
-                             (let [voimassa (:voimassa_alkaen muokattava-muutos)
-                                   rivi-voimassa? (boolean (when voimassa
-                                                             (pvm/ennen? voimassa (:pvm r))))]
-                               rivi-voimassa?))}]
+              :muokattava? (constantly true)}]
             rivit-atom]
 
            [yleiset/info-laatikko :neutraali

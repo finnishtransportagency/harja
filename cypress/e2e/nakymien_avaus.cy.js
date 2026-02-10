@@ -106,7 +106,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.get('[data-cy=tabs-taso2-Suolarajoitukset]').click()
         cy.contains('Urakan suolarajoitukset hoitovuosittain').should('exist')
         cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click()
-        cy.contains('Tehtävät ja määrät').should('exist')
+        cy.contains('Tehtävä ja määräluettelo').should('exist')
         //cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click()
         //cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.', {timeout: clickTimeout}).should('exist')
     })
