@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.ui.napit :as napit]
+            [reagent.core :refer [atom]]
             [clojure.data :refer [diff]]
             [clojure.string :as str]
             [tuck.core :as tuck]
@@ -109,6 +110,14 @@
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
 (defrecord AvaaVihje [])
 (defrecord AsetaTiemerkinnanTila [tila paikkauskohde])
+(defrecord VahvistaRaportointitavatModalissa [])
+(defrecord TilaustilaAktivoituToggle [])
+(defrecord ValitsePaikkauskohde [paikkauskohde valittu?])
+(defrecord ValitseKaikkiPaikkauskohteet [valittu?])
+(defrecord AsetaToteumatyyppiKohteelle [paikkauskohde toteumatyyppi])
+(defrecord TilaaValitutPaikkauskohteet [])
+(defrecord TilaaValitutPaikkauskohteetOnnistui [vastaus])
+(defrecord TilaaValitutPaikkauskohteetEpaonnistui [vastaus])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -126,16 +135,19 @@
                          (if (= "Ei ajorataa" nykyinen-arvo)
                            nil
                            nykyinen-arvo)))
-      (dissoc :sijainti
-              :pituus
-              :harja.tiedot.urakka.urakka/validi?
-              :harja.tiedot.urakka.urakka/validius
-              :valiaika-takuuaika
-              :valiaika-valmistumispvm
-              :paikkaustyo-valmis?
-              :erotus
-              :toteutus-alkuaika
-              :toteutus-loppuaika)))
+    (dissoc
+      :sijainti
+      :formatoitu-sijainti
+      :pituus
+      :harja.tiedot.urakka.urakka/validi?
+      :harja.tiedot.urakka.urakka/validius
+      :valiaika-takuuaika
+      :valiaika-valmistumispvm
+      :paikkaustyo-valmis?
+      :erotus
+      :toteutus-alkuaika
+      :toteutus-loppuaika
+      :alasveto-valinnat)))
 
 (defn laske-paikkauskohteen-pituus [lomake parametrit]
   (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
@@ -793,7 +805,77 @@
         ->TallennaPaikkauskohdeOnnistui
         ->TallennaPaikkauskohdeEpaonnistui
         [(not (nil? (:id paikkauskohde)))])
-      (assoc app :haku-kaynnissa? true :paikkauskohteet nil))))
+      (assoc app :haku-kaynnissa? true :paikkauskohteet nil)))
+
+  TilaustilaAktivoituToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:tilaustila-aktiivinen? app))]
+      (-> app
+        (assoc :tilaustila-aktiivinen? uusi-tila)
+        ;; Tyhjennetään valitut kohteet kun tila muuttuu
+        (assoc :valitut-tilattavat-kohteet []))))
+
+  ValitsePaikkauskohde
+  (process-event [{:keys [paikkauskohde valittu?]} app]
+    (let [valitut (:valitut-tilattavat-kohteet app [])]
+      (assoc app :valitut-tilattavat-kohteet
+        (if valittu?
+          (conj valitut paikkauskohde)
+          (disj valitut paikkauskohde)))))
+
+  ValitseKaikkiPaikkauskohteet
+  (process-event [{:keys [valittu?]} app]
+    (let [ehdotetut (filter #(= "ehdotettu" (:paikkauskohteen-tila %)) (:paikkauskohteet app))]
+      (if valittu?
+        (assoc app :valitut-tilattavat-kohteet ehdotetut)
+        (assoc app :valitut-tilattavat-kohteet []))))
+
+  VahvistaRaportointitavatModalissa
+  (process-event [_ app]
+    (modal/piilota!)
+    ;; Avataan toinen modal, jossa pyydetään lopullinen vahvistus tilauksesta, ja jos vahvistetaan, niin tilataan kohteet
+    (assoc app :vahvista-tilaus-modal-auki? true))
+
+  AsetaToteumatyyppiKohteelle
+  (process-event [{:keys [paikkauskohde toteumatyyppi]} app]
+    ;; Vaihda tälle kohteelle toteumatyyppi halutuksi
+    (update app :valitut-tilattavat-kohteet
+      (fn [kohteet]
+        (mapv (fn [kohde]
+                (if (= (:id kohde) (:id paikkauskohde))
+                  (assoc kohde :toteumatyyppi toteumatyyppi)
+                  kohde))
+          kohteet))))
+
+  TilaaValitutPaikkauskohteet
+  (process-event [_ app]
+    (let [valitut-kohteet (:valitut-tilattavat-kohteet app)
+          ;; Merkitse kohteet tilatuiksi
+          tilattavat-kohteet (map (fn [kohde]
+                                    (-> kohde
+                                      (assoc :paikkauskohteen-tila "tilattu")
+                                      (siivoa-ennen-lahetysta)))
+                               valitut-kohteet)]
+
+      (tuck-apurit/post! :tilaa-valitut-paikkauskohteet
+        {:tilattavat-paikkauskohteet tilattavat-kohteet}
+        {:onnistui ->TilaaValitutPaikkauskohteetOnnistui
+         :epaonnistui ->TilaaValitutPaikkauskohteetEpaonnistui
+         :paasta-virhe-lapi? true})
+      app))
+
+  TilaaValitutPaikkauskohteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (modal/piilota!)
+    (viesti/nayta-toast! (str "Tilattiin onnistuneesti" (vastaus :onnistuneet) " kpl kohteita"))
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app))
+
+  TilaaValitutPaikkauskohteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (modal/piilota!)
+    (viesti/nayta-toast! (str "Tilauksessa tapahtui virhe!")
+      :varoitus viesti/viestin-nayttoaika-aareton)
+    app))
 
 (defn kayttaja-on-urakoitsija? [urakkaroolit]
   (let [urakkaroolit (if (set? urakkaroolit)
