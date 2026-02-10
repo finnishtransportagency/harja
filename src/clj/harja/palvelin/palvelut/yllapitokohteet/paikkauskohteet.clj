@@ -864,17 +864,18 @@
                            (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
                          (catch Exception e
                            (log/error e "Fimiin ei saatu yhteyttä.")))
+        osoite (str "https://harja.vaylapilvi.fi/#urakat/paikkaukset-yllapito?&hy=" ely-id "&u=" urakka-id)
         viesti (html (into [:div]
                        (keep identity)
                        [[:p "Hei "]
-                        [:p (str "Urakan " urakan-nimi " paikkauskohteita tilattiin  " kpl " kpl. Alla lista paikkauskohteista:" )]
-                        (doseq [kohde paikkauskohteet]
-                          (let [{:keys [tie aosa aet let losa]} kohde]
-                            (when (and tie aosa aet let losa)
-                              [[:p (str "- " (:nimi kohde) " (" tie " - " aet "/" aosa " " let "/" losa ")")]])))
+                        [:p (str "Urakan: '" urakan-nimi "' paikkauskohteita tilattiin " kpl " kpl. <br> Alla lista paikkauskohteista:" )]
+                        (for [p paikkauskohteet]
+                          (let [kohde (:kohde p)]
+                            (when (:nimi kohde)
+                              [:p (str "- " (:nimi kohde) " (" (:tie kohde) " - " (:aet kohde) "/" (:aosa kohde) " " (:let kohde) "/" (:losa kohde) ")")])))
 
 
-                        [:p (str "Voit tarkastella paikkauskohteiden tilannetta tarkemmin https://harja.vaylapilvi.fi/#urakat/paikkaukset-yllapito?&hy=" ely-id "&u=" urakka-id)]
+                        [:p (str "Voit tarkastella paikkauskohteiden tilannetta tarkemmin <a href=\"" osoite "\" > tääältä. </a>")]
                         [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]]))]
     (if (empty? vastaanottajat)
       (log/warn (str "Tilattaessa useampi paikkauskohde kerralla, paikkauskohteille ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä."))
