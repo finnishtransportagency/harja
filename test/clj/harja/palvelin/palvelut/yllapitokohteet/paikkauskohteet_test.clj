@@ -773,3 +773,34 @@
     ;; Tarkistetaan yhteenvetorivi
     (let [yhteenveto (first (drop 1 rivit))]
       (is (= "Yhteensä:" (nth yhteenveto 12)) "Yhteensä-teksti pitäisi olla oikeassa kohdassa"))))
+
+(deftest tilaa-monta-paikkauskohdetta-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde1 (merge {:urakka-id urakka-id}
+                (default-paikkauskohde (rand-int 999999)))
+        kohde1 (assoc kohde1 :paikkauskohteen-tila "tilattu")
+        kohde2 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde (rand-int 999999)))
+        kohde2 (assoc kohde2 :paikkauskohteen-tila "tilattu")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tilaa-valitut-paikkauskohteet
+            +kayttaja-jvh+
+            {:tilattavat-paikkauskohteet (vector kohde1 kohde2)})]
+
+     (is (= vastaus {:onnistuneet 2, :epaonnistuneet 0, :virheet []}))))
+
+(deftest tilaa-monta-paikkauskohdetta-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde1 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde 1))
+        kohde1 (assoc kohde1 :paikkauskohteen-tila "tilattu")
+        kohde2 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde 1))
+        kohde2 (assoc kohde2 :paikkauskohteen-tila "tilattu")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tilaa-valitut-paikkauskohteet
+                  +kayttaja-jvh+
+                  {:tilattavat-paikkauskohteet (vector kohde1 kohde2)})]
+
+    (is (= vastaus {:onnistuneet 1, :epaonnistuneet 1, :virheet ["throw+: {:type \"Validaatiovirhe\", :virheet {:koodi \"ERROR\", :viesti #{\"Paikkauskohteen Nro: '1' on jo käytössä.\\n        Numeron täytyy olla yksilöllinen.\\n        Samalla numerolla löytyy kohde: 'testinimi' alkanut: 01.01.2020\"}}}"]}))))
+

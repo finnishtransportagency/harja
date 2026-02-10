@@ -440,7 +440,10 @@
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? db kohde vanha-kohde kayttajarooli) ;;rooli on null?
-        kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+        ;; Jos ei ole erikseen merkitty, että sähköposti skipataan, niin tarkista tilamuutoksen vaikutukset
+        kohde (if-not (:skip-sahkoposti kohde)
+                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+                kohde)
         ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
         kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
         ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
@@ -839,6 +842,73 @@
       ;; Normitilanteessa palautetaan jo löydetyt kohteet
       paikkauskohteet)))
 
+(defn laheta-massatilaus-sahkoposti
+  "Kun tilataan useampi paikkauskohde kerralla, lähetetään niistä yhteinen sähköposti urakoitsijalle."
+
+  [db fim email paikkauskohteet]
+  (let [kpl (count paikkauskohteet)
+        urakka-id (get-in (first paikkauskohteet) [:kohde :urakka-id])
+        ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
+        sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
+        urakan-nimi (-> (urakat-q/hae-yksittainen-urakka db {:urakka_id urakka-id})
+                      first
+                      :nimi)
+        otsikko (str "Paikkauskohteita tilattu" (count paikkauskohteet) "kpl")
+        roolit  #{"urakan vastuuhenkilö"}
+        ely-id (-> (urakat-q/hae-urakan-ely db {:urakkaid (:urakka-id (first paikkauskohteet))})
+                 first
+                 :id)
+        ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
+        vastaanottajat (try
+                         (when fim
+                           (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+                         (catch Exception e
+                           (log/error e "Fimiin ei saatu yhteyttä.")))
+        viesti (html (into [:div]
+                       (keep identity)
+                       [[:p "Hei "]
+                        [:p (str "Urakan " urakan-nimi " paikkauskohteita tilattiin  " kpl " kpl. Alla lista paikkauskohteista:" )]
+                        (doseq [kohde paikkauskohteet]
+                          (let [{:keys [tie aosa aet let losa]} kohde]
+                            (when (and tie aosa aet let losa)
+                              [[:p (str "- " (:nimi kohde) " (" tie " - " aet "/" aosa " " let "/" losa ")")]])))
+
+
+                        [:p (str "Voit tarkastella paikkauskohteiden tilannetta tarkemmin https://harja.vaylapilvi.fi/#urakat/paikkaukset-yllapito?&hy=" ely-id "&u=" urakka-id)]
+                        [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]]))]
+    (if (empty? vastaanottajat)
+      (log/warn (str "Tilattaessa useampi paikkauskohde kerralla, paikkauskohteille ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä."))
+      (laheta-sahkoposti fim email sampo-id
+        roolit
+        otsikko
+        viesti))))
+
+(defn tilaa-valitut-paikkauskohteet!
+  "Otetaan frontilta vastaan lista paikkauskohteista, joiden tila halutaan muuttaa tilattuun tilaan. Varmistetaan,
+  että käyttäjällä on oikeudet tilata kohteet. Kutsutaan sen jälkeen jo olemassa olevaa kohteen tallennusta."
+  [db fim email user kohteet]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id (first kohteet)))
+  (jdbc/with-db-transaction [db db]
+   (let [tulokset (mapv
+                    (fn [kohde]
+                      (try
+                        {:kohde kohde
+                         :tulos (tallenna-paikkauskohde! db fim email user
+                                  (assoc kohde :paikkauskohteen-tila "tilattu"
+                                    :skip-sahkoposti true))} ;; Lisää tämä lippu, jotta jokaisesta kohteesta ei lähetetä erikseen sähköpostia, vaan sähköposti lähetetään tilauksen jälkeen yhteenvetona
+                        (catch Exception e
+                          {:kohde kohde
+                           :virhe (.getMessage e)})))
+                    (:tilattavat-paikkauskohteet kohteet))
+         onnistuneet (filterv (complement :virhe) tulokset)
+         epaonnistuneet (filterv :virhe tulokset)]
+     ;; Lähetä YKSI yhteenvetosähköposti vain jos onnistuneita
+     (when (seq onnistuneet)
+       (laheta-massatilaus-sahkoposti db fim email onnistuneet))
+     {:onnistuneet (count onnistuneet)
+      :epaonnistuneet (count epaonnistuneet)
+      :virheet (mapv :virhe epaonnistuneet)})))
+
 (defrecord Paikkauskohteet []
   component/Lifecycle
   (start [this]
@@ -879,6 +949,9 @@
       (julkaise-palvelu http :hae-paikkauskohteiden-tyomenetelmat
                         (fn [user tiedot]
                           (paikkaus-q/hae-paikkauskohteiden-tyomenetelmat db user tiedot)))
+      (julkaise-palvelu http :tilaa-valitut-paikkauskohteet
+        (fn [user kohteet]
+          (tilaa-valitut-paikkauskohteet! db fim email user kohteet)))
       (julkaise-palvelu http :lue-urapaikkaukset-excelista
         (wrap-multipart-params (fn [req] (vastaanota-urem-excel db req)))
         {:ring-kasittelija? true})
@@ -899,6 +972,7 @@
       :poista-kasinsyotetty-paikkaus
       :hae-paikkauskohteen-tiemerkintaurakat
       :hae-paikkauskohteiden-tyomenetelmat
+      :tilaa-valitut-paikkauskohteet
       :lue-urapaikkaukset-excelista
       (when (:excel-vienti this)
         (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paikkauskohteet-urakalle-excel)))
