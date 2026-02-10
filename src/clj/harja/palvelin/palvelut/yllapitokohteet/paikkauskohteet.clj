@@ -425,102 +425,115 @@
 
 (defn tallenna-paikkauskohde! [db fim email user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
-  (let [_ (log/debug "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
+
+  ;; VAIHE 1: ESIKÄSITTELY JA VALIDOINTI
+  (let [_ (log/info "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
-        on-kustannusoikeudet? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (:urakka-id kohde) user)
         kohde-id (:id kohde)
-        vanha-kohde (when kohde-id (first (paikkaus-q/hae-paikkauskohde db {:id kohde-id
-                                                                            :urakka-id (:urakka-id kohde)})))
-        ;; Muutetaan tarvittaessa työmenetelmä teksistä ID:ksi.
+        vanha-kohde (when kohde-id
+                      (first (paikkaus-q/hae-paikkauskohde db {:id kohde-id
+                                                               :urakka-id (:urakka-id kohde)})))
+
+        ;; Muutetaan tarvittaessa työmenetelmä tekstistä ID:ksi
         annettu-tyomenetelma (:tyomenetelma kohde)
         kohde (if (string? annettu-tyomenetelma)
                 (assoc kohde :tyomenetelma (paikkaus-q/hae-tyomenetelman-id db annettu-tyomenetelma))
                 kohde)
-        ;; Haetaan urakan sampo-id sähköpostin lähetystä varten
-        urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
+
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
-        validointivirheet (paikkauskohde-validi? db kohde vanha-kohde kayttajarooli) ;;rooli on null?
-        ;; Jos ei ole erikseen merkitty, että sähköposti skipataan, niin tarkista tilamuutoksen vaikutukset
-        kohde (if-not (:skip-sahkoposti kohde)
-                (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
-                kohde)
-        ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
-        kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
-        ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
-        valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde)) (:valmistumispvm kohde) nil)
+        validointivirheet (paikkauskohde-validi? db kohde vanha-kohde kayttajarooli)]
 
-        tiemerkinnan-tila (or (:tiemerkinnan-tila kohde) "ei-tiemerkintaa")
-
-        paikkauskohde (merge
-                        {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
-                         :urakka-id (:urakka-id kohde)
-                         :luotu (pvm/nyt)
-                         :luoja-id (:id user)
-                         :nimi (:nimi kohde)
-                         :poistettu? (or (:poistettu kohde) false)
-                         :yhalahetyksen-tila (or (:yhalahetyksen-tila kohde) nil)
-                         :virhe (or (:virhe kohde) nil)
-                         :tarkistettu (or (:tarkistettu kohde) nil)
-                         :tarkistaja-id (or (:tarkistaja-id kohde) nil)
-                         :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
-                         :alkupvm (:alkupvm kohde)
-                         :loppupvm (:loppupvm kohde)
-                         :tyomenetelma (or (:tyomenetelma kohde) nil)
-                         :pot? (or (:pot? kohde) false)
-                         :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
-                         :suunniteltu-maara (when (:suunniteltu-maara kohde)
-                                              (bigdec (:suunniteltu-maara kohde)))
-                         :yksikko (:yksikko kohde)
-                         :lisatiedot (or (:lisatiedot kohde) nil)
-                         :valmistumispvm valmistumispvm
-                         :tilattupvm (or (:tilattupvm kohde) nil)
-                         :toteutunut-hinta (when (:toteutunut-hinta kohde)
-                                             (bigdec (:toteutunut-hinta kohde)))
-                         :tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
-                         ;; Asetetaan suorittava tiemerkintäurakka ja varmistetaan että ei nollata - Välitetään kulujen kirjauksen paikkausosiolle 
-                         :suorittava-tiemerkintaurakka (if (and (nil? (:tiemerkintapvm vanha-kohde))
-                                                               (:tiemerkintaa-tuhoutunut? kohde))
-                                                         (:tiemerkinta-urakka kohde)
-                                                         (:suorittava-tiemerkintaurakka vanha-kohde))
-                         :takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
-                         :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
-                         :yllapitokohde-id (:yllapitokohde-id kohde)
-                         :tie (konversio/konvertoi->int (:tie kohde))
-                         :aosa (konversio/konvertoi->int (:aosa kohde))
-                         :aet (konversio/konvertoi->int (:aet kohde))
-                         :losa (konversio/konvertoi->int (:losa kohde))
-                         :let (konversio/konvertoi->int (:let kohde))
-                         :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
-                         :tiemerkinnan-tila tiemerkinnan-tila}
-                        (when on-kustannusoikeudet?
-                          {:suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
-                        (when kohde-id
-                          {:id kohde-id
-                           :muokattu (pvm/nyt)
-                           :muokkaaja-id (:id user)}))
-        ;; Jos annetulla kohteella on olemassa id, niin päivitetään. Muuten tehdään uusi
-        kohde (when (empty? validointivirheet)
-                (let [p (if (id-olemassa? (:id paikkauskohde))
-                          (do
-                            (paikkaus-q/paivita-paikkauskohde! db paikkauskohde)
-                            (first (paikkaus-q/hae-paikkauskohde db {:id (:id paikkauskohde)
-                                                                     :urakka-id (:urakka-id kohde)})))
-                          (let [tallennettu-paikkauskohde (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)
-                                haettu-paikkauskohde (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu-paikkauskohde)
-                                                                                              :urakka-id (:urakka-id kohde)}))]
-                            haettu-paikkauskohde))]
-                  p))
-
-        ;; Päivitetään paikkauskohteen PK-luokan laskenta aina päivityksen tai luonnin yhteydessä
-        kohde (when kohde
-                (let [pkluokka (:paivita_paikkauskohteen_korjausluokka
-                                 (first (paikkaus-q/paivita-paikkauskohteen-korjausluokka db {:id (:id kohde)})))]
-                  (assoc kohde :pkluokka pkluokka)))]
-
-    (if (empty? validointivirheet)
-      kohde
+    ;; Jos validointivirheitä, heitetään poikkeus heti
+    (when (seq validointivirheet)
       (throw+ {:type "Validaatiovirhe"
-               :virheet {:koodi "ERROR" :viesti validointivirheet}}))))
+               :virheet {:koodi "ERROR" :viesti validointivirheet}}))
+
+    ;; VAIHE 2: KÄSITTELE SIVUVAIKUTUKSET JA TILASIIRTYMÄT
+    ;; (vain jos validointi meni läpi)
+    (let [on-kustannusoikeudet? (oikeudet/voi-kirjoittaa?
+                                 oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
+                                 (:urakka-id kohde) user)
+          urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
+
+          ;; Tilamuutosten käsittely
+          kohde (if-not (:skip-sahkoposti kohde)
+                  (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+                  kohde)
+
+          ;; POT-raportoinnin käsittely
+          kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
+
+          ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähän eri tavalla
+          valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde))
+                            (:valmistumispvm kohde)
+                            nil)
+          tiemerkinnan-tila (or (:tiemerkinnan-tila kohde) "ei-tiemerkintaa")
+
+          ;; VAIHE 3: MUODOSTA TALLENNETTAVA PAIKKAUSKOHDE
+          paikkauskohde (merge
+                         {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
+                          :urakka-id (:urakka-id kohde)
+                          :luotu (pvm/nyt)
+                          :luoja-id (:id user)
+                          :nimi (:nimi kohde)
+                          :poistettu? (or (:poistettu kohde) false)
+                          :yhalahetyksen-tila (or (:yhalahetyksen-tila kohde) nil)
+                          :virhe (or (:virhe kohde) nil)
+                          :tarkistettu (or (:tarkistettu kohde) nil)
+                          :tarkistaja-id (or (:tarkistaja-id kohde) nil)
+                          :ilmoitettu-virhe (or (:ilmoitettu-virhe kohde) nil)
+                          :alkupvm (:alkupvm kohde)
+                          :loppupvm (:loppupvm kohde)
+                          :tyomenetelma (or (:tyomenetelma kohde) nil)
+                          :pot? (or (:pot? kohde) false)
+                          :paikkauskohteen-tila (:paikkauskohteen-tila kohde)
+                          :suunniteltu-maara (when (:suunniteltu-maara kohde)
+                                               (bigdec (:suunniteltu-maara kohde)))
+                          :yksikko (:yksikko kohde)
+                          :lisatiedot (or (:lisatiedot kohde) nil)
+                          :valmistumispvm valmistumispvm
+                          :tilattupvm (or (:tilattupvm kohde) nil)
+                          :toteutunut-hinta (when (:toteutunut-hinta kohde)
+                                              (bigdec (:toteutunut-hinta kohde)))
+                          :tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
+                          ;; Asetetaan suorittava tiemerkintäurakka ja varmistetaan että ei nollata - Välitetään kulujen kirjauksen paikkausosiolle
+                          :suorittava-tiemerkintaurakka (if (and (nil? (:tiemerkintapvm vanha-kohde))
+                                                                (:tiemerkintaa-tuhoutunut? kohde))
+                                                          (:tiemerkinta-urakka kohde)
+                                                          (:suorittava-tiemerkintaurakka vanha-kohde))
+                          :takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
+                          :tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
+                          :yllapitokohde-id (:yllapitokohde-id kohde)
+                          :tie (konversio/konvertoi->int (:tie kohde))
+                          :aosa (konversio/konvertoi->int (:aosa kohde))
+                          :aet (konversio/konvertoi->int (:aet kohde))
+                          :losa (konversio/konvertoi->int (:losa kohde))
+                          :let (konversio/konvertoi->int (:let kohde))
+                          :ajorata (konversio/konvertoi->int (or (:ajorata kohde) 0))
+                          :tiemerkinnan-tila tiemerkinnan-tila}
+                         (when on-kustannusoikeudet?
+                           {:suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
+                         (when kohde-id
+                           {:id kohde-id
+                            :muokattu (pvm/nyt)
+                            :muokkaaja-id (:id user)}))
+
+          ;; VAIHE 4: TALLENNA KANTAAN
+          tallennettu-kohde (if (id-olemassa? (:id paikkauskohde))
+                             (do
+                               (paikkaus-q/paivita-paikkauskohde! db paikkauskohde)
+                               (first (paikkaus-q/hae-paikkauskohde db {:id (:id paikkauskohde)
+                                                                        :urakka-id (:urakka-id kohde)})))
+                             (let [tallennettu (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)]
+                               (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu)
+                                                                        :urakka-id (:urakka-id kohde)}))))
+
+          ;; VAIHE 5: PÄIVITÄ PK-LUOKKA
+          pkluokka (:paivita_paikkauskohteen_korjausluokka
+                    (first (paikkaus-q/paivita-paikkauskohteen-korjausluokka db {:id (:id tallennettu-kohde)})))]
+
+      ;; Palauta lopullinen kohde PK-luokan kanssa
+      (assoc tallennettu-kohde :pkluokka pkluokka))))
 
 (defn poista-paikkauskohde! [db user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
