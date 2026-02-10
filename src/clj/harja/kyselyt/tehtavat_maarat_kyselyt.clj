@@ -1,5 +1,6 @@
 (ns harja.kyselyt.tehtavat-maarat-kyselyt
   (:require [harja.kyselyt.konversio :as konversio]
+            [harja.tyokalut.big :as big]
             [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/tehtavat_maarat_kyselyt.sql"
@@ -11,23 +12,35 @@
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
 
 (defn tallenna-tarjouksen-tehtavat-ja-maarat [db urakka-id kayttaja-id hk-alkuvuosi tehtavat]
-  ;; Filtteröidään valiotsikot pois
-  (doseq [{:keys [tehtava_id tarjous_maara nimi] :as tehtava} (filter #(nil? (:valiotsikko %)) tehtavat)]
-    (let [dbtehtava (first (hae-tarjous-tehtava-idlla db {:tehtavaid tehtava_id
-                                                          :urakkaid urakka-id
-                                                          :hoitokauden-alkuvuosi hk-alkuvuosi}))
-          dbvastaus (if dbtehtava
-                      ;; Tehtävä löytyy kannasta
-                      (paivita-tarjous-tehtava<! db {:tarjous_tehtava_id (:id dbtehtava)
-                                                     :urakkaid urakka-id
-                                                     :maara tarjous_maara
-                                                     :muokkaaja kayttaja-id})
-                      ;; Lisätään uutena
-                      (lisaa-tarjous-tehtava<! db {:tehtavaid tehtava_id
-                                                   :urakkaid urakka-id
-                                                   :maara tarjous_maara
-                                                   :luoja kayttaja-id
-                                                   :hoitokauden-alkuvuosi hk-alkuvuosi}))])))
+  (doseq [{:keys [tehtava_id tarjous_maara]} (remove :valiotsikko tehtavat)]
+    ;; Tallennetaan vain tehtävät, joille on annettu arvo.
+    ;; Tämä estää tilanteen, jossa nil päätyy urakka_tehtavamaara.maara-kenttään.
+    (when-some [tarjous-maara-arvo tarjous_maara]
+      (let [tarjous-maara (bigdec tarjous-maara-arvo)
+            dbtehtava (first (hae-tarjous-tehtava-idlla db {:tehtavaid tehtava_id
+                                                            :urakkaid urakka-id
+                                                            :hoitokauden-alkuvuosi hk-alkuvuosi}))
+            db-maara (:maara dbtehtava)
+            sama-maara? (big/bigdecimal-arvot-samat? tarjous-maara db-maara)]
+        (cond
+          ;; Ei päivitetä turhaan, jotta muokattu/muokkaaja eivät vääristy.
+          sama-maara?
+          nil
+
+          ;; Tehtävä löytyy kannasta
+          dbtehtava
+          (paivita-tarjous-tehtava<! db {:tarjous_tehtava_id (:id dbtehtava)
+                                         :urakkaid urakka-id
+                                         :maara tarjous-maara
+                                         :muokkaaja kayttaja-id})
+
+          ;; Lisätään uutena
+          :else
+          (lisaa-tarjous-tehtava<! db {:tehtavaid tehtava_id
+                                       :urakkaid urakka-id
+                                       :maara tarjous-maara
+                                       :luoja kayttaja-id
+                                       :hoitokauden-alkuvuosi hk-alkuvuosi}))))))
 
 (defn hae-tehtavat-ja-maarat
   [db urakka-id hoitokauden-alkuvuosi]

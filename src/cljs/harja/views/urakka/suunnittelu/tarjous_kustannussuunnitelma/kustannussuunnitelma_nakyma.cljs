@@ -6,7 +6,6 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :as tyokalut]
             [harja.ui.komponentti :as komp]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
@@ -37,35 +36,33 @@
           toimenpiteet (:toimenpiteet kilpailutettavat-hankinnat)
           taulukon-tiedot (butlast toimenpiteet) ;; Jätetään yhteenvetorivi pois tässä kohdassa
           _ (reset! yhteiset/grid-hankinnat-atom taulukon-tiedot)
-
-          yht-alkukausi (:alkukausi (last toimenpiteet))
-          yht-loppukausi (:loppukausi (last toimenpiteet))
-          yht (:yhteensa (last toimenpiteet))
+          yht-alkukausi (:kaikki-alkukausi (last toimenpiteet))
+          yht-loppukausi (:kaikki-loppukausi (last toimenpiteet))
+          yht (:kaikki-yhteensa (last toimenpiteet))
 
           viimeisin-muokkaus (:viimeisin-muokkaus (last toimenpiteet))
           viimeisin-muokkaaja (:viimeisin-muokkaaja (last toimenpiteet))
 
-          kirjaamatta (tyokalut/round2 2 (- tarjouksen-maara yht))
+          kirjaamatta (tyokalut/round2 2 (+ pysyvat-muutokset-maara (- tarjouksen-maara yht)))
           kirjaamatta-luokka (if (= 0 kirjaamatta) "yhteensa" "yhteensa-punainen")
+
           kirjaamatta-rivi (when (and (not vahvistettu?) (>= valittu-vuosi yhteiset/rajavuosi))
                              [^{:luokka "kustannukset-yhteenveto"}
                               {:teksti "Kirjaamatta" :luokka kirjaamatta-luokka}
-                              {:teksti "" :luokka kirjaamatta-luokka}
                               {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                               {:teksti "" :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                               {:teksti (fmt/euro-opt false kirjaamatta) :luokka kirjaamatta-luokka :tyyppi :euro :tasaa :oikea :rivi-disabled? true}])
 
           yhteenveto-rivit [[^{:luokka "kustannukset-yhteenveto"}
                              {:teksti "Yhteensä" :luokka "yhteensa korkea"}
-                             {:teksti "Ei muutoksia" :luokka "yhteensa-ei-korostusta korkea"}
                              {:teksti (fmt/euro-opt false yht-alkukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht-loppukausi) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}
                              {:teksti (fmt/euro-opt false yht) :luokka "yhteensa korkea" :tyyppi :euro :tasaa :oikea :rivi-disabled? true}]
                             kirjaamatta-rivi]
 
           kilpailutettavat-hankinnat (:toimenpiteet kilpailutettavat-hankinnat)
-          kilpailutettavat-hankinnat-yhteensa (:yhteensa (last kilpailutettavat-hankinnat))
-          kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
+          kilpailutettavat-hankinnat-yhteensa (:kaikki-yhteensa (last kilpailutettavat-hankinnat))
+          kilpailutettavat-hankinnat-yhteensa-indeksikorjattu (:kaikki-yhteensa-indeksikorjattu (last kilpailutettavat-hankinnat))]
 
       [:div#kilpailutettavat-hankinnat-elementti.kustannussuunnitelma-osio.osio-976
        [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Kilpailutettavat hankinnat" tarjouksen-maara pysyvat-muutokset-maara
@@ -85,13 +82,14 @@
            nil
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
            onko-hankinnat-muutoksia?))
 
        [:div.row
         [:div.col-xs-12
          [grid/grid (merge (yhteiset/grid-perusasetukset (if vahvistettu? false true) :nimi)
                       {:otsikko ""
+                       :piilota-toiminnot? true
                        :jarjestys :jarjestys
                        :muutos #(do
                                   (reset! yhteiset/tallenna-painettu false)
@@ -105,8 +103,6 @@
                                           yhteenveto-rivit)})
           [{:otsikko "Toimenpide" :nimi :toimenpide-nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
             :otsikkorivi-luokka "korkea"}
-           {:otsikko "Pysyvät muutokset (€)" :nimi :pysyvat-muutokset :tyyppi :string
-            :leveys "20%" :muokattava? (constantly false)}
            {:otsikko (str "Loka-joulukuu " (pvm/vuosi (first valittu-hoitokausi)) " (€)") :nimi :alkukausi :tyyppi :euro
             :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :vaadi-ei-negatiivinen? true
             :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
@@ -128,7 +124,7 @@
             nil
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaKilpailutettavatHankinnat @yhteiset/grid-hankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:kilpailutettavat-hankinnat tulevaisuudessa-arvoja?)
             onko-hankinnat-muutoksia?)])])))
 
 (defn rahavaraukset [e! {:keys [valittu-hoitokausi tarjous kustannussuunnitelma] :as app}]
@@ -243,7 +239,7 @@
               #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-            tulevaisuudessa-arvoja?
+            (:erillishankinnat tulevaisuudessa-arvoja?)
             onko-erillishankinnat-muutoksia?)])
 
        [:div.row
@@ -263,10 +259,10 @@
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)
+            :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?)
             :otsikkorivi-luokka "korkea" :vaadi-ei-negatiivinen? true}
            {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+            :fmt #(if-not (<= % 0.0) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           erillishankinnat]]]
 
        (when-not vahvistettu?
@@ -276,7 +272,7 @@
              #(e! (kust-tiedot/->JaaErillishankinnatTasan tarjouksen-maara "erillishankinnat-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaErillishankinnat @yhteiset/grid-erillishankinnat-atom true)))
-           tulevaisuudessa-arvoja?
+           (:erillishankinnat tulevaisuudessa-arvoja?)
            onko-erillishankinnat-muutoksia?))])))
 
 (defn hoidonjohtopalkkiot [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
@@ -329,7 +325,7 @@
               #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
             (when-not viimeinen-hoitovuosi?
               #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-            tulevaisuudessa-arvoja?
+            (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
             onko-hoidonjohtopalkkio-muutoksia?)])
 
        [:div.row
@@ -349,10 +345,10 @@
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
            {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro
-            :tasaa :oikea :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?)
+            :tasaa :oikea :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?)
             :otsikkorivi-luokka "korkea" :vaadi-ei-negatiivinen? true}
            {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(if-not (= 0 suunniteltu-yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
+            :fmt #(if-not (<= % 0.0) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           hoidonjohtopalkkiot]]]
 
        (when-not vahvistettu?
@@ -362,10 +358,10 @@
              #(e! (kust-tiedot/->JaaHoidonjohtopalkkiotTasan tarjouksen-maara "hoidonjohtopalkkio-elementti")))
            (when-not viimeinen-hoitovuosi?
              #(e! (kust-tiedot/->TallennaHoidonjohtopalkkiot @yhteiset/grid-hoidonjohtopalkkiot-atom true)))
-           tulevaisuudessa-arvoja?
+           (:hoidonjohtopalkkiot tulevaisuudessa-arvoja?)
            onko-hoidonjohtopalkkio-muutoksia?))])))
 
-(defn- pysyvat-muutokset-grid* [e! muutokset]
+(defn- pysyvat-muutokset-grid* [e! muutokset valittu-hoitokausi]
   [grid/grid
    {:tunniste :id
     :luokat ["kirjatut-muutokset-grid"]
@@ -417,10 +413,10 @@
                      (fn []
                        (let [muutokset-e! (tuck/control tila/muutokset)]
                          ;; Siirry muutoslomakkeelle, käyttäen muutosten omaa tilakontrolleria
-                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi))))])}]
+                         (muutokset-e! (muutokset-tiedot/->SiirryPysyvanMuutoksenMuokkauslomakkeelle rivi valittu-hoitokausi))))])}]
    muutokset])
 
-(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma] :as app}]
+(defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma hoitokauden-alkuvuosi] :as app}]
   (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
@@ -438,7 +434,9 @@
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
 
        (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
-         [pysyvat-muutokset-grid* e! muutokset]
+         ;; Täytyy passata näin, sillä valittu-hoitokausi on jostain syystä: 20280930 T 000000
+         ;; Kun pysyvän muutoksen lomake haluaa sen: 20280930 T 235959
+         [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]
 
          ;; Mhu-muutokset ei käytössä, näytetään placeholder
          [:div.row
@@ -480,7 +478,7 @@
      (when (>= valittu-vuosi yhteiset/rajavuosi)
        [:div.row
         [:div.col-xs-12.korkea-rivi.bottom-border-text
-         [:div.col-xs-9.body-text.text-right.kohdista-teksti "Pysyvät muutokset"]
+         [:div.col-xs-9.body-text.text-right.kohdista-teksti "Pysyvät muutokset ilman indeksitarkistusta"]
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true pysyvat-muutokset-maara)]]])
      [:div.row
       [:div.col-xs-12.korkea-rivi.bottom-border-text
@@ -501,9 +499,9 @@
         [:div.col-xs-12.korkea-rivi.bottom-border-text
          [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
          [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-kattohinta)]]]
+
        [:div.row.kattohinta
         [:div.col-xs-12.korkea-rivi.bottom-border-text.kattohinta-input-osio
-
          [:div.col-xs-12.body-text.strong.kohdista-teksti.text-right
           [:div {:style {:padding-right "10px"}}
            [kentat/tee-otsikollinen-kentta
@@ -548,9 +546,9 @@
      (when vahvistus-virhe
        [:div.row {:style {:margin-bottom "1rem"}}
         [:div.col-xs-12
-         [yleiset/info-laatikko :varoitus vahvistus-virhe nil nil {:sulje-nappi-id (gensym)}]]])]))
+         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Suunnitellut kustannukset eivät täsmää tarjouksen tietoihin:"]]])]))
 
-(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa?	 valittu-hoitokausi] :as app}]
+(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         urakan-kesto-vuosina (- urakan-loppuvuosi urakan-alkuvuosi)
@@ -580,8 +578,7 @@
      [jjh/johto-ja-hallintokorvaus e! app]
      [hoidonjohtopalkkiot e! app]
      [pysyvat-muutokset e! app]
-     [tavoite-ja-kattohinta e! app]
-     [debug/debug app]]))
+     [tavoite-ja-kattohinta e! app]]))
 
 (defn nakyma* [e! _app]
   (let [{:keys [sisaan ulos]}

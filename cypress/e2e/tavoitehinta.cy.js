@@ -88,14 +88,14 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.get('#kilpailutettavat-hankinnat-elementti table.grid').gridOtsikot().then(() => {
 
             let valitseHankinnatInput = function (rivi) {
-                return `#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
+                return `#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(${rivi}) td input`;
             };
 
             // Muokataan Talvihoito laaja TPI
             cy.get(valitseHankinnatInput(1)).eq(0).clear().type('10');
 
             // Yhteensä ja Kirjaamatta teksti näkyy ja summat on oikein
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody').contains('Yhteensä').next().next().contains('10,00');
+            cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody').contains('Yhteensä').next().contains('10,00');
         });
 
         // Tallennetaan Kilpailutettavat hankinnat tietokantaan

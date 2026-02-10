@@ -69,59 +69,62 @@
           :kustannussuunnitelma
           ^{:key "uusi-kustannussuunnitelma"}
           (when (and (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     (valilehti-mahdollinen? :kustannussuunnitelma ur)
-                     (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (valilehti-mahdollinen? :kustannussuunnitelma ur)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
             ^{:key "kustannussuunnitelma"}
             [kustannussuunnitelma/kustannussuunnitelma])
 
-          "Tehtävät ja määrät"
-          :tehtavat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                     (valilehti-mahdollinen? :tehtavat ur)
-                     (istunto/ominaisuus-kaytossa? :mhu-urakka)
-                     nayta-vanha-tehtavat?)
-            ^{:key "tehtavat"}
-            [tehtavat/tehtavat])
+            "Tehtävät ja määrät"
+            :tehtavat
+            (when (and
+                    (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                    (valilehti-mahdollinen? :tehtavat ur)
+                    (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                    (some-> alkupvm pvm/vuosi (< 2025)))
+              ^{:key "tehtavat"}
+              [tehtavat/tehtavat])
 
-          "Tehtävä- ja määräluettelo"
-          :tehtavat-maarat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                  (valilehti-mahdollinen? :tehtavat ur)
-                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
-              nayta-uusi-tehtavat-maarat?)
-            ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat])
+            "Tehtävä- ja määräluettelo"
+            :tehtavat-maarat
+            (when (and
+                    (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                    (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                    (valilehti-mahdollinen? :tehtavat ur)
+                    (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
+                    (some-> alkupvm pvm/vuosi (>= 2025)))
+              ^{:key "tehtavat-maarat"}
+              [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
           (when (and (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
-                     (valilehti-mahdollinen? :kokonaishintaiset ur))
+                  (valilehti-mahdollinen? :kokonaishintaiset ur))
             ^{:key "kokonaishintaiset-tyot"}
             [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
           "Yksikköhintaiset työt"
           :yksikkohintaiset
           (when (and (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
-                     (valilehti-mahdollinen? :yksikkohintaiset ur))
+                  (valilehti-mahdollinen? :yksikkohintaiset ur))
             ^{:key "yksikkohintaiset-tyot"}
             [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
 
           "Muutos- ja lisätyöt"
           :muut
           (when (and (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
-                     (valilehti-mahdollinen? :muut ur))
+                  (valilehti-mahdollinen? :muut ur))
             ^{:key "muut-tyot"}
             [muut-tyot/muut-tyot ur])
 
           "Suolarajoitukset" :suola
           (when (and (oikeudet/urakat-suunnittelu-suola id)
-                     (valilehti-mahdollinen? :suola ur))
+                  (valilehti-mahdollinen? :suola ur))
             [suola/urakan-suolarajoitukset])
 
           "Materiaalit"
           :materiaalit
           (when (and (oikeudet/urakat-suunnittelu-materiaalit id)
-                     (valilehti-mahdollinen? :materiaalit ur))
+                  (valilehti-mahdollinen? :materiaalit ur))
             ^{:key "materiaalit"}
             [mat/materiaalit ur])
 
