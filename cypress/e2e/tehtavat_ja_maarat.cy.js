@@ -47,7 +47,7 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: ladataanHarjaaTimeout}).should('not.exist');
 
         // Varmista että näkymä on varmasti valmis ennen testejä
-        cy.get('h1', {timeout: ladataanHarjaaTimeout}).contains('Tehtävät ja määrät').should('be.visible');
+        cy.get('h1', {timeout: ladataanHarjaaTimeout}).contains('Tehtävä ja määräluettelo').should('be.visible');
         cy.get('table.grid', {timeout: ladataanHarjaaTimeout}).should('exist');
         cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]', {timeout: ladataanHarjaaTimeout}).should('exist');
     })
