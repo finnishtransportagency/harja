@@ -409,7 +409,7 @@
                   (nil? paatos)
                   (not= urakkaid (:urakkaid paatos)))
             ;; Throw exception
-            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+            (throw (Exception. "Hoidonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-hoidonjohtopalkkio-paatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))
 
@@ -440,6 +440,6 @@
                   (nil? paatos)
                   (not= urakkaid (:urakkaid paatos)))
             ;; Throw exception
-            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+            (throw (Exception. "Raporttipäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-poytakirjan-raporttipaatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))
