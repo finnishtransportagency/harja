@@ -38,7 +38,11 @@
         tehtavaryhmat-ja-toimenpiteet (into []
                                         (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db
                                           {:urakka urakka-id
-                                           :muutokset-kaytossa? (boolean muutokset-kaytossa?)
+                                           ;; 25 urakoilta karsitaan jjh käsinkirjaukset pois,
+                                           ;; mikäli muutokset ovat käytössä 
+                                           :muutokset-kaytossa? (and
+                                                                  (>= alkuvuosi 2025)
+                                                                  (boolean muutokset-kaytossa?))
                                            :urakka-voimassaolo-alkuvuosi alkuvuosi}))]
     tehtavaryhmat-ja-toimenpiteet))
 

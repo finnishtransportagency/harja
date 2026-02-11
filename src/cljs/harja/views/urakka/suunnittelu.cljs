@@ -2,7 +2,6 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [harja.ui.bootstrap :as bs]
             [harja.pvm :as pvm]
-            [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
@@ -39,8 +38,7 @@
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
     (komp/luo
-      (fn [{:keys [id] :as ur}]
-
+      (fn [{:keys [id alkupvm] :as ur}]
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
                    :active (nav/valittu-valilehti-atom :suunnittelu)
@@ -73,19 +71,23 @@
 
           "Tehtävät ja määrät"
           :tehtavat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                   (valilehti-mahdollinen? :tehtavat ur)
-                  (istunto/ominaisuus-kaytossa? :mhu-urakka))
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (some-> alkupvm pvm/vuosi (< 2025)))
             ^{:key "tehtavat"}
             [tehtavat/tehtavat])
 
           "Tehtävä- ja määräluettelo"
           :tehtavat-maarat
-          (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                  (valilehti-mahdollinen? :tehtavat ur)
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                   (istunto/ominaisuus-kaytossa? :mhu-urakka)
-                  (istunto/ominaisuus-kaytossa? :tehtavat-maarat))
-            ^{:key "tehtavat"}
+                  (valilehti-mahdollinen? :tehtavat ur)
+                  (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
+                  (some-> alkupvm pvm/vuosi (>= 2025)))
+            ^{:key "tehtavat-maarat"}
             [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"

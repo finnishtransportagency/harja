@@ -330,20 +330,21 @@
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defn- normalisoi-numero [n salli-whitespace?]
-  (when n (-> n
-            ;; Poistetaan whitespace, jos ei sallittu
-            (as-> n n
-              (if-not salli-whitespace? (str/replace n #"\s" "")
-                n))
-            ;; Poistetaan mahd. euromerkki lopusta
-            (str/replace #"€$" "")
-            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
-            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
-            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
-            (str/replace #"[−–—]" "-")
+  (when (and n (string? n))
+    (-> n
+      ;; Poistetaan whitespace, jos ei sallittu
+      (as-> n n
+        (if-not salli-whitespace? (str/replace n #"\s" "")
+          n))
+      ;; Poistetaan mahd. euromerkki lopusta
+      (str/replace #"€$" "")
+      ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+      ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+      ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+      (str/replace #"[−–—]" "-")
 
-            ;; Poistetaan ympäröivä whitespace joka tapauksessa
-            (str/trim))))
+      ;; Poistetaan ympäröivä whitespace joka tapauksessa
+      (str/trim))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
