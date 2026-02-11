@@ -1,45 +1,47 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
-  (:require [clojure.set :as set]
-            [com.stuartsierra.component :as component]
-            [clojure.spec.alpha :as s]
+  (:require [taoensso.timbre :as log]
+            [clojure.set :as set]
             [clojure.string :as str]
-            [compojure.core :refer [GET]]
+            [clojure.spec.alpha :as s]
             [compojure.core :refer :all]
             [compojure.route :refer :all]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.kulut :as kulut-domain]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [taoensso.timbre :as log]
+            [compojure.core :refer [GET]]
+            [com.stuartsierra.component :as component]
+
             [harja.pvm :as pvm]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.domain.kulut :as kulut-domain]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.konversio-optimoitu :as konv-opt]
             [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.kyselyt.urakat :as urakat-kyselyt]
-            [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
-            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
-            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
-            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
+            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
             [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
+            [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
+            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
-            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone])
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -72,7 +74,6 @@
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
 (defn- tarkista-haun-parametrit [{:keys [alkuaika loppuaika] :as parametrit} rajoita]
-
   (try
     (s/valid? ::loppuaika loppuaika)
     (s/valid? ::alkuaika alkuaika)
@@ -145,7 +146,7 @@
    :f4 :reittipiste_sijainti_epsg3067
    :f5 :reittipiste_materiaalit})
 
-(def ^{:private true} toteuma-muunnos-pilkottuna
+(def ^{:private true} toteuma-muunnos-nopea
   (comp
     (map (fn [toteuma]
            (-> toteuma
@@ -156,9 +157,7 @@
            (update toteuma :toteumatehtavat
              (fn [rivit]
                (keep (fn [r]
-                       (-> r
-                         (clojure.set/rename-keys db-tehtavat->avaimet)
-                         (konversio/alaviiva->rakenne)))
+                       (konv-opt/alaviiva-rename-opt r db-tehtavat->avaimet))
                  rivit)))))
 
     (map (fn [toteuma]
@@ -166,16 +165,14 @@
              (fn [rivit]
                (keep (fn [r]
                        (when (:f1 r)
-                         (-> r
-                           (clojure.set/rename-keys db-materiaalit->avaimet)
-                           (konversio/alaviiva->rakenne))))
+                         (konv-opt/alaviiva-rename-opt r db-materiaalit->avaimet)))
                  rivit)))))
 
     (map (fn [toteuma]
-           (clojure.set/rename-keys toteuma
+           (konv-opt/rename-keys-opt toteuma
              {:toteumamateriaalit :toteuma_materiaalit
               :toteumatehtavat :toteuma_tehtavat})))
-    (map konversio/alaviiva->rakenne)))
+    (map konv-opt/alaviiva->rakenne-nopea)))
 
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
@@ -328,20 +325,16 @@
 
 (defn palauta-toteumat-ilman-reittipisteita
   "Haetaan toteumat ilman reittipisteitä annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
   (log/info "Analytiikka API, toteumien haku ilman reittipisteitä, parametrit: " (pr-str parametrit))
-  ;;Rajoitetaan haku yhteen vuorokauteen
+  ;; Rajoitetaan haku yhteen vuorokauteen
   (tarkista-haun-parametrit parametrit true)
   (let [alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
                                                                                       :loppuaika loppuaika})
-        maara (count toteumat)
         loppudb (System/currentTimeMillis)
-        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
-        ;; Älä buildaa isoa lazy seq stackkia, vaan aja single transducerina 
-        ;; Kokeillaan, onko muistille ystävällisempi. Saman voi tehdä muillekin, jos ensin mennään kuitenkin vain tällä.
-        toteumat (into [] toteuma-muunnos-pilkottuna toteumat)
-        toteumat {:toteumat toteumat}]
+        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. ")
+        toteumat {:toteumat (sequence toteuma-muunnos-nopea toteumat)}]
     toteumat))
 
 (defn palauta-materiaalit
