@@ -71,10 +71,11 @@
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
-(defn- tarkista-haun-parametrit [parametrit rajoita]
+(defn- tarkista-haun-parametrit [{:keys [alkuaika loppuaika] :as parametrit} rajoita]
+
   (try
-    (s/valid? ::loppuaika (:loppuaika parametrit))
-    (s/valid? ::alkuaika (:alkuaika parametrit))
+    (s/valid? ::loppuaika loppuaika)
+    (s/valid? ::alkuaika alkuaika)
     (parametrivalidointi/tarkista-parametrit
       parametrit
       {:alkuaika "Alkuaika puuttuu"
@@ -84,27 +85,35 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+puutteelliset-parametrit+
                           :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
-  (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
+  (when (not (s/valid? ::alkuaika alkuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
-  (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
+       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" alkuaika)}))
+  (when (not (s/valid? ::loppuaika loppuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))}))
+       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" loppuaika)}))
 
-  ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
-  (when rajoita
-    (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:alkuaika parametrit))
-          loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:loppuaika parametrit))
-          aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
-          syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
-          paiva-sekunteina 90000] ;; Käytetään 25 tuntia
-      ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
-      (when (> aikavali-sekunteina paiva-sekunteina)
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi virheet/+puutteelliset-parametrit+
-           :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)})))))
+  (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) alkuaika)
+        loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) loppuaika)]
+
+    ;; Tarkista vielä, että alku ja loppu ovat oikeasti alku & loppu
+    ;; johtaa muuten sisäiseen virheeseen 
+    (when (pvm/jalkeen? alkuaika-pvm loppuaika-pvm)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti "Alkuaika ei voi olla loppuajan jälkeen."}))
+
+    ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
+    (when rajoita
+      (let [aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
+            syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
+            paiva-sekunteina 90000] ;; Käytetään 25 tuntia
+        ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
+        (when (> aikavali-sekunteina paiva-sekunteina)
+          (virheet/heita-viallinen-apikutsu-poikkeus
+            {:koodi virheet/+puutteelliset-parametrit+
+             :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))))
 
 (def db-tehtavat->avaimet
   {:f1 :id
@@ -135,6 +144,38 @@
    :f3 :reittipiste_sijainti_epsg4326
    :f4 :reittipiste_sijainti_epsg3067
    :f5 :reittipiste_materiaalit})
+
+(def ^{:private true} toteuma-muunnos-pilkottuna
+  (comp
+    (map (fn [toteuma]
+           (-> toteuma
+             (update :toteumatehtavat konversio/jsonb->clojuremap)
+             (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+
+    (map (fn [toteuma]
+           (update toteuma :toteumatehtavat
+             (fn [rivit]
+               (keep (fn [r]
+                       (-> r
+                         (clojure.set/rename-keys db-tehtavat->avaimet)
+                         (konversio/alaviiva->rakenne)))
+                 rivit)))))
+
+    (map (fn [toteuma]
+           (update toteuma :toteumamateriaalit
+             (fn [rivit]
+               (keep (fn [r]
+                       (when (:f1 r)
+                         (-> r
+                           (clojure.set/rename-keys db-materiaalit->avaimet)
+                           (konversio/alaviiva->rakenne))))
+                 rivit)))))
+
+    (map (fn [toteuma]
+           (clojure.set/rename-keys toteuma
+             {:toteumamateriaalit :toteuma_materiaalit
+              :toteumatehtavat :toteuma_tehtavat})))
+    (map konversio/alaviiva->rakenne)))
 
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
@@ -297,35 +338,10 @@
         maara (count toteumat)
         loppudb (System/currentTimeMillis)
         _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. Toteumamäärä: " maara)
-
-        toteumat (->> toteumat
-                   (map (fn [toteuma]
-                          (-> toteuma
-                            (update :toteumatehtavat konversio/jsonb->clojuremap)
-                            (update :toteumamateriaalit konversio/jsonb->clojuremap))))
-                   (map #(update % :toteumatehtavat
-                           (fn [rivit]
-                             (keep
-                               (fn [r]
-                                 (-> r
-                                   (clojure.set/rename-keys db-tehtavat->avaimet)
-                                   (konversio/alaviiva->rakenne)))
-                               rivit))))
-                   (map #(update % :toteumamateriaalit
-                           (fn [rivit]
-                             (keep
-                               (fn [r]
-                                 (when (not (nil? (:f1 r)))
-                                   (-> r
-                                     (clojure.set/rename-keys db-materiaalit->avaimet)
-                                     (konversio/alaviiva->rakenne))))
-                               rivit))))
-                   (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
-                                                     :toteumatehtavat :toteuma_tehtavat})))
-        toteumat {:toteumat
-                  (map (fn [toteuma]
-                         (konversio/alaviiva->rakenne toteuma))
-                    toteumat)}]
+        ;; Älä buildaa isoa lazy seq stackkia, vaan aja single transducerina 
+        ;; Kokeillaan, onko muistille ystävällisempi. Saman voi tehdä muillekin, jos ensin mennään kuitenkin vain tällä.
+        toteumat (into [] toteuma-muunnos-pilkottuna toteumat)
+        toteumat {:toteumat toteumat}]
     toteumat))
 
 (defn palauta-materiaalit
@@ -787,7 +803,7 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))    
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
@@ -813,7 +829,7 @@
                       :massat :massa})))
 
 (defn- yhdista-lyhenne-ja-nimi [lyhenne nimi]
-  (cond    
+  (cond
     (and lyhenne nimi) (str lyhenne ", " nimi)
     nimi nimi
     :else nil))
@@ -848,8 +864,8 @@
                             (yhdista-lyhenne-ja-nimi
                               (:kasittelymenetelma_lyhenne a)
                               (:kasittelymenetelma a))))
-                        atp)
-                    (map #(dissoc % :kasittelymenetelma_lyhenne) atp)
+                     atp)
+                   (map #(dissoc % :kasittelymenetelma_lyhenne) atp)
                    (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne atp)
                      {:massa :massat})
                    (map muodosta-alustatoimenpide atp))
@@ -1152,7 +1168,7 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Vaaditaan analytiikka-oikeudet
           :analytiikka)))
-    
+
     (julkaise-reitti
       http :analytiikka-toteumat-ilman-reittipisteita
       (GET "/api/analytiikka/toteumat-ilman-reittipisteita/:alkuaika/:loppuaika" request
