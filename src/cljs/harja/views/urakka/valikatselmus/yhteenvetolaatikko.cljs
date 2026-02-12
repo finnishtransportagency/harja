@@ -9,8 +9,21 @@
   (when (:id paatos)
     (get paatos avain)))
 
-(defn yhteenvetolaatikko [e! {:keys [paatokset] :as app}]
+(defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit] :as app}]
   (let [yhteenvedon-tiedot (:yhteenveto app)
+
+        ;; Yhteenvedot kokonaissummat
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu])
+        ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
+        tavoitehinnan-muutokset (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu])
+        ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset saadaan vain, jos muutosten hallinta on käytössä. -25 ja uudemmat urakat.
+        toteuma-muutokset (when (:muutosten_hallinta urakan-parametrit) (get-in yhteenvedon-tiedot [:budjettitavoite :toteuma-muutos-summa]))
+        pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
+                            (get-in yhteenvedon-tiedot [:budjettitavoite :pysyva-muutos-summa]))
+        pysyvat-muutokset-toteuma-muutokset (+ (or pysyvat-muutokset 0) (or toteuma-muutokset 0))
+
+        hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
+        hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
 
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
@@ -53,8 +66,6 @@
                                            0))
                                     (:sanktiot yhteenvedon-tiedot)))
         ;; Alitukset ja ylitykset
-        hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
-        hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
@@ -86,6 +97,25 @@
      ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
      [:h2.yhteenveto "Yhteenveto"]
      [:div.flex-row.summa-rivi-ylin
+      [:span "Hoitovuoden alun indeksikorjattu tavoitehinta"]
+      [:span (fmt/euro-opt false hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]
+     (if (:muutosten_hallinta urakan-parametrit)
+       ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset
+       [:div
+        [:div.flex-row.summa-rivi
+         [:span "Tavoitehinnan muutokset"]
+         [:span (str (when (> pysyvat-muutokset-toteuma-muutokset 0) "+") (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset))]]
+        [:div.flex-row.summa-rivi
+         [:span "• Kirjallisesti sovitut muutokset"]
+         [:span (str (when (> pysyvat-muutokset 0) "+") (fmt/euro-opt false pysyvat-muutokset))]]
+        [:div.flex-row.summa-rivi
+         [:span "• Toteumiin perustuvat muutokset"]
+         [:span (str (when (> toteuma-muutokset 0) "+") (fmt/euro-opt false toteuma-muutokset))]]]
+       ;; Käsin kirjatut tavoitehinnan oikaisut
+       [:div.flex-row.summa-rivi
+        [:span "Tavoitehinnan muutokset"]
+        [:span (str (when (> tavoitehinnan-muutokset 0) "+") (fmt/euro-opt false tavoitehinnan-muutokset))]])
+     [:div.flex-row.summa-rivi
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-tavoitehinta)]]
      [:div.flex-row.summa-rivi

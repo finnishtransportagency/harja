@@ -48,7 +48,20 @@ WITH tavoitehinnan_oikaisut AS
          (SELECT phi.hoitokauden_lopun_indeksikorjaus, phi.hoitokauden_alkuvuosi
           FROM paatos_hoitokauden_indeksikorjaus phi
           WHERE phi.poistettu = FALSE
-            AND phi.urakkaid = :urakka)
+            AND phi.urakkaid = :urakka),
+     pysyvat_muutokset AS (SELECT mmk.summa                 as pysyva_muutos_summa,
+                                  mmk.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi
+                           FROM mhu_muutos mm
+                                    JOIN mhu_muutos_kustannusvaikutus mmk
+                                         ON mmk.muutos = mm.id
+                           WHERE mm.urakka = :urakka
+                             AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+                             AND mm.poistettu IS FALSE),
+     toteuma_muutokset AS (SELECT SUM(mmtt.kasin_syotetty_tavoitehintamuutos) as toteuma_muutos_summa,
+                                  mmtt.hoitokauden_alkuvuosi                  as hoitokauden_alkuvuosi
+                           FROM mhu_muutos_tehtava_tiedot mmtt
+                           WHERE mmtt.urakka = :urakka
+                           GROUP BY mmtt.hoitokauden_alkuvuosi)
 SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
@@ -74,7 +87,9 @@ SELECT ut.id,
                     + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
-       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
+       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
+       pm.pysyva_muutos_summa                                                                 AS "pysyva-muutos-summa",
+       tm.toteuma_muutos_summa                                                                AS "toteuma-muutos-summa"
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
@@ -85,6 +100,8 @@ FROM urakka_tavoite ut
                                                EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                                t."hoitokauden-alkuvuosi"
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+         LEFT JOIN pysyvat_muutokset pm ON pm.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+         LEFT JOIN toteuma_muutokset tm ON tm.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 

@@ -125,6 +125,7 @@
       (assoc :paatokset (:paatokset vastaus))
       (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
       (assoc :yhteenveto (:yhteenveto vastaus))
+      (assoc :urakan-parametrit (:urakan-parametrit vastaus))
       (assoc :haku-kaynnissa? false)
       (assoc :tallennus-kesken? false))))
 
