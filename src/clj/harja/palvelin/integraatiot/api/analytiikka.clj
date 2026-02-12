@@ -98,8 +98,7 @@
   (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) alkuaika)
         loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) loppuaika)]
 
-    ;; Tarkista vielä, että alku ja loppu ovat oikeasti alku & loppu
-    ;; johtaa muuten sisäiseen virheeseen 
+    ;; Tarkista vielä, että alku ja loppu ovat oikeasti alku & loppu, johtaa muuten virheeseen 
     (when (pvm/jalkeen? alkuaika-pvm loppuaika-pvm)
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
@@ -340,7 +339,7 @@
         _ (when (> rivimaara 500000)
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+puutteelliset-parametrit+
-                                :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %d kpl. Rajoita aikaväliä." rivimaara)}]}))
+                                :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %d kpl. Rajoita aikaväliä, jotta toteumia palautuu alle 500 000." rivimaara)}]}))
 
         _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- (System/currentTimeMillis) alkudb) " ms. Määrä: " rivimaara)
         toteumat {:toteumat (sequence toteuma-muunnos-nopea toteumat)}]
