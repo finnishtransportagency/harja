@@ -21,9 +21,10 @@ RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
 # Aseta aikavyöhyke
+# Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
-    && cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
     && echo "Europe/Helsinki" > /etc/timezone
 
 # Asenna apurit
