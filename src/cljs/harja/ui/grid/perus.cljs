@@ -194,7 +194,6 @@
 
 
            {:teksti-nappi? false
-            :vayla-tyyli? true
             :tooltip "Poista rivi"
             :luokka "napiton-nappi pelkka-ikoni"
             :on-focus #(aseta-fokus! [id :poista-nappi])}]))
