@@ -5,8 +5,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.domain.kulut :as kulut-domain]
             [harja.ui.pvm :as pvm-valinta]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka.kulut.mhu-kulut :as kulut-tiedot]))
+            [harja.pvm :as pvm]))
 
 (t/use-fixtures :each u/komponentti-fixture)
 
