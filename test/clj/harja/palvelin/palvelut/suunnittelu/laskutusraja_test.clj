@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.laskutusraja-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
 
             [harja.pvm :as pvm]
@@ -35,6 +36,45 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+
+(defn- luo-testikulu!
+  "Luo testikulun ja palauttaa sen id:n"
+  [urakka-id koontilaskun-kuukausi erapaiva-sql kokonaissumma laskun-numero lisatieto & {:keys [poistettu?] :or {poistettu? false}}]
+  (let [poistettu-kentta (if poistettu? ", poistettu" "")
+        poistettu-arvo (if poistettu? ", TRUE" "")]
+    (ffirst (q (str "INSERT INTO kulu (urakka, koontilaskun_kuukausi, erapaiva, kokonaissumma, "
+                 "laskun_numero, lisatieto" poistettu-kentta ", luoja, luotu) "
+                 "VALUES (" urakka-id ", '" koontilaskun-kuukausi "', '" erapaiva-sql "', " kokonaissumma ", "
+                 "'" laskun-numero "', '" lisatieto "'" poistettu-arvo ", (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW()) "
+                 "RETURNING id")))))
+
+(defn- lisaa-kulu-kohdistus!
+  "Lisää kulun kohdistuksen"
+  [kulu-id summa toimenpideinstanssi-id tehtavaryhma-id]
+  (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, "
+       "maksueratyyppi, tyyppi, tavoitehintainen, luotu, luoja) "
+       "VALUES (0, " kulu-id ", " summa ", " toimenpideinstanssi-id ", " tehtavaryhma-id ", "
+       "'kokonaishintainen', 'muukulu', TRUE, NOW(), "
+       "(SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'))")))
+
+(defn- poista-urakan-kulut-aikaväliltä!
+  "Poistaa urakan kulut ja niiden kohdistukset annetulta aikaväliltä"
+  [urakka-id alkupvm-sql loppupvm-sql]
+  (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "')"))
+  (u (str "DELETE FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "'")))
+
+(defn- poista-kulu!
+  "Poistaa yksittäisen kulun ja sen kohdistukset"
+  [kulu-id]
+  (u (str "DELETE FROM kulu_kohdistus WHERE kulu = " kulu-id))
+  (u (str "DELETE FROM kulu WHERE id = " kulu-id)))
+
+(defn- poista-kulut!
+  "Poistaa useita kuluja ja niiden kohdistukset"
+  [& kulu-idt]
+  (let [ids-str (str/join ", " kulu-idt)]
+    (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (" ids-str ")"))
+    (u (str "DELETE FROM kulu WHERE id IN (" ids-str ")"))))
 
 (defn- vahvista-tai-kumoa-tavoite-ja-kattohinta!
   "Vahvistaa tai kumoaa tavoitteen ja kattohinnan"
@@ -165,8 +205,7 @@
         alkupvm-sql (konv/sql-timestamp alkupvm)
         loppupvm-sql (konv/sql-timestamp loppupvm)]
     ;; Varmista että hoitokaudella ei ole kuluja - Poista mahdolliset olemassa olevat kulut
-    (u "DELETE FROM kulu_kohdistus WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "')")
-    (u "DELETE FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "'")
+    (poista-urakan-kulut-aikaväliltä! urakka-id alkupvm-sql loppupvm-sql)
 
     ;; Kutsu palvelua
     (let [summa (kutsu-http-palvelua
@@ -194,21 +233,12 @@
     (is (some? tehtavaryhma-id) "Tehtäväryhmä pitäisi löytyä")
 
     ;; Varmista että hoitokaudella ei ole vanhoja kuluja
-    (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "')"))
-    (u (str "DELETE FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "'"))
+    (poista-urakan-kulut-aikaväliltä! urakka-id alkupvm-sql loppupvm-sql)
 
     ;; Lisää testikulu
-    (let [kulu-id (ffirst (q (str "INSERT INTO kulu (urakka, koontilaskun_kuukausi, erapaiva, kokonaissumma, "
-                               "laskun_numero, lisatieto, luoja, luotu) "
-                               "VALUES (" urakka-id ", 'marraskuu/1-hoitovuosi', '" erapaiva-sql "', 1000.00, "
-                               "'TESTI-123', 'Testikulu', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW()) "
-                               "RETURNING id")))]
+    (let [kulu-id (luo-testikulu! urakka-id "marraskuu/1-hoitovuosi" erapaiva-sql 1000.00 "TESTI-123" "Testikulu")]
       ;; Lisää kohdistus
-      (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, "
-           "maksueratyyppi, tyyppi, tavoitehintainen, luotu, luoja) "
-           "VALUES (0, " kulu-id ", 1000.00, " toimenpideinstanssi-id ", " tehtavaryhma-id ", "
-           "'kokonaishintainen', 'muukulu', TRUE, NOW(), "
-           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'))"))
+      (lisaa-kulu-kohdistus! kulu-id 1000.00 toimenpideinstanssi-id tehtavaryhma-id)
 
       ;; Kutsu palvelua
       (let [summa (kutsu-http-palvelua
@@ -221,8 +251,7 @@
         (is (= 1000.00M summa) "Summan pitäisi olla 1000.00"))
 
       ;; Siivoa
-      (u (str "DELETE FROM kulu_kohdistus WHERE kulu = " kulu-id))
-      (u (str "DELETE FROM kulu WHERE id = " kulu-id)))))
+      (poista-kulu! kulu-id))))
 
 (deftest hae-hoitokauden-kulujen-summa-kun-poistettu-kulu
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -240,22 +269,13 @@
     (is (some? tehtavaryhma-id) "Tehtäväryhmä pitäisi löytyä")
 
     ;; Varmista että hoitokaudella ei ole vanhoja kuluja
-    (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "')"))
-    (u (str "DELETE FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "'"))
+    (poista-urakan-kulut-aikaväliltä! urakka-id alkupvm-sql loppupvm-sql)
 
     ;; Lisää testikulu joka on poistettu
-    (let [kulu-id (ffirst (q (str "INSERT INTO kulu (urakka, koontilaskun_kuukausi, erapaiva, kokonaissumma, "
-                               "laskun_numero, lisatieto, poistettu, luoja, luotu) "
-                               "VALUES (" urakka-id ", 'marraskuu/1-hoitovuosi', '" erapaiva-sql "', 1000.00, "
-                               "'TESTI-456', 'Poistettu testikulu', TRUE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW()) "
-                               "RETURNING id")))]
+    (let [kulu-id (luo-testikulu! urakka-id "marraskuu/1-hoitovuosi" erapaiva-sql 1000.00 "TESTI-456" "Poistettu testikulu" :poistettu? true)]
 
       ;; Lisää kohdistus
-      (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, "
-           "maksueratyyppi, tyyppi, tavoitehintainen, luotu, luoja) "
-           "VALUES (0, " kulu-id ", 1000.00, " toimenpideinstanssi-id ", " tehtavaryhma-id ", "
-           "'kokonaishintainen', 'muukulu', TRUE, NOW(), "
-           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));"))
+      (lisaa-kulu-kohdistus! kulu-id 1000.00 toimenpideinstanssi-id tehtavaryhma-id)
 
       ;; Kutsu palvelua (poistetut kulut eivät sisälly)
       (let [summa (kutsu-http-palvelua
@@ -268,8 +288,7 @@
         (is (zero? summa) "Summan pitäisi olla 0 kun kulu on poistettu"))
 
       ;; Siivoa
-      (u (str "DELETE FROM kulu_kohdistus WHERE kulu = " kulu-id))
-      (u (str "DELETE FROM kulu WHERE id = " kulu-id)))))
+      (poista-kulu! kulu-id))))
 
 (deftest hae-hoitokauden-kulujen-summa-kun-useita-kuluja
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -285,32 +304,15 @@
         erapaiva2-sql (konv/sql-timestamp erapaiva2)]
 
     ;; Varmista että hoitokaudella ei ole vanhoja kuluja
-    (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "')"))
-    (u (str "DELETE FROM kulu WHERE urakka = " urakka-id " AND erapaiva BETWEEN '" alkupvm-sql "' AND '" loppupvm-sql "'"))
+    (poista-urakan-kulut-aikaväliltä! urakka-id alkupvm-sql loppupvm-sql)
 
     ;; Lisää ensimmäinen testikulu
-    (let [kulu-id1 (ffirst (q (str "INSERT INTO kulu (urakka, koontilaskun_kuukausi, erapaiva, kokonaissumma, "
-                                "laskun_numero, lisatieto, luoja, luotu) "
-                                "VALUES (" urakka-id ", 'marraskuu/1-hoitovuosi', '" erapaiva1-sql "', 1500.00, "
-                                "'TESTI-111', 'Ensimmäinen testikulu', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW()) "
-                                "RETURNING id")))
+    (let [kulu-id1 (luo-testikulu! urakka-id "marraskuu/1-hoitovuosi" erapaiva1-sql 1500.00 "TESTI-111" "Ensimmäinen testikulu")
           ;; Lisää toinen testikulu
-          kulu-id2 (ffirst (q (str "INSERT INTO kulu (urakka, koontilaskun_kuukausi, erapaiva, kokonaissumma, "
-                                "laskun_numero, lisatieto, luoja, luotu) "
-                                "VALUES (" urakka-id ", 'joulukuu/1-hoitovuosi', '" erapaiva2-sql "', 2500.00, "
-                                "'TESTI-222', 'Toinen testikulu', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW()) "
-                                "RETURNING id")))]
+          kulu-id2 (luo-testikulu! urakka-id "joulukuu/1-hoitovuosi" erapaiva2-sql 2500.00 "TESTI-222" "Toinen testikulu")]
       ;; Lisää kohdistukset
-      (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, "
-           "maksueratyyppi, tyyppi, tavoitehintainen, luotu, luoja) "
-           "VALUES (0, " kulu-id1 ", 1500.00, " toimenpideinstanssi-id ", " tehtavaryhma-id ", "
-           "'kokonaishintainen', 'muukulu', TRUE, NOW(), "
-           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'))"))
-      (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, "
-           "maksueratyyppi, tyyppi, tavoitehintainen, luotu, luoja) "
-           "VALUES (0, " kulu-id2 ", 2500.00, " toimenpideinstanssi-id ", " tehtavaryhma-id ", "
-           "'kokonaishintainen', 'muukulu', TRUE, NOW(), "
-           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'))"))
+      (lisaa-kulu-kohdistus! kulu-id1 1500.00 toimenpideinstanssi-id tehtavaryhma-id)
+      (lisaa-kulu-kohdistus! kulu-id2 2500.00 toimenpideinstanssi-id tehtavaryhma-id)
 
       ;; Kutsu palvelua
       (let [summa (kutsu-http-palvelua
@@ -323,5 +325,4 @@
         (is (= 4000.00M summa) "Summan pitäisi olla 4000.00 (1500 + 2500)"))
 
       ;; Siivoa
-      (u (str "DELETE FROM kulu_kohdistus WHERE kulu IN (" kulu-id1 ", " kulu-id2 ")"))
-      (u (str "DELETE FROM kulu WHERE id IN (" kulu-id1 ", " kulu-id2 ")")))))
+      (poista-kulut! kulu-id1 kulu-id2))))

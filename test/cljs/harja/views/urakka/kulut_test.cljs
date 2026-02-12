@@ -32,32 +32,3 @@
       (is (not (valittava?-fn (pvm/->pvm "31.03.2015"))))
       (is (not (valittava?-fn (pvm/->pvm "01.05.2015"))))
       (is (not (valittava?-fn (pvm/->pvm "04.04.1985")))))))
-
-;; Laskutusraja-komponentin testit
-(deftest kuukauden-kulujen-jako-laskutusrajassa
-  (testing "Kuukauden kulujen jako laskutusrajaan sisältyvään ja ylittävään osaan"
-    (let [laskutusraja 5000000M
-          kulut-yhteensa-hakukuukauteen-asti 4800000M
-          haetun-aikarajan-kulujen-summa 400000M
-          yhteensa (+ haetun-aikarajan-kulujen-summa kulut-yhteensa-hakukuukauteen-asti)
-          ylitys (- yhteensa laskutusraja)
-          laskutusrajaan-sisaltyva (- haetun-aikarajan-kulujen-summa ylitys)
-          laskutusrajan-ylittava (- yhteensa laskutusraja)]
-      (is (= 5200000M yhteensa) "Kulujen yhteissumman pitäisi olla 5200000")
-      (is (= 200000M ylitys) "Ylityksen pitäisi olla 200000")
-      (is (= 200000M laskutusrajaan-sisaltyva) "Laskutusrajaan sisältyvän pitäisi olla 200000")
-      (is (= 200000M laskutusrajan-ylittava) "Laskutusrajan ylittävän pitäisi olla 200000")))
-
-  (testing "Kuukauden kulut kun edellisten kuukausien kulut ylittävät jo laskutusrajan"
-    (let [laskutusraja 5000000M
-          kulut-yhteensa-hakukuukauteen-asti 5500000M
-          haetun-aikarajan-kulujen-summa 300000M
-          yhteensa (+ haetun-aikarajan-kulujen-summa kulut-yhteensa-hakukuukauteen-asti)
-          laskutusrajaan-sisaltyva (if (> kulut-yhteensa-hakukuukauteen-asti laskutusraja)
-                                     0
-                                     haetun-aikarajan-kulujen-summa)
-          laskutusrajan-ylittava (if (> kulut-yhteensa-hakukuukauteen-asti laskutusraja)
-                                   haetun-aikarajan-kulujen-summa
-                                   (- yhteensa laskutusraja))]
-      (is (= 0M laskutusrajaan-sisaltyva) "Laskutusrajaan sisältyvän pitäisi olla 0 kun raja ylitetty jo aiemmin")
-      (is (= 300000M laskutusrajan-ylittava) "Kaikki kuukauden kulut pitäisi olla ylittävää osaa"))))
