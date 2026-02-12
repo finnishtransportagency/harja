@@ -332,8 +332,17 @@
   (let [alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
                                                                                       :loppuaika loppuaika})
-        loppudb (System/currentTimeMillis)
-        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- loppudb alkudb) " ms. ")
+        ;; Ei käytetä count(), syö muistia tässä liikaa
+        rivimaara (:rivimaara (first toteumat) 0)
+
+        ;; Päivällä voi olla jopa miljoona toteumaa, en usko, että optimoinnitkaan kestää niin paljoa
+        ;; Älä siirry JSON mappaukseen jos rivejä yli 500 000. Alenna tätä, jos aiheutuu vielä ongelmia 
+        _ (when (> rivimaara 500000)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                                :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %d kpl. Rajoita aikaväliä." rivimaara)}]}))
+
+        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- (System/currentTimeMillis) alkudb) " ms. Määrä: " rivimaara)
         toteumat {:toteumat (sequence toteuma-muunnos-nopea toteumat)}]
     toteumat))
 
