@@ -13,6 +13,10 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+;; Määritellään ::kommentin-tila spec molemmille alustoille
+#?(:cljs
+   (s/def ::kommentin-tila #{:luotu :muokattu :hyvaksytty :hylatty :poistettu}))
+
 #?(:clj
    (define-tables
      ["kommentin_tila" ::kommentin-tila (specql.transform/transform (specql.transform/to-keyword))]
