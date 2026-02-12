@@ -65,7 +65,7 @@
                  [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.1.0"]
+                 [org.clojure/core.match "1.1.1"]
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
