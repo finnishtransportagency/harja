@@ -12,16 +12,17 @@
 (defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit] :as app}]
   (let [yhteenvedon-tiedot (:yhteenveto app)
 
-        ;; Yhteenvedot kokonaissummat
+        ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu])
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
         tavoitehinnan-muutokset (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu])
-        ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset saadaan vain, jos muutosten hallinta on käytössä. -25 ja uudemmat urakat.
-        toteuma-muutokset (when (:muutosten_hallinta urakan-parametrit) (get-in yhteenvedon-tiedot [:budjettitavoite :toteuma-muutos-summa]))
-        pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
+        aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
                             (get-in yhteenvedon-tiedot [:budjettitavoite :pysyva-muutos-summa]))
-        pysyvat-muutokset-toteuma-muutokset (+ (or pysyvat-muutokset 0) (or toteuma-muutokset 0))
-
+        menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
+                            (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-pysyva-muutos-summa]))
+        toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
+                                             (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
+        pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
         hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
         hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
 
@@ -104,13 +105,18 @@
        [:div
         [:div.flex-row.summa-rivi
          [:span "Tavoitehinnan muutokset"]
-         [:span (str (when (> pysyvat-muutokset-toteuma-muutokset 0) "+") (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset))]]
-        [:div.flex-row.summa-rivi
-         [:span "• Kirjallisesti sovitut muutokset"]
-         [:span (str (when (> pysyvat-muutokset 0) "+") (fmt/euro-opt false pysyvat-muutokset))]]
+         [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+") (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
+        (when aktiiviset-pysyvat-muutokset
+          [:div.flex-row.summa-rivi
+           [:span "• Kirjallisesti sovitut muutokset"]
+           [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+") (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
+        (when menneet-pysyvat-muutokset
+          [:div.flex-row.summa-rivi
+           [:span "• Edellisten hoitovuosien pysyvien muutosten osuus"]
+           [:span (fmt/euro-opt false menneet-pysyvat-muutokset)]])
         [:div.flex-row.summa-rivi
          [:span "• Toteumiin perustuvat muutokset"]
-         [:span (str (when (> toteuma-muutokset 0) "+") (fmt/euro-opt false toteuma-muutokset))]]]
+         [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]]
        ;; Käsin kirjatut tavoitehinnan oikaisut
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan muutokset"]

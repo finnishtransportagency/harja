@@ -49,14 +49,6 @@ WITH tavoitehinnan_oikaisut AS
           FROM paatos_hoitokauden_indeksikorjaus phi
           WHERE phi.poistettu = FALSE
             AND phi.urakkaid = :urakka),
-     pysyvat_muutokset AS (SELECT mmk.summa                 as pysyva_muutos_summa,
-                                  mmk.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi
-                           FROM mhu_muutos mm
-                                    JOIN mhu_muutos_kustannusvaikutus mmk
-                                         ON mmk.muutos = mm.id
-                           WHERE mm.urakka = :urakka
-                             AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
-                             AND mm.poistettu IS FALSE),
      toteuma_muutokset AS (SELECT SUM(mmtt.kasin_syotetty_tavoitehintamuutos) as toteuma_muutos_summa,
                                   mmtt.hoitokauden_alkuvuosi                  as hoitokauden_alkuvuosi
                            FROM mhu_muutos_tehtava_tiedot mmtt
@@ -88,8 +80,33 @@ SELECT ut.id,
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
-       pm.pysyva_muutos_summa                                                                 AS "pysyva-muutos-summa",
-       tm.toteuma_muutos_summa                                                                AS "toteuma-muutos-summa"
+       (SELECT SUM(mmk.summa)
+        FROM mhu_muutos mm
+                 JOIN mhu_muutos_kustannusvaikutus mmk
+                      ON mmk.muutos = mm.id
+        WHERE mm.urakka = :urakka
+          AND mm.voimassa_alkaen BETWEEN
+            (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
+            AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+          AND mm.tyyppi IN ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus')
+          AND mm.poistettu IS FALSE
+          AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+        group by mmk.hoitokauden_alkuvuosi)                                                   AS "pysyva-muutos-summa",
+       tm.toteuma_muutos_summa                                                                AS "toteuma-muutos-summa",
+       -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
+       indeksikorjaa(
+       (SELECT SUM(mmk.summa)
+        FROM mhu_muutos mm
+                 JOIN mhu_muutos_kustannusvaikutus mmk
+                      ON mmk.muutos = mm.id
+        WHERE mm.urakka = :urakka
+          AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+          AND mm.poistettu IS FALSE
+          AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi
+          AND mm.voimassa_alkaen < (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))),
+       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INT, 10, u.id)
+                                                                                               AS "menneet-pysyva-muutos-summa"
+
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
@@ -100,7 +117,6 @@ FROM urakka_tavoite ut
                                                EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                                t."hoitokauden-alkuvuosi"
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
-         LEFT JOIN pysyvat_muutokset pm ON pm.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
          LEFT JOIN toteuma_muutokset tm ON tm.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;

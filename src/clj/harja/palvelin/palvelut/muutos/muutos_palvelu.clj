@@ -27,23 +27,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
 
-(defn- rahavarausten-summarivi [rahavaraukset]
-  (let [{:keys [summa-indeksikorjattu toteumat]}
-        (reduce (fn [acc {:keys [summa-indeksikorjattu toteumat]}]
-                  {:summa-indeksikorjattu (+ (:summa-indeksikorjattu acc 0)
-                                            (or summa-indeksikorjattu 0))
-                   :toteumat (+ (:toteumat acc 0)
-                               (or toteumat 0))})
-          {}
-          rahavaraukset)
-        ;; Jos rahavaraukset vektori on tyhjä, nil arvoja voi olla
-        summa-indeksikorjattu (or summa-indeksikorjattu 0)
-        toteumat (or toteumat 0)]
-    {:id :yhteenveto
-     :summa-indeksikorjattu summa-indeksikorjattu
-     :toteumat toteumat
-     :tavoitehinnan-muutos (- toteumat summa-indeksikorjattu)}))
-
 (defn paivita-muutostyo-kulu-kohdistus
   "Kululomake kutsuu, ei liity automaattisiin kuluihin"
   [db muutostyo kohdistus-id]
@@ -423,28 +406,7 @@
                                 :hae-vain-aiemmat-pysyvat-muutokset? false})
                              (parsi-kirjatut-muutokset-vastaus))
         aiempien-vuosien-pysyvat-muutokset (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitokauden-alkuvuosi)
-        rahavarausten-suunnitelmat (map
-                                     #(select-keys % [:id :nimi :summa-indeksikorjattu])
-                                     (rahavaraus-kyselyt/hae-urakan-suunnitellut-rahavarausten-kustannukset db {:urakka_id urakka-id
-                                                                                                                ;; haetaan vain valitulle hoitovuodelle
-                                                                                                                :alkuvuosi hoitokauden-alkuvuosi
-                                                                                                                :loppuvuosi (inc hoitokauden-alkuvuosi)}))
-        rahavarausten-toteumat (muutos-kyselyt/rahavarausten-toteumat db {:urakka urakka-id
-                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
-        rahavaraukset (yleiset/yhdista-mapit-avaimella rahavarausten-suunnitelmat rahavarausten-toteumat :id)
-        rahavarausmuutosten-syyt (muutos-kyselyt/rahavarausmuutosten-syyt db {:urakka urakka-id
-                                                                              :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
-        rahavaraukset (yleiset/yhdista-mapit-avaimella rahavaraukset rahavarausmuutosten-syyt :id)
-        rahavaraukset (mapv
-                        ;; lasketaan erotus vain jos molemmat arvot ovat olemassa
-                        #(if (and (:summa-indeksikorjattu %)
-                               (:toteumat %))
-                           (assoc % :tavoitehinnan-muutos (- (:toteumat %)
-                                                            (:summa-indeksikorjattu %)))
-                           %)
-                        rahavaraukset)
-        rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
-        rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
+        rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
         budjettitavoiteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
         ;; Mapataan hoitokausien alkuvuodet, joille urakan tavoitehinnat on indeksikorjattu ja vahvistettu
         tavoitehinnat-indeksikorjattu (urakan-tavoitehinnat-indeksikorjattu db urakka-id)

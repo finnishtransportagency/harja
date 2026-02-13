@@ -4,6 +4,7 @@
     [cognitect.transit :as transit]
     [clojure.string :as string]
     [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
     [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [slingshot.slingshot :refer [throw+]]
@@ -28,6 +29,7 @@
     [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]
     [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
+    [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
     [harja.pvm :as pvm]
     [harja.domain.lupaus-domain :as lupaus-domain]
@@ -133,9 +135,9 @@
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset)
 
-        _ (println "mahdolliset-paatokset:" (pr-str mahdolliset-paatokset))
+        #_ (println "mahdolliset-paatokset:" (pr-str mahdolliset-paatokset))
         ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain yksi päätös - Tavoitehinnan muutospäätös.
-        #_#_ mahdolliset-paatokset (if (and (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset)
+        mahdolliset-paatokset (if (and (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset)
                                     (or (>= valittu-hoitovuosi nyt-vuosi)
                                       hoitovuosi-kesken?))
                                 ;; Poistetaan kaikki muut päätökset, kuin tavoitehinnan muutospäätös
@@ -164,11 +166,11 @@
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitovuosi))
+        valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
 
         ;; 2019/2020 vuosille haetaan erilaiset lupausitiedot
         lupaus-parametrit {:urakka-id urakkaid
-                           :valittu-hoitokausi [hoitokauden-alkupvm
-                                                hoitokauden-loppupvm]
+                           :valittu-hoitokausi valittu-hoitokausi
                            :nykyhetki (pvm/nyt)}
         lupaustiedot (if vanha-urakka?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db lupaus-parametrit)
@@ -213,6 +215,18 @@
                               (conj v {(paatoskone/nimi->avain (:nimi paatos)) paatos})))
 
                     [] paatokset)
+        muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakkaid hoitovuosi)
+        ;; Hae kaikki tehtävä ja määrämuutokset
+        urakan-hoitokaudet (q-urakat/hae-urakan-hoitokaudet db urakkaid)
+        tehtava-ja-maaramuutokset (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakkaid
+                                                                                          :hoitokaudet urakan-hoitokaudet
+                                                                                          :valittu-hoitokausi valittu-hoitokausi})
+        toteumiin-perustuvat-muutokset-yht (reduce + 0
+                                             (remove nil?
+                                               (concat
+                                                 [(:tavoitehinnan-muutos (last muutos-rahavaraukset))]
+                                                 (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
+
         vastaus {:hoitokauden-alkuvuosi hoitovuosi
                  :urakan-parametrit {:muutosten_hallinta (:muutosten_hallinta urakan-parametrit)}
                  :yhteenveto {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
@@ -220,7 +234,8 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
-                              :budjettitavoite budjettitavoite}
+                              :budjettitavoite budjettitavoite
+                              :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset
                  :tavoitehinnan-muutokset tavoitehinnan-muutokset
                  :kattohinnan-muutokset kattohinnan-muutokset}]
