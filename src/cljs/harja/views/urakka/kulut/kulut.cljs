@@ -208,9 +208,12 @@
               yhteensa (+ haetun-aikarajan-kulujen-summa kulut-yhteensa-hakukuukauteen-asti)
               ylitys (- yhteensa laskutusraja)
               laskutusrajaan-sisaltyva (- haetun-aikarajan-kulujen-summa ylitys)
-              laskutusrajan-ylittava (- yhteensa laskutusraja)]
+              laskutusrajan-ylittava (- yhteensa laskutusraja)
+              alkupvm-hoitokausi (when @haun-alkupvm-atom (pvm/paivamaaran-hoitokausi @haun-alkupvm-atom))
+              loppupvm-hoitokausi (when @haun-loppupvm-atom (pvm/paivamaaran-hoitokausi @haun-loppupvm-atom))
+              eri-hoitovuosilla? (when (and alkupvm-hoitokausi loppupvm-hoitokausi (not= alkupvm-hoitokausi loppupvm-hoitokausi)) true)]
 
-          (when laskutusraja-kaytossa?
+          (when (and laskutusraja-kaytossa? (not eri-hoitovuosilla?))
             [:div.laskutusraja
              [:div
               [:h2 "Laskutusraja"]
@@ -418,10 +421,20 @@
                                        :on-datepicker-select #(do
                                                                 (e! (tiedot/->AsetaHakuAlkuPvm %))
                                                                 (when (and % @haun-loppupvm-atom)
-                                                                  (e! (tiedot/->HaeUrakanKulut
-                                                                        {:id (-> @tila/yleiset :urakka :id)
-                                                                         :alkupvm %
-                                                                         :loppupvm @haun-loppupvm-atom}))))}
+                                                                  ;; Tarkista että alkupvm on ennen loppupvm:ää
+                                                                  (if (pvm/ennen? % @haun-loppupvm-atom)
+                                                                    (e! (tiedot/->HaeUrakanKulut
+                                                                          {:id (-> @tila/yleiset :urakka :id)
+                                                                           :alkupvm %
+                                                                           :loppupvm @haun-loppupvm-atom}))
+                                                                    ;; Jos alkupvm on loppupvm:n jälkeen, aseta loppupvm samaksi
+                                                                    (do
+                                                                      (reset! haun-loppupvm-atom %)
+                                                                      (e! (tiedot/->AsetaHakuLoppuPvm %))
+                                                                      (e! (tiedot/->HaeUrakanKulut
+                                                                            {:id (-> @tila/yleiset :urakka :id)
+                                                                             :alkupvm %
+                                                                             :loppupvm %}))))))}
                     haun-alkupvm-atom]
                    [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
                    [kentat/tee-kentta {:tyyppi :pvm
@@ -431,10 +444,21 @@
                                                                (do
                                                                  (e! (tiedot/->AsetaHakuLoppuPvm loppupvm))
                                                                  (when (and (not (nil? loppupvm)) (not (nil? @haun-alkupvm-atom)))
-                                                                   (e! (tiedot/->HaeUrakanKulut
-                                                                         {:id (-> @tila/yleiset :urakka :id)
-                                                                          :alkupvm @haun-alkupvm-atom
-                                                                          :loppupvm loppupvm})))))}
+                                                                   ;; Tarkista että loppupvm on alkupvm:n jälkeen tai samana päivänä
+                                                                   (if (or (pvm/jalkeen? loppupvm @haun-alkupvm-atom)
+                                                                         (pvm/sama-pvm? loppupvm @haun-alkupvm-atom))
+                                                                     (e! (tiedot/->HaeUrakanKulut
+                                                                           {:id (-> @tila/yleiset :urakka :id)
+                                                                            :alkupvm @haun-alkupvm-atom
+                                                                            :loppupvm loppupvm}))
+                                                                     ;; Jos loppupvm on ennen alkupvm:ää, aseta alkupvm samaksi
+                                                                     (do
+                                                                       (reset! haun-alkupvm-atom loppupvm)
+                                                                       (e! (tiedot/->AsetaHakuAlkuPvm loppupvm))
+                                                                       (e! (tiedot/->HaeUrakanKulut
+                                                                             {:id (-> @tila/yleiset :urakka :id)
+                                                                              :alkupvm loppupvm
+                                                                              :loppupvm loppupvm})))))))}
                     haun-loppupvm-atom]]])]]
              [laskutusraja-komponentti  e! app valittu-hoitokausi hoitovuodet haun-kuukausi haun-alkupvm-atom haun-loppupvm-atom]]
 
