@@ -411,6 +411,7 @@
   ;; Kustannussuunnitelma vahvistettu
   ;; Tavoitehinnan muutokset tallennettu,
   ;; Hoitovuoden lopun tavoitehintapäätös tallennettu
+  ;; Ja vielä lisäksi: Tavoitehinnan ylityspäätös tallennettu
   (if-not (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
     (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Poistetaan vain koko päätös." false 7)
 
@@ -430,6 +431,12 @@
       (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
+
+      ;; Vaaditaan Tavoitehinnan ylitys päätös, pitää olla tallennettuna
+      ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan ylitys")))
+      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan ylitys -päätös on vielä tekemättä." true 7)
 
       (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
       (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
