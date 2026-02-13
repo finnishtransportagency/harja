@@ -783,10 +783,12 @@
           kaanteinen? (if (= jarjestys vanha-jarjestys)
                         (not (get-in app [:jarjestys :kaanteinen?]))
                         false)]
-      (-> app
-        (assoc-in [:jarjestys :nimi] jarjestys)
-        (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
-        (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))))
+      (if jarjestys
+        (-> app
+          (assoc-in [:jarjestys :nimi] jarjestys)
+          (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
+          (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))
+        app)))
 
   AsetaToteumatyyppi
   (process-event [{uusi-tyyppi :uusi-tyyppi} app]
