@@ -1,15 +1,10 @@
 (ns harja.palvelin.palvelut.haku
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-
             [harja.kyselyt.urakat :as ur-q]
-            [harja.kyselyt.kayttajat :as k-q]
             [harja.kyselyt.hallintayksikot :as org-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka :as urakka-domain]
-            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
+            [harja.domain.urakka :as urakka-domain]))
 
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
@@ -35,15 +30,6 @@
                                         :kayttajan_org_id (:id kayttajan-org)
                                         :numero (when (re-matches (re-pattern "\\d+") hakutermi)
                                                   (Integer/parseInt hakutermi))}))))
-        loytyneet-kayttajat (when kayttajan-org             ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
-                              (into []
-                                   (map #(assoc % :tyyppi :kayttaja
-                                                  :hakusanat (if (:jarjestelmasta %)
-                                                               (str "Järjestelmäkäyttäjä: " (:kayttajanimi %))
-                                                               (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
-                                        (k-q/hae-kayttajien-tunnistetiedot db {:hakutermi termi
-                                                                               :organisaatiotyyppi (name (:tyyppi kayttajan-org))
-                                                                               :organisaatioid (:id kayttajan-org)}))))
         loytyneet-organisaatiot (when kayttajan-org         ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
                                   (into []
                                         (map #(assoc % :tyyppi :organisaatio
@@ -51,14 +37,8 @@
                                                                        (:nimi %) ", " (:organisaatiotyyppi %)))
                                              (org-q/hae-organisaation-tunnistetiedot db termi))))
         tulokset (into []
-                       (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))]
+                       (concat loytyneet-urakat loytyneet-organisaatiot))]
     tulokset))
-
-(defn hae-kayttajan-tiedot
-  "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
-  [db user kayttaja-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
-  (dissoc (kayttajatiedot/hae-kayttaja db kayttaja-id) :kayttajanimi))
 
 (defrecord Haku []
   component/Lifecycle
@@ -66,10 +46,7 @@
     (doto (:http-palvelin this)
       (julkaise-palvelu :hae
                         (fn [user hakutermi]
-                          (hae-harjasta (:db this) user hakutermi)))
-      (julkaise-palvelu :hae-kayttajan-tiedot
-                        (fn [user kayttaja-id]
-                          (hae-kayttajan-tiedot (:db this) user kayttaja-id))))
+                          (hae-harjasta (:db this) user hakutermi))))
     this)
 
   (stop [this]
