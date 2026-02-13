@@ -158,7 +158,7 @@
 (deftest hae-toteumat-test-koordinaattimuunnos-toimii
   (let [alkuaika "2015-12-17T00:00:00+03"
         loppuaika "2015-12-17T23:59:59+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))
     ;; Sisältää lisäksi koordinaattimuunnoksen
@@ -167,7 +167,7 @@
 (deftest hae-toteumat-test-koko-liian-pieni
   (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001")] kayttaja-analytiikka portti)]
     (is (= 400 (:status vastaus)))
     (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
 
@@ -510,15 +510,25 @@
         sallittu-haku (api-tyokalut/get-kutsu
                         [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku "/" loppu)]
                         kayttaja-analytiikka portti)
+
         alku-pitka "2004-10-19T00:00:00+03"
         loppu-pitka "2004-10-21T02:00:00+03"
         hylattava-haku (api-tyokalut/get-kutsu
                          [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-pitka "/" loppu-pitka)]
-                         kayttaja-analytiikka portti)]
+                         kayttaja-analytiikka portti)
+
+        alku-ei-validi "2005-10-19T00:00:00+03"
+        loppu-ei-validi "2004-10-21T02:00:00+03"
+        hylattava-aikavali (api-tyokalut/get-kutsu
+                             [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-ei-validi "/" loppu-ei-validi)]
+                             kayttaja-analytiikka portti)]
+
     (is (= 200 (:status sallittu-haku)))
     (validoi-vastaus-ilman-reittipistetta (:body sallittu-haku))
     (is (= 400 (:status hylattava-haku)))
-    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))))
+    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))
+    (is (= 400 (:status hylattava-aikavali)))
+    (is (str/includes? (:body hylattava-aikavali) "Alkuaika ei voi olla loppuajan jälkeen."))))
 
 (deftest toteuma-haku-ilman-reittipistetta-perustoiminnallisuus
   (let [alku-aika "2004-10-19T00:00:00+03"
