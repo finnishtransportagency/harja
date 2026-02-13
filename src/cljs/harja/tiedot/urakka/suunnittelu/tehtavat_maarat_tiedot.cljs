@@ -52,6 +52,20 @@
       tehtavat)
     tehtavat))
 
+(defn validoi-ja-filtteroi-tehtavat
+  "Validoi hakuehdon ja filtteröi tehtävät. Näytä virheviesti, jos hakuehto on liian lyhyt (alle 2 merkkiä)."
+  [hakuehto app]
+  ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
+  (if (>= (count hakuehto) 2)
+    (let [tehtavat (:tehtavat-ja-maarat app)
+          f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
+      (-> app
+        (assoc :haku hakuehto)
+        (assoc :tehtavat-ja-maarat f-tehtavat)))
+    (-> app
+      (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
+      (assoc :haku hakuehto))))
+
 (def ^:private puuttuva-tarjousmaara-viesti
   "Syötä määrä tai aseta 0. Tyhjää arvoa ei voi tallentaa.")
 
@@ -82,18 +96,19 @@
 
   HaeTehtavatJaMaarat
   (process-event [{parametrit :parametrit} app]
-    (js/console.log "HaeTehtavatJaMaarat :: parametrit " (pr-str parametrit))
     (hae-tehtavat-ja-maarat parametrit)
     (assoc app :haku-kaynnissa? true))
 
   HaeTehtavatJaMaaratOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tehtavat-ja-maarat (:tehtavat vastaus))
-      (assoc :kaikki-tehtavat (:tehtavat vastaus))
-      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
-      (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
+    (let [app (validoi-ja-filtteroi-tehtavat (:haku app) app)]
+      (-> app
+        (assoc :haku-kaynnissa? false)
+        (assoc :haku (:haku app))
+        (assoc :tehtavat-ja-maarat (:tehtavat-ja-maarat app))
+        (assoc :kaikki-tehtavat (:tehtavat vastaus))
+        (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
+        (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus)))))
 
   HaeTehtavatJaMaaratEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -169,16 +184,7 @@
 
   FiltteroiTehtavat
   (process-event [{hakuehto :hakuehto} app]
-    ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
-    (if (>= (count hakuehto) 2)
-      (let [tehtavat (:tehtavat-ja-maarat app)
-            f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
-        (-> app
-          (assoc :haku hakuehto)
-          (assoc :tehtavat-ja-maarat f-tehtavat)))
-      (-> app
-        (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
-        (assoc :haku hakuehto))))
+    (validoi-ja-filtteroi-tehtavat hakuehto app))
 
   PeruutaTallennus
   (process-event [_ app]
