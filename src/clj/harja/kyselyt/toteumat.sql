@@ -705,6 +705,12 @@ VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
 DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
 
+-- name: merkitse-toteuman-materiaalit-poistetuiksi!
+-- Merkitsee toteuman materiaalit poistetuiksi
+UPDATE toteuma_materiaali
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE toteuma = :id AND poistettu IS NOT TRUE;
+
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
 UPDATE varustetoteuma
@@ -1250,6 +1256,13 @@ SELECT currval('toteuma_id_seq');
 -- name: toteuman-id-ulkoisella-idlla
 -- single?: true
 SELECT id FROM toteuma where ulkoinen_id = :ulkoinen_id;
+
+-- name: hae-toteuman-id-ulkoisella-idlla
+SELECT id 
+  FROM toteuma
+WHERE ulkoinen_id = :ulkoinen_id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
 
 -- name: hae-toteuman-alkanut-pvm-idlla
 -- single?: true

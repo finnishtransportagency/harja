@@ -20,7 +20,7 @@
   paivita-toteuman-reittigeometria<! paivita-toteuma-materiaali! paivita-palautettu-analytiikalle-aikaleima!
   lisaa-toteumalle-jsonhash! hae-toteuman-reittipisteet paivita-toteuma-ulkoisella-idlla<! toteuman-id-ulkoisella-idlla
   hae-poistettavien-toteumien-alkanut-ulkoisella-idlla poista-toteumat-ulkoisilla-idlla-ja-luojalla!
-  hae-toteumat-ilman-reittipisteita-analytiikalle
+  hae-toteumat-ilman-reittipisteita-analytiikalle hae-toteuman-id-ulkoisella-idlla
   hae-toteuman-perustiedot-ulkoisella-idlla poista-toteuma_tehtava-toteuma-idlla!
   poista-toteuma-materiaali-toteuma-idlla!)
 
