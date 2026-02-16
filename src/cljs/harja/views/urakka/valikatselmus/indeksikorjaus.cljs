@@ -12,8 +12,7 @@
 
 (defn- laskenta-modaali [paatos]
   (let [keskiarvo (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1) "," "."))
-        alkuperainen (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) "," "."))
-        pistelukujen-muutos (fmt/desimaaliluku-opt (* 100 (/ (- keskiarvo alkuperainen) keskiarvo)) 1)]
+        alkuperainen (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) "," "."))]
     [:div
      [:div.flex-row
       [:p.laskenta-rivi "Hoitovuoden päätyttyä lasketaan hoitovuotta edeltävän syyskuun ja hoitovuoden elokuun välisten
@@ -32,6 +31,13 @@
        [:div.flex-row.kuukausi-rivi
         [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
         [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]])
+
+     ;; Jos kaikkia indeksikuukausia ei ole vielä hallintaan lisätty, niin näytetään nolla arvoilla puuttuvat kuukaudet
+     (when (> (count (:puuttuvat_kuukaudet paatos)) 0)
+       (for* [kuukausi (:puuttuvat_kuukaudet paatos)]
+         [:div.flex-row.kuukausi-rivi
+          [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
+          [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]]))
 
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
        [yleiset/info-laatikko :vahva-ilmoitus
