@@ -112,6 +112,8 @@
 (defrecord AsetaTiemerkinnanTila [tila paikkauskohde])
 (defrecord VahvistaRaportointitavatModalissa [])
 (defrecord TilaustilaAktivoituToggle [])
+(defrecord RaportointitapaModalToggle [])
+(defrecord TilaaModalToggle [])
 (defrecord ValitsePaikkauskohde [paikkauskohde valittu?])
 (defrecord ValitseKaikkiPaikkauskohteet [valittu?])
 (defrecord AsetaToteumatyyppiKohteelle [paikkauskohde toteumatyyppi])
@@ -817,6 +819,16 @@
         ;; Tyhjennetään valitut kohteet kun tila muuttuu
         (assoc :valitut-tilattavat-kohteet []))))
 
+  RaportointitapaModalToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:raportointimodal-aktiivinen? app))]
+      (assoc app :raportointimodal-aktiivinen? uusi-tila)))
+
+  TilaaModalToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:vahvista-tilaus-modal-auki? app))]
+      (assoc app :vahvista-tilaus-modal-auki? uusi-tila)))
+
   ValitsePaikkauskohde
   (process-event [{:keys [paikkauskohde valittu?]} app]
     (let [valitut (:valitut-tilattavat-kohteet app [])]
@@ -834,20 +846,21 @@
 
   VahvistaRaportointitavatModalissa
   (process-event [_ app]
-    (modal/piilota!)
-    ;; Avataan toinen modal, jossa pyydetään lopullinen vahvistus tilauksesta, ja jos vahvistetaan, niin tilataan kohteet
-    (assoc app :vahvista-tilaus-modal-auki? true))
+    (-> app
+      (assoc :raportointimodal-aktiivinen? false)
+      ;; Avataan toinen modal, jossa pyydetään lopullinen vahvistus tilauksesta, ja jos vahvistetaan, niin tilataan kohteet
+      (assoc :vahvista-tilaus-modal-auki? true)))
 
   AsetaToteumatyyppiKohteelle
   (process-event [{:keys [paikkauskohde toteumatyyppi]} app]
     ;; Vaihda tälle kohteelle toteumatyyppi halutuksi
-    (update app :valitut-tilattavat-kohteet
-      (fn [kohteet]
-        (mapv (fn [kohde]
-                (if (= (:id kohde) (:id paikkauskohde))
-                  (assoc kohde :toteumatyyppi toteumatyyppi)
-                  kohde))
-          kohteet))))
+    (let [kohteet (:valitut-tilattavat-kohteet app)
+          kohteet (mapv (fn [kohde]
+                            (if (= (:id kohde) (:id paikkauskohde))
+                              (assoc kohde :toteumatyyppi toteumatyyppi)
+                              kohde))
+                        kohteet)]
+      (assoc app :valitut-tilattavat-kohteet kohteet)))
 
   TilaaValitutPaikkauskohteet
   (process-event [_ app]
@@ -864,7 +877,7 @@
         {:onnistui ->TilaaValitutPaikkauskohteetOnnistui
          :epaonnistui ->TilaaValitutPaikkauskohteetEpaonnistui
          :paasta-virhe-lapi? true})
-      app))
+      (assoc app :vahvista-tilaus-modal-auki? false)))
 
   TilaaValitutPaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]

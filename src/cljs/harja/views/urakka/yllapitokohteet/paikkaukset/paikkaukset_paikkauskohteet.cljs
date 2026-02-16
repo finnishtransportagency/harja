@@ -250,6 +250,8 @@
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12.paikkauskohde-nakyma
+     [paikkaukset-apurit/raportointi-modal! e! app]
+     [paikkaukset-apurit/tilaa-paikkauskohteet-modal! e! app]
      [grid/grid
       (merge {:sivuta 25
               :tunniste :id
@@ -290,9 +292,10 @@
                                 "/excel/harja_paikkauskohteet_pohja.xlsx"
                                 {:luokat ["padding-top-8"]}]
                                [napit/yleinen-toissijainen
-                                (if tilaustila-aktiivinen? "Peruuta tilaus" "Tilaa kohteita")
+                                "Tilaa kohteita"
                                 #(e! (t-paikkauskohteet/->TilaustilaAktivoituToggle))
                                 {:paksu? true
+                                 :disabled tilaustila-aktiivinen?
                                  :data-attributes {:data-cy "tilaa-paikkauskohteita"}}]
                                [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
                                 {:paksu? true
@@ -304,11 +307,11 @@
                               [:div.flex-row.alkuun
                                [:p.valitut-maara
                                 (str "Kohteita valittu yhteensä "
-                                     (count valitut-tilattavat-kohteet)
-                                     " kpl.")]]
+                                  (count valitut-tilattavat-kohteet)
+                                  " kpl.")]]
                               [:div.flex-row.alkuun.napit
                                [napit/yleinen-ensisijainen "Tee tilaus"
-                                #(paikkaukset-apurit/nayta-tilaus-vahvistus-modal! e! app)
+                                #(e! (t-paikkauskohteet/->RaportointitapaModalToggle))
                                 {:paksu? true
                                  :disabled (zero? (count valitut-tilattavat-kohteet))
                                  :data-attributes {:data-cy "tee-tilaus"}}]
