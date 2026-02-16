@@ -103,6 +103,19 @@
 (def semi-virheellinen-miam-vastaus "{\"Table1\": [{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXXX\",\"Name\":\"Firma Oy\",\"Role\": \"\",\"StartDate\": \"9.4.2024 13:01:03\", \"EndDate\": \"31.3.2029 0:00:00\", \"Agreementname\": \"_Organisaatio peruste Destia Oy\",\"Appname\": \"HARJA\", \"email\": \"s.fi\" }
                          ,{\"CompanyID\":\"2163026-3\",\"Company\":\"Destia Oy\",\"UserName\":\"LXYY\",\"Name\":\"Destia Oy\", \"StartDate\": \"2016-10-14 09:57:23\", \"EndDate\": \"2027-12-30 17:00:00\", \"Agreementname\": \"E18 (Vt7) Koskenkylä-Kotka, kunnossapito, P\", \"Appname\": \"HARJA\", \"email\": \"...fi\" }]}")
 
+(deftest siivoa-roolit-rajapintavastauksesta-test
+  (let [data (json/read-str default-miam-vastaus :key-fn keyword)
+        table1 (get data :Table1)
+        siivottu-json-data (if (and table1 (sequential? table1))
+                             (let [siivottu-table1 (mapv #(dissoc % :Name :email) table1)
+                                   siivottu-data (assoc data :Table1 siivottu-table1)]
+                               (json/write-str siivottu-data))
+                             (json/write-str data))]
+    ;; Sisältää emailin
+    (is (re-find #"email" default-miam-vastaus))
+    ;; Ei sisällä emailia
+    (is (not (re-find #"email" siivottu-json-data)))))
+
 (deftest kayttajaroolit-rajapinnasta-test
   (is (= {:organisaatioroolit {26 #{"Paakayttaja"}}
           :roolit #{}
