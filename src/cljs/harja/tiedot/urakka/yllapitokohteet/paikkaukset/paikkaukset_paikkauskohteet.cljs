@@ -524,7 +524,11 @@
           ;; Kun tullaan näkymään, aseta suodattimeen kuluva/viimeinen vuosi 
           app (if nakymaan?
                 (assoc app :valittu-vuosi vuosi)
-                app)]
+                app)
+          app (assoc app :tilaustila-aktiivinen? false
+                :vahvista-tilaus-modal-auki? false
+                :raportointimodal-aktiivinen? false
+                :valitut-tilattavat-kohteet [])]
 
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
@@ -877,12 +881,13 @@
         {:onnistui ->TilaaValitutPaikkauskohteetOnnistui
          :epaonnistui ->TilaaValitutPaikkauskohteetEpaonnistui
          :paasta-virhe-lapi? true})
-      (assoc app :vahvista-tilaus-modal-auki? false)))
+      (-> app
+        (assoc :vahvista-tilaus-modal-auki? false)
+        (assoc :tilaustila-aktiivinen? false))))
 
   TilaaValitutPaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (modal/piilota!)
-    (viesti/nayta-toast! (str "Tilattiin onnistuneesti" (vastaus :onnistuneet) " kpl kohteita"))
+    (viesti/nayta-toast! (str "Kohteet " (vastaus :onnistuneet) " kpl tilattu"))
     (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app))
 
   TilaaValitutPaikkauskohteetEpaonnistui

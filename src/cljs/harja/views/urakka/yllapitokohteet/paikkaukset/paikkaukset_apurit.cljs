@@ -25,7 +25,9 @@
 (defn tilaa-paikkauskohteet-modal! [e! {:keys [valitut-tilattavat-kohteet vahvista-tilaus-modal-auki?] :as app}]
   [modal/modal
    {:nakyvissa? vahvista-tilaus-modal-auki?
-    :otsikko (str "Tilataanko " (count valitut-tilattavat-kohteet) " kpl kohteita?")
+    :otsikko (if (= 1 (count valitut-tilattavat-kohteet))
+               (str "Tilataanko kohde \"" (:nimi (first valitut-tilattavat-kohteet)) "\"?")
+               (str "Tilataanko " (count valitut-tilattavat-kohteet) " kpl kohteita?"))
     :footer [:div
              [:div.pull-left
               [napit/yleinen-ensisijainen (if (= 1 (count valitut-tilattavat-kohteet)) "Tilaa kohde" "Tilaa kohteet")
