@@ -159,16 +159,17 @@
 
 (defn- laske-kulujen-summa
   "Laskee kulujen kokonaissumman. Kulut voi olla joko map (jossa :kokonaissumma)
-   tai lista vektoreita joissa pvm-tagilla on summa kolmantena elementtinä."
+   tai lista vektoreita, joissa kulut ovat :tpi-tagilla ja niistä löytyy :kokonaissumma."
   [kulut]
   (if (map? kulut)
     (:kokonaissumma kulut)
-    (reduce (fn [summa item]
-              (if (and (vector? item)
-                    (= :pvm (first item))
-                    (number? (nth item 2 nil)))
-                (+ summa (nth item 2))
-                summa))
+    (reduce
+      (fn [summa item]
+        (if (and (vector? item)
+              (= :tpi (first item)))
+          (let [rivit (nth item 3 nil)]
+            (+ summa (reduce + 0 (map :kokonaissumma rivit))))
+          summa))
       0
       kulut)))
 
