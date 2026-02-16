@@ -308,7 +308,7 @@
                                      " kpl.")]]
                               [:div.flex-row.alkuun.napit
                                [napit/yleinen-ensisijainen "Tee tilaus"
-                                #(paikkaukset-apurit/nayta-tilaus-vahvistus-modal! e! (:valitut-tilattavat-kohteet app))
+                                #(paikkaukset-apurit/nayta-tilaus-vahvistus-modal! e! app)
                                 {:paksu? true
                                  :disabled (zero? (count valitut-tilattavat-kohteet))
                                  :data-attributes {:data-cy "tee-tilaus"}}]

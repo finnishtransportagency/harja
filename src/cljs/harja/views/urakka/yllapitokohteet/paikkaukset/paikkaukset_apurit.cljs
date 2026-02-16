@@ -1,11 +1,26 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-apurit
   (:require [reagent.core :as r]
+            [harja.domain.roolit :as roolit]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.ui.kentat :as kentat]
-            [tuck.core :as tuck]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
+
+(defn- nayta-pot-valinta?
+  "Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
+  Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
+  Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
+  [lomake tyomenetelmat]
+  (let [nayta? (and (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                      (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                      @istunto/kayttaja)
+                 (= "ehdotettu" (:paikkauskohteen-tila lomake))
+                 (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
+    nayta?))
 
 (defn nayta-tilaa-paikkauskohteet-modal! [e! valitut-tilattavat-kohteet]
   (modal/nayta!
@@ -24,12 +39,14 @@
   "Näyttää modalin, jossa käyttäjä voi vahvistaa valittujen paikkauskohteiden raportointitavan.
    Parametrit:
    - valitut-kohteet: Vektori paikkauskohteita, jotka käyttäjä on valinnut tilaukseen"
-  [e! valitut-kohteet]
-  (let [raportointitapa-teksti (fn [kohde]
+  [e! app]
+  (let [valitut-kohteet (:valitut-tilattavat-kohteet app)
+        raportointitapa-teksti (fn [kohde]
                                  (case (:toteumatyyppi kohde)
                                    :pot "POT-lomake"
                                    :normaali "Toteumat"
-                                   "Ei määritetty"))]
+                                   "Ei määritetty"))
+        tyomenetelmat (get-in app [:valinnat :tyomenetelmat])]
     (modal/nayta!
       {:otsikko "Vahvista raportointitapa seuraaville kohteille"
        :footer [:div
@@ -59,15 +76,17 @@
           :leveys 3
           :tyyppi :komponentti
           :komponentti (fn [rivi]
-                         [kentat/tee-kentta {:tyyppi :radio-group
-                                             :nimi :toteumatyyppi
-                                             :otsikko ""
-                                             :vaihtoehdot [:normaali :pot]
-                                             :nayta-rivina? true
-                                             :vayla-tyyli? true
-                                             :vaihtoehto-nayta {:pot "POT-lomake"
-                                                                :normaali "Toteumat"}
-                                             :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppiKohteelle rivi %))}
-                          (r/atom (:toteumatyyppi rivi))])}]
+                         (if (nayta-pot-valinta? rivi tyomenetelmat)
+                           [kentat/tee-kentta {:tyyppi :radio-group
+                                               :nimi :toteumatyyppi
+                                               :otsikko ""
+                                               :vaihtoehdot [:normaali :pot]
+                                               :nayta-rivina? true
+                                               :vayla-tyyli? true
+                                               :vaihtoehto-nayta {:pot "POT-lomake"
+                                                                  :normaali "Toteumat"}
+                                               :valitse-fn #(e! (t-paikkauskohteet/->AsetaToteumatyyppiKohteelle rivi %))}
+                            (r/atom (:toteumatyyppi rivi))]
+                           "Toteumat"))}]
         valitut-kohteet]])))
 
