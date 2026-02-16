@@ -54,16 +54,17 @@
 
 (defn validoi-ja-filtteroi-tehtavat
   "Validoi hakuehdon ja filtteröi tehtävät. Näytä virheviesti, jos hakuehto on liian lyhyt (alle 2 merkkiä)."
-  [hakuehto app]
+  [hakuehto kaikki-tehtavat app]
   ;; Kun hakuehto on alle 2 merkkiä, näytetään kaikki tehtävät
   (if (>= (count hakuehto) 2)
-    (let [tehtavat (:tehtavat-ja-maarat app)
-          f-tehtavat (filtteroi-tehtavat hakuehto tehtavat)]
+    (let [f-tehtavat (filtteroi-tehtavat hakuehto kaikki-tehtavat)]
       (-> app
         (assoc :haku hakuehto)
-        (assoc :tehtavat-ja-maarat f-tehtavat)))
+        (assoc :tehtavat-ja-maarat f-tehtavat)
+        (assoc :kaikki-tehtavat kaikki-tehtavat)))
     (-> app
-      (assoc :tehtavat-ja-maarat (:kaikki-tehtavat app))
+      (assoc :tehtavat-ja-maarat kaikki-tehtavat)
+      (assoc :kaikki-tehtavat kaikki-tehtavat)
       (assoc :haku hakuehto))))
 
 (def ^:private puuttuva-tarjousmaara-viesti
@@ -101,12 +102,10 @@
 
   HaeTehtavatJaMaaratOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [app (validoi-ja-filtteroi-tehtavat (:haku app) app)]
+    (let [app (validoi-ja-filtteroi-tehtavat (:haku app) (:tehtavat vastaus) app)]
       (-> app
         (assoc :haku-kaynnissa? false)
         (assoc :haku (:haku app))
-        (assoc :tehtavat-ja-maarat (:tehtavat-ja-maarat app))
-        (assoc :kaikki-tehtavat (:tehtavat vastaus))
         (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
         (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus)))))
 
@@ -184,7 +183,7 @@
 
   FiltteroiTehtavat
   (process-event [{hakuehto :hakuehto} app]
-    (validoi-ja-filtteroi-tehtavat hakuehto app))
+    (validoi-ja-filtteroi-tehtavat hakuehto (:kaikki-tehtavat app) app))
 
   PeruutaTallennus
   (process-event [_ app]
