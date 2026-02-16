@@ -50,5 +50,5 @@
     this)
 
   (stop [this]
-    (poista-palvelut (:http-palvelin this) :hae :hae-kayttajan-tiedot)
+    (poista-palvelut (:http-palvelin this) :hae)
     this))
