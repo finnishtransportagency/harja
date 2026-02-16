@@ -19,13 +19,13 @@
         "additionalProperties": false,
         "$ref": "file:resources/api/schemas/entities/maara.schema.json"
       },
-      "lahdemateriaali": {
-        "id": "urn:harja/materiaalit/0/lahdemateriaali",
+      "laitetoimittajan-materiaali": {
+        "id": "urn:harja/materiaalit/0/laitetoimittajan-materiaali",
         "type": "object",
         "required": false,
         "additionalProperties": false,
-        "description": "Sisältää lähettäjän kirjaamat tiedot materiaalista. Voidaan tarkistaa millä nimellä, yksiköllä ja pitoisuudella materiaali on kirjattu",
-        "$ref": "file:resources/api/schemas/entities/lahdemateriaali.schema.json"
+        "description": "Sisältää laitetoimittajalta saadut tiedot materiaalista muokkaamattomana. Voidaan tarkistaa millä nimellä, yksiköllä ja pitoisuudella materiaali on tallennettu",
+        "$ref": "file:resources/api/schemas/entities/laitetoimittajan-materiaali.schema.json"
 
       }
     }
