@@ -62,17 +62,22 @@
       (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
       (try
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
-              ava-paivitys (fn [] (aja-paivitys
-                                    integraatioloki
-                                    db
-                                    paivitystunnus
-                                    tiedostourl
-                                    kohdetiedoston-polku
-                                    shapefile
-                                    paivitystyyppi
-                                    paivitys
-                                    kayttajatunnus
-                                    salasana))]
+              ava-paivitys (fn []
+                             ;; Tallenna lähde ennen päivitystä, jotta se tulee talteen sekä onnistumisessa että epäonnistumisessa
+                             (let [lahde (or shapefile tiedostourl)]
+                               (when lahde
+                                 (geometriapaivitykset/paivita-viimeisin-lahde! db paivitystunnus lahde)))
+                             (aja-paivitys
+                               integraatioloki
+                               db
+                               paivitystunnus
+                               tiedostourl
+                               kohdetiedoston-polku
+                               shapefile
+                               paivitystyyppi
+                               paivitys
+                               kayttajatunnus
+                               salasana))]
              ;; Tehdään esitarkastukset päivitystyypin mukaan
              (case paivitystyyppi
                    :palvelimelta

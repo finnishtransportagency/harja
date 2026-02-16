@@ -4,8 +4,7 @@
             [specql.impl.registry]
             [specql.data-types]
     #?@(:clj [
-            [harja.kyselyt.specql-db :refer [define-tables]]])
-    #?(:cljs [cljs-time.core :as t]))
+            [harja.kyselyt.specql-db :refer [define-tables]]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -28,7 +27,8 @@
     ::edellinen_paivitysyritys
     ::paikallinen
     ::kaytossa
-    ::lisatieto})
+    ::lisatieto
+    ::viimeisin_lahde})
 
 (s/def ::geometria-aineistot (s/coll-of ::geometria-aineistot))
 
