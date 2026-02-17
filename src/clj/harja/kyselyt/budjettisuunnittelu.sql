@@ -48,12 +48,7 @@ WITH tavoitehinnan_oikaisut AS
          (SELECT phi.hoitokauden_lopun_indeksikorjaus, phi.hoitokauden_alkuvuosi
           FROM paatos_hoitokauden_indeksikorjaus phi
           WHERE phi.poistettu = FALSE
-            AND phi.urakkaid = :urakka),
-     toteuma_muutokset AS (SELECT SUM(mmtt.kasin_syotetty_tavoitehintamuutos) as toteuma_muutos_summa,
-                                  mmtt.hoitokauden_alkuvuosi                  as hoitokauden_alkuvuosi
-                           FROM mhu_muutos_tehtava_tiedot mmtt
-                           WHERE mmtt.urakka = :urakka
-                           GROUP BY mmtt.hoitokauden_alkuvuosi)
+            AND phi.urakkaid = :urakka)
 SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
@@ -69,10 +64,13 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
-       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) +
-        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))                                    AS "hoitovuoden-lopun-tavoitehinta",
-       COALESCE(ko."uusi-kattohinta",
-                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) + -- Tavoitehinta + mahdolliset oikaisut
+        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))  -- Hoitovuoden lopun indeksikorjaus
+                                                                                              AS "hoitovuoden-lopun-tavoitehinta",
+       COALESCE(ko."uusi-kattohinta", -- Oikaistu kattohinta
+                (ut.kattohinta_indeksikorjattu + -- Indeksikorjattu kattohinta
+                 (COALESCE(t.summa,0) -- Mahdolliset oikaisut
+                      * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
        COALESCE(ko."uusi-kattohinta",
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
@@ -92,7 +90,6 @@ SELECT ut.id,
           AND mm.poistettu IS FALSE
           AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
         group by mmk.hoitokauden_alkuvuosi)                                                   AS "pysyva-muutos-summa",
-       tm.toteuma_muutos_summa                                                                AS "toteuma-muutos-summa",
        -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
        indeksikorjaa(
        (SELECT SUM(mmk.summa)
@@ -117,7 +114,6 @@ FROM urakka_tavoite ut
                                                EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                                t."hoitokauden-alkuvuosi"
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
-         LEFT JOIN toteuma_muutokset tm ON tm.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE urakka = :urakka
 ORDER BY ut.hoitokausi;
 
