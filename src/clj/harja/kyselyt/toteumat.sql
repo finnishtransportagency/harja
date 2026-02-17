@@ -1318,7 +1318,8 @@ ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
 -- name: hae-toteumat-ilman-reittipisteita-analytiikalle
-SELECT t.toteuma_tunniste_id,  
+SELECT COUNT(*) OVER() AS rivimaara, -- Ei tee full table scannia, laskee fetchin mukana
+       t.toteuma_tunniste_id,  
        t.toteuma_sopimus_id,  
        t.toteuma_alkanut,  
        t.toteuma_paattynyt,  
