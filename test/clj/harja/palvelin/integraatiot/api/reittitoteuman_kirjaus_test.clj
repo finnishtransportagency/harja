@@ -1035,3 +1035,49 @@
       (is (= 200 (:status paivitys-vastaus)))
       (is (some? (ffirst (q (format "SELECT id FROM toteuma WHERE ulkoinen_id = %s AND urakka = %s" ulkoinen-id urakka-id)))))
       (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id))))
+
+(deftest toteuman-poisto-merkitsee-tehtavat-ja-materiaalit-poistetuiksi
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
+                         (-> "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json"
+                           slurp
+                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Testiyritys Oy")))
+        _ (is (= 200 (:status vastaus-lisays)) "Toteuman luonti onnistui")
+
+        toteuma-kannassa (first (q-map (str "SELECT id, poistettu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        toteuma-id (:id toteuma-kannassa)
+        _ (is (some? toteuma-id) "Toteuma löytyy kannasta")
+        _ (is (not (:poistettu toteuma-kannassa)) "Toteuma ei ole poistettu")
+
+        _ (odota-reittipisteet toteuma-id)
+
+        toteuma-tehtavat-ennen (q-map (str "SELECT id, poistettu FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+        toteuma-materiaalit-ennen (q-map (str "SELECT id, poistettu FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
+        
+        _ (is (> (count toteuma-tehtavat-ennen) 0) "Toteumalla on tehtäviä")
+        _ (is (> (count toteuma-materiaalit-ennen) 0) "Toteumalla on materiaaleja")
+        _ (is (every? #(not (:poistettu %)) toteuma-tehtavat-ennen) "Tehtävät eivät ole poistettuja")
+        _ (is (every? #(not (:poistettu %)) toteuma-materiaalit-ennen) "Materiaalit eivät ole poistettuja")]
+
+    (testing "Toteuman poisto merkitsee toteuman, tehtävät ja materiaalit poistetuiksi"
+      (poista-toteuma ulkoinen-id urakka-id kayttaja-yit)
+
+      (let [toteuma-poiston-jalkeen (first (q-map (str "SELECT id, poistettu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+            _ (is (some? toteuma-poiston-jalkeen) "Toteuma löytyy edelleen kannasta")
+            _ (is (:poistettu toteuma-poiston-jalkeen) "Toteuma on merkitty poistetuksi")
+
+            toteuma-tehtavat-jalkeen (q-map (str "SELECT id, poistettu FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+            _ (is (= (count toteuma-tehtavat-ennen) (count toteuma-tehtavat-jalkeen)) "Tehtävien määrä säilyy")
+            _ (is (every? :poistettu toteuma-tehtavat-jalkeen) "Kaikki tehtävät on merkitty poistetuiksi")
+            
+            toteuma-materiaalit-jalkeen (q-map (str "SELECT id, poistettu FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
+            _ (is (= (count toteuma-materiaalit-ennen) (count toteuma-materiaalit-jalkeen)) "Materiaalien määrä säilyy")
+            _ (is (every? :poistettu toteuma-materiaalit-jalkeen) "Kaikki materiaalit on merkitty poistetuiksi")]
+        
+        (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id)))))
