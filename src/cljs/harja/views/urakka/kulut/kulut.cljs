@@ -159,7 +159,16 @@
 
 (defn- laske-kulujen-summa
   "Laskee kulujen kokonaissumman. Kulut voi olla joko map (jossa :kokonaissumma)
-   tai lista vektoreita, joissa kulut ovat :tpi-tagilla ja niistä löytyy :kokonaissumma."
+   tai lista vektoreita, joissa kulut ovat :tpi-tagilla ja niistä löytyy :kokonaissumma.
+
+   Tpi-vektorin tietomalli:
+   [:tpi <toimenpideinstanssi-numero> <summa> [{:erapaiva <paiva> :muutos-voimassa-alkaen <paiva> :kokonaissumma <summa>
+   :lisatyon-lisatieto <lisatieto>, :maksueratyyppi <tyyppi>, :muu-tehtava-kaytossa <boolean>, :tehtava {:nimi <nimi>, :id <id>},
+   :summa <summa>, :kohdistus-id <id>, :maksuera-alias <maksuera-alias>, :laskun-numero <numero>, :toimenpideinstanssi <numero>,
+   :rahavaraus <numero>, :id <id>, :liitteet [], :tehtavaryhma <numero>, :maksuera-numero <numero>, :tyyppi <tyyppi>, :lisatieto <lisatieto>,
+   :muutos-nimi <nimi>, :muutos-id <id>, :rivi <rivi>,:koontilaskun-kuukausi <kk/vuosi>}]]
+
+   Jos samalla toimenpideinstanssilla on useampi kulu, ne ovat mappeina saman vektorin sisällä. Muuten jokaisesta toimenpideinstanssista on oma vektori."
   [kulut]
   (if (map? kulut)
     (:kokonaissumma kulut)
