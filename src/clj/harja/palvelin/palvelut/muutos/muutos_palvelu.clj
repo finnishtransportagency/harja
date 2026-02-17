@@ -702,14 +702,12 @@
 
 
 (defn luo-tehtava-ja-maaramuutos
-  [aiti-muutos-id versio {:keys [tehtava maaramuutos uusi_maara edellinen_maara hoitokauden_alkuvuosi] :as sql-opts}]
+  [aiti-muutos-id versio {:keys [tehtava maaramuutos hoitokauden_alkuvuosi] :as sql-opts}]
   {:muutos-id aiti-muutos-id
    :versio versio
    :tehtava tehtava
    :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
-   :maaramuutos maaramuutos
-   :uusi_maara uusi_maara
-   :edellinen_maara edellinen_maara})
+   :maaramuutos maaramuutos})
 
 (defn tallenna-muutoksen-tehtavien-maaramuutokset
   "Poikkeaminen tehtävä- ja määräluettelon määristä"
@@ -734,14 +732,7 @@
       ;; Vain määrämuutokset joilla on positiviinen tehtävän id käsitellään.
       ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
       (when (pos? (:tehtava maaramuutos))
-        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1)
-                            (assoc maaramuutos
-                              ;; TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
-                              ;;       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
-                              ;;       lasketaan. Katsotaan myöhemmin voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
-                              ;;       Ja kuinka monimutkaiseksi useamman muutoksen tietojen yhdistely menee.
-                              #_:uusi_maara 0
-                              #_:edellinen_maara 0))]
+        (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1) maaramuutos)]
           (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))
 
     ;; Päivitä tavoite ja kattohinta 
