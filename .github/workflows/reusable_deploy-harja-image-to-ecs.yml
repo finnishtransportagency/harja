@@ -91,7 +91,7 @@ jobs:
           run-id: ${{ inputs.artifact-run-id }}
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"

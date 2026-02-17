@@ -41,7 +41,7 @@
                  [com.taoensso/timbre "6.7.1"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.25.1"]
+                 [org.apache.logging.log4j/log4j-core "2.25.3"]
 
                  ;; --
 
@@ -65,7 +65,7 @@
                  [org.clojure/core.memoize "1.1.266"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.1.0"]
+                 [org.clojure/core.match "1.1.1"]
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
