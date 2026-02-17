@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
-  (:require [taoensso.timbre :as log]
+  (:require [harja.fmt :as fmt]
+            [taoensso.timbre :as log]
             [clojure.set :as set]
             [clojure.string :as str]
             [clojure.spec.alpha :as s]
@@ -88,11 +89,11 @@
                           :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
   (when (not (s/valid? ::alkuaika alkuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
+      {:koodi virheet/+virheelinen-aikavali+
        :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" alkuaika)}))
   (when (not (s/valid? ::loppuaika loppuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
+      {:koodi virheet/+virheelinen-aikavali+
        :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" loppuaika)}))
 
   (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) alkuaika)
@@ -101,7 +102,7 @@
     ;; Tarkista vielä, että alku ja loppu ovat oikeasti alku & loppu, johtaa muuten virheeseen 
     (when (pvm/jalkeen? alkuaika-pvm loppuaika-pvm)
       (virheet/heita-viallinen-apikutsu-poikkeus
-        {:koodi virheet/+puutteelliset-parametrit+
+        {:koodi virheet/+virheelinen-aikavali+
          :viesti "Alkuaika ei voi olla loppuajan jälkeen."}))
 
     ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
@@ -112,7 +113,7 @@
         ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
         (when (> aikavali-sekunteina paiva-sekunteina)
           (virheet/heita-viallinen-apikutsu-poikkeus
-            {:koodi virheet/+puutteelliset-parametrit+
+            {:koodi virheet/+virheelinen-aikavali+
              :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))))
 
 (def db-tehtavat->avaimet
@@ -239,6 +240,8 @@
 ;; nopea, mutta vain suuntaa antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
 (def arvioitu-toteuman-koko 0.006)
 
+(def toteumat-ilman-reittipisteita-max 250000)
+
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
   koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
@@ -334,12 +337,14 @@
         ;; Ei käytetä count(), syö muistia tässä liikaa
         rivimaara (:rivimaara (first toteumat) 0)
 
-        ;; Päivällä voi olla jopa miljoona toteumaa, en usko, että optimoinnitkaan kestää niin paljoa
-        ;; Älä siirry JSON mappaukseen jos rivejä yli 500 000. Alenna tätä, jos aiheutuu vielä ongelmia 
-        _ (when (> rivimaara 500000)
-            (throw+ {:type virheet/+viallinen-kutsu+
-                     :virheet [{:koodi virheet/+puutteelliset-parametrit+
-                                :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %d kpl. Rajoita aikaväliä, jotta toteumia palautuu alle 500 000." rivimaara)}]}))
+        ;; Päivällä voi olla jopa miljoona toteumaa.. Älä siirry JSON mappaukseen jos rivejä liikaa. 
+        ;; Alenna tätä, jos aiheutuu vielä ongelmia. 
+        _ (when (> rivimaara toteumat-ilman-reittipisteita-max)
+            (virheet/heita-viallinen-apikutsu-poikkeus
+              {:koodi virheet/+liikaa-tuloksia+
+               :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %s kpl. Rajoita aikaväliä, jotta toteumia palautuu alle %s."
+                         (-> rivimaara fmt/formatoi-numero-tuhansittain)
+                         (-> toteumat-ilman-reittipisteita-max fmt/formatoi-numero-tuhansittain))}))
 
         _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- (System/currentTimeMillis) alkudb) " ms. Määrä: " rivimaara)
         toteumat {:toteumat (sequence toteuma-muunnos-nopea toteumat)}]
