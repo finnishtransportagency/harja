@@ -27,9 +27,15 @@ if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen nu
     echo ""
 fi
 
+# Luo yhteinen harja-verkko, mikäli sitä ei ole vielä olemassa
+# Muut containerit voivat ottaa suoraan tietokantaan yhteyttä käyttämällä IP-osoitteen sijasta containerin nimeä: 'harjadb'
+# Tätä verkkoa käytetään mm. testaustarkoituksessa, jossa Lambda-kontti ottaa yhteyttä tietokantaan.
+docker network create harja-net 2>/dev/null || true
+
 # Jotta harjadb kontin tietoliikenne toimii oikein, täytyy IPv6 disabloida asetuksella: --sysctl net.ipv6.conf.all.disable_ipv6=1
 # https://docs.docker.com/engine/release-notes/26.0/#bug-fixes-and-enhancements
 docker run -p "127.0.0.1:${HARJA_TIETOKANTA_PORTTI:-5432}:5432" \
+    --network harja-net \
     --name "${POSTGRESQL_NAME:-harjadb}" -dit -v "$DIR":/var/lib/postgresql/harja/tietokanta \
     --sysctl net.ipv6.conf.all.disable_ipv6=1 \
     ${IMAGE} >/dev/null
