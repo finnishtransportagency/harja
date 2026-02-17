@@ -366,3 +366,11 @@ SELECT k.id                        AS "kulu-id",
  WHERE u.id = :urakka-id
  GROUP BY k.id, k.laskun_numero, k.lisatieto, k.poistettu, k.koontilaskun_kuukausi, k.erapaiva, k.kokonaissumma
  ORDER BY k.erapaiva;
+
+-- name: hae-urakan-laskutusraja
+SELECT ut.laskutusraja,
+       up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+  FROM urakka_tavoite ut
+       LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
+ WHERE ut.urakka = :urakka-id
+   AND ut.hoitokausi = :hoitokausinro;
