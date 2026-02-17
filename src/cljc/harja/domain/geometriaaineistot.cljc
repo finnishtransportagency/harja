@@ -1,5 +1,5 @@
 (ns harja.domain.geometriaaineistot
-  "Urakan työtuntien skeemat."
+  "Geometria-aineistojen skeemat."
   (:require [clojure.spec.alpha :as s]
             [specql.impl.registry]
             [specql.data-types]

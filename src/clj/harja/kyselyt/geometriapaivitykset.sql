@@ -1,5 +1,5 @@
 -- name: hae-paivitys
--- Hakee annetun integraatiotapahtuman viestit
+-- Hakee geometriapäivityksen tiedot nimellä
 SELECT *
   FROM geometriapaivitys
  WHERE nimi = :nimi;

@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.ava
   (:require
     [taoensso.timbre :as log]
+    [clojure.string :as str]
     [clojure.java.io :as io]
     [clj-time.coerce :as time-coerce]
     [harja.palvelin.tyokalut.lukot :as lukko]
@@ -62,11 +63,13 @@
       (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
       (try
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
+              lahde (or (not-empty shapefile) (not-empty tiedostourl))
+              tallenna-lahde! (fn []
+                                (when lahde
+                                  (geometriapaivitykset/paivita-viimeisin-lahde! db paivitystunnus lahde)))
               ava-paivitys (fn []
                              ;; Tallenna lähde ennen päivitystä, jotta se tulee talteen sekä onnistumisessa että epäonnistumisessa
-                             (let [lahde (or shapefile tiedostourl)]
-                               (when lahde
-                                 (geometriapaivitykset/paivita-viimeisin-lahde! db paivitystunnus lahde)))
+                             (tallenna-lahde!)
                              (aja-paivitys
                                integraatioloki
                                db
@@ -81,7 +84,9 @@
              ;; Tehdään esitarkastukset päivitystyypin mukaan
              (case paivitystyyppi
                    :palvelimelta
-                   (when (or (empty tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
+               (when (or (str/blank? tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
+                 ;; Esitarkastuksen epäonnistuessa tallennetaan lähde, jotta se näkyy UI:ssa virheen selvittelyssä
+                 (tallenna-lahde!)
                          (throw (Exception. "Virhe geometria-aineston haun osoitteessa tai kohdekansiossa.")))
                    :ei-paivitystarvetta
                    (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))

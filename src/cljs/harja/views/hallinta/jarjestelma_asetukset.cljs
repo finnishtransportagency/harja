@@ -104,7 +104,9 @@
           :nimi :lahdetiedosto-display
           :hae (fn [rivi]
                  (or (when-let [lahde (::geometria-aineistot/viimeisin_lahde rivi)]
-                       (last (str/split lahde #"[\\/]")))
+                       (->> (str/split lahde #"[\\/]")
+                            (remove str/blank?)
+                            last))
                      "-"))
           :tyyppi :string
           :leveys 1
