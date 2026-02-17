@@ -867,7 +867,7 @@
         ;; Tallenna tarjous, koska kattohinta lasketaan tarjouksen perusteella
         tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
                   urakka-id
-                  ;; Passataan vaikka hankintojen summa 
+                  ;; Passataan vaikka hankintojen summa
                   ;; Hankintoja ei välttämättä tähän tarvi, sillä tavoitehinta on tarjous + pysyvät.
                   hankinnat-yhteensa
                   0
