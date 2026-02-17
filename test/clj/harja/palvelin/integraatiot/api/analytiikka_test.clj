@@ -335,7 +335,7 @@
             loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Loppuaika on väärässä muodossa "
@@ -343,7 +343,7 @@
             loppuaika "234"
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Haussa on paljon asioita väärin "
