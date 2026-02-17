@@ -24,7 +24,11 @@
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
         hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
+        ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta pysyvat-muutokset-toteuma-muutokset-yht)
         hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
+        ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+        hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.

@@ -228,7 +228,7 @@
                                                  (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
 
         vastaus {:hoitokauden-alkuvuosi hoitovuosi
-                 :urakan-parametrit {:muutosten_hallinta (:muutosten_hallinta urakan-parametrit)}
+                 :urakan-parametrit urakan-parametrit
                  :yhteenveto {:lupaustiedot (dissoc lupaustiedot :lupausryhmat :lahtotiedot)
                               :kustannukset-yhteensa (:yhteensa kustannukset-jarjestettyna)
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
