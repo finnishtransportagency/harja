@@ -1441,3 +1441,8 @@ UPDATE urakka_parametrit
                         FROM urakka
                         WHERE alkupvm IN ('2019-10-01', '2020-10-01')
                           AND tyyppi = 'teiden-hoito');
+
+-- Asetetaan laskutusraja käyttöön "POP MHU Kajaani 2025-2030" -urakalle
+UPDATE urakka_parametrit
+SET laskutusraja_kaytossa = true
+WHERE urakkaid = (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030');
