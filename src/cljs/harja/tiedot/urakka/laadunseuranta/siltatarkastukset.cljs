@@ -32,9 +32,7 @@
                                    :silta-id silta
                                    :siltatarkastus-id tarkastus}))
 
-(defonce valittu-silta (local-storage/local-storage-atom :valittu-silta-siltatarkastuksessa
-                                                          nil
-                                                          nil))
+(defonce valittu-silta (atom nil))
 
 (defonce valitun-sillan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

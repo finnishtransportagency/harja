@@ -252,6 +252,20 @@
             tavoitehinta-ennen (- oikaistu-tavoitehinta muutosten-summa)
             hoitokauden-lopun-indeksikorjaus (* tavoitehinta-ennen (/ indeksikorotuksen-prosenttiosuus 100))
             tavoitehinnan-muutos (apply + (map :summa tavoitehinnan-muutokset))
+            ;; Lisätään mahdolliset puuttuvat kuukaudet UI:n Pistelukujen keskiarvon laskenta listaukseen.
+            puuttuvat-kuukaudet (filter #(not (some (fn [kuukausi] (= (:kuukausi kuukausi) (:kuukausi %))) hoitokauden-indeksikuukaudet))
+                                  [{:kuukausi (str hoitokauden-alkuvuosi " Lokakuu") :indeksiluku 0}
+                                   {:kuukausi (str hoitokauden-alkuvuosi " Marraskuu") :indeksiluku 0}
+                                   {:kuukausi (str hoitokauden-alkuvuosi " Joulukuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Tammikuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Helmikuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Maaliskuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Huhtikuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Toukokuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Kesäkuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Heinäkuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Elokuu") :indeksiluku 0}
+                                   {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Syyskuu") :indeksiluku 0}])
             ;; Korvataan koneelta saatu päätös tässä valistellulta
             indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
             indeksipaatos (-> indeksipaatos
@@ -259,6 +273,7 @@
                             (assoc :tavoitehinnan_muutokset tavoitehinnan-muutos)
                             (assoc :tavoitehinta_ennen tavoitehinta-ennen)
                             (assoc :hoitokauden_kuukaudet hoitokauden-indeksikuukaudet)
+                            (assoc :puuttuvat_kuukaudet puuttuvat-kuukaudet)
                             (assoc :kuukausien_keskiarvo piste-keskiarvo)
                             (assoc :alkuperainen_pisteluku alkuperainen-pisteluku)
                             (assoc :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi)
@@ -411,6 +426,7 @@
   ;; Kustannussuunnitelma vahvistettu
   ;; Tavoitehinnan muutokset tallennettu,
   ;; Hoitovuoden lopun tavoitehintapäätös tallennettu
+  ;; Ja vielä lisäksi: Tavoitehinnan ylityspäätös tallennettu
   (if-not (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
     (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Poistetaan vain koko päätös." false 7)
 
@@ -430,6 +446,12 @@
       (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
+
+      ;; Vaaditaan Tavoitehinnan ylitys päätös, pitää olla tallennettuna
+      ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
+      (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
+        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan ylitys")))
+      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan ylitys -päätös on vielä tekemättä." true 7)
 
       (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
       (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))

@@ -122,7 +122,9 @@
     (let [kustannusennuste-lupaus (first (filter #(= (:lupaustyyppi %) "kustannusennuste") lupaukset))]
       (if-not kustannusennuste-lupaus
         (do
-          (log/warn "Kustannusennuste-lupausta ei löytynyt urakalle" urakka-id)
+          ;; Varoita vain, jos kustannusennusten-lupaus vaaditaan urakalle. Ja se vaaditaan vasta -25 ja sen jälkeen
+          (when (>= (pvm/vuosi (:alkupvm urakan-tiedot)) 2025)
+            (log/warn "Kustannusennustelupausta ei löytynyt urakalle" urakka-id))
           {})
         (let [maarapaivat (kustannusennuste-kyselyt/hae-kustannusennuste-maarapaivat
                             db {:lupaus-id (:lupaus-id kustannusennuste-lupaus)
