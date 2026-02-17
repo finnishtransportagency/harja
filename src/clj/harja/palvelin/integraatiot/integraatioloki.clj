@@ -114,7 +114,8 @@
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
   (try
     (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))
-          viesti (siivoa-henkilotiedot-viestista viesti jarjestelma nimi)]
+          ;viesti (siivoa-henkilotiedot-viestista viesti jarjestelma nimi)
+          ]
       (when viesti
         (kirjaa-viesti db tapahtumaid viesti))
       tapahtumaid)
