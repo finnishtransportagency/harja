@@ -248,11 +248,8 @@
         paatoksen-tiedot (merge paatos {:urakkaid (-> @tila/yleiset :urakka :id)})]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavoitehinnan-pysyvat-muutokset.paatos-komponentti-reunuksella
-
-     (if hoitovuosi-kesken?
-       [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
-       [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+     [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
+      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
 
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])

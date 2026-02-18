@@ -154,7 +154,7 @@
       [:span.laskenta-rivi-lukema "Toteutuma yhteensä"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false toteuma-yht)]]
      ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
-     (when (or (:id tavoitehinnan-ylityspaatos) (and (not tavoitehinnan-ylityspaatos) (not= 0 tavoitehinnan-ylitys)))
+     (when (or (:id tavoitehinnan-ylityspaatos) (and (not (nil? tavoitehinnan-ylitys)) (not tavoitehinnan-ylityspaatos) (not= 0 tavoitehinnan-ylitys)))
        [:div.flex-row.summa-rivi
         [:span {:class (when (> tavoitehinnan-ylitys 0)
                          "negatiivinen-numero")} "Tavoitehinnan ylitys"]

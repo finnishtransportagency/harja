@@ -109,6 +109,8 @@
         ;; HAetaan pysyviin muutoksiin perustuvat tiedot
         aktiiviset-pysyvat-muutokset (:pysyva-muutos-summa budjettitavoite)
 
+        tavoitehinnan-2025-muutokset (+ (or aktiiviset-pysyvat-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
 
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
@@ -132,15 +134,14 @@
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset aktiiviset-pysyvat-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa oikaistu-tavoitehinta valittu-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu?)
+        mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset tavoitehinnan-2025-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-hintapaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset mahdolliset-paatokset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu?)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu?)
         mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset hoitovuoden-lopun-kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu?)
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset hoitokauden-lopun-indeksikorjaamaton-tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi mahdolliset-paatokset)
-
-        #_ (println "mahdolliset-paatokset:" (pr-str mahdolliset-paatokset))
+        
         ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain yksi päätös - Tavoitehinnan muutospäätös.
         mahdolliset-paatokset (if (and (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset)
                                     (or (>= valittu-hoitovuosi nyt-vuosi)

@@ -91,16 +91,18 @@
 (defn lisaa-paatos-virheellisena
   "Jos päätös on mukana päätöslistassa, mutta sille ei ole antaa tarkentavia tietoja, niin lisätään siihen virhe.
   Mikäli päätöstä ei löydy listasta, niin älä lisää mitään."
-  [paatokset nimi virhe lisataan? jarjestys]
-  (keep identity
-    (sort-by :jarjestys
-      (if (some #(= (:nimi %) nimi) paatokset)
-        (conj
-          (filter #(not= (:nimi %) nimi) paatokset)
-          ;; Jos ehdot eivät täyttyneet, niin päätöstä ei voida lisätä edes virheellisenä
-          (when lisataan?
-            {:nimi nimi :virhe virhe :jarjestys jarjestys}))
-        paatokset))))
+  [paatokset nimi virhe lisataan? jarjestys & args]
+  (let [virhepaatos (merge (first args)                     ;; Ensimmäinen parametri on päätös
+                      {:nimi nimi :virhe virhe :jarjestys jarjestys})]
+    (keep identity
+         (sort-by :jarjestys
+           (if (some #(= (:nimi %) nimi) paatokset)
+             (conj
+               (filter #(not= (:nimi %) nimi) paatokset)
+               ;; Jos ehdot eivät täyttyneet, niin päätöstä ei voida lisätä edes virheellisenä
+               (when lisataan?
+                 virhepaatos))
+             paatokset)))))
 
 (defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
   (let [indeksikorotus-parametrit {:pvm paatos-pvm
@@ -227,35 +229,38 @@
   ;; Aktiivisia pysyviä muutoksia pitää olla
   (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
     paatokset
-   (cond
-     ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
-     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
-     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Hoitovuosi on vielä kesken." true 2)
+    (cond
+      ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
+      (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Hoitovuosi on vielä kesken." true 2)
 
 
-     (not (nil? aktiiviset-pysyvat-muutokset))
-     (let [;; Korvataan koneelta saatu päätös tässä valistellulta
-           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
-           tavoitehinta-jalkeen (+ (or (when-not (nil? tehtaviin-perustuvat-muutokset) tehtaviin-perustuvat-muutokset) 0)
-                                  (or (when-not (nil? rahavarauksiin-perustuvat-muutokset) rahavarauksiin-perustuvat-muutokset) 0)
-                                  (or (when-not (nil? aktiiviset-pysyvat-muutokset) aktiiviset-pysyvat-muutokset) 0)
-                                  tavoitehinta)
-           tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
-                                               (assoc :tavoitehinta_ennen tavoitehinta)
-                                               (assoc :tavoitehinta_jalkeen tavoitehinta-jalkeen)
-                                               (assoc :kirjalliset_muutokset aktiiviset-pysyvat-muutokset)
-                                               (assoc :tehtava_muutokset tehtaviin-perustuvat-muutokset)
-                                               (assoc :rahavaraus_muutokset rahavarauksiin-perustuvat-muutokset))
-           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
-           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
-       paatokset)
+      (not (nil? tavoitehinta))
+      (let [;; Korvataan koneelta saatu päätös tässä valistellulta
+            tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
+            tavoitehinta-jalkeen (+ (or (when-not (nil? tehtaviin-perustuvat-muutokset) tehtaviin-perustuvat-muutokset) 0)
+                                   (or (when-not (nil? rahavarauksiin-perustuvat-muutokset) rahavarauksiin-perustuvat-muutokset) 0)
+                                   (or (when-not (nil? aktiiviset-pysyvat-muutokset) aktiiviset-pysyvat-muutokset) 0)
+                                   tavoitehinta)
+            tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
+                                                (assoc :tavoitehinta_ennen tavoitehinta)
+                                                (assoc :tavoitehinta_jalkeen tavoitehinta-jalkeen)
+                                                (assoc :kirjalliset_muutokset (or aktiiviset-pysyvat-muutokset 0))
+                                                (assoc :tehtava_muutokset (or tehtaviin-perustuvat-muutokset 0))
+                                                (assoc :rahavaraus_muutokset (or rahavarauksiin-perustuvat-muutokset 0)))
+            paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
+            paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
+        paatokset)
 
-     :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
+      :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
+      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Tavoitehintaa ei ole määritelty." true 2
+        {:kirjalliset_muutokset (or aktiiviset-pysyvat-muutokset 0)
+         :rahavaraus_muutokset (or rahavarauksiin-perustuvat-muutokset 0)
+         :tehtava_muutokset (or tehtaviin-perustuvat-muutokset 0)}))))
 
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
-                                       hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
-                                       tietokanta-paatokset tavoitehinta-vahvistettu?]
+                                       tavoitehinnan-2025-muutokset hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
+                                       tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
   ;; - Tavoitehinnan muutokset -päätös on tallennettu
@@ -278,7 +283,7 @@
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden lopun indeksikorjaus
       laskentaan automaattisesti, kun tavoitehintamuutokset on vahvistettu." true 3)
 
-      (and oikaistu-tavoitehinta tavoitehinnan-muutokset hoitokauden-indeksikuukaudet)
+      (and oikaistu-tavoitehinta hoitokauden-indeksikuukaudet)
       (let [;; Laske pistelukujen muutos
             pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
             piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
@@ -288,12 +293,15 @@
 
             ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
             indeksikorotuksen-prosenttiosuus (if (> muutos-prosentteina 2) (- muutos-prosentteina 2) 0)
-            muutosten-summa (if (seq tavoitehinnan-muutokset)
-                              (apply + (map #(:summa %) tavoitehinnan-muutokset))
-                              0)
-            tavoitehinta-ennen (- oikaistu-tavoitehinta muutosten-summa)
+            ;tavoitehinnan-muutos (apply + (map :summa tavoitehinnan-muutokset))
+            muutosten-summa (if (>= 2024 urakan-alkuvuosi)
+                              (if (seq tavoitehinnan-muutokset)
+                                (apply + (map #(:summa %) tavoitehinnan-muutokset))
+                                0)
+                              tavoitehinnan-2025-muutokset)
+            tavoitehinta-ennen (if (>= 2024 urakan-alkuvuosi) (- oikaistu-tavoitehinta muutosten-summa) oikaistu-tavoitehinta)
             hoitokauden-lopun-indeksikorjaus (* tavoitehinta-ennen (/ indeksikorotuksen-prosenttiosuus 100))
-            tavoitehinnan-muutos (apply + (map :summa tavoitehinnan-muutokset))
+
             ;; Lisätään mahdolliset puuttuvat kuukaudet UI:n Pistelukujen keskiarvon laskenta listaukseen.
             puuttuvat-kuukaudet (filter #(not (some (fn [kuukausi] (= (:kuukausi kuukausi) (:kuukausi %))) hoitokauden-indeksikuukaudet))
                                   [{:kuukausi (str hoitokauden-alkuvuosi " Lokakuu") :indeksiluku 0}
@@ -308,11 +316,12 @@
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Heinäkuu") :indeksiluku 0}
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Elokuu") :indeksiluku 0}
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Syyskuu") :indeksiluku 0}])
+            hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (+ oikaistu-tavoitehinta tavoitehinnan-2025-muutokset)
             ;; Korvataan koneelta saatu päätös tässä valistellulta
             indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
             indeksipaatos (-> indeksipaatos
-                            (assoc :tavoitehinta oikaistu-tavoitehinta)
-                            (assoc :tavoitehinnan_muutokset tavoitehinnan-muutos)
+                            (assoc :tavoitehinta hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
+                            (assoc :tavoitehinnan_muutokset muutosten-summa)
                             (assoc :tavoitehinta_ennen tavoitehinta-ennen)
                             (assoc :hoitokauden_kuukaudet hoitokauden-indeksikuukaudet)
                             (assoc :puuttuvat_kuukaudet puuttuvat-kuukaudet)
@@ -663,13 +672,13 @@
   [paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
   (let [;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
         paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-kattohinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-kattohinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) paatokset)
-                                paatokset)
+                    (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) paatokset)
+                    paatokset)
 
         ;; Jos toteuma ei ylitä tavoitehintaan, niin poistetaan tavoihinnan ylityspäätös
         paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
-                                (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan ylitys")) paatokset)
-                                paatokset)
+                    (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan ylitys")) paatokset)
+                    paatokset)
         ;; Jos toteuma ylittää tavoitehinnan, niin poistetaan tavoihinnan alituspäätös
         paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-tavoitehinta) (> toteutuneet-kustannukset hoitovuoden-lopun-tavoitehinta))
                     (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan alitus")) paatokset)
