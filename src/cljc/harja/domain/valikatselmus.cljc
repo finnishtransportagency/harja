@@ -8,6 +8,8 @@
 (s/def ::viimeinen_hoitokausi boolean?)
 (s/def ::urakkaid int?)
 (s/def ::tavoitehinta number?)
+(s/def ::tavoitehinta_ennen number?)
+(s/def ::tavoitehinta_jalkeen number?)
 (s/def ::tavoitehinnan_muutokset number?)
 (s/def ::tavoitehinta_ennen number?)
 (s/def ::tavoitehinta_jalkeen number?)
@@ -26,6 +28,9 @@
 (s/def ::maksimi_siirrettava_maara number?)
 (s/def ::siirron_maara #(or (nil? %) (number? %)))
 (s/def ::siirtorajoitus_prosentti #(or (nil? %) (number? %)))
+(s/def ::kirjalliset_muutokset #(or (nil? %) (number? %)))
+(s/def ::rahavaraus_muutokset #(or (nil? %) (number? %)))
+(s/def ::tehtava_muutokset #(or (nil? %) (number? %)))
 (s/def ::tavoitepalkkion_maksuprosentti number?)
 (s/def ::tavoitepalkkion_maksimi_prosentti number?)
 (s/def ::luvatut_pisteet int?)
@@ -57,6 +62,10 @@
 
 (s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::muokkaa_kattohinta ::tavoitehinta
                                        ::kattohinta ::luoja]))
+
+(s/def ::tavoitehinnan-pysyvamuutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjalliset_muutokset
+                                                           ::tehtava_muutokset ::rahavaraus_muutokset
+                                                           ::tavoitehinta_ennen ::tavoitehinta_jalkeen ::luoja]))
 
 (s/def ::kattohinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kattohinta ::toteutuneet_kustannukset
                                                    ::ylityksen_maara ::urakoitsija_maksaa ::siirrettava_maara ::maksimi_siirrettava_maara

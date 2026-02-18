@@ -14,6 +14,7 @@
 
 (declare tee-lupauspaatos<! poista-lupauspaatos<! hae-lupauspaatokset hae-lupauspaatos
   hae-tavoitehinnan-muutos-paatokset tee-tavoitehinnan-muutos-paatos<! hae-tavoitehinnan-muutospaatos poista-tavoitehinnan-muutos-paatos<!
+  hae-tavoitehinnan-pysyvat-muutospaatokset hae-tavoitehinnan-pysyvamuutospaatos tee-tavoitehinnan-pysyvamuutos-paatos<! poista-tavoitehinnan-pysyvamuutos-paatos<!
   tee-tavoitehinnan-alitus-paatos<! poista-tavoitehinnan-alitus-paatos<! hae-tavoitehinnnan-alitus-paatokset hae-tavoitehinnan-alituspaatos
   tee-tavoitehinnan-ylitys-paatos<! hae-tavoitehinnan-ylityspaatos hae-tavoitehinnnan-ylitys-paatokset poista-tavoitehinnan-ylitys-paatos<!
   hae-kattohinta-paatokset tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!
@@ -48,6 +49,7 @@
       (cond
         (= (:nimi paatos) "Lupaukset") (hae-lupauspaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Tavoitehinnan muutokset") (hae-tavoitehinnan-muutos-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset") (hae-tavoitehinnan-pysyvat-muutospaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Hoitovuoden lopun indeksikorjaus") (hae-indeksikorjauspaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Hoitovuoden lopun tavoite- ja kattohinta") (hae-hoitokauden-lopun-hinta-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Tavoitehinnan alitus") (hae-tavoitehinnnan-alitus-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
@@ -146,7 +148,7 @@
         uusi-paatos))))
 
 (defn poista-tavoitehinnan-muutospaatos [db urakkaid kayttajaid paatosid]
-  (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
+  (let [;; Varmistetaan ensin, että päätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
         paatos (first (hae-tavoitehinnan-muutospaatos db {:paatos-id paatosid}))
         _ (when (or
                   (nil? paatos)
@@ -154,6 +156,47 @@
             ;; Throw exception
             (throw (Exception. "Tavoitehinnan muutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle.")))]
     (poista-tavoitehinnan-muutos-paatos<! db {:poistaja kayttajaid :id paatosid})))
+
+(defn tee-tavoitehinnan-pysyvamuutospaatos
+  "Tavoitehinnan pysyvä muutospäätös mäppi:
+  {:hoitokauden_alkuvuosi <vuosi>
+  :urakkaid <urakka-id>
+  :tavoitehinta_ennen <tavoitehinta>
+  :tavoitehinta_jalkeen <tavoitehinta>
+  :kirjalliset_muutokset <Pysyvät muutokset>
+  :tehtava_muutokset <Tehtävä ja määrämuutokset>
+  :rahavaraus_muutokset <Rahavarauksien muutokset>
+  :luoja <kuka>}"
+  [db {:keys [urakkaid] :as paatos} kayttajaid]
+  ;; Varmistetaan, että tarvittavat tiedot on annettu
+  (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm (pvm/vuosi))
+        hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "1.10." (:hoitokauden_alkuvuosi paatos))))
+        validaatio #{}
+        ;; Validoi perustietojen pakollisuus
+        valid (s/valid? ::valikatselmus-domain/tavoitehinnan-pysyvamuutospaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-pysyvamuutospaatos paatos)))
+        validaatio (if valid
+                     validaatio
+                     (conj validaatio "Puutteelliset tavoitehinnan muutospäätöstiedot."))]
+
+    (if (seq validaatio)
+      (do
+        (log/error "Virheellinen tavoitehinnan muutospäätös:" paatos)
+        (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (string/join ", " validaatio))))
+      ;; Tallenna uudet tiedot tietokantaan
+      (tee-tavoitehinnan-pysyvamuutos-paatos<! db paatos))))
+
+(defn poista-tavoitehinnan-pysyvamuutospaatos [db urakkaid kayttajaid paatosid]
+  (let [;; Varmistetaan ensin, että pöötös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
+        paatos (first (hae-tavoitehinnan-pysyvamuutospaatos db {:paatos-id paatosid}))
+        _ (when (or
+                  (nil? paatos)
+                  (not= urakkaid (:urakkaid paatos)))
+            ;; Throw exception
+            (throw (Exception. "Tavoitehinnan muutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle.")))]
+    (poista-tavoitehinnan-pysyvamuutos-paatos<! db {:poistaja kayttajaid :id paatosid})))
 
 (defn tee-tavoitehinnan-alituspaatos
   "Tavoitehinnan alityspäätöksen mäppi:

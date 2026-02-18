@@ -10,9 +10,10 @@
   [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
    {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
    {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
+   {:nimi "Tavoitehinnan pysyvät muutokset" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
    {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :paatostyyppi "indeksikorjaus"}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
@@ -198,24 +199,59 @@
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
   ;; Itse muutoksia (vanhalla kielellä oikaisuja) voi tehdä myös kesken hoitovuoden
+  (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
+    paatokset
+    (cond
+      ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
+      (and validoinnit-kaytossa? false #_(not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Hoitovuosi on vielä kesken." true 2)
+      (and kattohinta oikaistu-tavoitehinta)
+      (let [;; Korvataan koneelta saatu päätös tässä valistellulta
+            tavoitehinnan-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
+            tavoitehinnan-muutospaatos (-> tavoitehinnan-muutospaatos
+                                         (assoc :tavoitehinta oikaistu-tavoitehinta)
+                                         (assoc :kattohinta kattohinta)
+                                         (assoc :muokkaa_kattohinta muokkaa-kattohinta?))
+            paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
+            paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
+        paatokset)
 
-  (cond
-    ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
-    (and validoinnit-kaytossa? false #_ (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
-    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Hoitovuosi on vielä kesken." true 2)
-    (and kattohinta oikaistu-tavoitehinta)
-    (let [;; Korvataan koneelta saatu päätös tässä valistellulta
-          tavoitehinnan-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
-          tavoitehinnan-muutospaatos (-> tavoitehinnan-muutospaatos
-                                       (assoc :tavoitehinta oikaistu-tavoitehinta)
-                                       (assoc :kattohinta kattohinta)
-                                       (assoc :muokkaa_kattohinta muokkaa-kattohinta?))
-          paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
-          paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
-      paatokset)
+      :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
+      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
 
-    :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-    (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2)))
+(defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset aktiiviset-pysyvat-muutokset
+                                                    tehtaviin-perustuvat-muutokset rahavarauksiin-perustuvat-muutokset
+                                                    tavoitehinta kuluva-hoitovuosi]
+  ;; Edeltävät vaatimukset päätöksen tallentamiselle:
+  ;; - Hoitotovuoden pitää olla päättynyt
+  ;; Aktiivisia pysyviä muutoksia pitää olla
+  (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
+    paatokset
+   (cond
+     ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
+     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Hoitovuosi on vielä kesken." true 2)
+
+
+     (not (nil? aktiiviset-pysyvat-muutokset))
+     (let [;; Korvataan koneelta saatu päätös tässä valistellulta
+           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
+           tavoitehinta-jalkeen (+ (or (when-not (nil? tehtaviin-perustuvat-muutokset) tehtaviin-perustuvat-muutokset) 0)
+                                  (or (when-not (nil? rahavarauksiin-perustuvat-muutokset) rahavarauksiin-perustuvat-muutokset) 0)
+                                  (or (when-not (nil? aktiiviset-pysyvat-muutokset) aktiiviset-pysyvat-muutokset) 0)
+                                  tavoitehinta)
+           tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
+                                               (assoc :tavoitehinta_ennen tavoitehinta)
+                                               (assoc :tavoitehinta_jalkeen tavoitehinta-jalkeen)
+                                               (assoc :kirjalliset_muutokset aktiiviset-pysyvat-muutokset)
+                                               (assoc :tehtava_muutokset tehtaviin-perustuvat-muutokset)
+                                               (assoc :rahavaraus_muutokset rahavarauksiin-perustuvat-muutokset))
+           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
+           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
+       paatokset)
+
+     :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
+     (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
 
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
                                        hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi

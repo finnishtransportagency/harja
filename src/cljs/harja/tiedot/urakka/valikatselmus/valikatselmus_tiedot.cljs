@@ -71,6 +71,10 @@
 (defrecord PoistaTavoitehinnanMuutosPaatos [paatos])
 (defrecord PoistaTavoitehinnanMuutosPaatosOnnistui [vastaus])
 (defrecord PoistaTavoitehinnanMuutosPaatosEpaonnistui [vastaus])
+(defrecord TallennaTavoitehinnanPysyvaMuutosPaatos [paatos])
+(defrecord PoistaTavoitehinnanPysyvaMuutosPaatos [paatos])
+(defrecord PoistaTavoitehinnanPysyvaMuutosPaatosOnnistui [vastaus])
+(defrecord PoistaTavoitehinnanPysyvaMuutosPaatosEpaonnistui [vastaus])
 (defrecord TallennaTavoitehinnanAlitusPaatos [paatos])
 (defrecord PoistaTavoitehinnanAlitusPaatos [paatos])
 (defrecord TallennaTavoitehinnanYlitysPaatos [paatos])
@@ -403,6 +407,33 @@
     (kasittele-valikatselmuksen-vastaus app vastaus))
 
   PoistaTavoitehinnanMuutosPaatosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
+    (kasittele-valikatselmuksen-vastaus app vastaus))
+
+  TallennaTavoitehinnanPysyvaMuutosPaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :tee-tavoitehinnan-pysyvamuutospaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+  PoistaTavoitehinnanPysyvaMuutosPaatos
+  (process-event [{paatos :paatos} app]
+    (tuck-apurit/post! :poista-tavoitehinnan-pysyvamuutospaatos
+      (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:onnistui ->PoistaTavoitehinnanPysyvaMuutosPaatosOnnistui
+       :epaonnistui ->PoistaTavoitehinnanPysyvaMuutosPaatosEpaonnistui})
+    (assoc app :tallennus-kesken? true))
+
+
+  PoistaTavoitehinnanPysyvaMuutosPaatosOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Päätöksen poisto onnistui!")
+    (kasittele-valikatselmuksen-vastaus app vastaus))
+
+  PoistaTavoitehinnanPysyvaMuutosPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
     (kasittele-valikatselmuksen-vastaus app vastaus))
