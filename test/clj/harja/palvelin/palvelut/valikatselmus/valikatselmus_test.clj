@@ -465,3 +465,49 @@
                           {:urakkaid urakka-id :kuluva-hoitovuosi hoitokauden-alkuvuosi})
                         (catch Exception e e))]
           (is (= false vastaus)))))))
+
+(deftest tavoitehinnan-pysyva-muutos-paatos-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2022
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Päätöksen testitiedot
+        tavoitehinta-ennen 1000000M
+        kirjalliset-muutokset 50000M
+        tehtava-muutokset 30000M
+        rahavaraus-muutokset 20000M
+        tavoitehinta-jalkeen (+ tavoitehinta-ennen kirjalliset-muutokset tehtava-muutokset rahavaraus-muutokset)
+
+        ;; Luodaan päätös
+        paatos {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                :urakkaid urakka-id
+                :tavoitehinta_ennen tavoitehinta-ennen
+                :tavoitehinta_jalkeen tavoitehinta-jalkeen
+                :kirjalliset_muutokset kirjalliset-muutokset
+                :tehtava_muutokset tehtava-muutokset
+                :rahavaraus_muutokset rahavaraus-muutokset
+                :luoja kayttaja-id}
+
+        ;; Tallennetaan päätös tietokantaan
+        tallennettu-paatos (paatos-kyselyt/tee-tavoitehinnan-pysyvamuutospaatos (:db jarjestelma) paatos kayttaja-id)]
+
+    (testing "Päätöksen tallennus onnistuu ja palautettu id on oikea"
+      (is (some? (:id tallennettu-paatos)) "Päätökselle pitäisi saada id"))
+
+    (testing "Haetaan päätös kannasta ja varmistetaan arvot"
+      (let [haettu-paatos (first (paatos-kyselyt/hae-tavoitehinnan-pysyvamuutospaatos (:db jarjestelma) {:paatos-id (:id tallennettu-paatos)}))]
+        (is (some? haettu-paatos) "Päätös pitäisi löytyä kannasta")
+        (is (= urakka-id (:urakkaid haettu-paatos)) "Urakka-id täsmää")
+        (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi haettu-paatos)) "Hoitokauden alkuvuosi täsmää")
+        (is (= tavoitehinta-ennen (:tavoitehinta_ennen haettu-paatos)) "Tavoitehinta ennen täsmää")
+        (is (= tavoitehinta-jalkeen (:tavoitehinta_jalkeen haettu-paatos)) "Tavoitehinta jälkeen täsmää")
+        (is (= kirjalliset-muutokset (:kirjalliset_muutokset haettu-paatos)) "Kirjalliset muutokset täsmää")
+        (is (= tehtava-muutokset (:tehtava_muutokset haettu-paatos)) "Tehtävä muutokset täsmää")
+        (is (= rahavaraus-muutokset (:rahavaraus_muutokset haettu-paatos)) "Rahavaraus muutokset täsmää")
+        (is (= kayttaja-id (:luoja haettu-paatos)) "Luoja täsmää")
+        (is (= false (:poistettu haettu-paatos)) "Päätös ei ole poistettu")))
+
+    (testing "Poistetaan päätös ja varmistetaan että se on merkitty poistetuksi"
+      (paatos-kyselyt/poista-tavoitehinnan-pysyvamuutospaatos (:db jarjestelma) urakka-id kayttaja-id (:id tallennettu-paatos))
+      ;; Haetaan päätös uudelleen - pitäisi palauttaa nil koska poistettu = false
+      (let [poistettu-paatos (first (paatos-kyselyt/hae-tavoitehinnan-pysyvamuutospaatos (:db jarjestelma) {:paatos-id (:id tallennettu-paatos)}))]
+        (is (nil? poistettu-paatos) "Poistettu päätös ei pitäisi löytyä haulla (poistettu = false)")))))
