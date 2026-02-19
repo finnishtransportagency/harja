@@ -95,6 +95,8 @@
           toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
                                     (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:urakka-id urakka-id
                                                                                                          :ulkoiset-idt ulkoiset-idt})))
+          toteumien-alkupvm-pvmt (map pvm/->pvm toteumien-alkupvmt)
+          [aikavalin-alkupvm aikavalin-loppupvm] (pvm/min-max toteumien-alkupvm-pvmt)
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
 
           sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
@@ -110,11 +112,12 @@
                                                                      :alkupvm (pvm/->pvm alkupvm)
                                                                      :urakkaid urakka-id})))
           ;; Päivitetään urakoihin liittyvät materiaalin käytöt
-          (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
-            " alkupvm: " (pvm/->pvm (first toteumien-alkupvmt)) " loppupvm: " (pvm/->pvm (last toteumien-alkupvmt)))
-          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                             :alkupvm (pvm/->pvm (first toteumien-alkupvmt))
-                                                                             :loppupvm (pvm/->pvm (last toteumien-alkupvmt))})))
+          (when (and aikavalin-alkupvm aikavalin-loppupvm)
+            (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
+              " alkupvm: " aikavalin-alkupvm " loppupvm: " aikavalin-loppupvm)
+            (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                               :alkupvm aikavalin-alkupvm
+                                                                               :loppupvm aikavalin-loppupvm}))))
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]
