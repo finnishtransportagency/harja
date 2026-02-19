@@ -835,18 +835,19 @@
 
   ValitsePaikkauskohde
   (process-event [{:keys [paikkauskohde valittu?]} app]
-    (let [valitut (:valitut-tilattavat-kohteet app [])]
+    (let [valitut (set (:valitut-tilattavat-kohteet app))]
       (assoc app :valitut-tilattavat-kohteet
         (if valittu?
-          (conj valitut paikkauskohde)
-          (disj valitut paikkauskohde)))))
+          (conj valitut (:id paikkauskohde))
+          (disj valitut (:id paikkauskohde))))))
 
   ValitseKaikkiPaikkauskohteet
   (process-event [{:keys [valittu?]} app]
     (let [ehdotetut (filter #(= "ehdotettu" (:paikkauskohteen-tila %)) (:paikkauskohteet app))]
       (if valittu?
-        (assoc app :valitut-tilattavat-kohteet ehdotetut)
-        (assoc app :valitut-tilattavat-kohteet []))))
+        (assoc app :valitut-tilattavat-kohteet (set (map :id ehdotetut)))
+        (assoc app :valitut-tilattavat-kohteet #{}))))
+
 
   VahvistaRaportointitavatModalissa
   (process-event [_ app]
@@ -869,12 +870,15 @@
   TilaaValitutPaikkauskohteet
   (process-event [_ app]
     (let [valitut-kohteet (:valitut-tilattavat-kohteet app)
+          kaikki-kohteet (:paikkauskohteet app)
+
           ;; Merkitse kohteet tilatuiksi
-          tilattavat-kohteet (map (fn [kohde]
-                                    (-> kohde
-                                      (assoc :paikkauskohteen-tila "tilattu")
-                                      (siivoa-ennen-lahetysta)))
-                               valitut-kohteet)]
+          tilattavat-kohteet (->> kaikki-kohteet
+                               (filter #(contains? valitut-kohteet (:id %)))
+                               (map (fn [kohde]
+                                      (-> kohde
+                                        (assoc :paikkauskohteen-tila "tilattu")
+                                        (siivoa-ennen-lahetysta)))))]
 
       (tuck-apurit/post! :tilaa-valitut-paikkauskohteet
         {:tilattavat-paikkauskohteet tilattavat-kohteet}
@@ -882,8 +886,11 @@
          :epaonnistui ->TilaaValitutPaikkauskohteetEpaonnistui
          :paasta-virhe-lapi? true})
       (-> app
-        (assoc :vahvista-tilaus-modal-auki? false)
-        (assoc :tilaustila-aktiivinen? false))))
+        (assoc
+          :paikkauskohteet nil
+          :haku-kaynnissa? true
+          :tilaustila-aktiivinen? false
+          :vahvista-tilaus-modal-auki? false))))
 
   TilaaValitutPaikkauskohteetOnnistui
   (process-event [{vastaus :vastaus} app]

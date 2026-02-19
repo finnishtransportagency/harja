@@ -78,8 +78,7 @@
         :komponentti (fn [rivi]
                        [kentat/raksiboksi {:disabled? (not= "ehdotettu" (:paikkauskohteen-tila rivi))
                                            :toiminto #(e! (t-paikkauskohteet/->ValitsePaikkauskohde rivi (-> % .-target .-checked)))}
-                        (boolean (some #(= (:id %) (:id rivi)) valitut-tilattavat-kohteet))
-                        #_ (contains? (or valitut-tilattavat-kohteet #{}) (:id rivi))])})
+                        (boolean (some #(= % (:id rivi)) valitut-tilattavat-kohteet))])})
      (cond
        ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
        (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)

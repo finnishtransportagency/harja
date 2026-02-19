@@ -10,7 +10,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
 
-(defn- nayta-pot-valinta?
+(defn nayta-pot-valinta?
   "Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
   Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
   Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
@@ -23,27 +23,28 @@
     nayta?))
 
 (defn tilaa-paikkauskohteet-modal! [e! {:keys [valitut-tilattavat-kohteet vahvista-tilaus-modal-auki?] :as app}]
-  [modal/modal
-   {:nakyvissa? vahvista-tilaus-modal-auki?
-    :otsikko (if (= 1 (count valitut-tilattavat-kohteet))
-               (str "Tilataanko kohde \"" (:nimi (first valitut-tilattavat-kohteet)) "\"?")
-               (str "Tilataanko " (count valitut-tilattavat-kohteet) " kpl kohteita?"))
-    :footer [:div
-             [:div.pull-left
-              [napit/yleinen-ensisijainen (if (= 1 (count valitut-tilattavat-kohteet)) "Tilaa kohde" "Tilaa kohteet")
-               #(e! (t-paikkauskohteet/->TilaaValitutPaikkauskohteet))
-               {:paksu? true}]]
-             [:div.pull-right
-              [napit/yleinen-toissijainen "Kumoa" #(e! (t-paikkauskohteet/->TilaaModalToggle)) {:paksu? true}]]]}
-   [:div.tilaus-vahvistus-modal
-    [:p "Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."]]])
+  (let [valitut-kohteet (filter #(contains? valitut-tilattavat-kohteet (:id %)) paikkauskohteet)]
+    [modal/modal
+     {:nakyvissa? vahvista-tilaus-modal-auki?
+      :otsikko (if (= 1 (count valitut-kohteet))
+                 (str "Tilataanko kohde \"" (:nimi (first valitut-kohteet)) "\"?")
+                 (str "Tilataanko " (count valitut-kohteet) " kpl kohteita?"))
+      :footer [:div
+               [:div.pull-left
+                [napit/yleinen-ensisijainen (if (= 1 (count valitut-kohteet)) "Tilaa kohde" "Tilaa kohteet")
+                 #(e! (t-paikkauskohteet/->TilaaValitutPaikkauskohteet))
+                 {:paksu? true}]]
+               [:div.pull-right
+                [napit/yleinen-toissijainen "Kumoa" #(e! (t-paikkauskohteet/->TilaaModalToggle)) {:paksu? true}]]]}
+     [:div.tilaus-vahvistus-modal
+      [:p "Urakoitsija saa sähköpostiin ilmoituksen kohteen tilauksesta."]]]))
 
 (defn raportointi-modal!
-  "Näyttää modalin, jossa käyttäjä voi vahvistaa valittujen paikkauskohteiden raportointitavan.
-   Parametrit:
-   - valitut-kohteet: Vektori paikkauskohteita, jotka käyttäjä on valinnut tilaukseen"
+  "Näyttää modalin, jossa käyttäjä voi vahvistaa valittujen paikkauskohteiden raportointitavan."
   [e! app]
   (let [valitut-kohteet (:valitut-tilattavat-kohteet app)
+        kaikki-kohteet (:paikkauskohteet app)
+        valitut-kohteet (filter #(contains? valitut-kohteet (:id %)) kaikki-kohteet)
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])]
     [modal/modal
      {:nakyvissa? (:raportointimodal-aktiivinen? app)

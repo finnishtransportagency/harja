@@ -426,7 +426,6 @@
 (defn tallenna-paikkauskohde! [db fim email user kohde]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
 
-  ;; VAIHE 1: ESIKÄSITTELY JA VALIDOINTI
   (let [_ (log/info "tallenna-paikkauskohde! :: kohde " (pr-str (dissoc kohde :sijainti)))
         kayttajarooli (roolit/osapuoli user)
         kohde-id (:id kohde)
@@ -448,7 +447,6 @@
       (throw+ {:type "Validaatiovirhe"
                :virheet {:koodi "ERROR" :viesti validointivirheet}}))
 
-    ;; VAIHE 2: KÄSITTELE SIVUVAIKUTUKSET JA TILASIIRTYMÄT
     ;; (vain jos validointi meni läpi)
     (let [on-kustannusoikeudet? (oikeudet/voi-kirjoittaa?
                                  oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
@@ -469,7 +467,6 @@
                             nil)
           tiemerkinnan-tila (or (:tiemerkinnan-tila kohde) "ei-tiemerkintaa")
 
-          ;; VAIHE 3: MUODOSTA TALLENNETTAVA PAIKKAUSKOHDE
           paikkauskohde (merge
                          {:ulkoinen-id (konversio/konvertoi->int (:ulkoinen-id kohde))
                           :urakka-id (:urakka-id kohde)
@@ -518,7 +515,6 @@
                             :muokattu (pvm/nyt)
                             :muokkaaja-id (:id user)}))
 
-          ;; VAIHE 4: TALLENNA KANTAAN
           tallennettu-kohde (if (id-olemassa? (:id paikkauskohde))
                              (do
                                (paikkaus-q/paivita-paikkauskohde! db paikkauskohde)
@@ -527,8 +523,7 @@
                              (let [tallennettu (paikkaus-q/tallenna-paikkauskohde<! db paikkauskohde)]
                                (first (paikkaus-q/hae-paikkauskohde db {:id (:id tallennettu)
                                                                         :urakka-id (:urakka-id kohde)}))))
-
-          ;; VAIHE 5: PÄIVITÄ PK-LUOKKA
+          
           pkluokka (:paivita_paikkauskohteen_korjausluokka
                     (first (paikkaus-q/paivita-paikkauskohteen-korjausluokka db {:id (:id tallennettu-kohde)})))]
 
