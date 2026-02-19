@@ -871,6 +871,7 @@
                                                              (dissoc :toteumatyyppi)))
                                                          lomake)))
             {:paksu? true
+             :ajax-luokka "poista-ajax-loader-valistykset"
              :ikoni (ikonit/check)
              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]

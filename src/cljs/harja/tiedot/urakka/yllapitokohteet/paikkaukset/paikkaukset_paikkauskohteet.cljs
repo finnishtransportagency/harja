@@ -859,13 +859,14 @@
   AsetaToteumatyyppiKohteelle
   (process-event [{:keys [paikkauskohde toteumatyyppi]} app]
     ;; Vaihda tälle kohteelle toteumatyyppi halutuksi
-    (let [kohteet (:valitut-tilattavat-kohteet app)
-          kohteet (mapv (fn [kohde]
+    (let [kohteet (mapv (fn [kohde]
                             (if (= (:id kohde) (:id paikkauskohde))
-                              (assoc kohde :toteumatyyppi toteumatyyppi)
+                              (-> kohde
+                                (assoc :pot? (= toteumatyyppi :pot))
+                                (assoc :toteumatyyppi toteumatyyppi))
                               kohde))
-                        kohteet)]
-      (assoc app :valitut-tilattavat-kohteet kohteet)))
+                    (:paikkauskohteet app))]
+      (assoc app :paikkauskohteet kohteet)))
 
   TilaaValitutPaikkauskohteet
   (process-event [_ app]
