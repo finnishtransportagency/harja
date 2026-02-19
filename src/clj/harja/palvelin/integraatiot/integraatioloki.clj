@@ -92,15 +92,24 @@
     \"hae-kayttajan-roolit\")
   => \"{\\\"Table1\\\":[{...}]}\" ; Name ja email poistettu"
   [viesti jarjestelma integraation-nimi]
-  (if (and (= jarjestelma "miam") (= integraation-nimi "hae-kayttajan-roolit"))
-    (let [data (json/read-str viesti :key-fn keyword)
-          table1 (get data :Table1)
-          siivottu-json-data (if (and table1 (sequential? table1))
-                               (let [siivottu-table1 (mapv #(dissoc % :Name :email) table1)
-                                     siivottu-data (assoc data :Table1 siivottu-table1)]
-                                 (json/write-str siivottu-data))
-                               (json/write-str data))]
-      siivottu-json-data)
+  (if (and
+        (not (nil? viesti))
+        (not (nil? jarjestelma))
+        (not (nil? integraation-nimi))
+        (= jarjestelma "miam")
+        (= integraation-nimi "hae-kayttajan-roolit"))
+    (try
+     (let [data (json/read-str viesti :key-fn keyword)
+           table1 (get data :Table1)
+           siivottu-json-data (if (and table1 (sequential? table1))
+                                (let [siivottu-table1 (mapv #(dissoc % :Name :email) table1)
+                                      siivottu-data (assoc data :Table1 siivottu-table1)]
+                                  (json/write-str siivottu-data))
+                                (json/write-str data))]
+       siivottu-json-data)
+      (catch Exception e
+        (log/error e "Virhe siivottaessa henkilötietoja MIAM-vastauksesta, palautetaan alkuperäinen viesti")
+        viesti))
     viesti))
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi

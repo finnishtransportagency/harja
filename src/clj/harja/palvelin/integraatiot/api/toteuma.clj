@@ -88,10 +88,34 @@
                       (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
     toteuman-id))
 
+(defn poista-toteuman-tehtavat-ulkoisella-idlla
+  "Poistaa toteuman tehtävät ulkoisen ID:n perusteella."
+  [db kayttaja-id ulkoinen-id]
+  (when-let [toteuma-id (q-toteumat/toteuman-id-ulkoisella-idlla
+                          db
+                          {:ulkoinen_id ulkoinen-id})]
+    (q-toteumat/poista-toteuman-tehtavat! db {:kayttaja kayttaja-id
+                                              :id toteuma-id})
+    (log/debug "Poistettu toteuman" toteuma-id "tehtävät ulkoisella ID:llä" ulkoinen-id)))
+
+(defn poista-toteuman-materiaalit-ulkoisella-idlla
+  "Poistaa toteuman materiaalit ulkoisen ID:n perusteella."
+  [db kayttaja-id ulkoinen-id]
+  (when-let [toteuma-id (q-toteumat/toteuman-id-ulkoisella-idlla
+                          db
+                          {:ulkoinen_id ulkoinen-id})]
+    (q-toteumat/merkitse-toteuman-materiaalit-poistetuiksi! db {:kayttaja kayttaja-id
+                                                                 :id toteuma-id})
+    (log/debug "Poistettu toteuman" toteuma-id "materiaalit ulkoisella ID:llä" ulkoinen-id)))
+
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kayttaja-id (:id kirjaaja)
+          ;; Poistetaan ensin toteumien tehtävät ja materiaalit
+          _ (doseq [ulkoinen-id ulkoiset-idt]
+              (poista-toteuman-tehtavat-ulkoisella-idlla db kayttaja-id ulkoinen-id)
+              (poista-toteuman-materiaalit-ulkoisella-idlla db kayttaja-id ulkoinen-id))
           toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
                                     (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:urakka-id urakka-id
                                                                                                          :ulkoiset-idt ulkoiset-idt})))
