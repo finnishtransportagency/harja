@@ -153,6 +153,16 @@
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
+(defn min-max
+  "Palauttaa annetusta aikajoukosta pienimmän ja suurimman arvon vektorina [min max].
+
+  Vertailu tehdään millisekunteina, jotta se toimii sekä java.util.Date että Joda/cljs-time -tyyppien kanssa.
+  Palauttaa nil jos syöte on tyhjä tai nil."
+  [ajat]
+  (when (seq ajat)
+    [(apply min-key millisekunteina ajat)
+     (apply max-key millisekunteina ajat)]))
+
 #?(:clj
    (defn joda-timeksi [dt]
      (cond
