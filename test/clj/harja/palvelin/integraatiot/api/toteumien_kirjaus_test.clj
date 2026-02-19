@@ -36,20 +36,6 @@
         vastaus (q (str "SELECT * FROM toteuma WHERE ulkoinen_id = '" id "';"))]
     (if (empty? vastaus) id (recur))))
 
-(defn etsi-hashsetin-first-last-ristiin-menevat-paivat
-  "Palauttaa [min max] muodossa päivät (dd.MM.yyyy), joilla (set [min max]) antaa first=max ja last=min."
-  []
-  (let [pvmt (mapv #(format "%02d.01.2019" %) (range 1 29))]
-    (or
-      (first
-        (for [min pvmt
-              max pvmt
-              :when (< (compare min max) 0)
-              :let [s (set [min max])]
-              :when (and (= (first s) max)
-                         (= (last s) min))]
-          [min max]))
-      (throw (ex-info "Ei löytynyt hash-set -järjestyksellä ristiin menevää päivämääräparia" {:pvmt pvmt})))))
 
 (deftest tallenna-pistetoteuma
   (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
@@ -241,18 +227,27 @@
 
 (deftest poista-usea-toteuma-paivittaa-urakan-materiaalicachen-aikavalin-min-max
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
-        [min-pvm max-pvm] (etsi-hashsetin-first-last-ristiin-menevat-paivat)
+        min-pvm "01.01.2019"
+        max-pvm "02.01.2019"
         pvm-str->date (fn [pvm-str]
                         (-> pvm-str
                             pvm/->pvm-date-timeksi
                             pvm/dateksi))
         min-alkanut (pvm-str->date min-pvm)
         max-alkanut (pvm-str->date max-pvm)
+        min-max-kutsuttu? (atom false)
         paivitys-args (atom nil)]
     (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
                   (fn [_ _]
                     [{:alkanut min-alkanut}
                      {:alkanut max-alkanut}])
+
+                  pvm/min-max
+                  (fn [_]
+                    (reset! min-max-kutsuttu? true)
+                    [(pvm/->pvm min-pvm)
+                     (pvm/->pvm max-pvm)])
+
                   harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                   (fn [& _] 2)
                   harja.kyselyt.sopimukset/hae-urakan-sopimus-idt
@@ -269,6 +264,7 @@
         [111 222]
         urakka-id))
 
+    (is (true? @min-max-kutsuttu?) "Päivämääräaikaväli muodostetaan kutsumalla pvm/min-max")
     (is (some? @paivitys-args) "Urakan materiaalicachen päivitystä kutsutaan")
     (is (= urakka-id (:urakka @paivitys-args)))
     (is (= (pvm/iso8601 (pvm/->pvm min-pvm))
