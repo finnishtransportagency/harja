@@ -22,7 +22,7 @@
                  (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
     nayta?))
 
-(defn tilaa-paikkauskohteet-modal! [e! {:keys [valitut-tilattavat-kohteet vahvista-tilaus-modal-auki?] :as app}]
+(defn tilaa-paikkauskohteet-modal! [e! {:keys [valitut-tilattavat-kohteet vahvista-tilaus-modal-auki? paikkauskohteet] :as app}]
   (let [valitut-kohteet (filter #(contains? valitut-tilattavat-kohteet (:id %)) paikkauskohteet)]
     [modal/modal
      {:nakyvissa? vahvista-tilaus-modal-auki?
