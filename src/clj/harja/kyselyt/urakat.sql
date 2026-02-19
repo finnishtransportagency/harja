@@ -1293,3 +1293,6 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: aseta-laskutusraja-kaytossa-true!
+UPDATE urakka_parametrit SET laskutusraja_kaytossa = true WHERE urakkaid = :urakkaid;

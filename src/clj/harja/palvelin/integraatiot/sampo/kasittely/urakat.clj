@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.tyokalut.merkkijono :as merkkijono]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -163,6 +164,12 @@
             ely-id (hae-hallintayksikko db ely-hash urakkatyyppi sampo-id)
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                        sopimustyyppi ely-id urakoitsija-id)]
+        (when
+          (and
+            (= urakkatyyppi "teiden-hoito")
+            (>= (pvm/vuosi alkupvm) 2025))
+          (urakat-q/aseta-laskutusraja-kaytossa-true! db urakka-id))
+
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
                            urakka-id
                            urakkatyyppi
