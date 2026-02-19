@@ -27,6 +27,21 @@
     (is (= #inst "2030-09-29T21:00:00.000-00:00" (:loppupvm urakan-tiedot)))
     (poista-urakka)))
 
+(deftest maanteiden-hoidon-urakan-laskutusraja-true
+  (let [_ (tuo-urakka)
+        urakat (hae-urakat)
+        urakkaid (ffirst urakat)
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+
+        _ (tuo-maanteiden-hoidon-urakka)
+        maanteiden-urakat (hae-urakat)
+        teidenhoitourakkaid (ffirst maanteiden-urakat)
+        teidenhoitourakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid teidenhoitourakkaid}))
+        _ (poista-urakka)]
+    (is (true? (:laskutusraja_kaytossa teidenhoitourakan-parametrit)))
+    (is (nil? (:laskutusraja_kaytossa urakan-parametrit))))
+    (poista-urakka))
+
 (deftest urakan-paivittaminen
   (tuo-urakka)
   (tuo-urakka)
