@@ -16,6 +16,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as muutokset-tiedot]
             [harja.tiedot.urakka.suunnittelu.tarjous-kustannussuunnitelma-tiedot :as kust-tiedot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -445,7 +446,7 @@
            [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]])]]]))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe] :as app}]
+                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe laskutusraja] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                 hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin-str
                 kattohintakerroin hoitovuoden-alun-kattohinta
@@ -460,6 +461,7 @@
         pysyvat-muutokset-maara (or pysyvat-muutokset-maara 0)
         hoitovuoden-alun-tavoitehinta (or hoitovuoden-alun-tavoitehinta 0)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0)
+        laskutusraja (or laskutusraja 0)
         ero-tarjoukseen (- hoitovuoden-alun-tavoitehinta tarjouksen-maara)
 
         hoitovuoden-alun-kattohinta (or paivitetty-hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta 0)
@@ -493,6 +495,10 @@
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
+     [:div.row
+      [:div.col-xs-12.korkea-rivi.bottom-border-text
+       [:div.col-xs-9.body-text.text-right.kohdista-teksti "Laskutusraja"]
+       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true laskutusraja)]]]
      ;; Osalla urakoista kattohinta syötetään käsin.
      (if-not muokkaa-kattohinta-kasin
        [:div.row
@@ -580,16 +586,20 @@
      [pysyvat-muutokset e! app]
      [tavoite-ja-kattohinta e! app]]))
 
-(defn nakyma* [e! _app]
+(defn nakyma* [e! app]
   (let [{:keys [sisaan ulos]}
         (nav/luo-muutosten-hallinta
           :uusi-kustannusuunnitelma-nakyma/muutokset
           #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
-          :beforeunload-viesti "Hoitovuoden alun tavoitehinta -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+          :beforeunload-viesti "Hoitovuoden alun tavoitehinta -lomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")
+        vuosi (when @u/valittu-aikavali
+                (pvm/vuosi (-> @u/valittu-aikavali first)))]
     (komp/luo
       (komp/lippu kust-tiedot/nakymassa?)
       (komp/sisaan #(do
                       (e! (kust-tiedot/->HaeKustannussuunnitelmanTiedot))
+                      (when vuosi
+                        (e! (tiedot/->HaeLaskutusraja vuosi)))
                       (sisaan)))
       (komp/ulos
         #(do
