@@ -587,7 +587,7 @@
 
       :else
       ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "else : Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
+      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
                                                   tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi]
