@@ -126,7 +126,7 @@
             (= (ffirst paatos) :lupaukset) [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
             (= (ffirst paatos) :tavoitehinnan-muutokset)
             (if (>= urakan-alkuvuosi 2025)
-              [:div {:style {:height "800px" :width "100%"}}
+              [:div {:style {:height "90px" :width "100%"}}
                [yleiset/info-laatikko :huolto "Tavoitehinnan muutokset uudistuvat. Päivityksen ajan osio on pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
               [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])
             (= (ffirst paatos) :tavoitehinnan-pysyvat-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-pysyvat-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset hoitovuosi-kesken?]
