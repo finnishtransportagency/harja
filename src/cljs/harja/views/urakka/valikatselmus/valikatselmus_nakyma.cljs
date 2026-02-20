@@ -115,7 +115,8 @@
        [:div.hoitovuosi-info
         (when hoitovuosi-kesken?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä päättynyt."
-           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.") nil])
+           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. "
+             (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil])
         (when hoitokausi-tulevaisuudessa?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä alkanut." nil nil])])
      [:div
@@ -123,7 +124,11 @@
         (for* [paatos paatokset]
           (cond
             (= (ffirst paatos) :lupaukset) [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-            (= (ffirst paatos) :tavoitehinnan-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?]
+            (= (ffirst paatos) :tavoitehinnan-muutokset)
+            (if (>= urakan-alkuvuosi 2025)
+              [:div {:style {:height "800px" :width "100%"}}
+               [yleiset/info-laatikko :huolto "Tavoitehinnan muutokset uudistuvat. Päivityksen ajan osio on pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
+              [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])
             (= (ffirst paatos) :tavoitehinnan-pysyvat-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-pysyvat-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset hoitovuosi-kesken?]
             (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
