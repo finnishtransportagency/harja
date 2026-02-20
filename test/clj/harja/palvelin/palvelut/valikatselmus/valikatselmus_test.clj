@@ -408,10 +408,10 @@
               _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) muutospaatos (:id kayttaja))
 
               ;; Indeksikorjauspäätös
-              tavoitehinta 2000000M
+              hv_alun_indkorj_tavoitehinta 2000000M
               hoitokauden-lopun-indeksikorjaus 40000M ;
               tavoitehinnan-muutokset 30000M
-              tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+              hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
               hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                      {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                      {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -430,7 +430,7 @@
               pistelukujen-muutos 5.9
               pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
               indeksikorotuksen-prosenttiosuus 3.9
-              indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+              indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                        hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                        pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus (:id kayttaja))
               _ (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) indeksikorjauspaatos)

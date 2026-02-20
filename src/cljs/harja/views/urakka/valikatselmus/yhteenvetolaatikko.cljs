@@ -11,7 +11,6 @@
 
 (defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit] :as app}]
   (let [yhteenvedon-tiedot (:yhteenveto app)
-
         ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu])
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
@@ -23,12 +22,19 @@
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
+
+        ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
+        hoitovuoden-lopun-indeksikorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
+        hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hoitovuoden-lopun-indeksikorjaus-paatos) 0)
+
         hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
-        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta pysyvat-muutokset-toteuma-muutokset-yht)
+        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta hoitokauden_lopun_indeksikorjaus pysyvat-muutokset-toteuma-muutokset-yht)
         hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
-        hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+        hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
+                                       (* hoitokauden_lopun_indeksikorjaus (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                       (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
@@ -125,6 +131,10 @@
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan muutokset"]
         [:span (str (when (> tavoitehinnan-muutokset 0) "+") (fmt/euro-opt false tavoitehinnan-muutokset))]])
+     [:div.flex-row.summa-rivi
+      [:span "Hoitovuoden lopun indeksikorjaus"]
+      [:span (fmt/euro-opt false hoitokauden_lopun_indeksikorjaus)]]
+     [:hr]
      [:div.flex-row.summa-rivi
       [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-tavoitehinta)]]

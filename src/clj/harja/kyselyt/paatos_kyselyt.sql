@@ -205,12 +205,12 @@ WHERE id = :paatos-id
 
 -- name: tee-hoitokauden-indeksikorjaus-paatos<!
 -- Tee hoitokauden indeksikorjaus päätös
-INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tavoitehinnan_muutokset,
-                                               tavoitehinta_ennen, hoitokauden_kuukaudet, kuukausien_keskiarvo,
+INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, hv_alun_indkorj_tavoitehinta, tavoitehinnan_muutokset,
+                                               hv_lopun_tavoitehinta_ennen_indkorj, hoitokauden_kuukaudet, kuukausien_keskiarvo,
                                                alkuperainen_pisteluku, alkuperaisen_pisteluvun_kuukausi, pistelukujen_muutos,
                                                pistelukujen_muutos_prosentteina, indeksikorotuksen_prosenttiosuus,
                                                hoitokauden_lopun_indeksikorjaus, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tavoitehinnan_muutokset, :tavoitehinta_ennen,
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :hv_alun_indkorj_tavoitehinta, :tavoitehinnan_muutokset, :hv_lopun_tavoitehinta_ennen_indkorj,
         (SELECT ARRAY[:hoitokauden_kuukaudet]::indeksikorjauskuukausi[]), :kuukausien_keskiarvo, :alkuperainen_pisteluku,
         :alkuperaisen_pisteluvun_kuukausi, :pistelukujen_muutos, :pistelukujen_muutos_prosentteina,
         :indeksikorotuksen_prosenttiosuus, :hoitokauden_lopun_indeksikorjaus, :luoja, NOW());

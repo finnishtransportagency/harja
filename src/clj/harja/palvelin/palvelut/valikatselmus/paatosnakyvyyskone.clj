@@ -294,14 +294,10 @@
 
             ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
             indeksikorotuksen-prosenttiosuus (if (> muutos-prosentteina 2) (- muutos-prosentteina 2) 0)
-            ;tavoitehinnan-muutos (apply + (map :summa tavoitehinnan-muutokset))
-            muutosten-summa (if (>= 2024 urakan-alkuvuosi)
-                              (if (seq tavoitehinnan-muutokset)
-                                (apply + (map #(:summa %) tavoitehinnan-muutokset))
-                                0)
-                              taman-vuoden-muutokset-summa)
-            tavoitehinta-ennen oikaistu-tavoitehinta
-            hoitokauden-lopun-indeksikorjaus (* tavoitehinta-ennen (/ indeksikorotuksen-prosenttiosuus 100))
+            tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset))
+            muutosten-summa (if (>= 2024 urakan-alkuvuosi) tavoitehinnan-oikaisut taman-vuoden-muutokset-summa)
+            hv_alun_indkorj_tavoitehinta (- oikaistu-tavoitehinta tavoitehinnan-oikaisut) ;; Meillä on harmillisesti tässä tärkeimmässä tavoitehinta haussa oikaisut mukana
+            hoitokauden-lopun-indeksikorjaus (* hv_alun_indkorj_tavoitehinta (/ indeksikorotuksen-prosenttiosuus 100))
 
             ;; Lisätään mahdolliset puuttuvat kuukaudet UI:n Pistelukujen keskiarvon laskenta listaukseen.
             puuttuvat-kuukaudet (filter #(not (some (fn [kuukausi] (= (:kuukausi kuukausi) (:kuukausi %))) hoitokauden-indeksikuukaudet))
@@ -317,13 +313,13 @@
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Heinäkuu") :indeksiluku 0}
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Elokuu") :indeksiluku 0}
                                    {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Syyskuu") :indeksiluku 0}])
-            hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (+ oikaistu-tavoitehinta taman-vuoden-muutokset-summa)
+            hv_lopun_tavoitehinta_ennen_indkorj (+ oikaistu-tavoitehinta taman-vuoden-muutokset-summa)
             ;; Korvataan koneelta saatu päätös tässä valistellulta
             indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
             indeksipaatos (-> indeksipaatos
-                            (assoc :tavoitehinta hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta) ;; = Hoitovuoden lopun tavoitehinta
+                            (assoc :hv_alun_indkorj_tavoitehinta hv_alun_indkorj_tavoitehinta) ;; = Hoitovuoden lopun tavoitehinta
                             (assoc :tavoitehinnan_muutokset muutosten-summa)
-                            (assoc :tavoitehinta_ennen tavoitehinta-ennen)
+                            (assoc :hv_lopun_tavoitehinta_ennen_indkorj hv_lopun_tavoitehinta_ennen_indkorj)
                             (assoc :hoitokauden_kuukaudet hoitokauden-indeksikuukaudet)
                             (assoc :puuttuvat_kuukaudet puuttuvat-kuukaudet)
                             (assoc :kuukausien_keskiarvo piste-keskiarvo)

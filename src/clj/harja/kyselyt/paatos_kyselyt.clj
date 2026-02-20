@@ -332,9 +332,9 @@
   "Indeksikorjauspäätöksen mäppi:
    {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
-   :tavoitehinta <eurot>
+   :hv_alun_indkorj_tavoitehinta <eurot>
    :tavoitehinnan_muutokset <eurot>
-   :tavoitehinta_ennen <eurot>
+   :hv_lopun_tavoitehinta_ennen_indkorj <eurot>
    :alkuperainen_pisteluku <pisteet>
    :alkuperaisen_pisteluvun_kuukausi <kuukausi vuosi>
    :pistelukujen_muutos <prosentti>

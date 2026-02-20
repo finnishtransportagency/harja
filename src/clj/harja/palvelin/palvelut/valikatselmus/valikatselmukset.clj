@@ -698,10 +698,13 @@
                        validaatio)
 
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan - tässä tavoitehinnassa ei ole tämän vuoden aktiivisia pysyviä muutoksia, mutta menneet pysyvät muutokset on.
-          oikaistu-tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= (konversio/konvertoi->int oikaistu-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta_ennen paatos)))
-                       (conj validaatio (str "Hoitovuoden alun indeksikorjattu tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" oikaistu-tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta_ennen paatos) " €"))
+          hk-alun-indkorj-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakka-id
+                                                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+
+          validaatio (if-not (= (konversio/konvertoi->int hk-alun-indkorj-tavoitehinta) (konversio/konvertoi->int (:hv_alun_indkorj_tavoitehinta paatos)))
+                       (conj validaatio
+                         (str "Hoitovuoden alun indeksikorjattu tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu hoitokauden alun indeksikorjattu tavoitehinta: " hk-alun-indkorj-tavoitehinta "€.
+                       Päätöksen mukainen tavoitehinta: " (:hv_alun_indkorj_tavoitehinta paatos) " €"))
                        validaatio)
 
           ;; Lasketaan hoitovuoden lopun tavoitehinta ennen indeksikorjausta
@@ -723,11 +726,14 @@
           tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
                                          (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
                                          0)
-
+          oikaistu-tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
+                                                                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           taman-vuoden-muutokset-summa (+ (or aktiiviset-pysyvat-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
           hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (+ oikaistu-tavoitehinta taman-vuoden-muutokset-summa)
-          validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta) (konversio/konvertoi->int (:tavoitehinta paatos)))
-                       (conj validaatio (str "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta) (konversio/konvertoi->int (:hv_lopun_tavoitehinta_ennen_indkorj paatos)))
+                       (conj validaatio (str "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta ei täsmää suunnitelman kanssa.
+                       Suunniteltu tavoitehinta:" hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta "€.
+                       Päätöksen mukainen hoitovuoden lopun tavoitehinta ennen indeksikorjausta: " (:hv_lopun_tavoitehinta_ennen_indkorj paatos) " €"))
                        validaatio)
 
           _ (if (seq validaatio)
@@ -874,7 +880,7 @@
     ;; Varmista, että päätöstä ei ole vielä tehty
     (let [validaatio #{}
           olemassaoleva-paatos (first (paatos-kyselyt/hae-poytakirjan-raporttipaatokset db {:urakkaid (:urakkaid paatos)
-                                                                                             :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi paatos)}))
+                                                                                            :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi paatos)}))
           validaatio (if olemassaoleva-paatos
                        (conj validaatio (str "Päätös on jo tehty tälle hoitokaudelle. Päivitä selain."))
                        validaatio)

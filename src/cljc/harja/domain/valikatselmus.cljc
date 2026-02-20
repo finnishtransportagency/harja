@@ -8,10 +8,11 @@
 (s/def ::viimeinen_hoitokausi boolean?)
 (s/def ::urakkaid int?)
 (s/def ::tavoitehinta number?)
+(s/def ::hv_alun_indkorj_tavoitehinta number?)
+(s/def ::hv_lopun_tavoitehinta_ennen_indkorj number?)
 (s/def ::tavoitehinta_ennen number?)
 (s/def ::tavoitehinta_jalkeen number?)
 (s/def ::tavoitehinnan_muutokset number?)
-(s/def ::tavoitehinta_ennen number?)
 (s/def ::tavoitehinta_jalkeen number?)
 (s/def ::hoitokauden_alun_tavoitehinta number?)
 (s/def ::hoitokauden_lopun_tavoitehinta number?)
@@ -83,7 +84,7 @@
                                                      ::luoja]
                                       :opt-un [::kulu_id ::siirto]))
 
-(s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tavoitehinnan_muutokset ::tavoitehinta_ennen
+(s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::hv_alun_indkorj_tavoitehinta ::tavoitehinnan_muutokset ::hv_lopun_tavoitehinta_ennen_indkorj
                                                ::hoitokauden_kuukaudet ::kuukausien_keskiarvo ::alkuperaisen_pisteluvun_kuukausi
                                                ::alkuperainen_pisteluku ::pistelukujen_muutos ::pistelukujen_muutos_prosentteina  ::indeksikorotuksen_prosenttiosuus
                                                ::hoitokauden_lopun_indeksikorjaus ::luoja]))

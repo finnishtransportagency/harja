@@ -131,15 +131,15 @@
   (is (= siirtorajoitus-prosentti (:siirtorajoitus_prosentti paatos)))
   (is (= luoja (:luoja paatos))))
 
-(defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+(defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                                    hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                                    pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
                                    hoitokauden-lopun-indeksikorjaus luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= hv_alun_indkorj_tavoitehinta (:hv_alun_indkorj_tavoitehinta paatos)))
   (is (= tavoitehinnan-muutokset (:tavoitehinnan_muutokset paatos)))
-  (is (= tavoitehinta-ennen (:tavoitehinta_ennen paatos)))
+  (is (= hv_lopun_tavoitehinta_ennen_indkorj (:hv_lopun_tavoitehinta_ennen_indkorj paatos)))
   (is (= hoitokauden-kuukaudet (:hoitokauden_kuukaudet paatos)))
   (is (= (bigdec kuukausien-keskiarvo) (bigdec (:kuukausien_keskiarvo paatos))))
   (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku paatos)))
@@ -1100,10 +1100,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1122,7 +1122,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1130,7 +1130,7 @@
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)]
-    (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+    (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
       testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
       pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
 
@@ -1141,10 +1141,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1163,7 +1163,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1171,7 +1171,7 @@
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)
-        _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
             testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
             pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1190,10 +1190,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1212,13 +1212,14 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
@@ -1234,10 +1235,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1256,13 +1257,14 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] hv_lopun_tavoitehinta_ennen_indkorj)
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
