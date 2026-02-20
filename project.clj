@@ -46,7 +46,7 @@
                  ;; --
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "1.1.0"]
+                 [org.clojure/java.jmx "1.1.1"]
 
                  ;; -- JSON encode/decode
                  [cheshire "6.1.0"]
