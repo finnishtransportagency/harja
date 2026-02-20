@@ -8,15 +8,14 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-            [cljs.core.async :refer [<! >! chan timeout]]
+            [cljs.core.async :refer [<!]]
             [harja.ui.tierekisteri :as tr]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.loki :refer [log]]
+            [harja.geo]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
-            [harja.tiedot.kartta :as tiedot-kartta]
-            [clojure.walk :as walk])
+            [harja.tiedot.kartta :as tiedot-kartta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -136,7 +135,7 @@
               alue (harja.geo/extent reitti)]
           (swap! tarkasteltava-asia assoc :reitti reitti)
           (piirra-reitti reitti)
-          (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
+              (js/setTimeout #(tiedot-kartta/keskita-kartta-alueeseen! alue) 200)))
 
       :tarkastusajo
       (go
@@ -508,6 +507,95 @@
       (when (not (empty? suola-pisteet))
         (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle suola-pisteet))))))
 
+(defonce suolarajoitus-ja-suolat-rajoitus-geo-nimet (r/atom []))
+(defonce suolarajoitus-ja-suolat-piste-geo-nimet (r/atom []))
+(defonce suolarajoitus-ja-suolat-reitti-geo-nimet (r/atom []))
+
+(defn- hae-ja-nayta-suolarajoitukset-ja-suolatoteumat
+  [urakka-id alkupaiva loppupaiva]
+  (go
+    (let [;; Poista vanhat
+          _ (doseq [id @suolarajoitus-ja-suolat-rajoitus-geo-nimet]
+              (tasot/poista-geometria! id))
+          _ (doseq [id @suolarajoitus-ja-suolat-piste-geo-nimet]
+              (tasot/poista-geometria! id))
+          _ (doseq [id @suolarajoitus-ja-suolat-reitti-geo-nimet]
+              (tasot/poista-geometria! id))
+          _ (reset! suolarajoitus-ja-suolat-rajoitus-geo-nimet [])
+          _ (reset! suolarajoitus-ja-suolat-piste-geo-nimet [])
+          _ (reset! suolarajoitus-ja-suolat-reitti-geo-nimet [])
+
+          {:keys [rajoitukset suolatoteumat] :as vastaus}
+          (<! (k/post! :debug-hae-suolarajoitukset-ja-suolatoteumat
+                       {:urakka-id urakka-id
+                        :alkupaiva alkupaiva
+                        :loppupaiva loppupaiva}))
+
+          suola-pisteet (get suolatoteumat :pisteet)
+          suola-reitit (get suolatoteumat :reitit)
+
+          rajoitus-geot (keep (fn [r] (when (:sijainti r) (:sijainti r))) rajoitukset)
+          piste-geot (keep (fn [s] (when (:sijainti s) (:sijainti s))) suola-pisteet)
+          reitti-geot (keep (fn [r] (when (:reitti r) (:reitti r))) suola-reitit)
+
+          rajoitus-idt (->> rajoitukset
+                            (keep (fn [r]
+                                    (when (and (:sijainti r) (:rajoitusalue_id r))
+                                      (keyword (str "suolarajoitus-" (:rajoitusalue_id r))))))
+                            vec)
+          piste-idt (->> suola-pisteet
+                         (map-indexed (fn [idx s]
+                                        (when (:sijainti s)
+                                          (keyword (str "suola-yhdistetty-" (:alkanut s) "-" idx)))))
+                         (remove nil?)
+                         vec)
+          reitti-idt (->> suola-reitit
+                          (keep (fn [r]
+                                  (when (:reitti r)
+                                    (keyword (str "suola-reitti-" (:toteuma_id r))))))
+                          vec)
+
+          _ (reset! suolarajoitus-ja-suolat-rajoitus-geo-nimet rajoitus-idt)
+          _ (reset! suolarajoitus-ja-suolat-piste-geo-nimet piste-idt)
+          _ (reset! suolarajoitus-ja-suolat-reitti-geo-nimet reitti-idt)]
+
+      (doseq [r rajoitukset]
+        (when-let [g (:sijainti r)]
+          (tasot/nayta-geometria! (keyword (str "suolarajoitus-" (:rajoitusalue_id r)))
+                                  {:type :rajoitusalueet
+                                   :nimi "Suolarajoitukset"
+                                   :alue (assoc g
+                                           :fill "orange"
+                                           :radius 4
+                                           :stroke {:color "orange"
+                                                    :width 3})})))
+
+      (doseq [[idx s] (map-indexed vector suola-pisteet)]
+        (when-let [g (:sijainti s)]
+          (tasot/nayta-geometria! (keyword (str "suola-yhdistetty-" (:alkanut s) "-" idx))
+                                  {:type :suolat
+                                   :nimi "Suolatoteumat"
+                                   :alue (assoc g
+                                           :fill "blue"
+                                           :radius 3
+                                           :stroke {:color "blue"
+                                                    :width 4})})))
+
+      (doseq [r suola-reitit]
+        (when-let [g (:reitti r)]
+          (tasot/nayta-geometria! (keyword (str "suola-reitti-" (:toteuma_id r)))
+                                  {:type :suolat
+                                   :nimi "Suolatoteumien reitit"
+                                   :alue (assoc g
+                                           :stroke {:color "blue"
+                                                    :width 3})})))
+
+      (let [keskitys-geot (vec (concat reitti-geot piste-geot rajoitus-geot))]
+        (when (seq keskitys-geot)
+          (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle keskitys-geot))))
+
+      vastaus)))
+
 (defn- urakan-rajoitusalueet []
   (let []
     (fn []
@@ -561,6 +649,47 @@
                                 (let []
                                   (hae-ja-nayta-suolat @suola-urakka @suola-alkupaiva @suola-loppupaiva)))}
           "Piirrä suolatoteuat kartalle"]]]])))
+
+(defn- urakan-suolarajoitukset-ja-suolatoteumat []
+  (let [urakka-id (r/atom nil)
+        alkupaiva (r/atom nil)
+        loppupaiva (r/atom nil)]
+    (fn []
+      [:div.lomake
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:label.control-label "Urakka-id:"]
+         [:input {:type :text
+                  :class "form-control"
+                  :value @urakka-id
+                  :on-change #(reset! urakka-id (-> % .-target .-value))}]]]
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:label.control-label "Alkupäivä: (anna muodossa: 2023-01-01)"]
+         [:input {:type :text
+                  :class "form-control"
+                  :value @alkupaiva
+                  :on-change #(reset! alkupaiva (-> % .-target .-value))
+                  :placeholder "2023-01-01"}]]]
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:label.control-label "Loppupäivä: (anna muodossa: 2023-01-01)"]
+         [:input {:type :text
+                  :class "form-control"
+                  :value @loppupaiva
+                  :on-change #(reset! loppupaiva (-> % .-target .-value))
+                  :placeholder "2023-01-01"}]]]
+       [:div.row.lomakerivi
+        [:div.form-group.col-xs-12.col-sm-6.col-md-5.col-lg-4
+         [:button {:on-click #(hae-ja-nayta-suolarajoitukset-ja-suolatoteumat
+                               @urakka-id
+                               @alkupaiva
+                               @loppupaiva)
+                   :disabled (when (or (nil? @urakka-id)
+                                       (nil? @alkupaiva)
+                                       (nil? @loppupaiva))
+                               "disabled")}
+          "Piirrä suolarajoitukset ja suolatoteumat"]]]])))
 
 (defonce urakan-geo-nimet  (r/atom []))
 (defn- hae-ja-nayta-urakan-geometriat [urakka-id]
@@ -742,9 +871,113 @@
           "Piirrä PK-luokkageometriat kartalle"]]]])))
 
 
+
+;; Suolapoikkeamat - State
+(defonce suolapoikkeamat-urakka-id (r/atom ""))
+(defonce suolapoikkeamat-alku (r/atom ""))
+(defonce suolapoikkeamat-loppu (r/atom ""))
+(defonce suolapoikkeamat-tulokset (r/atom nil))
+(defonce valittu-suolapoikkeama (r/atom nil))
+
+(defn- muotoile-alkanut [alkanut]
+  (when alkanut
+    (try
+      (pvm/pvm-aika-sek alkanut)
+      (catch :default _
+        (str alkanut)))))
+
+(defn generoi-mock-data []
+  (let [c (+ 5 (rand-int 10))]
+    (vec
+     (for [i (range c)]
+       (let [kokonaism (rand-int 5000)
+             reittipistes (int (* kokonaism (+ 0.9 (rand 0.2))))
+             suolapistes (int (* reittipistes (+ 0.9 (rand 0.2))))
+             delta1 (- kokonaism reittipistes)
+             delta2 (- reittipistes suolapistes)]
+         {:toteuma-id i
+          :alkanut (str "2023-10-" (+ 10 i) " 12:00:00")
+          :kokonaismaara kokonaism
+          :reittipistesumma reittipistes
+          :suolapistesumma suolapistes
+          :delta1 delta1
+          :delta2 delta2})))))
+
+(defn- hae-suolapoikkeamat! []
+  (reset! suolapoikkeamat-tulokset nil)
+  (reset! valittu-suolapoikkeama nil)
+  (go
+    (try
+      (let [urakka-id (js/parseInt @suolapoikkeamat-urakka-id)
+            alkupvm @suolapoikkeamat-alku
+            loppupvm @suolapoikkeamat-loppu]
+        (when-not (js/isNaN urakka-id)
+          (let [tulos (<! (k/post! :debug-hae-suolapoikkeamat
+                                  {:urakka-id urakka-id
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm}))]
+            (reset! suolapoikkeamat-tulokset tulos))))
+      (catch :default e
+        (log "Suolapoikkeamien haku epäonnistui" e)))))
+
+(defn- suolapoikkeamat-osio []
+  [:div.lomake
+   ;; Inputs
+   [:div.row.lomakerivi
+    [:div.form-group.col-xs-12.col-sm-4
+     [:label "Urakka-id:"]
+     [:input.form-control {:type "text" 
+                           :value @suolapoikkeamat-urakka-id
+                           :on-change #(reset! suolapoikkeamat-urakka-id (-> % .-target .-value))}]]
+    [:div.form-group.col-xs-12.col-sm-4
+     [:label "Alkupäivä:"]
+     [:input.form-control {:type "text" 
+                           :placeholder "YYYY-MM-DD"
+                           :value @suolapoikkeamat-alku
+                           :on-change #(reset! suolapoikkeamat-alku (-> % .-target .-value))}]]
+    [:div.form-group.col-xs-12.col-sm-4
+     [:label "Loppupäivä:"]
+     [:input.form-control {:type "text" 
+                           :placeholder "YYYY-MM-DD"
+                           :value @suolapoikkeamat-loppu
+                           :on-change #(reset! suolapoikkeamat-loppu (-> % .-target .-value))}]]]
+   
+   [:div.row.lomakerivi
+    [:div.col-xs-12
+     [:button.nappi-ensisijainen {:on-click hae-suolapoikkeamat!} "Hae poikkeamat"]]]
+
+   ;; Results Table
+   (when @suolapoikkeamat-tulokset
+     [:div
+      [:br]
+      [:table.table.table-striped.table-hover
+       [:thead
+        [:tr
+         [:th "Toteuma ID"]
+         [:th "Alkanut"]
+         [:th "Kokonaismäärä"]
+         [:th "Reittipistesumma"]
+         [:th "Suolapistesumma"]
+         [:th "Delta1 (Kok - Reitti)"]
+         [:th "Delta2 (Reitti - Suola)"]]]
+       [:tbody
+        (for [row @suolapoikkeamat-tulokset]
+          ^{:key (:toteuma-id row)}
+          [:tr {:class (when (= @valittu-suolapoikkeama (:toteuma-id row)) "info")
+            :on-click #(reset! valittu-suolapoikkeama (:toteuma-id row))
+                :style {:cursor "pointer"}}
+           [:td (:toteuma-id row)]
+           [:td (muotoile-alkanut (:alkanut row))]
+           [:td (:kokonaismaara row)]
+           [:td (:reittipistesumma row)]
+           [:td (:suolapistesumma row)]
+           [:td {:style {:color (if (neg? (:delta1 row)) "red" "inherit")}} (:delta1 row)]
+           [:td {:style {:color (if (neg? (:delta2 row)) "red" "inherit")}} (:delta2 row)]])]]])])
+
+
 (defn tierekisteri []
   (komp/luo
-    (komp/lippu-arvo false true kartta-tiedot/pida-geometriat-nakyvilla?)
+    (komp/lippu-arvo false true tiedot-kartta/pida-geometriat-nakyvilla?)
     (komp/avain-lippu nav/tarvitsen-isoa-karttaa :tierekisteri)
     (fn []
       [:div.tr-debug
@@ -788,6 +1021,12 @@
        [:h3 "Visualisoi urakan pohjavesien rajoitusalueet kartalle"]
        [urakan-rajoitusalueet]
        [:hr]
+      [:h3 "Visualisoi suolarajoitukset ja suolatoteumat kartalle"]
+      [urakan-suolarajoitukset-ja-suolatoteumat]
+      [:hr]
+      [:h3 "Suolapoikkeamat"]
+      [suolapoikkeamat-osio]
+      [:hr]
        [:h3 "Visualisoi suolatoteumat kartalle"]
        [urakan-suolat]
        [:hr]

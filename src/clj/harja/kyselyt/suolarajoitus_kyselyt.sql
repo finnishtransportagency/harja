@@ -71,6 +71,31 @@ WHERE ra.poistettu = FALSE
   AND ra.urakka_id = :urakka_id
   ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC, (ra.tierekisteriosoite).aet ASC;
 
+-- name: hae-suolarajoitukset-hoitokaudelle-geometrialla
+SELECT ra.id                   AS rajoitusalue_id,
+       ra.tierekisteriosoite   AS tierekisteriosoite,
+       ra.sijainti             AS sijainti,
+       rr.id                   AS rajoitus_id,
+       rr.suolarajoitus        AS suolarajoitus,
+       rr.formiaatti           AS formiaatti,
+       rr.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+       ra.urakka_id            AS urakka_id,
+       rr.luotu                AS luotu,
+       rr.luoja                AS luoja,
+       rr.muokattu             AS muokattu,
+       rr.muokkaaja            AS muokkaaja
+  FROM rajoitusalue ra
+       JOIN rajoitusalue_rajoitus rr
+         ON rr.rajoitusalue_id = ra.id
+ WHERE ra.poistettu = FALSE
+   AND rr.poistettu = FALSE
+   AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INT
+   AND ra.urakka_id = :urakka-id::INT
+ ORDER BY rr.suolarajoitus DESC,
+          (ra.tierekisteriosoite).tie ASC,
+          (ra.tierekisteriosoite).aosa ASC,
+          (ra.tierekisteriosoite).aet ASC;
+
 -- name: hae-rajoitusalueet-summatiedoin
 WITH suola AS (
     SELECT SUM(rp.maara) as maara,
@@ -509,3 +534,16 @@ SELECT sr.sijainti, t.alkanut
        JOIN suolatoteuma_reittipiste sr on sr.toteuma = t.id
  WHERE t.urakka = :urakka-id::INT
   AND t.alkanut BETWEEN :alkupaiva::DATE AND :loppupaiva::DATE + INTERVAL '1 days'
+
+-- name: hae-suolatoteuma-reitit
+SELECT t.id                                                          AS toteuma_id,
+       ST_MakeLine(sr.sijainti::geometry ORDER BY sr.aika)            AS reitti,
+       MIN(sr.aika)                                                   AS alku_aika,
+       MAX(sr.aika)                                                   AS loppu_aika
+  FROM toteuma t
+       JOIN suolatoteuma_reittipiste sr
+         ON sr.toteuma = t.id
+ WHERE t.poistettu = FALSE
+   AND t.urakka = :urakka-id::INT
+   AND t.alkanut BETWEEN :alkupaiva::DATE AND :loppupaiva::DATE + INTERVAL '1 days'
+ GROUP BY t.id;

@@ -32,6 +32,7 @@
             [harja.kyselyt.paallysteen-korjausluokat :as korjausluokka-kyselyt]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieturvallisuusverkko :as tieturvallisuusverkko-tuonti]
             [harja.geo :as geo]
+            [harja.pvm :as pvm]
             [clojure.string :as str]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
@@ -121,6 +122,59 @@
                                 (assoc :sijainti (geo/pg->clj (:sijainti s)))))
                          suolat)]
     suolat))
+
+(defn- hae-suolatoteuma-reitit
+  "Älä hae tällä liian laajalta aikaväliltä"
+  [db tiedot]
+  (let [reitit (suolarajoitus-kyselyt/hae-suolatoteuma-reitit db tiedot)]
+    (map (fn [r]
+           (-> r
+               (update :reitti (fn [reitti]
+                                 (when reitti
+                                   (geo/pg->clj reitti))))))
+         reitit)))
+
+(defn- hae-suolarajoitukset-geometrialla
+  [db {:keys [urakka-id hoitokauden-alkuvuosi]}]
+  (let [rajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-hoitokaudelle-geometrialla
+                      db
+                      {:urakka-id urakka-id
+                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+    (map (fn [r]
+           (-> r
+               (update :tierekisteriosoite konv/lue-tr-osoite)
+               (update :sijainti (fn [sijainti]
+                                   (when sijainti
+                                     (geo/pg->clj sijainti))))))
+         rajoitukset)))
+
+(defn- hae-suolarajoitukset-ja-suolatoteumat
+  [db payload]
+  (let [alkupaiva (:alkupaiva payload)
+        hoitokauden-alkuvuosi (or (:hoitokauden-alkuvuosi payload)
+                                  (when (seq alkupaiva)
+                                    (let [[vuosi-str kk-str] (take 2 (string/split alkupaiva #"-"))]
+                                      (when (and (seq vuosi-str) (seq kk-str))
+                                        (pvm/hoitokauden-alkuvuosi (Integer/parseInt vuosi-str)
+                                                                  (Integer/parseInt kk-str))))))
+        payload (assoc payload :hoitokauden-alkuvuosi hoitokauden-alkuvuosi)]
+    (when-not hoitokauden-alkuvuosi
+      (throw (ex-info "Hoitokauden alkuvuotta ei voitu päätellä alkupäivästä" {:payload payload})))
+    {:rajoitukset (hae-suolarajoitukset-geometrialla db payload)
+     :suolatoteumat {:pisteet (hae-suolatoteumat db payload)
+                    :reitit (hae-suolatoteuma-reitit db payload)}}))
+
+(defn- hae-suolapoikkeamat
+  "Hakee toteumat joissa on poikkeamia suolamäärissä.
+   Rajataan vain suola-materiaaleihin (talvisuola, erityisalue, kesasuola) ja vain poikkeaviin toteumiin (delta != 0).
+   Palautetaan max 500 riviä."
+  [db {:keys [urakka-id alkupvm loppupvm]}]
+  (log/info "Haetaan suolapoikkeamat" {:urakka-id urakka-id :alkupvm alkupvm :loppupvm loppupvm})
+  (let [tulokset (q/hae-suolapoikkeamat db {:urakka-id urakka-id
+                                            :alkupvm alkupvm
+                                            :loppupvm loppupvm})]
+    (log/info "Suolapoikkeamat haettu:" (count tulokset) "riviä")
+    (vec tulokset)))
 
 (defn hae-urakan-geometriat
   "Osaa hakea vain hoido/mhu urakoiden ja valaistusurakoiden geometriat tällä hetkellä."
@@ -393,6 +447,10 @@
       (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
       :debug-hae-paivan-suolatoteumat
       (vaadi-jvh! (partial #'hae-suolatoteumat db))
+      :debug-hae-suolarajoitukset-ja-suolatoteumat
+      (vaadi-jvh! (partial #'hae-suolarajoitukset-ja-suolatoteumat db))
+      :debug-hae-suolapoikkeamat
+      (vaadi-jvh! (partial #'hae-suolapoikkeamat db))
       :debug-hae-urakan-geometriat
       (vaadi-jvh! (partial #'hae-urakan-geometriat db))
       :debug-laheta-email
@@ -426,6 +484,8 @@
       :debug-paivita-raportit
       :debug-hae-rajoitusalueet
       :debug-hae-paivan-suolatoteumat
+      :debug-hae-suolarajoitukset-ja-suolatoteumat
+      :debug-hae-suolapoikkeamat
       :debug-hae-urakan-geometriat
       :debug-laheta-email
       :debug-laheta-emailapi
