@@ -61,14 +61,12 @@ RETURNING id INTO muutos_id_3;
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
 VALUES (_versio, muutos_id_3, 'hankintakustannukset',
         _toimenpideinstanssi_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
 VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_alle_600mm,
-        ensimmainen_tayden_hkn_alkuvuosi,
-        30, -30, 0);
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
+        ensimmainen_tayden_hkn_alkuvuosi, -30);
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
 VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_600_1000mm,
-        ensimmainen_tayden_hkn_alkuvuosi,
-        40, -40, 0);
+        ensimmainen_tayden_hkn_alkuvuosi, -40);
 INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja)
 VALUES ('rumpu.jpg', 'image/png', 'harja-ui'::lahde,
         urakka_id, NOW(), kayttaja_id_tero)
@@ -114,10 +112,9 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi
         VALUES (_versio, muutos_id_1, 'hankintakustannukset',
                 _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
         -- Muutos 1: Päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
-        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
-        VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi,
-                1000, 100, 1100);
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
+        VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi, 100);
 
         -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - kustannusvaikutus
         --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta kustannusvaikutusta lisätään
@@ -129,10 +126,9 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi
         -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - tehtävä- ja määräluettelon muutokset
         --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta määrämuutoksia lisätään
         --           seuraaville kokonaisille hoitovuosille
-        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
-        VALUES (_versio, muutos_id_5, _tehtava_id_ab_paikkaus, vuosi,
-                1000, 100, 1100);
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
+        VALUES (_versio, muutos_id_5, _tehtava_id_ab_paikkaus, vuosi, 100);
 
     END LOOP;
 

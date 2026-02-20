@@ -213,8 +213,8 @@
                         :tehtavat_ja_maarat [{:tehtava 17345, :uusi? true, :maaramuutos 10, :hoitokauden_alkuvuosi 2025}
                                              {:tehtava 11235, :uusi? true, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
                                              {:tehtava 17350, :uusi? true, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}
-                                             {:tehtava 6953, :uusi_maara 1100, :maaramuutos 111, :edellinen_maara 1000, :hoitokauden_alkuvuosi 2025}
-                                             {:tehtava 6953, :uusi_maara 1100, :maaramuutos 222, :edellinen_maara 1000, :hoitokauden_alkuvuosi 2026}],
+                                             {:tehtava 6953, :maaramuutos 111, :hoitokauden_alkuvuosi 2025}
+                                             {:tehtava 6953, :maaramuutos 222, :hoitokauden_alkuvuosi 2026}],
                         :kustannusvaikutukset [{:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1000, :hoitokauden_alkuvuosi 2025}
                                                {:toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :summa 1000, :hoitokauden_alkuvuosi 2026}
                                                {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025}
