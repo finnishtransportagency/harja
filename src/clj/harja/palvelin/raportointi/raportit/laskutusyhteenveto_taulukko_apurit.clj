@@ -32,6 +32,10 @@
                     (= "Toteutuneet" otsikko)
                     [(when (or kyseessa-kk-vali? kyseessa-hoitokausi-vali?)
                        (valitaulukko-rivi data false "Hoitovuoden alun indeksikorjattu tavoitehinta" :hoitovuoden_alun_indkorj_tavoitehinta :hoitovuoden_alun_indkorj_tavoitehinta true nil nil))
+                     ;; Jätän tämän kommentteihin, koska voi olla, että lisätään pikaisesti takaisin
+                     #_ (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
+
                      ;;   19-24 urakoilla on tavoitehinnan oikaisuja
                      (when (yhteiset/raha-arvo-olemassa? (:tavoitehinta_oikaisu_summa data))
                        (valitaulukko-rivi data false "Tavoitehinnan muutokset" :tavoitehinta_oikaisu_summa nil true nil nil))

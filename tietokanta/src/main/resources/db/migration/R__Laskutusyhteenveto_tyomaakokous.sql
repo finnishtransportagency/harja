@@ -1121,6 +1121,9 @@ BEGIN
         kaikki_rahavaraukset_val_yht := kaikki_rahavaraukset_val_yht + val_aika_yht_array[i];
     END LOOP;
 
+    RAISE NOTICE 'kaikki_rahavaraukset_hoitokausi_yht: %', kaikki_rahavaraukset_hoitokausi_yht;
+    RAISE NOTICE 'kaikki_rahavaraukset_val_yht: %',kaikki_rahavaraukset_val_yht;
+
     ---------------------------------------------
     ---------------  Muut kulut   ---------------
     ---------------------------------------------
@@ -1599,7 +1602,7 @@ BEGIN
               -- Ei tavoitehintaiset 
               muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
               muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht,
-             -- Pysyvät muutokset
+        -- Pysyvät muutokset
               pysyvat_muutokset_hoitokausi_yht,
               pysyvat_muutokset_val_aika_yht,
               pysyvat_muutokset_ed_hoitokausi
