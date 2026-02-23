@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.apurit
   (:require [clojure.string :as str]
+            [harja.testi :refer :all]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]))
 
@@ -222,3 +223,11 @@
     ;; Tarjous
     (tarjous-kyselyt/tallenna-tarjous-tietokantaan
       db urakka-id (:id kayttaja) kattohintakerroin tarjous vahvistetut-vuodet)))
+
+(defn poista-tarjoukset-tietokannasta!
+  "Poistaa kaikki tarjouksessa olevat rivit tietokannasta, jotta testit voidaan ajaa uudestaan."
+  []
+  ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+  (u "DELETE FROM tarjous_kustannukset")
+  (u "DELETE FROM tarjous_johto_ja_hallintokorvaus")
+  (u "DELETE FROM tarjous"))
