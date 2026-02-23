@@ -75,7 +75,7 @@ run_fix() {
         echo "   Nämä korjaukset eivät muuta workflowien toiminnallisuutta."
     fi
 
-    run_zizmor --fix "$fix_mode" "${EXTRA_OPTS[@]}"
+    run_zizmor --fix="$fix_mode" "${EXTRA_OPTS[@]}"
 }
 
 # Parsi komentorivioptiot
@@ -85,11 +85,11 @@ EXTRA_OPTS=(--persona=pedantic)
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
     --fix=safe)
-        FIX_MODE="only-safe"
+        FIX_MODE="safe"
         shift
         ;;
     --fix=unsafe-only)
-        FIX_MODE="only-unsafe"
+        FIX_MODE="unsafe-only"
         shift
         ;;
     -h | --help)
