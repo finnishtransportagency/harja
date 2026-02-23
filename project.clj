@@ -28,7 +28,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.1.0"]
+                 [com.stuartsierra/component "1.2.0"]
 
                  ;; -- Lokitus / assertointi / virheiden käsittely
                  ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
