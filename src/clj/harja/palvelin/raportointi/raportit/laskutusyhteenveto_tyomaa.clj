@@ -283,17 +283,18 @@
                 :tavoitehintainen? true})
 
      ;; ----------------------------------------------------- ;;
-     ;;    Hankinnat ja hoidonjohto yhteensä                  ;;
+     ;;    Hoitovuoden alun indeksikorjattutavoitehinta       ;;
+     ;;    Tavoitehinnan muutokset                            ;;
      ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä   ;;
-     ;;    Tavoitehinta (indeksikorjattu)                     ;;
-     ;;    Siirto edelliseltä vuodelta                        ;;
      ;;    Budjettia jäljellä                                 ;;
      ;; ----------------------------------------------------- ;;
      (taulukot/valitaulukko {:data rivitiedot
                              :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
+                             :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+                             :kyseessa-kk-vali? kyseessa-kk-vali?
+                             :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
 
      ;; Ei tavoitehintaiset
      (if

@@ -66,11 +66,17 @@
                     (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))]
 
     (if urakka-tavoite
-      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+      {:hoitokauden-alun-indeksikorjattu-tavoitehinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+       :oikaisujen-maara (if (and (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                           (- (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                           0)
+       :kirjallisesti-sovitut-muutokset (or (:pysyva-muutos-summa urakka-tavoite) 0M)
        :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
        :oikaistu? oikaistu?}
-      {:tavoite-hinta 0
+      {:hoitokauden-alun-indeksikorjattu-tavoitehinta 0
        :jaljella 0
+       :kirjallisesti-sovitut-muutokset nil
+       :oikaisujen-maara nil
        :oikaistu? oikaistu?})))
 
 
@@ -235,7 +241,6 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                               urakoiden-parametrit)
-        
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
@@ -298,17 +303,9 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     (taulukot/toteutuneet-valitaulukko {:data (first koostettu-yhteenveto)
+     (taulukot/toteutuneet-valitaulukko {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
                                          :otsikko "Toteutuneet"
                                          :laskutettu-teksti laskutettu-teksti
                                          :laskutetaan-teksti laskutetaan-teksti
-                                         :kyseessa-kk-vali? kyseessa-kk-vali?})
-     ;; Näytetään nämä vain jos hoitokausi valittuna
-     (when hoitokausi?
-       (taulukot/toteutuneet-valitaulukko {:data (second koostettu-yhteenveto)
-                                           :otsikko ""
-                                           :laskutettu-teksti (str (if (-> koostettu-yhteenveto second :oikaistu?)
-                                                                     "Tavoitehinta (oikaistu)"
-                                                                     "Tavoitehinta (indeksikorjattu)"))
-                                           :laskutetaan-teksti "Budjettia jäljellä"
-                                           :kyseessa-kk-vali? true}))]))
+                                         :kyseessa-kk-vali? kyseessa-kk-vali?
+                                         :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})]))

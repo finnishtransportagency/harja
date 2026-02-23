@@ -24,25 +24,22 @@
 ;; NOTE: Tätä käytetään pääasiassa työmaakokouksen laskutusyhteenvedossa
 (defn valitaulukko
   "Työmaakokous välitaulukko ilman tyylejä"
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali?]}]
-  (let [rivit (into []
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti]}]
+  (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
+        rivit (into []
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-                    [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
+                    [(when (or kyseessa-kk-vali? kyseessa-hoitokausi-vali?)
+                       (valitaulukko-rivi data false "Hoitovuoden alun indeksikorjattu tavoitehinta" :hoitovuoden_alun_indkorj_tavoitehinta :hoitovuoden_alun_indkorj_tavoitehinta true nil nil))
+                     ;;   19-24 urakoilla on tavoitehinnan oikaisuja
+                     (when (yhteiset/raha-arvo-olemassa? (:tavoitehinta_oikaisu_summa data))
+                       (valitaulukko-rivi data false "Tavoitehinnan muutokset" :tavoitehinta_oikaisu_summa nil true nil nil))
+                     ;;   -25 urakoilla on tavoitehinnan pysyviä muutoksia - niitä sanotaan kirjallisesti sovituiksi  muutoksiksi
+                     (when (yhteiset/raha-arvo-olemassa? (:pysyvat_muutokset_hoitokausi_yht data))
+                       (valitaulukko-rivi data false "Kirjallisesti sovitut muutokset" :pysyvat_muutokset_hoitokausi_yht nil true nil nil))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
-
-                     ;; Nätetään arvot vain jos on olemassa
-                     (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
-                       
-                       (valitaulukko-rivi data false (str (if (:tavoitehinta_on_oikaistu data)
-                                                                            "Hoitovuoden lopun tavoitehinta"
-                                                                            "Hoitovuoden alun indeksikorjattu tavoitehinta"))
-                         :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
-
-                     (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
+                     (when (and (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data)) (not kyseessa-vapaa-aikavali?))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
 
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)
@@ -61,7 +58,8 @@
      (rivi
        {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
        {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 48 :tyyppi :varillinen-teksti}
-       {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
+       {:otsikko (if kyseessa-vapaa-aikavali? vapaa-aikavali-teksti laskutettu-teksti)
+        :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
          {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
      rivit]))
@@ -83,17 +81,21 @@
 
 ;; NOTE: Tätä käytetään pääasiassa tuotekohtaisessa laskutusyteenvedossa
 (defn toteutuneet-valitaulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                                         kyseessa-kk-vali?]}]
-  (let [rivit (into []
+                                         kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
+  (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
+        rivit (into []
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
                     [(toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset yhteensä" :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton")
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (toteutuneet-rivi data kyseessa-kk-vali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
-                     (toteutuneet-rivi data kyseessa-kk-vali? "Toteutuneet kustannukset, jotka kuuluvat tavoitehintaan" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
-                     (toteutuneet-rivi data false "" :nil :nil false nil nil)
-                     (toteutuneet-rivi data false "" :nil :nil false nil nil)]
+                     (toteutuneet-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :kaikki-tavoitehintaiset-laskutettu :kaikki-tavoitehintaiset-laskutetaan true nil nil)
+                     (when-not kyseessa-vapaa-aikavali?
+                       (toteutuneet-rivi data kyseessa-kk-vali? "Hoitovuoden alun indeksikorjattu tavoitehinta" :hoitokauden-alun-indeksikorjattu-tavoitehinta nil true nil nil))
+                     ;;   19-24 urakoilla on tavoitehinnan oikaisuja
+                     (when (yhteiset/raha-arvo-olemassa? (:oikaisujen-maara data)) (toteutuneet-rivi data kyseessa-kk-vali? "Tavoitehinnan muutokset" :oikaisujen-maara nil true nil nil))
+                     ;;   -25 urakoilla on kirjallisesti sovittuja pysyviä muutoksia
+                     (when (yhteiset/raha-arvo-olemassa? (:kirjallisesti-sovitut-muutokset data)) (toteutuneet-rivi data kyseessa-kk-vali? "Kirjallisesti sovitut muutokset" :kirjallisesti-sovitut-muutokset nil true nil nil))
+                     (when-not kyseessa-vapaa-aikavali? (toteutuneet-rivi data kyseessa-kk-vali? "Budjettia jäljellä" :jaljella nil true nil nil))]
 
                     :else
                     ;;  Tuotekohtainen -> tavoitehinta

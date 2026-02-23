@@ -64,17 +64,46 @@ SELECT ut.id,
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
-       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) +
-        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))                                    AS "hoitovuoden-lopun-tavoitehinta",
-       COALESCE(ko."uusi-kattohinta",
-                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) + -- Tavoitehinta + mahdolliset oikaisut
+        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))  -- Hoitovuoden lopun indeksikorjaus
+                                                                                              AS "hoitovuoden-lopun-tavoitehinta",
+       COALESCE(ko."uusi-kattohinta", -- Oikaistu kattohinta
+                (ut.kattohinta_indeksikorjattu + -- Indeksikorjattu kattohinta
+                 (COALESCE(t.summa,0) -- Mahdolliset oikaisut
+                      * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
        COALESCE(ko."uusi-kattohinta",
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
                     + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
-       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
+       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
+       (SELECT SUM(mmk.summa)
+        FROM mhu_muutos mm
+                 JOIN mhu_muutos_kustannusvaikutus mmk
+                      ON mmk.muutos = mm.id
+        WHERE mm.urakka = :urakka
+          AND mm.voimassa_alkaen BETWEEN
+            (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
+            AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+          AND mm.tyyppi IN ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus')
+          AND mm.poistettu IS FALSE
+          AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+        group by mmk.hoitokauden_alkuvuosi)                                                   AS "pysyva-muutos-summa",
+       -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
+       indeksikorjaa(
+       (SELECT SUM(mmk.summa)
+        FROM mhu_muutos mm
+                 JOIN mhu_muutos_kustannusvaikutus mmk
+                      ON mmk.muutos = mm.id
+        WHERE mm.urakka = :urakka
+          AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+          AND mm.poistettu IS FALSE
+          AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi
+          AND mm.voimassa_alkaen < (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))),
+       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INT, 10, u.id)
+                                                                                               AS "menneet-pysyva-muutos-summa"
+
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
