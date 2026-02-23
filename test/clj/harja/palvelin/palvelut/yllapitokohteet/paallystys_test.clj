@@ -1326,7 +1326,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 ;; Jossain tilanteessa heitettiin virhe Liian herkästi muun kohteen päällekkäisyydestä vaikka ei ollut
-(deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon.
+(deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
