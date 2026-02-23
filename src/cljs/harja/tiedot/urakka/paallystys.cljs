@@ -284,7 +284,14 @@
           ;; gensym on tässä vain poistamassa virheilmoituksen. Se ei estä remounttailua.
           (interpose '(^{:key (str (gensym))} [:p "------------"])
             (map virheviestit-komponentti virhe)))
-        :default
+
+        (and (sequential? virhe)
+             (seq virhe)
+             (every? map? virhe))
+        (concat
+          (interpose '(^{:key (str (gensym))} [:p "------------"])
+            (mapcat virheviestit-komponentti virhe)))
+        :else
         [:div
          [:p (str virhe)]]))))
 
@@ -329,33 +336,39 @@
 (defn rivita-virheet
   "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
   [virhe]
-  (let [luettu-json (transit/read (transit/reader :json) virhe)]
-    (cond
-      (or
-        (not (coll? luettu-json))
-        (str/includes? virhe "missing-required-key"))
-      luettu-json
+  (try
+    (let [luettu-json (if (string? virhe)
+                        (transit/read (transit/reader :json) virhe)
+                        virhe)
+          missing-required-key? (and (string? virhe)
+                                     (str/includes? virhe "missing-required-key"))]
+      (cond
+        (or (not (coll? luettu-json))
+            missing-required-key?)
+        luettu-json
 
-      :else
-      [(reduce-kv (fn [m k v]
-                    (assoc m k (distinct
-                                 (flatten
-                                   (cond
-                                     (map? v)
-                                     v
+        :else
+        [(reduce-kv (fn [m k v]
+                      (assoc m k (distinct
+                                   (flatten
+                                     (cond
+                                       (map? v)
+                                       v
 
-                                     (string? v)
-                                     (list v)
+                                       (string? v)
+                                       (list v)
 
-                                     :else
-                                     (map (fn [kohde]
-                                            (cond
-                                              (empty? kohde) nil
+                                       :else
+                                       (map (fn [kohde]
+                                              (cond
+                                                (empty? kohde) nil
 
-                                              :else
-                                              (vals kohde)))
-                                       v))))))
-         {} luettu-json)])))
+                                                :else
+                                                (vals kohde)))
+                                            v))))))
+           {} luettu-json)]))
+    (catch :default _
+      virhe)))
 
 (defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
   (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe]

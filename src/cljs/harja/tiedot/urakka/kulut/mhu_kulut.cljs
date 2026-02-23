@@ -30,6 +30,15 @@
 (defrecord KoontilaskunNumero [koontilaskunnumero])
 (defrecord KulunLisatieto [lisatieto])
 (defrecord ValitseHoitokausi [vuosi])
+(defrecord HaeLaskutusraja [vuosi])
+(defrecord HaeLaskutusrajaOnnistui [vastaus])
+(defrecord HaeLaskutusrajaEpaonnistui [vastaus])
+(defrecord HaeHoitokaudenKulujenSumma [alkupvm loppupvm])
+(defrecord HaeHoitokaudenKulujenSummaOnnistui [vastaus])
+(defrecord HaeHoitokaudenKulujenSummaEpaonnistui [vastaus])
+(defrecord HaeKulutYhteensaHakukuukauteenAsti [alkupvm loppupvm])
+(defrecord HaeKulutYhteensaHakukuukauteenAstiOnnistui [vastaus])
+(defrecord HaeKulutYhteensaHakukuukauteenAstiEpaonnistui [vastaus])
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
@@ -497,6 +506,71 @@
         (assoc-in [:parametrit :haun-kuukausi] nil)
         (assoc-in [:parametrit :haun-alkupvm] nil)
         (assoc-in [:parametrit :haun-loppupvm] nil))))
+
+  HaeLaskutusraja
+  (process-event [{vuosi :vuosi} app]
+    (tuck-apurit/post! :hae-urakan-laskutusraja
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id) :hoitovuosi vuosi}
+      {:onnistui ->HaeLaskutusrajaOnnistui
+       :epaonnistui ->HaeLaskutusrajaEpaonnistui})
+    (-> app
+      (assoc :haku-kaynnissa? (boolean vuosi))))
+
+  HaeLaskutusrajaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :laskutusraja-kaytossa? (:laskutusraja-kaytossa vastaus))
+      (assoc :laskutusraja (:laskutusraja vastaus))))
+
+  HaeLaskutusrajaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :haku-kaynnissa? false))
+
+  HaeHoitokaudenKulujenSumma
+  (process-event [{:keys [alkupvm loppupvm]} app]
+    (tuck-apurit/post! :hae-hoitokauden-kulujen-summa
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :alkupvm alkupvm
+       :loppupvm loppupvm}
+      {:onnistui ->HaeHoitokaudenKulujenSummaOnnistui
+       :epaonnistui ->HaeHoitokaudenKulujenSummaEpaonnistui})
+    (-> app
+      (assoc :hoitokauden-kulujen-summa-haku-kaynnissa? true)))
+
+  HaeHoitokaudenKulujenSummaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :hoitokauden-kulujen-summa-haku-kaynnissa? false)
+      (assoc :hoitokauden-kulujen-summa vastaus)))
+
+  HaeHoitokaudenKulujenSummaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Hoitokauden kulujen summan haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :hoitokauden-kulujen-summa-haku-kaynnissa? false))
+
+  HaeKulutYhteensaHakukuukauteenAsti
+  (process-event [{:keys [alkupvm loppupvm]} app]
+    (tuck-apurit/post! :hae-hoitokauden-kulujen-summa
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :alkupvm alkupvm
+       :loppupvm loppupvm}
+      {:onnistui ->HaeKulutYhteensaHakukuukauteenAstiOnnistui
+       :epaonnistui ->HaeKulutYhteensaHakukuukauteenAstiEpaonnistui})
+    (-> app
+      (assoc :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? true)))
+
+  HaeKulutYhteensaHakukuukauteenAstiOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? false)
+      (assoc :kulut-yhteensa-hakukuukauteen-asti vastaus)))
+
+  HaeKulutYhteensaHakukuukauteenAstiEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Kumulatiivisten kulujen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? false))
 
   NakymastaPoistuttiin
   (process-event [_ _app]

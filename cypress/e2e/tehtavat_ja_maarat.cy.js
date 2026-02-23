@@ -10,6 +10,9 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
     // Poista urakalta kaikki vuosittaiset suunnitelmat ja tehtävämäärät
     cy.terminaaliKomento().then((terminaaliKomento) => {
         const sql = `
+            -- Varmista, että urakalla on sopimuksen tehtävämäärät olemassa (testidatan varaan ei kannata luottaa)
+            SELECT luo_kaikille_tehtaville_testitarjousmaarat('${urakkaNimi}', 1100);
+
             DELETE
             FROM urakka_tehtavamaara
             WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');
@@ -17,14 +20,6 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
             DELETE
             FROM sopimuksen_tehtavamaarat_tallennettu
             WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');
-
-            DELETE
-            FROM sopimus_tehtavamaara
-            WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}')
-              AND tehtava IN (SELECT id
-                              FROM tehtava
-                              WHERE nimi IN ('Ise ohituskaistat', 'Pysäkkikatosten puhdistus',
-                                             'Opastustaulun/-viitan uusiminen'));
         `;
 
         // Poista uudet rivit komennosta, ja pidä yllä oleva query on luettavana
@@ -39,22 +34,27 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
 
     before(() => {
         // Resetoidaan urakan kaikki tehtävämäärät.
-        alustaKantaanTehtavatJaMaarat('Pellon MHU testiurakka (3. hoitovuosi)');
+        alustaKantaanTehtavatJaMaarat('Rovaniemen MHU testiurakka (1. hoitovuosi)');
         avaaHarjaTimeoutilla();
         
         cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
         cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Pellon MHU testiurakka (3. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
         // Mene suunnittelu välilehdelle
         cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: ladataanHarjaaTimeout}).click();
         // Avaa Tehtävä- ja määräluettelo -välilehti
         cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: ladataanHarjaaTimeout}).should('not.exist');
+
+        // Varmista että näkymä on varmasti valmis ennen testejä
+        cy.get('h1', {timeout: ladataanHarjaaTimeout}).contains('Tehtävä ja määräluettelo').should('be.visible');
+        cy.get('table.grid', {timeout: ladataanHarjaaTimeout}).should('exist');
+        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]', {timeout: ladataanHarjaaTimeout}).should('exist');
     })
 
     it('Avaa tehtävä- ja määräluettelo', () => {
-        cy.get('h1').contains('Tehtävät ja määrät').should('be.visible');
-        cy.get('span').contains('Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla.').should('be.visible');
+        cy.get('h1').contains('Tehtävä ja määräluettelo').should('be.visible');
+        cy.get('span').contains('Pysyvät muutokset sopimuksen määriin kirjataan muutokset-sivulla.').should('be.visible');
 
         cy.get('table.grid').contains('Ise 2-ajorat.').should('be.visible');
         cy.get('table.grid').contains('Ise 1-ajorat.').should('be.visible');
@@ -64,11 +64,19 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
 
     });
 
-    it('Muokkaa sopimuksen määriä', () => {
+    it('Muokkaa alkuperäisen sopimuksen määriä', () => {
         cy.intercept('POST', '_/tallenna-tehtavat-ja-maarat').as('tallenna');
 
-        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').click();
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('10');
+        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]', {timeout: ladataanHarjaaTimeout}).should('be.visible').click();
+
+        // Käytetään tehtävää, jonka olemassaoloon ei liity erillistä testidata-oletusta
+        cy.get('table.grid', {timeout: ladataanHarjaaTimeout})
+            .contains('Ise rampit', {timeout: clickTimeout})
+            .parents('tr')
+            .first()
+            .find('td.muokattava input')
+            .clear()
+            .type('10');
 
         // Tallennetaan muutokset
         cy.get('div.painikkeet button').contains('Tallenna').click();
@@ -90,8 +98,14 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
             cy.contains('1. hoitovuosi').click();
         });
 
-        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]').click();
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('43');
+        cy.get('[data-cy="btn-muokkaa-sopimuksen-maaria"]', {timeout: ladataanHarjaaTimeout}).should('be.visible').click();
+        cy.get('table.grid', {timeout: ladataanHarjaaTimeout})
+            .contains('Ise rampit', {timeout: clickTimeout})
+            .parents('tr')
+            .first()
+            .find('td.muokattava input')
+            .clear()
+            .type('43');
 
         // Tallennetaan muutokset
         cy.get('[data-cy="btn-kopioi-tuleville-hoitovuosille"]').click();
@@ -107,7 +121,12 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
             cy.get('button').click({force: true});
             cy.contains('5. hoitovuosi').click();
         });
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.ei-muokattava').contains('43');
+        cy.get('table.grid', {timeout: ladataanHarjaaTimeout})
+            .contains('Ise rampit', {timeout: clickTimeout})
+            .parents('tr')
+            .first()
+            .find('td.ei-muokattava')
+            .contains('43');
 
     });
 
