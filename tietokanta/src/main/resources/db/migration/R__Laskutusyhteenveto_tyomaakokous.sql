@@ -1214,7 +1214,7 @@ BEGIN
       AND mm.voimassa_alkaen BETWEEN hk_alkupvm AND hk_loppupvm;
 
     -- Aktiiviset jjh muutokset kuluista koko hoitovuodelle
-    SELECT SUM(kokonaissumma) INTO pysyvat_jjhmuutokset_hoitokausi_yht
+    SELECT COALESCE(SUM(kokonaissumma),0) INTO pysyvat_jjhmuutokset_hoitokausi_yht
     FROM mhu_muutos mm
              JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
          kulu k
@@ -1241,7 +1241,7 @@ BEGIN
       AND mm.voimassa_alkaen BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
 
     -- Aktiiviset jjh muutokset kuluista valitulle aikajaksolle
-    SELECT SUM(kokonaissumma) INTO pysyvat_jjhmuutokset_val_aika_yht
+    SELECT COALESCE(SUM(kokonaissumma),0) INTO pysyvat_jjhmuutokset_val_aika_yht
     FROM mhu_muutos mm
              JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
          kulu k
