@@ -33,6 +33,7 @@
         urakat (hae-urakat)
         urakkaid (ffirst urakat)
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        _ (poista-urakka)
 
         _ (tuo-maanteiden-hoidon-urakka {:sampo-id nil :ennen-2025? false})
         maanteiden-urakat (hae-urakat)
