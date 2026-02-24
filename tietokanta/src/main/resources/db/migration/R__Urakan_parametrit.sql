@@ -81,7 +81,7 @@ BEGIN
                                                                   WHEN urakan_tiedot.alkupvm < '2023-10-02'
                                                                       THEN FALSE
                                                                   ELSE TRUE END);
-            laskutusraja_kaytossa := (CASE
+            onko_laskutusraja_kaytossa := (CASE
                                           WHEN urakan_tiedot.alkupvm >= '2025-01-01' THEN TRUE
                                           ELSE FALSE END);
 
@@ -104,7 +104,7 @@ BEGIN
                     lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus = tavoitehintaan_hoitovuodenlopunindeksikorjaus,
                     muokattu                                            = NOW(),
                     muokkaaja                                           = luojaid,
-                    laskutusraja_kaytossa                               = laskutusraja_kaytossa
+                    laskutusraja_kaytossa                               = onko_laskutusraja_kaytossa
                 WHERE urakkaid = urakan_tiedot.id;
             ELSE
                 -- Jos ei löydy, niin lisätään
@@ -123,7 +123,7 @@ BEGIN
                         (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti,
                         kattohintaylityksen_prosenttirajoitus_siirrolle, muokkaa_kasin_kattohinta,
                         kerroin_hoitokauden_lopun_kattohinnalle,
-                        tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW(), laskutusraja_kaytossa);
+                        tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW(), onko_laskutusraja_kaytossa);
             END IF;
         end LOOP;
 END
