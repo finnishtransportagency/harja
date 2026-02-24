@@ -350,6 +350,10 @@ $$
         VALUES (30, tarjousid5, urakkaid, 2029, 8000.00, 'tavoitehintaiset-rahavaraukset', null, null, 3, kayttajaid,
                 '2026-02-23 08:12:09.191964', null, null);
 
-
+        -- Päivitä tarjouksen summa myös urakka_tavoite tauluun
+        UPDATE urakka_tavoite
+        SET tarjous_tavoitehinta = (SELECT SUM(summa) FROM tarjous_kustannukset WHERE tarjous_id = tarjousid1),
+        tarjous_kattohinta = (SELECT SUM(summa)*1.2 FROM tarjous_kustannukset WHERE tarjous_id = tarjousid1)
+        WHERE urakka = urakkaid; -- Ei välitetä hoitokaudesta, koska summa on kaikilla hiotokausilla (1-5) sama
     END
 $$ LANGUAGE plpgsql;
