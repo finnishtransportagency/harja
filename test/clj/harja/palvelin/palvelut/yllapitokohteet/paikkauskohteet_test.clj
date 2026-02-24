@@ -5,6 +5,12 @@
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [cheshire.core :as cheshire]
+            [harja.jms-test :refer [feikki-jms]]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.integraatio :as integraatio]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
@@ -15,7 +21,9 @@
             [dk.ative.docjure.spreadsheet :as xls]
             [clojure.java.io :as io]
             [harja.kyselyt.paikkaus :as paikkaus-q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv])
+  (:use org.httpkit.fake)
+  (:import (java.util UUID)))
 
 (declare thrown?)
 
@@ -26,9 +34,20 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :fim (component/using
+                               (fim/->FIM {:url +testi-fim+})
+                               [:db :integraatioloki])
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :paikkauskohteet (component/using
                                            (paikkauskohteet/->Paikkauskohteet)
-                                           [:http-palvelin :db])))))
+                                           [:http-palvelin :db :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -773,3 +792,83 @@
     ;; Tarkistetaan yhteenvetorivi
     (let [yhteenveto (first (drop 1 rivit))]
       (is (= "Yhteensä:" (nth yhteenveto 12)) "Yhteensä-teksti pitäisi olla oikeassa kohdassa"))))
+
+(deftest tilaa-monta-paikkauskohdetta-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde1 (merge {:urakka-id urakka-id}
+                (default-paikkauskohde (rand-int 999999)))
+        kohde1 (assoc kohde1 :paikkauskohteen-tila "tilattu")
+        kohde2 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde (rand-int 999999)))
+        kohde2 (assoc kohde2 :paikkauskohteen-tila "tilattu")
+
+        fim-vastaus [{:sahkoposti "testityyppi@example.com" :nimi "Testi Testinen"}]
+        vastaus (with-redefs [fim/hae-urakan-kayttajat-jotka-roolissa (fn [x y z]
+                                                                        (println "kutsuttiin fakettua fim-vastausta")
+                                                                        fim-vastaus)]
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tilaa-valitut-paikkauskohteet
+                   +kayttaja-jvh+
+                   {:tilattavat-paikkauskohteet (vector kohde1 kohde2)}))]
+
+     (is (= vastaus {:onnistuneet 2, :epaonnistuneet 0, :virheet []}))))
+
+(deftest tilaa-monta-paikkauskohdetta-samalla-numerolla-test
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde1 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde 1))
+        kohde1 (assoc kohde1 :paikkauskohteen-tila "tilattu")
+        kohde2 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde 1))
+        kohde2 (assoc kohde2 :paikkauskohteen-tila "tilattu")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tilaa-valitut-paikkauskohteet
+                  +kayttaja-jvh+
+                  {:tilattavat-paikkauskohteet (vector kohde1 kohde2)})]
+
+    (is (= vastaus {:onnistuneet 1, :epaonnistuneet 1, :virheet ["throw+: {:type \"Validaatiovirhe\", :virheet {:koodi \"ERROR\", :viesti #{\"Paikkauskohteen Nro: '1' on jo käytössä.\\n        Numeron täytyy olla yksilöllinen.\\n        Samalla numerolla löytyy kohde: 'testinimi' alkanut: 01.01.2020\"}}}"]}))))
+
+(deftest tilaa-useampi-paikkauskohde-fim-integraatiolla
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        ;; Luodaan kaksi eri paikkauskohetta eri numeroilla
+        kohde1 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde (rand-int 999999)))
+        kohde1 (assoc kohde1 :paikkauskohteen-tila "tilattu")
+        kohde2 (merge {:urakka-id urakka-id}
+                 (default-paikkauskohde (rand-int 999999)))
+        kohde2 (assoc kohde2 :paikkauskohteen-tila "tilattu")
+        ;; FIM XML-vastaus jossa on urakan vastuuhenkilö
+        fim-xml (str "<Members>"
+                  "<member>"
+                  "<AccountName>A000001</AccountName>"
+                  "<FirstName>Testi</FirstName>"
+                  "<LastName>Testinen</LastName>"
+                  "<DisplayName>Testinen Testi</DisplayName>"
+                  "<Email>testi.testinen@example.com</Email>"
+                  "<MobilePhone>0401234567</MobilePhone>"
+                  "<Company>ELY</Company>"
+                  "<Role>1337133-LAP1_vastuuhenkilo</Role>"
+                  "<Disabled>false</Disabled>"
+                  "</member>"
+                  "<member>"
+                  "<AccountName>A000002</AccountName>"
+                  "<FirstName>Toinen</FirstName>"
+                  "<LastName>Henkilö</LastName>"
+                  "<DisplayName>Henkilö Toinen</DisplayName>"
+                  "<Email>toinen.henkilo@example.com</Email>"
+                  "<MobilePhone>0409876543</MobilePhone>"
+                  "<Company>ELY</Company>"
+                  "<Role>1337133-LAP1_vastuuhenkilo</Role>"
+                  "<Disabled>false</Disabled>"
+                  "</member>"
+                  "</Members>")
+        vastaus (with-fake-http
+                  [+testi-fim+ fim-xml]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tilaa-valitut-paikkauskohteet
+                    +kayttaja-jvh+
+                    {:tilattavat-paikkauskohteet (vector kohde1 kohde2)}))]
+
+    ;; Tarkistetaan että molemmat kohteet tilattiin onnistuneesti
+    (is (= vastaus {:onnistuneet 2, :epaonnistuneet 0, :virheet []}))))
+

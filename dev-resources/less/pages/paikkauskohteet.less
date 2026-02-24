@@ -133,3 +133,43 @@ div.kohdelistaus {
   display: flex;
   justify-content: space-between;
 }
+
+.tilaa-kohteita-vihje {
+  background-color: @gray240;
+  border: 1px solid @gray230;
+  border-radius: 4px;
+  padding: @valistys-16 @valistys-24;
+  margin-bottom: @valistys-16;
+  margin-top: @valistys-16;
+
+  .otsikko {
+    margin: 0 0 @valistys-8 0;
+    color: @blue-darker;
+    font-weight: 600;
+  }
+
+  .valitut-maara {
+    margin: 0;
+    font-size: 0.85rem;
+    color: @black-light;
+  }
+
+  .napit {
+    margin-top: @valistys-12;
+    gap: @valistys-12;
+
+    button {
+      margin-left: 0;
+      margin-right: @valistys-12;
+    }
+  }
+}
+
+.tilaus-vahvistus-modal {
+  min-width: 600px;
+  max-width: 800px;
+
+  .grid-taulukko {
+    margin-top: @valistys-16;
+  }
+}

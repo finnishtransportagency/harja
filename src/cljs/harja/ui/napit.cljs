@@ -91,7 +91,7 @@
             (when data-cy
               {:data-cy data-cy}))
 
-          (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
+          (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader nil {:luokka (:ajax-luokka asetukset)}] ikoni) (when ikoni (str " ")) teksti]
          (when (and @nayta-virheviesti? asetukset-nayta-virheviesti?)
            (case virheen-esitystapa
              :flash (do
