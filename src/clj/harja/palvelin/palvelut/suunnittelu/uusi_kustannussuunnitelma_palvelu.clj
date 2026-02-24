@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu
   (:require [harja.domain.mhu :as mhu]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
+            [harja.kyselyt.kulut :as kulut-q]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -76,6 +77,10 @@
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
           hoitovuoden-alun-kattohinta (:kattohinta tavoitetiedot)
           hoitovuoden-alun-indeksikorjattu-kattohinta (:kattohinta_indeksikorjattu tavoitetiedot)
+          laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id
+                                                                  :hoitokausinro hoitovuosinro}))
+          laskutusraja (:laskutusraja laskutusraja-rivi)
+          laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
 
           ;; Haetaan osio-kohtaisesti onko tulevilla hoitovuosilla >0 euroja tallennettuna 
           tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-loppuvuosi)
@@ -104,6 +109,8 @@
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
+                                    :laskutusraja-kaytossa? laskutusraja-kaytossa?
+                                    :laskutusraja laskutusraja
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin

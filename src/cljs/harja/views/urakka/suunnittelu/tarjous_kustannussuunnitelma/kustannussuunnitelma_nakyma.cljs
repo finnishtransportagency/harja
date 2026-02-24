@@ -446,12 +446,12 @@
            [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]])]]]))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe laskutusraja] :as app}]
+                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe] :as app}]
   (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                 hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin-str
                 kattohintakerroin hoitovuoden-alun-kattohinta
                 hoitovuoden-alun-indeksikorjattu-kattohinta vahvistettu?
-                vahvistus-virhe muokkaa-kattohinta-kasin]} kustannussuunnitelma
+                vahvistus-virhe muokkaa-kattohinta-kasin laskutusraja-kaytossa? laskutusraja]} kustannussuunnitelma
         valittu-vuosi (pvm/vuosi (first valittu-hoitokausi))
         tarjous-yht-rivi (filter #(= valittu-vuosi (:vuosi %)) (:hoitovuosittaiset-arvot (first (filter #(= "yhteensa" (:osio %)) (:tarjous tarjous)))))
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
@@ -495,10 +495,11 @@
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.text-right.kohdista-teksti (str "Hoitovuoden alun indeksikorjattu tavoitehinta (" indeksikerroin-str " * " (fmt/euro-opt false hoitovuoden-alun-tavoitehinta) ")")]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]]
-     [:div.row
-      [:div.col-xs-12.korkea-rivi.bottom-border-text
-       [:div.col-xs-9.body-text.text-right.kohdista-teksti "Laskutusraja"]
-       [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true laskutusraja)]]]
+     (when laskutusraja-kaytossa?
+       [:div.row
+        [:div.col-xs-12.korkea-rivi.bottom-border-text
+         [:div.col-xs-9.body-text.text-right.kohdista-teksti "Laskutusraja"]
+         [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true laskutusraja)]]])
      ;; Osalla urakoista kattohinta syötetään käsin.
      (if-not muokkaa-kattohinta-kasin
        [:div.row

@@ -341,12 +341,6 @@
 
   HaeKustannussuunnitelmanTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    ;; Haetaan myös laskutusraja
-    (let [hoitovuosi (pvm/vuosi (first (:valittu-hoitokausi vastaus)))]
-      (tuck-apurit/post! :hae-urakan-laskutusraja
-        {:urakka-id (-> @tila/yleiset :urakka :id) :hoitovuosi hoitovuosi}
-        {:onnistui mhu-kulut/->HaeLaskutusrajaOnnistui
-         :epaonnistui mhu-kulut/->HaeLaskutusrajaEpaonnistui}))
     (-> app
       (assoc :haku-kaynnissa? false)
       (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
@@ -718,12 +712,6 @@
         viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
     (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
-    ;; Haetaan laskutusraja uudelleen vahvistuksen/peruutuksen jälkeen
-    (let [hoitovuosi (pvm/vuosi (first @u/valittu-hoitokausi))]
-      (tuck-apurit/post! :hae-urakan-laskutusraja
-        {:urakka-id (-> @tila/yleiset :urakka :id) :hoitovuosi hoitovuosi}
-        {:onnistui mhu-kulut/->HaeLaskutusrajaOnnistui
-         :epaonnistui mhu-kulut/->HaeLaskutusrajaEpaonnistui}))
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
