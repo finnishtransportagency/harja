@@ -3,6 +3,8 @@
 
 -- Siivotaan ensin vanhat pois, niin uudet voi toimia
 DROP FUNCTION IF EXISTS ly_raportti_tyomaakokous(DATE, DATE, DATE, DATE, INTEGER);
+-- Poistetaan myös funktio ilman parametreja
+DROP FUNCTION IF EXISTS ly_raportti_tyomaakokous;
 DROP TYPE IF EXISTS LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
 -- Ensin määritellään TYPE, joka on ikäänkuin se objekti/rivi, jonka funktio palauttaa.
