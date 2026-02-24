@@ -1,4 +1,3 @@
-
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
 CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_urakalle(urakkaid_ INT) RETURNS VOID AS
 $$
@@ -143,6 +142,5 @@ BEGIN
         end loop;
 END
 $$ LANGUAGE plpgsql;
-
 
 select aseta_urakka_parametrit();
