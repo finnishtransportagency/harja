@@ -300,6 +300,8 @@ DECLARE
     pysyvat_muutokset_hoitokausi_yht      NUMERIC := 0.0;
     pysyvat_muutokset_val_aika_yht        NUMERIC := 0.0;
     pysyvat_muutokset_ed_hoitokausi       NUMERIC := 0.0;
+    pysyvat_jjhmuutokset_hoitokausi_yht   NUMERIC := 0.0;
+    pysyvat_jjhmuutokset_val_aika_yht     NUMERIC := 0.0;
 
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
@@ -1193,6 +1195,8 @@ BEGIN
     pysyvat_muutokset_hoitokausi_yht := 0.0;
     pysyvat_muutokset_val_aika_yht := 0.0;
     pysyvat_muutokset_ed_hoitokausi := 0.0;
+    pysyvat_jjhmuutokset_hoitokausi_yht := 0.0;
+    pysyvat_jjhmuutokset_val_aika_yht := 0.0;
 
     -- Aktiiviset pysyvät muutokset valitun hoitokauden alusta
     SELECT COALESCE(SUM(mmk.summa), 0)
@@ -1207,6 +1211,20 @@ BEGIN
       AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
       AND mm.voimassa_alkaen BETWEEN hk_alkupvm AND hk_loppupvm;
 
+    -- Aktiiviset jjh muutokset kuluista koko hoitovuodelle
+    SELECT SUM(kokonaissumma) INTO pysyvat_jjhmuutokset_hoitokausi_yht
+    FROM mhu_muutos mm
+             JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
+         kulu k
+             JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
+    WHERE k.id = mmk.kulu
+      AND mm.urakka = ur
+      AND k.poistettu IS FALSE
+      AND kk.poistettu IS FALSE
+      AND k.erapaiva BETWEEN hk_alkupvm AND hk_loppupvm;
+
+    pysyvat_muutokset_hoitokausi_yht := pysyvat_muutokset_hoitokausi_yht + pysyvat_jjhmuutokset_hoitokausi_yht;
+
     -- Aktiiviset pysyvät muutokset valitun aikavälin sisällä
     SELECT COALESCE(SUM(mmk.summa), 0)
     INTO pysyvat_muutokset_val_aika_yht
@@ -1219,6 +1237,20 @@ BEGIN
       AND mm.poistettu IS FALSE
       AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
       AND mm.voimassa_alkaen BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
+
+    -- Aktiiviset jjh muutokset kuluista valitulle aikajaksolle
+    SELECT SUM(kokonaissumma) INTO pysyvat_jjhmuutokset_val_aika_yht
+    FROM mhu_muutos mm
+             JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
+         kulu k
+             JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
+    WHERE k.id = mmk.kulu
+      AND mm.urakka = ur
+      AND k.poistettu IS FALSE
+      AND kk.poistettu IS FALSE
+      AND k.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
+
+    pysyvat_muutokset_val_aika_yht := pysyvat_muutokset_val_aika_yht + pysyvat_jjhmuutokset_val_aika_yht;
 
     -- Edellisillä hoitokausilla merkityt pysyvät muutokset - Näitä ei vielä raportoida, mutta haetaan kuitenkin jo.
     SELECT COALESCE(SUM(mmk.summa), 0)
