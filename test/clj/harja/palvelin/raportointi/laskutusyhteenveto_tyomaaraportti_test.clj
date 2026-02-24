@@ -370,7 +370,6 @@
                           (assoc acc (generoi-avaimet nimi "val") arvo))
                   purettu-hoitokausi
                   (map vector rahavaraukset-nimet rahavaraukset-val-aika))
-        _ (println "purettu:" (pr-str purettu))
         ;; Tavoitehintaan kuuluvat kustannukset yhteensä
         tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
                                  (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
