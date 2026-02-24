@@ -25,7 +25,7 @@ DECLARE
     muokkaa_kasin_kattohinta                                     BOOLEAN;
     kerroin_hoitokauden_lopun_kattohinnalle                      DECIMAL(4, 2);
     tavoitehintaan_hoitovuodenlopunindeksikorjaus                BOOLEAN;
-    laskutusraja_kaytossa                                        BOOLEAN;
+    onko_laskutusraja_kaytossa                                   BOOLEAN;
 BEGIN
     -- Haetaan kaikki MHU-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
     for urakan_tiedot in (SELECT * FROM urakka WHERE id = urakkaid_ and tyyppi IN ('teiden-hoito'))
@@ -82,7 +82,7 @@ BEGIN
                                                                       THEN FALSE
                                                                   ELSE TRUE END);
             onko_laskutusraja_kaytossa := (CASE
-                                          WHEN urakan_tiedot.alkupvm >= '2025-01-01' THEN TRUE
+                                          WHEN urakan_tiedot.alkupvm >= '2025-10-01' THEN TRUE
                                           ELSE FALSE END);
 
 
