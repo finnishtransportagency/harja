@@ -310,7 +310,7 @@
                            kirjaamatta-rivi]
           _ (reset! yhteiset/grid-hoidonjohtopalkkiot-atom hoidonjohtopalkkiot)]
       [:div#hoidonjohtopalkkio-elementti.row.kustannussuunnitelma-osio.kapea-osio
-       [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Hoidonjohtopalkkiot" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht
+       [yhteiset/otsikkotiedot valittu-hoitokausi kustannussuunnitelma "Hoidonjohtopalkkio" tarjouksen-maara pysyvamuutos-maara suunniteltu-yht
         suunniteltu-yht-indeksikorjattu {:div1 true :div2 false :div3 (if (< valittu-vuosi yhteiset/rajavuosi) true false) :div4 true} valittu-vuosi]
 
        [:div.row [:div.col-xs-12 [:h3 "Kustannusten erittely"]]]
