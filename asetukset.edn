@@ -155,7 +155,7 @@
                               ;; Lokaalisti elinvoimakeskusten geometriat tulevat testidatasta. Nämä on esimerkkinä tässä, etteivät unohdu. STG ja PROD ympäristöissä nämä on oikeasti käytössä
                               ;:elinvoimakeskusten-shapefile "file://shp/Elinvoimakeskukset/elinvoimakeskusalueet_10kPolygon.shp" ;; Päivitä tarvittaessa manuaalisesti
                               ;:elinvoimakeskusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=rajaus_aineistot:elinvoimakeskusalueet_10k&outputformat=shape-zip"
-                              ;:elinvoimakeskusten-tuontikohde "file://shp/Elinvoimakeskukset/elinvoimakeskusalueet_10kPolygon.shp"
+                              ;:elinvoimakeskusten-tuontikohde "./shp/Elinvoimakeskukset/elinvoimakeskusalueet_10kPolygon.shz"
 
                               :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/palvelusopimusLine.shp"
                               :valaistusurakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
