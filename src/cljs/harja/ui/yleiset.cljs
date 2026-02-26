@@ -51,7 +51,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti {:keys [luokka sama-rivi?] :as opts}]
-   [:div {:class (str "ajax-loader-valistys ajax-loader " (when (:luokka opts) (:luokka opts)))}
+   [:div {:class (str "ajax-loader-valistys ajax-loader " (when luokka luokka))}
     [:img {:alt "Ladataan sisältöä." :src "images/ajax-loader.gif"}]
     (when viesti
       (if sama-rivi?
