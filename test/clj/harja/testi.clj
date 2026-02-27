@@ -613,6 +613,7 @@
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
+(def pohjois-suomen-evk-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def tampereen-alueurakan-2017-2022-id (atom nil))
@@ -996,7 +997,12 @@
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa' AND tyyppi = 'hallintayksikko'"))))
+
+(defn hae-pohjois-suomen-evk-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Pohjois-Suomen elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -1331,6 +1337,7 @@
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
+  (reset! pohjois-suomen-evk-id (hae-pohjois-suomen-evk-id))
   (reset! muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! muhoksen-paikkausurakan-id (hae-urakan-id-nimella "Muhoksen paikkausurakka"))

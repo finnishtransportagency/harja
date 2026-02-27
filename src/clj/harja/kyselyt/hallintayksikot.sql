@@ -11,6 +11,18 @@ WHERE tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND
       (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
 ORDER BY elynumero ASC, nimi ASC;
 
+-- name: listaa-elinvoimakeskukset-kulkumuodolle
+SELECT
+    id,
+    nimi,
+    alue,
+    liikennemuoto,
+    lpad(cast(elinvoimakeskusnumero AS VARCHAR), 2, '0') AS evknumero
+FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' :: ORGANISAATIOTYYPPI AND
+    (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
+ORDER BY elinvoimakeskusnumero ASC, nimi ASC;
+
 -- name: hae-organisaation-tunnistetiedot
 -- Hakee organisaation perustiedot tekstihaulla.
 SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi, o.lyhenne

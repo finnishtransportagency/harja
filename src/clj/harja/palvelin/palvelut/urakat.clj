@@ -220,6 +220,26 @@
                               [-1]
                               urakat)})))))
 
+(defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
+  (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
+  (let [urakat (oikeudet/kayttajan-urakat user)
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
+    (if (and (nil? organisaatio) (empty? urakat))
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        [])
+      (into []
+        urakka-xf
+        (q/listaa-urakat-elinvoimakeskukselle db
+          {:elinvoimakeskusid elinvoimakeskusid
+           :kayttajan_org_id (:id organisaatio)
+           :kayttajan_org_tyyppi organisaatiotyyppi
+           :sallitut_urakat (if (empty? urakat)
+                              ;; Jos ei urakoita, annetaan
+                              ;; dummy, jotta IN toimii
+                              [-1]
+                              urakat)})))))
+
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
   (into []
@@ -501,6 +521,11 @@
         (hallintayksikon-urakat db user hallintayksikko)))
 
     (julkaise-palvelu http
+      :elinvoimakeskuksen-urakat
+      (fn [user elinvoimakeskusid]
+        (elinvoimakeskuksen-urakat db user elinvoimakeskusid)))
+
+    (julkaise-palvelu http
       :hae-urakka
       (fn [user urakka-id]
         (hae-yksittainen-urakka db user urakka-id)))
@@ -551,6 +576,7 @@
         (tallenna-vesivaylaurakka db user tiedot))
       {:kysely-spec ::u/tallenna-urakka-kysely
        :vastaus-spec ::u/tallenna-urakka-vastaus})
+
     (julkaise-palvelu http
       :hae-harjassa-luodut-urakat
       (fn [user _]
@@ -562,6 +588,7 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :hallintayksikon-urakat
+      :elinvoimakeskuksen-urakat
       :hae-urakka
       :hae-urakoita
       :hae-organisaation-urakat

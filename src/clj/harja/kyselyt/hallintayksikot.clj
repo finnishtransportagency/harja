@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/hallintayksikot.sql"
   {:positional? true})
 
-(declare hae-organisaatio)
+(declare hae-organisaatio listaa-hallintayksikot-kulkumuodolle listaa-elinvoimakeskukset-kulkumuodolle)

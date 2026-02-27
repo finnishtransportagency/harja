@@ -745,11 +745,11 @@
      {:valitse-fn nav/valitse-hallintayksikko!
       :valinta v-hal
       :class "raportti-alasveto"
-      :format-fn (fnil hy/elynumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
-                                                     "Valitse hallintayksikkö"
+      :format-fn (fnil hy/evknumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
+                                                     "Valitse elinvoimakeskus"
                                                      (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                                         "Kaikki ELYt"
-                                                         "Valitse ELY"))})}
+                                                         "Kaikki Elinvoimakeskukset"
+                                                         "Valitse Elinvoimakeskus"))})}
      (concat (if (and
                    (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
                    ;; vesiväylille ei haluta "Kaikki ELYt" vaihtoehtoa
@@ -769,7 +769,7 @@
   (if (and (nil? valittu-urakka)
            (or (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?))
                (= urakkatyyppi "vesiväylät")))              ;Vesiväylissä raportteja toistaiseksi vain urakkatasolla
-    (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
+    (str "Valitse elinvoimakeskus ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
 (defn raporttivalinnat [ensimmainen-urakka-viimeksi]

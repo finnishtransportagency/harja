@@ -29,6 +29,19 @@
                                                        :vesi "V"
                                                        :rata "R"))))))
 
+(defn hae-elinvoimakeskukset
+  "Palvelu, joka palauttaa halutun liikennemuodon elinvoimakeskukset."
+  [db user tiedot]
+  (oikeudet/ei-oikeustarkistusta!)
+  (let [liikennemuoto (:liikennemuoto tiedot)]
+    (into []
+      (muunna-pg-tulokset :alue)
+      (q/listaa-elinvoimakeskukset-kulkumuodolle db (when liikennemuoto
+                                                      (case liikennemuoto
+                                                        :tie "T"
+                                                        :vesi "V"
+                                                        :rata "R"))))))
+
 
 (defn hae-organisaatio
   "Palvelu, joka palauttaa organisaation tiedot id:llä."
@@ -45,15 +58,20 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hallintayksikot (fn [user tiedot]
-                                         (hae-hallintayksikot (:db this) user tiedot))
-                      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
+      :hallintayksikot (fn [user tiedot]
+                         (hae-hallintayksikot (:db this) user tiedot))
+      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-organisaatio (fn [user org-id]
-                                          (hae-organisaatio (:db this) user org-id)))
+      :elinvoimakeskukset (fn [user tiedot]
+                            (hae-elinvoimakeskukset (:db this) user tiedot))
+      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
+    (julkaise-palvelu (:http-palvelin this)
+      :hae-organisaatio (fn [user org-id]
+                          (hae-organisaatio (:db this) user org-id)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hallintayksikot)
+    (poista-palvelu (:http-palvelin this) :elinvoimakeskukset)
     (poista-palvelu (:http-palvelin this) :hae-organisaatio)
     this))
