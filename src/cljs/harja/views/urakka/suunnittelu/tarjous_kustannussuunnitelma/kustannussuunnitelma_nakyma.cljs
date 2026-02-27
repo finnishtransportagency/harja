@@ -568,7 +568,7 @@
      (when vahvistus-virhe
        [:div.row {:style {:margin-bottom "1rem"}}
         [:div.col-xs-12
-         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Tavoite- ja kattohintaa ei voi vahvistaa:"]]])]))
+         [yleiset/nayta-virheet :varoitus vahvistus-virhe "Tavoite- ja kattohintaa ei voi vahvistaa seuraavien virheiden takia:"]]])]))
 
 (defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))

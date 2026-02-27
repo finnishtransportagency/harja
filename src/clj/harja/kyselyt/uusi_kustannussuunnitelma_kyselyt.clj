@@ -841,8 +841,8 @@
         pysyvat-muutokset-maara (bigdec (or pysyvat-muutokset-maara 0.0))
 
         virhe-teksti (if (>= urakan-alkuvuosi 2025)
-                       "Kilpailutettavat hankinnat eivät täsmää tarjoukseen"
-                       "Kilpailutettavat hankinnat puuttuu")
+                       "“Kilpailutettavat hankinnat”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                       "“Kilpailutettavat hankinnat” puuttuu.")
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hankinnat osio = tarjouksen hankinnat + pysyvät muutokset 
@@ -870,8 +870,8 @@
         erillishankinnat-yht (bigdec (or erillishankinnat-yht 0.0))
 
         virhe-teksti (if (>= urakan-alkuvuosi 2025)
-                       "Erillishankinnat eivät täsmää tarjoukseen"
-                       "Erillishankinnat puuttuu")
+                       "”Erillishankinnat”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                       "”Erillishankinnat” puuttuu")
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hankinnat osio = tarjouksen erillishankinnat
@@ -893,8 +893,8 @@
         hoidonjohtopalkkiot-yht (bigdec (or hoidonjohtopalkkiot-yht 0.0))
 
         virhe-teksti (if (>= urakan-alkuvuosi 2025)
-                       "Hoidonjohtopalkkiot eivät täsmää tarjoukseen"
-                       "Hoidonjohtopalkkiot puuttuu")
+                       "”Hoidonjohtopalkkio”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                       "”Hoidonjohtopalkkio” puuttuu.")
 
         puuttuvat (cond
                     ;; Tarkistetaan, että hoidonjohtopalkkio osio = tarjouksen hoidonjohtopalkkiot
@@ -940,8 +940,8 @@
         tarjous-jjh-yht (bigdec (or tarjous-jjh-yht 0.0))
 
         virhe-teksti (if (>= urakan-alkuvuosi 2025)
-                       "Johto-ja-hallintokorvaukset eivät täsmää tarjoukseen"
-                       "Johto-ja-hallintokorvaukset puuttuu")
+                       "”Johto-ja-hallintokorvaukset”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                       "”Johto-ja-hallintokorvaukset” puuttuu")
 
         puuttuvat (cond
                     ;; 2025 ja myöhemmin alkavilla urakoilla summien tulee täsmätä tarjouksen kanssa

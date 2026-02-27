@@ -247,16 +247,16 @@
           virheet (if-not vanha-urakka?
                     (cond-> virheet
                       (<= tarjous-kilpailetuttavat-yht 0.0)
-                      (conj "Tarjous puuttuu (Kilpailetuttavat hankinnat)")
+                      (conj "”Kilpailetuttavat hankinnat” -tarjous puuttuu.")
 
                       (<= tarjous-erillishankinnat-yht 0.0)
-                      (conj "Tarjous puuttuu (Erillishankinnat)")
+                      (conj "”Erillishankinnat” -tarjous puuttuu.")
 
                       (<= tarjous-hoidonjohto-yht 0.0)
-                      (conj "Tarjous puuttuu (Hoidonjohtopalkkio)")
+                      (conj "”Hoidonjohtopalkkiot” -tarjous puuttuu.")
 
                       (<= tarjous-jjh-yht 0.0)
-                      (conj "Tarjous puuttuu (Johto- ja hallintokorvaus)"))
+                      (conj "”Johto- ja hallintokorvaukset” -tarjous puuttuu."))
                     virheet)
 
           virheet (if tarjous-puuttuu?
