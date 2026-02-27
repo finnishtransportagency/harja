@@ -70,9 +70,6 @@ SELECT setval(
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
 
--- Siirretään urakat elinvoimakeskuksiin
-\i testidata/elinvoimakeskusten_urakat.sql
-
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
@@ -268,6 +265,9 @@ SELECT paivita_pohjavesialueet();
 \i testidata/muutos_testidata.sql
 
 \i testidata/analytiikka-paallystyskohteet.sql
+
+-- Siirretään urakat elinvoimakeskuksiin - analytiikan päällystyskohteissa vielä lisätään urakoita, niin tämän on oltava täällä lopussa
+\i testidata/elinvoimakeskusten_urakat.sql
 
 -- Populoidaan rahavaraukset
 SELECT populoi_rahavaraus_idt();

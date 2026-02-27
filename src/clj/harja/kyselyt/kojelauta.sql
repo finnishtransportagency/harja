@@ -1,7 +1,7 @@
 -- name: hae-hoidon-urakat-kojelautaan
 SELECT u.id,
        COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
-       u.hallintayksikko as ely_id,
+       u.elinvoimakeskus_id as evk_id,
        EXTRACT (YEAR FROM u.alkupvm) AS urakan_alkuvuosi,
        :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
@@ -66,13 +66,13 @@ SELECT u.id,
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm) - 1) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-     (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
+     (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
  ORDER BY COALESCE(u.lyhyt_nimi, u.nimi);
 
 -- name: hae-paallystysurakat-kojelautaan
 SELECT u.id,
        u.nimi,
-       u.hallintayksikko as ely_id,
+       u.elinvoimakeskus_id as evk_id,
        :vuosi as hoitokauden_alkuvuosi, -- Käytetään UIn vuoksi tässä samaa termiä kuin hoidossa vaikka kyseessä on vuosi
        COUNT(*) FILTER (WHERE y.id IS NOT NULL) AS yllapitokohteiden_lkm,
        COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu')) AS valmis_hyvaksytty,
@@ -103,7 +103,7 @@ WHERE
         EXTRACT (YEAR FROM u.alkupvm) AND
         EXTRACT (YEAR FROM u.loppupvm)) AND
     (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-    (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
+    (:evkt_annettu IS NOT TRUE OR u.hallintayksikko IN (:evk_idt))
 GROUP BY u.id, u.nimi, u.hallintayksikko, hoitokauden_alkuvuosi
 ORDER BY u.nimi;
 
