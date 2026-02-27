@@ -131,3 +131,61 @@ SELECT t.id AS "toteuma-id",
         OR (COALESCE(tr.reittipistesumma, 0) - COALESCE(ts.suolapistesumma, 0)) <> 0)
  ORDER BY t.alkanut DESC
  LIMIT 500;
+
+-- name: hae-suolapoikkeamien-paivavertailu
+-- Hakee päiväkohtaisen vertailun toteumat vs RTM suolamääristä
+-- Palauttaa per päivä: toteumat_suola_maara, rtm_suola_maara, rtm_loytyy, rtm_delta, tasmaa
+WITH toteumat AS (
+    SELECT id,
+           alkanut::DATE AS paiva
+      FROM toteuma
+     WHERE urakka = :urakka-id::INT
+       AND alkanut >= :alkupvm::DATE
+       AND alkanut < (:loppupvm::DATE + INTERVAL '1 day')
+       AND poistettu IS NOT TRUE
+),
+suolamateriaalikoodit AS (
+    SELECT id
+      FROM materiaalikoodi
+     WHERE materiaalityyppi IN ('talvisuola', 'erityisalue', 'kesasuola')
+),
+paivat AS (
+    SELECT DISTINCT paiva
+      FROM toteumat
+),
+toteumat_per_paiva AS (
+    SELECT p.paiva,
+           COALESCE(SUM(CASE 
+               WHEN sm.id IS NOT NULL THEN tm.maara 
+               ELSE 0 
+           END), 0) AS toteumat_suola_maara
+      FROM paivat p
+           LEFT JOIN toteumat t
+             ON t.paiva = p.paiva
+           LEFT JOIN toteuma_materiaali tm
+             ON tm.toteuma = t.id
+           LEFT JOIN suolamateriaalikoodit sm
+             ON tm.materiaalikoodi = sm.id
+     GROUP BY p.paiva
+),
+rtm_per_paiva AS (
+    SELECT rtm.paiva,
+           SUM(rtm.kokonaismaara) AS rtm_suola_maara
+      FROM raportti_toteutuneet_materiaalit rtm
+           JOIN suolamateriaalikoodit sm
+             ON rtm."materiaali-id" = sm.id
+     WHERE rtm."urakka-id" = :urakka-id::INT
+       AND rtm.paiva >= :alkupvm::DATE
+       AND rtm.paiva < (:loppupvm::DATE + INTERVAL '1 day')
+     GROUP BY rtm.paiva
+)
+SELECT tp.paiva,
+       tp.toteumat_suola_maara              AS "toteumat_suola_maara",
+       rtm.rtm_suola_maara                  AS "rtm_suola_maara",
+       (rtm.rtm_suola_maara IS NOT NULL)    AS "rtm_loytyy",
+       (COALESCE(rtm.rtm_suola_maara, 0) - tp.toteumat_suola_maara) AS "rtm_delta",
+       (ABS(COALESCE(rtm.rtm_suola_maara, 0) - tp.toteumat_suola_maara) <= 0.01) AS "tasmaa"
+  FROM toteumat_per_paiva tp
+       LEFT JOIN rtm_per_paiva rtm
+         ON tp.paiva = rtm.paiva
+ ORDER BY tp.paiva DESC;

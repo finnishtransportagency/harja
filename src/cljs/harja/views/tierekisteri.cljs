@@ -958,6 +958,7 @@
          [:th "Kokonaismäärä"]
          [:th "Reittipistesumma"]
          [:th "Suolapistesumma"]
+         [:th "RTM suolamäärä"]
          [:th "Delta1 (Kok - Reitti)"]
          [:th "Delta2 (Reitti - Suola)"]]]
        [:tbody
@@ -971,6 +972,7 @@
            [:td (:kokonaismaara row)]
            [:td (:reittipistesumma row)]
            [:td (:suolapistesumma row)]
+           [:td (if (nil? (:rtm_suola_maara row)) "—" (:rtm_suola_maara row))]
            [:td {:style {:color (if (neg? (:delta1 row)) "red" "inherit")}} (:delta1 row)]
            [:td {:style {:color (if (neg? (:delta2 row)) "red" "inherit")}} (:delta2 row)]])]]])])
 

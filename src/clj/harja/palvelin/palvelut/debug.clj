@@ -176,6 +176,17 @@
     (log/info "Suolapoikkeamat haettu:" (count tulokset) "riviä")
     (vec tulokset)))
 
+(defn- hae-suolapoikkeamien-paivavertailu
+  "Hakee päiväkohtaisen vertailun toteumat vs RTM suolamääristä.
+   Palauttaa per päivä: paiva, toteumat_suola_maara, rtm_suola_maara, rtm_loytyy, rtm_delta, tasmaa."
+  [db {:keys [urakka-id alkupvm loppupvm]}]
+  (log/info "Haetaan suolapoikkeamien päivävertailu" {:urakka-id urakka-id :alkupvm alkupvm :loppupvm loppupvm})
+  (let [tulokset (q/hae-suolapoikkeamien-paivavertailu db {:urakka-id urakka-id
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm})]
+    (log/info "Suolapoikkeamien päivävertailu haettu:" (count tulokset) "päivää")
+    (vec tulokset)))
+
 (defn hae-urakan-geometriat
   "Osaa hakea vain hoido/mhu urakoiden ja valaistusurakoiden geometriat tällä hetkellä."
   [db tiedot]
@@ -451,6 +462,8 @@
       (vaadi-jvh! (partial #'hae-suolarajoitukset-ja-suolatoteumat db))
       :debug-hae-suolapoikkeamat
       (vaadi-jvh! (partial #'hae-suolapoikkeamat db))
+      :debug-hae-suolapoikkeamien-paivavertailu
+      (vaadi-jvh! (partial #'hae-suolapoikkeamien-paivavertailu db))
       :debug-hae-urakan-geometriat
       (vaadi-jvh! (partial #'hae-urakan-geometriat db))
       :debug-laheta-email
@@ -486,6 +499,7 @@
       :debug-hae-paivan-suolatoteumat
       :debug-hae-suolarajoitukset-ja-suolatoteumat
       :debug-hae-suolapoikkeamat
+      :debug-hae-suolapoikkeamien-paivavertailu
       :debug-hae-urakan-geometriat
       :debug-laheta-email
       :debug-laheta-emailapi

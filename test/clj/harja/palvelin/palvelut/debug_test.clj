@@ -133,3 +133,130 @@
               (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
               (u (str "DELETE FROM toteuma WHERE id = " toteuma-id)))))))))
 
+(deftest hae-suolapoikkeamien-paivavertailu-test
+  (testing "Haetaan suolapoikkeamien päivävertailu (toteumat vs RTM) JVH-käyttäjällä"
+    (let [aja-u! (fn [sql]
+                   (try
+                     (u sql)
+                     (catch Exception e
+                       (throw (ex-info "SQL-ajossa virhe" {:sql sql} e)))))
+          urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
+          integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+          sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " urakka-id " AND paasopimus IS NULL LIMIT 1")))
+          ;; Käytetään kaukaista tulevaisuuden päivämäärää varmistamaan että muuta dataa ei ole
+          testipvm "2030-07-20"
+          testipvm-2 "2030-07-21"
+          toteuma-lisatieto (str "Suolapoikkeamat-paivavertailu-test-" (java.util.UUID/randomUUID))
+          toteuma-lisatieto-2 (str "Suolapoikkeamat-paivavertailu-test-2-" (java.util.UUID/randomUUID))]
+      (try
+        ;; Päivitetään RTM ensin jotta saadaan baseline
+        (q "SELECT paivita_raportti_toteutuneet_materiaalit()")
+        
+        (anna-kirjoitusoikeus "jvh")
+        
+        ;; Haetaan baseline ennen inserttejä
+        (let [baseline-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :debug-hae-suolapoikkeamien-paivavertailu
+                                 +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :alkupvm testipvm
+                                  :loppupvm testipvm-2})
+              baseline-paiva-1 (first (filter #(= testipvm (str (:paiva %))) baseline-vastaus))
+              baseline-paiva-2 (first (filter #(= testipvm-2 (str (:paiva %))) baseline-vastaus))
+              baseline-toteumat-1 (if baseline-paiva-1 (double (:toteumat_suola_maara baseline-paiva-1)) 0.0)
+              baseline-rtm-1 (if baseline-paiva-1 (double (or (:rtm_suola_maara baseline-paiva-1) 0.0)) 0.0)
+              baseline-toteumat-2 (if baseline-paiva-2 (double (:toteumat_suola_maara baseline-paiva-2)) 0.0)
+              baseline-rtm-2 (if baseline-paiva-2 (double (or (:rtm_suola_maara baseline-paiva-2) 0.0)) 0.0)]
+          
+          ;; Luodaan testidataa: toteuma 1 - 100 kg suolamateriaalilla päivälle 1
+          (aja-u! (format (str "INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, luoja, lisatieto) "
+                               "VALUES ('harja-ui'::lahde, %d, %d, NOW(), "
+                               "        '%s 10:00:00'::timestamp, "
+                               "        '%s 11:00:00'::timestamp, "
+                               "        'kokonaishintainen'::toteumatyyppi, %d, '%s')")
+                        urakka-id
+                        sopimus-id
+                        testipvm
+                        testipvm
+                        integraatio-id
+                        toteuma-lisatieto))
+          
+          (let [toteuma-id-1 (let [sql (format "SELECT id FROM toteuma WHERE lisatieto = '%s'" toteuma-lisatieto)
+                                   id (ffirst (q sql))]
+                              (when-not id
+                                (throw (ex-info "Toteumaa 1 ei löytynyt lisatiedolla" {:sql sql :lisatieto toteuma-lisatieto})))
+                              id)
+                materiaalikoodi (ffirst (q "SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'"))]
+            
+            ;; Lisätään toteuma_materiaali: 100 kg Talvisuolaa
+            (aja-u! (format (str "INSERT INTO toteuma_materiaali (toteuma, materiaalikoodi, maara, luotu, luoja) "
+                                 "VALUES (%d, %d, 100, NOW(), %d)")
+                          toteuma-id-1
+                          materiaalikoodi
+                          integraatio-id))
+            
+            ;; Luodaan toteuma 2 päivälle 2 ILMAN materiaaleja (0-suolapäivä)
+            (aja-u! (format (str "INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, luoja, lisatieto) "
+                                 "VALUES ('harja-ui'::lahde, %d, %d, NOW(), "
+                                 "        '%s 10:00:00'::timestamp, "
+                                 "        '%s 11:00:00'::timestamp, "
+                                 "        'kokonaishintainen'::toteumatyyppi, %d, '%s')")
+                          urakka-id
+                          sopimus-id
+                          testipvm-2
+                          testipvm-2
+                          integraatio-id
+                          toteuma-lisatieto-2))
+            
+            ;; Päivitetään raportti_toteutuneet_materiaalit näkymä
+            (q "SELECT paivita_raportti_toteutuneet_materiaalit()")
+            
+            ;; Haetaan uusi tulos
+            (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :debug-hae-suolapoikkeamien-paivavertailu
+                            +kayttaja-jvh+
+                            {:urakka-id urakka-id
+                             :alkupvm testipvm
+                             :loppupvm testipvm-2})]
+              
+              ;; Varmistetaan että vastaus on vector
+              (is (vector? vastaus) "Vastauksen tulee olla vektori")
+              
+              ;; Tarkistetaan päivä 1 (100 kg suolaa lisätty)
+              (let [paiva-tulos-1 (first (filter #(= testipvm (str (:paiva %))) vastaus))]
+                (is (some? paiva-tulos-1) "Päivä 1 löytyy tuloksista")
+                (when paiva-tulos-1
+                  (is (= testipvm (str (:paiva paiva-tulos-1))) "Päivämäärä 1 täsmää")
+                  (is (== (+ baseline-toteumat-1 100.0) (double (:toteumat_suola_maara paiva-tulos-1))) 
+                      (str "Toteumat suolamäärä kasvoi +100 (baseline: " baseline-toteumat-1 ")"))
+                  (is (== (+ baseline-rtm-1 100.0) (double (:rtm_suola_maara paiva-tulos-1))) 
+                      (str "RTM suolamäärä kasvoi +100 (baseline: " baseline-rtm-1 ")"))
+                  (is (true? (:rtm_loytyy paiva-tulos-1)) "RTM löytyy päivälle 1")
+                  (is (true? (:tasmaa paiva-tulos-1)) "Täsmää-kenttä on true päivälle 1")))
+              
+              ;; Tarkistetaan päivä 2 (0-suolapäivä: toteuma ilman materiaaleja)
+              (let [paiva-tulos-2 (first (filter #(= testipvm-2 (str (:paiva %))) vastaus))]
+                (is (some? paiva-tulos-2) "Päivä 2 löytyy tuloksista (0-suolapäivä)")
+                (when paiva-tulos-2
+                  (is (= testipvm-2 (str (:paiva paiva-tulos-2))) "Päivämäärä 2 täsmää")
+                  (is (== baseline-toteumat-2 (double (:toteumat_suola_maara paiva-tulos-2))) 
+                      (str "Toteumat suolamäärä ei kasvanut päivälle 2 (baseline: " baseline-toteumat-2 ")"))
+                  ;; RTM ei välttämättä päivity 0-materiaalille, mutta tämä on ok
+                  (is (some? paiva-tulos-2) "0-suolapäivä näkyy tuloksissa"))))))
+        
+        (finally
+          ;; Siivotaan testdata
+          (let [toteuma-id-1 (ffirst (q (format "SELECT id FROM toteuma WHERE lisatieto = '%s'" toteuma-lisatieto)))
+                toteuma-id-2 (ffirst (q (format "SELECT id FROM toteuma WHERE lisatieto = '%s'" toteuma-lisatieto-2)))]
+            (when toteuma-id-1
+              (u (str "DELETE FROM suolatoteuma_reittipiste WHERE toteuma = " toteuma-id-1))
+              (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id-1))
+              (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id-1))
+              (u (str "DELETE FROM toteuma WHERE id = " toteuma-id-1)))
+            (when toteuma-id-2
+              (u (str "DELETE FROM suolatoteuma_reittipiste WHERE toteuma = " toteuma-id-2))
+              (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id-2))
+              (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id-2))
+              (u (str "DELETE FROM toteuma WHERE id = " toteuma-id-2)))
+            ;; Päivitetään RTM lopuksi jotta se palautuu
+            (q "SELECT paivita_raportti_toteutuneet_materiaalit()")))))))
