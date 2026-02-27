@@ -99,7 +99,7 @@
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
-        (is (= (set virhe) #{"Hoidonjohtopalkkiot eivät täsmää tarjoukseen"}) "Hoidonjohtopalkkiot ovat puutteellisena")))
+        (is (= (set virhe) #{"”Hoidonjohtopalkkio”-osiossa erittelyt eivät täsmää tarjouksen kanssa."}) "Hoidonjohtopalkkiot ovat puutteellisena")))
 
 
     (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (jjh)"
@@ -119,7 +119,7 @@
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
-        (is (= (set virhe) #{"Johto-ja-hallintokorvaukset eivät täsmää tarjoukseen"}) "Johto-ja-hallintokorvaukset ovat puutteellisena")))
+        (is (= (set virhe) #{"”Johto-ja-hallintokorvaukset”-osiossa erittelyt eivät täsmää tarjouksen kanssa."}) "Johto-ja-hallintokorvaukset ovat puutteellisena")))
 
 
     (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (Erillishankinnat)"
@@ -139,7 +139,7 @@
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
-        (is (= (set virhe) #{"Erillishankinnat eivät täsmää tarjoukseen"}) "Erillishankinnat ovat puutteellisena")))
+        (is (= (set virhe) #{"”Erillishankinnat”-osiossa erittelyt eivät täsmää tarjouksen kanssa."}) "Erillishankinnat ovat puutteellisena")))
 
 
     (testing "Vahvistus ei onnistu, suunnitelma ei täsmää (monta virhettä)"
@@ -159,9 +159,9 @@
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
         (is (some? vastaus) "Vastaus pitäisi olla olemassa")
         (is (not (nil? virhe)) "Vahvistusvirheen pitäisi olla olemassa")
-        (is (= (set virhe) #{"Erillishankinnat eivät täsmää tarjoukseen"
-                             "Hoidonjohtopalkkiot eivät täsmää tarjoukseen"
-                             "Johto-ja-hallintokorvaukset eivät täsmää tarjoukseen"}) "Kaikki kentät ovat puutteellisena")))
+        (is (= (set virhe) #{"”Erillishankinnat”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                             "”Hoidonjohtopalkkio”-osiossa erittelyt eivät täsmää tarjouksen kanssa."
+                             "”Johto-ja-hallintokorvaukset”-osiossa erittelyt eivät täsmää tarjouksen kanssa."}) "Useat kentät ovat puutteellisena")))
 
 
     (testing "Vahvistus onnistuu, suunnitelma täsmää tarjousta"
@@ -358,10 +358,10 @@
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
-        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) ["Kilpailutettavat hankinnat puuttuu"
-                                                                            "Erillishankinnat puuttuu"
-                                                                            "Hoidonjohtopalkkiot puuttuu"
-                                                                            "Johto-ja-hallintokorvaukset puuttuu"]))
+        _ (is (= (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe]) ["“Kilpailutettavat hankinnat” puuttuu."
+                                                                            "”Erillishankinnat” puuttuu"
+                                                                            "”Hoidonjohtopalkkio” puuttuu."
+                                                                            "”Johto-ja-hallintokorvaukset” puuttuu"]))
 
         _ (u (format "update urakka set indeksi = null WHERE id = %s" urakka-id)) ;; Poistetaan urakan indeksi
         vastaus-indeksi (try
@@ -373,10 +373,10 @@
 
         _ (is (= (get-in vastaus-indeksi [:kustannussuunnitelma :vahvistus-virhe])
                 ["Hoitovuoden 2024 indeksikerroin ei ole vielä saatavilla"
-                 "Kilpailutettavat hankinnat puuttuu"
-                 "Erillishankinnat puuttuu"
-                 "Hoidonjohtopalkkiot puuttuu"
-                 "Johto-ja-hallintokorvaukset puuttuu"]))]))
+                 "“Kilpailutettavat hankinnat” puuttuu."
+                 "”Erillishankinnat” puuttuu"
+                 "”Hoidonjohtopalkkio” puuttuu."
+                 "”Johto-ja-hallintokorvaukset” puuttuu"]))]))
 
 
 (deftest vahvista-ja-kumoa-tavoite-ja-kattohinta-toimii-2021
