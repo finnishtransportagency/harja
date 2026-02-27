@@ -221,7 +221,7 @@ describe('Tarjous-näkymä', function () {
             tarkistaTarjoushinta('Rahavaraukset', akillisethoitotyot);
             tarkistaTarjoushinta('Erillishankinnat', erillishankinnat);
             tarkistaTarjoushinta('Johto- ja hallintokorvaus', kaikkiToimenkuvatYhteensa);
-            tarkistaTarjoushinta('Hoidonjohtopalkkiot', hoidonjohtopalkkio);
+            tarkistaTarjoushinta('Hoidonjohtopalkkio', hoidonjohtopalkkio);
         });
     });
 });
