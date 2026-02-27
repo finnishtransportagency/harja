@@ -34,7 +34,7 @@
                        (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
                      (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
 
-                     ;; Nätetään arvot vain jos on olemassa
+                     ;; Näytetään arvot vain jos on olemassa
                      (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
                        
                        (valitaulukko-rivi data false (str (if (:tavoitehinta_on_oikaistu data)

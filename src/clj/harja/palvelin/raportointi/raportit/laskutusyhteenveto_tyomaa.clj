@@ -158,8 +158,8 @@
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus] :as parametrit}]
   (log/debug "Työmaakokous PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Hoitokauden alusta")
-        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+        laskutettu-teksti (str "Hoitovuoden alusta")
+        laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
 
         ;; Käytetäänkö omaa aikaväliä
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
@@ -175,7 +175,7 @@
                                                       loppupvm))
 
         ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
-        laskutettu-teksti (if (= aikarajaus :valittu-aikavali) "Määrä" laskutettu-teksti)
+        laskutettu-teksti (if (= aikarajaus :valittu-aikakvali) "Määrä" laskutettu-teksti)
 
         ;; Konteksti ja urakkatiedot
         konteksti (cond
@@ -225,10 +225,7 @@
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]
 
-    [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
-                :otsikon-koko :keskikoko}
-
-     [:otsikko-heading-small (str alueen-nimi)]
+    [:raportti {}
 
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))

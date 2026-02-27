@@ -142,6 +142,7 @@
 
         [:div.laskutusyhteenveto
          [:h1 "Laskutusyhteenveto"]
+         [:div {:class "pieni-teksti"} (:nimi ur)]
          [:div.flex-row.alkuun
 
           ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
