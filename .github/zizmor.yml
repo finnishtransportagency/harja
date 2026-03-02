@@ -2,5 +2,7 @@ rules:
   unpinned-uses:
     config:
       policies:
-        actions/checkout: hash-pin
+        # Salli ref-pin GitHub Actions -actioneissa, koska ne ovat luotettuja.
+        # On hyvä saada perus-actioneihin nopeasti tietoturvapäivityksiä
+        # Kolmansien osapuolien actionit on hyvä hash-pinnata, koska niissä on suurempi riski
         actions/*: ref-pin

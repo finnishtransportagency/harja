@@ -14,7 +14,7 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ZIZMOR_IMAGE="ghcr.io/zizmorcore/zizmor:latest"
-ZIZMOR_TARGETS="/workdir/.github/workflows/ /workdir/.github/actions/"
+ZIZMOR_TARGETS=".github/workflows/ .github/actions/"
 
 help() {
     echo "Käyttö: $0 [OPTIONS] [-- ZIZMOR_OPTIONS...]"
@@ -45,10 +45,10 @@ run_zizmor() {
     # Disabloidaan SC2086, koska haluamme välittää inputit word-splitattuina
     # Käytetään kuitenkin "--", jotta Zizmor ei tulkitse inputteja optioina.
     # shellcheck disable=SC2086
-    docker run --rm -v "$PROJECT_DIR:/workdir" "$ZIZMOR_IMAGE" \
+    docker run --rm -v "$PROJECT_DIR:/workdir" --workdir "/workdir" "$ZIZMOR_IMAGE" \
         "$@" \
         --collect=workflows,actions,dependabot \
-        --config "/workdir/.github/zizmor.yml" \
+        --config ".github/zizmor.yml" \
         -- \
         $ZIZMOR_TARGETS
 }
