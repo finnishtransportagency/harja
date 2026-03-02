@@ -18,7 +18,7 @@
                  [org.clojure/core.async "1.6.681"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "1.0.333"]
+                 [com.cognitect/transit-clj "1.1.347"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -28,7 +28,7 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.1.0"]
+                 [com.stuartsierra/component "1.2.0"]
 
                  ;; -- Lokitus / assertointi / virheiden käsittely
                  ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
@@ -46,10 +46,10 @@
                  ;; --
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "1.1.0"]
+                 [org.clojure/java.jmx "1.1.1"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "6.0.0"]
+                 [cheshire "6.1.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.49"]
@@ -74,7 +74,7 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.9"]
+                 [org.postgresql/postgresql "42.7.10"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.1" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.2" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -128,7 +128,7 @@
                  [org.apache.poi/poi "5.4.1"]
                  [org.apache.poi/poi-scratchpad "5.4.1"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "5.4.1"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "2.5.1"]
+                 [org.clojure/data.json "2.5.2"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
