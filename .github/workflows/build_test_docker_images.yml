@@ -100,7 +100,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_harjadb}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_harjadb
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         if: ${{ inputs.dockerfile == 'harja_harjadb' }}
         env:
           TAGS: ${{ steps.tietokanta-tags.outputs.tags }}
@@ -149,7 +149,7 @@ jobs:
         run: echo "value=$(node -pe 'require("./package").devDependencies.cypress')" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_cypress
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         if: ${{ inputs.dockerfile == 'harja_cypress' }}
         env:
           CYPRESS_VERSION: ${{ steps.cypress-version.outputs.value }}
@@ -204,7 +204,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_activemq_artemis}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_activemq_artemis
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         if: ${{ inputs.dockerfile == 'harja_activemq_artemis' }}
         env:
           TAGS: ${{ steps.activemq-artemis-tags.outputs.tags }}
@@ -246,7 +246,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_activemq}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_activemq
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         if: ${{ inputs.dockerfile == 'harja_activemq' }}
         env:
           TAGS: ${{ steps.activemq-tags.outputs.tags }}
