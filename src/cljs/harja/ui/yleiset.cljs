@@ -908,9 +908,9 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      [:div {:style {:display "flex"
                     :flex-direction "column"
                     :white-space "pre-line" :color +vari-black-default+}}
-      otsikko
+      [:div.body-text.strong otsikko]
       (doall (for* [v (distinct virheet)]
-               [:span (str "- " v)]))]]]))
+               [:div.body-caption (str "- " v)]))]]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

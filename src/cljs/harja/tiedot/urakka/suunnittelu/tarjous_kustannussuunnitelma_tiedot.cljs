@@ -198,7 +198,8 @@
   Vuosi on hoitovuoden alkuvuosi, jolle kustannussuunnitelma haetaan."
   [urakka-id vuosi]
   (tuck-apurit/post! :hae-kustannussuunnitelman-tiedot
-    {:urakka-id urakka-id :hoitovuoden-alkuvuosi vuosi}
+    {:urakka-id urakka-id
+     :hoitovuoden-alkuvuosi vuosi}
     {:onnistui ->HaeKustannussuunnitelmanTiedotOnnistui
      :epaonnistui ->HaeKustannussuunnitelmanTiedotEpaonnistui}))
 
@@ -349,6 +350,7 @@
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui
@@ -417,6 +419,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaKilpailutettavatHankinnatEpaonnistui
@@ -465,6 +468,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaErillishankinnatEpaonnistui
@@ -533,6 +537,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaHoidonjohtopalkkiotEpaonnistui
@@ -618,6 +623,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
@@ -716,7 +722,8 @@
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))))
 
   VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
   (process-event [{vastaus :vastaus} app]
