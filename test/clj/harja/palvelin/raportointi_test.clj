@@ -289,9 +289,9 @@
                                                                                         +kayttaja-jvh+
                                                                                         tiedot-hoito)]
     (is (= "Laskutusyhteenveto (01.01.2022 - 31.01.2022)"
-          (as-> laskutusyhteenveto-tuotekohtainen-raportti m
-            (second m)
-            (get-in m [:raportin-yleiset-tiedot :raportin-nimi]))) "On MHU-tyypin laskutusyhteenveto")
+          (-> laskutusyhteenveto-tuotekohtainen-raportti
+            second
+            :nimi)) "On MHU-tyypin laskutusyhteenveto")
 
       (is (= "Laskutusyhteenveto"
            (-> laskutusyhteenveto-hoito-raportti
