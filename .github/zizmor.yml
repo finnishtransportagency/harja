@@ -10,3 +10,7 @@ rules:
         # Hash-pinnattavat actionit
         docker/*: hash-pin
         aws-actions/configure-aws-credentials: hash-pin
+  # https://docs.zizmor.sh/audits/#dependabot-cooldown
+  dependabot-cooldown:
+    config:
+      days: 3
