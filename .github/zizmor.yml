@@ -1,0 +1,6 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        actions/checkout: hash-pin
+        actions/*: ref-pin

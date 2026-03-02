@@ -47,13 +47,14 @@ run_zizmor() {
     # shellcheck disable=SC2086
     docker run --rm -v "$PROJECT_DIR:/workdir" "$ZIZMOR_IMAGE" \
         "$@" \
-        --collect=workflows,actions \
+        --collect=workflows,actions,dependabot \
+        --config "/workdir/.github/zizmor.yml" \
         -- \
         $ZIZMOR_TARGETS
 }
 
 run_scan() {
-    echo "🔍 Suoritetaan skannaus..."
+    echo -e "🔍 Suoritetaan skannaus...\n"
     run_zizmor "${EXTRA_OPTS[@]}"
 }
 
@@ -109,6 +110,10 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 pull_image
+
+echo ""
+echo -e "Optiot: FIX_MODE='$FIX_MODE', EXTRA_OPTS='${EXTRA_OPTS[*]}'"
+echo -e "Skannattavat hakemistot: ${ZIZMOR_TARGETS}\n"
 
 if [[ -n "$FIX_MODE" ]]; then
     run_fix "$FIX_MODE"
