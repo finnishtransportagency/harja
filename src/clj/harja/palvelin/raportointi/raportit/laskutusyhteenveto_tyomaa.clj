@@ -225,7 +225,9 @@
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]
 
-    [:raportti {}
+    [:raportti {:nimi "" :raportin-yleiset-tiedot {:raportin-nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")}}
+
+     [:otsikko-heading-small (str alueen-nimi)]
 
      (when perusluku
        (yleinen/urakan-indlask-perusluku {:perusluku perusluku}))
