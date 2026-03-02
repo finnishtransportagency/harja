@@ -14,7 +14,7 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ZIZMOR_IMAGE="ghcr.io/zizmorcore/zizmor:latest"
-ZIZMOR_TARGETS=".github/workflows/ .github/actions/"
+ZIZMOR_TARGETS=".github/workflows/ .github/actions/ .github/dependabot.yml"
 
 help() {
     echo "Käyttö: $0 [OPTIONS] [-- ZIZMOR_OPTIONS...]"
