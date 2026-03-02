@@ -51,10 +51,14 @@ jobs:
           persist-credentials: false
 
       - name: List used environment variables
+        env:
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_COMMIT_SHA: ${{ inputs.commit-sha }}
+          INPUTS_ARTIFACT_RUN_ID: ${{ inputs.artifact-run-id }}
         run: |
-          echo "Target environment: ${{ inputs.environment }}"
-          echo "Commit SHA: ${{ inputs.commit-sha }}"
-          echo "Artifact run ID: ${{ inputs.artifact-run-id }}"
+          echo "Target environment: ${INPUTS_ENVIRONMENT}"
+          echo "Commit SHA: ${INPUTS_COMMIT_SHA}"
+          echo "Artifact run ID: ${INPUTS_ARTIFACT_RUN_ID}"
           echo " --- "
           echo "Environment variables:"
           echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
