@@ -23,6 +23,9 @@ on:
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
+# Nollaa oikeudet. Oikeudet määritellään erikseen kunkin jobin kohdalla. (tietoturva)
+permissions: {}
+
 # Testit ja build ajetaan rinnakkain, jotta ne suorituisivat mahdollisimman nopeasti
 jobs:
   tests:
