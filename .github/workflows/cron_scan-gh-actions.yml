@@ -29,6 +29,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: 'false'
 
       - name: Run zizmor scan on GitHub Actions workflows

@@ -126,6 +126,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Testitietokantaa tarvitaan buildin yhteydessä
       - name: Start test database
@@ -199,6 +202,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Download uberjar artifact
         uses: actions/download-artifact@v7.0.0
