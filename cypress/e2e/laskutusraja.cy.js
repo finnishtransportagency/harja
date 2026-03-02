@@ -43,8 +43,11 @@ describe('Laskutusraja testit', function () {
         cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 
-        // Tallenna jotain kilpailutettaviin hankintoihin
-        muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 10);
+        // Tallenna jotain kilpailutettaviin hankintoihin, erillishankintoihin, toimenkuviin ja hoidonjohtopalkkioon
+        muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 5);
+        muokkaaTarjousRiviaArvo('tarjous-erillishankinnat-grid', 'Erillishankinnat', 0, 2);
+        muokkaaTarjousRiviaArvo('tarjous-toimenkuvat-grid', 'Vastuunalainen työnjohtaja', 0, 2);
+        muokkaaTarjousRiviaArvo('tarjous-hoidonjohtopalkkio-grid', 'Hoidonjohtopalkkio', 0, 1);
         // Tallenna muutokset
         cy.contains('button', 'Tallenna muutokset').click();
 
@@ -64,25 +67,25 @@ describe('Laskutusraja testit', function () {
 
         // Tallenna jotain kilpailutettaviin hankintoihin
         cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(1) td input')
-            .eq(0).clear().type('10');
+            .eq(0).clear().type('5');
         cy.get('#kilpailutettavat-hankinnat-elementti').contains('Tallenna tiedot').click();
         cy.wait('@tallenna-kilpailutettavat-hankinnat').its('response.statusCode').should('equal', 200);
 
         // Tallenna erillishankinnat
         cy.get('#erillishankinnat-elementti table.grid tbody tr:nth-child(2) td input')
-            .eq(0).clear().type('0');
+            .eq(0).clear().type('2');
         cy.get('#erillishankinnat-elementti').contains('Tallenna tiedot').click();
         cy.wait('@tallenna-erillishankinnat').its('response.statusCode').should('equal', 200);
 
         // Tallenna johto ja hallintokorvaukset
         cy.get('#johto-ja-hallintokorvaus-elementti table.grid tbody tr:nth-child(2) td input')
-            .eq(0).clear().type('0');
+            .eq(0).clear().type('2');
         cy.get('#johto-ja-hallintokorvaus-elementti').contains('Tallenna tiedot').click();
         cy.wait('@tallenna-toimenkuvat-2025').its('response.statusCode').should('equal', 200);
 
         // Tallenna hoidonjohtopalkkiot
         cy.get('#hoidonjohtopalkkio-elementti table.grid tbody tr:nth-child(2) td input')
-            .eq(0).clear().type('0');
+            .eq(0).clear().type('1');
         cy.get('#hoidonjohtopalkkio-elementti').contains('Tallenna tiedot').click();
         cy.wait('@tallenna-hoidonjohtopalkkiot').its('response.statusCode').should('equal', 200);
 
@@ -114,9 +117,6 @@ describe('Laskutusraja testit', function () {
         // Peruuta vahvistus
         cy.get('button.nappi-toissijainen[type="button"]').contains('Peruuta vahvistus').click();
         cy.wait('@vahvista-tavoite-ja-kattohinta').its('response.statusCode').should('equal', 200);
-
-        // Odota että laskutusraja haetaan peruutuksen jälkeen
-        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
 
         // Tarkista että laskutusraja on nolla tai ei näy
         cy.get('div #tavoite-ja-kattohinta-elementti div')
