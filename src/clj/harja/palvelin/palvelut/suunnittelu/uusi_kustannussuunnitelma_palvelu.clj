@@ -253,7 +253,7 @@
           virheet (if-not vanha-urakka?
                     (cond-> virheet
                       (<= tarjous-kilpailetuttavat-yht 0.0)
-                      (conj "”Kilpailetuttavat hankinnat” -tarjous puuttuu.")
+                      (conj "”Kilpailutettavat hankinnat” -tarjous puuttuu.")
 
                       (<= tarjous-erillishankinnat-yht 0.0)
                       (conj "”Erillishankinnat” -tarjous puuttuu.")
