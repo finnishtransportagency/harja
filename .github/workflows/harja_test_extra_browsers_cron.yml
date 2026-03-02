@@ -22,6 +22,8 @@ on:
   schedule:
     - cron: '0 9 * * MON'
 
+# Nollaa oikeudet. Oikeudet määritellään erikseen kunkin jobin kohdalla. (tietoturva)
+permissions: {}
 
 jobs:
   tests:
