@@ -85,8 +85,7 @@
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
           hoitovuoden-alun-kattohinta (:kattohinta tavoitetiedot)
           hoitovuoden-alun-indeksikorjattu-kattohinta (:kattohinta_indeksikorjattu tavoitetiedot)
-          laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id
-                                                                  :hoitokausinro hoitovuosinro}))
+          laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitovuosinro}))
           laskutusraja (:laskutusraja laskutusraja-rivi)
           laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
 
