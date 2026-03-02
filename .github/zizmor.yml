@@ -6,3 +6,7 @@ rules:
         # On hyvä saada perus-actioneihin nopeasti tietoturvapäivityksiä
         # Kolmansien osapuolien actionit on hyvä hash-pinnata, koska niissä on suurempi riski
         actions/*: ref-pin
+        github/*: ref-pin
+        # Hash-pinnattavat actionit
+        docker/*: hash-pin
+        aws-actions/configure-aws-credentials: hash-pin
