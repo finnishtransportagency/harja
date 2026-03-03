@@ -239,7 +239,7 @@ jobs:
               })
 
       - name: Upload a new build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
@@ -666,14 +666,14 @@ jobs:
           detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           retention-days: 4
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: cypress-videos-${{ matrix.browser }}
