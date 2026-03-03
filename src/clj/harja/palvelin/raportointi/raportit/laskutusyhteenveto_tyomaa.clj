@@ -10,6 +10,7 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.kyselyt.kulut :as q]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
 
 
@@ -160,7 +161,12 @@
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+        _ (println "aikarajaus: " aikarajaus)
+        _ (println "alkupvm" alkupvm)
+        _ (println "loppupvm: " loppupvm)
+        _ (println "parametrit: " parametrit)
 
+        ;;_ (println "kulut: " (pvm/paivamaaran alkupvm (second (:valittu-kk parametrit))))
         ;; Käytetäänkö omaa aikaväliä
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
@@ -209,6 +215,12 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                               urakoiden-parametrit)
+        ;;hoitokauden-laskutusraja #_(kulut/hae-urakan-laskutusraja)
+        ;;hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuosi)
+        hoitokausinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) (second (:valittu-kk parametrit)))
+        hoitokauden-laskutusraja (first (q/hae-urakan-laskutusraja db {:urakka-id urakka-id
+                                                                :hoitokausinro hoitokausinro}))
+        _ (println "laskutusraja: " hoitokauden-laskutusraja)
 
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
@@ -220,7 +232,7 @@
                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])
-
+        ;;_ (println "urakat: " urakat)
         rivitiedot (first (first laskutusyhteenvedot))
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]
