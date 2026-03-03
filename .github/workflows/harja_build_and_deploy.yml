@@ -155,7 +155,7 @@ jobs:
 
       # Uploadaa build-artifact. Deploy-workflow lataa sen myöhemmässä vaiheessa.
       - name: Upload uberjar as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: harja-uberjar
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
@@ -213,7 +213,7 @@ jobs:
           persist-credentials: false
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v7.0.0
+        uses: actions/download-artifact@v8.0.0
         with:
           name: harja-uberjar
           # Download to the same directory as the uberjar is built to
