@@ -38,7 +38,7 @@
                  [com.taoensso/truss "2.1.1"]
 
                  ;; Lokitus
-                 [com.taoensso/timbre "6.7.1"]
+                 [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.25.3"]
