@@ -61,7 +61,7 @@ run_scan() {
 run_fix() {
     local fix_mode="$1"
 
-    if [[ "$fix_mode" == "only-unsafe" ]]; then
+    if [[ "$fix_mode" == "unsafe-only" ]]; then
         echo "⚠️  VAROITUS: Suoritetaan vaaralliset korjaukset!"
         echo "   Nämä korjaukset voivat rikkoa workfloweja tai actioneja."
         echo "   Tarkista KAIKKI muutokset huolellisesti ennen committia!"
