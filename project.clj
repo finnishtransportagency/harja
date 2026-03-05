@@ -10,7 +10,7 @@
   :pedantic? false
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.764"]
-                 [org.clojure/spec.alpha "0.5.238"]
+                 [org.clojure/spec.alpha "0.6.249"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
