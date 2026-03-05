@@ -76,13 +76,24 @@ jobs:
             });
 
             const stalePRs = pullRequests.filter(pr => 
-            pr.labels.some(label => label.name === 'Stale')
+              pr.labels.some(label => label.name === 'Stale')
             );
             
             console.log(`Found ${stalePRs.length} stale PR(s).`);
             console.log(stalePRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
             
-            const formattedList = stalePRs
+            
+            const dependencyPRs = pullRequests.filter(pr => 
+              pr.labels.some(label => label.name === 'dependencies')
+            );
+            
+            console.log(`Found ${dependencyPRs.length} dependency PR(s).`);
+            console.log(dependencyPRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
+            
+            // Combine PRs listings, ensuring no duplicates (in case some PRs have both labels)
+            const prs = [...stalePRs, ...dependencyPRs.filter(depPR => !stalePRs.some(stalePR => stalePR.number === depPR.number))];
+            
+            const formattedList = prs
               .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
               .join('\\n');
             
