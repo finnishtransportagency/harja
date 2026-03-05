@@ -61,7 +61,7 @@
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.1.234"]
+                 [org.clojure/core.cache "1.2.263"]
                  [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
