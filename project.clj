@@ -35,7 +35,7 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.1.1"]
+                 [com.taoensso/truss "2.3.0"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "6.8.0"]
@@ -61,8 +61,8 @@
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.1.234"]
-                 [org.clojure/core.memoize "1.1.266"]
+                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.1"]
@@ -174,7 +174,7 @@
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
                          ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.27.1"]
+                         [org.apache.commons/commons-compress "1.28.0"]
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
