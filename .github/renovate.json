@@ -14,10 +14,11 @@
   "schedule": [
     "before 8am on Tuesday"
   ],
+  "labels": ["dependencies"],
   "vulnerabilityAlerts": {
     "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
     "enabled": false,
-    "labels": [
+    "addLabels": [
       "security"
     ],
     "automerge": false
