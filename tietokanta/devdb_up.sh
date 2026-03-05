@@ -30,6 +30,7 @@ fi
 # Luo yhteinen harja-verkko, mikäli sitä ei ole vielä olemassa
 # Muut containerit voivat ottaa suoraan tietokantaan yhteyttä käyttämällä IP-osoitteen sijasta containerin nimeä: 'harjadb'
 # Tätä verkkoa käytetään mm. testaustarkoituksessa, jossa Lambda-kontti ottaa yhteyttä tietokantaan.
+# Palauttaa aina exit-koodin 0, vaikka verkko olisikin jo olemassa, jotta skripti ei keskeydy.
 docker network create harja-net 2>/dev/null || true
 
 # Jotta harjadb kontin tietoliikenne toimii oikein, täytyy IPv6 disabloida asetuksella: --sysctl net.ipv6.conf.all.disable_ipv6=1
