@@ -10,7 +10,7 @@
   :pedantic? false
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.764"]
-                 [org.clojure/spec.alpha "0.5.238"]
+                 [org.clojure/spec.alpha "0.6.249"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -35,10 +35,10 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.1.1"]
+                 [com.taoensso/truss "2.3.0"]
 
                  ;; Lokitus
-                 [com.taoensso/timbre "6.7.1"]
+                 [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
                  [org.apache.logging.log4j/log4j-core "2.25.3"]
@@ -57,12 +57,12 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.14.2"]
+                 [ring/ring-core "1.15.3"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.1.234"]
-                 [org.clojure/core.memoize "1.1.266"]
+                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
                  [org.clojure/core.match "1.1.1"]
@@ -152,7 +152,7 @@
                  [org.apache.ant/ant "1.10.15"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.21.0"]
+                 [dk.ative/docjure "1.22.0"]
 
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
@@ -174,7 +174,7 @@
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
                          ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.27.1"]
+                         [org.apache.commons/commons-compress "1.28.0"]
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
