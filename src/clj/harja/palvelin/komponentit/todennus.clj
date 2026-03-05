@@ -384,74 +384,77 @@
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
-  [db integraatioloki miam {kayttajanimi "oam_remote_user"
-                            ryhmat "oam_groups"
-                            organisaationumero "oam_departmentnumber"
-                            organisaation_nimi "oam_organization"
-                            etunimi "oam_user_first_name"
-                            sukunimi "oam_user_last_name"
-                            sahkoposti "oam_user_mail"
-                            puhelin "oam_user_mobile"
-                            y-tunnus "oam_user_companyid"
-                            :as headerit}]
-
-  ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
-  (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
-  (if (q/onko-jarjestelma? db kayttajanimi)
-    (throw+ todennusvirhe)
-    (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
-                   ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
-                   (kayttajan-roolit
-                     (partial q/hae-urakan-id-sampo-idlla db)
-                     (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                     oikeudet/roolit
-                     ryhmat)
-                   ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
-                   (kayttajaroolit-rajapintavastauksesta db
-                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
-                     ryhmat))
-          elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
-          ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
-          organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
-          kayttaja {:kayttajanimi kayttajanimi
-                    :etunimi etunimi
-                    :sukunimi sukunimi
-                    :sahkoposti sahkoposti
-                    :puhelin puhelin
-                    :organisaatio (:id organisaatio)}
-          kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
-          piilota-nimi? (:piilota_nimi kayttaja-kannassa)
-          kayttaja-id-kannassa (:id kayttaja-kannassa)
-          kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
-                                                                    :etunimi
-                                                                    :sukunimi
-                                                                    :sahkoposti
-                                                                    :puhelin})
-                              {:organisaatio (:org_id kayttaja-kannassa)})
-          kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
-          kayttaja-id (or
-                        kayttaja-id-kannassa
-                        (:id (q/luo-kayttaja<! db kayttaja)))
-          ;; Päivitetään käyttäjätiedot Jarjestelmavastaava :lle, jos nimeä ei ole vielä piilotettu
-          _ (when (and (not piilota-nimi?) (contains? (:roolit roolit) "Jarjestelmavastaava"))
-              (q/piilota-jvh-nimi! db {:id kayttaja-id}))]
-      (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
-        (q/paivita-kayttaja! db (merge kayttaja
-                                  {:id kayttaja-id})))
-      (log/info
-        "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
-        "; ELY-NUMERO: " ely
-        "; ORGANISAATION NIMI: " organisaation_nimi
-        "; Y-TUNNUS: " y-tunnus
-        "; KÄYTTÄJÄ ID: " kayttaja-id
-        "; ORGANISAATIO: " organisaatio)
-      (merge (assoc kayttaja
-               :organisaatio organisaatio
-               :organisaation-urakat (into #{}
-                                       (map :id)
-                                       (q/hae-organisaation-urakat db (:id organisaatio)))
-               :id kayttaja-id)
-        roolit))))
+  ([db integraatioloki miam headerit]
+   (varmista-kayttajatiedot db integraatioloki miam headerit false))
+  ([db integraatioloki miam {kayttajanimi "oam_remote_user"
+                             ryhmat "oam_groups"
+                             organisaationumero "oam_departmentnumber"
+                             organisaation_nimi "oam_organization"
+                             etunimi "oam_user_first_name"
+                             sukunimi "oam_user_last_name"
+                             sahkoposti "oam_user_mail"
+                             puhelin "oam_user_mobile"
+                             y-tunnus "oam_user_companyid"
+                             :as headerit} token-epaonnistui?]
+   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
+   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
+   (if (q/onko-jarjestelma? db kayttajanimi)
+     (throw+ todennusvirhe)
+     (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
+                    ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
+                    (kayttajan-roolit
+                      (partial q/hae-urakan-id-sampo-idlla db)
+                      (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                      oikeudet/roolit
+                      ryhmat)
+                    ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
+                    (kayttajaroolit-rajapintavastauksesta db
+                      (if token-epaonnistui?
+                        nil
+                        (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi))
+                      ryhmat))
+           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
+           kayttaja {:kayttajanimi kayttajanimi
+                     :etunimi etunimi
+                     :sukunimi sukunimi
+                     :sahkoposti sahkoposti
+                     :puhelin puhelin
+                     :organisaatio (:id organisaatio)}
+           kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
+           piilota-nimi? (:piilota_nimi kayttaja-kannassa)
+           kayttaja-id-kannassa (:id kayttaja-kannassa)
+           kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
+                                                                     :etunimi
+                                                                     :sukunimi
+                                                                     :sahkoposti
+                                                                     :puhelin})
+                               {:organisaatio (:org_id kayttaja-kannassa)})
+           kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
+           kayttaja-id (or
+                         kayttaja-id-kannassa
+                         (:id (q/luo-kayttaja<! db kayttaja)))
+           ;; Päivitetään käyttäjätiedot Jarjestelmavastaava :lle, jos nimeä ei ole vielä piilotettu
+           _ (when (and (not piilota-nimi?) (contains? (:roolit roolit) "Jarjestelmavastaava"))
+               (q/piilota-jvh-nimi! db {:id kayttaja-id}))]
+       (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
+         (q/paivita-kayttaja! db (merge kayttaja
+                                   {:id kayttaja-id})))
+       (log/info
+         "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
+         "; ELY-NUMERO: " ely
+         "; ORGANISAATION NIMI: " organisaation_nimi
+         "; Y-TUNNUS: " y-tunnus
+         "; KÄYTTÄJÄ ID: " kayttaja-id
+         "; ORGANISAATIO: " organisaatio)
+       (merge (assoc kayttaja
+                :organisaatio organisaatio
+                :organisaation-urakat (into #{}
+                                        (map :id)
+                                        (q/hae-organisaation-urakat db (:id organisaatio)))
+                :id kayttaja-id)
+         roolit)))))
 
 (defn- ohita-oikeudet
   "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
@@ -513,7 +516,7 @@
        ;; JW Token epäonnistui (tässä on aiheelliset hälytykset jo) 
        ;; Älä etene miam hakuun, vaan mene suoraan varmistukseen  
        ;;     Tämä ohjaa  -> div.ei-kayttooikeutta -> "Todennus epäonnistui"
-       (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)
+       (varmista-kayttajatiedot db integraatioloki miam oam-tiedot jwt-epaonnistui?)
        (try
          ;; Tarkista ensin cachesta
          (if-let [cached (cache/lookup @kayttajatiedot-cache-atom oam-tiedot)]
