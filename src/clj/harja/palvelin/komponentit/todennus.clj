@@ -131,7 +131,7 @@
         (->
           (str "Virhe miam kutsussa :: poikkeus ")
           (loki/koristele-lokiviesti loki/miam-error))
-        e)
+        (.getMessage e))
       ;; Palautetaan virheen sattuessa nil
       nil)))
 
