@@ -13,8 +13,12 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# Rajoitetaan skannattavat kohteet vain .github-hakemistoon
+# Työkalun ei ole tarpeen päästä käsiksi projektin muihin osiin
+GITHUB_DIR="$PROJECT_DIR/.github"
 ZIZMOR_IMAGE="ghcr.io/zizmorcore/zizmor:latest"
-ZIZMOR_TARGETS=".github/workflows/ .github/actions/ .github/dependabot.yml"
+# .github hakemiston alla olevat kohteet, jotka halutaan skannata.
+ZIZMOR_TARGETS="workflows/ actions/ dependabot.yml"
 
 help() {
     echo "Käyttö: $0 [OPTIONS] [-- ZIZMOR_OPTIONS...]"
@@ -42,13 +46,22 @@ pull_image() {
 }
 
 run_zizmor() {
+    # Jos ei olla fix-tilassa, mountataan read-only
+    # Tämä lisää tietoturvaa, koska skannauksessa ei tarvita kirjoitusoikeuksia.
+    if [[ -z "$FIX_MODE" ]]; then
+        mount_opts=":ro"
+    fi
+
     # Disabloidaan SC2086, koska haluamme välittää inputit word-splitattuina
     # Käytetään kuitenkin "--", jotta Zizmor ei tulkitse inputteja optioina.
     # shellcheck disable=SC2086
-    docker run --rm -v "$PROJECT_DIR:/workdir" --workdir "/workdir" "$ZIZMOR_IMAGE" \
+    docker run --rm \
+        -v "$GITHUB_DIR:/workdir${mount_opts}" \
+        --workdir "/workdir" \
+        "$ZIZMOR_IMAGE" \
         "$@" \
         --collect=workflows,actions,dependabot \
-        --config ".github/zizmor.yml" \
+        --config "zizmor.yml" \
         -- \
         $ZIZMOR_TARGETS
 }
@@ -113,7 +126,8 @@ pull_image
 
 echo ""
 echo -e "Optiot: FIX_MODE='$FIX_MODE', EXTRA_OPTS='${EXTRA_OPTS[*]}'"
-echo -e "Skannattavat hakemistot: ${ZIZMOR_TARGETS}\n"
+echo -e "Skannataan kohteet hakemistossa: $GITHUB_DIR"
+echo -e "Skannattavat kohteet: ${ZIZMOR_TARGETS}\n"
 
 if [[ -n "$FIX_MODE" ]]; then
     run_fix "$FIX_MODE"
