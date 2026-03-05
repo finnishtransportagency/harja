@@ -125,6 +125,18 @@
       ],
       "separateMajorMinor": true,
       "separateMultipleMinor": true
+    },
+    {
+      "description": "Ryhmittele cljsjs:react* päivitykset. Erottele major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "cljsjs:react*"
+      ],
+      "groupName": "cljsjs:react",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
     }
   ]
 }
