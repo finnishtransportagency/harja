@@ -35,7 +35,7 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.1.1"]
+                 [com.taoensso/truss "2.3.0"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "6.8.0"]
