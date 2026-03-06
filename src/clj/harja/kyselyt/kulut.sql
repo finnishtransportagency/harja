@@ -374,3 +374,35 @@ SELECT ut.laskutusraja,
        LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
  WHERE ut.urakka = :urakka-id
    AND ut.hoitokausi = :hoitokausinro;
+
+-- name: hae-urakan-toteutuneet-kustannukset
+-- Hakee urakan toteutuneet kustannukset annetulta aikaväliltä
+SELECT NULL                       AS "maksuera-numero",
+       NULL                       AS "maksuera-alias",
+       tk.id                      AS "id",
+       tk.summa                   AS "kokonaissumma",
+       make_date(tk.vuosi, tk.kuukausi, 1) AS "erapaiva",
+       NULL                       AS "laskun-numero",
+       tk.kuukausi                AS "koontilaskun-kuukausi",
+       'Harjan automaattisesti luoma kulu.'     AS "lisatieto",
+       tk.id                      AS "kohdistus-id",
+       1                          AS "rivi",
+       tk.summa_indeksikorjattu   AS "summa",
+       tk.toimenpideinstanssi     AS "toimenpideinstanssi",
+       tk.tehtavaryhma            AS "tehtavaryhma",
+       NULL                       AS "lisatyon-lisatieto",
+       'kokonaishintainen'::maksueratyyppi AS "maksueratyyppi",
+       NULL                       AS rahavaraus,
+       tk.tyyppi                  AS tyyppi,
+       tk.tehtava                 AS "tehtava_id",
+       t.nimi                     AS "tehtava_nimi",
+       false                      AS "muu-tehtava-kaytossa",
+       NULL                       AS "muutos-id",
+       NULL                       AS "muutos-voimassa-alkaen",
+       NULL                       AS "muutos-nimi",
+       true                       AS "harjan-generoima"
+  FROM toteutuneet_kustannukset tk
+       LEFT JOIN tehtava t ON tk.tehtava = t.id
+ WHERE tk.urakka_id = :urakka
+   AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= make_date(tk.vuosi, tk.kuukausi, 1))
+   AND (:loppupvm::DATE IS NULL OR make_date(tk.vuosi, tk.kuukausi, 1) <= :loppupvm::DATE);

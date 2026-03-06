@@ -164,9 +164,13 @@
   [db hakuehdot]
   (let [kulukohdistukset (group-by :id (into []
                                          (map konv/alaviiva->rakenne)
-                                         (q/hae-urakan-kulut-kohdistuksineen db {:urakka (:urakka-id hakuehdot)
-                                                                                 :alkupvm (:alkupvm hakuehdot)
-                                                                                 :loppupvm (:loppupvm hakuehdot)})))
+                                         (concat
+                                           (q/hae-urakan-kulut-kohdistuksineen db {:urakka (:urakka-id hakuehdot)
+                                                                                   :alkupvm (:alkupvm hakuehdot)
+                                                                                   :loppupvm (:loppupvm hakuehdot)})
+                                           (q/hae-urakan-toteutuneet-kustannukset db {:urakka (:urakka-id hakuehdot)
+                                                                                   :alkupvm (:alkupvm hakuehdot)
+                                                                                   :loppupvm (:loppupvm hakuehdot)}))))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
