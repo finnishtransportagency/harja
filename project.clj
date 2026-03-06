@@ -10,7 +10,7 @@
   :pedantic? false
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.764"]
-                 [org.clojure/spec.alpha "0.5.238"]
+                 [org.clojure/spec.alpha "0.6.249"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -57,7 +57,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.14.2"]
+                 [ring/ring-core "1.15.3"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
