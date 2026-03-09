@@ -1,15 +1,11 @@
 (ns harja.views.haku
   "Harjan haku"
-  (:require [harja.ui.ikonit :as ikonit]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
-
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :refer [tietoja kaksi-palstaa-otsikkoja-ja-arvoja]]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakat :as urakat]
             [harja.atom :refer-macros [reaction<!]]
@@ -120,8 +116,6 @@
             (nav/aseta-hallintayksikko-ja-urakka-varmistuksella!
               (get-in haettu-urakka [:hallintayksikko :id])
               haettu-urakka))
-          :kayttaja (let [haettu-kayttaja (<! (k/post! :hae-kayttajan-tiedot (:id tulos)))]
-                      (nayta-kayttaja haettu-kayttaja))
           :organisaatio
           (let [haettu-organisaatio (<! (k/post! :hae-organisaatio (:id tulos)))]
             (valitse-organisaatio haettu-organisaatio))))))
@@ -152,7 +146,6 @@
                            :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
                                               :urakka "Urakat"
-                                              :kayttaja "Käyttäjät"
                                               :organisaatio "Organisaatiot"
                                               "Muut")
                            :on-select #(valitse-hakutulos %)
