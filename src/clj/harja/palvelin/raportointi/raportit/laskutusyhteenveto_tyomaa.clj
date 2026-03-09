@@ -11,6 +11,7 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.kyselyt.kulut :as q]
+            [clojure.pprint :as pprint]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
 
 
@@ -147,7 +148,8 @@
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_ei_tavoite_hoitokausi_yht :muut_kulut_ei_tavoite_val_aika_yht true)])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
-                :viimeinen-rivi-yhteenveto? false
+                :viimeinen-rivi-yhteenveto? true
+                :piilota-border? false
                 :sheet-nimi sheet-nimi}
      (rivi
        {:otsikko otsikko :leveys 36}
@@ -161,12 +163,7 @@
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
-        _ (println "aikarajaus: " aikarajaus)
-        _ (println "alkupvm" alkupvm)
-        _ (println "loppupvm: " loppupvm)
-        _ (println "parametrit: " parametrit)
 
-        ;;_ (println "kulut: " (pvm/paivamaaran alkupvm (second (:valittu-kk parametrit))))
         ;; Käytetäänkö omaa aikaväliä
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
@@ -215,12 +212,7 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                               urakoiden-parametrit)
-        ;;hoitokauden-laskutusraja #_(kulut/hae-urakan-laskutusraja)
-        ;;hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuosi)
-        hoitokausinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) (second (:valittu-kk parametrit)))
-        hoitokauden-laskutusraja (first (q/hae-urakan-laskutusraja db {:urakka-id urakka-id
-                                                                :hoitokausinro hoitokausinro}))
-        _ (println "laskutusraja: " hoitokauden-laskutusraja)
+
 
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
@@ -232,8 +224,29 @@
                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])
-        ;;_ (println "urakat: " urakat)
         rivitiedot (first (first laskutusyhteenvedot))
+
+
+        _ (println "rivitiedot: \n " )
+        _ (pprint/pprint rivitiedot)
+        laskutusraja-kaytossa? (:onko_laskutusraja_kaytossa rivitiedot)
+        hk-laskutusraja (:hk_laskutusraja rivitiedot)
+        laskutusrajaan-jaljella (:laskutusrajaan_jaljella rivitiedot)
+        laskutusraja-ylittynyt? (:laskutusraja_ylittynyt rivitiedot)
+        kk-ylittava-laskutusosuus (:kk_ylittava_laskutusosuus rivitiedot)
+        kk-sallittu-laskutusosuus (:kk_sallittu_laskutusosuus rivitiedot)
+        aikavali (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+        _ (println "laskutusraja: " hk-laskutusraja)
+        _ (println "laskutusrajaan jaljella: " laskutusrajaan-jaljella)
+        _ (println "laskutusraja ylittynyt: " laskutusraja-ylittynyt?)
+        _ (println "sallittu laskutusosuus: " kk-sallittu-laskutusosuus)
+        _ (println "laskutusraja ylittynyt osuus: " kk-ylittava-laskutusosuus)
+        _ (println "laskutusraja käytössä: " laskutusraja-kaytossa?)
+        _ (println "aikavali: " aikavali)
+        _ (println "valittu aikavali?" valittu-aikavali?)
+        _ (println "kyseessa kk vali?" kyseessa-kk-vali?)
+        _ (println "aikarajaus: " aikarajaus)
+
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]
 
@@ -301,11 +314,23 @@
      ;;    Siirto edelliseltä vuodelta                        ;;
      ;;    Budjettia jäljellä                                 ;;
      ;; ----------------------------------------------------- ;;
-     (taulukot/valitaulukko {:data rivitiedot
-                             :otsikko "Toteutuneet"
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
+
+     (if laskutusraja-kaytossa?
+       (taulukot/valitaulukko-laskutusraja {:data rivitiedot
+                                            :otsikko "Laskutusraja"
+                                            :laskutettu-teksti (if valittu-aikavali? aikavali laskutettu-teksti)
+                                            :laskutetaan-teksti laskutetaan-teksti
+                                            :kyseessa-kk-vali? kyseessa-kk-vali?
+                                            :kyseessa-valittu-aikavali? valittu-aikavali?
+                                            :laskutusraja hk-laskutusraja
+                                            :laskutusraja-ylittynyt? laskutusraja-ylittynyt?})
+
+       (taulukot/valitaulukko {:data rivitiedot
+                               :otsikko "Toteutuneet"
+                               :laskutettu-teksti laskutettu-teksti
+                               :laskutetaan-teksti laskutetaan-teksti
+                               :kyseessa-kk-vali? kyseessa-kk-vali?
+                               :kyseessa-valittu-aikavali? valittu-aikavali?}))
 
      ;; Ei tavoitehintaiset
      (if
@@ -332,11 +357,13 @@
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
-
      ;; --------------------------------- ;;
      ;;    Footer (Laskutus yhteensä)     ;;
      ;; --------------------------------- ;;
-     [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+     [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? valittu-aikavali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
-      laskutettu-teksti laskutetaan-teksti]]))
+      (if valittu-aikavali? aikavali laskutettu-teksti) laskutetaan-teksti
+      kk-sallittu-laskutusosuus
+      hk-laskutusraja
+      laskutusraja-ylittynyt?]]))

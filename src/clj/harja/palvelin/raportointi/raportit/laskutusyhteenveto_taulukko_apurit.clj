@@ -5,54 +5,93 @@
 
 
 (defn- valitaulukko-rivi
-  [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli]
-  (rivi
-    [:varillinen-teksti {:arvo ""}]
-    [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
-    [:varillinen-teksti {:itsepaisesti-maaritelty-oma-vari (or vari nil)
-                         :arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt nil))
-                         :fmt :raha
-                         :lihavoi? lihavoi?}]
+  [tp-rivi kyseessa-kk-vali? kyseessa-valittu-aikavali? valiotsikko avain_hoitokausi avain_yht lihavoi? lihavoi-summa? vari tyyli]
+    (rivi
+      [:varillinen-teksti {:arvo ""}]
+      [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
+      [:varillinen-teksti
+           {:itsepaisesti-maaritelty-oma-vari (or vari nil)
+            :arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt nil))
+            :fmt :raha
+            :lihavoi? lihavoi?
+            :kustomi-tyyli (if-not kyseessa-kk-vali? tyyli "")}]
 
-    (when kyseessa-kk-vali?
-      (let [arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil))]
-        [:varillinen-teksti {:kustomi-tyyli tyyli
-                             :arvo arvo
-                             :fmt :raha
-                             :lihavoi? lihavoi?}]))))
+      (when kyseessa-kk-vali?
+        (let [arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt nil))]
+          [:varillinen-teksti {:kustomi-tyyli tyyli
+                               :arvo arvo
+                               :fmt :raha
+                               :lihavoi? lihavoi?}]))))
+
+;; NOTE: Tätä käytetään jos urakalla on laskutusraja käytössä eli MHU urakat vuodesta 2025 eteenpäin
+(defn valitaulukko-laskutusraja
+  "Työmaakokous välitaulukko laskutusrajalla"
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-valittu-aikavali? laskutusraja laskutusraja-ylittynyt?]}]
+  (let [rivit (into []
+                (remove nil?
+                  (cond
+                    ;;[tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli]
+                    (= "Laskutusraja" otsikko)
+                      (if kyseessa-valittu-aikavali?
+                        [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true true nil nil)]
+                        (if-not laskutusraja-ylittynyt?
+                          [(valitaulukko-rivi data false kyseessa-valittu-aikavali? (str "Laskutusraja " (yhteiset/summa-fmt laskutusraja)) :nil :nil false true nil nil)
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true true nil "vahvistamaton")
+                           (valitaulukko-rivi data false kyseessa-valittu-aikavali? "Laskutusrajaan jäljellä" :laskutusrajaan_jaljella "" true true nil nil)]
+                          [(valitaulukko-rivi data false kyseessa-valittu-aikavali? (str "Laskutusraja " (yhteiset/summa-fmt laskutusraja)) :nil :nil false true nil "vahvistamaton")
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true true nil nil)
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? " josta laskutettavaa (sisältyy laskutusrajaan)" :hk_laskutusraja :kk_sallittu_laskutusosuus false true nil "vahvistamaton")
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? " josta laskutusrajan ylittäviä kustannuksia (ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" :laskutusrajan_ylittynyt_osuus :tavhin_val_aika_yht false true nil nil)
+
+                           ]))
+                    :else
+                    ;; Alin välitaulukko
+                    [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true true nil "vahvistamaton")
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)])))]
+    [:taulukko {:piilota-border? true
+                :raportin-tunniste :tyomaa-yhteenveto
+                :oikealle-tasattavat-kentat #{2 3}
+                :viimeinen-rivi-yhteenveto? false}
+     (rivi
+       {:otsikko "" :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
+       {:otsikko "" :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 48 :tyyppi :varillinen-teksti}
+       {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
+       (when kyseessa-kk-vali?
+         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
+     rivit]))
 
 ;; NOTE: Tätä käytetään pääasiassa työmaakokouksen laskutusyhteenvedossa
 (defn valitaulukko
   "Työmaakokous välitaulukko ilman tyylejä"
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali?]}]
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-valittu-aikavali?]}]
   (let [rivit (into []
                 (remove nil?
                   (cond
                     (= "Toteutuneet" otsikko)
-                    [(valitaulukko-rivi data false "Hankinnat ja hoidonjohto yhteensä" :hankinnat_ja_hoidon_hk_yht :hankinnat_ja_hoidon_val_yht true nil "vahvistamaton")
-                     (when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
-                       (valitaulukko-rivi data false "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true nil nil))
-                     (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
+                    [(when (yhteiset/raha-arvo-olemassa? (:hk_valikatselmus_siirrot_ed_vuodelta data))
+                       (valitaulukko-rivi data false kyseessa-valittu-aikavali? "Siirto edelliseltä vuodelta" :hk_valikatselmus_siirrot_ed_vuodelta nil true true nil nil))
+                     (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true true nil "vahvistamaton")
 
                      ;; Nätetään arvot vain jos on olemassa
                      (when (yhteiset/raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
                        
-                       (valitaulukko-rivi data false (str (if (:tavoitehinta_on_oikaistu data)
+                       (valitaulukko-rivi data false kyseessa-valittu-aikavali? (str (if (:tavoitehinta_on_oikaistu data)
                                                                             "Hoitovuoden lopun tavoitehinta"
                                                                             "Hoitovuoden alun indeksikorjattu tavoitehinta"))
-                         :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
+                         :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true true nil nil))
 
                      (when (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data))
-                       (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
+                       (valitaulukko-rivi data false kyseessa-valittu-aikavali? "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true true nil nil))
 
-                     (valitaulukko-rivi data false "" :nil :nil false nil nil)
-                     (valitaulukko-rivi data false "" :nil :nil false nil nil)]
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)]
 
                     :else
                     ;; Alin välitaulukko
-                    [(valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton")
-                     (valitaulukko-rivi data false "" :nil :nil false nil nil)
-                     (valitaulukko-rivi data false "" :nil :nil false nil nil)])))]
+                    [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true true nil "vahvistamaton")
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)
+                     (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)])))]
 
     [:taulukko {:piilota-border? true
                 :raportin-tunniste :tyomaa-yhteenveto
