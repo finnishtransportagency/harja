@@ -63,7 +63,7 @@ jobs:
           days-before-issue-stale: -1
           days-before-issue-close: -1
 
-      - name: Get and format all PRs labeled as Stale
+      - name: Get and format stale PRs list
         id: stale-prs-list
         uses: actions/github-script@v8
         with:
