@@ -10,7 +10,7 @@
   (if kyseessa-valittu-aikavali?
     [:div
      [:div.tyomaakokous-footer
-      [:div.sisalto-ei-kk-vali
+      [:div.sisalto-valittu-aikavali
        [:h3 (str "Toteutuneet kustannukset yhteensä")]
        [:span.laskutus-yhteensa laskutettu-str]
        [:h1 [:span (str (fmt/euro laskutetaan))]]]]]

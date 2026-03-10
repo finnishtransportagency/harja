@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit
   "Laskutusyhteenvedon taulukoiden apufunktiot"
    (:require [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]))
+             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
+             [clojure.string :as cstr]))
 
 
 (defn- valitaulukko-rivi
@@ -13,7 +14,7 @@
            {:itsepaisesti-maaritelty-oma-vari (or vari nil)
             :arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt nil))
             :fmt :raha
-            :lihavoi? lihavoi?
+            :lihavoi? lihavoi-summa?
             :kustomi-tyyli (if-not kyseessa-kk-vali? tyyli "")}]
 
       (when kyseessa-kk-vali?
@@ -21,7 +22,7 @@
           [:varillinen-teksti {:kustomi-tyyli tyyli
                                :arvo arvo
                                :fmt :raha
-                               :lihavoi? lihavoi?}]))))
+                               :lihavoi? lihavoi-summa?}]))))
 
 ;; NOTE: Tätä käytetään jos urakalla on laskutusraja käytössä eli MHU urakat vuodesta 2025 eteenpäin
 (defn valitaulukko-laskutusraja
@@ -40,10 +41,8 @@
                            (valitaulukko-rivi data false kyseessa-valittu-aikavali? "Laskutusrajaan jäljellä" :laskutusrajaan_jaljella "" true true nil nil)]
                           [(valitaulukko-rivi data false kyseessa-valittu-aikavali? (str "Laskutusraja " (yhteiset/summa-fmt laskutusraja)) :nil :nil false true nil "vahvistamaton")
                            (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true true nil nil)
-                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? " josta laskutettavaa (sisältyy laskutusrajaan)" :hk_laskutusraja :kk_sallittu_laskutusosuus false true nil "vahvistamaton")
-                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? " josta laskutusrajan ylittäviä kustannuksia (ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" :laskutusrajan_ylittynyt_osuus :tavhin_val_aika_yht false true nil nil)
-
-                           ]))
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? (str "- josta laskutettavaa (sisältyy laskutusrajaan)") :hk_laskutusraja :kk_sallittu_laskutusosuus false true nil "vahvistamaton")
+                           (valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "- josta laskutusrajan ylittäviä kustannuksia (ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" :laskutusrajan_ylittynyt_osuus :tavhin_val_aika_yht false true nil nil)]))
                     :else
                     ;; Alin välitaulukko
                     [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true true nil "vahvistamaton")
@@ -89,7 +88,7 @@
 
                     :else
                     ;; Alin välitaulukko
-                    [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true true nil "vahvistamaton")
+                    [(valitaulukko-rivi data kyseessa-kk-vali? kyseessa-valittu-aikavali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true true nil nil)
                      (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)
                      (valitaulukko-rivi data false kyseessa-valittu-aikavali? "" :nil :nil false true nil nil)])))]
 
