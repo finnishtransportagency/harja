@@ -35,6 +35,9 @@ updates:
 
     schedule:
       interval: "weekly"
+    # Mitigoi supply chain-hyökkäyksen riskiä cooldown-ajalla, joka viivyttää uuden päivityksen tarjoamista x päivää
+    cooldown:
+      default-days: 3
 
   # Dcoker image päivitykset
   - package-ecosystem: "docker"
@@ -42,12 +45,18 @@ updates:
     # Check for updates once a week
     schedule:
       interval: "weekly"
+    # Mitigoi supply chain-hyökkäyksen riskiä cooldown-ajalla, joka viivyttää uuden päivityksen tarjoamista x päivää
+    cooldown:
+      default-days: 3
 
   # tietokanta pom.xml maven plugin päivitykset
   - package-ecosystem: "maven"
     directory: /tietokanta
     schedule:
       interval: "weekly"
+    # Mitigoi supply chain-hyökkäyksen riskiä cooldown-ajalla, joka viivyttää uuden päivityksen tarjoamista x päivää
+    cooldown:
+      default-days: 3
     groups:
       # Ryhmittele flyway päivitykset samaan PR:ään
       flyway:
