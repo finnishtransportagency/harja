@@ -59,7 +59,7 @@ BEGIN
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),  (SELECT id
                                                               FROM organisaatio
-                                                              WHERE lyhenne = 'PSU' and tyyppi = 'hallintayksikko'), 'Utajärven päällystysurakka',
+                                                              WHERE lyhenne = 'PSU' and tyyppi = 'elinvoimakeskus'), 'Utajärven päällystysurakka',
           '2021-01-01', '2026-12-31', 'paallystys', 'uta1', (SELECT id
                                                                            FROM organisaatio
                                                                            WHERE ytunnus = '0651792-4'));
