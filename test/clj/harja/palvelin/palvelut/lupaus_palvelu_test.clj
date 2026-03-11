@@ -1911,7 +1911,9 @@
 
 (deftest laske-bonus-ja-ennuste-test
   (testing "Bonus ja ennusteen tilan laskenta"
-    (let [opts {:tallennettu-paatos nil
+    (let [opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos nil
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1924,10 +1926,12 @@
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
       (is (map? (:bonus-tai-sanktio tulos)) "Bonus on map")
-      (is (or (contains? (:bonus-tai-sanktio tulos) :sanktio)
-            (contains? (:bonus-tai-sanktio tulos) :bonus)
-            (contains? (:bonus-tai-sanktio tulos) :tavoite-taytetty))
-        "Bonus-tai-sanktio sisältää joko :bonus, :sanktio tai :tavoite-taytetty")
+      (is (contains? (:bonus-tai-sanktio tulos) :sanktio)
+        "Tässä skenaariossa palautuu sanktio")
+      (is (number? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Sanktio on numero")
+      (is (pos? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Palvelun API-muodossa sanktio on positiivinen")
       (is (keyword? (:ennusteen-tila tulos)) "Ennusteen tila on keyword"))))
 
 (deftest laske-bonus-ja-ennuste-paatos-test
@@ -1936,8 +1940,10 @@
                               :luvatut_pisteet 100
                               :tavoitehinta 1000000
                               :tyyppi "sanktio"
-                              :lupaussanktio -10000M}
-          opts {:tallennettu-paatos tallennettu-paatos
+                              :lupaussanktio 10000M}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1947,12 +1953,38 @@
           tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
 
       (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
-        "Ennusteen tila on katselmoitu-toteuma kun päätös on"))))
+        "Ennusteen tila on katselmoitu-toteuma kun päätös on")
+      (is (= {:sanktio 10000M} (:bonus-tai-sanktio tulos))
+        "Tallennettu sanktio palautetaan positiivisena API-muodossa"))))
+
+(deftest laske-bonus-ja-ennuste-paatos-taytetty-test
+  (testing "Tallennettu taytetty-päätös näkyy katselmoituna toteumana"
+    (let [tallennettu-paatos {:toteutuneet_pisteet 100
+                              :luvatut_pisteet 100
+                              :tavoitehinta 1000000
+                              :tyyppi "taytetty"
+                              :lupaussanktio nil}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
+                :piste-toteuma 100
+                :piste-ennuste 100
+                :lupaus-sitoutuminen {:pisteet 100}
+                :tavoitehinta 1000000
+                :nykyhetki (pvm/luo-pvm 2020 1 15)
+                :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
+      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
+        "Tallennettu taytetty-päätös käsitellään katselmoituna toteumana")
+      (is (= {:tavoite-taytetty true} (:bonus-tai-sanktio tulos))
+        "Tallennettu taytetty-päätös näkyy API-muodossa tavoite täytetty -tilana"))))
 
 (deftest laske-bonus-ja-ennuste-ennusteen-tila-test
   (testing "Ennusteen tilan määrittely eri tilanteissa"
     ;; Alustava toteuma (hoitovuosi valmis)
-    (let [opts-alustava {:tallennettu-paatos nil
+    (let [opts-alustava {:db (:db jarjestelma)
+                         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                         :tallennettu-paatos nil
                          :piste-toteuma 85
                          :piste-ennuste 80
                          :lupaus-sitoutuminen {:pisteet 100}
@@ -1964,7 +1996,9 @@
         "Alustava toteuma kun toteuma on olemassa"))
 
     ;; Ennuste (hoitokausi alkanut, ei toteumaa)
-    (let [opts-ennuste {:tallennettu-paatos nil
+    (let [opts-ennuste {:db (:db jarjestelma)
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                        :tallennettu-paatos nil
                         :piste-toteuma nil
                         :piste-ennuste 80
                         :lupaus-sitoutuminen {:pisteet 100}
@@ -1976,7 +2010,9 @@
         "Ennuste kun hoitokausi on alkanut ja bonus on laskettavissa"))
 
     ;; Ei vielä ennustetta
-    (let [opts-ei-ennustetta {:tallennettu-paatos nil
+    (let [opts-ei-ennustetta {:db (:db jarjestelma)
+                              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                              :tallennettu-paatos nil
                               :piste-toteuma nil
                               :piste-ennuste 80
                               :lupaus-sitoutuminen {:pisteet 100}
@@ -1986,3 +2022,26 @@
           tulos-ei-ennustetta (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ei-ennustetta)]
       (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ei-ennustetta))
         "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))
+
+(deftest kanoninen-paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa kanonisen päätöksen API-muotoon oikein"
+    (is (= {:bonus 5200.0}
+           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+             {:lupausbonus 5200.0}))
+        "Bonus palautetaan positiivisena")
+    
+    (is (= {:sanktio 13200.0}
+           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+             {:lupaussanktio 13200.0}))
+        "Sanktio palautetaan positiivisena API-muodossa")
+    
+    (is (= {:tavoite-taytetty true}
+           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+             {:tavoite-taytetty true}))
+        "Tavoite täytetty palautetaan sellaisenaan")
+    
+    (is (nil? (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun kanoninen päätös on nil")
+    
+    (is (nil? (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio {}))
+        "Palauttaa nil kun kanoninen päätös on tyhjä map")))
