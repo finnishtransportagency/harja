@@ -87,14 +87,14 @@ BEGIN
 
   -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
   FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi,
-                               sum(mat.maara) as summa,
+                               sum(CASE WHEN t.poistettu IS TRUE THEN 0 ELSE mat.maara) as summa,
                 rp.aika::DATE
               FROM toteuma t
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
               WHERE ((t.luotu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE))
-                    AND urakka = u AND t.poistettu IS FALSE
+                    AND urakka = u
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
@@ -120,10 +120,13 @@ BEGIN
                     AND urakka = u AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, soratiehoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
-    -- Poista hoitoluokittainen materiaalicache kaikille reittipisteiden pvm:ille tässä urakassa
+    -- Poista päivitettävä materiaalicacherivi
     DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain
     WHERE pvm = rivi.aika 
-          AND urakka = u;
+          AND urakka = u
+          AND materiaalikoodi = rivi.materiaalikoodi
+          AND talvihoitoluokka = COALESCE(rivi.talvihoitoluokka, 100)
+          AND soratiehoitoluokka = COALESCE(rivi.soratiehoitoluokka, 100);
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
     (pvm, materiaalikoodi, talvihoitoluokka, soratiehoitoluokka, urakka, maara, muokattu)
     VALUES (rivi.aika,
