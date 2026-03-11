@@ -1271,7 +1271,6 @@ SELECT yt.yhaid,
        u.poistettu,
        u.urakkanro,
        yt.elyt,
-       yt.elinvoimakeskukset,
        yt.vuodet,
        u.sampoid,
        yt.yhatunnus
