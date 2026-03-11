@@ -89,6 +89,9 @@
          (for [kohde epaonnistuneet-tallennukset]
            ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
+     (when (and (empty? epaonnistuneet-tallennukset) (empty? epaonnistuneet-vkm-muunnokset))
+       [:div
+        [:p "Yha-kohteiden tietojen päivittäminen epäonnistui"]])
 
      [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))
 
@@ -119,14 +122,14 @@
   (cond (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "YHA-kohteen tieosoitteen päivittäminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "YHA-kohteen tallentaminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
