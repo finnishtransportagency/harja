@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatokset-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -11,7 +11,6 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
@@ -459,6 +458,96 @@
     (is (nil? lupauspaatoksen-poistettu-sanktio))
     (is (= "Lupaukset" (:nimi poistettu-paatos)))))
 
+(deftest tee-lupauspaatos-tyyppi-tarkistus-test
+  (testing "Varmistetaan, että bonus/sanktio tallennetaan vain kun :tyyppi on oikea - negatiivinen regressiotesti"
+    (let [paatos-pvm (pvm/->pvm "12.05.2024")
+          urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+          urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          indeksi (:indeksi urakan-tiedot)
+          kayttajaid (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          tavoitehinta 5M
+          tarjous-tavoitehinta 5M
+          luvatut-pisteet 5
+          toteutuneet-pisteet 10
+          lupausbonus 1500M
+          lupaussanktio 2000M
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          
+          ;; Testi 1: Bonus-päätös (tyyppi="bonus") - datassa on sekä bonus että sanktio, mutta vain bonus saa tallentua
+          lupauspaatos-bonus (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "bonus" tavoitehinta tarjous-tavoitehinta
+                               luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio 
+                               bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
+          vastaus-bonus (try
+                          (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                                        lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                        (fn [db hakuparametrit]
+                                          {:lupaus-sitoutuminen {:pisteet 50}
+                                           :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                        :pisteet {:maksimi 100 :ennuste 100 :toteuma 100}
+                                                        :bonus-tai-sanktio {:bonus lupausbonus}
+                                                        :tavoitehinta tavoitehinta
+                                                        :odottaa-kannanottoa 0
+                                                        :merkitsevat-odottaa-kannanottoa 0}})
+                                        valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                        (fn [db hakuparametrit] tavoitehinta)
+                                        jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                        (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                            (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-bonus))
+                          (catch Exception e e))
+          tallennettu-bonus (valitse-paatos (:paatokset vastaus-bonus) :lupaukset)
+          
+          erilliskustannus-bonus (when (:erilliskustannus_id tallennettu-bonus)
+                                   (first (erilliskustannus-kyselyt/hae-erilliskustannus 
+                                            (:db jarjestelma) 
+                                            {:urakka-id urakkaid :id (:erilliskustannus_id tallennettu-bonus)})))
+          
+          ;; Testi 2: Sanktio-päätös (tyyppi="sanktio") - datassa on sekä bonus että sanktio, mutta vain sanktio saa tallentua
+          lupauspaatos-sanktio (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "sanktio" tavoitehinta tarjous-tavoitehinta
+                                 luvatut-pisteet 5 lupausbonus lupaussanktio 
+                                 bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
+          vastaus-sanktio (try
+                            (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                                          lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                          (fn [db hakuparametrit]
+                                            {:lupaus-sitoutuminen {:pisteet 50}
+                                             :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                          :pisteet {:maksimi 100 :ennuste 100 :toteuma 100}
+                                                          :bonus-tai-sanktio {:sanktio lupaussanktio}
+                                                          :tavoitehinta tavoitehinta
+                                                          :odottaa-kannanottoa 0
+                                                          :merkitsevat-odottaa-kannanottoa 0}})
+                                          valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                          (fn [db hakuparametrit] tavoitehinta)
+                                          jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                          (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                              (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-sanktio))
+                            (catch Exception e e))
+          tallennettu-sanktio (valitse-paatos (:paatokset vastaus-sanktio) :lupaukset)
+          
+          sanktio (when (:sanktio_id tallennettu-sanktio)
+                    (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-sanktio))))]
+      
+      ;; Assertiot bonukselle: Bonus tallennetaan, sanktio EI tallennu
+      (is (not (nil? erilliskustannus-bonus)) 
+          "Bonus tallennettiin kun tyyppi oli 'bonus'")
+      (is (= lupausbonus (:rahasumma erilliskustannus-bonus)) 
+          "Lupausbonus on oikea")
+      (is (nil? (:sanktio_id tallennettu-bonus)) 
+          "REGRESSIOTESTI: Sanktiota ei tallennettu vaikka datassa oli :lupaussanktio, koska tyyppi oli 'bonus'")
+      
+      ;; Assertiot sanktiolle: Sanktio tallennetaan, bonus EI tallennu
+      (is (not (nil? sanktio)) 
+          "Sanktio tallennettiin kun tyyppi oli 'sanktio'")
+      (is (= lupaussanktio (:maara sanktio)) 
+          "Lupaussanktio on oikea")
+      (is (nil? (:erilliskustannus_id tallennettu-sanktio)) 
+          "REGRESSIOTESTI: Bonusta ei tallennettu vaikka datassa oli :lupausbonus, koska tyyppi oli 'sanktio'"))))
+
+
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
 (deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
@@ -901,7 +990,7 @@
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
-        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-alkupvm (:alkupvm urakan-tiedot)
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
