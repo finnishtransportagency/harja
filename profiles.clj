@@ -72,9 +72,8 @@
         :plugins [[cider/cider-nrepl "0.57.0"]]
         :repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
-                        ;; Oletuksena kiinteä portti on kätevä, mutta worktree-ajossa
-                        ;; tarvitaan mahdollisuus ajaa useita instansseja rinnakkain.
-                        ;; Aseta HARJA_NREPL_PORTTI jos 4005 on varattu.
+                                                ;; Worktree-ajossa nREPL-portti pitää voida yliajaa,
+                                                ;; jotta rinnakkaiset instanssit eivät törmää porttiin 4005.
                         :port #=(eval (let [p (System/getenv "HARJA_NREPL_PORTTI")]
                                                 (if (and p (re-matches #"\d+" p))
                                                     (Integer/parseInt p)
