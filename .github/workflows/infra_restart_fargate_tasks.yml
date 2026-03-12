@@ -12,8 +12,12 @@ on:
     inputs:
       environment:
         description: "Valitse deploy-ympäristö"
-        type: environment
         required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
 
 jobs:
   restart-fargate-tasks:
