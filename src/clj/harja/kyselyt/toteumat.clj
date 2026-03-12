@@ -19,8 +19,8 @@
   hae-reittitoteumat-analytiikalle luo-toteuma-materiaali<! hae-toteuman-alkanut-pvm-idlla paivita-toteuma<!
   paivita-toteuman-reittigeometria<! paivita-toteuma-materiaali! paivita-palautettu-analytiikalle-aikaleima!
   lisaa-toteumalle-jsonhash! hae-toteuman-reittipisteet paivita-toteuma-ulkoisella-idlla<! toteuman-id-ulkoisella-idlla
-  hae-poistettavien-toteumien-alkanut-ulkoisella-idlla hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
-  hae-poistettavien-toteumien-aikavali-ulkoisella-idlla poista-toteumat-ulkoisilla-idlla-ja-luojalla!
+  hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
+  poista-toteumat-ulkoisilla-idlla-ja-luojalla!
   hae-toteumat-ilman-reittipisteita-analytiikalle
   hae-toteuman-perustiedot-ulkoisella-idlla poista-toteuma_tehtava-toteuma-idlla!
   poista-toteuma-materiaali-toteuma-idlla!)

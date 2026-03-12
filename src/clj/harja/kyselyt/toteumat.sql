@@ -362,11 +362,6 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
--- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
-SELECT alkanut
-  FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
-
 -- name: hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
 SELECT DISTINCT alkanut::DATE AS alkanut
   FROM toteuma t
