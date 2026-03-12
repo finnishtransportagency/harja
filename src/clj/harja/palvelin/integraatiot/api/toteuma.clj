@@ -115,15 +115,12 @@
           _ (doseq [ulkoinen-id ulkoiset-idt]
               (poista-toteuman-tehtavat-ulkoisella-idlla db kayttaja-id ulkoinen-id)
               (poista-toteuman-materiaalit-ulkoisella-idlla db kayttaja-id ulkoinen-id))
-          ;; Haetaan uniikit alkupäivämäärät sopimuspäivityksiä varten
-          toteumien-alkupvmt (map :alkanut
-                               (q-toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
-                                 db {:urakka-id urakka-id
-                                     :ulkoiset-idt ulkoiset-idt}))
-          ;; Haetaan aikavälin min/max urakan materiaalicachen päivitystä varten
-          aikavali (first (q-toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
-                            db {:urakka-id urakka-id
-                                :ulkoiset-idt ulkoiset-idt}))
+        poistettavien-toteumien-paivat-ja-aikavali
+        (q-toteumat/hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+        db {:urakka-id urakka-id
+          :ulkoiset-idt ulkoiset-idt})
+        toteumien-alkupvmt (map :alkanut poistettavien-toteumien-paivat-ja-aikavali)
+        aikavali (first poistettavien-toteumien-paivat-ja-aikavali)
           aikavalin-alkupvm (:min_alkanut aikavali)
           aikavalin-loppupvm (:max_alkanut aikavali)
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
