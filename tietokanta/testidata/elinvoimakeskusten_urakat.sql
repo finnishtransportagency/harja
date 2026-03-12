@@ -22,8 +22,8 @@ UPDATE urakka
 
 -- Varsinais-Suomen elinvoimakeskus
 UPDATE urakka
-   SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Varsinais-Suomen elinvoimakeskus')
- WHERE hallintayksikko = (select id from organisaatio where nimi = 'Lounais-Suomi');
+   SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Lounais-Suomen elinvoimakeskus')
+ WHERE hallintayksikko = (select id from organisaatio where nimi = 'Varsinais-Suomi');
 
 -- Vanha ely on kokonaan jonkun uuden elinvoimakeskuksen alueella
 -- eli KAS => Kaakkois-Suomi ja PIR => Sisä-Suomi

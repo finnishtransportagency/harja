@@ -80,7 +80,7 @@
                  (when urakkatyyppi (name urakkatyyppi))
                  (not (empty? hallintayksikot)) hallintayksikot))))
      {:urakka :urakat}
-     (juxt :tyyppi (comp :id :hallintayksikko)))))
+     (juxt :tyyppi (comp :id :elinvoimakeskus)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
   ([db user oikeustarkistus-fn]

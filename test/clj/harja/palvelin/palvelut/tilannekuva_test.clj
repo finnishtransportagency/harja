@@ -170,7 +170,7 @@
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (= (count (:laatupoikkeamat vastaus)) 52))
+    (is (= (count (:laatupoikkeamat vastaus)) 47)) ;; Aiemmin haki myös kanavaurakoiden laatupoikkeamat, joita ei voi elinvoimaksekuksen avulla hakea
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 18))
     (is (= (count (:ilmoitukset vastaus)) 53))
@@ -399,12 +399,9 @@
 
 (deftest hae-urakat-tilannekuvaan-jvh
   (let [vastaus (poista-urakan-alue-ja-id (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia))
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))
         urakkatyypit (set (distinct (keep #(get-in % [:tyyppi]) vastaus)))
-        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))
-        _ (println "OEFHUOE " vastaus)
-        _ (println "ELYNUMEROT  " elynumerot)
-        ]
+        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))]
 
     (is (= (count elynumerot) 6) "JVH:n pitäisi nähdä kaikki ELY:t")
 
@@ -412,20 +409,21 @@
     (is (contains? urakkatyypit :paallystys)  "JVH:n pitäisi nähdä kaikki urakkatyypit, paallystys")
     (is (contains? urakkatyypit :tiemerkinta)  "JVH:n pitäisi nähdä kaikki urakkatyypit, tiemerkintä")
     (is (contains? urakkatyypit :valaistus)  "JVH:n pitäisi nähdä kaikki urakkatyypit, valaistus")
-    (is (contains? urakkatyypit :vesivayla-kanavien-hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, vesivayla-kanavien-hoito")
+    ;; Kommentoidaan pois. Vesiväylä urakat eivät ole koskaan kuuluneet yhteenkään ELYyn, eli tämä on ollut aina virheellinen.
+    ;;(is (contains? urakkatyypit :vesivayla-kanavien-hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, vesivayla-kanavien-hoito")
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 54) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 48) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))]
     (is (= (count elynumerot) 6)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
 
 (deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))]
 
     (is (= (count elynumerot) 0))))
 
@@ -433,12 +431,12 @@
   ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
   ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
   (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
-        eka-ely (first elynumerot)]
+        evknumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))
+        eka-evk (first evknumerot)]
 
-    (is (= eka-ely 12))
-    (is (every? #(= % eka-ely) elynumerot)
-      "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+    (is (= eka-evk 9))
+    (is (every? #(= % eka-evk) evknumerot)
+      "Pääsy vain omaan urakkaan ja sen Elinvoimakeskuksen urakoihin --> kaikki EVK-numerot tulee olla samoja")))
 
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
@@ -452,9 +450,9 @@
             vastaus))
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
-              :hallintayksikko {:id 22
-                                :nimi "Pohjois-Pohjanmaa"
-                                :elynumero 12}
+              :elinvoimakeskus {:id 12
+                                :nimi "Pohjois-Suomen elinvoimakeskus"
+                                :evknumero 9}
               :urakat #{{:id 4
                          :nimi "Oulun alueurakka 2014-2019"
                          :urakkanro "1238"
