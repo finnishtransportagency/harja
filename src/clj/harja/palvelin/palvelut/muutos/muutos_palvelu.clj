@@ -437,11 +437,13 @@
         rahavaraukset (yleiset/yhdista-mapit-avaimella rahavaraukset rahavarausmuutosten-syyt :id)
         rahavaraukset (mapv
                         ;; lasketaan erotus vain jos molemmat arvot ovat olemassa
-                        #(if (and (:summa-indeksikorjattu %)
-                               (:toteumat %))
-                           (assoc % :tavoitehinnan-muutos (- (:toteumat %)
-                                                            (:summa-indeksikorjattu %)))
-                           %)
+                        #(cond
+                           (and (:summa-indeksikorjattu %) (:toteumat %))
+                           (assoc % :tavoitehinnan-muutos (- (:toteumat %) (:summa-indeksikorjattu %)))
+                           
+                           (:summa-indeksikorjattu %)
+                           (assoc % :tavoitehinnan-muutos (- (:summa-indeksikorjattu %)))
+                           :else %)
                         rahavaraukset)
         rahavaraukset-yhteensa (rahavarausten-summarivi rahavaraukset)
         rahavaraukset (conj rahavaraukset rahavaraukset-yhteensa)
