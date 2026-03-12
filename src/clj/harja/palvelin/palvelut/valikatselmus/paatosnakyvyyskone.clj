@@ -222,43 +222,6 @@
       :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
 
-(defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset aktiiviset-pysyvat-muutokset
-                                                    tehtaviin-perustuvat-muutokset rahavarauksiin-perustuvat-muutokset
-                                                    tavoitehinta kuluva-hoitovuosi]
-  ;; Edeltävät vaatimukset päätöksen tallentamiselle:
-  ;; - Hoitotovuoden pitää olla päättynyt
-  ;; Aktiivisia pysyviä muutoksia pitää olla
-  (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
-    paatokset
-    (cond
-      ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
-      (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
-      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Hoitovuosi on vielä kesken." true 2)
-
-
-      (not (nil? tavoitehinta))
-      (let [;; Korvataan koneelta saatu päätös tässä valistellulta
-            tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
-            tavoitehinta-jalkeen (+ (or (when-not (nil? tehtaviin-perustuvat-muutokset) tehtaviin-perustuvat-muutokset) 0)
-                                   (or (when-not (nil? rahavarauksiin-perustuvat-muutokset) rahavarauksiin-perustuvat-muutokset) 0)
-                                   (or (when-not (nil? aktiiviset-pysyvat-muutokset) aktiiviset-pysyvat-muutokset) 0)
-                                   tavoitehinta)
-            tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
-                                                (assoc :tavoitehinta_ennen tavoitehinta)
-                                                (assoc :tavoitehinta_jalkeen tavoitehinta-jalkeen)
-                                                (assoc :kirjalliset_muutokset (or aktiiviset-pysyvat-muutokset 0))
-                                                (assoc :tehtava_muutokset (or tehtaviin-perustuvat-muutokset 0))
-                                                (assoc :rahavaraus_muutokset (or rahavarauksiin-perustuvat-muutokset 0)))
-            paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
-            paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
-        paatokset)
-
-      :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
-      (lisaa-paatos-virheellisena paatokset "Tavoitehinnan pysyvät muutokset" "Tavoitehintaa ei ole määritelty." true 2
-        {:kirjalliset_muutokset (or aktiiviset-pysyvat-muutokset 0)
-         :rahavaraus_muutokset (or rahavarauksiin-perustuvat-muutokset 0)
-         :tehtava_muutokset (or tehtaviin-perustuvat-muutokset 0)}))))
-
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
                                        taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
                                        tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi]

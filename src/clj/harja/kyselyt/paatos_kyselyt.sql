@@ -53,35 +53,6 @@ FROM paatos_tavoitehinnan_muutos
 WHERE id = :paatos-id
   AND poistettu = FALSE;
 
--- name: hae-tavoitehinnan-pysyvat-muutospaatokset
--- Hae tavoitehinnan muutos päätökset
-SELECT 'Tavoitehinnan pysyvät muutokset' as nimi, *
-FROM paatos_tavoitehinnan_pysyvamuutos
-WHERE urakkaid = :urakkaid
-  AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-  AND poistettu = FALSE;
-
--- name: hae-tavoitehinnan-pysyvamuutospaatos
--- Hae tavoitehinnan muutos
-SELECT 'Tavoitehinnan pysyvät muutokset' as nimi, *
-FROM paatos_tavoitehinnan_pysyvamuutos
-WHERE id = :paatos-id
-  AND poistettu = FALSE;
-
--- name: tee-tavoitehinnan-pysyvamuutos-paatos<!
--- Tee tavoitehinnan muutos päätös
-INSERT INTO paatos_tavoitehinnan_pysyvamuutos (urakkaid, hoitokauden_alkuvuosi, tavoitehinta_ennen, tavoitehinta_jalkeen,
-                                               rahavaraus_muutokset, kirjalliset_muutokset, tehtava_muutokset, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta_ennen, :tavoitehinta_jalkeen,
-        :rahavaraus_muutokset, :kirjalliset_muutokset, :tehtava_muutokset, :luoja, NOW());
-
--- name: poista-tavoitehinnan-pysyvamuutos-paatos<!
--- Poista tavoitehinnan muutos päätös
-UPDATE paatos_tavoitehinnan_pysyvamuutos
-SET poistettu = TRUE,
-    poistaja  = :poistaja
-WHERE id = :id;
-
 -- name: tee-tavoitehinnan-ylitys-paatos<!
 -- Tee tavoitehinnan ylitys päätös
 INSERT INTO paatos_tavoitehinta_ylitys (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset,

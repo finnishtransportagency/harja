@@ -64,10 +64,6 @@
 (s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::muokkaa_kattohinta ::tavoitehinta
                                        ::kattohinta ::luoja]))
 
-(s/def ::tavoitehinnan-pysyvamuutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjalliset_muutokset
-                                                           ::tehtava_muutokset ::rahavaraus_muutokset
-                                                           ::tavoitehinta_ennen ::tavoitehinta_jalkeen ::luoja]))
-
 (s/def ::kattohinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kattohinta ::toteutuneet_kustannukset
                                                    ::ylityksen_maara ::urakoitsija_maksaa ::siirrettava_maara ::maksimi_siirrettava_maara
                                                     ::viimeinen_hoitokausi ::luoja]

@@ -199,10 +199,7 @@
         kattohinnan-oikaisu-mahdollinen? (and
                                            (seq tavoitehinnan-muutokset)
                                            voi-muokata?
-                                           poikkeusvuosi?)
-        avaa-tai-sulje-haitari (fn [event]
-                                 (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+                                           poikkeusvuosi?)]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
      
@@ -231,46 +228,15 @@
 
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
-        [:hr.paatos-hr]
 
         ;; Päätöksenteko napit
-        (if-not (:virhe paatos)
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
-
-(defn tavoitehinnan-pysyvat-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset hoitovuosi-kesken?]
-  (let [paatos-avain :tavoitehinnan-pysyvat-muutokset
-        paatos-tehty? (boolean (:id paatos))
-        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        paatoksen-tiedot (merge paatos {:urakkaid (-> @tila/yleiset :urakka :id)})]
-    ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
-    [:div#tavoitehinnan-pysyvat-muutokset.paatos-komponentti-reunuksella
-     [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-      (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
-
-     (when tallennus-kesken?
-       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
-
-     (when (not (contains? avatut-paatokset paatos-avain))
-       [:div
-        [:div.flex-row.lista-rivi
-         [:div "Kirjallisesti sovitut muutokset"]
-         [:div.rivi-lukema (fmt/euro-opt false (:kirjalliset_muutokset paatos))]]
-        [:div.flex-row.lista-rivi
-         [:div "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"]
-         [:div.rivi-lukema (fmt/euro-opt false (:tehtava_muutokset paatos))]]
-        [:div.flex-row.lista-rivi
-         [:div "Rahavarausten muutokset"]
-         [:div.rivi-lukema (fmt/euro-opt false (:rahavaraus_muutokset paatos))]]
-        [:hr.paatos-hr]
-
-        ;; Päätöksentekonapit
-        (if-not (:virhe paatos)
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
-           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
+        (if-not hoitovuosi-kesken?
+          [:div
+           [:hr.paatos-hr]
+           (if-not (:virhe paatos)
+             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
+              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
+              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
+             [:div.muokkaustoiminnot
+              [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
+          [:div {:style {:padding-bottom "1rem"}}])])]))
