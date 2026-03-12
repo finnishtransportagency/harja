@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.materiaalit :as materiaalit]
+            [harja.kyselyt.sopimukset :as q-sopimukset]
             [harja.kyselyt.toteumat :as q-toteumat]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
@@ -235,18 +236,16 @@
                             pvm/dateksi))
         min-alkanut (pvm-str->date min-pvm)
         max-alkanut (pvm-str->date max-pvm)
-        min-max-kutsuttu? (atom false)
         paivitys-args (atom nil)]
-    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
+    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
                   (fn [_ _]
                     [{:alkanut min-alkanut}
                      {:alkanut max-alkanut}])
 
-                  pvm/min-max
-                  (fn [_]
-                    (reset! min-max-kutsuttu? true)
-                    [(pvm/->pvm min-pvm)
-                     (pvm/->pvm max-pvm)])
+                  harja.kyselyt.toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
+                  (fn [_ _]
+                    [{:min_alkanut min-alkanut
+                      :max_alkanut max-alkanut}])
 
                   harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                   (fn [& _] 2)
@@ -264,7 +263,6 @@
         [111 222]
         urakka-id))
 
-    (is (true? @min-max-kutsuttu?) "Päivämääräaikaväli muodostetaan kutsumalla pvm/min-max")
     (is (some? @paivitys-args) "Urakan materiaalicachen päivitystä kutsutaan")
     (is (= urakka-id (:urakka @paivitys-args)))
     (is (= (pvm/iso8601 (pvm/->pvm min-pvm))
@@ -279,7 +277,9 @@
         ulkoiset-idt [111 222]
         kirjaaja {:id 987 :kayttajanimi kayttaja-jvh}
         poisto-kutsu-args (atom nil)
-        vastaus (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
+        vastaus (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
+                              (fn [& _] [])
+                              harja.kyselyt.toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
                               (fn [& _] [])
                               harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                               (fn [_ kayttaja-id ulkoiset-idt* urakka-id*]
@@ -304,7 +304,9 @@
         kirjaaja {:id 987 :kayttajanimi kayttaja-jvh}
   sopimus-paivitys-kutsuttu? (atom false)
   urakka-paivitys-kutsuttu? (atom false)
-        vastaus (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
+        vastaus (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
+                              (fn [& _] [])
+                              harja.kyselyt.toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
                               (fn [& _] [])
                               harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                               (fn [& _] 0)
@@ -338,11 +340,14 @@
         odotetut (set (for [sopimus [10 20]
                             pvm ["01.01.2019" "02.01.2019"]]
                         [sopimus pvm]))]
-    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
+    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
                   (fn [& _]
                     [{:alkanut d1}
-                     {:alkanut d1}
                      {:alkanut d2}])
+                  harja.kyselyt.toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
+                  (fn [& _]
+                    [{:min_alkanut d1
+                      :max_alkanut d2}])
                   harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                   (fn [& _] 2)
                   harja.kyselyt.sopimukset/hae-urakan-sopimus-idt
@@ -368,7 +373,9 @@
         ulkoiset-idt [111]
         kirjaaja {:id 987 :kayttajanimi kayttaja-jvh}
         urakka-paivitys-kutsuttu? (atom false)]
-    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
+    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
+                  (fn [& _] [])
+                  harja.kyselyt.toteumat/hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
                   (fn [& _] [])
                   harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
                   (fn [& _] 1)

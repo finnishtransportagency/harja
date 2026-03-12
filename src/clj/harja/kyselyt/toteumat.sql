@@ -367,6 +367,17 @@ SELECT alkanut
   FROM toteuma t
  WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
+-- name: hae-poistettavien-toteumien-alkanut-uniikit-ulkoisella-idlla
+SELECT DISTINCT alkanut::DATE AS alkanut
+  FROM toteuma t
+ WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+
+-- name: hae-poistettavien-toteumien-aikavali-ulkoisella-idlla
+SELECT MIN(alkanut::DATE) AS min_alkanut,
+       MAX(alkanut::DATE) AS max_alkanut
+  FROM toteuma t
+ WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT

@@ -17,18 +17,6 @@
   (is (pvm/sama-pvm? (pvm/->pvm-date-timeksi "1.1.2020") (t/local-date 2020 1 1)))
   (is (pvm/sama-pvm? (t/local-date-time 2020 12 1 13 30 59) (pvm/->pvm-date-timeksi "1.12.2020"))))
 
-(deftest min-max-palauttaa-oikein
-  (let [alku (pvm/->pvm-date-timeksi "01.01.2019")
-        loppu (pvm/->pvm-date-timeksi "02.01.2019")]
-    (is (= [alku loppu]
-           (pvm/min-max [loppu alku]))
-        "pvm/min-max palauttaa [min max] riippumatta syötteen järjestyksestä")
-    (is (= [alku alku]
-           (pvm/min-max [alku alku]))
-        "pvm/min-max toimii myös kun kaikki arvot ovat samoja")
-    (is (nil? (pvm/min-max []))
-        "pvm/min-max palauttaa nil kun syöte on tyhjä")))
-
 (deftest ennen?
   (is (false? (pvm/ennen? nil nil)))
   (is (false? (pvm/ennen? nyt nil)))
