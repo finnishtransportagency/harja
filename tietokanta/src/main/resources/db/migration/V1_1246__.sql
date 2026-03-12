@@ -1,2 +1,2 @@
-INSERT INTO geometriapaivitys (nimi, paikallinen, kaytossa) VALUES ('elinvoimakeskukset', false, true);
-INSERT INTO integraatio (jarjestelma, nimi )values ('ptj', 'elinvoimakeskukset-haku');
+-- Lisätään uusi tarkastustyyppi, koska myös tarkastustyypit on mukana suoritettavien tehtävien enumeraatiossa
+ALTER TYPE suoritettavatehtava ADD VALUE 'tieturvallisuustarkastus' AFTER 'tiestotarkastus';
