@@ -30,7 +30,7 @@
   [roolit ryhma]
   (let [roolit (vals roolit)
         ryhmanimet (into #{}
-                         (map :nimi roolit))]
+                     (map :nimi roolit))]
     (some (fn [{:keys [nimi linkki] :as rooli}]
             (cond
               (= nimi ryhma)
@@ -38,53 +38,53 @@
 
               (and (not (ryhmanimet ryhma)) linkki (str/ends-with? ryhma (str "_" nimi)))
               [rooli (str/trim (first (str/split ryhma #"_")))]))
-          roolit)))
+      roolit)))
 
 (defn- yleisroolit [roolit-ja-linkit]
   (into #{}
-        ;; Haetaan kaikki roolit, joilla ei ole linkkiä
-        (comp (map first)
-              (filter (comp empty? :linkki))
-              (map :nimi))
-        roolit-ja-linkit))
+    ;; Haetaan kaikki roolit, joilla ei ole linkkiä
+    (comp (map first)
+      (filter (comp empty? :linkki))
+      (map :nimi))
+    roolit-ja-linkit))
 
 (defn- roolien-nimet
   [roolit]
   (into #{}
-        (map (comp :nimi first))
-        roolit))
+    (map (comp :nimi first))
+    roolit))
 
 (defn poista-nil-id []
   (filter #(some? (first %))))
 
 (defn- urakkaroolit [urakan-id roolit-ja-linkit]
   (into {}
-        (comp
-         ;; Muuta key Sampo id:stä Harjan urakka id:ksi
-         (map #(update-in % [0] urakan-id))
-         (poista-nil-id)
-         ;; Muuta [[rooli id] ...] -> #{nimi ...}
-         (map #(update-in % [1] roolien-nimet)))
-        ;; Valitaan vain "urakka" linkitetyt roolit ja
-        ;; ryhmitellään ne id:n perusteella
-        (group-by second
-                  (filter (comp #(= "urakka" %)
-                                :linkki
-                                first)
-                          roolit-ja-linkit))))
+    (comp
+      ;; Muuta key Sampo id:stä Harjan urakka id:ksi
+      (map #(update-in % [0] urakan-id))
+      (poista-nil-id)
+      ;; Muuta [[rooli id] ...] -> #{nimi ...}
+      (map #(update-in % [1] roolien-nimet)))
+    ;; Valitaan vain "urakka" linkitetyt roolit ja
+    ;; ryhmitellään ne id:n perusteella
+    (group-by second
+      (filter (comp #(= "urakka" %)
+                :linkki
+                first)
+        roolit-ja-linkit))))
 
 (defn organisaatioroolit [urakoitsijan-id roolit-ja-linkit]
   (into {}
-        (comp
-         (map #(update-in % [0] urakoitsijan-id))
-         ;; Poistetaan roolit, joille ei löydy organisaatiota.
-         ;; Muuten muiden järjestelmien roolit (esim. Extranet_Liito_Kayttaja) rooli voi sekoittua
-         ;; Harjan rooleihin.
-         (poista-nil-id)
-         (map #(update-in % [1] roolien-nimet)))
-        (group-by second
-                  (filter (comp #(= "urakoitsija" %) :linkki first)
-                          roolit-ja-linkit))))
+    (comp
+      (map #(update-in % [0] urakoitsijan-id))
+      ;; Poistetaan roolit, joille ei löydy organisaatiota.
+      ;; Muuten muiden järjestelmien roolit (esim. Extranet_Liito_Kayttaja) rooli voi sekoittua
+      ;; Harjan rooleihin.
+      (poista-nil-id)
+      (map #(update-in % [1] roolien-nimet)))
+    (group-by second
+      (filter (comp #(= "urakoitsija" %) :linkki first)
+        roolit-ja-linkit))))
 
 (defn kayttajan-roolit
   "Palauttaa annetun käyttäjän roolit OAM_GROUPS header arvon perusteella.
@@ -159,16 +159,16 @@
     (loop [yritys 1]
       (let [vastaus (try
                       (integraatiotapahtuma/suorita-integraatio
-                       db integraatioloki "miam" "hae-kayttajan-roolit" nil
-                       (fn [konteksti]
-                         (let [http-asetukset {:metodi :GET
-                                               :url (str (:url miam) kayttajanimi)
-                                               :timeout timeout
-                                               :otsikot (merge
-                                                          {"Content-Type" "application/json"}
-                                                          {"x-api-key" (:apiavain miam)})}
-                               {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                           (kasittele-miam-vastaus status body))))
+                        db integraatioloki "miam" "hae-kayttajan-roolit" nil
+                        (fn [konteksti]
+                          (let [http-asetukset {:metodi :GET
+                                                :url (str (:url miam) kayttajanimi)
+                                                :timeout timeout
+                                                :otsikot (merge
+                                                           {"Content-Type" "application/json"}
+                                                           {"x-api-key" (:apiavain miam)})}
+                                {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                            (kasittele-miam-vastaus status body))))
                       (catch Exception e
                         (log/error e "MIAM-kutsu epäonnistui poikkeukseen")
                         nil))]
@@ -231,7 +231,7 @@
             ;; Olemme kiinnostuneita pelkästään roolista eli Role kentästä. Mitään muuta arvoa ei tarkasteta tai validoida
             (let [ryhmat (->> table1
                            (keep #(get % "Role"))
-                           (remove str/blank?)      ; poista tyhjät
+                           (remove str/blank?) ; poista tyhjät
                            (str/join ","))
                   ;; Lisätään mahdolliset ryhmät asetuksista
                   ryhmat (str/join "," (remove nil? [ryhmat-asetuksista ryhmat]))]
@@ -280,9 +280,9 @@
         ;; Subject ID (sub), eli käyttäjä kenelle JWT on myönnetty, tällä voidaan tunnistaa käyttäjä (mukana myös yllä olevissa tokeneissa)
         ;; Tällä voidaan esim invalitoida token, kun käyttäjä kirjautuu ulos, mutta Harjassa ei tuollaista tarvetta kirjoitushetkellä taida olla
         ; iam-identity (get headerit "x-iam-identity")
-        
+
         ;; Vahvistetaan että tokenien payloadit on eheät
-        vahvistetut-tunnustiedot (if (and 
+        vahvistetut-tunnustiedot (if (and
                                        iam-data
                                        todennus-varmistus-paalla?)
                                    (varmistus/vahvista-jwt-signaturet accesstoken iam-data kehitysmoodi? public-key-url)
@@ -314,18 +314,18 @@
 
 (defn- koka-headerit [headerit]
   (reduce-kv
-   (fn [m k v]
-     (assoc m k (pura-header-arvo v)))
-   {}
-   (select-keys headerit
-                [;; Käyttäjätunnus ja ryhmät
-                 "oam_remote_user" "oam_groups"
-                 ;; ELY-numero (tai null), org nimi ja Y-tunnus
-                 "oam_departmentnumber" "oam_organization" "oam_user_companyid"
-                 ;; Etu- ja sukunimi
-                 "oam_user_first_name" "oam_user_last_name"
-                 ;; Sähköposti ja puhelin
-                 "oam_user_mail" "oam_user_mobile"])))
+    (fn [m k v]
+      (assoc m k (pura-header-arvo v)))
+    {}
+    (select-keys headerit
+      [;; Käyttäjätunnus ja ryhmät
+       "oam_remote_user" "oam_groups"
+       ;; ELY-numero (tai null), org nimi ja Y-tunnus
+       "oam_departmentnumber" "oam_organization" "oam_user_companyid"
+       ;; Etu- ja sukunimi
+       "oam_user_first_name" "oam_user_last_name"
+       ;; Sähköposti ja puhelin
+       "oam_user_mail" "oam_user_mobile"])))
 
 (defn prosessoi-apikayttaja-header
   "Integraatioväylä välittää apikäyttäjän tunnuksen Harjaan harja-api-username-nimisessä headerissä.
@@ -351,10 +351,10 @@
 
 (defn- hae-organisaatio-elynumerolla [db ely]
   (some->> ely
-           (re-matches #"\d+")
-           Long/parseLong
-           (q/hae-ely-numerolla db)
-           first))
+    (re-matches #"\d+")
+    Long/parseLong
+    (q/hae-ely-numerolla db)
+    first))
 
 (defn- hae-organisaatio-elinvoimakeskusnumerolla [db elinvoimakeskus]
   (some->> elinvoimakeskus
@@ -368,16 +368,16 @@
 
 (defn- hae-organisaatio-liitetylle-roolille [db roolit]
   (some->> roolit
-           :organisaatioroolit
-           keys
-           first
-           (q/hae-organisaatio-idlla db)
-           first))
+    :organisaatioroolit
+    keys
+    first
+    (q/hae-organisaatio-idlla db)
+    first))
 
 (defn- hae-organisaatio-y-tunnuksella [db y-tunnus]
   (some->> y-tunnus
-           (q/hae-organisaatio-y-tunnuksella db)
-           first))
+    (q/hae-organisaatio-y-tunnuksella db)
+    first))
 
 (defn- hae-kayttajalle-organisaatio
   [db elinvoimakeskus ely y-tunnus organisaatio roolit]
@@ -397,15 +397,15 @@
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
   [db integraatioloki miam {kayttajanimi "oam_remote_user"
-       ryhmat "oam_groups"
-       organisaationumero "oam_departmentnumber"
-       organisaation_nimi "oam_organization"
-       etunimi "oam_user_first_name"
-       sukunimi "oam_user_last_name"
-       sahkoposti "oam_user_mail"
-       puhelin "oam_user_mobile"
-       y-tunnus "oam_user_companyid"
-       :as headerit}]
+                            ryhmat "oam_groups"
+                            organisaationumero "oam_departmentnumber"
+                            organisaation_nimi "oam_organization"
+                            etunimi "oam_user_first_name"
+                            sukunimi "oam_user_last_name"
+                            sahkoposti "oam_user_mail"
+                            puhelin "oam_user_mobile"
+                            y-tunnus "oam_user_companyid"
+                            :as headerit}]
 
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
@@ -471,7 +471,7 @@
    headerit palautetaan normaalisti."
   [{kayttaja "oam_remote_user" :as koka-headerit} oikeudet]
   (or (and oikeudet (oikeudet kayttaja))
-      koka-headerit))
+    koka-headerit))
 
 ;; Atomilla seurataan käynnissä olevia hakuja
 (def odottavat-kutsut-atom (atom {}))
@@ -535,11 +535,11 @@
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
-  (todenna-pyynto [this req kehitysmoodi?] 
+  (todenna-pyynto [this req kehitysmoodi?]
     "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
      req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
-(defrecord HttpTodennus 
+(defrecord HttpTodennus
   [oikeudet todennus-varmistus-asetukset miam]
   component/Lifecycle
   (start [this]
