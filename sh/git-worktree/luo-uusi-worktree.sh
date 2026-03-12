@@ -189,8 +189,15 @@ paivita_worktree_profiles_nrepl_portti() {
             "$profiles_polku" > "$tmp"
 
         mv "$tmp" "$profiles_polku"
-        echo -e "${VIHREA}✓ Päivitettiin profiles.clj: nREPL-portti tukee HARJA_NREPL_PORTTI${EI_VARIA}"
+            if grep -q 'System/getenv "HARJA_NREPL_PORTTI"' "$profiles_polku" 2>/dev/null; then
+                echo -e "${VIHREA}✓ Päivitettiin profiles.clj: nREPL-portti tukee HARJA_NREPL_PORTTI${EI_VARIA}"
+                return 0
+            fi
     fi
+
+        echo -e "${PUNAINEN}❌ Worktree-haaran profiles.clj ei tue HARJA_NREPL_PORTTI-asetusta eikä sitä voitu päivittää turvallisesti.${EI_VARIA}"
+        echo -e "${KELTAINEN}   Päivitä haaraan profiles.clj-muutos tai muuta nREPL-portin määritys käsin ennen käynnistystä.${EI_VARIA}"
+        return 1
 }
 
 # Funktio kysymään tietokannan uudelleenkäynnistyksestä
@@ -341,7 +348,13 @@ echo -e "${SININEN}📁 Luodaan worktree...${EI_VARIA}"
 git worktree add "${WORKTREE_KANSIO}" "${HAARAN_NIMI}"
 
 # Varmista että worktree tukee nREPL-portin yliajoa (muuten se yrittää usein porttia 4005 ja törmää pääinstanssiin).
-paivita_worktree_profiles_nrepl_portti "$WORKTREE_KANSIO"
+if ! paivita_worktree_profiles_nrepl_portti "$WORKTREE_KANSIO"; then
+    echo ""
+    echo -e "${KELTAINEN}Worktree jätetään paikoilleen käsin korjattavaksi:${EI_VARIA}"
+    echo -e "${KELTAINEN}   $WORKTREE_KANSIO/profiles.clj${EI_VARIA}"
+    echo -e "${KELTAINEN}Lisää tiedostoon HARJA_NREPL_PORTTI-tuki tai muuta :port-määritys käsin ennen käynnistystä.${EI_VARIA}"
+    exit 1
+fi
 
 # Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
 if [ -z "$HTTP_PORTTI" ]; then
