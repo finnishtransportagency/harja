@@ -174,9 +174,7 @@
                                                  (konv/sql-timestamp (second toimenpiteet-aloitettu-aikavali)))
          urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                   db user (fn [urakka-id kayttaja]
-                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
-                                                 urakka-id
-                                                 kayttaja))
+                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
                   urakka urakoitsija
                   (case urakkatyyppi
                     :kaikki nil
@@ -220,7 +218,8 @@
              (into []
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
-                     {:urakat urakat
+                     {:urakat_annettu (some? urakat)
+                      :urakat urakat
                       :alku_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-alku)
                       :loppu_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-loppu)
                       :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
@@ -287,7 +286,7 @@
                      [urakka]
 
                      hallintayksikko
-                     (map :id (ur-q/hae-hallintayksikon-urakat db hallintayksikko))
+                     (map :id (ur-q/hae-elinvoimakeskuksen-urakat db {:evk_id hallintayksikko}))
 
                      :default ;; Kaikki urakat
                      nil)

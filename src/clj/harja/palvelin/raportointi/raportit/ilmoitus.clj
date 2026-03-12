@@ -167,10 +167,10 @@
               (concat
                 (apply concat
                        ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppisten ilmoitusten määrä
-                       (for [[hy ilmoitukset] (sort-by #(:elynumero (first %)) ilmoitukset-hyn-mukaan)]
+                       (for [[hy ilmoitukset] (sort-by #(:evknumero (first %)) ilmoitukset-hyn-mukaan)]
                          (concat
                            (when (or urakoittain? (= :urakka konteksti))
-                             [{:otsikko (or (when (:nimi hy) (str (:elynumero hy) " " (:nimi hy)))
+                             [{:otsikko (or (when (:nimi hy) (str (:evknumero hy) " " (:nimi hy)))
                                             "Ilmoitukset ilman urakkaa")}])
                            (when (or urakoittain? (= :urakka konteksti))
                              (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)

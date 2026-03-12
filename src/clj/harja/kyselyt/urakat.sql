@@ -183,6 +183,16 @@ FROM urakka u
 WHERE o.id = :hy
 AND u.poistettu = false;
 
+-- name: hae-elinvoimakeskuksen-urakat
+SELECT
+    u.id,
+    u.nimi,
+    u.tyyppi
+FROM urakka u
+         JOIN organisaatio o ON o.id = u.elinvoimakeskus_id
+WHERE o.id = :evk_id
+  AND u.poistettu = false;
+
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
 SELECT
