@@ -76,7 +76,7 @@ $$ LANGUAGE plpgsql;
 -- 2. Proseduuri hakee välimuistissa päivitettävät päivämäärät palautuneiden toteumien reittipisteistä (aika) ja käsinkirjattujen toteumien alkanut-sarakkeesta.
 -- 3. Proseduuri poistaa välimuistitaulusta urakan päivämäärää koskevat rivit.
 -- 4. Proseduuri insertoi välimuistitauluun uudet päivämäärää koskevat rivit.
-CREATE OR REPLACE FUNCTION paivita_urakan_materiaalin_kaytto_hoitoluokittain_luonti_ja_muokkaus_paivalla (
+CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla (
   urakka_id INTEGER, alkupvm DATE, loppupvm DATE)
   RETURNS void AS $$
 DECLARE
@@ -87,7 +87,7 @@ BEGIN
 
   -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
   FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi,
-                               sum(CASE WHEN t.poistettu IS TRUE THEN 0 ELSE mat.maara) as summa,
+                               sum(CASE WHEN t.poistettu IS TRUE THEN 0 ELSE mat.maara END) as summa,
                 rp.aika::DATE
               FROM toteuma t
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
