@@ -1,0 +1,173 @@
+## Testiympäristöjen pystytykseen karvalakki QA1 workflow
+## 
+## Tässä alustava deploy skeleton 
+## -> antaa valita branchin 
+## -> buildaa imagen testi ECR:rään (erillään prodista)
+## -> deployaa imagen QA1 ECS konttiin  
+##
+## Ei koske prod pipelineen, kovakoodattu QA1 
+## 
+
+name: '[TEST-ENV] Deploy branch to qa1'
+
+## Pitäisi antaa branch valinnat defaulttina 
+## TODO.. valinta on vaan koristeena toistaiseksi 
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Valitse deploy-ympäristö"
+        required: true
+        type: choice
+        options:
+          - test-qa1
+
+permissions: {}
+
+concurrency:
+  ## TODO .. 
+  ## Myöhemmin tähän ei kovakoodata? 
+  ## Mutta tähän spikeen hard set
+  group: test-qa1-deploy
+  cancel-in-progress: false
+  
+jobs:
+  ## TODO .. 
+  # << imagen builaus siirretään myöhemmin tähän >>
+  # tests:
+  # check-tests-status-and-notify:
+  # scan-and-test-image:
+  
+  deploy-qa1:
+    runs-on: ubuntu-latest
+    ## TODO .. 
+    environment: 'test-qa1'
+
+    permissions:
+      id-token: write
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      
+      ## TODO tällä ei tehdä vielä mitään? 
+      ## Mutta buildi ilmeisesti sen tarvii
+      - name: Start test database
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: harjadb-latest
+
+      ## rev-parse == commit 
+      - name: Resolve checked out commit
+        id: git-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      ## ref_name == branchi
+      ## Tagataan image näillä 
+      ## TODO.. Jos halutaan sallia että esim QA1 & QA2 käyttää samaa branchia
+      ##        -> täytyy tagittaa vielä environment, muuten voi tulla ongelmia (tagit ristissä)
+      - name: Resolve sanitized ref tag
+        id: ref-tag
+        env:
+          RAW_REF: ${{ github.ref_name }}
+        run: |
+          REF_TAG=$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
+          
+      
+      ## TODO.. Siirretään buildaus ylemmälle tasolle myöhemmin
+      - name: Build Harja Uberjar
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      # https://github.com/aws-actions/amazon-ecr-login
+      # mask-password: 'true' käyttö on suositeltavaa, jotta docker-salasanaa ei tulosteta mikäli debug-lokitus on enabloitu.
+      # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
+      - name: Authenticate with AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076
+        with:
+          mask-password: 'true'
+
+      - name: Build and tag Harja Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
+          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+        run: |
+          docker build --provenance=false \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" \
+            --file "$DOCKERFILE_PATH" .
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
+          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+        run: |
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+          
+      - name: Download task definition
+        env:
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+        run: |
+          aws ecs describe-task-definition \
+            --region eu-west-1 \
+            --task-definition "$ECS_TASK_DEFINITION_NAME" \
+            --query taskDefinition \
+            > harja-task-definition.json
+
+      - name: Update ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c
+        with:
+          task-definition: harja-task-definition.json
+          container-name: ${{ vars.ECS_CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          wait-for-service-stability: false
+
+      - name: Start qa1 service
+        env:
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
+        ## TODO:: 
+        ## Käytetään desired count muuttujaa jälkikäteen, 
+        ## Tähän spikeen hard set == 1 
+        ## Tätä hallinnoidaan infran puolella 
+        run: |
+          aws ecs update-service \
+            --region eu-west-1 \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --service "$ECS_SERVICE_NAME" \
+            --desired-count 1
