@@ -122,14 +122,14 @@
   (cond (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "YHA-kohteen tieosoitteen päivittäminen epäonnistui"
+          {:otsikko "Päällystyskohteen tieosoitteen päivittäminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "YHA-kohteen tallentaminen epäonnistui"
+          {:otsikko "Päällystyskohteen tallentaminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
