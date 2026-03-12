@@ -68,6 +68,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Get latest successful build
         uses: actions/github-script@v8
@@ -210,6 +212,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Replace latest deployment
         uses: actions/github-script@v8

@@ -163,6 +163,7 @@
             ely-id (hae-hallintayksikko db ely-hash urakkatyyppi sampo-id)
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                        sopimustyyppi ely-id urakoitsija-id)]
+
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
                            urakka-id
                            urakkatyyppi
