@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
-  (:require [harja.ui.bootstrap :as bs]
+  (:require [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.bootstrap :as bs]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
@@ -27,7 +28,8 @@
     (komp/luo
       (komp/sisaan-ulos #(do
                            (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                           (nav/vaihda-kartan-koko! :S))
+                           (nav/vaihda-kartan-koko! :S)
+                           (kartta-tiedot/piilota-infopaneeli!))
                         #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
       (fn [{:keys [id] :as ur}]
         [bs/tabs {:style :tabs :classes "tabs-taso2"
