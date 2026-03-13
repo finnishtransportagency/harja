@@ -32,6 +32,12 @@
               "type": "string"
             }
           },
+          "elinvoimakeskukset": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "vuodet":{
             "type": "array",
             "items": {

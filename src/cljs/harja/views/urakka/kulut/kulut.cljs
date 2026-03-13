@@ -251,7 +251,17 @@
 
                 (some? laskutusraja)
                 [:div
-                 [:div.sarakkeet
+                 (when (> hoitokauden-kulujen-summa laskutusraja)
+                   [yleiset/info-laatikko :vahva-ilmoitus  "Laskutusraja on täynnä."
+                    [:span "Kaikki laskutusrajan yli menevät toteutuneet kustannukset kirjataan edelleen normaalisti Harjaan, mutta niitä ei saa laskuttaa. Maksuosuuksista päätetään "
+                     [:a.klikattava.alleviivaa {:href "#"
+                                                :on-click #(siirtymat/siirry-annettuun-valilehteen
+                                                             @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                                             {:taso1 :urakat
+                                                              :taso2 :valikatselmus})}
+                      "välikatselmuksessa"] "."]
+                    nil {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "tasan"}])
+                 [:div.sarakkeet-yhteensa
                   [:div.leveampi-sarake
                    [:div.lukema-label "Laskutusrajan käyttö " (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi hoitovuodet "Hoitovuosi")]
                    [:div.lukema (if (and hoitokauden-kulujen-summa (< hoitokauden-kulujen-summa laskutusraja))
@@ -304,7 +314,7 @@
                                                            :taso2 :suunnittelu
                                                            :taso3 :uusi-kustannussuunnitelma})}
                    "Siirry Hoitovuoden alun tavoitehinta-sivulle"]]
-                 nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])]]))))))
+                 nil {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "tasan"}])]]))))))
 
 (defn- kohdistetut*
   [e! app]
