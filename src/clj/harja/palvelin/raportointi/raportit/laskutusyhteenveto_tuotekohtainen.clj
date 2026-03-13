@@ -174,8 +174,8 @@
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus valittu-kk] :as parametrit}]
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-        laskutettu-teksti (str "Hoitokauden alusta")
-        laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+        laskutettu-teksti (str "Hoitovuoden alusta")
+        laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
         ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
         ;; Halutaanko näyttää tietyn vuoden data
         koko-vuosi? (and (= aikarajaus :kalenterivuosi) (nil? valittu-kk))
@@ -257,9 +257,9 @@
         otsikot [["Talvihoito" "alvi"]
                  ["Liikenneympäristön hoito" "ympä"]
                  ["Soratien hoito" "sora"]
-                 ["Päällyste" "pääl"]
+                 ["Päällysteiden paikkaus" "pääl"]
                  ["MHU Ylläpito" "yllä"]
-                 ["MHU ja HJU hoidon johto" "johto"]
+                 ["MHU hoidon johto" "johto"]
                  ["MHU Korvausinvestointi" "korv"]]
 
         ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella

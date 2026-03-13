@@ -14,8 +14,12 @@ on:
     inputs:
       environment:
         description: 'Valitse deploy-ympäristö'
-        type: environment
         required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
   push:
     branches:
       - develop
@@ -222,7 +226,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
       - name: Log in to the Container registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -288,7 +292,7 @@ jobs:
       # Actions read lupaa tarvitaan actions/download-artifact actionissa
       actions: read
     with:
-      environment: ${{ github.event.inputs.environment }}
+      environment: ${{ inputs.environment }}
       # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
       commit-sha: ${{ github.sha }}
       artifact-run-id: ${{ github.run_id }}

@@ -93,3 +93,9 @@ SELECT id, ytunnus, nimi, lyhenne, tyyppi,
        liikennemuoto, katuosoite, postinumero, postitoimipaikka, sampoid, elynumero, poistettu, luotu, muokattu
   FROM organisaatio
  ORDER BY nimi ASC;
+
+-- name: paivita-elinvoimakeskus-geometria!
+UPDATE organisaatio
+SET alue = ST_GeomFromText(:alue) :: GEOMETRY
+WHERE tyyppi = 'elinvoimakeskus'
+  AND lyhenne = :lyhenne;

@@ -6,7 +6,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.laadunseuranta.talvihoitoreitit-domain :as talvihoitoreitit-domain]
             [taoensso.timbre :as log]
-            [harja.domain.tierekisteri.validointi :as tr-validointi]))
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
+            [harja.tyokalut.yleiset :refer [round2]]))
 
 (defqueries "harja/kyselyt/talvihoitoreitit.sql"
   {:positional? true})
@@ -144,7 +145,7 @@
                                        hoitoluokat (group-by :ryhma hoitoluokat)
                                        rivi (-> rivi
                                               (assoc :reitit reitit)
-                                              (assoc :laskettu_pituus (reduce + (map :laskettu_pituus reitit)))
+                                               (assoc :laskettu_pituus (round2 3 (reduce + (map :laskettu_pituus reitit))))
                                               (assoc :hoitoluokat hoitoluokat)
                                               (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
