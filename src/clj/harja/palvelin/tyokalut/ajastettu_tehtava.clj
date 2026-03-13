@@ -1,6 +1,5 @@
 (ns harja.palvelin.tyokalut.ajastettu-tehtava
   "Apufunktioita tehtävien ajastamiseen"
-
   (:require
     [chime :refer [chime-at]]
     [taoensso.timbre :as log]
@@ -18,12 +17,12 @@
 (defn ajasta-paivittain [[tunti minuutti sekuntti] tehtava]
   (when (and tunti minuutti sekuntti)
     (chime-at (periodic-seq
-               (.. (t/now)
-                   (withZone (DateTimeZone/forID "Europe/Helsinki"))
-                   (withTime tunti minuutti sekuntti 0))
-               (t/days 1))
-              tehtava
-              virhekasittely)))
+                (.. (t/now)
+                  (withZone (DateTimeZone/forID "Europe/Helsinki"))
+                  (withTime tunti minuutti sekuntti 0))
+                (t/days 1))
+      tehtava
+      virhekasittely)))
 
 (defn ajasta-minuutin-valein [minuutit aloitusviive-sekunteina tehtava]
   ;; Kutsujien tulee antaa aloitusviive, jotta kaikki esim 60 minuutin välein tehtävät eivät
@@ -32,8 +31,8 @@
   ;; minuutin kuluttua Harjan käynnistyksestä.
   (when minuutit
     (chime-at (periodic-seq
-               (.. (aika-sekuntien-kuluttua aloitusviive-sekunteina)
-                   (withZone (DateTimeZone/forID "Europe/Helsinki")))
-               (t/minutes minuutit))
-              tehtava
-              virhekasittely)))
+                (.. (aika-sekuntien-kuluttua aloitusviive-sekunteina)
+                  (withZone (DateTimeZone/forID "Europe/Helsinki")))
+                (t/minutes minuutit))
+      tehtava
+      virhekasittely)))
