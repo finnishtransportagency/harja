@@ -598,17 +598,20 @@
                     parametrit
                     (:headers request)
                     body
-                    #(let
-                       [kayttaja (hae-kayttaja db
-                                   (get (:headers request) "oam_remote_user"))
-                        origin-header (get (:headers request) "origin")
-                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                        vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
-                        purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
-                        ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
-                        ;; käsittely onnistunut
-                        mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
-                        status (if-not (str/blank? mahdollinen-virhe) 400 200)]
+                    #(let [kayttaja (hae-kayttaja db
+                                      (get (:headers request) "oam_remote_user"))
+                           origin-header (get (:headers request) "origin")
+                           kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                           vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
+                           purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
+                           ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
+                           ;; käsittely onnistunut
+                           mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
+                           status-element (some (fn [elem] (when (= (:tag elem) :Status) elem)) purettu-vastauksen-data)
+                           status-state (get-in status-element [:attrs :state])
+                           failure? (or (= status-state "FAILURE")
+                                        (not (str/blank? mahdollinen-virhe)))
+                           status (if failure? 400 200)]
 
                        {:status status
                         :headers (lisaa-request-headerit true origin-header)
