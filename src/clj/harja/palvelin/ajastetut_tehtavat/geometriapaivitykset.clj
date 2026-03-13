@@ -14,6 +14,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.alueurakat :as urakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt :as elyjen-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elinvoimakeskukset :as elinvoimakeskusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
@@ -190,6 +191,14 @@
     :ely-alueiden-shapefile
     elyjen-tuonti/vie-elyt-kantaan))
 
+(def tee-elinvoimakeskusten-paivitystehtava
+  (maarittele-paivitystehtava
+    "elinvoimakeskukset"
+    :elinvoimakeskusten-osoite
+    :elinvoimakeskusten-tuontikohde
+    :elinvoimakeskusten-shapefile
+    elinvoimakeskusten-tuonti/vie-elinvoimakeskukset-kantaan))
+
 (def tee-valaistusurakoiden-paivitystehtava
   (maarittele-paivitystehtava
     "valaistusurakat"
@@ -245,6 +254,7 @@
       :siltojen-paivitys (tee-siltojen-paivitystehtava this asetukset)
       :urakoiden-paivitys (tee-urakoiden-paivitystehtava this asetukset)
       :elyjen-paivitys (tee-elyjen-paivitystehtava this asetukset)
+      :elinvoimakeskusten-paivitys (tee-elinvoimakeskusten-paivitystehtava this asetukset)
       :valaistusurakoiden-paivitys (tee-valaistusurakoiden-paivitystehtava this asetukset)
       :paallystyspalvelusopimusten-paivitys (tee-paallystyspalvelusopimusten-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitys (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
@@ -262,6 +272,7 @@
                      :siltojen-paivitys
                      :urakoiden-paivitys
                      :elyjen-paivitys
+                     :elinvoimakeskusten-paivitys
                      :valaistusurakoiden-paivitys
                      :paallystyspalvelusopimusten-paivitys
                      :tekniset-laitteet-urakoiden-paivitys
