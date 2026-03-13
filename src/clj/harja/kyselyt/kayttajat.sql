@@ -175,10 +175,10 @@ SELECT EXISTS(SELECT klu.id
 -- Poista tietyn urakan kaikilta käyttäjiltä lisäoikeus urakkaan.
 -- Tätä kutsutaan, kun urakat ovat päättyneet ja halutaan poistaa kaikki lisäoikeudet, jotta käyttäjillä ei enää ole oikeuksia vanhoihin urakoihin.
 UPDATE kayttajan_lisaoikeudet_urakkaan
-SET poistettu = TRUE,
-    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio'),
-    muokattu = NOW()
-WHERE urakka = :urakkaid;
+   SET poistettu = TRUE,
+       muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+       muokattu = NOW()
+ WHERE urakka = :urakkaid;
 
 
 -- name: onko-kayttaja-organisaatiossa
