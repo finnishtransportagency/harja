@@ -16,9 +16,9 @@
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
         tavoitehinnan-muutokset (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu])
         aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                            (get-in yhteenvedon-tiedot [:budjettitavoite :pysyva-muutos-summa]))
+                            (get-in yhteenvedon-tiedot [:budjettitavoite :muutos-summa]))
         menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                            (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-pysyva-muutos-summa]))
+                            (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-muutos-summa]))
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))

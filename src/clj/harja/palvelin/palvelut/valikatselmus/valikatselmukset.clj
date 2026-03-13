@@ -108,9 +108,9 @@
                                                                                                :hoitokauden_alkuvuosi valittu-hoitovuosi})
 
         ;; HAetaan pysyviin muutoksiin perustuvat tiedot
-        aktiiviset-pysyvat-muutokset (:pysyva-muutos-summa budjettitavoite)
+        aktiiviset-muutokset (:muutos-summa budjettitavoite)
 
-        taman-vuoden-muutokset-summa (+ (or aktiiviset-pysyvat-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+        taman-vuoden-muutokset-summa (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
 
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
 
@@ -646,7 +646,7 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
 
           ;; Haetaan pysyviin muutoksiin perustuvat tiedot
-          aktiiviset-pysyvat-muutokset (:pysyva-muutos-summa budjettitavoite-vuodelle)
+          aktiiviset-muutokset (:muutos-summa budjettitavoite-vuodelle)
 
           ;; Muutosten aiheuttamat muutokset tavoitehinnassa
           muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
@@ -661,7 +661,7 @@
                                          0)
           oikaistu-tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          taman-vuoden-muutokset-summa (+ (or aktiiviset-pysyvat-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+          taman-vuoden-muutokset-summa (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
           hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (+ oikaistu-tavoitehinta taman-vuoden-muutokset-summa)
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta) (konversio/konvertoi->int (:hv_lopun_tavoitehinta_ennen_indkorj paatos)))
                        (conj validaatio (str "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta ei täsmää suunnitelman kanssa.
