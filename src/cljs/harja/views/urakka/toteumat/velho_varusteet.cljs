@@ -55,12 +55,23 @@
     nil "Kaikki"
     (str/capitalize kohdeluokka)))
 
+(defn- oletus-hoitovuosi [urakka]
+  (let [hoitokausien-alkuvuodet (into []
+                                  (range
+                                    (pvm/vuosi (:alkupvm urakka))
+                                    (pvm/vuosi (:loppupvm urakka))))
+        kuluva-hoitovuosi urakka-tila/kuluva-alkuvuosi]
+    (or (some #(when (= % kuluva-hoitovuosi) %) hoitokausien-alkuvuodet)
+      (first hoitokausien-alkuvuodet)
+      (pvm/vuosi (:alkupvm urakka)))))
+
 (defn suodatuslomake [_e! _app]
   (fn [e! {:keys [valinnat urakka kuntoluokat-nimikkeisto kohdeluokat-nimikkeisto varustetyyppihaku] :as app}]
     (let [hoitokausien-alkuvuodet (into []
                                     (range
                                       (pvm/vuosi (:alkupvm urakka))
                                       (pvm/vuosi (:loppupvm urakka))))
+          oletus-hoitovuosi (oletus-hoitovuosi urakka)
           hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
           valittu-toimenpide (:toimenpide valinnat)
           hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
@@ -100,9 +111,12 @@
          (:hoitokauden-alkuvuosi valinnat)
          hoitokausien-alkuvuodet
          #(e! (v/->ValitseHoitokausi %))
-         {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"}]
+           {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+            :kaikki-valinta? true
+            :kaikki-teksti "Ei rajausta"}]
         [yleiset/pudotusvalikko "Kuukausi"
          {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
+            :disabled (nil? hoitokauden-alkuvuosi)
           :valinta (:hoitovuoden-kuukausi valinnat)
           :vayla-tyyli? true
           :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
@@ -111,7 +125,9 @@
                           (if (>= % 10)
                             hoitokauden-alkuvuosi
                             (inc hoitokauden-alkuvuosi)))
-                        "Kaikki")
+                          (if hoitokauden-alkuvuosi
+                            "Kaikki"
+                            "Valitse hoitovuosi"))
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitovuoden-kuukaudet]
         [yleiset/tr-kentat-flex
@@ -175,10 +191,10 @@
         [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(e! (v/->HaeVarusteet)) {:luokka "nappi-korkeus-32"
                                                                                          :disabled false
                                                                                          :ikoni (ikonit/livicon-search)}]
-        [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+        [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet oletus-hoitovuosi))
          {:luokka "nappi-korkeus-32"
           :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
-                      (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]])))
+                (= oletus-hoitovuosi (:hoitokauden-alkuvuosi valinnat)))}]]])))
 
 (def infoteksti-poistuneista-varusteista
   "Harjassa näytetään vain voimassaolevat varusteet. Jos kaipaat tietoa poistetuista varusteista tietyssä urakassa, käänny joko Velhon tai Harja-palautteen puoleen.")
@@ -302,9 +318,7 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
-         (e! (v/->ValitseHoitokausi (if (u/urakka-kaynnissa? (:urakka app))
-                                      urakka-tila/kuluva-alkuvuosi
-                                      (pvm/vuosi (get-in app [:urakka :alkupvm])))))
+         (e! (v/->ValitseHoitokausi (oletus-hoitovuosi (:urakka app))))
          (e! (v/->HaeNimikkeisto))
          (reset! varusteet-kartalla/varuste-klikattu-fn
            (fn [varuste-kartalla]
