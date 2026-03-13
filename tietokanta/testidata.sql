@@ -57,6 +57,8 @@ SELECT setval(
 
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
+-- Lisätään elinvoimakeskuksille geometriat
+\i testidata/elinvoimakeskukset.sql
 
 -- Luodaan urakoitsijat
 \i testidata/urakoitsijat.sql
