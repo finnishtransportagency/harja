@@ -4,6 +4,7 @@
 
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -1826,6 +1827,7 @@
                 :odottaa-urakoitsijan-kannanottoa? true
                 :valikatselmus-tehty? false
                 :tavoitehinta-puuttuu? false
+                    :lupausprosentit-puuttuu? false
                 :luvatut-pisteet-puuttuu? false
                 :ennusteen-tila :ennuste
                 :tallennettu-paatos nil}
@@ -1836,7 +1838,9 @@
       (is (contains? tulos :pisteet) "Sisältää pisteet")
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :tavoitehinta) "Sisältää tavoitehinta")
+      (is (contains? tulos :lupausprosentit-puuttuu?) "Sisältää lupausprosentit-puuttuu?")
       (is (= :ennuste (:ennusteen-tila tulos)) "Ennusteen tila on :ennuste")
+      (is (false? (:lupausprosentit-puuttuu? tulos)) "Lupausprosentit löytyvät")
       (is (= 100 (get-in tulos [:pisteet :maksimi])) "Maksimipisteet oikein")
       (is (= 80 (get-in tulos [:pisteet :ennuste])) "Ennustepisteet oikein")
       (is (= 85 (get-in tulos [:pisteet :toteuma])) "Toteumapisteet oikein"))))
@@ -2022,6 +2026,35 @@
           tulos-ei-ennustetta (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ei-ennustetta)]
       (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ei-ennustetta))
         "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))
+
+(deftest laske-bonus-ja-ennuste-kun-lupausprosentti-puuttuu-test
+  (testing "Puuttuva lupausprosentti estää onnistuneen ennustetilan"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [{:lupauspaatoksen_sanktioprosentti 2M
+                                :lupauspaatoksen_bonusprosentti nil}])]
+      (let [yhteiset-opts {:db (:db jarjestelma)
+                           :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                           :tallennettu-paatos nil
+                           :lupaus-sitoutuminen {:pisteet 100}
+                           :tavoitehinta 1000000
+                           :nykyhetki (pvm/luo-pvm 2020 8 31)
+                           :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+            tulos-alustava (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                             (assoc yhteiset-opts
+                               :piste-toteuma 85
+                               :piste-ennuste 80))
+            tulos-ennuste (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                            (assoc yhteiset-opts
+                              :piste-toteuma nil
+                              :piste-ennuste 80))]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-alustava))
+          "Pelkkä pisteiden toteuma ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ennuste))
+          "Pelkkä piste-ennuste ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (true? (:lupausprosentit-puuttuu? tulos-alustava))
+          "Puuttuvat prosentit merkitään eksplisiittisesti yhteenvetoa varten")
+        (is (nil? (:bonus-tai-sanktio tulos-alustava))
+          "Bonusta tai sanktiota ei voida laskea ilman kaikkia prosenttiparametreja")))))
 
 (deftest kanoninen-paatos->bonus-tai-sanktio-test
   (testing "Muuntaa kanonisen päätöksen API-muotoon oikein"
