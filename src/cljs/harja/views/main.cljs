@@ -177,23 +177,28 @@
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
-(defn hairioilmoitus [hairiotiedot]
-  (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
-        tyyppi (::hairio/tyyppi hairiotiedot)
-        tyyppi-luokka (case tyyppi
-                        :tiedote "hairioilmoitin-tyyppi-tiedote"
-                        "hairioilmoitin-tyyppi-hairio")
-        hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
-    [:div.hairioilmoitin.margin-bottom-16 {:class tyyppi-luokka}
-     [:div.margin-right-32.lihavoitu
-      (str otsikko " " hairio-pvm ": " (::hairio/viesti hairiotiedot))]
-     [napit/sulje-ruksi #(hairiotiedot/piilota-hairioilmoitus-tyypilla! tyyppi) {:style {:margin "0px"}}]]))
+(defn hairioilmoitus
+  ([hairiotiedot] (hairioilmoitus hairiotiedot {}))
+  ([hairiotiedot {:keys [margin-bottom?] :or {margin-bottom? true}}]
+   (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
+         tyyppi (::hairio/tyyppi hairiotiedot)
+         tyyppi-luokka (case tyyppi
+                         :tiedote "hairioilmoitin-tyyppi-tiedote"
+                         "hairioilmoitin-tyyppi-hairio")
+         hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
+     [:div.hairioilmoitin {:class (str tyyppi-luokka (when margin-bottom? " margin-bottom-16"))}
+      [:div.margin-right-32.lihavoitu
+       (str otsikko " " hairio-pvm ": " (::hairio/viesti hairiotiedot))]
+      [napit/sulje-ruksi #(hairiotiedot/piilota-hairioilmoitus-tyypilla! tyyppi) {:style {:margin "0px"}}]])))
 
 (defn paasisalto [sivu korkeus]
   (let [tyypeittain @hairiotiedot/hairioilmoitukset-tyypeittain
         nayta-tyypeittain @hairiotiedot/nayta-hairioilmoitus-tyypeittain?
         hairio-ilmoitus (:hairio tyypeittain)
-        tiedote-ilmoitus (:tiedote tyypeittain)]
+        tiedote-ilmoitus (:tiedote tyypeittain)
+        nayta-hairio? (and hairio-ilmoitus (:hairio nayta-tyypeittain))
+        nayta-tiedote? (and tiedote-ilmoitus (:tiedote nayta-tyypeittain))
+        molemmat-nakyvissa? (and nayta-hairio? nayta-tiedote?)]
     [:div
      [debug/df-shell-kaikki]
      (cond
@@ -217,10 +222,10 @@
      [:div.container
       [murupolku/murupolku]]
 
-     (when (and hairio-ilmoitus (:hairio nayta-tyypeittain))
-       [hairioilmoitus hairio-ilmoitus])
+     (when nayta-hairio?
+       [hairioilmoitus hairio-ilmoitus {:margin-bottom? (not molemmat-nakyvissa?)}])
 
-     (when (and tiedote-ilmoitus (:tiedote nayta-tyypeittain))
+     (when nayta-tiedote?
        [hairioilmoitus tiedote-ilmoitus])
 
      ^{:key "harjan-paasisalto"}
