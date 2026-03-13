@@ -17,9 +17,11 @@
 (defn- hae-kaikki-hairioilmoitukset [db user tarkista-oikeus?]
   (when tarkista-oikeus?
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user))
-  (reverse (sort-by ::hairio/pvm (specql/fetch db ::hairio/hairioilmoitus
-                                               hairio/sarakkeet
-                                               {}))))
+  (specql/fetch db ::hairio/hairioilmoitus
+                hairio/sarakkeet
+                {}
+                {::specql/order-by ::hairio/pvm :specql.core/order-direction :desc
+                 ::specql/limit 20}))
 
 (defn- hae-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
