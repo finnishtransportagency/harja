@@ -1293,3 +1293,14 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: hae-90pv-paattyneet-urakat
+-- Hakee urakat, jotka on päättyneet vähintään 90 päivää sitten, mutta vähemmän kuin 180 pv sitten.
+-- Näille urakoille tehdään varmistuksia, jotta päättyneille urakoille ei jää mitään väärää tietoa järjestelmään.
+SELECT u.id,
+       u.nimi,
+       u.loppupvm
+  FROM urakka u
+ WHERE u.loppupvm BETWEEN (current_date - INTERVAL '180 days') AND (current_date - INTERVAL '90 days')
+   AND u.poistettu = FALSE;
+
