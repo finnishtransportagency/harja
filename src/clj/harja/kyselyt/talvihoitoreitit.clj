@@ -145,7 +145,7 @@
                                        hoitoluokat (group-by :ryhma hoitoluokat)
                                        rivi (-> rivi
                                               (assoc :reitit reitit)
-                                               (assoc :laskettu_pituus (round2 2 (reduce + (map :laskettu_pituus reitit))))
+                                               (assoc :laskettu_pituus (round2 3 (reduce + (map :laskettu_pituus reitit))))
                                               (assoc :hoitoluokat hoitoluokat)
                                               (dissoc :muokkaaja :muokattu :luotu :luoja))]
                                    rivi))
