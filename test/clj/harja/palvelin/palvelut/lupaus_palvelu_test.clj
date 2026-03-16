@@ -1827,7 +1827,7 @@
                 :odottaa-urakoitsijan-kannanottoa? true
                 :valikatselmus-tehty? false
                 :tavoitehinta-puuttuu? false
-                    :lupausprosentit-puuttuu? false
+                :lupausprosentit-puuttuu? false
                 :luvatut-pisteet-puuttuu? false
                 :ennusteen-tila :ennuste
                 :tallennettu-paatos nil}
@@ -2056,25 +2056,46 @@
         (is (nil? (:bonus-tai-sanktio tulos-alustava))
           "Bonusta tai sanktiota ei voida laskea ilman kaikkia prosenttiparametreja")))))
 
-(deftest kanoninen-paatos->bonus-tai-sanktio-test
-  (testing "Muuntaa kanonisen päätöksen API-muotoon oikein"
+(deftest laske-bonus-ja-ennuste-kun-urakan-parametrit-puuttuvat-test
+  (testing "Myos kokonaan puuttuva parametririvi merkitään puuttuviksi lupausprosenteiksi"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [])]
+      (let [tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                    {:db (:db jarjestelma)
+                     :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                     :tallennettu-paatos nil
+                     :piste-toteuma 85
+                     :piste-ennuste 80
+                     :lupaus-sitoutuminen {:pisteet 100}
+                     :tavoitehinta 1000000
+                     :nykyhetki (pvm/luo-pvm 2020 8 31)
+                     :hk-alkupvm (pvm/luo-pvm 2019 10 1)})]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos))
+          "Ilman parametreja ennustetta ei voida laskea")
+        (is (true? (:lupausprosentit-puuttuu? tulos))
+          "Puuttuva parametririvi pitää näyttää puuttuvina lupausprosentteina")
+        (is (nil? (:bonus-tai-sanktio tulos))
+          "Bonusta tai sanktiota ei voida laskea ilman parametririviä")))))
+
+(deftest yhteinen-paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa yhteisen päätöksen API-muotoon oikein"
     (is (= {:bonus 5200.0}
-           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
              {:lupausbonus 5200.0}))
         "Bonus palautetaan positiivisena")
     
     (is (= {:sanktio 13200.0}
-           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
              {:lupaussanktio 13200.0}))
         "Sanktio palautetaan positiivisena API-muodossa")
     
     (is (= {:tavoite-taytetty true}
-           (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
              {:tavoite-taytetty true}))
         "Tavoite täytetty palautetaan sellaisenaan")
     
-    (is (nil? (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio nil))
-        "Palauttaa nil kun kanoninen päätös on nil")
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun yhteinen päätös on nil")
     
-    (is (nil? (#'lupaus-palvelu/kanoninen-paatos->bonus-tai-sanktio {}))
-        "Palauttaa nil kun kanoninen päätös on tyhjä map")))
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio {}))
+        "Palauttaa nil kun yhteinen päätös on tyhjä map")))
