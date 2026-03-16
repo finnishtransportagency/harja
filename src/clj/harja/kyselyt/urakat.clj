@@ -19,7 +19,7 @@
   luo-tai-paivita-vesivaylaurakan-alue<! paivita-harjassa-luotu-urakka<! luo-vesivaylaurakan-toimenpideinstanssi<!
   luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<! luo-harjassa-luotu-urakka<! hae-harjassa-luodut-urakat
   hae-urakoiden-organisaatiotiedot hae-kaikki-urakat-aikavalilla hae-elinvoimakeskuksen-urakat
-  aseta-laskutusraja-kaytossa-true!)
+  aseta-laskutusraja-kaytossa-true! hae-90pv-paattyneet-urakat)
 
 (defn onko-olemassa? [db id]
   (:exists (first (onko-olemassa db id))))

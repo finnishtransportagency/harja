@@ -174,7 +174,6 @@
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
-    [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
     [harja.palvelin.ajastetut-tehtavat.harja-status :as harja-status]
@@ -223,7 +222,7 @@
   (log/info "Asetettiin clojure.async thread-poolin koko: " (Long/getLong "clojure.core.async.pool-size")))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin 
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin
                 kehitysmoodi todennus-varmistus sahke-headerit]} asetukset]
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)
@@ -475,7 +474,7 @@
                        [:http-palvelin :db])
       :yhteyshenkilot (component/using
                         (harja.palvelin.palvelut.yhteyshenkilot/->Yhteyshenkilot)
-                        [:http-palvelin :db  :fim])
+                        [:http-palvelin :db :fim])
       :toimenpidekoodit (component/using
                           (toimenpidekoodit/->Toimenpidekoodit)
                           [:http-palvelin :db])
@@ -486,14 +485,14 @@
                           (suolarajoitus-palvelu/->Suolarajoitus)
                           [:http-palvelin :db])
       :tarjous (component/using
-                          (tarjous-palvelu/->Tarjous)
-                          [:http-palvelin :db])
+                 (tarjous-palvelu/->Tarjous)
+                 [:http-palvelin :db])
       :uusi-kustannussuunnitelma (component/using
                                    (uusi-kustannussuunnitelma-palvelu/->UusiKustannussuunnitelmaPalvelu)
                                    [:http-palvelin :db])
       :tehtavat-maarat (component/using
-                 (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
-                 [:http-palvelin :db])
+                         (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
+                         [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -519,8 +518,8 @@
                            (siltatarkastukset/->Siltatarkastukset)
                            [:http-palvelin :db])
       :tiemerkinnan-kustannuskirjaukset (component/using
-                        (tiemerkinnan-kustannus-kirjaukset/->TiemerkinnanKustannusKirjaukset)
-                        [:http-palvelin :db])
+                                          (tiemerkinnan-kustannus-kirjaukset/->TiemerkinnanKustannusKirjaukset)
+                                          [:http-palvelin :db])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
                       (:lampotilat-url (:ilmatieteenlaitos asetukset))
@@ -548,7 +547,7 @@
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
-                     [:http-palvelin :db  :tloik])
+                     [:http-palvelin :db :tloik])
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
@@ -579,7 +578,7 @@
                                  [:http-palvelin :db-replica])
       :raportit (component/using
                   (raportit/->Raportit)
-                  [:http-palvelin :db  :raportointi :pdf-vienti])
+                  [:http-palvelin :db :raportointi :pdf-vienti])
 
       :yha (component/using
              (yha/->Yha)
@@ -631,10 +630,10 @@
                      [:http-palvelin :db])
       :hankkeet (component/using
                   (hankkeet/->Hankkeet)
-                  [:db  :http-palvelin])
+                  [:db :http-palvelin])
       :sopimukset (component/using
                     (sopimukset/->Sopimukset)
-                    [:db  :http-palvelin])
+                    [:db :http-palvelin])
 
       :urakan-tyotunnit (component/using
                           (urakan-tyotunnit/->UrakanTyotunnit)
@@ -683,7 +682,7 @@
                     [:http-palvelin :db :integraatioloki])
       :api-laatupoikkeamat (component/using
                              (api-laatupoikkeamat/->Laatupoikkeamat)
-                             [:http-palvelin :db  :liitteiden-hallinta :integraatioloki])
+                             [:http-palvelin :db :liitteiden-hallinta :integraatioloki])
       :api-paivystajatiedot (component/using
                               (api-paivystajatiedot/->Paivystajatiedot)
                               [:http-palvelin :db :integraatioloki])
@@ -692,7 +691,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
-                           [:http-palvelin :db  :db-replica :integraatioloki])
+                           [:http-palvelin :db :db-replica :integraatioloki])
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
@@ -757,9 +756,9 @@
       :api-talvihoitoreitit (component/using
                               (api-talvihoitoreitit/->TalvihoitoreittiAPI)
                               [:http-palvelin :db :integraatioloki])
-      
+
       :api-taitorakennerekisteri (component/using
-                                   (taitorakennerekisteri/->Taitorakennerekisteri 
+                                   (taitorakennerekisteri/->Taitorakennerekisteri
                                      (:harja-url asetukset))
                                    [:http-palvelin :db :integraatioloki])
 
@@ -792,7 +791,7 @@
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
-        [:db  :http-palvelin :integraatioloki])
+        [:db :http-palvelin :integraatioloki])
 
       :kustannusarvioiduntyontoteumien-ajastus
       (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
@@ -803,19 +802,14 @@
         [:http-palvelin :db])
 
       #_#_:mobiili-laadunseuranta
-      (component/using
-        (harja-laadunseuranta/->Laadunseuranta)
-        [:db  :http-palvelin])
+              (component/using
+                (harja-laadunseuranta/->Laadunseuranta)
+                [:db :http-palvelin])
 
       :urakan-tyotuntimuistutukset
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
-        [:db :api-sahkoposti :fim])
-
-      :urakan-lupausmuistutukset
-      (component/using
-        (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
         [:db :api-sahkoposti :fim])
 
       :yleiset-ajastukset
@@ -867,7 +861,7 @@
       (component/using
         (raporttityokalu-hallinta/->RaporttityokaluHallinta)
         [:http-palvelin :db])
-      
+
       :paallystysilmoitukset-hallinta
       (component/using
         (paallystysilmoitukset-hallinta/->PaallystysilmoituksetHallinta)
@@ -903,14 +897,14 @@
 (defn- merkkaa-kaynnistyminen! []
   (log/info "Yritetään seuraavaksi käynnistää HARJA")
   (event-apurit/julkaise-tapahtuma :harja-tila
-                                   {:viesti "Harja käynnistyy"
-                                    :kaikki-ok? false}))
+    {:viesti "Harja käynnistyy"
+     :kaikki-ok? false}))
 
 (defn- merkkaa-kaynnistetyksi! []
   (log/info "HARJA käynnistetty")
   (event-apurit/julkaise-tapahtuma :harja-tila
-                                   {:viesti "Harja käynnistetty"
-                                    :kaikki-ok? true}))
+    {:viesti "Harja käynnistetty"
+     :kaikki-ok? true}))
 
 (defn- kaynnista-pelkastaan-jarjestelma
   ([]
@@ -918,40 +912,40 @@
      (kaynnista-pelkastaan-jarjestelma asetukset)))
   ([asetukset]
    (alter-var-root #'harja-jarjestelma
-                   (fn [_]
-                     (let [jarjestelma
-                           (try
-                             (-> asetukset
-                               luo-jarjestelma
-                               component/start)
-                             (catch Exception e
-                               (throw (component/ex-without-components e))))]
-                       (when (ominaisuus-kaytossa? :itmf)
-                         (jms/aloita-jms (:itmf jarjestelma)))
-                       jarjestelma)))))
+     (fn [_]
+       (let [jarjestelma
+             (try
+               (-> asetukset
+                 luo-jarjestelma
+                 component/start)
+               (catch Exception e
+                 (throw (component/ex-without-components e))))]
+         (when (ominaisuus-kaytossa? :itmf)
+           (jms/aloita-jms (:itmf jarjestelma)))
+         jarjestelma)))))
 
 (defn- kuuntele-tapahtumia! []
   (event-apurit/tarkkaile-tapahtumaa :harjajarjestelman-restart
-                                     {}
-                                     (fn [{:keys [palvelin payload]}]
-                                       (when (= palvelin event-apurit/host-nimi)
-                                         (if (= payload :all)
-                                           (kaynnista-pelkastaan-jarjestelma)
-                                           (when (nil? (alter-var-root #'harja-jarjestelma
-                                                                       (fn [harja-jarjestelma]
-                                                                         (log/warn "harjajarjestelman-restart")
-                                                                         (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
-                                                                                (when (ominaisuus-kaytossa? :itmf)
-                                                                                  (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma)))
-                                                                                (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 20))
-                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
-                                                                                  (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
-                                                                                uudelleen-kaynnistetty-jarjestelma)
-                                                                              (catch Throwable t
-                                                                                (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
-                                                                                (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo)
-                                                                                nil)))))
-                                             (kaynnista-pelkastaan-jarjestelma)))))))
+    {}
+    (fn [{:keys [palvelin payload]}]
+      (when (= palvelin event-apurit/host-nimi)
+        (if (= payload :all)
+          (kaynnista-pelkastaan-jarjestelma)
+          (when (nil? (alter-var-root #'harja-jarjestelma
+                        (fn [harja-jarjestelma]
+                          (log/warn "harjajarjestelman-restart")
+                          (try (let [uudelleen-kaynnistetty-jarjestelma (jarjestelma/system-restart harja-jarjestelma payload)]
+                                 (when (ominaisuus-kaytossa? :itmf)
+                                   (jms/aloita-jms (:itmf uudelleen-kaynnistetty-jarjestelma)))
+                                 (if (jarjestelma/kaikki-ok? uudelleen-kaynnistetty-jarjestelma (* 1000 20))
+                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-onnistui tapahtumien-tulkkaus/tyhja-arvo)
+                                   (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo))
+                                 uudelleen-kaynnistetty-jarjestelma)
+                            (catch Throwable t
+                              (log/error "Harjajärjestelmän uudelleen käynnistyksessä virhe: " (.getMessage t) ".\nStack: " (.printStackTrace t))
+                              (event-apurit/julkaise-tapahtuma :harjajarjestelman-restart-epaonnistui tapahtumien-tulkkaus/tyhja-arvo)
+                              nil)))))
+            (kaynnista-pelkastaan-jarjestelma)))))))
 
 (defn- kaynnista-harja-tarkkailija! [asetukset]
   (tarkkailija/kaynnista! asetukset))
