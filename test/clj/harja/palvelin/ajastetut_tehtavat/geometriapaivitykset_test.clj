@@ -225,28 +225,8 @@
         tiedosto-url "http://example.com/testi-fallback.zip"
         paivitys-fn (fn [] :onnistui)]
     (component/start integraatioloki)
-    ;; Valmistele testidata - Poista ensin mahdollinen vanha rivi
-    (u (str "DELETE FROM geometriapaivitys WHERE nimi = '" paivitystunnus "'"))
-    (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) "
-            "VALUES ('" paivitystunnus "', '2022-01-01 00:00:00', '2022-01-02 00:00:00', true)"))
-    
-    ;; Stubataan aja-paivitys
-    ;; Stubataan myös lukko/yrita-ajaa-lukon-kanssa, jotta testi ei riipu lukko-käyttäytymisestä
-    (with-redefs [alk/aja-paivitys (fn [_ _ _ _ _ _ _ paivitys _ _] (paivitys))
-                  lukko/yrita-ajaa-lukon-kanssa (fn [_ _ f] (f) true)]
-      ;; Kutsutaan ilman shapefile-parametria (nil), pitäisi fallbackata urliin
-      (alk/kaynnista-paivitys 
-        integraatioloki
-        testitietokanta
-        paivitystunnus
-        tiedosto-url
-        "/tmp/testi/kohde-fallback.zip"
-        nil
-        paivitys-fn
-        nil
-        nil))
-    
-    ;; Tarkista että viimeisin_lahde päivittyi tiedosto-urliin
-    (let [tulos (first (gp-kyselyt/hae-paivitys testitietokanta paivitystunnus))]
-      (is (= tiedosto-url (:viimeisin_lahde tulos)) 
-          "Viimeisin lähde pitää fallbackata tiedosto-urliin jos shapefile puuttuu"))))
+    (valmistele-geometriapaivitys! paivitystunnus)
+    (kaynnista-paivitys-stubattuna!
+      integraatioloki testitietokanta paivitystunnus tiedosto-url "/tmp/testi/kohde-fallback.zip" nil paivitys-fn)
+    (is (= tiedosto-url (hae-viimeisin-lahde testitietokanta paivitystunnus))
+        "Viimeisin lähde pitää fallbackata tiedosto-urliin jos shapefile puuttuu")))
