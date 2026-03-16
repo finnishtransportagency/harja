@@ -1,13 +1,13 @@
 (ns harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot
   "Urakan muutosten tiedot - kirjatut muutokset."
   (:require
-    [taoensso.timbre :as log]
     [tuck.core :as tuck]
-    [harja.kokoelmat :as kokoelmat]
+    [taoensso.timbre :as log]
+
     [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
     [harja.ui.viesti :as viesti]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.domain.muutos-domain :as muutos-domain]))
 

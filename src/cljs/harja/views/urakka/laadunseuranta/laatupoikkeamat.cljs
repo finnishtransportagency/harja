@@ -140,6 +140,7 @@
                                                          (reset! laatupoikkeamat/valittu-laatupoikkeama-id
                                                            (:id (vastaava-laatupoikkeama lp))))
                                              :teksti "Valitse laatupoikkeama"}})
+                         (kartta-tiedot/piilota-infopaneeli!)
                          (nav/vaihda-kartan-koko! :M))
       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))

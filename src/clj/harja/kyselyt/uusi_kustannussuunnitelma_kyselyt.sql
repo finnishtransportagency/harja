@@ -460,6 +460,9 @@ VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorja
 -- name: hae-urakan-hoitovuoden-tarjous
 SELECT * FROM tarjous WHERE urakka_id = :urakka_id AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
 
+-- name: hae-vanhan-urakan-hoitovuoden-tarjous
+SELECT * FROM urakka_tavoite WHERE urakka = :urakka_id  AND hoitokausi = :hoitokausi;
+
 -- name: indeksikorjaukset-vahvistettu?
 -- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
 -- joilla indeksikorjaus_vahvistettu ei ole null. Jos yhdellä rivillä annetulla aikavälillä on jotain muuta kuin null,
