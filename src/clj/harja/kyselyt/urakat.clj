@@ -16,7 +16,7 @@
   aseta-takuun-loppupvm! aseta-urakan-kesa-aika! hae-urakan-kesa-aika aseta-urakan-indeksi!
   tallenna-vv-urakkanro<! hae-loytyvat-reimari-turvalaiteryhmat hae-vv-turvalaiteryhmien-nykyiset-urakat
   luo-tai-paivita-vesivaylaurakan-alue<! paivita-harjassa-luotu-urakka<! luo-vesivaylaurakan-toimenpideinstanssi<!
-  luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<! luo-harjassa-luotu-urakka<! hae-harjassa-luodut-urakat)
+  luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<! luo-harjassa-luotu-urakka<! hae-harjassa-luodut-urakat aseta-laskutusraja-kaytossa-true!)
 
 (defn onko-olemassa? [db id]
   (:exists (first (onko-olemassa db id))))
