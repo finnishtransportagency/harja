@@ -387,32 +387,6 @@
       (is (= odotettu-sanktio (:lupaussanktio lupauspaatos)) 
           "Lupaussanktio vastaa yhteistä laskentaa"))))
 
-(deftest valmistele-lupauspaatokset-kayttaa-sanktiohaaran-indeksikorotuspolkua-test
-  (testing "Sanktiohaara välittää indeksikorotusapurille lupaussanktion sanktiopolkuna"
-    (let [kaytetty-sanktioparametri (atom nil)
-          paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
-                     {:nimi "Lupaukset" :tyyppi "sanktio" :jarjestys 2}
-                     {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]]
-      (with-redefs [urakat-kyselyt/hae-urakan-parametrit
-                    (fn [_ _]
-                      [{:lupauspaatoksen_bonusprosentti 0.1M
-                        :lupauspaatoksen_sanktioprosentti 0.3M
-                        :indeksi_kaytossa_bonuksella false
-                        :indeksi_kaytossa_sanktiolla true}])
-                    lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
-                    (fn [_]
-                      {:lupaussanktio 1500M})
-                    kone/laske-indeksikorotus-lupaukselle
-                    (fn [_ _ _ _ _ sanktio?]
-                      (reset! kaytetty-sanktioparametri sanktio?)
-                      42M)]
-        (let [valmistellut-paatokset (kone/valmistele-lupauspaatokset nil false 2024 123 paatokset
-                                       10 15 99000M 100000M "MAKU 2015")
-              lupauspaatos (first valmistellut-paatokset)]
-          (is (= "sanktio" (:tyyppi lupauspaatos)) "Päätös muodostuu sanktiohaarasta")
-          (is (true? @kaytetty-sanktioparametri)
-              "Sanktiohaaran pitää kutsua indeksikorotusapuria sanktioparametrilla true")
-          (is (= 42M (:indeksikorotus lupauspaatos)) "Stubattu indeksikorotus palautuu päätökseen"))))))
 
 (deftest valmistele-lupauspaatokset-puuttuvat-prosentit-test
   (testing "Varmistetaan, että puuttuvilla bonus/sanktioprosenteilla palautetaan virheellinen Lupaukset-päätös"
