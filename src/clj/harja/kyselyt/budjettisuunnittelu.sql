@@ -109,24 +109,33 @@ SELECT ut.id,
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
                     + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
-       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
+       x.hk_alkuvuosi                                                                         AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
        SUM(hmum.summa)                                                                        AS "muutos-summa",
        -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
        indeksikorjaa(
-       (SELECT SUM(mmk.summa)
-        FROM mhu_muutos mm
-                 JOIN mhu_muutos_kustannusvaikutus mmk
-                      ON mmk.muutos = mm.id
-        WHERE mm.urakka = :urakka
-          AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
-          AND mm.poistettu IS FALSE
-          AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi
-          AND mm.voimassa_alkaen < (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))),
-       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INT, 10, u.id)
-                                                                                               AS "menneet-muutos-summa"
+           (SELECT SUM(mmk.summa)
+            FROM mhu_muutos_kustannusvaikutus mmk
+                     JOIN mhu_muutos m ON m.id = mmk.muutos
+            WHERE m.urakka = :urakka
+              AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+              AND m.poistettu IS FALSE
+              -- Astunut voimaan ennen valittua hk
+              -- Muutosvaikutuksen alkuvuosi on valittu hk
+              AND (m.voimassa_alkaen < x.hk_alkupvm AND mmk.hoitokauden_alkuvuosi = x.hk_alkuvuosi)),
+           x.hk_alkuvuosi, 10, u.id
+       ) AS "menneet-muutos-summa"
+
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
+         CROSS JOIN LATERAL (
+            SELECT
+                -- Ei ole kaunista, helpompi olisi passaa :parametreina
+                (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1) AS hk_alkuvuosi,
+                TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD') AS hk_alkupvm,
+                (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi) AS hk_loppuvuosi,
+                TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi || '-09-30', 'YYYY-MM-DD') AS hk_loppupvm
+            ) x
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
                                               EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
                                               ko."hoitokauden-alkuvuosi" AND
@@ -137,7 +146,7 @@ FROM urakka_tavoite ut
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
          LEFT JOIN mhu_muutokset hmum ON hmum.urakka = u.id AND hmum.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
 WHERE ut.urakka = :urakka
-GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus
+GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm
 ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta

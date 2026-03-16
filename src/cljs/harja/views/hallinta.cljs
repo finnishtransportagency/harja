@@ -9,7 +9,7 @@
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.urakoiden-lyhytnimet :as lyhytnimet]
             [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
-            [harja.views.hallinta.hairiot :as hairiot]
+            [harja.views.hallinta.tyokalut.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
