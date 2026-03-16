@@ -1302,7 +1302,7 @@ SELECT u.id,
        u.nimi,
        u.loppupvm
   FROM urakka u
- WHERE u.loppupvm BETWEEN (current_date - INTERVAL '180 days') AND (current_date - INTERVAL '90 days')
+ WHERE u.loppupvm < (current_date - INTERVAL '90 days')
    AND u.poistettu = FALSE
    AND EXISTS (SELECT 1
                  FROM kayttajan_lisaoikeudet_urakkaan klu
