@@ -186,7 +186,7 @@
                                (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
 
                                (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
-                               (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio false)
+                               (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio true)
 
                                :else nil)
               ;; Korvataan koneelta saatu päätös tässä valistellulta
