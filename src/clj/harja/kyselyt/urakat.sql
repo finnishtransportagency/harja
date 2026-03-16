@@ -1293,3 +1293,19 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: hae-90pv-paattyneet-urakat
+-- Hakee urakat, jotka on päättyneet vähintään 90 päivää sitten, mutta vähemmän kuin 180 pv sitten,
+-- ja joilla on vielä aktiivisia käyttäjien lisäoikeuksia.
+-- Näille urakoille tehdään varmistuksia, jotta päättyneille urakoille ei jää mitään väärää tietoa järjestelmään.
+SELECT u.id,
+       u.nimi,
+       u.loppupvm
+  FROM urakka u
+ WHERE u.loppupvm < (current_date - INTERVAL '90 days')
+   AND u.poistettu = FALSE
+   AND EXISTS (SELECT 1
+                 FROM kayttajan_lisaoikeudet_urakkaan klu
+                WHERE klu.urakka = u.id
+                  AND (klu.poistettu IS NULL OR klu.poistettu = FALSE));
+
