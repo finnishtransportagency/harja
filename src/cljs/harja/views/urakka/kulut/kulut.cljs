@@ -182,13 +182,13 @@
    Jos samalla toimenpideinstanssilla on useampi kulu, ne ovat mappeina saman vektorin sisällä. Muuten jokaisesta toimenpideinstanssista on oma vektori."
   [kulut]
   (if (map? kulut)
-    (:kokonaissumma kulut)
+    (:summa kulut)
     (reduce
       (fn [summa item]
         (if (and (vector? item)
               (= :tpi (first item)))
           (let [rivit (nth item 3 nil)]
-            (+ summa (reduce + 0 (map :kokonaissumma rivit))))
+            (+ summa (reduce + 0 (map #(/ (Math/round (* (or (:summa %) 0) 100.0)) 100.0) rivit))))
           summa))
       0
       kulut)))

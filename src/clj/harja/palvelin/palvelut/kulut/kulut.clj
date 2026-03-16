@@ -24,6 +24,7 @@
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]])
@@ -186,12 +187,15 @@
   "Palauttaa hoitokauden kulujen summan laskutusrajaa varten."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulut (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
-                                                       :alkupvm alkupvm
-                                                       :loppupvm loppupvm})
+  (let [kulut (concat (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm})
+                      (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
+                                                                 :alkupvm alkupvm
+                                                                 :loppupvm loppupvm}))
         ;; Lasketaan summa kaikista kohdistuksista
         summa (reduce (fn [acc kulu]
-                        (+ acc (or (:summa kulu) 0)))
+                        (+ acc (or (tyokalut/pyorista-kahteen-decimaaliin (:summa kulu)) 0)))
                       0
                       kulut)]
     summa))
