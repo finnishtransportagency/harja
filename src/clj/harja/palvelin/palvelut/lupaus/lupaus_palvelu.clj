@@ -455,7 +455,7 @@
                             (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})))
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
-        lupausprosentit-puuttuu? (and urakan-parametrit
+        lupausprosentit-puuttuu? (and (nil? tallennettu-bonus-tai-sanktio)
                                       (or (nil? sanktioprosentti)
                                           (nil? bonusprosentti)))
         
