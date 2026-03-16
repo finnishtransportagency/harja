@@ -398,10 +398,10 @@
   :lupausprosentit-puuttuu? lupausprosentit-puuttuu?
    :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?})
 
-(defn- kanoninen-paatos->bonus-tai-sanktio
-  "Muuntaa kanonisen päätöslaskennan tuloksen palvelun API-muotoon.
+(defn- yhteinen-paatos->bonus-tai-sanktio
+  "Muuntaa yhteisen päätöslaskennan tuloksen palvelun API-muotoon.
   
-  Kanoninen muoto (välikatselmuksen logiikka):
+  Yhteinen muoto (välikatselmuksen logiikka):
   - {:lupausbonus <positiivinen>} -> {:bonus <positiivinen>}
   - {:lupaussanktio <positiivinen>} -> {:sanktio <positiivinen>}
   - {:tavoite-taytetty true} -> {:tavoite-taytetty true}
@@ -410,15 +410,15 @@
   - {:bonus <positiivinen>} kun bonus
   - {:sanktio <positiivinen>} kun sanktio
   - {:tavoite-taytetty true} kun tavoite täytetty"
-  [kanoninen-paatos]
+  [yhteinen-paatos]
   (cond
-    (:lupausbonus kanoninen-paatos)
-    {:bonus (:lupausbonus kanoninen-paatos)}
+    (:lupausbonus yhteinen-paatos)
+    {:bonus (:lupausbonus yhteinen-paatos)}
     
-    (:lupaussanktio kanoninen-paatos)
-    {:sanktio (:lupaussanktio kanoninen-paatos)}
+    (:lupaussanktio yhteinen-paatos)
+    {:sanktio (:lupaussanktio yhteinen-paatos)}
     
-    (:tavoite-taytetty kanoninen-paatos)
+    (:tavoite-taytetty yhteinen-paatos)
     {:tavoite-taytetty true}
     
     :else
@@ -463,14 +463,14 @@
         bonus-tai-sanktio (if tallennettu-bonus-tai-sanktio
                             tallennettu-bonus-tai-sanktio
                             (when (and sanktioprosentti bonusprosentti)
-                              ;; Laske kanoninen päätös ja muunna API-muotoon
+                              ;; Laske yhteinen päätös ja muunna API-muotoon
                               (some-> (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
                                         {:toteutuneet-pisteet (or piste-toteuma piste-ennuste)
                                          :luvatut-pisteet (:pisteet lupaus-sitoutuminen)
                                          :tavoitehinta tavoitehinta
                                          :sanktioprosentti sanktioprosentti
                                          :bonusprosentti bonusprosentti})
-                                kanoninen-paatos->bonus-tai-sanktio)))
+                                yhteinen-paatos->bonus-tai-sanktio)))
         
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
@@ -941,9 +941,9 @@
                                  ;; Lasketaan kuukaudet 10,11,12,1-8 mukaan ennustepisteisiin eli skipataan viimeinen, koska syyskuu on toteuma
                                  (take 11 lopulliset-pisteet)))
          toteuma-pisteet (:pisteet (last lopulliset-pisteet))
-         bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
-                                                             :lupaus (:pisteet sitoutumistiedot)
-                                                             :tavoitehinta tavoitehinta})
+         bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:toteuma (or toteuma-pisteet ennuste-pisteet)
+                                                                            :lupaus (:pisteet sitoutumistiedot)
+                                                                            :tavoitehinta tavoitehinta})
          ;; Näille -19/-20 alkaneille MH-urakoille (muita ei voi tällä funktiolla käsitellä) lasketaan
          ;; Indeksikorjaus automaattisesti hintaan mukaan
          bonus-tai-sanktio-pvm (-> (second valittu-hoitokausi)
