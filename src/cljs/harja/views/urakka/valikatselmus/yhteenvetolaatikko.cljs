@@ -112,7 +112,7 @@
       [:span (fmt/euro-opt false hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]
      (when menneet-pysyvat-muutokset
        [:div.flex-row.summa-rivi
-        [:span "• Edellisten hoitovuosien pysyvien muutosten osuus"]
+        [:span.sisennys "• Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)"]
         [:span (fmt/euro-opt false menneet-pysyvat-muutokset)]])
      (if (:muutosten_hallinta urakan-parametrit)
        ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset
@@ -122,10 +122,10 @@
          [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+") (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
         (when aktiiviset-pysyvat-muutokset
           [:div.flex-row.summa-rivi
-           [:span "• Kirjallisesti sovitut muutokset"]
+           [:span.sisennys "• Kirjallisesti sovitut muutokset"]
            [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+") (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
         [:div.flex-row.summa-rivi
-         [:span "• Toteumiin perustuvat muutokset"]
+         [:span.sisennys "• Toteumiin perustuvat muutokset"]
          [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]]
        ;; Käsin kirjatut tavoitehinnan oikaisut
        [:div.flex-row.summa-rivi

@@ -206,7 +206,7 @@
     paatokset
     (cond
       ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
-      (and validoinnit-kaytossa? false #_(not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+      (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Hoitovuosi on vielä kesken." true 2)
       (and kattohinta oikaistu-tavoitehinta)
       (let [;; Korvataan koneelta saatu päätös tässä valistellulta
@@ -525,7 +525,7 @@
           (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus"))))
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4)
 
-      (and tavoitehinta-indeksikorjattu tavoitehinnan-muutokset #_hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta)
+      (and tavoitehinta-indeksikorjattu tavoitehinnan-muutokset hoitovuoden-lopun-kattohinta)
       (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
             hintamuutos (apply + (map :summa tavoitehinnan-muutokset))
             ;; Täytetään pakolliset tiedot
