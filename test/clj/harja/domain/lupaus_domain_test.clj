@@ -96,19 +96,21 @@
                               :kuukausi 11}]}]
     (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))))
 
-(deftest bonus-tai-sanktio
+(deftest bonus-tai-sanktio-19-20-urakalle-test
   (is (= {:tavoite-taytetty true}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:bonus 13.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
-  (is (= {:sanktio 33.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
+  (is (= {:sanktio -33.0}
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 90 :tavoitehinta 1000}))
+      "Legacy-polku odottaa sanktion negatiivisena, jotta indeksikorjaus laskee 2019/2020-urakoille oikein.")
   (is (= {:bonus 5200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
-  (is (= {:sanktio 13200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio {})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio nil))))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
+  (is (= {:sanktio -13200.0}
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 74 :tavoitehinta 2000000}))
+      "Legacy-sanktio säilyy negatiivisena vanhaa kuukausittaisten pisteiden indeksikorjauspolkua varten.")
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {})))
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle nil))))
 
 (deftest lupaus-kuukaudet
   (let [lupaus {:kirjaus-kkt nil
