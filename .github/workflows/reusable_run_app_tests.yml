@@ -88,6 +88,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -111,6 +114,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -135,6 +141,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -185,6 +194,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -258,6 +270,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Get the build artifact name
         id: artifact-name
@@ -275,9 +290,9 @@ jobs:
           path: ./target
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -285,7 +300,7 @@ jobs:
 
       - name: Build and tag Harja app test image
         id: build-test-image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         env:
           IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
@@ -335,6 +350,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -385,6 +403,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -435,6 +456,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -479,6 +503,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -543,6 +570,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database

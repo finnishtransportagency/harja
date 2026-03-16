@@ -12,6 +12,12 @@
 ;; JMS-delay-alert tagilla koristellaan lokiviestit, jotka liittyvät JMS-viestien odotusaikojen ylittymiseen.
 (def jms-delay-alert-TAG "JMS-DELAY-ALERT")
 
+;; -- MIAM-integraation hälytystagit --
+(def miam-error "MIAM-ERROR")
+(def miam-retry "MIAM-RETRY")
+
+;; --
+
 (defn koristele-lokiviesti
   "Käytä tätä apuria lokiviestin koristeluun määritellyillä koristelutageilla:
   esim. (log/error (koristele-lokiviesti loki/alert \"Hälytystason virhe!\"))"
