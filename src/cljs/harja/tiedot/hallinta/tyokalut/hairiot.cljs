@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.hairiot
+(ns harja.tiedot.hallinta.tyokalut.hairiot
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom]]
 
@@ -7,7 +7,9 @@
             [harja.domain.hairioilmoitus :as hairio]
             [harja.tiedot.hairioilmoitukset :as hairio-ui]))
 
-(defonce ^{:private true} nollatut-valinnat {:rivit nil
+(defonce ^{:private true} nollatut-valinnat {:voimassaolevat-tyypeittain nil
+                                             :tulevat nil
+                                             :vanhat nil
                                              :valinnat {}
                                              :valittu-rivi {}
                                              :muokataan false
@@ -17,7 +19,6 @@
                                              :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}
                                              :muokattava-ilmoitus nil})
 (def nakymassa? (atom false))
-
 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
@@ -92,13 +93,17 @@
     (do
       (viesti/nayta-toast! virhe :varoitus viesti/viestin-nayttoaika-keskipitka)
       (hae-tiedot (assoc app
-                    :rivit nil
+                    :voimassaolevat-tyypeittain nil
+                    :tulevat nil
+                    :vanhat nil
                     :haku-kaynnissa? false
                     :tallennus-kaynnissa? false
                     :asetetaan-hairioilmoitus? false
                     :muokattava-ilmoitus nil)))
     (assoc app
-      :rivit vastaus
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
       :haku-kaynnissa? false
       :tallennus-kaynnissa? false
       :asetetaan-hairioilmoitus? false
@@ -116,7 +121,11 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app :rivit vastaus))
+    (assoc app
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
+      :haku-kaynnissa? false))
 
   PaivitysEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -160,7 +169,9 @@
   PoistaHairioOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app
-      :rivit vastaus
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
       :haku-kaynnissa? false
       :tallennus-kaynnissa? false
       :asetetaan-hairioilmoitus? false

@@ -1,6 +1,7 @@
-(ns harja.views.hallinta.hairiot
+(ns harja.views.hallinta.tyokalut.hairiot
   "Näkymästä voi lähettää kaikille käyttäjille sähköpostia. Hyödyllinen esimerkiksi päivityskatkoista tiedottamiseen."
-  (:require [tuck.core :refer [tuck]]
+  (:require [harja.ui.debug :as debug]
+            [tuck.core :refer [tuck]]
             [clojure.string]
 
             [harja.pvm :as pvm]
@@ -16,7 +17,7 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.hairioilmoitus :as hairio]
-            [harja.tiedot.hallinta.hairiot :as tiedot])
+            [harja.tiedot.hallinta.tyokalut.hairiot :as tiedot])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
@@ -51,12 +52,12 @@
       (::hairio/viesti hairio))))
 
 
-(defn- vanhat-hairioilmoitukset [_e! {:keys [rivit] :as _app}]
+(defn- vanhat-hairioilmoitukset [_e! {:keys [vanhat] :as _app}]
   [:div
    [:h3 "Vanhat ilmoitukset"]
-   (if (empty? rivit)
+   (if (empty? vanhat)
      [:span "Ei vanhoja ilmoituksia"]
-     [:ul (for* [hairio rivit]
+     [:ul (for* [hairio vanhat]
             [:li (listaa-hairioilmoitus hairio)])])])
 
 
@@ -137,8 +138,8 @@
        :else
        [:p "Ei voimassaolevaa ilmoitusta."])]))
 
-(defn- voimassaoleva-hairioilmoitus [e! {:keys [rivit asetetaan-hairioilmoitus? tallennus-kaynnissa? muokattava-ilmoitus] :as app}]
-  (let [{:keys [hairio tiedote]} (hairio/voimassaolevat-hairiot-tyypeittain rivit)]
+(defn- voimassaolevat-ilmoitukset [e! {:keys [voimassaolevat-tyypeittain asetetaan-hairioilmoitus? tallennus-kaynnissa? muokattava-ilmoitus] :as app}]
+  (let [{:keys [hairio tiedote]} voimassaolevat-tyypeittain]
     [:div
      [:h1 "Nykyiset ilmoitukset"]
      [:div
@@ -155,9 +156,9 @@
      ]))
 
 
-(defn- tulevat-hairioilmoitukset [e! {:keys [rivit haku-kaynnissa?] :as _app}]
-  
-  (let [tulevat-hairiot (vec (hairio/tulevat-hairiot rivit))
+(defn- tulevat-hairioilmoitukset [e! {:keys [tulevat haku-kaynnissa?] :as _app}]
+
+  (let [tulevat-hairiot (vec tulevat)
         tyypit (map (fn [[k _]] {:tyyppi k}) hairio/tyyppi-fmt)]
     
     [:div.tulevat-hairiot
@@ -227,12 +228,13 @@
     
     (fn [e! app]
       [:div.hairioilmoitukset
-       [voimassaoleva-hairioilmoitus e! app]
+       [voimassaolevat-ilmoitukset e! app]
        [tulevat-hairioilmoitukset e! app]
        (when-not (:asetetaan-hairioilmoitus? app)
          [napit/yleinen-ensisijainen "Aseta uusi ilmoitus" #(e! (tiedot/->AsetetaanHairioilmoitus))])
        [:hr]
-       [vanhat-hairioilmoitukset e! app]])))
+       [vanhat-hairioilmoitukset e! app]
+       #_ [debug/debug app]])))
 
 
 (defn hairiot []

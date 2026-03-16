@@ -1,12 +1,8 @@
 (ns harja.palvelin.palvelut.hairioilmoitukset
-  (:require [clojure.java.jdbc :as jdbc]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
-            [clojure.core.async :as async]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.muokkaustiedot :as muok]
             [harja.domain.hairioilmoitus :as hairio]
             [specql.core :as specql]
             [specql.op :as op]
@@ -23,6 +19,18 @@
                 {::specql/order-by ::hairio/pvm :specql.core/order-direction :desc
                  ::specql/limit 20}))
 
+(defn- hae-hairioilmoitukset-ryhmiteltyna
+  "Hakee kaikki häiriöilmoitukset ja ryhmittelee ne UI:n tarpeiden mukaan:
+   - :voimassaolevat-tyypeittain - voimassaolevat häiriöt ja tiedotteet
+   - :tulevat - tulevat ilmoitukset
+   - :vanhat - päättyneet/poistetut ilmoitukset"
+  [db user]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
+  (let [kaikki (hae-kaikki-hairioilmoitukset db user false)]
+    {:voimassaolevat-tyypeittain (hairio/voimassaolevat-hairiot-tyypeittain kaikki)
+     :tulevat (vec (hairio/tulevat-hairiot kaikki))
+     :vanhat (vec (hairio/vanhat-hairiot kaikki))}))
+
 (defn- hae-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
   (let [kaikki (hae-kaikki-hairioilmoitukset db user false)
@@ -35,7 +43,7 @@
   (specql/update! db ::hairio/hairioilmoitus
                   {::hairio/voimassa? false}
                   {::hairio/voimassa? true})
-  (hae-kaikki-hairioilmoitukset db user false))
+  (hae-hairioilmoitukset-ryhmiteltyna db user))
 
 (defn- aseta-hairioilmoitus-pois [db user {::hairio/keys [id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
@@ -43,7 +51,7 @@
     {::hairio/voimassa? false}
     {::hairio/id id})
   (log/debug "Asetettiin häiriöilmoitus pois päältä: " id)
-  (hae-kaikki-hairioilmoitukset db user false))
+  (hae-hairioilmoitukset-ryhmiteltyna db user))
 
 (defn- aseta-vanhat-hairioilmoitukset-pois [db]
   (specql/update! db ::hairio/hairioilmoitus
@@ -68,18 +76,16 @@
        [{:virhe "Alkuajan pitäisi olla ennen loppuaikaa."}]
 
        (hairio/onko-paallekkainen? alkuaika loppuaika (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet haku))
-       [{:virhe "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta."}]
+       [{:virhe (if (= :hairio tyyppi)
+                  "Annettu aikaväli on päällekäinen olemassaolevan häiriöilmoituksen kanssa."
+                  "Annettu aikaväli on päällekäinen olemassaolevan ilmoituksen kanssa.")}]
 
        :else nil))))
 
 (defn- tallenna-hairioilmoitukset [db user {:keys [tiedot]}]
   (log/info "Tallennetaan häiriöilmoitus: tiedot:" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
-  (let [hae-kaikki #(->> (specql/fetch db ::hairio/hairioilmoitus hairio/sarakkeet {})
-                      (sort-by ::hairio/alkupvm)
-                      reverse
-                      vec)
-        virhe
+  (let [virhe
         (reduce
           (fn [_ rivi]
             (let [{::hairio/keys [viesti tyyppi alkuaika loppuaika id]} rivi
@@ -110,7 +116,7 @@
           nil
           tiedot)]
     ;; Palautetaan vastaus, jos tapahtui virhe, päivitys lopetetaan siihen riviin
-    (if virhe virhe (hae-kaikki))))
+    (if virhe virhe (hae-hairioilmoitukset-ryhmiteltyna db user))))
 
 
 (defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
@@ -127,7 +133,7 @@
          ::hairio/alkuaika alkuaika
          ::hairio/loppuaika loppuaika})
       (log/debug "Asetettiin häiriöilmoitus")
-      (hae-kaikki-hairioilmoitukset db user false))
+      (hae-hairioilmoitukset-ryhmiteltyna db user))
     (do
       (log/debug "Häiriöilmoituksen luonti epäonnistui")
       validointi-virhe))))
@@ -140,7 +146,7 @@
       http
       :hae-hairioilmoitukset
       (fn [user _]
-        (hae-kaikki-hairioilmoitukset db user true)))
+        (hae-hairioilmoitukset-ryhmiteltyna db user)))
 
     (julkaise-palvelu
       http

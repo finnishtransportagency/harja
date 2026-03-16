@@ -43,7 +43,7 @@
     (filter #(or
                (not (::voimassa? %))
                (pvm/jalkeen? (pvm/nyt) (::loppuaika %))))
-    (sort-by ::loppupvm)))
+    (sort-by ::loppuaika)))
 
 (defn aikavalit-leikkaavat-sivuaminen-sallittu? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
   (boolean (or
