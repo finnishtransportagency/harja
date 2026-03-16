@@ -491,7 +491,7 @@
 (defn sallittu-kuukausi? [lupaus kuukausi paatos]
   (sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos nil nil))
 
-(defn bonus-tai-sanktio
+(defn bonus-tai-sanktio-19-20-urakalle
   "Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet.
   Bonukset lasketaan kaavalla:
   0,0013 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta
@@ -500,12 +500,12 @@
   Sanktiot lasketaan kaavalla:
   0,0033 x (lupauspistemäärä - toteumapistemäärä) x tavoitehinta
   
-  HUOM: Tämä funktio käyttää kiinteitä kertoimia ja on jätetty backward-kompatibiliteetin vuoksi.
-  Uusi kanoninen laskenta on funktiossa laske-lupauspaatos-bonus-tai-sanktio.
+  HUOM: Tämä funktio käyttää kiinteitä kertoimia ja on jätetty 2019/2020-urakoiden vanhan polun yhteensopivuuden vuoksi.
+  Uusi yhteinen laskenta on funktiossa laske-lupauspaatos-bonus-tai-sanktio.
   
   Palauttaa:
   - {:bonus <positiivinen>} kun bonus
-  - {:sanktio <positiivinen>} kun sanktio
+  - {:sanktio <negatiivinen>} kun legacy-polku tarvitsee sanktion indeksikorjaukseen
   - {:tavoite-taytetty true} kun tavoite täytetty"
   [{:keys [toteuma lupaus tavoitehinta]}]
   (when (and (number? toteuma) (number? lupaus) (number? tavoitehinta) (pos? tavoitehinta))
@@ -513,13 +513,13 @@
       (> toteuma lupaus)
       {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
       (< toteuma lupaus)
-      {:sanktio (* 0.0033 (- lupaus toteuma) tavoitehinta)}
+      {:sanktio (* -0.0033 (- lupaus toteuma) tavoitehinta)}
       ;; Jos pisteet täsmää, niin tavoite on täytetty
       :else
       {:tavoite-taytetty true})))
 
 (defn laske-lupauspaatos-bonus-tai-sanktio
-  "Kanoninen lupausbonus/sanktio-laskenta, joka käyttää välikatselmuksen logiikkaa.
+  "Yhteinen lupausbonus/sanktio-laskenta, joka käyttää välikatselmuksen logiikkaa.
   
   Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet:
     bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
