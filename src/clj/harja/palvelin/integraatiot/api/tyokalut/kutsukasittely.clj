@@ -446,38 +446,34 @@
   Hox. Tämä lähes identtinen muiden kasittele-kutsu funktioiden kanssa, mutta on eriytetty, jotta sähköpostiapin hallinta
   yksinkertaistuu"
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-  (if-not (= (kutsun-formaatti request) "xml")
-    {:status 415
-     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-     :body "Virhe: Väärä content-type. Käytä application/xml\n"}
-    (let [xml? (= (kutsun-formaatti request) "xml")
-          body (lue-body request)
-          tapahtuma-id-thread (thread (when integraatioloki
-                                        (lokita-kutsu integraatioloki resurssi request body "sahkoposti")))
-          parametrit (:params request)
-          headerit (:headers request)
-          vastaus (aja-virhekasittelyn-kanssa
-                    resurssi
-                    parametrit
-                    headerit
-                    body
-                    #(let
-                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-                        origin-header (get (:headers request) "origin")
-                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
-                        vastauksen-xml (xml/tee-xml-sanoma vastauksen-data)]
+  (let [xml? (= (kutsun-formaatti request) "xml")
+        body (lue-body request)
+        tapahtuma-id-thread (thread (when integraatioloki
+                                      (lokita-kutsu integraatioloki resurssi request body "sahkoposti")))
+        parametrit (:params request)
+        headerit (:headers request)
+        vastaus (aja-virhekasittelyn-kanssa
+                  resurssi
+                  parametrit
+                  headerit
+                  body
+                  #(let
+                     [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                      origin-header (get (:headers request) "origin")
+                      kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                      vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
+                      vastauksen-xml (xml/tee-xml-sanoma vastauksen-data)]
 
-                       ;; Jos vain mahdollista, eikä todella vakavia virheitä satu, raportoidaan 200 ok vastaukseksi, vaikka
-                       ;; itse käsittely ei ole välttämättä onnistunut
-                       {:status 200
-                        :headers (lisaa-request-headerit false origin-header)
-                        :body vastauksen-xml}))]
-      (when integraatioloki
-        (thread
-          (go
-            (lokita-vastaus integraatioloki resurssi vastaus (<! tapahtuma-id-thread)))))
-      vastaus)))
+                     ;; Jos vain mahdollista, eikä todella vakavia virheitä satu, raportoidaan 200 ok vastaukseksi, vaikka
+                     ;; itse käsittely ei ole välttämättä onnistunut
+                     {:status 200
+                      :headers (lisaa-request-headerit false origin-header)
+                      :body vastauksen-xml}))]
+    (when integraatioloki
+      (thread
+        (go
+          (lokita-vastaus integraatioloki resurssi vastaus (<! tapahtuma-id-thread)))))
+    vastaus))
 
 (defn kasittele-get-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
