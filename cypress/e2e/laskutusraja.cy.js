@@ -9,6 +9,12 @@ function alustaUrakkaKustannussuunnitteluun(nimi) {
     ks.alustaKanta(nimi);
 }
 
+function tarkistaLaskutusrajaOsio() {
+    cy.contains('h2', 'Laskutusraja', {timeout: visibleTimeout}).should('be.visible');
+    cy.get('div.laskutusraja div.lukema-label').contains('Laskutusrajan käyttö').should('be.visible');
+    cy.get('div.laskutusraja div.lukema').should('exist').and('not.be.empty');
+}
+
 function trimmaaArvo(arvo) {
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
 }
@@ -19,12 +25,9 @@ describe('Laskutusraja testit', function () {
         alustaUrakkaKustannussuunnitteluun(urakanNimi);
         cy.viewport(1100, 2000);
         avaaHarjaTimeoutilla();
-    });
 
-    it("Vahvista tavoitehinta ja tarkista laskutusraja", function () {
         cy.intercept('POST', '_/tallenna-kilpailutettavat-hankinnat').as('tallenna-kilpailutettavat-hankinnat');
         cy.intercept('POST', '_/tallenna-tarjouksen-tiedot').as('tallenna-tarjous');
-        cy.intercept('POST', '_/hae-tarjouksen-tiedot').as('hae-tarjous');
         cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
         cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2025').as('tallenna-toimenkuvat-2025');
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
@@ -93,23 +96,36 @@ describe('Laskutusraja testit', function () {
         cy.get('button.nappi-ensisijainen[type="button"]').contains('Vahvista tavoite- ja kattohinta').click();
         cy.wait('@vahvista-tavoite-ja-kattohinta').its('response.statusCode').should('equal', 200);
 
-        // Odota että laskutusraja haetaan vahvistuksen jälkeen
-        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+    });
+
+    it("Tarkista laskutusraja", function () {
+        // Siirry Suunnittelu -> Hoitovuoden alun tavoitehinta
+        cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
+        cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+
+        // Valitse 1. hoitovuosi
+        cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('1. hoitovuosi').click();
+        });
 
         // Tarkista että laskutusraja näkyy
         cy.get('div #tavoite-ja-kattohinta-elementti div')
             .contains('Laskutusraja')
             .next()
             .should('exist')
-            .and('not.be.empty');
+            .and('not.be.empty')
+            .invoke('text')
+            .then(trimmaaArvo)
+            .should('eq', '10.52');
     });
 
     it("Peruuta vahvistus ja tarkista että laskutusraja nollautuu", function () {
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
-        // Oletetaan että ollaan jo oikeassa näkymässä edellisen testin jälkeen
-        // Jos ei ole, navigoi sinne
+        // Siirry Suunnittelu -> Hoitovuoden alun tavoitehinta
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
@@ -125,21 +141,17 @@ describe('Laskutusraja testit', function () {
             .invoke('text')
             .should('satisfy', (text) => {
                 const trimmed = trimmaaArvo(text);
-                return trimmed === '0' || trimmed === '0.00' || trimmed === '';
+                return trimmed === '0.00';
             });
+
+        // Vahvista tavoite- ja kattohinta uudestaan
+        cy.get('button.nappi-ensisijainen[type="button"]').contains('Vahvista tavoite- ja kattohinta').click();
+        cy.wait('@vahvista-tavoite-ja-kattohinta').its('response.statusCode').should('equal', 200);
     });
 
     it("Laskutusraja näkyy Kulujen kohdistus -sivulla", function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
         cy.intercept('POST', '_/hae-hoitokauden-kulujen-summa').as('hae-hoitokauden-kulujen-summa');
-
-        // Ensin vahvista tavoitehinta uudelleen
-        cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
-        cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
-
-        cy.get('button.nappi-ensisijainen[type="button"]').contains('Vahvista tavoite- ja kattohinta').click();
-        cy.wait(2000); // Odota vahvistusta
 
         // Siirry Kulut → Kulujen kohdistus
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
@@ -151,57 +163,49 @@ describe('Laskutusraja testit', function () {
         cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: 10000}).its('response.statusCode').should('equal', 200);
 
         // Tarkista että Laskutusraja-osio näkyy
-        cy.contains('h2', 'Laskutusraja', {timeout: visibleTimeout}).should('be.visible');
-
-        // Tarkista että laskutusrajan käyttö näkyy
-        cy.get('div.laskutusraja div.lukema-label')
-            .contains('Laskutusrajan käyttö')
-            .should('be.visible');
-
-        // Tarkista että laskutusrajan arvo näkyy
-        cy.get('div.laskutusraja div.lukema')
-            .should('exist')
-            .and('not.be.empty');
+        tarkistaLaskutusrajaOsio();
     });
 
     it("Hoitovuoden vaihto hakee uuden laskutusrajan", function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
-        // Oletetaan että ollaan Kulujen kohdistus -sivulla
+        // Siirry Kulut -> Kulujen kohdistus
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 
         // Vaihda hoitovuotta (jos mahdollista)
         cy.get('body').then(($body) => {
-            // Tarkista onko hoitokausi-valinta olemassa
-            if ($body.find('[data-cy=hoitokausi-valinta]').length > 0) {
-                // Avaa dropdown ja tarkista onko 2. hoitovuosi olemassa
-                cy.get('[data-cy=hoitokausi-valinta]').click();
+            cy.get('[data-cy=hoitokausi-valinta]').click();
+            cy.contains('li', '2. hoitovuosi').click();
 
-                cy.get('body').then(($dropdown) => {
-                    if ($dropdown.find('li:contains("2. hoitovuosi")').length > 0) {
-                        cy.contains('li', '2. hoitovuosi').click();
+            // Odota että laskutusraja haetaan uudelleen
+            cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
 
-                        // Odota että laskutusraja haetaan uudelleen
-                        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+            // Tarkista että Laskutusraja-otsikko näkyy (vaikka arvoa ei olisi)
+            cy.contains('h2', 'Laskutusraja').should('be.visible');
 
-                        // Tarkista että Laskutusraja-otsikko näkyy (vaikka arvoa ei olisi)
-                        cy.contains('h2', 'Laskutusraja').should('be.visible');
-
-                        // Tarkista että sivulla on notifikaatio (eli hoitovuoden alun tavoite- ja kattohinta on vahvistamatta)
-                        cy.get('.info-laatikko.vahva-ilmoitus')
-                            .should('exist')
-                            .and('be.visible');
-                    } else {
-                        cy.log('Vain 1. hoitovuosi saatavilla, skipataan hoitovuoden vaihto');
-                        // Sulje dropdown jos se on auki
-                        cy.get('[data-cy=hoitokausi-valinta]').click();
-                    }
-                });
-            } else {
-                cy.log('Hoitokausi-valinta ei löydy, skipataan hoitovuoden vaihto');
-            }
+            // Tarkista että sivulla on notifikaatio (eli hoitovuoden alun tavoite- ja kattohinta on vahvistamatta)
+            cy.get('.info-laatikko.vahva-ilmoitus')
+                .should('exist')
+                .and('be.visible');
         });
+    });
+
+    it("Laskutusraja näkyy Kustannusten seuranta -sivulla", function () {
+        cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
+        cy.intercept('POST', '_/hae-hoitokauden-kulujen-summa').as('hae-hoitokauden-kulujen-summa');
+
+        // Siirry Kulut → Kustannusten seuranta
+        cy.get('[data-cy=tabs-taso1-Kulut]').click();
+        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+
+        // Odota että laskutusraja haetaan
+        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+
+        // Tarkista että Laskutusraja-osio näkyy
+        tarkistaLaskutusrajaOsio();
     });
 });
