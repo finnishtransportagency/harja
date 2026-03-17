@@ -145,10 +145,11 @@
         odotetut-rahavarausten-muutokset
         [{:id 1, :toteumat 100000M, :nimi "Äkilliset hoitotyöt", :summa-indeksikorjattu 133200M, :tavoitehinnan-muutos -33200M}
          {:id 2, :toteumat 1000M, :nimi "Vahinkojen korjaukset", :summa-indeksikorjattu 2640M, :tavoitehinnan-muutos -1640M}
-         {:id 3, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :summa-indeksikorjattu nil}
-         {:id :yhteenveto, :summa-indeksikorjattu 135840M, :toteumat 101000M, :tavoitehinnan-muutos -34840M}]
+         {:id 3, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :summa-indeksikorjattu 39600M, :tavoitehinnan-muutos -39600M}
+         {:id :yhteenveto, :summa-indeksikorjattu 175440M, :toteumat 101000M, :tavoitehinnan-muutos -74440M}]
         vastaus (:rahavarausten-muutokset (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                    :valittu-hoitokausi valittu-hoitokausi}))]
+    (println "Vastaus:" vastaus)
     (is (= (count vastaus) 4) "Rahavarausten muutokset: oikea määrä rivejä")
     (is (some #{:yhteenveto} (mapv :id vastaus)) "Rahavarausten muutokset: yhteenveto löytyy")
     (is (= vastaus odotetut-rahavarausten-muutokset) "Rahavarausten muutokset: koko lista odotettuja arvoja")))
@@ -172,7 +173,7 @@
 
     (is (= 6230M (:kirjatut-muutokset-yht budjettitavoitteet)) "Kirjatut muutokset yhteensä")
 
-    (is (= -42658.0 (some->>
+    (is (= -82258.0 (some->>
                       (:toteumiin-perustuvat-muutokset-yht budjettitavoitteet)
                       (round2 2))) "Toteutumiin perustuvat muutokset yhteensä")
 
@@ -182,7 +183,7 @@
     ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
     ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
     ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
-    (is (= 294706.0 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
+    (is (= 255106.0 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-tavoitehinta-muutosten-kokonaissumma-suomussalmi
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
@@ -303,11 +304,12 @@
                                    :toteumat 1000M}
                                   {:id 3
                                    :nimi "Tilaajan rahavaraus kannustinjärjestelmään"
-                                   :summa-indeksikorjattu nil
-                                   :syy "Tämä on syy 3"}
+                                   :summa-indeksikorjattu 39600M
+                                   :syy "Tämä on syy 3"
+                                   :tavoitehinnan-muutos -39600M}
                                   {:id :yhteenveto
-                                   :summa-indeksikorjattu 135840M
-                                   :tavoitehinnan-muutos -34840M
+                                   :summa-indeksikorjattu 175440M
+                                   :tavoitehinnan-muutos -74440M
                                    :toteumat 101000M}]
         vastaus-muokkauksen-jalkeen (get-in
                                       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -355,11 +357,12 @@
                                        :toteumat 1000M}
                                       {:id 3
                                        :nimi "Tilaajan rahavaraus kannustinjärjestelmään"
-                                       :summa-indeksikorjattu nil
-                                       :syy "Tämä on syy 3"}
+                                       :summa-indeksikorjattu 39600M
+                                       :syy "Tämä on syy 3"
+                                       :tavoitehinnan-muutos -39600M}
                                       {:id :yhteenveto
-                                       :summa-indeksikorjattu 135840M
-                                       :tavoitehinnan-muutos -34840M
+                                       :summa-indeksikorjattu 175440M
+                                       :tavoitehinnan-muutos -74440M
                                        :toteumat 101000M}]]
     ;; assertoidaan luodut, näistä löytyy muokkausmetatiedoista vain luoja ja luotu
     (is (= vastaus-luonnin-jalkeen odotetut-luonnin-jalkeen) "Rahavarausmuutosten syyt luonnin jälkeen")

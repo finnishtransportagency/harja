@@ -436,7 +436,7 @@
                                                                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         rahavaraukset (yleiset/yhdista-mapit-avaimella rahavaraukset rahavarausmuutosten-syyt :id)
         rahavaraukset (mapv
-                        ;; lasketaan erotus vain jos molemmat arvot ovat olemassa
+                        ;; lasketaan suunnitellun ja toteutuneen määrän erotus, vaikka toteutunut määrä olisi null
                         #(cond
                            (and (:summa-indeksikorjattu %) (:toteumat %))
                            (assoc % :tavoitehinnan-muutos (- (:toteumat %) (:summa-indeksikorjattu %)))
