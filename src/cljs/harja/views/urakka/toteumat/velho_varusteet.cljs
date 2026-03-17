@@ -111,12 +111,12 @@
          (:hoitokauden-alkuvuosi valinnat)
          hoitokausien-alkuvuodet
          #(e! (v/->ValitseHoitokausi %))
-           {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-            :kaikki-valinta? true
-            :kaikki-teksti "Ei rajausta"}]
+         {:wrapper-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+          :kaikki-valinta? true
+          :kaikki-teksti "Ei rajausta"}]
         [yleiset/pudotusvalikko "Kuukausi"
          {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
-            :disabled (nil? hoitokauden-alkuvuosi)
+          :disabled (nil? hoitokauden-alkuvuosi)
           :valinta (:hoitovuoden-kuukausi valinnat)
           :vayla-tyyli? true
           :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
@@ -125,9 +125,9 @@
                           (if (>= % 10)
                             hoitokauden-alkuvuosi
                             (inc hoitokauden-alkuvuosi)))
-                          (if hoitokauden-alkuvuosi
-                            "Kaikki"
-                            "Valitse hoitovuosi"))
+                        (if hoitokauden-alkuvuosi
+                          "Kaikki"
+                          "Valitse hoitovuosi"))
           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
          hoitovuoden-kuukaudet]
         [yleiset/tr-kentat-flex
@@ -194,7 +194,7 @@
         [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet oletus-hoitovuosi))
          {:luokka "nappi-korkeus-32"
           :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
-                (= oletus-hoitovuosi (:hoitokauden-alkuvuosi valinnat)))}]]])))
+                      (= oletus-hoitovuosi (:hoitokauden-alkuvuosi valinnat)))}]]])))
 
 (def infoteksti-poistuneista-varusteista
   "Harjassa näytetään vain voimassaolevat varusteet. Jos kaipaat tietoa poistetuista varusteista tietyssä urakassa, käänny joko Velhon tai Harja-palautteen puoleen.")
