@@ -24,35 +24,35 @@
 
 (defn- muokkaa-asetuksia [asetukset]
   (let [asetukset-datana (-> (edn/read-string asetukset)
-                             (assoc-in [:http-palvelin :portti] (testi/arvo-vapaa-portti))
-                             (assoc-in [:http-palvelin :salli-oletuskayttaja?] false)
-                             (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
-                             (assoc :tietokanta testi/testitietokanta)
-                             (assoc :tietokanta-replica testi/testitietokanta)
-                             (assoc :itmf integraatio/itmf-asetukset)
-                             (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
-                                            :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
-                                            :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
-                                            :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
-                                            :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))]
+                           (assoc-in [:http-palvelin :portti] (testi/arvo-vapaa-portti))
+                           (assoc-in [:http-palvelin :salli-oletuskayttaja?] false)
+                           (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
+                           (assoc :tietokanta testi/testitietokanta)
+                           (assoc :tietokanta-replica testi/testitietokanta)
+                           (assoc :itmf integraatio/itmf-asetukset)
+                           (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
+                                          :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
+                                          :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
+                                          :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
+                                          :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))]
     asetukset-datana
     #_(str asetukset-datana)))
 
 (defn- poista-reader-makro [s korvaava-teksti]
   (str/replace s
-               #"#=\([^\(\)]*\)"
-               korvaava-teksti))
+    #"#=\([^\(\)]*\)"
+    korvaava-teksti))
 
 (defn- poista-sisaiset-sulut [s]
   (str/replace s
-               #"#=\((?:[^\(\)]*\()*([^\)\(]*)\)"
-               (fn [args]
-                 (case (count args)
-                   0 ""
-                   1 (first args)
-                   2 (apply str (let [lopputulos (first args)
-                                      pudotettavien-maara (+ (count (second args)) 2)]
-                                  (drop-last pudotettavien-maara lopputulos)))))))
+    #"#=\((?:[^\(\)]*\()*([^\)\(]*)\)"
+    (fn [args]
+      (case (count args)
+        0 ""
+        1 (first args)
+        2 (apply str (let [lopputulos (first args)
+                           pudotettavien-maara (+ (count (second args)) 2)]
+                       (drop-last pudotettavien-maara lopputulos)))))))
 
 (defn- poista-reader-makrot [teksti korvaava-teksti]
   (loop [teksti teksti
@@ -62,16 +62,16 @@
       (> loop-n 1000) (do (println teksti) (throw (Exception. "liikaa looppeja")))
       sisaltaa-readermakroja? (let [uusi-teksti (-> teksti (poista-reader-makro korvaava-teksti) poista-sisaiset-sulut)]
                                 (recur uusi-teksti
-                                       (re-find #"\#=" uusi-teksti)
-                                       (inc loop-n)))
+                                  (re-find #"\#=" uusi-teksti)
+                                  (inc loop-n)))
       :default teksti)))
 
 (defn- testiasetukset [testit]
   (let [file (File/createTempFile "asetukset" ".edn")
         asetukset (-> "asetukset.edn"
-                      slurp
-                      (poista-reader-makrot "\"foo\"")
-                      muokkaa-asetuksia)]
+                    slurp
+                    (poista-reader-makrot "\"foo\"")
+                    muokkaa-asetuksia)]
     (testi/pudota-ja-luo-testitietokanta-templatesta)
     (testi/pystyta-harja-tarkkailija!)
     (spit file asetukset)
@@ -145,7 +145,6 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
-    :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
@@ -237,7 +236,6 @@
     :valikatselmukset
     :lupaukset
     :muutokset
-    :urakan-lupausmuistutukset
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
@@ -287,25 +285,25 @@
       (try (let [sammutettu-jarjestelma (component/update-system-reverse @jarjestelma komponentit (fn [k]
                                                                                                     (component/stop k)))]
              (reset! jarjestelma sammutettu-jarjestelma))
-           (catch ExceptionInfo e
-             (is false (str "Komponenttien pysäyttäminen epäonnistui!\n"
-                            "Viesti: " (ex-message e) "\n"
-                            "Data: " (ex-data e) "\n"
-                            "Cause: " (ex-cause e))))
-           (catch Throwable t
-             (is false (str "Komponentin pysäyttäminen epäonnistui!\n"
-                            "Viesti: " (.getMessage t)))))
+        (catch ExceptionInfo e
+          (is false (str "Komponenttien pysäyttäminen epäonnistui!\n"
+                      "Viesti: " (ex-message e) "\n"
+                      "Data: " (ex-data e) "\n"
+                      "Cause: " (ex-cause e))))
+        (catch Throwable t
+          (is false (str "Komponentin pysäyttäminen epäonnistui!\n"
+                      "Viesti: " (.getMessage t)))))
       (try (let [kaynnistetty-jarjestelma (component/update-system @jarjestelma komponentit (fn [k]
                                                                                               (component/start k)))]
              (reset! jarjestelma kaynnistetty-jarjestelma))
-           (catch ExceptionInfo e
-             (is false (str "Komponenttien käynnistäminen epäonnistui!\n"
-                            "Viesti: " (ex-message e) "\n"
-                            "Data: " (ex-data e) "\n"
-                            "Cause: " (ex-cause e))))
-           (catch Throwable t
-             (is false (str "Komponentin käynnistäminen epäonnistui!\n"
-                            "Viesti: " (.getMessage t)))))
+        (catch ExceptionInfo e
+          (is false (str "Komponenttien käynnistäminen epäonnistui!\n"
+                      "Viesti: " (ex-message e) "\n"
+                      "Data: " (ex-data e) "\n"
+                      "Cause: " (ex-cause e))))
+        (catch Throwable t
+          (is false (str "Komponentin käynnistäminen epäonnistui!\n"
+                      "Viesti: " (.getMessage t)))))
       (jms/aloita-jms (:itmf @jarjestelma))
       (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
         (cond
@@ -313,15 +311,15 @@
           nil
           (contains? hidas-ok-status komponentti)
           (testi/odota-ehdon-tayttymista (fn [] (kp/status-ok? (get @jarjestelma komponentti)))
-                                         (str "Komponentin "
-                                              komponentti
-                                              " ei ole toipunut uudelleen käynnistämisestä pitkänkään odotuksen jälkeen: "
-                                              (kp/status (get @jarjestelma komponentti)))
-                                         (* 1000 15))
+            (str "Komponentin "
+              komponentti
+              " ei ole toipunut uudelleen käynnistämisestä pitkänkään odotuksen jälkeen: "
+              (kp/status (get @jarjestelma komponentti)))
+            (* 1000 15))
           :else (is (try (kp/status-ok? (get @jarjestelma komponentti))
-                         (catch Throwable t
-                           false))
-                    (str "Komponentin "
-                         komponentti
-                         " status ei ole ok uudelleen käynnistämisen jälkeen: "
-                         (kp/status (get @jarjestelma komponentti)))))))))
+                      (catch Throwable t
+                        false))
+                  (str "Komponentin "
+                    komponentti
+                    " status ei ole ok uudelleen käynnistämisen jälkeen: "
+                    (kp/status (get @jarjestelma komponentti)))))))))

@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
 
       - name: Log in to the Container registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -52,7 +52,7 @@ jobs:
         run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 # v0.34.2
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           image-ref: 'harja-app:${{ github.sha }}'
           # Sallitaan ainoastaan table-formaatin tulostus, koska manuaalisen ajon SARIF upload aiheuttaisi ristiriitoja
