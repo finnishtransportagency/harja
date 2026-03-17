@@ -10,8 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]
             [harja.domain.reittipiste :as rp]
-            [clojure.java.jdbc :as jdbc]
-            [harja.pvm :as pvm])
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn muunna-toteuma-lahde
@@ -116,9 +115,14 @@
           _ (doseq [ulkoinen-id ulkoiset-idt]
               (poista-toteuman-tehtavat-ulkoisella-idlla db kayttaja-id ulkoinen-id)
               (poista-toteuman-materiaalit-ulkoisella-idlla db kayttaja-id ulkoinen-id))
-          toteumien-alkupvmt (set (map #(pvm/pvm (:alkanut %))
-                                    (q-toteumat/hae-poistettavien-toteumien-alkanut-ulkoisella-idlla db {:urakka-id urakka-id
-                                                                                                         :ulkoiset-idt ulkoiset-idt})))
+        poistettavien-toteumien-paivat-ja-aikavali
+        (q-toteumat/hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+        db {:urakka-id urakka-id
+          :ulkoiset-idt ulkoiset-idt})
+        toteumien-alkupvmt (map :alkanut poistettavien-toteumien-paivat-ja-aikavali)
+        aikavali (first poistettavien-toteumien-paivat-ja-aikavali)
+          aikavalin-alkupvm (:min_alkanut aikavali)
+          aikavalin-loppupvm (:max_alkanut aikavali)
           poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
 
           sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
@@ -129,16 +133,17 @@
           ;; Päivitetään sopimuksiin liittyvät materiaalien käytöt
           (doseq [sopimus-id sopimus-idt]
             (doseq [alkupvm toteumien-alkupvmt]
-              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm) " urakkaid:" urakka-id)
+              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " alkupvm " urakkaid:" urakka-id)
               (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm (pvm/->pvm alkupvm)
+                                                                     :alkupvm alkupvm
                                                                      :urakkaid urakka-id})))
           ;; Päivitetään urakoihin liittyvät materiaalin käytöt
-          (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
-            " alkupvm: " (pvm/->pvm (first toteumien-alkupvmt)) " loppupvm: " (pvm/->pvm (last toteumien-alkupvmt)))
-          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                             :alkupvm (pvm/->pvm (first toteumien-alkupvmt))
-                                                                             :loppupvm (pvm/->pvm (last toteumien-alkupvmt))})))
+          (when (and aikavalin-alkupvm aikavalin-loppupvm)
+            (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
+              " alkupvm: " aikavalin-alkupvm " loppupvm: " aikavalin-loppupvm)
+            (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                               :alkupvm aikavalin-alkupvm
+                                                                               :loppupvm aikavalin-loppupvm}))))
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]
