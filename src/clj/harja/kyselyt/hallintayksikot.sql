@@ -19,8 +19,12 @@ SELECT
     liikennemuoto,
     lpad(cast(elinvoimakeskusnumero AS VARCHAR), 2, '0') AS evknumero
 FROM organisaatio
-WHERE tyyppi = 'elinvoimakeskus' :: ORGANISAATIOTYYPPI AND
-    (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
+WHERE (
+    -- Joko haetaan elinvoimakeskuksia, joiden liikennemuoto on T, tai hallintayksiköitä (kanavat yms), joiden liikennemuoto on V
+    (tyyppi = 'elinvoimakeskus' :: ORGANISAATIOTYYPPI AND liikennemuoto = 'T' AND (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO))
+OR
+    (tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND liikennemuoto = 'V' AND (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO))
+    )
 ORDER BY elinvoimakeskusnumero ASC, nimi ASC;
 
 -- name: hae-organisaation-tunnistetiedot

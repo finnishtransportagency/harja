@@ -126,10 +126,10 @@ SELECT
   i.ilmoitustyyppi,
   evk.id                                                              AS evk_id,
   evk.nimi                                                            AS evk_nimi,
-  lpad(cast(evk.elynumero as varchar), 2, '0')                        AS evk_evknumero
+  lpad(cast(evk.elinvoimakeskusnumero as varchar), 2, '0')            AS evk_evknumero
 FROM ilmoitus i
   LEFT JOIN urakka u ON i.urakka = u.id
-  LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'evk')
+  LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'elinvoimakeskus')
 WHERE i.id IN
       (SELECT x.id
        FROM ilmoitus x

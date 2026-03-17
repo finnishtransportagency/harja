@@ -170,7 +170,7 @@
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (= (count (:laatupoikkeamat vastaus)) 47)) ;; Aiemmin haki myös kanavaurakoiden laatupoikkeamat, joita ei voi elinvoimaksekuksen avulla hakea
+    (is (= (count (:laatupoikkeamat vastaus)) 52))
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 18))
     (is (= (count (:ilmoitukset vastaus)) 53))
@@ -414,7 +414,7 @@
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 48) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 54) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)

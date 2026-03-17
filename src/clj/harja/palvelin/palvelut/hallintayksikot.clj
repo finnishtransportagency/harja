@@ -6,7 +6,6 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
@@ -33,14 +32,15 @@
   "Palvelu, joka palauttaa halutun liikennemuodon elinvoimakeskukset."
   [db user tiedot]
   (oikeudet/ei-oikeustarkistusta!)
-  (let [liikennemuoto (:liikennemuoto tiedot)]
+  (let [liikennemuoto (:liikennemuoto tiedot)
+        evkt (q/listaa-elinvoimakeskukset-kulkumuodolle db (when liikennemuoto
+                                                             (case liikennemuoto
+                                                               :tie "T"
+                                                               :vesi "V"
+                                                               :rata "R")))]
     (into []
       (muunna-pg-tulokset :alue)
-      (q/listaa-elinvoimakeskukset-kulkumuodolle db (when liikennemuoto
-                                                      (case liikennemuoto
-                                                        :tie "T"
-                                                        :vesi "V"
-                                                        :rata "R"))))))
+      evkt)))
 
 
 (defn hae-organisaatio

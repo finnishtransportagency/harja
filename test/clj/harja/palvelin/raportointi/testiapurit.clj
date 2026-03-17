@@ -85,8 +85,8 @@
      (map (fn [taulukon-rivi rivi]
             (if (fn? rivi)
               (is (rivi taulukon-rivi)
-                  (str "Taulukon rivi ei tyydytä annettua predikaattia, rivi: "
-                       (pr-str taulukon-rivi) ", predikaatti: " rivi))
+                  (str taulukko "Taulukon rivi ei tyydytä annettua predikaattia, rivi: "
+                       (pr-str taulukon-rivi) ", predikaatti: " rivi taulukko))
               (is (= taulukon-rivi rivi)
                   (str "Taulukon rivi ei täsmää vaadittuun: "
                        (pr-str taulukon-rivi) " != "

@@ -143,9 +143,8 @@
         otsikko (raportin-otsikko
                   raportin-tiedot
                   raportin-nimi alkupvm loppupvm)
-        ilmoitukset-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
-                                        (seq (group-by :hallintayksikko
-                                                       ilmoitukset)))
+        ilmoitukset-evk-mukaan (sort-by #(or (:id (first %)) 100000)
+                                        (seq (group-by :evk ilmoitukset)))
         nayta-pylvaat? (or (and (> (count ilmoitukset) 0)
                                 (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm)))
                            (and (> (count ilmoitukset-hoitokaudella) 0)
@@ -167,7 +166,7 @@
               (concat
                 (apply concat
                        ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppisten ilmoitusten määrä
-                       (for [[hy ilmoitukset] (sort-by #(:evknumero (first %)) ilmoitukset-hyn-mukaan)]
+                       (for [[hy ilmoitukset] (sort-by #(:evknumero (first %)) ilmoitukset-evk-mukaan)]
                          (concat
                            (when (or urakoittain? (= :urakka konteksti))
                              [{:otsikko (or (when (:nimi hy) (str (:evknumero hy) " " (:nimi hy)))

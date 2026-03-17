@@ -45,3 +45,16 @@ UPDATE urakka
 UPDATE urakka
    SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Uudenmaan elinvoimakeskus')
  WHERE hallintayksikko = (select id from organisaatio where nimi = 'Uusimaa');
+
+-- Kanavat, sisävesi- ja meriväylät
+UPDATE urakka
+SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Kanavat ja avattavat sillat')
+WHERE hallintayksikko = (select id from organisaatio where nimi = 'Kanavat ja avattavat sillat');
+
+UPDATE urakka
+SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Sisävesiväylät')
+WHERE hallintayksikko = (select id from organisaatio where nimi = 'Sisävesiväylät');
+
+UPDATE urakka
+SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Meriväylät')
+WHERE hallintayksikko = (select id from organisaatio where nimi = 'Meriväylät');
