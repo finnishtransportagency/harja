@@ -543,7 +543,7 @@
 
   TallennaHoitokaudenlopunHintapaatos
   (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :tee-hoitovuoden-lopun-hintapaatos
+    (tuck-apurit/post! :tee-hv-lopun-tavoite-ja-kattohintapaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui

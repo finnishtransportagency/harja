@@ -499,8 +499,8 @@
       (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kattohintaa tai toteutuneita kustannuksia ei ole määritelty." false 7))))
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
-(defn valmistele-hoitovuoden-lopun-hintapaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
-                                                tavoitehinnan-muutokset hoitokauden-lopun-indeksikorjaus
+(defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
+                                                tavoitehinnan-muutokset taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus
                                                 hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
                                                 tietokanta-paatokset mahdolliset-paatokset]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
@@ -527,7 +527,9 @@
 
       (and tavoitehinta-indeksikorjattu tavoitehinnan-muutokset hoitovuoden-lopun-kattohinta)
       (let [hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
-            hintamuutos (apply + (map :summa tavoitehinnan-muutokset))
+            hintamuutos (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset))
+            ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset
+            hintamuutos (if (>= 2024 urakan-alkuvuosi) hintamuutos taman-vuoden-muutokset-summa)
             ;; Täytetään pakolliset tiedot
             hintapaatos (-> hintapaatos
                           (assoc :nimi "Hoitovuoden lopun tavoite- ja kattohinta") ;; Nimi löytyy, jos päätösten alkuvuosia ei kovakoodaten vaihdeta testitarkoituksissa

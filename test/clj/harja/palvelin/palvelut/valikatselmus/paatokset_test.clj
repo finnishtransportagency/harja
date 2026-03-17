@@ -1374,7 +1374,7 @@
                                                           :hoitovuoden-lopun-kattohinta kattohinta}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hv-lopun-tavoite-ja-kattohintapaatos +kayttaja-jvh+ paatos))
                   (catch Exception e (println "ERROR:" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     (testaa-lopun-hintapaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
