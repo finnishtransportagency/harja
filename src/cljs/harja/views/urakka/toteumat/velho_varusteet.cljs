@@ -199,7 +199,20 @@
 (def infoteksti-poistuneista-varusteista
   "Harjassa näytetään vain voimassaolevat varusteet. Jos kaipaat tietoa poistetuista varusteista tietyssä urakassa, käänny joko Velhon tai Harja-palautteen puoleen.")
 
-(defn listaus [e! {:keys [varusteet haku-paalla valinnat] :as app}]
+(defn excel-vienti [app]
+  [:form {:target "_blank"
+          :method "POST"
+          :action (k/excel-url :varusteet-ulkoiset-excel)}
+   [:input {:type "hidden"
+            :name "parametrit"
+            :value (transit/clj->transit (v/hakuparametrit app))}]
+   [napit/tallenna "Tallenna Excel" (constantly true)
+    {:ikoni (ikonit/harja-icon-action-download)
+     :luokka "nappi-toissijainen"
+     :type "submit"
+     :esta-prevent-default? true}]])
+
+(defn listaus [e! {:keys [varusteet haku-paalla]}]
   (let [lkm (count varusteet)]
     [:span
      [grid/grid
@@ -219,15 +232,6 @@
                                   (e! (v/->HaeVarusteenHistoria %)))))
        :otsikkorivi-klikattu (fn [opts]
                                (e! (v/->JarjestaVarusteet (:nimi opts))))
-       :paneelikomponentit [(fn [] [:span.inline-block
-                                    [:form {:style {:margin-left "auto"}
-                                            :target "_blank" :method "POST"
-                                            :action (k/excel-url :varusteet-ulkoiset-excel)}
-                                     [:input {:type "hidden" :name "parametrit"
-                                              :value (transit/clj->transit (v/hakuparametrit app))}]
-                                     [:button {:type "submit"
-                                               :class #{"nappi-toissijainen nappi-reunaton"}}
-                                      [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]])]
        :voi-lisata? false :voi-kumota? false
        :voi-poistaa? (constantly false) :voi-muokata? true}
       [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
@@ -335,7 +339,10 @@
           (e! (v/->TyhjennaVarusteListaus)))))
     (fn [e! app]
       [:div.varusteet-nakyma
-       [:h1 "Varusteet"]
+       [:div.flex-row
+        [:h1 "Varusteet"]
+        [:div {:style {:margin-left "auto"}}
+         [excel-vienti app]]]
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! app])
        [suodatuslomake e! app]
