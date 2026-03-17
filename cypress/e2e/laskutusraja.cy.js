@@ -44,7 +44,7 @@ describe('Laskutusraja testit', function () {
 
         // Tallenna ensimmäisenä tarjoukseen jotain, koska muuten tavoitehinnan vahvistus ei onnistu
         cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Tallenna jotain kilpailutettaviin hankintoihin, erillishankintoihin, toimenkuviin ja hoidonjohtopalkkioon
         muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 5);
@@ -60,7 +60,7 @@ describe('Laskutusraja testit', function () {
             .should('equal', 200);
 
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Valitse 1. hoitovuosi
         cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
@@ -102,7 +102,7 @@ describe('Laskutusraja testit', function () {
         // Siirry Suunnittelu -> Hoitovuoden alun tavoitehinta
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Valitse 1. hoitovuosi
         cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
@@ -128,13 +128,13 @@ describe('Laskutusraja testit', function () {
         // Siirry Suunnittelu -> Hoitovuoden alun tavoitehinta
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
         cy.get('[data-cy="tabs-taso2-Hoitovuoden alun tavoitehinta"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Peruuta vahvistus
         cy.get('button.nappi-toissijainen[type="button"]').contains('Peruuta vahvistus').click();
         cy.wait('@vahvista-tavoite-ja-kattohinta').its('response.statusCode').should('equal', 200);
 
-        // Tarkista että laskutusraja on nolla tai ei näy
+        // Tarkista että laskutusraja on 0,00
         cy.get('div #tavoite-ja-kattohinta-elementti div')
             .contains('Laskutusraja')
             .next()
@@ -156,11 +156,11 @@ describe('Laskutusraja testit', function () {
         // Siirry Kulut → Kulujen kohdistus
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Odota että laskutusraja haetaan
-        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
-        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
 
         // Tarkista että Laskutusraja-osio näkyy
         tarkistaLaskutusrajaOsio();
@@ -172,7 +172,7 @@ describe('Laskutusraja testit', function () {
         // Siirry Kulut -> Kulujen kohdistus
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Vaihda hoitovuotta (jos mahdollista)
         cy.get('body').then(($body) => {
@@ -180,7 +180,7 @@ describe('Laskutusraja testit', function () {
             cy.contains('li', '2. hoitovuosi').click();
 
             // Odota että laskutusraja haetaan uudelleen
-            cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+            cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
 
             // Tarkista että Laskutusraja-otsikko näkyy (vaikka arvoa ei olisi)
             cy.contains('h2', 'Laskutusraja').should('be.visible');
@@ -199,11 +199,11 @@ describe('Laskutusraja testit', function () {
         // Siirry Kulut → Kustannusten seuranta
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Odota että laskutusraja haetaan
-        cy.wait('@hae-laskutusraja', {timeout: 10000}).its('response.statusCode').should('equal', 200);
-        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: 10000}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
 
         // Tarkista että Laskutusraja-osio näkyy
         tarkistaLaskutusrajaOsio();
