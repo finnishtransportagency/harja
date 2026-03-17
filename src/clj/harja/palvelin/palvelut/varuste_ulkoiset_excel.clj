@@ -74,7 +74,7 @@
    tiedot]
   (let [{:keys [urakka-id hoitovuoden-kuukausi hoitokauden-alkuvuosi] :as tiedot}
         (normalisoi-hoitovuosirajaus tiedot)
-  _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
+        _ (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
         urakka (first (urakat-q/hae-urakka db urakka-id))
         varusteet (:toteumat (velho/hae-urakan-varustetoteumat velho-integraatio tiedot))
         raportin-yleiset-tiedot (muodosta-raportin-yleiset-tiedot urakka hoitokauden-alkuvuosi hoitovuoden-kuukausi)

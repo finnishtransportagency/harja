@@ -30,5 +30,5 @@
                 :alkupvm nil
                 :loppupvm nil
                 :custom-ylin-rivi "Varustetoimenpiteet, Testiurakka, Ei hoitovuosirajausta"}
-              (:raportin-yleiset-tiedot raportin-asetukset))
+               (:raportin-yleiset-tiedot raportin-asetukset))
           "Ei-rajatun haun Excelin pitää välittää otsikointi raportin yleisiin tietoihin")))))
