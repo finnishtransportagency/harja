@@ -24,16 +24,19 @@
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
 
         ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
-        hoitovuoden-lopun-indeksikorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
-        hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hoitovuoden-lopun-indeksikorjaus-paatos) 0)
+        hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
+        hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
 
         hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
-        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta hoitokauden_lopun_indeksikorjaus pysyvat-muutokset-toteuma-muutokset-yht)
+        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta
+                                         ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
+                                         (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus)
+                                         pysyvat-muutokset-toteuma-muutokset-yht)
         hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
         hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
-                                       (* hoitokauden_lopun_indeksikorjaus (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                       (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
                                        (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
         ;; Toteutuneet kustannukset

@@ -130,7 +130,7 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn kasittele-throw+
+(defn- kasittele-throw+
   "Jos paasta-virhe-lapi? on true, parsi myös throw+ virheet, ja reititä virhe käyttöliittmään"
   [vastaus]
   (if (and

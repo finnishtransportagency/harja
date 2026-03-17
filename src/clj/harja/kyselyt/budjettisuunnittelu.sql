@@ -129,22 +129,15 @@ SELECT ut.id,
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          CROSS JOIN LATERAL (
-            SELECT
-                -- Ei ole kaunista, helpompi olisi passaa :parametreina
-                (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1) AS hk_alkuvuosi,
-                TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD') AS hk_alkupvm,
-                (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi) AS hk_loppuvuosi,
-                TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi || '-09-30', 'YYYY-MM-DD') AS hk_loppupvm
-            ) x
-         LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
-                                              EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
-                                              ko."hoitokauden-alkuvuosi" AND
-                                              NOT ko.poistettu)
-         LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND
-                                               EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
-                                               t."hoitokauden-alkuvuosi"
-         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
-         LEFT JOIN mhu_muutokset hmum ON hmum.urakka = u.id AND hmum.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+            -- Muodostetaan hoitovuosi, jota voidaan käyttää sisäkkäisissä hauissa
+             SELECT (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1) AS hk_alkuvuosi,
+                    TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD') AS hk_alkupvm,
+                    (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi) AS hk_loppuvuosi,
+                    TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi || '-09-30', 'YYYY-MM-DD') AS hk_loppupvm) x
+         LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND ko."hoitokauden-alkuvuosi" = x.hk_alkuvuosi AND NOT ko.poistettu)
+         LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND t."hoitokauden-alkuvuosi" = x.hk_alkuvuosi
+         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  x.hk_alkuvuosi
+         LEFT JOIN mhu_muutokset hmum ON hmum.urakka = u.id AND hmum.hoitokauden_alkuvuosi = x.hk_alkuvuosi
 WHERE ut.urakka = :urakka
 GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm
 ORDER BY ut.hoitokausi;

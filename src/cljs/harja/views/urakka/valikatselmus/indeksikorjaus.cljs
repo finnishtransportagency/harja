@@ -85,7 +85,7 @@
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta"]
-            [:div [:strong (fmt/euro-opt false (:hv_alun_indkorj_tavoitehinta paatos))]]]
+            [:div [:strong (fmt/euro-opt false (:hv_lopun_tavoitehinta_ennen_indkorj paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Indeksin pistelukujen muutos"]
