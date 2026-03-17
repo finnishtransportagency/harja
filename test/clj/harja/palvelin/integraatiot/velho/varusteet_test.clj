@@ -1,14 +1,16 @@
 (ns harja.palvelin.integraatiot.velho.varusteet-test
   (:require [com.stuartsierra.component :as component]
+            [clojure.data.json :as json]
+            [clojure.test :refer :all]
+            [clojure.walk :as walk]
             [org.httpkit.fake :refer [with-fake-http]]
+            [harja.kyselyt.velho-nimikkeistot :as q-nimikkeistot]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.testi :refer :all]
-            [org.httpkit.fake :refer [with-fake-http]]
-            [clojure.test :refer :all])
+            [harja.testi :refer [i jarjestelma laajenna-integraatiojarjestelmafixturea q-map u]])
   (:import (net.postgis.jdbc PGgeometry)))
 
 (def kayttaja "jvh")
@@ -29,6 +31,12 @@
 (def +urakan-velho-oid+ "urakan-velho-oid")
 
 (def +tienvarsikaluste-oid+ "1.2.345.678.9.0.12.345.678901234")
+
+(defn- pyyntobody->string [body]
+  (cond
+    (string? body) body
+    (nil? body) nil
+    :else (slurp body)))
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -114,6 +122,42 @@
         (is (= 1 (count (:toteumat vastaus))))
         (is (= odotettu-varuste (first (:toteumat vastaus))))))))
 
+(deftest hae-urakan-varustetoteumat-ilman-hoitovuosirajausta-test
+  (let [pyynnot (atom [])
+        tallenna-pyynto! (fn [& args]
+                           (let [{:keys [body]} (some #(when (map? %) %) args)]
+                             (swap! pyynnot conj (json/read-str (pyyntobody->string body) :key-fn keyword)))
+                           (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json"))]
+    (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+                     +velho-varusteet-hakurajapinta-url+ tallenna-pyynto!]
+      (with-redefs [urakat-q/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
+        (let [vastaus (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
+                                                                                              :hoitokauden-alkuvuosi nil})]
+          (is (= 1 (count (:toteumat vastaus))) "Ei-rajatun haun pitää edelleen palauttaa varusteet")
+          (is (= 3 (count @pyynnot)) "Haun pitää tehdä välimäisten oidien, välimäisten toimenpiteiden ja varsinaisten varusteiden pyynnöt")
+          (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
+                  (tree-seq coll? seq (walk/stringify-keys %)))
+                @pyynnot)
+          "Ei-rajatun haun payloadiin ei saa päätyä aikarajausehtoja"))))))
+
+(deftest hae-urakan-varustetoteumat-ohittaa-kuukauden-ilman-hoitovuotta-test
+  (let [pyynnot (atom [])
+        tallenna-pyynto! (fn [& args]
+                           (let [{:keys [body]} (some #(when (map? %) %) args)]
+                             (swap! pyynnot conj (json/read-str (pyyntobody->string body) :key-fn keyword)))
+                           (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json"))]
+    (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+                     +velho-varusteet-hakurajapinta-url+ tallenna-pyynto!]
+      (with-redefs [urakat-q/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
+        (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
+                                                                                :hoitokauden-alkuvuosi nil
+                                                                                :hoitovuoden-kuukausi 10})
+        (is (= 3 (count @pyynnot)) "Kuukausen normalisointi ei saa estää koko kolmen pyynnön hakuketjua")
+        (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
+                        (tree-seq coll? seq (walk/stringify-keys %)))
+              @pyynnot)
+          "Kuukausi ilman hoitovuotta ei saa lisätä payloadiin aikarajaa")))))
+
 
 (deftest yhdista-valimaiset-toimenpiteet-varusteisiin
   (testing "Toimenpide tieto yhdistyy varusteisiin oikein"
@@ -191,7 +235,7 @@
       (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")))
 
   (testing "tee-muut-varustetoimenpiteet-parametri ei tuota tyhjiä OID-listoja"
-    (with-redefs [harja.kyselyt.velho-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet
+    (with-redefs [q-nimikkeistot/hae-muut-varustetoimenpide-nimikkeet
                   (constantly [{:nimiavaruus "varustetoimenpide" :nimi "vtp01"}])]
       (let [tulos-tyhja (#'varusteet/tee-muut-varustetoimenpiteet-parametri nil [])
             tulos-nil (#'varusteet/tee-muut-varustetoimenpiteet-parametri nil nil)
@@ -201,7 +245,7 @@
         (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita"))))
 
   (testing "tee-varustetoimenpide-parametri ei tuota tyhjiä OID-listoja"
-    (with-redefs [harja.kyselyt.velho-nimikkeistot/hae-nimike-otsikolla
+    (with-redefs [q-nimikkeistot/hae-nimike-otsikolla
                   (constantly "vtp01")]
       (let [tulos-tyhja (#'varusteet/tee-varustetoimenpide-parametri nil "Korjaus" [])
             tulos-nil (#'varusteet/tee-varustetoimenpide-parametri nil "Korjaus" nil)
