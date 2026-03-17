@@ -48,6 +48,11 @@
                                0)
         erillishankinnat (or (get-in yhteenvedon-tiedot [:kustannukset :erillishankinnat-toteutunut]) 0)
         johto-ja-hallintokorvaus (or (get-in yhteenvedon-tiedot [:kustannukset :johto-ja-hallintokorvaus-toteutunut]) 0)
+        ;; Muutosten jjh-muutos tyyppiset kulut eivät kuulu kustannusten seurannassa johto-ja-hallintokorvauksiin ja sen vuoksi ne eivät ole tässä mukana.
+        ;; Välikatselmuksen yhteenvedossa niille ei kuitenkaan ole muuta paikkaa, niin ne yhdistetään tässä johto-ja-hallintokorvauksiin
+        muutokset (get-in yhteenvedon-tiedot [:kustannukset :muutokset])
+        jjh-muutokset (:toimenpide-toteutunut-summa (first (filter #(= (:toimenpide %) "Johto- ja hallintokorvauksen muutokset") muutokset)))
+        johto-ja-hallintokorvaus (+ johto-ja-hallintokorvaus jjh-muutokset)
         hoidonjohtopalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)
         muut-kulut (or (get-in yhteenvedon-tiedot [:kustannukset :muukulu-tavoitehintainen-toteutunut]) 0)
         toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
