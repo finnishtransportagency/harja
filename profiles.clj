@@ -40,8 +40,6 @@
                  ;; Pprint-pluginin avulla voit nähdä miten profiilit vaikuttavat konfiguraatioon
                  ;; Esim. lein with-profile +test pprint
                  [lein-pprint "1.3.2"]]}
-       ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
-       ;; :resource-paths ["opt/sonic/7.6.2/*"]
        
  :dev-ymparisto {:plugins [[lein-with-env-vars "0.2.0"]]
                  :env-vars {:HARJA_DEV_YMPARISTO "true"
