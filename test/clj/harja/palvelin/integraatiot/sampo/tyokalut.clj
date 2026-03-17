@@ -189,11 +189,19 @@
      (urakat/kasittele-urakat testi/ds urakat))))
 
 (defn tuo-maanteiden-hoidon-urakka
-  ([] (tuo-maanteiden-hoidon-urakka nil))
-  ([sampo-id]
-   (let [sanoma (if sampo-id
-                  (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id)
-                  +testi-maanteiden-hoidon-urakka-sanoma+)
+  ([] (tuo-maanteiden-hoidon-urakka {:sampo-id nil :ennen-2025? nil}))
+  ([{:keys [sampo-id ennen-2025?]}]
+   (let [sanoma (cond
+                  (and sampo-id ennen-2025?)
+                  (-> +testi-maanteiden-hoidon-urakka-sanoma+
+                    (str/replace "TESTIURAKKA" sampo-id)
+                    (str/replace "2025" "2024"))
+                  sampo-id
+                    (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id)
+                  ennen-2025?
+                    (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "2025" "2024")
+                  :else
+                    +testi-maanteiden-hoidon-urakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
 

@@ -524,10 +524,10 @@
                               :loppupvm (pvm/->pvm "30.9.2020")})
         ;; Hoidonjohtopalkkio on vaan MHY ylläpidon alla, mutta lasketaan se kaikkien alta, koska se on muualla nolla
         ;; Ja jos ei ole, niin silloin on virhetilanne ja se löytyy samalla testillä.
-        hoindonjohtopalkkio-laskutusyhteenvedossa (apply + (map :hj_palkkio_laskutetaan laskutusyhteenveto))
+        hoidonjohtopalkkio-laskutusyhteenvedossa (apply + (map :hj_palkkio_laskutetaan laskutusyhteenveto))
         _ (is (= (+ hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-kulut)
                 (+ hoidonjohtopalkkio-toteutuneet_kustannukset hoidonjohtopalkkio-kulut)
-                hoindonjohtopalkkio-laskutusyhteenvedossa))]))
+                hoidonjohtopalkkio-laskutusyhteenvedossa))]))
 
 (deftest toteutuneet-erilliskustannukset
   ;; Erilliskustannukset suunnitellaan kustannusarvioitu_tyo tauluun. Ja ne on
