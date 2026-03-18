@@ -16,7 +16,7 @@
 
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia"]
-    [:div.laskenta-rivi-lukema (fmt/euro-opt (:tavoitehinta paatos))]]
+    [:div.laskenta-rivi-lukema (fmt/euro-opt (:hv_lopun_indkorjaamaton_tavoitehinta paatos))]]
 
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Tarjouksen mukainen tavoitehinta"]

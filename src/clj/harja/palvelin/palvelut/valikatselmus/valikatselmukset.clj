@@ -789,9 +789,9 @@
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
           hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
                                                               db {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= (konversio/konvertoi->int hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
+          validaatio (if-not (= (konversio/konvertoi->int hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) (konversio/konvertoi->int (:hv_lopun_indkorjaamaton_tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" hoitokauden-lopun-indeksikorjaamaton-tavoitehinta "€.
-                       Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+                       Päätöksen mukainen tavoitehinta: " (:hv_lopun_indkorjaamaton_tavoitehinta paatos) " €"))
                        validaatio)
           tarjouksen-tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta db urakkaid (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi))
           validaatio (if-not (= (konversio/konvertoi->int tarjouksen-tavoitehinta) (konversio/konvertoi->int (:tarjouksen_tavoitehinta paatos)))

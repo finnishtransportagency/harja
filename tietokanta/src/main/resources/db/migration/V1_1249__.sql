@@ -16,3 +16,7 @@ ALTER TABLE paatos_hoitokauden_indeksikorjaus
 UPDATE urakka_parametrit
 SET muutosten_hallinta = true
 WHERE urakkaid IN (SELECT id FROM urakka WHERE alkupvm >= '2025-01-01' AND tyyppi = 'teiden-hoito');
+
+-- Nimetään hoidonjohtopalkkionpäätöksen kolumni kuvaavammiksi
+ALTER TABLE paatos_hoidonjohtopalkkio
+    RENAME COLUMN tavoitehinta TO hv_lopun_indkorjaamaton_tavoitehinta;

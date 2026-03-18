@@ -381,7 +381,7 @@
   "Hoidojohtopalkkion muutospäätöksen mäppi:
    {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
-   :tavoitehinta <eurot>
+   :hv_lopun_indkorjaamaton_tavoitehinta <eurot>
    :tarjouksen_tavoitehinta <eurot>
    :hoidonjohtopalkkio <eurot>
    :muutosprosentti <prosentti>

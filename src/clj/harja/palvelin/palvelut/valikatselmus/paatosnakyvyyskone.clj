@@ -550,7 +550,7 @@
       ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun tavoite- ja kattohinta" "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä." true 4))))
 
-(defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset tavoitehinta
+(defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset hv-lopun-tavoitehinta-ilman-indeksia
                                                   tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; Hoitotovuoden pitää olla päättynyt
@@ -570,10 +570,10 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 9)
 
-      (and tavoitehinta tarjouksen-tavoitehinta hoidonjohtopalkkio)
+      (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta hoidonjohtopalkkio)
       (let [paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
             ;; Desimaalien tarkkuus on tärkeää. Käyttöliittymässä kuitenkin käytetään pyöristettyjä lukuja. Taustalla lasketaan raakaluvuilla.
-            muutosprosentti-raaka (.divide (bigdec tavoitehinta) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
+            muutosprosentti-raaka (.divide (bigdec hv-lopun-tavoitehinta-ilman-indeksia) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
             ;tulos (with-precision 15 (/ tavoitehinta tarjouksen-tavoitehinta))
             hoidonjohtopalkkio-muutos (if (>= muutosprosentti-raaka 1)
                                         (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
@@ -587,7 +587,7 @@
 
             ;; Täytetään pakolliset tiedot
             paatos (-> paatos
-                     (assoc :tavoitehinta tavoitehinta)
+                     (assoc :hv_lopun_indkorjaamaton_tavoitehinta hv-lopun-tavoitehinta-ilman-indeksia)
                      (assoc :tarjouksen_tavoitehinta tarjouksen-tavoitehinta)
                      (assoc :hoidonjohtopalkkio hoidonjohtopalkkio)
                      (assoc :muutosprosentti muutosprosentti)
@@ -603,7 +603,7 @@
       :else
       ;; Jos tarvittavia tietoja ei ole, niin varoitetaan siitä käyttäjää
       (let [virhe #{}
-            virhe (if-not tavoitehinta (conj virhe "Tavoitehintaa ei ole määritelty. ") virhe)
+            virhe (if-not hv-lopun-tavoitehinta-ilman-indeksia (conj virhe "Hoitovuoden lopun indekiskorjaamatonta tavoitehintaa ei ole määritelty. ") virhe)
             virhe (if-not tarjouksen-tavoitehinta (conj virhe "Tarjouksen tavoitehintaa ei ole määritelty. ") virhe)
             virhe (if-not hoidonjohtopalkkio (conj virhe "Hoidonjohtopalkkiota ei ole määritelty. ") virhe)]
         (lisaa-paatos-virheellisena paatokset "Hoidonjohtopalkkion muutos" (str/join " " virhe) true 9)))))

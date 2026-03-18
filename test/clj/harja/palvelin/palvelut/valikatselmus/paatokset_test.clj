@@ -163,11 +163,11 @@
   (is (= lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_lopunindeksikorjaus paatos)))
   (is (= kayttajaid (:luoja paatos))))
 
-(defn testaa-hoidojohtopalkkiomuutospaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+(defn testaa-hoidojohtopalkkiomuutospaatos [paatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                                             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= hv_lopun_indkorjaamaton_tavoitehinta (:hv_lopun_indkorjaamaton_tavoitehinta paatos)))
   (is (= tarjouksen_tavoitehinta (:tarjouksen_tavoitehinta paatos)))
   (is (= muutosprosentti (:muutosprosentti paatos)))
   (is (= hoidonjohtopalkkio (:hoidonjohtopalkkio paatos)))
@@ -1414,18 +1414,18 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)]
-    (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+    (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
 
@@ -1434,18 +1434,18 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)
-        _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)
 
         ;; Poistetaan päätös
@@ -1458,19 +1458,19 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hv_lopun_indkorjaamaton_tavoitehinta)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
@@ -1479,7 +1479,7 @@
                   (catch Exception e
                     (println "ERROR:: e" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)]
-    (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+    (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
 (deftest rajapinta-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test

@@ -114,7 +114,7 @@
                                      muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
+   :hv_lopun_indkorjaamaton_tavoitehinta tavoitehinta
    :tarjouksen_tavoitehinta tarjouksen_tavoitehinta
    :muutosprosentti muutosprosentti
    :hoidonjohtopalkkio hoidonjohtopalkkio
