@@ -115,23 +115,41 @@
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
 
+(def granulariteetti-asetukset
+  "Granulariteettikohtaiset UI-asetukset pylväsgraafille."
+  {:minute {:otsikkoteksti "Pyynnöt minuuteittain "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :5-min {:otsikkoteksti "Pyynnöt 5 min välein "
+           :otsikon-pvm-fn pvm/pvm-aika
+           :label-fn #(pvm/aika (:pvm %))}
+   :15-min {:otsikkoteksti "Pyynnöt 15 min välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :30-min {:otsikkoteksti "Pyynnöt 30 min välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :hour {:otsikkoteksti "Pyynnöt tunneittain "
+          :otsikon-pvm-fn pvm/pvm-aika
+          :label-fn #(if (zero? (pvm/tunti (:pvm %)))
+                       (pvm/paiva-kuukausi (:pvm %))
+                       (pvm/aika (:pvm %)))}
+   :3-hour {:otsikkoteksti "Pyynnöt 3 tunnin välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(str (pvm/paiva-kuukausi (:pvm %)) " " (pvm/aika (:pvm %)))}
+   :day {:otsikkoteksti "Pyynnöt päivittäin "
+         :otsikon-pvm-fn pvm/pvm
+         :label-fn #(pvm/paiva-kuukausi (:pvm %))}})
+
 (defn tapahtumien-maarat-graafi [tiedot granulariteetti]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
-        tunti? (= granulariteetti :hour)
-        minuutti? (= granulariteetti :minute)
-        viisi-min? (= granulariteetti :5-min)
+        ;; Hae granulariteettiin liittyvät asetukset, käytä :day-tasoa defaulttina
+        {:keys [otsikkoteksti otsikon-pvm-fn label-fn]}
+        (get granulariteetti-asetukset granulariteetti (:day granulariteetti-asetukset))
         tiedot-pvm-sortattu (sort-by :pvm tiedot)
-        otsikon-pvm-fn (cond
-                         (or minuutti? viisi-min?) pvm/pvm-aika
-                         tunti? pvm/pvm-aika
-                         :else pvm/pvm)
         eka-pvm (otsikon-pvm-fn (:pvm (first tiedot-pvm-sortattu)))
         vika-pvm (otsikon-pvm-fn (:pvm (last tiedot-pvm-sortattu)))
-        otsikkoteksti (cond minuutti? "Pyynnöt minuuteittain "
-                        viisi-min? "Pyynnöt 5 min välein "
-                        tunti? "Pyynnöt tunneittain "
-                        :else "Pyynnöt päivittäin ")
         pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
         pvm-kohtaiset-maarat-summattu (sort-by :pvm
                                         (map (fn [rivit]
@@ -153,13 +171,7 @@
          [vis/bars {:width w
                     :height (min 200 h)
                     :label-fn #(if nayta-labelit?
-                                 (cond
-                                   minuutti? (pvm/aika (:pvm %))
-                                   viisi-min? (pvm/aika (:pvm %))
-                                   tunti? (if (zero? (pvm/tunti (:pvm %)))
-                                            (pvm/paiva-kuukausi (:pvm %))
-                                            (pvm/aika (:pvm %)))
-                                   :else (pvm/paiva-kuukausi (:pvm %)))
+                                 (label-fn %)
                                  "")
                     :value-fn :maara
                     :format-amount str

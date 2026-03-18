@@ -1,13 +1,14 @@
 (ns harja.palvelin.palvelut.integraatioloki
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [clojure.string :as str]
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.integraatioloki :as q]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.string :as str]
-            [clj-time.core :as t]
-            [clj-time.coerce :as tc]))
+            [harja.pvm :as pvm]))
 
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
@@ -88,7 +89,10 @@
   "Granulariteetti-keyword → PostgreSQL date_bin -yhteensopiva interval-merkkijono."
   {:minute "1 minute"
    :5-min  "5 minutes"
+   :15-min "15 minutes"
+   :30-min "30 minutes"
    :hour   "1 hour"
+   :3-hour "3 hours"
    :day    "1 day"})
 
 (defn- laske-granulariteetti
@@ -96,12 +100,15 @@
   Granulariteetti määrittää, kuinka tapahtumat ryhmitellään aikavälillä: minuutti, 5 minuuttia, tunti, päivä, jne."
   [alkaen paattyen]
   (if (and alkaen paattyen)
-    (let [tunnit (t/in-hours (t/interval (tc/from-date alkaen)
-                               (tc/from-date paattyen)))]
+    (let [minuutit (pvm/aikaa-valissa (tc/from-date alkaen) (tc/from-date paattyen) t/in-minutes)
+          tunnit (/ minuutit 60)]
       (cond
-        (<= tunnit 1) :minute
-        (<= tunnit 6) :5-min
-        (<= tunnit 72) :hour
+        (<= tunnit 0.5) :minute
+        (<= tunnit 1) :5-min
+        (<= tunnit 3) :15-min
+        (<= tunnit 6) :30-min
+        (<= tunnit 24) :hour
+        (<= tunnit 48) :3-hour
         :else :day))
     :day))
 
