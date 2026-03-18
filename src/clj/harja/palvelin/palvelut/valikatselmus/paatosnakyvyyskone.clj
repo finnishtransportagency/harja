@@ -302,7 +302,7 @@
       (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehintaa, tavoitehinnan muutoksia tai hoitokauden indeksikuukausia ei ole määritelty." true 3))))
 
 (defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
-                                             hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset
+                                             hoitokauden-alun-tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset
                                              tietokanta-paatokset tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
   ;; -24 vuodesta alkaen lisäksi:
@@ -331,9 +331,9 @@
         (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan alitus" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 5)
 
-      (and hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta kustannukset (> hoitokauden-lopun-tavoitehinta kustannukset))
+      (and hoitokauden-alun-tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset (> hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset))
       (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
-            tavoitehinnan-alitus (- hoitokauden-lopun-tavoitehinta kustannukset)
+            tavoitehinnan-alitus (- hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset)
             ;; Poistetaan päätöskokneen tavoitehinna alituspäätös ja muokataan se alla
             tavoitehinnan-alituspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan alitus") %) paatokset))
             paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan alitus")) paatokset)
@@ -354,7 +354,7 @@
             viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
             tavoitehinnan-alituspaatos (-> tavoitehinnan-alituspaatos
                                          (assoc :hoitokauden_alun_tavoitehinta hoitokauden-alun-tavoitehinta)
-                                         (assoc :hoitokauden_lopun_tavoitehinta hoitokauden-lopun-tavoitehinta)
+                                         (assoc :hoitokauden_lopun_tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta)
                                          (assoc :toteutuneet_kustannukset kustannukset)
                                          (assoc :alituksen_maara tavoitehinnan-alitus)
                                          (assoc :siirron_maara siirron-maara)
