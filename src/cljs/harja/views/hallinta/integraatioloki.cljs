@@ -130,7 +130,7 @@
     [:span.pylvaat
      [:h5 {:on-click #(tiedot/nayta-graafit!)
            :style {:cursor "pointer"}}
-      (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa) <Avaa klikkaamalla>")]
+      (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " <Avaa klikkaamalla>")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))

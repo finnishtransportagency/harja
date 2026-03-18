@@ -126,6 +126,8 @@ FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
 WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
       AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
+      AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= current_date) OR it.alkanut >= :alkaen)
+      AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
 GROUP BY pvm, integraatio, jarjestelma, nimi
 ORDER BY pvm;
 

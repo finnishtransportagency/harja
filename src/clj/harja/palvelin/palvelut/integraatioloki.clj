@@ -83,14 +83,18 @@
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
-  [db kayttaja jarjestelma integraatio]
+  [db kayttaja jarjestelma integraatio alkaen paattyen]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
   (let [
         jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
         maarat (q/hae-integraatiotapahtumien-maarat
                  db
-                 (boolean jarjestelma) jarjestelma
-                 (boolean integraatio) integraatio)]
+                 {:jarjestelma_annettu (boolean jarjestelma)
+                  :jarjestelma jarjestelma
+                  :integraatio_annettu (boolean integraatio)
+                  :integraatio integraatio
+                  :alkaen (konversio/sql-date alkaen)
+                  :paattyen (konversio/sql-date paattyen)})]
     maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
@@ -116,8 +120,8 @@
                           (hae-integraatiotapahtumat db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot)))
       (julkaise-palvelu http-palvelin
                         :hae-integraatiotapahtumien-maarat
-                        (fn [kayttaja {:keys [jarjestelma integraatio]}]
-                          (hae-integraatiotapahtumien-maarat db kayttaja jarjestelma integraatio)))
+                        (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
+                          (hae-integraatiotapahtumien-maarat db kayttaja jarjestelma integraatio alkaen paattyen)))
       (julkaise-palvelu http-palvelin
                         :hae-integraatiotapahtuman-viestit
                         (fn [kayttaja tapahtuma-id]
