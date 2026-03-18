@@ -149,7 +149,7 @@
          {:id :yhteenveto, :summa-indeksikorjattu 175440M, :toteumat 101000M, :tavoitehinnan-muutos -74440M}]
         vastaus (:rahavarausten-muutokset (hae-urakan-muutostiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                    :valittu-hoitokausi valittu-hoitokausi}))]
-    (println "Vastaus:" vastaus)
+
     (is (= (count vastaus) 4) "Rahavarausten muutokset: oikea määrä rivejä")
     (is (some #{:yhteenveto} (mapv :id vastaus)) "Rahavarausten muutokset: yhteenveto löytyy")
     (is (= vastaus odotetut-rahavarausten-muutokset) "Rahavarausten muutokset: koko lista odotettuja arvoja")))
