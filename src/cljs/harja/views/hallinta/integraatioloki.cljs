@@ -115,22 +115,31 @@
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
 
-(defn tapahtumien-maarat-graafi [tiedot]
+(defn tapahtumien-maarat-graafi [tiedot granulariteetti]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
+        tunti? (= granulariteetti "hour")
+        minuutti? (= granulariteetti "minute")
         tiedot-pvm-sortattu (sort-by :pvm tiedot)
-        eka-pvm (pvm/pvm (:pvm (first tiedot-pvm-sortattu)))
-        vika-pvm (pvm/pvm (:pvm (last tiedot-pvm-sortattu)))
+        otsikon-pvm-fn (cond
+                         minuutti? pvm/pvm-aika
+                         tunti? pvm/pvm-aika
+                         :else pvm/pvm)
+        eka-pvm (otsikon-pvm-fn (:pvm (first tiedot-pvm-sortattu)))
+        vika-pvm (otsikon-pvm-fn (:pvm (last tiedot-pvm-sortattu)))
+        otsikkoteksti (cond minuutti? "Pyynnöt minuuteittain "
+                        tunti? "Pyynnöt tunneittain "
+                        :else "Pyynnöt päivittäin ")
         pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
         pvm-kohtaiset-maarat-summattu (sort-by :pvm
-                                               (map (fn [rivit]
-                                                      (zipmap [:pvm :maara]
-                                                              [(:pvm (first rivit))
-                                                               (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
+                                        (map (fn [rivit]
+                                               (zipmap [:pvm :maara]
+                                                 [(:pvm (first rivit))
+                                                  (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
     [:span.pylvaat
      [:h5 {:on-click #(tiedot/nayta-graafit!)
            :style {:cursor "pointer"}}
-      (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " <Avaa klikkaamalla>")]
+      (str otsikkoteksti eka-pvm " - " vika-pvm " <Avaa klikkaamalla>")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))
@@ -142,7 +151,12 @@
          [vis/bars {:width w
                     :height (min 200 h)
                     :label-fn #(if nayta-labelit?
-                                 (pvm/paiva-kuukausi (:pvm %))
+                                 (cond
+                                   minuutti? (pvm/aika (:pvm %))
+                                   tunti? (if (zero? (pvm/tunti (:pvm %)))
+                                            (pvm/paiva-kuukausi (:pvm %))
+                                            (pvm/aika (:pvm %)))
+                                   :else (pvm/paiva-kuukausi (:pvm %)))
                                  "")
                     :value-fn :maara
                     :format-amount str
@@ -259,7 +273,7 @@
 
         (if-not (empty? @tiedot/tapahtumien-maarat)
           [:div.integraatio-tilastoja
-           [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
+           [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat @tiedot/maarat-granulariteetti]
            (when-not @tiedot/valittu-integraatio
              [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
           [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])

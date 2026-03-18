@@ -70,6 +70,7 @@
 
 
 (def tapahtumien-maarat (atom []))
+(def maarat-granulariteetti (atom "day"))
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
 (def hae-automaattisesti? (atom false))
 
@@ -84,9 +85,10 @@
       (reset! tapahtumien-maarat nil)
       ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))
-                maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))]
+                maarat-vastaus (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))]
             (reset! haetut-tapahtumat tapahtumat)
-            (reset! tapahtumien-maarat maarat)
+            (reset! tapahtumien-maarat (:maarat maarat-vastaus))
+            (reset! maarat-granulariteetti (:granulariteetti maarat-vastaus))
             (when @tultiin-urlin-kautta
               (go-loop [aukinainen-vetolaatikko (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
                         kertoja-loopattu 0]

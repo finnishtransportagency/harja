@@ -6,7 +6,8 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as tc]))
 
 
 (defn muunna-merkkijono-kartaksi [merkkijono]
@@ -82,20 +83,35 @@
                         :limit limit}))]
     tapahtumat))
 
+(defn- laske-granulariteetti
+  "Palauttaa PostgreSQL:n date_trunc-yhteensopivan granulariteettistringin aikavälin pituuden perusteella.
+   ≤ 1 tunti → \"minute\", ≤ 3 päivää → \"hour\", muuten → \"day\"."
+  [alkaen paattyen]
+  (if (and alkaen paattyen)
+    (let [tunnit (t/in-hours (t/interval (tc/from-date alkaen)
+                                         (tc/from-date paattyen)))]
+      (cond
+        (<= tunnit 1) "minute"
+        (<= tunnit 72) "hour"
+        :else "day"))
+    "day"))
+
 (defn hae-integraatiotapahtumien-maarat
   [db kayttaja jarjestelma integraatio alkaen paattyen]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
-  (let [
-        jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
+  (let [jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
+        granulariteetti (laske-granulariteetti alkaen paattyen)
         maarat (q/hae-integraatiotapahtumien-maarat
                  db
-                 {:jarjestelma_annettu (boolean jarjestelma)
+                 {:granulariteetti granulariteetti
+                  :jarjestelma_annettu (boolean jarjestelma)
                   :jarjestelma jarjestelma
                   :integraatio_annettu (boolean integraatio)
                   :integraatio integraatio
                   :alkaen (konversio/sql-date alkaen)
                   :paattyen (konversio/sql-date paattyen)})]
-    maarat))
+    {:granulariteetti granulariteetti
+     :maarat maarat}))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)

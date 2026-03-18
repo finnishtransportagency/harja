@@ -115,9 +115,9 @@ FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
 -- name: hae-integraatiotapahtumien-maarat
--- Hakee annetun integraation tapahtumien määrät päivittäin ryhmiteltynä
+-- Hakee annetun integraation tapahtumien määrät ryhmiteltynä granulariteetin mukaan
 SELECT
-  date_trunc('day', it.alkanut) AS pvm,
+  date_trunc(:granulariteetti, it.alkanut) AS pvm,
   it.integraatio                AS integraatio,
   i.jarjestelma                 AS jarjestelma,
   i.nimi                        AS nimi,
