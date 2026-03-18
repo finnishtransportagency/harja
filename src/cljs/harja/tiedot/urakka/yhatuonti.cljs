@@ -75,7 +75,7 @@
      (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tieosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
+         "Seuraavien päällystyskohteiden tieosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
          Kohteet on kuitenkin tallennettu Harjaan."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
@@ -84,14 +84,14 @@
      (when-not (empty? epaonnistuneet-tallennukset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
+         "Seuraavien päällystyskohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
          (for [kohde epaonnistuneet-tallennukset]
            ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
      (when (and (empty? epaonnistuneet-tallennukset) (empty? epaonnistuneet-vkm-muunnokset))
        [:div
-        [:p "Yha-kohteiden tietojen päivittäminen epäonnistui"]])
+        [:p "Päällystyskohteiden tietojen päivittäminen epäonnistui"]])
 
      [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))
 
@@ -136,7 +136,7 @@
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "Kaikkia päällystyskohteita ei voitu käsitellä"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)
                                         :epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
