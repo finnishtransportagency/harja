@@ -13,3 +13,14 @@ export function avaaHarjaTimeoutilla() {
     cy.visit("/");
     cy.get('.ladataan-harjaa', {timeout: ladataanHarjaaTimeout}).should('not.exist')
 }
+
+export function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uusiArvo) {
+    cy.get(`[data-cy=${taulukonDataCy}]`)
+        .should('be.visible')
+        .contains('tbody tr', rivinTunniste)
+        .find('input')
+        .eq(sarakeIndex)
+        .should('be.visible')
+        .clear()
+        .type(uusiArvo)
+}
