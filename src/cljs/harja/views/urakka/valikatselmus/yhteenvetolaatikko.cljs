@@ -12,9 +12,9 @@
 (defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit] :as app}]
   (let [yhteenvedon-tiedot (:yhteenveto app)
         ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
-        hoitovuoden-alun-indeksikorjattu-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu])
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
-        tavoitehinnan-muutokset (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu])
+        tavoitehinnan-muutokset (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
         aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
                             (get-in yhteenvedon-tiedot [:budjettitavoite :muutos-summa]))
         menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
@@ -27,13 +27,13 @@
         hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
         hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
 
-        hoitovuoden-lopun-tavoitehinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta])
+        hoitovuoden-lopun-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta]) 0)
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
         hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta
                                          ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
                                          (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus)
                                          pysyvat-muutokset-toteuma-muutokset-yht)
-        hoitovuoden-lopun-kattohinta (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta])
+        hoitovuoden-lopun-kattohinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta]) 0)
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
         hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
                                        (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
@@ -51,11 +51,11 @@
         ;; Muutosten jjh-muutos tyyppiset kulut eivät kuulu kustannusten seurannassa johto-ja-hallintokorvauksiin ja sen vuoksi ne eivät ole tässä mukana.
         ;; Välikatselmuksen yhteenvedossa niille ei kuitenkaan ole muuta paikkaa, niin ne yhdistetään tässä johto-ja-hallintokorvauksiin
         muutokset (get-in yhteenvedon-tiedot [:kustannukset :muutokset])
-        jjh-muutokset (:toimenpide-toteutunut-summa (first (filter #(= (:toimenpide %) "Johto- ja hallintokorvauksen muutokset") muutokset)))
+        jjh-muutokset (or (:toimenpide-toteutunut-summa (first (filter #(= (:toimenpide %) "Johto- ja hallintokorvauksen muutokset") muutokset))) 0)
         johto-ja-hallintokorvaus (+ johto-ja-hallintokorvaus jjh-muutokset)
         hoidonjohtopalkkio (or (get-in yhteenvedon-tiedot [:kustannukset :hoidonjohdonpalkkio-toteutunut]) 0)
         muut-kulut (or (get-in yhteenvedon-tiedot [:kustannukset :muukulu-tavoitehintainen-toteutunut]) 0)
-        toteuma-yht (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa])
+        toteuma-yht (or (get-in yhteenvedon-tiedot [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
 
         ;; Urakoitsijan saatavat
         lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
