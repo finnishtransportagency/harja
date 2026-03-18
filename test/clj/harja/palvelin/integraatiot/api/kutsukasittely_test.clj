@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.kutsukasittely-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [are deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.xml-skeemat :as xml-skeemat]
@@ -20,6 +20,22 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once jarjestelma-fixture)
+
+(deftest tunnistaa-kutsun-formaatin-normalisoidusta-content-typesta
+  (are [content-type odotettu-formaatti] (= odotettu-formaatti
+                                           (kutsukasittely/kutsun-formaatti
+                                             {:headers (cond-> {}
+                                                         content-type (assoc "content-type" content-type))}))
+    "application/xml" "xml"
+    "text/xml" "xml"
+    "Application/XML" "xml"
+    " application/xml ; charset=UTF-8 " "xml"
+    "text/xml; charset=utf-8" "xml"
+    "application/json" "json"
+    "application/json; charset=UTF-8" "json"
+    "application/x-www-form-urlencoded" "form"
+    "text/plain" nil
+    nil nil))
 
 (deftest huomaa-kutsu-jossa-epavalidia-json-dataa
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
@@ -82,7 +98,7 @@
         vastaus (kutsukasittely/kasittele-sahkoposti-kutsu
                   (:db jarjestelma)
                   (:integraatioloki jarjestelma)
-                  "hae-urakka"
+                  :sahkoposti-vastaanotto
                   {:body kutsun-data
                    :request-method :post
                    :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
@@ -93,18 +109,89 @@
     (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "Virhe: Väärä content-type. Käytä application/xml"))))
 
+(deftest lokittaa-hylatyn-sahkopostikutsun-integraatiolokiin
+  (let [lokita-kutsu-kutsut (atom [])
+        lokita-vastaus-kutsut (atom [])
+        kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")]
+    (with-redefs [kutsukasittely/lokita-kutsu (fn [_ resurssi request body integraatio]
+                                                (swap! lokita-kutsu-kutsut conj {:resurssi resurssi
+                                                                                 :content-type (get-in request [:headers "content-type"])
+                                                                                 :body body
+                                                                                 :integraatio integraatio})
+                                                123)
+                  kutsukasittely/lokita-vastaus (fn [_ resurssi response tapahtuma-id]
+                                                  (swap! lokita-vastaus-kutsut conj {:resurssi resurssi
+                                                                                     :status (:status response)
+                                                                                     :content-type (get-in response [:headers "Content-Type"])
+                                                                                     :tapahtuma-id tapahtuma-id}))]
+      (let [vastaus (kutsukasittely/kasittele-sahkoposti-kutsu
+                      nil
+                      :integraatioloki
+                      :sahkoposti-vastaanotto
+                      {:body kutsun-data
+                       :request-method :post
+                       :headers {"oam_remote_user" "yit-rakennus"
+                                 "content-type" "application/x-www-form-urlencoded"
+                                 "origin" "http://localhost:3000"}}
+                      xml-skeemat/+sahkoposti-kutsu+
+                      xml-skeemat/+sahkoposti-vastaus+
+                      (fn [_]))]
+        (is (= 415 (:status vastaus)))
+        (is (= [{:resurssi :sahkoposti-vastaanotto
+                 :content-type "application/x-www-form-urlencoded"
+                 :body "{\"asdfasdfa\":234}"
+                 :integraatio "sahkoposti"}]
+               @lokita-kutsu-kutsut))
+        (is (= [{:resurssi :sahkoposti-vastaanotto
+                 :status 415
+                 :content-type "text/plain"
+                 :tapahtuma-id 123}]
+               @lokita-vastaus-kutsut))))))
+
+(deftest palauttaa-415-vaikka-hylatyn-kutsun-logitus-epaonnistuu
+  (let [lokita-kutsu-kutsut (atom [])
+        lokita-vastaus-kutsut (atom [])
+        rikkoutuva-body (proxy [java.io.InputStream] []
+                          (read
+                            ([] (throw (java.io.IOException. "rikkoutunut body")))
+                            ([b] (throw (java.io.IOException. "rikkoutunut body")))
+                            ([b off len] (throw (java.io.IOException. "rikkoutunut body")))))]
+    (with-redefs [kutsukasittely/lokita-kutsu (fn [& args]
+                                                (swap! lokita-kutsu-kutsut conj args)
+                                                123)
+                  kutsukasittely/lokita-vastaus (fn [& args]
+                                                  (swap! lokita-vastaus-kutsut conj args))]
+      (let [vastaus (kutsukasittely/kasittele-sahkoposti-kutsu
+                      nil
+                      :integraatioloki
+                      :sahkoposti-vastaanotto
+                      {:body rikkoutuva-body
+                       :request-method :post
+                       :headers {"content-type" "application/x-www-form-urlencoded"
+                                 "origin" "http://localhost:3000"}}
+                      nil
+                      nil
+                      (fn [_]))]
+        (is (= 415 (:status vastaus)))
+        (is (= {"Content-Type" "text/plain"
+                "Access-Control-Allow-Origin" "http://localhost:3000"
+                "Vary" "Origin"}
+               (:headers vastaus)))
+        (is (empty? @lokita-kutsu-kutsut))
+        (is (empty? @lokita-vastaus-kutsut))))))
+
 (deftest huomaa-kutsu-jossa-vaara-content-type2
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
         vastaus (kutsukasittely/kasittele-sampo-kutsu
                   (:db jarjestelma)
                   (:integraatioloki jarjestelma)
-                  "/sampo/api/harja"
+                  :sisaanluku
                   {:body kutsun-data
                    :request-method :post
                    :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
                   xml-skeemat/+sampo-kutsu+
                   (fn [_])
-                  "sampo")]
+                  "sampo-api")]
     (is (= 415 (:status vastaus)))
     (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "Error: Wrong content type. Please use"))))
