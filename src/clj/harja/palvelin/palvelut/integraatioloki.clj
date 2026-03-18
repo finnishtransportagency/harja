@@ -62,22 +62,24 @@
                       :onnistuneet true
                       :epaonnistuneet false
                       nil)
+        kesken? (= tapahtumien-tila :kesken)
         limit 500
         tapahtumien-kesto (when tapahtumien-kesto
                             (/ (t/in-millis (t/minutes tapahtumien-kesto)) 1000))
         tapahtumat (into []
-                         tapahtuma-xf
-                         (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                               jarjestelma
-                                                                               integraatio
-                                                                               onnistuneet
-                                                                               (konversio/sql-date alkaen)
-                                                                               (konversio/sql-date paattyen)
-                                                                               otsikot
-                                                                               parametrit
-                                                                               viestin-sisalto
-                                                                               tapahtumien-kesto
-                                                                               limit))]
+                     tapahtuma-xf
+                     (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
+                       {:jarjestelma jarjestelma
+                        :integraatio integraatio
+                        :onnistunut onnistuneet
+                        :kesken kesken?
+                        :alkaen (konversio/sql-date alkaen)
+                        :paattyen (konversio/sql-date paattyen)
+                        :otsikot otsikot
+                        :parametrit parametrit
+                        :sisalto viestin-sisalto
+                        :kesto tapahtumien-kesto
+                        :limit limit}))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat

@@ -85,7 +85,10 @@ FROM integraatiotapahtuma it
   LEFT JOIN integraatioviesti iv ON it.id = iv.integraatiotapahtuma
 WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:integraatio :: VARCHAR IS NULL OR i.nimi = :integraatio) AND
-      (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
+      ((:kesken :: BOOLEAN IS TRUE AND it.paattynyt IS NULL)
+       OR
+       (:kesken :: BOOLEAN IS NOT TRUE
+        AND (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut))) AND
       ((:alkaen :: TIMESTAMP IS NULL AND alkanut >= current_date) OR alkanut >= :alkaen) AND
       (:paattyen :: TIMESTAMP IS NULL OR alkanut <= :paattyen) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND

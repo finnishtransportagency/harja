@@ -228,7 +228,8 @@
            :valinta-nayta second
            :valinnat [[:kaikki "Kaikki"]
                       [:onnistuneet "Onnistuneet"]
-                      [:epaonnistuneet "Epäonnistuneet"]]}
+                      [:epaonnistuneet "Epäonnistuneet"]
+                      [:kesken "Kesken"]]}
           {:otsikko "Tapahtuman kesto minuuteissa yli"
            :nimi :tapahtumien-kesto
            :tyyppi :positiivinen-numero
