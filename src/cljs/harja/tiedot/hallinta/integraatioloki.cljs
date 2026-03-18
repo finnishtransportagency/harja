@@ -70,7 +70,7 @@
 
 
 (def tapahtumien-maarat (atom []))
-(def maarat-granulariteetti (atom "day"))
+(def maarat-granulariteetti (atom :day))
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
 (def hae-automaattisesti? (atom false))
 

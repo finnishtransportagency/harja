@@ -83,18 +83,27 @@
                         :limit limit}))]
     tapahtumat))
 
+
+(def granulariteetti->intervalli
+  "Granulariteetti-keyword → PostgreSQL date_bin -yhteensopiva interval-merkkijono."
+  {:minute "1 minute"
+   :5-min  "5 minutes"
+   :hour   "1 hour"
+   :day    "1 day"})
+
 (defn- laske-granulariteetti
-  "Palauttaa PostgreSQL:n date_trunc-yhteensopivan granulariteettistringin aikavälin pituuden perusteella.
-   ≤ 1 tunti → \"minute\", ≤ 3 päivää → \"hour\", muuten → \"day\"."
+  "Palauttaa granulariteetti-keywordin aikavälin pituuden perusteella.
+  Granulariteetti määrittää, kuinka tapahtumat ryhmitellään aikavälillä: minuutti, 5 minuuttia, tunti, päivä, jne."
   [alkaen paattyen]
   (if (and alkaen paattyen)
     (let [tunnit (t/in-hours (t/interval (tc/from-date alkaen)
-                                         (tc/from-date paattyen)))]
+                               (tc/from-date paattyen)))]
       (cond
-        (<= tunnit 1) "minute"
-        (<= tunnit 72) "hour"
-        :else "day"))
-    "day"))
+        (<= tunnit 1) :minute
+        (<= tunnit 6) :5-min
+        (<= tunnit 72) :hour
+        :else :day))
+    :day))
 
 (defn hae-integraatiotapahtumien-maarat
   [db kayttaja jarjestelma integraatio alkaen paattyen]
@@ -103,7 +112,7 @@
         granulariteetti (laske-granulariteetti alkaen paattyen)
         maarat (q/hae-integraatiotapahtumien-maarat
                  db
-                 {:granulariteetti granulariteetti
+                 {:bin-intervalli (get granulariteetti->intervalli granulariteetti)
                   :jarjestelma_annettu (boolean jarjestelma)
                   :jarjestelma jarjestelma
                   :integraatio_annettu (boolean integraatio)

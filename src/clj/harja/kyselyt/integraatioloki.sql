@@ -115,21 +115,22 @@ FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
 -- name: hae-integraatiotapahtumien-maarat
--- Hakee annetun integraation tapahtumien määrät ryhmiteltynä granulariteetin mukaan
-SELECT
-  date_trunc(:granulariteetti, it.alkanut) AS pvm,
-  it.integraatio                AS integraatio,
-  i.jarjestelma                 AS jarjestelma,
-  i.nimi                        AS nimi,
-  count(*)                      AS maara
-FROM integraatiotapahtuma it
-  JOIN integraatio i ON it.integraatio = i.id
-WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
-      AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
-      AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= current_date) OR it.alkanut >= :alkaen)
-      AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
-GROUP BY pvm, integraatio, jarjestelma, nimi
-ORDER BY pvm;
+-- Hakee annetun integraation tapahtumien määrät ryhmiteltynä granulariteetin mukaan.
+-- Käyttää PostgreSQL 14+ date_bin-funktiota, joka tukee mielivaltaisia intervalleja.
+-- Parametri :bin-intervalli on PostgreSQL interval-merkkijono, esim. '1 minute', '5 minutes', '1 hour', '1 day'.
+SELECT date_bin(:bin-intervalli :: INTERVAL, it.alkanut, '2000-01-01') AS pvm,
+       it.integraatio                                                  AS integraatio,
+       i.jarjestelma                                                   AS jarjestelma,
+       i.nimi                                                          AS nimi,
+       COUNT(*)                                                        AS maara
+  FROM integraatiotapahtuma it
+           JOIN integraatio i ON it.integraatio = i.id
+ WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
+   AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
+   AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= CURRENT_DATE) OR it.alkanut >= :alkaen)
+   AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
+ GROUP BY pvm, integraatio, jarjestelma, nimi
+ ORDER BY pvm;
 
 -- name: hae-integraation-id
 SELECT id

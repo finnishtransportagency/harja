@@ -118,16 +118,18 @@
 (defn tapahtumien-maarat-graafi [tiedot granulariteetti]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
-        tunti? (= granulariteetti "hour")
-        minuutti? (= granulariteetti "minute")
+        tunti? (= granulariteetti :hour)
+        minuutti? (= granulariteetti :minute)
+        viisi-min? (= granulariteetti :5-min)
         tiedot-pvm-sortattu (sort-by :pvm tiedot)
         otsikon-pvm-fn (cond
-                         minuutti? pvm/pvm-aika
+                         (or minuutti? viisi-min?) pvm/pvm-aika
                          tunti? pvm/pvm-aika
                          :else pvm/pvm)
         eka-pvm (otsikon-pvm-fn (:pvm (first tiedot-pvm-sortattu)))
         vika-pvm (otsikon-pvm-fn (:pvm (last tiedot-pvm-sortattu)))
         otsikkoteksti (cond minuutti? "Pyynnöt minuuteittain "
+                        viisi-min? "Pyynnöt 5 min välein "
                         tunti? "Pyynnöt tunneittain "
                         :else "Pyynnöt päivittäin ")
         pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
@@ -153,6 +155,7 @@
                     :label-fn #(if nayta-labelit?
                                  (cond
                                    minuutti? (pvm/aika (:pvm %))
+                                   viisi-min? (pvm/aika (:pvm %))
                                    tunti? (if (zero? (pvm/tunti (:pvm %)))
                                             (pvm/paiva-kuukausi (:pvm %))
                                             (pvm/aika (:pvm %)))
