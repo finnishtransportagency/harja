@@ -303,6 +303,26 @@
      (pvm/suomen-aikavyohykkeeseen)
      pvm/pvm->iso-8601-pvm-aika-ei-ms)])
 
+(defn- normalisoi-hoitovuosirajaus [{:keys [hoitokauden-alkuvuosi] :as tiedot}]
+  (if hoitokauden-alkuvuosi
+    tiedot
+    (assoc tiedot :hoitovuoden-kuukausi nil)))
+
+(defn- muodosta-aikavali [hoitokauden-alkuvuosi hoitovuoden-kuukausi]
+  (when hoitokauden-alkuvuosi
+    (if hoitovuoden-kuukausi
+      (->>
+        (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi)
+        pvm/joda-timeksi
+        pvm/suomen-aikavyohykkeeseen
+        pvm/kuukauden-aikavali
+        (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/joda-date-timeksi)))
+
+      (->>
+        (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi 9)
+        pvm/paivamaaran-hoitokausi
+        (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))))
+
 (def varustetoimenpiteet-polku
   ["toimenpiteet/varustetoimenpiteet"
    "ominaisuudet"
@@ -471,11 +491,13 @@
 
 
 (defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
-                                  {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
-                                          hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}]
+          tiedot]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
-      (let [virheet (atom #{})
+      (let [{:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
+        hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}
+      (normalisoi-hoitovuosirajaus tiedot)
+      virheet (atom #{})
             {:keys [token-url
                     varuste-kayttajatunnus
                     varuste-salasana
@@ -540,28 +562,19 @@
                                                         kuntoluokat-parametri
                                                         ei-kuntoluokkaa-parametri]))
 
-                aikavali (if hoitovuoden-kuukausi
-                           (->>
-                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi)
-                             pvm/joda-timeksi
-                             pvm/suomen-aikavyohykkeeseen
-                             pvm/kuukauden-aikavali
-                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/joda-date-timeksi)))
+                aikavali (muodosta-aikavali hoitokauden-alkuvuosi hoitovuoden-kuukausi)
 
-                           (->>
-                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi 9)
-                             pvm/paivamaaran-hoitokausi
-                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))
+                alkuaika-parametri (when aikavali
+                                     ["kohdeluokka" "yleiset/versioitu"
+                                      ["pvm-suurempi-kuin"
+                                       ["yleiset/versioitu" "version-voimassaolo" "alku"]
+                                       (first aikavali)]])
 
-                alkuaika-parametri ["kohdeluokka" "yleiset/versioitu"
-                                    ["pvm-suurempi-kuin"
-                                     ["yleiset/versioitu" "version-voimassaolo" "alku"]
-                                     (first aikavali)]]
-
-                loppuaika-parametri ["kohdeluokka" "yleiset/versioitu"
-                                     ["pvm-pienempi-kuin"
-                                      ["yleiset/versioitu" "version-voimassaolo" "alku"]
-                                      (second aikavali)]]
+                loppuaika-parametri (when aikavali
+                                      ["kohdeluokka" "yleiset/versioitu"
+                                       ["pvm-pienempi-kuin"
+                                        ["yleiset/versioitu" "version-voimassaolo" "alku"]
+                                        (second aikavali)]])
 
                 valimaiset-oidit  (hae-urakan-valimaisten-varusteiden-oidit
                                     http-asetukset

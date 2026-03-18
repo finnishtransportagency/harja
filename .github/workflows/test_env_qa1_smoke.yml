@@ -11,9 +11,16 @@
 name: '[TEST-ENV] Deploy branch to qa1'
 
 ## Pitäisi antaa branch valinnat defaulttina 
-## TODO.. myöhemmin tulee envi valinnat, nyt hard-set qa1
+## TODO.. valinta on vaan koristeena toistaiseksi 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Valitse deploy-ympäristö"
+        required: true
+        type: choice
+        options:
+          - test-qa1
 
 permissions: {}
 
