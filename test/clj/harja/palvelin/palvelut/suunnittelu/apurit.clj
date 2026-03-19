@@ -226,8 +226,9 @@
 
 (defn poista-tarjoukset-tietokannasta!
   "Poistaa kaikki tarjouksessa olevat rivit tietokannasta, jotta testit voidaan ajaa uudestaan."
-  []
+  [urakkaid]
   ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-  (u "DELETE FROM tarjous_kustannukset")
-  (u "DELETE FROM tarjous_johto_ja_hallintokorvaus")
-  (u "DELETE FROM tarjous"))
+  (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s" urakkaid))
+  (u (format "DELETE FROM tarjous_kustannukset WHERE urakka_id = %s" urakkaid))
+  (u (format "DELETE FROM tarjous_johto_ja_hallintokorvaus WHERE urakka_id = %s" urakkaid))
+  (u (format "DELETE FROM tarjous WHERE urakka_id = %s" urakkaid)))

@@ -691,7 +691,7 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hoitovuoden-alkuvuosi 2024
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Lisätään ensin kilpailutettavat hankinnat - Poista yhteenvetorivi ennen tallennusta
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
@@ -757,7 +757,7 @@
         hoitovuoden-alkuvuosi 2021
         hoitovuosinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
         ;; Vuodet tietomallista
@@ -837,7 +837,7 @@
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet (:db jarjestelma) urakka-id)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
         hoitovuoden-alkuvuosi 2024

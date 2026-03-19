@@ -45,7 +45,7 @@
         hoitovuoden-alkuvuosi 2025
         urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
@@ -196,7 +196,7 @@
                               [(pvm/hoitokauden-alkupvm vuosi)
                                (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2025 2030))
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
         ;; Tyhjennä kustannussuunnitelman tiedot kokonaan 
         _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
@@ -333,7 +333,7 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         kayttaja-id (:id +kayttaja-jvh+)
         hoitovuoden-alkuvuosi 2024
         tiedot {:urakka-id urakka-id
@@ -389,7 +389,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hoitovuoden-alkuvuosi 2021
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Lisätään ensin kilpailutettavat hankinnat
         ;; ;; Poista yhteenvetorivi ennen tallennusta
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
@@ -461,7 +461,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (hae-sopimus-id-urakka-idlla urakka-id)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         hoitovuoden-alkuvuosi 2024
         alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))

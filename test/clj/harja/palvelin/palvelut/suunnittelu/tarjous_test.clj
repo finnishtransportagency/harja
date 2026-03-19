@@ -85,7 +85,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         vahvistetut-vuodet #{}
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
@@ -101,7 +101,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -125,7 +125,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         ;; Vuodet tietomallista
@@ -147,7 +147,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         ;; Vuodet tietomallista
@@ -182,7 +182,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
         hankinnat [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
                    {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id 380 :rahavaraus-id nil}
@@ -224,7 +224,7 @@
         ;; Käytetään kattohintana 1.1 x tavoitehintaa
         kattohintakerroin 1.1
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Muodostetaan johto-ja-hallinto-kustannuksia, joilla voi testata tallennuksia
         ;; Muodostetaan hankintakustannuksia, joilla voi testata tallennuksia
         johto-ja-hallintokorvaukset [{:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :nimi "Valmistelukausi ennen urakka-ajan alkua", :osio "johto-ja-hallintokorvaus" :toimenkuva-id 10 :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil}
@@ -255,7 +255,7 @@
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         kayttaja-id (:id +kayttaja-jvh+)
@@ -286,7 +286,7 @@
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         kayttaja-id (:id +kayttaja-jvh+)
@@ -314,7 +314,7 @@
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         kayttaja-id (:id +kayttaja-jvh+)
@@ -405,7 +405,7 @@
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         tietomallitarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
@@ -477,7 +477,7 @@
         urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
@@ -522,7 +522,7 @@
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         tarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
@@ -560,7 +560,7 @@
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         tarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
@@ -599,7 +599,7 @@
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-        _ (apurit/poista-tarjoukset-tietokannasta!)
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         tarjous (assoc apurit/tarjous-tietomalli-2019 :urakka-id urakka-id)
         tehtavaryhma-erillishankinnat (first (tehtavaryhmat-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
