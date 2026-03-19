@@ -35,7 +35,7 @@ describe('Laskutusraja testit', function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
         // Navigoi urakkaan
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click();
+        cy.contains('.haku-lista-item', 'Pohjois-Suomen elinvoimakeskus').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click();

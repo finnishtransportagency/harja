@@ -40,7 +40,7 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
 
-        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.contains('.haku-lista-item', 'Lapin elinvoimakeskus').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
