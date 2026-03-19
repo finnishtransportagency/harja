@@ -213,7 +213,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
         // Käydään alatabit läpi
         cy.get('[data-cy="tabs-taso2-Paallystysurakoiden paikkaukset"]').click()
-        cy.contains('ELY').should('exist')
+        cy.contains('Elinvoimakeskus').should('exist')
         cy.get('[data-cy=tabs-taso2-Toteumat]').click()
         cy.contains('Toteuman tieosoite').should('exist')
     })
