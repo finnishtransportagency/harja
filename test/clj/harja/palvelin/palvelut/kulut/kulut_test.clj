@@ -10,7 +10,8 @@
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
             [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -700,3 +701,48 @@
     ;; Varmistetaan että Harjan generoimia kuluja ei löydy kun ei ole dataa
     (is (zero? (count harjan-generoimat))
       "Harjan generoimia kuluja ei pitäisi löytyä kun toteutuneet_kustannukset-taulussa ei ole dataa aikavälillä")))
+
+(deftest erillishankintakulu-siirtyy-toteutuneet-kustannukset-tauluun
+  (let [db          (:db jarjestelma)
+        kayttaja-id (:id +kayttaja-jvh+)
+        tpi-id      (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151")
+        sopimus-id  (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tehtavaryhma-id (hae-tehtavaryhman-id "W - Erillishankinnat")
+
+        ;; Luodaan rivi menneeseen kuukauteen (2021/10), jotta siirtoehto täyttyy
+        _ (i (format "INSERT INTO kustannusarvioitu_tyo
+                        (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma,
+                         toimenpideinstanssi, sopimus, luotu, luoja,
+                         summa_indeksikorjattu, versio, osio, \"siirretty?\")
+                      VALUES (2021, 10, 500, 'laskutettava-tyo', null, %s,
+                              %s, %s, NOW(), %s, 500, 0, 'erillishankinnat', false);"
+               tehtavaryhma-id tpi-id sopimus-id kayttaja-id))
+        uusi-rivi-id (ffirst (q "SELECT id FROM kustannusarvioitu_tyo
+                                  WHERE osio = 'erillishankinnat'
+                                    AND vuosi = 2021 AND kuukausi = 10
+                                    AND summa = 500
+                                  ORDER BY id DESC LIMIT 1;"))
+
+        ;; Kutsutaan siirtofunktiota pvm:llä joka on lisätyn rivin kuukauden jälkeen
+        ;; siirra-kustannukset käyttää idempotenssitarkistusta, joten nollataan
+        ;; siirretty?-lippu ensin koko taulussa (sama kuin kustannusarvioiden_toteumat_siirto_test.clj:ssä)
+        _ (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false WHERE id = " uusi-rivi-id ";")
+        siirto-pvm (pvm/luo-pvm 2021 10 11)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset db siirto-pvm)
+
+        ;; Tarkistetaan tulos
+        toteutunut (first (q-map (format "SELECT * FROM toteutuneet_kustannukset
+                                           WHERE toimenpideinstanssi = %s
+                                             AND vuosi = 2021 AND kuukausi = 10
+                                             AND summa = 500;"
+                                   tpi-id)))
+        siirretty? (ffirst (q (format "SELECT \"siirretty?\" FROM kustannusarvioitu_tyo
+                                        WHERE id = %s;" uusi-rivi-id)))]
+
+    (is (some? toteutunut) "Erillishankintarivi löytyy toteutuneet_kustannukset-taulusta siirron jälkeen.")
+    (is (true? siirretty?) "kustannusarvioitu_tyo-rivin siirretty?-lippu on true siirron jälkeen.")
+
+    ;; Siivotaan luodut rivit
+    (u (format "DELETE FROM toteutuneet_kustannukset WHERE toimenpideinstanssi = %s
+                  AND vuosi = 2021 AND kuukausi = 10 AND summa = 500;" tpi-id))
+    (u (format "DELETE FROM kustannusarvioitu_tyo WHERE id = %s;" uusi-rivi-id))))
