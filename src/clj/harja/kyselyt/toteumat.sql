@@ -362,10 +362,17 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
--- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
-SELECT alkanut
-  FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+-- name: hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+SELECT alkanut,
+       MIN(alkanut) OVER () AS min_alkanut,
+       MAX(alkanut) OVER () AS max_alkanut
+  FROM (
+        SELECT DISTINCT alkanut::DATE AS alkanut
+          FROM toteuma t
+         WHERE ulkoinen_id IN (:ulkoiset-idt)
+           AND urakka = :urakka-id
+           AND poistettu IS NOT TRUE
+       ) poistettavien_paivat;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle

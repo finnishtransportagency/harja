@@ -89,7 +89,7 @@
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
    {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} lomakedatana? kutsudata]
-  (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
+  (log/info (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
                metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
 
   (let [sisaltotyyppi (get otsikot " Content-Type ")]
