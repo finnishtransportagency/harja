@@ -91,7 +91,7 @@
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
         tietomalli (apurit/paivita-tarjoustietomallin-idt apurit/tarjous-tietomalli-2019 tehtavaryhma-erillishankinnat tehtava-hoidonjohtopalkkio)
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tietomalli vahvistetut-vuodet)
-        tarjoukset-tietokannasta (q-map "SELECT * from tarjous")]
+        tarjoukset-tietokannasta (q-map (format "SELECT * from tarjous WHERE urakka_id = %s" urakka-id))]
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))))
 
 (deftest tallenna-rahavaraukset-tarjoukselle-onnistuu
@@ -110,7 +110,7 @@
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         vahvistetut-vuodet #{}
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
-        tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
+        tarjoukset-tietokannasta (q-map (format "SELECT * from tarjous WHERE urakka_id = %s" urakka-id))
         tietokantarahavaraukset (q-map (format "SELECT * from tarjous_kustannukset
                                                  WHERE osio = 'tavoitehintaiset-rahavaraukset'
                                                    AND urakka_id = %s" urakka-id))]
@@ -209,7 +209,7 @@
 
         vahvistetut-vuodet #{}
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
-        tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
+        tarjoukset-tietokannasta (q-map (format "SELECT * from tarjous WHERE urakka_id = %s" urakka-id))
         tietokantakustannukset (q-map (format "SELECT * from tarjous_kustannukset
                                                  WHERE osio IN ('hankintakustannukset', 'erillishankinnat', 'hoidonjohtopalkkio')
                                                    AND urakka_id = %s" urakka-id))]
@@ -238,11 +238,10 @@
 
         vahvistetut-vuodet #{}
         vuosittaiset-tarjoushinnat (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
-        tarjoukset-tietokannasta (q-map "SELECT * from tarjous")
+        tarjoukset-tietokannasta (q-map (format "SELECT * from tarjous WHERE urakka_id = %s" urakka-id))
         tietokantajohto-ja-hallintokorvaukset (q-map (format "SELECT * from tarjous_johto_ja_hallintokorvaus
                                                  WHERE osio = 'johto-ja-hallintokorvaus'
-                                                   AND urakka_id = %s" urakka-id))
-        _ (println "tietokantajohto-ja-hallintokorvaukset:" (pr-str tietokantajohto-ja-hallintokorvaukset))]
+                                                   AND urakka_id = %s" urakka-id))]
 
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantajohto-ja-hallintokorvaukset) 11) "Tietokannasta löytyy johto-ja-hallintokorvaukset jokaiselle vuodelle. Paitsi valmistelukausi ennen urakka-ajan alkua on vain yhdessä vuodessa.")))
