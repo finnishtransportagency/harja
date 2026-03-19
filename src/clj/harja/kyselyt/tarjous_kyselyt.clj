@@ -479,6 +479,7 @@
                                    (when-not (zero? tavoitehinta)
                                      (lisaa-urakan-tavoite-ja-kattohinta<! db {:urakka-id urakka-id
                                                                                :hoitokausinumero kuluva-hoitovuosi-nro
+                                                                               :tarjous_tavoitehinta tavoitehinta
                                                                                :tavoitehinta tavoitehinta
                                                                                :tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                                (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)

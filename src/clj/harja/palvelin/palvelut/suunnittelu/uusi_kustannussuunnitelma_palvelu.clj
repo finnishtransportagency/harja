@@ -268,8 +268,7 @@
           virheet (if tarjous-puuttuu?
                     (into virheet
                       (concat
-                        [(str "Hoitovuoden " hoitovuoden-alkuvuosi
-                           " tarjous puuttuu.")]))
+                        [(str "Hoitovuoden " hoitovuoden-alkuvuosi " tarjous puuttuu.")]))
 
                     (into virheet
                       (concat
