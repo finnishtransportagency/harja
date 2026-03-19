@@ -543,9 +543,11 @@ $$
         INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu, luoja, muokattu, muokkaaja, "siirretty?", summa_indeksikorjattu, indeksikorjaus_vahvistettu, vahvistaja, versio, osio, rahavaraus_id) VALUES (2029, 12, 666.67, 'laskutettava-tyo', null, null, 115, 27, NOW(), 3, null, null, false, null, null, null, 0, 'tilaajan-rahavaraukset', 3);
 
 
-
-
-
+        -- Koska tarjoukset lisätään kovakoodatulla id:llä, niin korjaa sekvenssit
+        -- Resetoi sekvenssit vastaamaan taulujen maksimiarvoja
+        PERFORM setval( pg_get_serial_sequence('tarjous', 'id'), (SELECT COALESCE(MAX(id), 1) FROM tarjous));
+        PERFORM setval(pg_get_serial_sequence('tarjous_kustannukset', 'id'),(SELECT COALESCE(MAX(id), 1) FROM tarjous_kustannukset));
+        PERFORM setval(pg_get_serial_sequence('tarjous_johto_ja_hallintokorvaus', 'id'),(SELECT COALESCE(MAX(id), 1) FROM tarjous_johto_ja_hallintokorvaus));
 
     END
 $$ LANGUAGE plpgsql;

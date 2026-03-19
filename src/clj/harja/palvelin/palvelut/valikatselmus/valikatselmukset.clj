@@ -145,7 +145,10 @@
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
         ;; Haetaan pysyviin muutoksiin perustuvat tiedot
         aktiiviset-muutokset (:muutos-summa budjettitavoite-vuodelle)
-        taman-vuoden-muutokset-summa (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+        ;; Varmistetaan, että urakan muutosten hallinta on päällä
+        taman-vuoden-muutokset-summa (if (:muutosten_hallinta urakan-parametrit)
+                                       (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+                                       0)
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
 
         hv-lopun-tavoitehinta-ilman-indeksia (+ (or tarjouksen-tavoitehinta 0) (or tavoitehinnan-oikaisut-summa 0) (+ taman-vuoden-muutokset-summa))
