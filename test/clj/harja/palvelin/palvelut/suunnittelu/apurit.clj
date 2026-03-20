@@ -199,7 +199,6 @@
   (let [h-tietomalli (poista-yhteenvetorivi-toimenpiteilta hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         h-tietomalli (paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
-        kattohintakerroin 1.1
         erillishankinnat-yht (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
         hoidonjohto-yht (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
         jjh-yht (apply + (map :summa johto-ja-hallinto-tietomalli))
@@ -221,8 +220,7 @@
     (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id
       johto-ja-hallinto-tietomalli hoitovuoden-alkuvuosi)
     ;; Tarjous
-    (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-      db urakka-id (:id kayttaja) kattohintakerroin tarjous vahvistetut-vuodet)))
+    (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) tarjous vahvistetut-vuodet)))
 
 (defn poista-tarjoukset-tietokannasta!
   "Poistaa kaikki tarjouksessa olevat rivit tietokannasta, jotta testit voidaan ajaa uudestaan."

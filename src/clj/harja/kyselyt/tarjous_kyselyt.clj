@@ -309,7 +309,7 @@
   Hankinnoista (Kilpailutettavat hankinnat, Erillishankinnat, Rahavarauksista, Hoidonjohtopalkkiosta).
   Kustannusten suunnittelussa rahavaraukset on irroitettu tallennusprosessista, koska niitä ei voi enää muokata tarjouksen tallennuksen jälkeen.
   Tästä syystä tarjouksen tallentamisen yhteydessä rahavaraukset tallennetaan kustannusarvioitu_tyo tauluun. Ikäänkuin ne olisi Kustannussuunnitelmassa jo suunniteltu."
-  [db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet]
+  [db urakka-id kayttaja-id tarjous vahvistetut-vuodet]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         sopimus-id (urakat-kyselyt/urakan-paasopimus-id db urakka-id)
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
@@ -549,7 +549,7 @@
 
 (defn lisaa-yhteenvetorivi-tarjoukseen
   "Vanhoille 2019 ja 2020 urakoille lisätään vielä kattohintarivi, koska ne voivat muokata niitä käsin."
-  [tarjous muokkaa-kattohinta-kasin]
+  [tarjous]
   (let [;; Lisätään vielä loppuun yhteenvetorivi, joka on viimeisenä
         ;; Vuodet ovat dynaamisia. Päätellään ne tietomallista
         vuodet (vuodet-tietomallista tarjous)
