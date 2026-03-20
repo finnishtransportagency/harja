@@ -21,6 +21,18 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(deftest normalisoi-sisaltotyyppi-happycase
+  (is (= "application/xml"
+         (#'kutsukasittely/normalisoi-sisaltotyyppi
+           {:headers {"Content-Type" " Application/XML ; charset=UTF-8 "}}))))
+
+(deftest normalisoi-sisaltotyyppi-failcase
+  (are [request] (nil? (#'kutsukasittely/normalisoi-sisaltotyyppi request))
+    {:headers {}}
+    {:headers {"content-type" ""}}
+    {:headers {"content-type" "   "}}
+    nil))
+
 (deftest tunnistaa-kutsun-formaatin-normalisoidusta-content-typesta
   (are [content-type odotettu-formaatti] (= odotettu-formaatti
                                            (kutsukasittely/kutsun-formaatti

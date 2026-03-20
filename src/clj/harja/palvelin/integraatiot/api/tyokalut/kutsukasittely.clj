@@ -38,34 +38,37 @@
                                             {"Content-Type" "application/json"})
                                    request-origin))
 
-(defn- hae-header-case-insensitive [headerit header]
+(defn- hae-header-kirjainkoosta-riippumatta [headerit header]
   (or (get headerit header)
       (some (fn [[avain arvo]]
               (when (= (str/lower-case (str avain)) header)
                 arvo))
             headerit)))
 
-(defn- normalisoi-content-type
+(defn- normalisoi-sisaltotyyppi
   "Hakee request-mapista content-type-headerin arvon ja normalisoi sen vertailukelpoiseksi:
   poistetaan reunavälilyönnit, muunnetaan pieniksi kirjaimiksi ja otetaan vain
   mediatyyppi ilman mahdollisia parametreja (esim. ';charset=UTF-8').
   Palauttaa nil, jos headeria ei ole."
   [request]
-  (some-> request
-          :headers
-      (hae-header-case-insensitive "content-type")
-          str/trim
-          str/lower-case
-          (str/split #";" 2)
-          first
-          str/trim))
+  (when-let [sisaltotyyppi (some-> request
+                                   :headers
+                                   (hae-header-kirjainkoosta-riippumatta "content-type")
+                                   str/trim
+                                   not-empty)]
+    (-> sisaltotyyppi
+        str/lower-case
+        (str/split #";" 2)
+        first
+        str/trim
+        not-empty)))
 
 (defn kutsun-formaatti
   "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Kirjainkoko ja
   content-typen parametrit, kuten ; charset=UTF-8, sivuutetaan. Palautetaan nil,
   mikäli ei passaa kumpaankaan."
   [request]
-  (let [content-type (normalisoi-content-type request)]
+  (let [content-type (normalisoi-sisaltotyyppi request)]
     (cond
       (= content-type "application/x-www-form-urlencoded") "form"
       (#{"application/xml" "text/xml"} content-type) "xml"
@@ -94,7 +97,7 @@
 
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta suunta
-  :sisaltotyyppi (or (hae-header-case-insensitive (:headers viesti) "content-type")
+  :sisaltotyyppi (or (hae-header-kirjainkoosta-riippumatta (:headers viesti) "content-type")
                       "application/json")
    :siirtotyyppi "HTTP"
    :sisalto body
@@ -499,7 +502,7 @@
        :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
        :body "Virhe: Väärä content-type. Käytä application/xml\n"}
       (format "Resurssi %s: hylätty kutsu väärällä content-typellä '%s', vaaditaan application/xml (415)"
-              resurssi (hae-header-case-insensitive (:headers request) "content-type"))
+              resurssi (hae-header-kirjainkoosta-riippumatta (:headers request) "content-type"))
       "sahkoposti")
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
@@ -656,7 +659,7 @@
        :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
        :body "Error: Wrong content type. Please use: application/xml\n"}
       (format "Resurssi %s: hylätty kutsu väärällä content-typellä '%s', vaaditaan application/xml (415)"
-              resurssi (hae-header-case-insensitive (:headers request) "content-type"))
+              resurssi (hae-header-kirjainkoosta-riippumatta (:headers request) "content-type"))
       integraatio)
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
