@@ -13,7 +13,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: [Test-environments] Run migrations 
+    - name: '[Test-environments] Run migrations'
       env:
         SHA: ${{ inputs.commit-sha }}
         FUNCTION_NAME: ${{ inputs.function-name }}
@@ -21,9 +21,9 @@ runs:
       run: |
         echo "[Test-environments] Run migrations using lambda ${FUNCTION_NAME} (Timeout ${TIMEOUT} sec)"
 
-        if [[ "$FUNCTION_NAME" == "HarjaMigrationRunner" ]]; then
-          echo "Refusing to invoke main migration runner from test workflow (DO NOT use production runner)."
-          exit 1
+        if [[ "$FUNCTION_NAME" != *"HarjaTestMigrationRunner"* ]]; then
+          echo "Refusing to invoke: ${FUNCTION_NAME}. Only test migration runners are allowed in this workflow."
+        exit 1
         fi
   
         readonly payload="{\"payload\":{\"sha\":\"${SHA}\"}}"
