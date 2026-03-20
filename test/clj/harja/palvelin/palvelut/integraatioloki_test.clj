@@ -5,18 +5,21 @@
             [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]))
 
 (defn- duplikaattiyhteenveto
-  [ilmoitusid kuittaustyyppi maara ensimmainen viimeisin uniikit-ulkoiset-idt]
-  {:ryhmaavain (str ilmoitusid "|" kuittaustyyppi)
+  [ilmoitusid kuittaustyyppi kanava duplikaatteja kertyneet-lahetysvirheet uniikit-kuittaajat ensimmainen viimeisin uniikit-ulkoiset-idt]
+  {:ryhmaavain (str ilmoitusid "|" kuittaustyyppi "|" kanava)
    :ilmoitusid ilmoitusid
    :kuittaustyyppi kuittaustyyppi
-   :maara maara
+   :kanava kanava
+   :duplikaatteja duplikaatteja
+   :kertyneet_lahetysvirheet kertyneet-lahetysvirheet
+   :uniikit_kuittaajat uniikit-kuittaajat
    :ensimmainen_alkanut ensimmainen
    :viimeisin_alkanut viimeisin
    :uniikit_ulkoiset_idt uniikit-ulkoiset-idt})
 
 (defn- esimerkkitapahtuma
-  [ilmoitusid kuittaustyyppi tapahtuma-id ulkoinen-id alkanut]
-  {:ryhmaavain (str ilmoitusid "|" kuittaustyyppi)
+  [ilmoitusid kuittaustyyppi kanava tapahtuma-id ulkoinen-id alkanut]
+  {:ryhmaavain (str ilmoitusid "|" kuittaustyyppi "|" kanava)
    :tapahtumaid tapahtuma-id
    :ulkoinenid ulkoinen-id
    :alkanut alkanut})
@@ -27,13 +30,17 @@
         yhteenvedot (vec (for [indeksi (range 0 1001)]
                            (duplikaattiyhteenveto indeksi
                                                  "aloitus"
-                                                 2
+                             "harja"
+                             2
+                             3
+                             1
                                                  #inst "2026-03-20T08:00:00.000-00:00"
                                                  #inst "2026-03-20T08:10:00.000-00:00"
                                                  [(str "msg-" indeksi)])))
         esimerkit (vec (for [indeksi (range 0 1000)]
                          (esimerkkitapahtuma indeksi
                                              "aloitus"
+                           "harja"
                                              indeksi
                                              (str "msg-" indeksi)
                                              #inst "2026-03-20T08:10:00.000-00:00")))]
@@ -58,27 +65,33 @@
         (is (= 1001 (:limit @yhteenvetoparametrit)) "Kysely hakee yhden ylimääräisen ryhmän katkaisun tunnistamiseksi")
         (is (= 1000 (count (:ryhmat vastaus))))
         (is (= 1000 (count (:ryhmaavaimet @esimerkkiparametrit))))
-        (is (= "0|aloitus" (first (:ryhmaavaimet @esimerkkiparametrit))))
-        (is (= "999|aloitus" (last (:ryhmaavaimet @esimerkkiparametrit))))
+        (is (= "0|aloitus|harja" (first (:ryhmaavaimet @esimerkkiparametrit))))
+        (is (= "999|aloitus|harja" (last (:ryhmaavaimet @esimerkkiparametrit))))
+        (is (= "harja" (-> vastaus :ryhmat first :kanava)))
+        (is (= 3 (-> vastaus :ryhmat first :kertyneet-lahetysvirheet)))
+        (is (= 1 (-> vastaus :ryhmat first :uniikit-kuittaajat)))
         (is (= 2500 (:kasitellyt-rivit vastaus)))
         (is (= 12 (:ohitetut-rivit vastaus)))
         (is (true? (:katkaistu vastaus)))))))
 
-(deftest hae-epaillyt-duplikaattikuittaukset-sailyttaa-vanhemmatkin-ryhmat-kun-rajaus-tehdaan-ryhmista
-  (let [yhteenvedot [(duplikaattiyhteenveto 123 "aloitus" 4
+      (deftest hae-epaillyt-duplikaattikuittaukset-sailyttaa-duplikaatit-ja-lahetysvirheet-kanavittain
+        (let [yhteenvedot [(duplikaattiyhteenveto 123 "aloitus" "harja" 4 2 1
                                             #inst "2026-03-10T08:00:00.000-00:00"
                                             #inst "2026-03-10T08:15:00.000-00:00"
                                             ["msg-1" "msg-2"])
-                    (duplikaattiyhteenveto 456 "lopetus" 2
+              (duplikaattiyhteenveto 456 "lopetus" "sms" 0 3 2
                                             #inst "2026-03-11T09:00:00.000-00:00"
                                             #inst "2026-03-11T09:10:00.000-00:00"
                                             ["msg-3" "msg-4"])]
-        esimerkit [(esimerkkitapahtuma 123 "aloitus" 100 "msg-2" #inst "2026-03-10T08:15:00.000-00:00")
-                   (esimerkkitapahtuma 123 "aloitus" 99 "msg-1" #inst "2026-03-10T08:05:00.000-00:00")
-                   (esimerkkitapahtuma 456 "lopetus" 200 "msg-4" #inst "2026-03-11T09:10:00.000-00:00")]
+        esimerkit [(esimerkkitapahtuma 123 "aloitus" "harja" 100 "msg-2" #inst "2026-03-10T08:15:00.000-00:00")
+             (esimerkkitapahtuma 123 "aloitus" "harja" 99 "msg-1" #inst "2026-03-10T08:05:00.000-00:00")
+             (esimerkkitapahtuma 456 "lopetus" "sms" 200 "msg-4" #inst "2026-03-11T09:10:00.000-00:00")]
         odotetut-ryhmat [{:ilmoitusid 123
                           :kuittaustyyppi "aloitus"
-                          :maara 4
+              :kanava "harja"
+              :duplikaatteja 4
+              :kertyneet-lahetysvirheet 2
+              :uniikit-kuittaajat 1
                           :ensimmainen-alkanut #inst "2026-03-10T08:00:00.000-00:00"
                           :viimeisin-alkanut #inst "2026-03-10T08:15:00.000-00:00"
                           :uniikit-ulkoiset-idt ["msg-1" "msg-2"]
@@ -90,7 +103,10 @@
                                                  :ulkoinen-id "msg-1"}]}
                          {:ilmoitusid 456
                           :kuittaustyyppi "lopetus"
-                          :maara 2
+                          :kanava "sms"
+                          :duplikaatteja 0
+                          :kertyneet-lahetysvirheet 3
+                          :uniikit-kuittaajat 2
                           :ensimmainen-alkanut #inst "2026-03-11T09:00:00.000-00:00"
                           :viimeisin-alkanut #inst "2026-03-11T09:10:00.000-00:00"
                           :uniikit-ulkoiset-idt ["msg-3" "msg-4"]

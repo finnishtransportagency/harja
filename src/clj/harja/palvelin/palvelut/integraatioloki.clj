@@ -151,7 +151,10 @@
 (defn- muodosta-epailty-duplikaattikuittausryhma-yhteenvedosta [yhteenveto esimerkkitapahtumat]
   {:ilmoitusid (:ilmoitusid yhteenveto)
    :kuittaustyyppi (:kuittaustyyppi yhteenveto)
-   :maara (:maara yhteenveto)
+  :kanava (:kanava yhteenveto)
+  :duplikaatteja (or (:duplikaatteja yhteenveto) 0)
+  :kertyneet-lahetysvirheet (or (:kertyneet_lahetysvirheet yhteenveto) 0)
+  :uniikit-kuittaajat (or (:uniikit_kuittaajat yhteenveto) 0)
    :ensimmainen-alkanut (:ensimmainen_alkanut yhteenveto)
    :viimeisin-alkanut (:viimeisin_alkanut yhteenveto)
    :uniikit-ulkoiset-idt (vektoroi-tulos (:uniikit_ulkoiset_idt yhteenveto))
