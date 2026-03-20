@@ -44,6 +44,8 @@
         kattohintakerroin 1.1
         hoitovuoden-alkuvuosi 2025
         urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
         h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
@@ -88,11 +90,7 @@
                       jjh-yht)
 
             ;; Osiot tallennettu, tallenna tarjous
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             ;; Nyt on osiot ja tarjous, kutsu vahvistusta
             vastaus (vahvista-kustis-fn true)
@@ -109,11 +107,7 @@
                       hoidonjohto-yht
                       (+ jjh-yht 200))
 
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
@@ -129,11 +123,7 @@
                       hoidonjohto-yht
                       jjh-yht)
 
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
@@ -149,11 +139,7 @@
                       (+ hoidonjohto-yht 200)
                       (+ jjh-yht 200))
 
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
@@ -171,11 +157,7 @@
                       hoidonjohto-yht
                       jjh-yht)
 
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             vastaus (vahvista-kustis-fn true)
             virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])]
@@ -193,6 +175,8 @@
         +hoitokaudet+ (mapv (fn [vuosi]
                               [(pvm/hoitokauden-alkupvm vuosi)
                                (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2025 2030))
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
         ;; Tyhjennä kustannussuunnitelman tiedot kokonaan 
         _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
@@ -259,17 +243,9 @@
       (let [jjh 260.00M
             hoidonjohto 300.00M
             erillishankinnat 500.00M
-            tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
-                      urakka-id
-                      erillishankinnat
-                      hoidonjohto
-                      jjh)
+            tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia urakka-id erillishankinnat hoidonjohto jjh)
 
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             muutos-payload-eurot-2025 (->>
                                         (:kustannusvaikutukset muutos-payload)
@@ -291,16 +267,8 @@
       (let [jjh 260.00M
             hoidonjohto 300.00M
             erillishankinnat 500.00M
-            tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
-                      urakka-id
-                      erillishankinnat
-                      hoidonjohto
-                      jjh)
-            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-                (:db jarjestelma)
-                urakka-id
-                (:id +kayttaja-jvh+)
-                kattohintakerroin tarjous vahvistetut-vuodet)
+            tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia urakka-id erillishankinnat hoidonjohto jjh)
+            _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
 
             muutos-payload-eurot-2025 (->>
                                         (:kustannusvaikutukset muutos-payload)
@@ -350,7 +318,7 @@
         tehtavaryhma-erillishankinnat (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db "37d3752c-9951-47ad-a463-c1704cf22f4c"))
         tehtava-hoidonjohtopalkkio (first (toimenpidekoodi-kyselyt/hae-tehtava-tunnisteella db "53647ad8-0632-4dd3-8302-8dfae09908c8"))
         tarjous (apurit/paivita-tarjoustietomallin-idt apurit/tarjous-tietomalli-2019 tehtavaryhma-erillishankinnat tehtava-hoidonjohtopalkkio)
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -414,8 +382,7 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         vahvistetut-vuodet #{}
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -480,8 +447,7 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         vahvistetut-vuodet #{}
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id

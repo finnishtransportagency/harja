@@ -229,7 +229,7 @@
     (is (= 21 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 21 (count urakan-alkuvuosi-2023-paatokset)))
     (is (= 21 (count urakan-alkuvuosi-2024-paatokset)))
-    (is (= 19 (count urakan-alkuvuosi-2025-paatokset)))))
+    (is (= 18 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-vuodesta-test
   (let [nakyvyysvuosi-2019-paatokset (kone/mahdolliset-paatokset-nakyvyys-vuodella 2019 kone/paatostyypit)

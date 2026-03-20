@@ -163,5 +163,5 @@ WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-urakan-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, tarjous_tavoitehinta, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, NOW(), :luoja);
