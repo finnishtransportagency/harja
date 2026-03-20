@@ -1,19 +1,20 @@
 (ns harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu
-  (:require [harja.domain.mhu :as mhu]
-            [harja.kyselyt.indeksit :as indeksi-kyselyt]
-            [harja.pvm :as pvm]
-            [taoensso.timbre :as log]
-            [com.stuartsierra.component :as component]
+  (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
-            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [com.stuartsierra.component :as component]
+
+            [harja.pvm :as pvm]
+            [harja.domain.mhu :as mhu]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
+            [harja.kyselyt.kulut :as kulut-q]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
-            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]))
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
+            [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -26,6 +27,9 @@
           urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
           urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+          vanha-urakka? (boolean
+                          (when urakan-alkuvuosi
+                            (< urakan-alkuvuosi 2025)))
           hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
           ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
           hoitovuoden-alkuvuosi (cond
@@ -48,7 +52,12 @@
           indeksikerroin-str (:indeksikerroin-str indeksikertoimet)
 
           ;; Hae tarjouksen tiedot
-          tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+          tarjous (if-not vanha-urakka?
+                    (tarjous-kyselyt/hae-tarjous db urakka-id)
+                    (suunnitelma-q/hae-vanhan-urakan-hoitovuoden-tarjous db
+                      {:urakka_id urakka-id
+                       :hoitokausi hoitovuosinro}))
+
           ;: Hae rahavaraukset
           rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
           ;; Hae erillishankinnat
@@ -76,6 +85,9 @@
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
           hoitovuoden-alun-kattohinta (:kattohinta tavoitetiedot)
           hoitovuoden-alun-indeksikorjattu-kattohinta (:kattohinta_indeksikorjattu tavoitetiedot)
+          laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitovuosinro}))
+          laskutusraja (:laskutusraja laskutusraja-rivi)
+          laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
 
           ;; Haetaan osio-kohtaisesti onko tulevilla hoitovuosilla >0 euroja tallennettuna 
           tulevaisuudessa-arvoja (suunnitelma-q/onko-tulevilla-hoitovuosilla-arvoja? db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-loppuvuosi)
@@ -89,6 +101,7 @@
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
              :tarjous tarjous
+             :vanha-urakka? vanha-urakka?
              :tulevaisuudessa-arvoja? {:muut (get tulevaisuudessa-arvoja "muut" false)
                                        :johto-ja-hallintokorvaukset (get tulevaisuudessa-arvoja "jjh" false)
                                        :hoidonjohtopalkkiot (get tulevaisuudessa-arvoja "hoidonjohto" false)
@@ -104,6 +117,8 @@
                                     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
                                     :hoitovuoden-alun-kattohinta hoitovuoden-alun-kattohinta
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
+                                    :laskutusraja-kaytossa? laskutusraja-kaytossa?
+                                    :laskutusraja laskutusraja
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
@@ -120,7 +135,8 @@
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot)))
-      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
+      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
+                                                     :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -129,7 +145,8 @@
     (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)))
-    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
+    (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
+                                                   :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -147,7 +164,8 @@
                   :johto-ja-hallintokorvaukset-2025)]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi))
-      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
+      (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
+                                                     :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
 (defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -163,21 +181,48 @@
   (jdbc/with-db-transaction [db db]
     (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+          urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
+          urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+          vanha-urakka? (boolean
+                          (when urakan-alkuvuosi
+                            (< urakan-alkuvuosi 2025)))
+          hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
-          ;; mein se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
-          _ (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
+          ;; meni se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
+          _ (when (>= hoitovuoden-alkuvuosi 2025)
+              (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset))
 
           ;; Riipumatta vahvistuksen onnistumisesta, aseta kattohinta, jos se on annettu
           _ (when (and paivitetty-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit))
               (suunnitelma-q/paivita-kasin-syotetty-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi
                 paivitetty-kattohinta urakan-indeksit
-                (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+                (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
+                                                               :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
                 urakan-parametrit))
 
           ;; Onko hoitovuoden tarjous tallennettu? Jos ei ole, niin ei voida vahvistaa.
-          tarjous (tarjous-kyselyt/hae-tarjousrivit-tietokannasta db urakka-id)
-          hoitovuoden-tarjous (first (filter #(= hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %)) tarjous))
+          tarjous (if-not vanha-urakka?
+                    (tarjous-kyselyt/hae-tarjousrivit-tietokannasta db urakka-id)
+                    (suunnitelma-q/hae-vanhan-urakan-hoitovuoden-tarjous db
+                      {:urakka_id urakka-id
+                       :hoitokausi hoitovuosinro}))
+
+          hoitovuoden-tarjous (if-not vanha-urakka?
+                                (first (filter #(= hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %)) tarjous))
+                                (-> tarjous first :tarjous_tavoitehinta))
+          ;; Äkilliset hoitotyöt | Vahinkojen korjaukset | Tilaajan rahavaraus kannustinjärjestelmään 
+          tarjous-kilpailetuttavat (filter #(= "Kilpailutettavat hankinnat" (:nimi %)) (:kustannukset hoitovuoden-tarjous))
+          tarjous-kilpailetuttavat-yht (or (apply + (keep #(:summa %) tarjous-kilpailetuttavat)) 0.0)
+
+          tarjous-erillishankinnat (filter #(= "Erillishankinnat" (:nimi %)) (:kustannukset hoitovuoden-tarjous))
+          tarjous-erillishankinnat-yht (or (apply + (keep #(:summa %) tarjous-erillishankinnat)) 0.0)
+
+          tarjous-hoidonjohto (filter #(= "Hoidonjohtopalkkio" (:nimi %)) (:kustannukset hoitovuoden-tarjous))
+          tarjous-hoidonjohto-yht (or (apply + (keep #(:summa %) tarjous-hoidonjohto)) 0.0)
+
+          tarjous-jjh (filter #(= "johto-ja-hallintokorvaus" (:osio %)) (:toimenkuvat hoitovuoden-tarjous))
+          tarjous-jjh-yht (or (apply + (keep #(:summa %) tarjous-jjh)) 0.0)
 
           ;; Onko indeksit valmiina
           indeksi-olemassa? (boolean (some #(= hoitovuoden-alkuvuosi (:vuosi %)) urakan-indeksit))
@@ -191,25 +236,44 @@
           _ (when (and suunnitelmat-annettu? indeksi-olemassa? hoitovuoden-tarjous)
               (suunnitelma-q/vahvista-tavoite-ja-kattohinta db kayttaja urakka-id vahvista? hoitovuoden-alkuvuosi))
 
-          vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+          vastaus (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
+                                                                 :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
+
+          tarjous-tavoitehinta (if-not vanha-urakka?
+                                 (bigdec
+                                   (or (:tarjous_tavoitehinta hoitovuoden-tarjous) 0))
+                                 (bigdec (or hoitovuoden-tarjous 0)))
 
           tarjous-puuttuu? (or
                              (not hoitovuoden-tarjous)
-                             (<= (bigdec
-                                   (or (:tarjous_tavoitehinta hoitovuoden-tarjous) 0)) 0.0M))
+                             (<= tarjous-tavoitehinta 0.0M))
 
           virheet []
+
+          virheet (if-not vanha-urakka?
+                    (cond-> virheet
+                      (<= tarjous-kilpailetuttavat-yht 0.0)
+                      (conj "”Kilpailutettavat hankinnat” -tarjous puuttuu.")
+
+                      (<= tarjous-erillishankinnat-yht 0.0)
+                      (conj "”Erillishankinnat” -tarjous puuttuu.")
+
+                      (<= tarjous-hoidonjohto-yht 0.0)
+                      (conj "”Hoidonjohtopalkkiot” -tarjous puuttuu.")
+
+                      (<= tarjous-jjh-yht 0.0)
+                      (conj "”Johto- ja hallintokorvaukset” -tarjous puuttuu."))
+                    virheet)
+
           virheet (if tarjous-puuttuu?
                     (into virheet
                       (concat
-                        [(str "Hoitovuoden " hoitovuoden-alkuvuosi
-                           " tarjous puuttuu. Tietoja ei voida vahvistaa.")]))
+                        [(str "Hoitovuoden " hoitovuoden-alkuvuosi " tarjous puuttuu.")]))
 
                     (into virheet
                       (concat
                         (when-not indeksi-olemassa?
-                          [(str "Indeksit puuttuvat hoitovuodelle " hoitovuoden-alkuvuosi
-                             ". Indeksit on lisättävä ennen vahvistusta.")])
+                          [(str "Hoitovuoden " hoitovuoden-alkuvuosi " indeksikerroin ei ole vielä saatavilla")])
 
                         (when (seq puuttuvat-suunnitelmat)
                           (map #(str %) puuttuvat-suunnitelmat)))))]

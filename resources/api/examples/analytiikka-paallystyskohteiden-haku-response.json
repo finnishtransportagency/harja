@@ -18,7 +18,9 @@
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1235,
-          "pituus": 300
+          "pituus": 300,
+          "poistettu": false
+
         },
         {
           "geometria": "MULTILINESTRING((404470.43673149456 7153004.472398268,404509.82 7153070.445,404562.38 7153149.582,404597.509 7153198.329,404670.56997705874 7153291.159323957))",
@@ -36,6 +38,7 @@
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1236,
+          "poistettu": false,
           "pituus": 350
         },
         {
@@ -54,6 +57,7 @@
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1237,
+          "poistettu": false,
           "pituus": 650
         }
       ],

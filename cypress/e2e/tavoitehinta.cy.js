@@ -1,5 +1,5 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
-import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+import {avaaHarjaTimeoutilla, muokkaaTarjousRiviaArvo} from "../support/apurit.js";
 
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
@@ -18,17 +18,6 @@ function alustaIin21TarjousUrakka() {
 function trimmaaArvo(arvo) {
     // Poistaa ylimääräiset välilyönnit ja trimmauksella
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
-}
-
-function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uusiArvo) {
-    cy.get(`[data-cy=${taulukonDataCy}]`)
-        .should('be.visible')
-        .contains('tbody tr', rivinTunniste)
-        .find('input')
-        .eq(sarakeIndex)
-        .should('be.visible')
-        .clear()
-        .type(uusiArvo)
 }
 
 describe('Varmista Hoitovuoden alun tavoitehinta', function () {

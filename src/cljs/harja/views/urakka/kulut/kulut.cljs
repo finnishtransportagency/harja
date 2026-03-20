@@ -157,6 +157,10 @@
                        (keep identity))
            tiedot))]]]))
 
+(defn hae-loppupvm
+  [hoitokausi]
+  (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokausi))))
+
 (defn- laske-kulujen-summa
   "Laskee kulujen kokonaissumman. Kulut voi olla joko map (jossa :kokonaissumma)
    tai lista vektoreita, joissa kulut ovat :tpi-tagilla ja niistä löytyy :kokonaissumma.
@@ -183,45 +187,59 @@
       kulut)))
 
 (defn laskutusraja-komponentti
-  [e! app valittu-hoitokausi]
-  (let [hoitovuoden-alkupvm (pvm/hoitokauden-alkupvm valittu-hoitokausi)
-        hoitovuoden-loppupvm (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi)))
-        edellinen-hoitokausi-atom (r/atom valittu-hoitokausi)]
+  [e! _app valittu-hoitokausi _hoitovuodet _haun-kuukausi hae-kulut?]
+  (let [edellinen-hoitokausi-atom (r/atom valittu-hoitokausi)
+        edellinen-hakukuukausi-atom (r/atom nil)]
     (komp/luo
-      (let [haku-kaynnissa? (r/atom false)]
-        (komp/piirretty
-          (fn [_this]
-            (when-not @haku-kaynnissa?
-              (reset! haku-kaynnissa? true)
-              (e! (tiedot/->HaeLaskutusraja valittu-hoitokausi))
-              (e! (tiedot/->HaeHoitokaudenKulujenSumma hoitovuoden-alkupvm hoitovuoden-loppupvm))))))
+      (komp/piirretty
+        (fn [_this]
+          (let [hoitovuoden-alkupvm (pvm/hoitokauden-alkupvm valittu-hoitokausi)
+                hoitovuoden-loppupvm (hae-loppupvm valittu-hoitokausi)]
+            (e! (tiedot/->HaeLaskutusraja valittu-hoitokausi))
+            (e! (tiedot/->HaeHoitokaudenKulujenSumma hoitovuoden-alkupvm hoitovuoden-loppupvm)))))
 
       (komp/kun-muuttuu
-        (fn [e! _app uusi-hoitokausi _hoitovuodet uusi-haun-kuukausi _haun-alkupvm-atom _haun-loppupvm-atom]
-          (let [edellinen-hoitokausi @edellinen-hoitokausi-atom]
+        (fn [e! _app uusi-hoitokausi _hoitovuodet uusi-haun-kuukausi]
+          (let [edellinen-hoitokausi @edellinen-hoitokausi-atom
+                hoitokauden-alkupvm (pvm/hoitokauden-alkupvm uusi-hoitokausi)
+                edellinen-hakukuukausi @edellinen-hakukuukausi-atom]
+
             (when (not= edellinen-hoitokausi uusi-hoitokausi)
-              (let [uusi-alkupvm (pvm/hoitokauden-alkupvm uusi-hoitokausi)
-                    uusi-loppupvm (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc uusi-hoitokausi)))]
+              (let [hoitokauden-loppupvm (hae-loppupvm uusi-hoitokausi)]
                 (reset! edellinen-hoitokausi-atom uusi-hoitokausi)
                 (e! (tiedot/->HaeLaskutusraja uusi-hoitokausi))
-                (e! (tiedot/->HaeHoitokaudenKulujenSumma uusi-alkupvm uusi-loppupvm))))
-            (when uusi-haun-kuukausi
-              (let [hoitokauden-alkupvm (pvm/hoitokauden-alkupvm uusi-hoitokausi)
-                    valitun-kuukauden-alkupvm (first uusi-haun-kuukausi)
-                    edellisen-kuukauden-loppupvm (pvm/ajan-muokkaus valitun-kuukauden-alkupvm false 1 :paiva)]
-                (e! (tiedot/->HaeKulutYhteensaHakukuukauteenAsti hoitokauden-alkupvm edellisen-kuukauden-loppupvm)))))))
+                (e! (tiedot/->HaeHoitokaudenKulujenSumma hoitokauden-alkupvm hoitokauden-loppupvm))))
 
-      (fn [_ {:keys [haku-kaynnissa? laskutusraja-kaytossa? laskutusraja kulut hoitokauden-kulujen-summa kulut-yhteensa-hakukuukauteen-asti] :as app}
-           valittu-hoitokausi hoitovuodet haun-kuukausi haun-alkupvm-atom haun-loppupvm-atom]
-        (let [haetun-aikarajan-kulujen-summa (laske-kulujen-summa kulut)
+            (when (and uusi-haun-kuukausi (not= edellinen-hakukuukausi uusi-haun-kuukausi))
+              (let [valitun-kuukauden-alkupvm (first uusi-haun-kuukausi)
+                    edellisen-kuukauden-loppupvm (pvm/ajan-muokkaus valitun-kuukauden-alkupvm false 1 :paiva)]
+                (reset! edellinen-hakukuukausi-atom uusi-haun-kuukausi)
+                (when hae-kulut?
+                  (e! (tiedot/->HaeUrakanKulut
+                        {:id (-> @tila/yleiset :urakka :id)
+                         :alkupvm (first uusi-haun-kuukausi)
+                         :loppupvm (second uusi-haun-kuukausi)})))
+                (e! (tiedot/->HaeKulutYhteensaHakukuukauteenAsti hoitokauden-alkupvm edellisen-kuukauden-loppupvm))))
+
+            (when (and (not uusi-haun-kuukausi) (not= edellinen-hakukuukausi uusi-haun-kuukausi))
+              (reset! edellinen-hakukuukausi-atom uusi-haun-kuukausi)))))
+
+      (fn [_ {:keys [haku-kaynnissa? laskutusraja-kaytossa? laskutusraja kulut hoitokauden-kulujen-summa kulut-yhteensa-hakukuukauteen-asti parametrit] :as app}
+           valittu-hoitokausi hoitovuodet haun-kuukausi]
+
+        (let [{:keys [haun-alkupvm haun-loppupvm]} parametrit
+              haetun-aikarajan-kulujen-summa (laske-kulujen-summa kulut)
               kulut-yhteensa-hakukuukauteen-asti (or kulut-yhteensa-hakukuukauteen-asti 0)
               yhteensa (+ haetun-aikarajan-kulujen-summa kulut-yhteensa-hakukuukauteen-asti)
-              ylitys (- yhteensa laskutusraja)
+              ylitys (when laskutusraja (- yhteensa laskutusraja))
               laskutusrajaan-sisaltyva (- haetun-aikarajan-kulujen-summa ylitys)
-              laskutusrajan-ylittava (- yhteensa laskutusraja)
-              alkupvm-hoitokausi (when @haun-alkupvm-atom (pvm/paivamaaran-hoitokausi @haun-alkupvm-atom))
-              loppupvm-hoitokausi (when @haun-loppupvm-atom (pvm/paivamaaran-hoitokausi @haun-loppupvm-atom))
-              eri-hoitovuosilla? (when (and alkupvm-hoitokausi loppupvm-hoitokausi (not= alkupvm-hoitokausi loppupvm-hoitokausi)) true)]
+              laskutusrajan-ylittava (when laskutusraja (- yhteensa laskutusraja))
+              vapaan-aikavalin-alkupvm haun-alkupvm
+              vapaan-aikavalin-loppupvm haun-loppupvm
+              vapaan-aikavalin-alkupvm-hoitokausi (when vapaan-aikavalin-alkupvm (pvm/paivamaaran-hoitokausi vapaan-aikavalin-alkupvm))
+              vapaan-aikavalin-loppupvm-hoitokausi (when vapaan-aikavalin-loppupvm (pvm/paivamaaran-hoitokausi vapaan-aikavalin-loppupvm))
+              eri-hoitovuosilla? (when (and vapaan-aikavalin-alkupvm-hoitokausi vapaan-aikavalin-loppupvm-hoitokausi
+                                         (not= vapaan-aikavalin-alkupvm-hoitokausi vapaan-aikavalin-loppupvm-hoitokausi)) true)]
 
           (when (and laskutusraja-kaytossa? (not eri-hoitovuosilla?))
             [:div.laskutusraja
@@ -233,14 +251,24 @@
 
                 (some? laskutusraja)
                 [:div
-                 [:div.sarakkeet
+                 (when (> hoitokauden-kulujen-summa laskutusraja)
+                   [yleiset/info-laatikko :vahva-ilmoitus  "Laskutusraja on täynnä."
+                    [:span "Kaikki laskutusrajan yli menevät toteutuneet kustannukset kirjataan edelleen normaalisti Harjaan, mutta niitä ei saa laskuttaa. Maksuosuuksista päätetään "
+                     [:a.klikattava.alleviivaa {:href "#"
+                                                :on-click #(siirtymat/siirry-annettuun-valilehteen
+                                                             @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)
+                                                             {:taso1 :urakat
+                                                              :taso2 :valikatselmus})}
+                      "välikatselmuksessa"] "."]
+                    nil {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "tasan"}])
+                 [:div.sarakkeet-yhteensa
                   [:div.leveampi-sarake
                    [:div.lukema-label "Laskutusrajan käyttö " (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi hoitovuodet "Hoitovuosi")]
-                   [:div.lukema (if (< hoitokauden-kulujen-summa laskutusraja)
+                   [:div.lukema (if (and hoitokauden-kulujen-summa (< hoitokauden-kulujen-summa laskutusraja))
                                   (fmt/euro-opt false hoitokauden-kulujen-summa)
                                   (fmt/euro-opt false laskutusraja))  " / " (fmt/euro-opt laskutusraja)]]
 
-                  (when (> hoitokauden-kulujen-summa laskutusraja)
+                  (when (and hoitokauden-kulujen-summa (> hoitokauden-kulujen-summa laskutusraja))
                     [:div.leveampi-sarake
                      [:div.lukema-label.oikeaan-reunaan "Laskutusrajan ylittävä osuus (kumulatiivinen)"]
                      [:div.lukema.oikeaan-reunaan (fmt/euro-opt (- hoitokauden-kulujen-summa laskutusraja))]])]
@@ -270,9 +298,9 @@
                          [:div.lukema (if (> kulut-yhteensa-hakukuukauteen-asti laskutusraja)
                                         (fmt/euro-opt haetun-aikarajan-kulujen-summa)
                                         (fmt/euro-opt laskutusrajan-ylittava))]]])]])
-                 (when (and @haun-alkupvm-atom @haun-loppupvm-atom)
+                 (when (and vapaan-aikavalin-alkupvm vapaan-aikavalin-loppupvm)
                    [:div
-                    [:h3 (str (pvm/pvm @haun-alkupvm-atom) " - " (pvm/pvm @haun-loppupvm-atom))]
+                    [:h3 (str (pvm/pvm vapaan-aikavalin-alkupvm) " - " (pvm/pvm vapaan-aikavalin-loppupvm))]
                     [:div.lukema-label "Tavoitehintaan kuuluvat kulut"]
                     [:div.lukema (fmt/euro-opt haetun-aikarajan-kulujen-summa)]])]
 
@@ -286,7 +314,7 @@
                                                            :taso2 :suunnittelu
                                                            :taso3 :uusi-kustannussuunnitelma})}
                    "Siirry Hoitovuoden alun tavoitehinta-sivulle"]]
-                 nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])]]))))))
+                 nil {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "tasan"}])]]))))))
 
 (defn- kohdistetut*
   [e! app]
@@ -393,8 +421,8 @@
               #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
               {:ikoni [ikonit/harja-icon-action-add]}]]
 
-            [:div {:style {:display "flex" :flex-direction "column" :width "max-content" }}
-             [:div.flex-row {:style {:justify-content "flex-start"}}
+            [:div.display-flex.flex-col.sisalto-leveys
+             [:div.flex-row.alkuun
               [:div.filtteri.label-ja-alasveto
                [:label.alasvedon-otsikko {:for "kulut-hoitokausi-valinta"} "Hoitovuosi"]
                [yleiset/livi-pudotusvalikko {:elementin-id "kulut-hoitokausi-valinta"
@@ -470,7 +498,7 @@
                                                                               :alkupvm loppupvm
                                                                               :loppupvm loppupvm})))))))}
                     haun-loppupvm-atom]]])]]
-             [laskutusraja-komponentti  e! app valittu-hoitokausi hoitovuodet haun-kuukausi haun-alkupvm-atom haun-loppupvm-atom]]
+             [laskutusraja-komponentti  e! app valittu-hoitokausi hoitovuodet haun-kuukausi false]]
 
             (when kulut
               [:div
