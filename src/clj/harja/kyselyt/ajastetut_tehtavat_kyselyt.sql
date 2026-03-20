@@ -3,7 +3,6 @@ INSERT INTO ajastetut_tehtavat (tyyppi, alkuaika_valilta, loppuaika_valilta, onn
 VALUES (:tyyppi::ajastettu_tehtava, :alkuaika_valilta, :loppuaika_valilta, :onnistunut, :virhe, NOW());
 
 -- name: hae-viimeisin-onnistunut-ajokerta
--- single?:true
 SELECT alkuaika_valilta, loppuaika_valilta, onnistunut, virhe, luotu
   FROM ajastetut_tehtavat
  WHERE tyyppi = :tyyppi::ajastettu_tehtava

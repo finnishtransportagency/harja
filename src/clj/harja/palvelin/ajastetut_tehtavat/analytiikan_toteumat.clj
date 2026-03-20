@@ -30,26 +30,18 @@
   Edellinen ajokerta saadaan ajastetut_tehtavat taulusta.
 
   Siirto tehdään transaktion sisällä ja yritetään maksimissaan 3 kertaa virhetilanteessa."
-  [db & args]
+  [db]
   (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
-        viimeisin-ajokerta (:loppuaika_valilta (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle"))
+        viimeisin-ajokerta (:loppuaika_valilta (first (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle")))
         _ (log/info "Viimeisin onnistunut ajokerta analytiikan_toteumat siirrossa:" viimeisin-ajokerta)
 
         ;; Jotta ei varmasti menetetä yhtään muokattua tai lisättyä toteumaa, niin otetaan viimeisin ajokerta mukaan isommalla pensselillä, eli poistetaan siitä vielä 3h.
         viimeisin-ajokerta (when viimeisin-ajokerta (pvm/ajan-muokkaus viimeisin-ajokerta false 3 :tunti))
-
-        annettu-alkuaika (first args)                       ;; Annetaan testeissä
-        annettu-loppuaika (second args)                     ;; Annetaan testeissä
-        alkuaika (or annettu-alkuaika                       ;; Käytetään testeissä
-                   viimeisin-ajokerta                       ;; Saatiin tietokanansta
-                   (pvm/ajan-muokkaus pvm/nyt true 1 :paiva) ;; Ensimmäisellä kerralla siirretään viimeisen päivän toteumat
-                   )
-        alkuaika-sql (if (= "java.sql.Timestamp" (type alkuaika)) alkuaika (konversio/sql-timestamp alkuaika))
-        loppuaika (or
-                    annettu-loppuaika                     ;; Käytetään testeissä
-                    pvm/nyt                                 ;; Nykyhetki muulloin
-                    )
-        loppuaika-sql (if (= "java.sql.Timestamp" (type loppuaika)) loppuaika (konversio/sql-timestamp loppuaika))
+        alkuaika (or viimeisin-ajokerta                       ;; Saatiin tietokannasta
+                   (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 2 :paiva)) ;; Ensimmäisellä kerralla siirretään parin viimeisen päivän toteumat
+        alkuaika-sql (if (= "java.sql.Timestamp" (type alkuaika)) alkuaika (konversio/joda-datetime->sql-timestamp alkuaika))
+        loppuaika (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 3 :tunti)                                 ;; Aina nykyhetki + 3h eli varmuuden varalta
+        loppuaika-sql (if (= "java.sql.Timestamp" (type loppuaika)) loppuaika (konversio/joda-datetime->sql-timestamp loppuaika))
         ;; Kovakoodattu maksimiyritysmäärä. Ei tarvetta vielä asetuksiin.
         max-yritykset 3]
     (loop [yritys 1
