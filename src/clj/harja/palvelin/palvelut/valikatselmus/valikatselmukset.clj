@@ -906,7 +906,7 @@
         budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakkaid})
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
-        hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite)
+        hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite-vuodelle)
         hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja kuluva-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
