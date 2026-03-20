@@ -1,6 +1,8 @@
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import {avaaTarjous, avaaUusiKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 
+let loaderTimeout = 30000;
+
 // Apufunktiot tarjous-näkymälle
 function alustaIvalonTarjousUrakka() {
     ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
@@ -135,7 +137,9 @@ describe('Tarjous-näkymä', function () {
 
             // Tarkista että success-viesti näkyy tai arvo säilyy
             cy.reload();
+            cy.get('.ladataan-harjaa', {timeout: loaderTimeout}).should('not.exist');
             cy.wait('@hae-tarjous');
+            cy.get('h1').should('contain', 'Tarjouksen tiedot');
 
             // Varmista että tallennettu arvo säilyy
 
@@ -207,10 +211,10 @@ describe('Tarjous-näkymä', function () {
                 .its('response.statusCode')
                 .should('equal', 200);
 
-            // Tarkista että success-viesti näkyy tai arvo säilyy
             cy.reload();
+            cy.get('.ladataan-harjaa', {timeout: loaderTimeout}).should('not.exist');
             cy.wait('@hae-tarjous');
-
+            cy.get('h1').should('contain', 'Tarjouksen tiedot');
 
             // Siirrytään kustiksen puolelle
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen elinvoimakeskus');
