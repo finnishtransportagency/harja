@@ -135,6 +135,61 @@
         viesti-xf
         (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))
 
+(def tloik-duplikaattikuittausmaksimi 1000)
+
+(defn- vektoroi-tulos [arvo]
+  (or (konversio/pgarray->vector arvo)
+      (when (vector? arvo) arvo)
+      (when (sequential? arvo) (vec arvo))
+      []))
+
+(defn- muodosta-esimerkkitapahtuma [rivi]
+  {:tapahtuma-id (:tapahtumaid rivi)
+   :alkanut (:alkanut rivi)
+   :ulkoinen-id (:ulkoinenid rivi)})
+
+(defn- muodosta-epailty-duplikaattikuittausryhma-yhteenvedosta [yhteenveto esimerkkitapahtumat]
+  {:ilmoitusid (:ilmoitusid yhteenveto)
+   :kuittaustyyppi (:kuittaustyyppi yhteenveto)
+   :maara (:maara yhteenveto)
+   :ensimmainen-alkanut (:ensimmainen_alkanut yhteenveto)
+   :viimeisin-alkanut (:viimeisin_alkanut yhteenveto)
+   :uniikit-ulkoiset-idt (vektoroi-tulos (:uniikit_ulkoiset_idt yhteenveto))
+   :esimerkkitapahtumat (mapv muodosta-esimerkkitapahtuma esimerkkitapahtumat)})
+
+(defn- muodosta-epaillyt-duplikaattikuittaukset-yhteenvedoista [yhteenvedot esimerkkitapahtumat tilastot katkaistu]
+  (let [esimerkit-ryhmittain (group-by :ryhmaavain esimerkkitapahtumat)]
+    {:katkaistu katkaistu
+     :kasitellyt-rivit (or (:kasitellyt_rivit tilastot) 0)
+     :ohitetut-rivit (or (:ohitetut_rivit tilastot) 0)
+     :ryhmat (mapv (fn [yhteenveto]
+                     (muodosta-epailty-duplikaattikuittausryhma-yhteenvedosta
+                       yhteenveto
+                       (get esimerkit-ryhmittain (:ryhmaavain yhteenveto))))
+                   yhteenvedot)}))
+
+(defn hae-epaillyt-duplikaattikuittaukset [db kayttaja alkaen paattyen]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
+  (let [parametrit {:alkaen (konversio/sql-date alkaen)
+                    :paattyen (konversio/sql-date paattyen)}
+        yhteenvedot (vec
+                      (q/hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausyhteenvedot
+                        db
+                        (assoc parametrit :limit (inc tloik-duplikaattikuittausmaksimi))))
+        katkaistu (> (count yhteenvedot) tloik-duplikaattikuittausmaksimi)
+        yhteenvedot (if katkaistu
+                      (subvec yhteenvedot 0 tloik-duplikaattikuittausmaksimi)
+                      yhteenvedot)
+        tilastot (q/hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausten-tilastot db parametrit)
+        ryhmaavaimet (mapv :ryhmaavain yhteenvedot)
+        esimerkkitapahtumat (if (seq ryhmaavaimet)
+                              (vec
+                                (q/hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausten-esimerkkitapahtumat
+                                  db
+                                  (assoc parametrit :ryhmaavaimet ryhmaavaimet)))
+                              [])]
+    (muodosta-epaillyt-duplikaattikuittaukset-yhteenvedoista yhteenvedot esimerkkitapahtumat tilastot katkaistu)))
+
 
 
 (defrecord Integraatioloki []
@@ -157,7 +212,11 @@
       (julkaise-palvelu http-palvelin
                         :hae-integraatiotapahtuman-viestit
                         (fn [kayttaja tapahtuma-id]
-                          (hae-integraatiotapahtuman-viestit db kayttaja tapahtuma-id))))
+                          (hae-integraatiotapahtuman-viestit db kayttaja tapahtuma-id)))
+      (julkaise-palvelu http-palvelin
+                        :hae-epaillyt-duplikaattikuittaukset
+                        (fn [kayttaja {:keys [alkaen paattyen]}]
+                          (hae-epaillyt-duplikaattikuittaukset db kayttaja alkaen paattyen))))
     this)
 
   (stop [this]
@@ -165,4 +224,5 @@
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumien-maarat)
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtuman-viestit)
+    (poista-palvelu (:http-palvelin this) :hae-epaillyt-duplikaattikuittaukset)
     this))

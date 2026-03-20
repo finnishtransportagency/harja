@@ -114,6 +114,97 @@ SELECT
 FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
+-- name: hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausyhteenvedot
+-- Hakee T-LOIKin toimenpiteen-lahetyksen epäillyt duplikaattikuittausryhmät valitulta aikaväliltä.
+WITH rikastetut AS (
+    SELECT it.id             AS tapahtumaid,
+           it.ulkoinenid     AS ulkoinenid,
+           it.alkanut        AS alkanut,
+           ip.ilmoitusid     AS ilmoitusid,
+           ip.kuittaustyyppi AS kuittaustyyppi
+      FROM integraatiotapahtuma it
+               JOIN integraatio i
+                    ON i.id = it.integraatio
+               LEFT JOIN ilmoitustoimenpide ip
+                         ON ip.lahetysid = it.ulkoinenid
+     WHERE i.jarjestelma = 'tloik'
+       AND i.nimi = 'toimenpiteen-lahetys'
+       AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= CURRENT_DATE) OR it.alkanut >= :alkaen)
+       AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
+)
+SELECT (ilmoitusid :: TEXT || '|' || kuittaustyyppi)        AS ryhmaavain,
+       ilmoitusid                                           AS ilmoitusid,
+       kuittaustyyppi                                       AS kuittaustyyppi,
+       COUNT(*) - 1                                         AS maara,
+       MIN(alkanut)                                         AS ensimmainen_alkanut,
+       MAX(alkanut)                                         AS viimeisin_alkanut,
+       ARRAY_REMOVE(ARRAY_AGG(DISTINCT ulkoinenid), NULL)   AS uniikit_ulkoiset_idt
+  FROM rikastetut
+ WHERE ilmoitusid IS NOT NULL
+   AND kuittaustyyppi IS NOT NULL
+ GROUP BY ilmoitusid, kuittaustyyppi
+HAVING COUNT(*) > 1
+ ORDER BY maara DESC,
+          viimeisin_alkanut DESC,
+          ilmoitusid,
+          kuittaustyyppi
+ LIMIT :limit;
+
+-- name: hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausten-tilastot
+-- single?: true
+WITH rikastetut AS (
+    SELECT ip.ilmoitusid     AS ilmoitusid,
+           ip.kuittaustyyppi AS kuittaustyyppi
+      FROM integraatiotapahtuma it
+               JOIN integraatio i
+                    ON i.id = it.integraatio
+               LEFT JOIN ilmoitustoimenpide ip
+                         ON ip.lahetysid = it.ulkoinenid
+     WHERE i.jarjestelma = 'tloik'
+       AND i.nimi = 'toimenpiteen-lahetys'
+       AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= CURRENT_DATE) OR it.alkanut >= :alkaen)
+       AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
+)
+SELECT COUNT(*)                                                           AS kasitellyt_rivit,
+       COUNT(*) FILTER (WHERE ilmoitusid IS NULL OR kuittaustyyppi IS NULL) AS ohitetut_rivit
+  FROM rikastetut;
+
+-- name: hae-tloik-toimenpiteen-lahetyksen-duplikaattikuittausten-esimerkkitapahtumat
+-- Hakee korkeintaan kolme uusinta tapahtumaa per palautettava duplikaattiryhmä.
+WITH numeroidut AS (
+    SELECT (ip.ilmoitusid :: TEXT || '|' || ip.kuittaustyyppi) AS ryhmaavain,
+           it.id                                               AS tapahtumaid,
+           it.alkanut                                          AS alkanut,
+           it.ulkoinenid                                       AS ulkoinenid,
+           ip.ilmoitusid                                       AS ilmoitusid,
+           ip.kuittaustyyppi                                   AS kuittaustyyppi,
+           ROW_NUMBER() OVER (
+               PARTITION BY ip.ilmoitusid, ip.kuittaustyyppi
+               ORDER BY it.alkanut DESC, it.id DESC
+           )                                                   AS jarjestys
+      FROM integraatiotapahtuma it
+               JOIN integraatio i
+                    ON i.id = it.integraatio
+               LEFT JOIN ilmoitustoimenpide ip
+                         ON ip.lahetysid = it.ulkoinenid
+     WHERE i.jarjestelma = 'tloik'
+       AND i.nimi = 'toimenpiteen-lahetys'
+       AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= CURRENT_DATE) OR it.alkanut >= :alkaen)
+       AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
+       AND ip.ilmoitusid IS NOT NULL
+       AND ip.kuittaustyyppi IS NOT NULL
+       AND (ip.ilmoitusid :: TEXT || '|' || ip.kuittaustyyppi) = ANY(ARRAY[:ryhmaavaimet] :: TEXT[])
+)
+SELECT ryhmaavain AS ryhmaavain,
+       tapahtumaid AS tapahtumaid,
+       alkanut AS alkanut,
+       ulkoinenid AS ulkoinenid
+  FROM numeroidut
+ WHERE jarjestys <= 3
+ ORDER BY ryhmaavain,
+          alkanut DESC,
+          tapahtumaid DESC;
+
 -- name: hae-integraatiotapahtumien-maarat
 -- Hakee annetun integraation tapahtumien määrät ryhmiteltynä granulariteetin mukaan.
 -- Käyttää PostgreSQL 14+ date_bin-funktiota, joka tukee mielivaltaisia intervalleja.

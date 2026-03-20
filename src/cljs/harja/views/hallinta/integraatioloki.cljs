@@ -1,11 +1,11 @@
 (ns harja.views.hallinta.integraatioloki
   "Integraatiolokin näkymä"
-  (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<! >! timeout chan]]
+  (:require [clojure.string :as str]
+            [reagent.core :refer [atom] :as r]
+            [cljs.core.async :refer [<! timeout]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.integraatioloki :as tiedot]
             [harja.pvm :as pvm]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader livi-pudotusvalikko]]
             [harja.visualisointi :as vis]
             [harja.ui.grid :refer [grid]]
@@ -16,8 +16,7 @@
             [harja.ui.dom :as dom]
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kartta-merkkijonoksi [kartta]
   (when kartta
@@ -205,6 +204,72 @@
 
         eniten-kutsutut])]))
 
+(defn- nayta-uniikit-ulkoiset-idt [rivi]
+  (let [idt (:uniikit-ulkoiset-idt rivi)
+        naytettavat (take 3 idt)]
+    (str (count idt)
+         (when (seq naytettavat)
+           (str " (" (str/join ", " naytettavat)
+                (when (> (count idt) (count naytettavat)) ", ...")
+                ")")))))
+
+(defn- nayta-esimerkkitapahtumat [rivi]
+  (->> (:esimerkkitapahtumat rivi)
+       (map #(str (:tapahtuma-id %)
+                  " ("
+                  (pvm/pvm-aika-sek (:alkanut %))
+                  ")"))
+       (str/join ", ")))
+
+(defn epaillyt-duplikaattikuittaukset-osio []
+  (r/with-let [nayta-duplikaattikuittaukset? (r/atom false)]
+    (let [vastaus @tiedot/epaillyt-duplikaattikuittaukset]
+      [:div
+       [:h5 {:on-click #(swap! nayta-duplikaattikuittaukset? not)
+             :style {:cursor "pointer"}}
+        "Epäillyt duplikaattikuittaukset <Avaa klikkaamalla>"]
+       (when @nayta-duplikaattikuittaukset?
+         [:div
+          [:div "Huom. tämä osio käyttää vain valittua aikaväliä ja valittua integraatiota. Muut tarkemmat hakuehdot eivät vaikuta tähän näkymään."]
+          (cond
+            (= :ei-kaytossa vastaus)
+            [:div "Hae tiedot nähdäksesi duplikaattiepäilyt valitulle aikavälille."]
+
+            (= tiedot/duplikaattikuittaukset-ladataan vastaus)
+            [ajax-loader "Haetaan duplikaattiepäilyjä"]
+
+            (= tiedot/duplikaattikuittaukset-epaonnistui vastaus)
+            [:div.integraatioloki-virhe "Duplikaattiepäilyjen haku epäonnistui. Hae tiedot uudelleen."]
+
+            (empty? (:ryhmat vastaus))
+            [:div
+             [:div "Valitulla aikavälillä ei löytynyt toistuvia kuittausryhmiä."]
+             (when (pos? (:ohitetut-rivit vastaus))
+               [:div (str "Ohitettu ilman liiketoiminta-avainta: " (:ohitetut-rivit vastaus) " riviä.")])
+             (when (:katkaistu vastaus)
+               [:div "Haku katkaistiin turvarajaan, joten kaikki rivit eivät ole mukana."])]
+
+            :else
+            [:div
+             (when (pos? (:ohitetut-rivit vastaus))
+               [:div (str "Ohitettu ilman liiketoiminta-avainta: " (:ohitetut-rivit vastaus) " riviä.")])
+             (when (:katkaistu vastaus)
+               [:div "Haku katkaistiin turvarajaan, joten näkymä voi olla osittainen."])
+             [grid
+              {:otsikko ""
+               :voi-muokata? false
+               :tunniste (juxt :ilmoitusid :kuittaustyyppi)}
+              [{:otsikko "IlmoitusId" :nimi :ilmoitusid :leveys "10%" :tyyppi :numero}
+               {:otsikko "Tyyppi" :nimi :kuittaustyyppi :leveys "12%" :tyyppi :string}
+               {:otsikko "Duplikaatteja" :nimi :maara :leveys "8%" :tyyppi :numero}
+               {:otsikko "Ensimmäinen" :nimi :ensimmainen-alkanut :leveys "16%" :fmt pvm/pvm-aika-sek}
+               {:otsikko "Viimeisin" :nimi :viimeisin-alkanut :leveys "16%" :fmt pvm/pvm-aika-sek}
+               {:otsikko "Uniikit viesti-id:t" :nimi :uniikit-ulkoiset-idt :leveys "18%" :tyyppi :komponentti
+                :komponentti nayta-uniikit-ulkoiset-idt}
+               {:otsikko "Esimerkkitapahtumat" :nimi :esimerkkitapahtumat :leveys "20%" :tyyppi :komponentti
+                :komponentti nayta-esimerkkitapahtumat}]
+              (:ryhmat vastaus)]])])])))
+
 (defn tapahtumien-paanakyma []
   (let [maara-per-sivu 100
         aloitussivu (r/with-let [tapahtuma-id-alussa (first @tiedot/tapahtuma-id)]
@@ -280,9 +345,7 @@
              :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
             {:nimi :tyhjenna
              :tyyppi :komponentti
-             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
-                                                                            tiedot/hakuehdot
-                                                                            dissoc :otsikot :parametrit :viestin-sisalto)}
+             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click tiedot/tyhjenna-hakuehdot!}
                                    "Tyhjennä"])})]
          @tiedot/hakuehdot]
 
@@ -292,6 +355,10 @@
            (when-not @tiedot/valittu-integraatio
              [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
           [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])
+
+        (when (tiedot/nayta-duplikaattikuittaukset? @tiedot/valittu-jarjestelma @tiedot/valittu-integraatio)
+          [:div.integraatio-tilastoja
+           [epaillyt-duplikaattikuittaukset-osio]])
 
         [grid
          {:otsikko (str "Tapahtumat "
