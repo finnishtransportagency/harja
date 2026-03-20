@@ -690,7 +690,8 @@
   (let [kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hoitovuoden-alkuvuosi 2024
-
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Lisätään ensin kilpailutettavat hankinnat - Poista yhteenvetorivi ennen tallennusta
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
@@ -715,8 +716,7 @@
         vuodet (tarjous-kyselyt/vuodet-tietomallista apurit/tarjous-tietomalli-2019)
         tarjous (apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
         vahvistetut-vuodet #{}
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
         ;; Vahvistetaan tavoite ja kattohinta
         tiedot {:urakka-id urakka-id
@@ -755,6 +755,8 @@
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         hoitovuoden-alkuvuosi 2021
         hoitovuosinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         ;; Haetaan urakan rahavaraukset
         rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
         ;; Vuodet tietomallista
@@ -790,8 +792,7 @@
         _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
             (:johto-ja-hallintokorvaukset-2019 apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
         ;; Tarjous
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma) urakka-id kayttaja-id kattohintakerroin tarjous vahvistetut-vuodet)
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
         ;; Syötä kattohinta käsin kustannussuuunnitelmalle.
         ;; Vahvistetaan tavoite ja kattohinta
@@ -833,6 +834,8 @@
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) urakka-id))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet (:db jarjestelma) urakka-id)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
         hoitovuoden-alkuvuosi 2024
@@ -872,11 +875,7 @@
                   hankinnat-yhteensa
                   0
                   0)
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-            (:db jarjestelma)
-            urakka-id
-            (:id +kayttaja-jvh+)
-            kattohintakerroin tarjous #{})
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous #{})
 
         ;; Nyt pitäisi tavoitehinta mennä kantaan 
         _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
