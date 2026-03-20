@@ -1,11 +1,9 @@
-## Testiympäristöjen pystytykseen karvalakki QA1 workflow
-## 
-## Tässä alustava deploy skeleton 
+## Testiympäristöjen pystytykseen alustava deployment prosessi
 ## -> antaa valita branchin 
 ## -> buildaa imagen testi ECR:rään (erillään prodista)
-## -> deployaa imagen QA1 ECS konttiin  
+## -> deployaa imagen <test-env> ECS konttiin  
 ##
-## Ei koske prod pipelineen, kovakoodattu QA1 
+## Ei koske prod pipelineen  
 ## 
 
 name: '[Test-environments] Build and deploy'
