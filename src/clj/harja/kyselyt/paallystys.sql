@@ -971,6 +971,7 @@ WHERE ypk.luotu BETWEEN :alku AND :loppu
 SELECT osa.yllapitokohde,
        osa.yhaid,
        osa.id,
+       osa.poistettu,
        ST_ASTEXT(st_simplify(osa.sijainti, 1)) AS geometria,
        osa.tr_numero           AS "tr-numero",
        osa.tr_alkuosa          AS "tr-alkuosa",
