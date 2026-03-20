@@ -43,7 +43,7 @@ SELECT r.id, r.nimi
 -- Haetaan kaikki rahavaraukset ja niihin liittyvät tehtävät
 SELECT rv.id,
        rv.nimi,
-       (SELECT ARRAY_AGG(ROW (t.id, t.nimi))
+       (SELECT ARRAY_AGG(ROW (t.id, t.nimi) ORDER BY rvt.luotu ASC)
           FROM rahavaraus_tehtava rvt
                    JOIN tehtava t ON t.id = rvt.tehtava_id AND rvt.rahavaraus_id = rv.id) AS tehtavat
   FROM rahavaraus rv

@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.hairiot
+(ns harja.tiedot.hallinta.tyokalut.hairiot
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom]]
 
@@ -7,16 +7,18 @@
             [harja.domain.hairioilmoitus :as hairio]
             [harja.tiedot.hairioilmoitukset :as hairio-ui]))
 
-(defonce ^{:private true} nollatut-valinnat {:rivit nil
+(defonce ^{:private true} nollatut-valinnat {:voimassaolevat-tyypeittain nil
+                                             :tulevat nil
+                                             :vanhat nil
                                              :valinnat {}
                                              :valittu-rivi {}
                                              :muokataan false
                                              :haku-kaynnissa? true
                                              :tallennus-kaynnissa? false
                                              :asetetaan-hairioilmoitus? false 
-                                             :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}})
+                                             :tuore-hairioilmoitus {:tyyppi :hairio :teksti nil}
+                                             :muokattava-ilmoitus nil})
 (def nakymassa? (atom false))
-
 
 (defrecord HaeTiedot [])
 (defrecord HaeTiedotOnnistui [vastaus])
@@ -29,6 +31,10 @@
 (defrecord PoistaHairio [id])
 (defrecord PoistaHairioOnnistui [vastaus])
 (defrecord TallennaMuokatut [muokatut])
+(defrecord MuokkaaIlmoitusta [ilmoitus])
+(defrecord MuokkaaIlmoitustaTiedot [tiedot])
+(defrecord TallennaMuokattuIlmoitus [])
+(defrecord PeruMuokkaus [])
 
 
 (defn- epaonnistui [vastaus app]
@@ -72,20 +78,36 @@
      :epaonnistui ->PaivitysEpaonnistui}))
 
 
+(defn tallenna-muokattu-ilmoitus [{:keys [muokattava-ilmoitus] :as app}]
+  (tuck-apurit/post! app :tallenna-hairioilmoitukset
+    {:tiedot [(assoc muokattava-ilmoitus
+               ::hairio/viesti (:viesti muokattava-ilmoitus)
+               ::hairio/alkuaika (:alkuaika muokattava-ilmoitus)
+               ::hairio/loppuaika (:loppuaika muokattava-ilmoitus))]}
+    {:onnistui ->PaivitysOnnistui
+     :epaonnistui ->PaivitysEpaonnistui}))
+
+
 (defn- kasittele-hairion-virhe [vastaus app]
   (if-let [virhe (:virhe (first (filter :virhe vastaus)))]
     (do
       (viesti/nayta-toast! virhe :varoitus viesti/viestin-nayttoaika-keskipitka)
       (hae-tiedot (assoc app
-                    :rivit nil
+                    :voimassaolevat-tyypeittain nil
+                    :tulevat nil
+                    :vanhat nil
                     :haku-kaynnissa? false
                     :tallennus-kaynnissa? false
-                    :asetetaan-hairioilmoitus? false)))
+                    :asetetaan-hairioilmoitus? false
+                    :muokattava-ilmoitus nil)))
     (assoc app
-      :rivit vastaus
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
       :haku-kaynnissa? false
       :tallennus-kaynnissa? false
-      :asetetaan-hairioilmoitus? false)))
+      :asetetaan-hairioilmoitus? false
+      :muokattava-ilmoitus nil)))
 
 
 (extend-protocol tuck/Event
@@ -99,7 +121,11 @@
 
   HaeTiedotOnnistui
   (process-event [{:keys [vastaus]} app]
-    (assoc app :rivit vastaus))
+    (assoc app
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
+      :haku-kaynnissa? false))
 
   PaivitysEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -143,7 +169,9 @@
   PoistaHairioOnnistui
   (process-event [{:keys [vastaus]} app]
     (assoc app
-      :rivit vastaus
+      :voimassaolevat-tyypeittain (:voimassaolevat-tyypeittain vastaus)
+      :tulevat (:tulevat vastaus)
+      :vanhat (:vanhat vastaus)
       :haku-kaynnissa? false
       :tallennus-kaynnissa? false
       :asetetaan-hairioilmoitus? false
@@ -152,4 +180,27 @@
   TallennaMuokatut
   (process-event [{:keys [muokatut]} app]
     (tallenna-muokatut app muokatut)
-    app))
+    app)
+
+  MuokkaaIlmoitusta
+  (process-event [{:keys [ilmoitus]} app]
+    (assoc app :muokattava-ilmoitus
+      (merge ilmoitus
+        {:viesti (::hairio/viesti ilmoitus)
+         :alkuaika (::hairio/alkuaika ilmoitus)
+         :loppuaika (::hairio/loppuaika ilmoitus)})))
+
+  MuokkaaIlmoitustaTiedot
+  (process-event [{:keys [tiedot]} app]
+    (assoc app :muokattava-ilmoitus (merge (:muokattava-ilmoitus app) tiedot)))
+
+  TallennaMuokattuIlmoitus
+  (process-event [_ app]
+    (tallenna-muokattu-ilmoitus app)
+    (assoc app
+      :tallennus-kaynnissa? true
+      :muokattava-ilmoitus nil))
+
+  PeruMuokkaus
+  (process-event [_ app]
+    (assoc app :muokattava-ilmoitus nil)))

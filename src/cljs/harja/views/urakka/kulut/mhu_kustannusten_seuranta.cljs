@@ -18,6 +18,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tyokalut.big :as big]
             [harja.ui.ikonit :as ikonit]
+            [harja.views.urakka.kulut.kulut :as kulut]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 (defn fmt->big
@@ -461,6 +462,13 @@
            (vuoden-paattamiskulu-rivi kattohinnan-ylitys))
          (paaryhman-rivitys e! app "Lisätyöt" :lisatyo lisatyo rivit-paaryhmittain false true)]]]]]))
 
+(defn laskutusraja-wrapper
+  "Wrapper-komponentti joka käyttää laskutus-kohdistetut-kulut -tilaa laskutusrajalle"
+  [e! app valittu-hoitokausi hoitokaudet valittu-kuukausi]
+  [tuck/tuck tila/laskutus-kohdistetut-kulut
+   (fn [e! kulut-app]
+     (let [valittu-kuukausi (if (= valittu-kuukausi "Kaikki") nil valittu-kuukausi)]
+       [kulut/laskutusraja-komponentti e! kulut-app valittu-hoitokausi hoitokaudet valittu-kuukausi true]))])
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -550,6 +558,8 @@
              #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)]
             [yleiset/linkki "Siirry välikatselmukseen"
              #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)])]]]
+
+       [laskutusraja-wrapper e! app valittu-hoitokausi hoitokaudet valittu-kuukausi]
 
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]

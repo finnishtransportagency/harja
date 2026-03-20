@@ -22,6 +22,11 @@
   .viesti {
     align-content: center;
   }
+
+  &.keskitetty-pysty {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .ajax-loader-valistys-kustannukset {
@@ -29,6 +34,10 @@
   padding-top: 0;
   display: flex;
   justify-content: right;
+}
+
+.poista-ajax-loader-valistykset {
+  padding: 0;
 }
 
 div.tietorivi {
@@ -502,6 +511,8 @@ button > .ajax-loader {
 
 .tierekisteriosoite-flex { 
     display: flex;
+    height: 60px;
+
     & > div {
       width:58px;
     }
@@ -796,6 +807,8 @@ button > .ajax-loader {
 }
 
 .vahvistamaton {
+    border-bottom: 1px solid @black-light;
+    border-top: 1px solid @black-light;
     background-color: @yellow;
 }
 

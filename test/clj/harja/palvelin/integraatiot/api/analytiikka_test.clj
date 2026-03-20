@@ -172,7 +172,7 @@
 (deftest hae-toteumat-test-koordinaattimuunnos-toimii
   (let [alkuaika "2015-12-17T00:00:00+03"
         loppuaika "2015-12-17T23:59:59+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))
     ;; Sisältää lisäksi koordinaattimuunnoksen
@@ -181,7 +181,7 @@
 (deftest hae-toteumat-test-koko-liian-pieni
   (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001")] kayttaja-analytiikka portti)]
     (is (= 400 (:status vastaus)))
     (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
 
@@ -349,7 +349,7 @@
             loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Loppuaika on väärässä muodossa "
@@ -357,7 +357,7 @@
             loppuaika "234"
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Haussa on paljon asioita väärin "
@@ -524,15 +524,25 @@
         sallittu-haku (api-tyokalut/get-kutsu
                         [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku "/" loppu)]
                         kayttaja-analytiikka portti)
+
         alku-pitka "2004-10-19T00:00:00+03"
         loppu-pitka "2004-10-21T02:00:00+03"
         hylattava-haku (api-tyokalut/get-kutsu
                          [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-pitka "/" loppu-pitka)]
-                         kayttaja-analytiikka portti)]
+                         kayttaja-analytiikka portti)
+
+        alku-ei-validi "2005-10-19T00:00:00+03"
+        loppu-ei-validi "2004-10-21T02:00:00+03"
+        hylattava-aikavali (api-tyokalut/get-kutsu
+                             [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-ei-validi "/" loppu-ei-validi)]
+                             kayttaja-analytiikka portti)]
+
     (is (= 200 (:status sallittu-haku)))
     (validoi-vastaus-ilman-reittipistetta (:body sallittu-haku))
     (is (= 400 (:status hylattava-haku)))
-    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))))
+    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))
+    (is (= 400 (:status hylattava-aikavali)))
+    (is (str/includes? (:body hylattava-aikavali) "Alkuaika ei voi olla loppuajan jälkeen."))))
 
 (deftest toteuma-haku-ilman-reittipistetta-perustoiminnallisuus
   (let [alku-aika "2004-10-19T00:00:00+03"

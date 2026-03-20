@@ -37,21 +37,16 @@ SELECT m.id,
               AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
            ),
            '[]'::json) AS kustannusvaikutukset,
-       COALESCE(
-           (SELECT JSON_AGG(
-                       JSONB_BUILD_OBJECT(
-                           'tehtava', tjm.tehtava,
-                           'suunniteltu_maara', ut.maara,
-                           'maaramuutos', tjm.maaramuutos,
-                           -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
-                           --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
-                           --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
-                           'edellinen_maara', tjm.edellinen_maara,
-                           'uusi_maara', tjm.uusi_maara,
-                           'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
-                           'versio', tjm.versio)
-                       ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
-                   )
+    COALESCE(
+        (SELECT JSON_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'tehtava', tjm.tehtava,
+                        'suunniteltu_maara', ut.maara,
+                        'maaramuutos', tjm.maaramuutos,
+                        'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
+                        'versio', tjm.versio)
+                    ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
+                )
             FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
                      LEFT JOIN urakka_tehtavamaara ut
                                ON ut.urakka = :urakka
@@ -263,6 +258,16 @@ WHERE
   AND k.erapaiva < :voimassa::DATE
   AND kk.muutos = :muutos;
 
+-- name: muutostyolle-jo-kirjatut-kulut-yhteensa
+-- single?: true
+SELECT COALESCE(SUM(kk.summa), 0) AS kirjattu_summa
+ FROM kulu k
+         JOIN kulu_kohdistus kk ON kk.kulu = k.id
+WHERE
+    kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE
+  AND kk.muutos = :muutos;
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
@@ -391,11 +396,6 @@ SELECT
                         'tehtava', tjm.tehtava,
                         'suunniteltu_maara', ut.maara,
                         'maaramuutos', tjm.maaramuutos,
-                        -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
-                        --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
-                        --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
-                        'edellinen_maara', tjm.edellinen_maara,
-                        'uusi_maara', tjm.uusi_maara,
                         'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                         'versio', tjm.versio)
                     ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
@@ -454,20 +454,16 @@ ORDER BY tp.jarjestys;
 
 -- name: luo-tai-paivita-tehtavan-maaramuutos<!
 -- Poikkeaminen tehtävä- ja määräluettelon määrästä
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo AS tjm (versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo AS tjm (versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
 VALUES (:versio,
         :muutos-id,
         :tehtava,
         :hoitokauden_alkuvuosi,
-        :edellinen_maara,
-        :maaramuutos,
-        :uusi_maara)
+        :maaramuutos)
     ON CONFLICT (muutos, tehtava, hoitokauden_alkuvuosi)
         DO UPDATE SET versio          = EXCLUDED.versio,
-                      edellinen_maara = EXCLUDED.edellinen_maara,
-                      maaramuutos     = EXCLUDED.maaramuutos,
-                      uusi_maara      = EXCLUDED.uusi_maara
+                      maaramuutos     = EXCLUDED.maaramuutos
 -- Päivitetään vain jos tulee uusi määrämuutos
  WHERE (tjm.maaramuutos) IS DISTINCT FROM (excluded.maaramuutos);
 
@@ -705,8 +701,17 @@ SELECT  DISTINCT ON (m.id)
         m.tyyppi, 
         m.alityyppi,
         m.nimi, 
-        m.voimassa_alkaen
+        m.voimassa_alkaen,
+        mmk.summa AS budjetoitu_summa,
+        COALESCE(kk.kirjattu_summa, 0) AS kirjattu_summa
  FROM mhu_muutos m
+ JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id
+ LEFT JOIN (
+     SELECT muutos, SUM(summa) AS kirjattu_summa
+     FROM kulu_kohdistus
+     WHERE poistettu IS NOT TRUE
+     GROUP BY muutos
+ ) kk ON kk.muutos = m.id
 WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND m.urakka =  :urakka
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)

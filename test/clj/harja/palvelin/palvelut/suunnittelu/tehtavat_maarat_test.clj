@@ -239,6 +239,37 @@
           (is (= (:tarjous_maara tehtava2) 20M) "Ise 1-ajorat (eli tehtävä2) määrä on tallennettu oikein")
           (is (= (:tarjous_maara tehtava3) 30M) "Ise rampit (eli tehtävä3) määrä on tallennettu oikein"))))))
 
+(deftest ei-tallenna-nulleja-sopimuksen-maariin
+  (testing "Tallennus ei saa kirjoittaa NULL-maaria niille tehtäville joihin ei ole koskettu"
+    (let [db (:db jarjestelma)
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          kayttaja-id (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          haettu (tm-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+          kaikki-rivit (:tehtavat haettu)
+          tehtavarivit (filter (fn [rivi]
+                                (some? (:tehtava_id rivi)))
+                       kaikki-rivit)
+          muokattava-tehtava-id (:tehtava_id (first tehtavarivit))
+          nil-tehtava-id (:tehtava_id (second tehtavarivit))
+          tehtavat (mapv (fn [t]
+                           (cond
+                             (= (:tehtava_id t) muokattava-tehtava-id) (assoc t :tarjous_maara 100M)
+                             (= (:tehtava_id t) nil-tehtava-id) (assoc t :tarjous_maara nil)
+                             :else t))
+                    kaikki-rivit)]
+
+      (is (some? muokattava-tehtava-id) "Testidata: löytyi muokattava tehtävä")
+      (is (some? nil-tehtava-id) "Testidata: löytyi toinen tehtävä, jolle asetetaan nil")
+
+      (tm-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id kayttaja-id hoitokauden-alkuvuosi tehtavat)
+
+      (let [nulleja (or (:lkm (first (q-map (format "SELECT COUNT(*) AS lkm\n                                             FROM urakka_tehtavamaara\n                                            WHERE urakka = %s\n                                              AND \"hoitokauden-alkuvuosi\" = %s\n                                              AND maara IS NULL"
+                                            urakka-id hoitokauden-alkuvuosi))))
+                    0)]
+        (is (= 0 nulleja)
+            (str "Kantaan ei saa tallentua NULL-maaria. NULL-riveja: " nulleja))))))
+
 (deftest muutokset-sisaltavat-oikeat-kentat
   (testing "Muutokset-kentässä on edellinen_maara, maaramuutos ja uusi_maara oikein"
     (let [db (:db jarjestelma)

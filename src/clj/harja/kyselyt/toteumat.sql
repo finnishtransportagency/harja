@@ -362,10 +362,17 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
--- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
-SELECT alkanut
-  FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+-- name: hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+SELECT alkanut,
+       MIN(alkanut) OVER () AS min_alkanut,
+       MAX(alkanut) OVER () AS max_alkanut
+  FROM (
+        SELECT DISTINCT alkanut::DATE AS alkanut
+          FROM toteuma t
+         WHERE ulkoinen_id IN (:ulkoiset-idt)
+           AND urakka = :urakka-id
+           AND poistettu IS NOT TRUE
+       ) poistettavien_paivat;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -704,6 +711,12 @@ VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
 -- Poistaa toteuman materiaalit
 DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
+
+-- name: merkitse-toteuman-materiaalit-poistetuiksi!
+-- Merkitsee toteuman materiaalit poistetuiksi
+UPDATE toteuma_materiaali
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE toteuma = :id AND poistettu IS NOT TRUE;
 
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
@@ -1305,7 +1318,8 @@ ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
 -- name: hae-toteumat-ilman-reittipisteita-analytiikalle
-SELECT t.toteuma_tunniste_id,  
+SELECT COUNT(*) OVER() AS rivimaara, -- Ei tee full table scannia, laskee fetchin mukana
+       t.toteuma_tunniste_id,  
        t.toteuma_sopimus_id,  
        t.toteuma_alkanut,  
        t.toteuma_paattynyt,  

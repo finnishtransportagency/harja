@@ -27,9 +27,16 @@ if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen nu
     echo ""
 fi
 
+# Luo yhteinen harja-verkko, mikäli sitä ei ole vielä olemassa
+# Muut containerit voivat ottaa suoraan tietokantaan yhteyttä käyttämällä IP-osoitteen sijasta containerin nimeä: 'harjadb'
+# Tätä verkkoa käytetään mm. testaustarkoituksessa, jossa Lambda-kontti ottaa yhteyttä tietokantaan.
+# Palauttaa aina exit-koodin 0, vaikka verkko olisikin jo olemassa, jotta skripti ei keskeydy.
+docker network create harja-net 2>/dev/null || true
+
 # Jotta harjadb kontin tietoliikenne toimii oikein, täytyy IPv6 disabloida asetuksella: --sysctl net.ipv6.conf.all.disable_ipv6=1
 # https://docs.docker.com/engine/release-notes/26.0/#bug-fixes-and-enhancements
-docker run -p "127.0.0.1:${HARJA_TIETOKANTA_PORTTI:-5432}:${HARJA_TIETOKANTA_PORTTI:-5432}" \
+docker run -p "127.0.0.1:${HARJA_TIETOKANTA_PORTTI:-5432}:5432" \
+    --network harja-net \
     --name "${POSTGRESQL_NAME:-harjadb}" -dit -v "$DIR":/var/lib/postgresql/harja/tietokanta \
     --sysctl net.ipv6.conf.all.disable_ipv6=1 \
     ${IMAGE} >/dev/null
@@ -48,9 +55,9 @@ until docker exec "${POSTGRESQL_NAME:-harjadb}" pg_isready; do
 done
 
 # shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST -e HARJA_TIETOKANTA_PORTTI "${HARJA_TIETOKANTA_HOST:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
+docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
 # shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST -e HARJA_TIETOKANTA_PORTTI "${HARJA_TIETOKANTA_HOST:-harjadb}" /bin/bash -c "~/aja-testidata.sh"
+docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-testidata.sh"
 
 echo ""
 echo "Harjan tietokanta käynnissä! Imagen tiedot:"

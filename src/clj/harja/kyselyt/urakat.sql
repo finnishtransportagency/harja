@@ -261,7 +261,7 @@ FROM urakka u
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE hallintayksikko = :hallintayksikko
+WHERE u.hallintayksikko = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
            OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
@@ -1254,7 +1254,7 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
 -- name: listaa-kaikki-urakat-analytiikalle
 -- Haetaan kaikki urakat ilman geometriatietoja
 -- jos vuodet on annettu, niin rajaa haku voimassaolon perusteella
-SELECT id, sampoid, nimi, lyhyt_nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
+SELECT id, sampoid, nimi, lyhyt_nimi, alkupvm, loppupvm, hallintayksikko, elinvoimakeskus_id as elinvoimakeskus, urakoitsija, hanke, sopimustyyppi, indeksi,
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
 FROM urakka
 ORDER BY alkupvm ASC;
@@ -1293,3 +1293,19 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: hae-90pv-paattyneet-urakat
+-- Hakee urakat, jotka on päättyneet vähintään 90 päivää sitten, mutta vähemmän kuin 180 pv sitten,
+-- ja joilla on vielä aktiivisia käyttäjien lisäoikeuksia.
+-- Näille urakoille tehdään varmistuksia, jotta päättyneille urakoille ei jää mitään väärää tietoa järjestelmään.
+SELECT u.id,
+       u.nimi,
+       u.loppupvm
+  FROM urakka u
+ WHERE u.loppupvm < (current_date - INTERVAL '90 days')
+   AND u.poistettu = FALSE
+   AND EXISTS (SELECT 1
+                 FROM kayttajan_lisaoikeudet_urakkaan klu
+                WHERE klu.urakka = u.id
+                  AND (klu.poistettu IS NULL OR klu.poistettu = FALSE));
+

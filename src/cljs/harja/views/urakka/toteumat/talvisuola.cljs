@@ -72,6 +72,12 @@
 
 (defonce tallennetaan (atom false))
 
+(defn raportointitapa [rivi]
+  (cond
+    (= "harja-ui" (:lahde rivi)) "Käsin syötetty"
+    (= "harja-api" (:lahde rivi)) "Koneellisesti raportoitu"
+    (= "harja-api-ui" (:lahde rivi)) "Urakoitsijajärjestelmässä käsin syötetty"))
+
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id materiaali-nimet]
   [:div.suolatoteumat
    [:h1 "Talvisuolan käyttö"]
@@ -147,10 +153,7 @@
       {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :kokonaisluku? true
        :leveys 15 :muokattava? muokattava? :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
       {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
-       :hae #(if (muokattava? %)
-               (:lisatieto %)
-               (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
-                 (:lukumaara %) ")"))}
+       :hae #(when (:pvm %) (str (:lisatieto %) " (" (raportointitapa %) ", toteumia: " (:lukumaara %) ")"))}
       {:otsikko ""
        :nimi :nayta-kartalla
        :tyyppi :komponentti
@@ -161,7 +164,7 @@
                                        (:toteumaidt rivi))
                             valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
                         (when (and (not (empty? toteumat))
-                                (:koneellinen rivi))
+                                (= "harja-api" (:lahde rivi)))
                           [:div
                            [(if (valittu?)
                               :button.nappi-toissijainen.nappi-grid
@@ -193,7 +196,7 @@
     (fn []
       (let [urakka @nav/valittu-urakka
             [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-            muokattava? (comp not true? :koneellinen)
+            muokattava? #(not= "harja-api" (:lahde %))
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
                                          @tiedot/toteumat))]

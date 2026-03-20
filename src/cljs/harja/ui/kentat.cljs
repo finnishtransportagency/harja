@@ -330,20 +330,21 @@
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defn- normalisoi-numero [n salli-whitespace?]
-  (when n (-> n
-            ;; Poistetaan whitespace, jos ei sallittu
-            (as-> n n
-              (if-not salli-whitespace? (str/replace n #"\s" "")
-                n))
-            ;; Poistetaan mahd. euromerkki lopusta
-            (str/replace #"€$" "")
-            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
-            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
-            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
-            (str/replace #"[−–—]" "-")
+  (when (and n (string? n))
+    (-> n
+      ;; Poistetaan whitespace, jos ei sallittu
+      (as-> n n
+        (if-not salli-whitespace? (str/replace n #"\s" "")
+          n))
+      ;; Poistetaan mahd. euromerkki lopusta
+      (str/replace #"€$" "")
+      ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+      ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+      ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+      (str/replace #"[−–—]" "-")
 
-            ;; Poistetaan ympäröivä whitespace joka tapauksessa
-            (str/trim))))
+      ;; Poistetaan ympäröivä whitespace joka tapauksessa
+      (str/trim))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
@@ -1537,12 +1538,9 @@
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
          karttavalinta virhe piste? vaadi-vali?]
 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
-                  "2px"
-                  "0px")]
+      (let [top (if alaotsikot?
+                  "1px"
+                  "16px")]
         [:div
          [:div.tierekisteriosoite-flex
           [osio alaotsikot? tie "Tie"]
@@ -1555,7 +1553,7 @@
           (when virhe
             [:div virhe])
           (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+            [:div {:style {:padding-left "16px" :padding-top top}}
              [:div.karttavalinta
               karttavalinta]])]]))))
 
