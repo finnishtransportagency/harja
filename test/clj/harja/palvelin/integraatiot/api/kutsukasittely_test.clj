@@ -37,6 +37,11 @@
     "text/plain" nil
     nil nil))
 
+(deftest tunnistaa-kutsun-formaatin-content-type-headerista-case-insensitive
+  (is (= "xml"
+         (kutsukasittely/kutsun-formaatti
+           {:headers {"Content-Type" "Application/XML; charset=UTF-8"}}))))
+
 (deftest huomaa-kutsu-jossa-epavalidia-json-dataa
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
         _ (anna-lukuoikeus "yit-rakennus")
@@ -92,6 +97,59 @@
            (is (= 415 (:status vastaus)))
            (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
            (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+
+(deftest huomaa-kutsu-jossa-form-urlencoded-content-type-sisaltaa-charsetin
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+    _ (anna-lukuoikeus "yit-rakennus")
+    vastaus (kutsukasittely/kasittele-kutsu
+      (:db jarjestelma)
+      (:integraatioloki jarjestelma)
+      "hae-urakka"
+      {:body kutsun-data
+       :request-method :post
+       :headers {"oam_remote_user" "yit-rakennus"
+             "content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+             "origin" "http://localhost:3000"}}
+      json-skeemat/laatupoikkeaman-kirjaus
+      json-skeemat/kirjausvastaus
+      (fn [_])
+      :luku)]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)))
+    (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+
+(deftest huomaa-get-kutsu-jossa-form-urlencoded-content-type-sisaltaa-charsetin
+  (let [vastaus (kutsukasittely/kasittele-get-kutsu
+                  nil
+                  nil
+                  "hae-urakka"
+                  {:request-method :get
+                   :headers {"oam_remote_user" "yit-rakennus"
+                             "content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+                             "origin" "http://localhost:3000"}}
+                  nil
+                  (fn [_ _ _])
+                  :luku
+                  "api")]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain"} (:headers vastaus)))
+    (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+
+(deftest huomaa-kevyen-get-kutsun-jossa-form-urlencoded-content-type-sisaltaa-charsetin
+  (let [vastaus (kutsukasittely/kasittele-kevyesti-get-kutsu
+                  nil
+                  nil
+                  "api"
+                  "hae-urakka"
+                  {:request-method :get
+                   :headers {"oam_remote_user" "yit-rakennus"
+                             "content-type" "application/x-www-form-urlencoded; charset=UTF-8"
+                             "origin" "http://localhost:3000"}}
+                  (fn [_ _ _])
+                  :luku)]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain"} (:headers vastaus)))
+    (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
 (deftest huomaa-kutsu-sahkoposti-jossa-vaara-content-type
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
