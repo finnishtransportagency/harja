@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.apurit
   (:require [clojure.string :as str]
+            [harja.testi :refer :all]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]))
 
@@ -198,7 +199,6 @@
   (let [h-tietomalli (poista-yhteenvetorivi-toimenpiteilta hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         h-tietomalli (paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
-        kattohintakerroin 1.1
         erillishankinnat-yht (apply + (map :summa (:erillishankinnat erillishankinnat-tietomalli)))
         hoidonjohto-yht (apply + (map :summa (:hoidonjohtopalkkiot hoidonjohtopalkkiot-tietomalli)))
         jjh-yht (apply + (map :summa johto-ja-hallinto-tietomalli))
@@ -220,5 +220,13 @@
     (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id
       johto-ja-hallinto-tietomalli hoitovuoden-alkuvuosi)
     ;; Tarjous
-    (tarjous-kyselyt/tallenna-tarjous-tietokantaan
-      db urakka-id (:id kayttaja) kattohintakerroin tarjous vahvistetut-vuodet)))
+    (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) tarjous vahvistetut-vuodet)))
+
+(defn poista-tarjoukset-tietokannasta!
+  "Poistaa kaikki tarjouksessa olevat rivit tietokannasta, jotta testit voidaan ajaa uudestaan."
+  [urakkaid]
+  ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+  (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s" urakkaid))
+  (u (format "DELETE FROM tarjous_kustannukset WHERE urakka_id = %s" urakkaid))
+  (u (format "DELETE FROM tarjous_johto_ja_hallintokorvaus WHERE urakka_id = %s" urakkaid))
+  (u (format "DELETE FROM tarjous WHERE urakka_id = %s" urakkaid)))
