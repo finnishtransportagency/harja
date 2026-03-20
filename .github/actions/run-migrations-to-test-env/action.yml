@@ -1,4 +1,4 @@
-name: '[Test-environments] Run migrations'
+name: '[Test-envs] Run migrations'
 description: 'Ajaa migraatiot testiympäristön kantaan testiympäristön lambdalla'
 
 inputs:
@@ -13,7 +13,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: '[Test-environments] Run migrations'
+    - name: '[Test-envs] Run migrations'
       env:
         SHA: ${{ inputs.commit-sha }}
         FUNCTION_NAME: ${{ inputs.function-name }}

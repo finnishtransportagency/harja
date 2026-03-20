@@ -6,7 +6,7 @@
 ## Ei koske prod pipelineen  
 ## 
 
-name: '[Test-environments] Build and deploy'
+name: '[Test-envs] Build and deploy'
 
 ## TODO: Tähän tulee oikeat valinnat myöhemmin 
 on:
@@ -40,13 +40,13 @@ jobs:
       packages: read
 
     steps:
-      - name: '[Test-environments] Checkout code'
+      - name: '[Test-envs] Checkout code'
         uses: actions/checkout@v6
         with:
           persist-credentials: false
       
       ## Buildi tarvii tietokannan 
-      - name: '[Test-environments] Start database for build'
+      - name: '[Test-envs] Start database for build'
         uses: ./.github/actions/start-test-db
         with:
           registry: ghcr.io
@@ -55,7 +55,7 @@ jobs:
           service-name: harjadb-latest
 
       ## rev-parse == commit 
-      - name: '[Test-environments] Resolve checked out commit'
+      - name: '[Test-envs] Resolve checked out commit'
         id: git-sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -63,7 +63,7 @@ jobs:
       ## Tagataan image näillä 
       ## TODO.. Jos halutaan sallia että esim QA1 & QA2 käyttää samaa branchia
       ##        -> täytyy tagittaa vielä environment
-      - name: '[Test-environments] Resolve sanitized ref tag'
+      - name: '[Test-envs] Resolve sanitized ref tag'
         id: ref-tag
         env:
           RAW_REF: ${{ github.ref_name }}
@@ -71,12 +71,12 @@ jobs:
           REF_TAG=$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
           echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
       
-      - name: '[Test-environments] Build Harja Uberjar'
+      - name: '[Test-envs] Build Harja Uberjar'
         uses: ./.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
 
-      - name: '[Test-environments] Assume role with OIDC'
+      - name: '[Test-envs] Assume role with OIDC'
         uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
         with:
           aws-region: 'eu-west-1'
@@ -87,13 +87,13 @@ jobs:
       # https://github.com/aws-actions/amazon-ecr-login
       # mask-password: 'true' käyttö on suositeltavaa, jotta docker-salasanaa ei tulosteta mikäli debug-lokitus on enabloitu.
       # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
-      - name: '[Test-environments] Authenticate with AWS ECR'
+      - name: '[Test-envs] Authenticate with AWS ECR'
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@c962da2960ed15f492addc26fffa274485265950
         with:
           mask-password: 'true'
 
-      - name: '[Test-environments] Build and tag Harja Docker image'
+      - name: '[Test-envs] Build and tag Harja Docker image'
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -109,13 +109,13 @@ jobs:
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
           
-      - name: '[Test-environments] Run migrations'
+      - name: '[Test-envs] Run migrations'
         uses: ./.github/actions/run-migrations-to-test-env
         with:
           commit-sha: ${{ steps.git-sha.outputs.sha }}
           function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
 
-      - name: '[Test-environments] Push image to ECR'
+      - name: '[Test-envs] Push image to ECR'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
@@ -125,7 +125,7 @@ jobs:
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
           
-      - name: '[Test-environments] Download task definition'
+      - name: '[Test-envs] Download task definition'
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
         run: |
@@ -135,7 +135,7 @@ jobs:
             --query taskDefinition \
             > harja-task-definition.json
 
-      - name: '[Test-environments] Update ECS task definition'
+      - name: '[Test-envs] Update ECS task definition'
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c
         with:
@@ -143,7 +143,7 @@ jobs:
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
-      - name: '[Test-environments] Deploy ECS task definition'
+      - name: '[Test-envs] Deploy ECS task definition'
         uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
@@ -151,7 +151,7 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
 
-      - name: '[Test-environments] Start ECS service'
+      - name: '[Test-envs] Start ECS service'
         env:
           ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
           ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
