@@ -288,3 +288,6 @@ SELECT paivita_raportti_toteuma_maarat();
 
 -- Päivitetään toimenkuvat -25 urakoille
 SELECT lisaa_toimenkuvat_urakalle('2025-10-01'::DATE);
+
+-- Tarjoukset
+\i testidata/tarjous.sql

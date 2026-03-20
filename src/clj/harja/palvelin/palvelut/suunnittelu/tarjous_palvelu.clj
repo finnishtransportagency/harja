@@ -52,8 +52,7 @@
           _ (when kaikki-vahvistettu?
               (throw (IllegalArgumentException. (str "Tarjousta ei voi enää muokata, koska kustannussuunitelmat on jo vahvistettu."))))
           urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
-          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
-          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot vahvistetut-vuodet)]
+          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) tiedot vahvistetut-vuodet)]
       (apurit/koosta-tarjouksen-tiedot db urakka-id))))
 
 (defrecord Tarjous []
