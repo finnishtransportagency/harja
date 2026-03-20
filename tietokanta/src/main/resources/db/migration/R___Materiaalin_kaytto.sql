@@ -77,7 +77,7 @@ $$ LANGUAGE plpgsql;
 -- 3. Proseduuri poistaa välimuistitaulusta urakan päivämäärää koskevat rivit.
 -- 4. Proseduuri insertoi välimuistitauluun uudet päivämäärää koskevat rivit.
 CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla (
-  urakka_id INTEGER, alkupvm DATE, loppupvm DATE)
+  urakka_id INTEGER, muutospvm DATE)
   RETURNS void AS $$
 DECLARE
   rivi RECORD;
@@ -93,7 +93,7 @@ BEGIN
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE ((t.luotu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE))
+              WHERE ((t.luotu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE))
                     AND urakka = u
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
@@ -116,7 +116,7 @@ BEGIN
              JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
              JOIN materiaalikoodi m on tm.materiaalikoodi = m.id
    WHERE t.lahde = 'harja-ui' and
-         ((t.luotu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE))
+         ((t.luotu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE))
                     AND urakka = u AND t.poistettu IS FALSE
    GROUP BY t.urakka, talvihoitoluokka, soratiehoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
