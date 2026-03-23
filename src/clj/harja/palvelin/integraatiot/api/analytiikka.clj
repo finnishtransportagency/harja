@@ -728,6 +728,7 @@
     (assoc-in [:paallystystoimenpide :kokonaismassamaara] (:massamaara alikohde))
     (assoc-in [:tierekisteriosoitevali :kaista] (:tr-kaista alikohde))
     (assoc-in [:tierekisteriosoitevali :ajorata] (:tr-ajorata alikohde))
+    (assoc :poistettu (:poistettu alikohde))
     (dissoc :tr-kaista :tr-ajorata :uusi_paallyste :tyomenetelma :raekoko :massamenekki :massamaara :yllapitokohde)))
 
 (defn hae-paallystyskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]

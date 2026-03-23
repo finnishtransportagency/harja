@@ -16,9 +16,13 @@
 (defn hae-jarjestelmien-integraatiot []
   (k/post! :hae-jarjestelmien-integraatiot nil))
 
-(defn hae-integraatiotapahtumien-maarat [jarjestelma integraatio]
-  (k/post! :hae-integraatiotapahtumien-maarat {:jarjestelma jarjestelma
-                                               :integraatio integraatio}))
+(defn hae-integraatiotapahtumien-maarat [jarjestelma integraatio aikavali]
+  (k/post! :hae-integraatiotapahtumien-maarat
+    (merge {:jarjestelma jarjestelma
+            :integraatio integraatio}
+      (when aikavali
+        {:alkaen (first aikavali)
+         :paattyen (second aikavali)}))))
 
 (defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali hakuehdot]
   (k/post! :hae-integraatiotapahtumat
@@ -66,6 +70,7 @@
 
 
 (def tapahtumien-maarat (atom []))
+(def maarat-granulariteetti (atom :day))
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
 (def hae-automaattisesti? (atom false))
 
@@ -80,13 +85,10 @@
       (reset! tapahtumien-maarat nil)
       ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))
-                maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))
-                maarat-aikavalilla (filter #(pvm/valissa? (:pvm %)
-                                                          (first valittu-aikavali)
-                                                          (second valittu-aikavali))
-                                           maarat)]
+                maarat-vastaus (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))]
             (reset! haetut-tapahtumat tapahtumat)
-            (reset! tapahtumien-maarat maarat-aikavalilla)
+            (reset! tapahtumien-maarat (:maarat maarat-vastaus))
+            (reset! maarat-granulariteetti (:granulariteetti maarat-vastaus))
             (when @tultiin-urlin-kautta
               (go-loop [aukinainen-vetolaatikko (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
                         kertoja-loopattu 0]

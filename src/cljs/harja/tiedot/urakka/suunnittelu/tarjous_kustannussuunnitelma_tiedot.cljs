@@ -7,7 +7,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.mhu-kulut :as mhu-kulut]))
 
 (defonce nakymassa? (atom false))
 
