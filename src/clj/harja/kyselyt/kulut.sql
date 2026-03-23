@@ -377,6 +377,7 @@ SELECT ut.laskutusraja,
 
 -- name: hae-urakan-toteutuneet-kustannukset
 -- Hakee urakan toteutuneet kustannukset annetulta aikaväliltä
+-- Tehtäväryhmä haetaan tehtava-taulun kautta, jos sitä ei ole toteutuneet_kustannukset-taulussa
 SELECT NULL                       AS "maksuera-numero",
        NULL                       AS "maksuera-alias",
        tk.id                      AS "id",
@@ -389,7 +390,7 @@ SELECT NULL                       AS "maksuera-numero",
        1                          AS "rivi",
        tk.summa_indeksikorjattu   AS "summa",
        tk.toimenpideinstanssi     AS "toimenpideinstanssi",
-       tk.tehtavaryhma            AS "tehtavaryhma",
+       tr.id                      AS "tehtavaryhma",
        NULL                       AS "lisatyon-lisatieto",
        'kokonaishintainen'::maksueratyyppi AS "maksueratyyppi",
        NULL                       AS rahavaraus,
@@ -403,6 +404,7 @@ SELECT NULL                       AS "maksuera-numero",
        true                       AS "harjan-generoima"
   FROM toteutuneet_kustannukset tk
        LEFT JOIN tehtava t ON tk.tehtava = t.id
+       LEFT JOIN tehtavaryhma tr ON COALESCE(tk.tehtavaryhma, t.tehtavaryhma) = tr.id
  WHERE tk.urakka_id = :urakka
    AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= make_date(tk.vuosi, tk.kuukausi, 1))
    AND (:loppupvm::DATE IS NULL OR make_date(tk.vuosi, tk.kuukausi, 1) <= :loppupvm::DATE);
