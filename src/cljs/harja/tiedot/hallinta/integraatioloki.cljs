@@ -71,24 +71,14 @@
 (def tapahtumien-maarat (atom []))
 (def maarat-granulariteetti (atom :day))
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
-(def epaillyt-duplikaattikuittaukset (atom :ei-kaytossa))
 (def hae-automaattisesti? (atom false))
-
-(def duplikaattikuittaukset-ladataan :ladataan)
-(def duplikaattikuittaukset-epaonnistui :epaonnistui)
-
-(defn nayta-duplikaattikuittaukset?
-  [jarjestelma integraatio]
-  (and (= "tloik" (:jarjestelma jarjestelma))
-       (= "toimenpiteen-lahetys" integraatio)))
 
 (defn hae-tapahtumat! []
   (let  [valittu-jarjestelma @valittu-jarjestelma
          valittu-integraatio @valittu-integraatio
          valittu-aikavali @valittu-aikavali
          nakymassa? @nakymassa?
-         hakuehdot @hakuehdot
-         hae-duplikaatit? (nayta-duplikaattikuittaukset? valittu-jarjestelma valittu-integraatio)]
+         hakuehdot @hakuehdot]
     (when nakymassa?
       (reset! haetut-tapahtumat nil)
       (reset! tapahtumien-maarat nil)
@@ -98,17 +88,10 @@
         valittu-aikavali)
       ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))
-                maarat-vastaus (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))
-                duplikaattivastaus (when hae-duplikaatit?
-                                    (<! (hae-epaillyt-duplikaattikuittaukset valittu-aikavali)))]
+                maarat-vastaus (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))]
             (reset! haetut-tapahtumat tapahtumat)
             (reset! tapahtumien-maarat (:maarat maarat-vastaus))
             (reset! maarat-granulariteetti (:granulariteetti maarat-vastaus))
-            (when hae-duplikaatit?
-              (reset! epaillyt-duplikaattikuittaukset
-                      (if (k/virhe? duplikaattivastaus)
-                        duplikaattikuittaukset-epaonnistui
-                        duplikaattivastaus)))
             (when @tultiin-urlin-kautta
               (go-loop [aukinainen-vetolaatikko (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
                         kertoja-loopattu 0]

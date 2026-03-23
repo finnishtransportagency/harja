@@ -4,7 +4,6 @@
 						[harja.kyselyt.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as q]))
 
 (def kuittausanalyysi-endpoint :hae-tloik-toimenpiteen-lahetyksen-kuittausanalyysi)
-(def legacy-kuittausanalyysi-endpoint :hae-epaillyt-duplikaattikuittaukset)
 
 (def ryhma-limit 1000)
 
