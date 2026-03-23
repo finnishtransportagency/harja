@@ -4,6 +4,7 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.vesivaylat.kommentti :as vv-kommentti]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     

@@ -5,6 +5,8 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.integraatioloki :as tiedot]
+            [harja.tiedot.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as tloik-kuittausanalyysi-tiedot]
+            [harja.views.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as tloik-kuittausanalyysi-view]
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader livi-pudotusvalikko]]
             [harja.visualisointi :as vis]
@@ -20,7 +22,7 @@
 
 (defn kartta-merkkijonoksi [kartta]
   (when kartta
-    (clojure.string/join
+    (str/join
       (map #(str (name (key %)) ": " (val %)) kartta))))
 
 (defn kartta-listaksi [kartta]
@@ -44,7 +46,7 @@
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
-          (fn [e]
+          (fn [_]
             (nayta-sisalto-modaalissa-dialogissa "Otsikko" (kartta-listaksi otsikko)))}
          (ikonit/eye-open)]]]
       sisalto)))
@@ -57,7 +59,7 @@
        (str (fmt/leikkaa-merkkijono max-pituus {:pisteet? true} lisatiedot) " ")
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
-         (fn [e]
+         (fn [_]
            (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre {:style {:white-space "pre-line"}} teksti]))}
         (ikonit/eye-open)]]
       teksti)))
@@ -74,7 +76,7 @@
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
-          (fn [e]
+            (fn [_]
             (nayta-sisalto-modaalissa-dialogissa
               "Viestin sisältö"
               [:span.viesti
@@ -370,9 +372,11 @@
              [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
           [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])
 
-        (when (tiedot/nayta-duplikaattikuittaukset? @tiedot/valittu-jarjestelma @tiedot/valittu-integraatio)
+        (when (tloik-kuittausanalyysi-tiedot/nayta-kuittausanalyysi?
+                @tiedot/valittu-jarjestelma
+                @tiedot/valittu-integraatio)
           [:div.integraatio-tilastoja
-           [epaillyt-duplikaattikuittaukset-osio]])
+           [tloik-kuittausanalyysi-view/epaillyt-duplikaattikuittaukset-osio]])
 
         [grid
          {:otsikko (str "Tapahtumat "

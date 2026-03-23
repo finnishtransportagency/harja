@@ -8,6 +8,7 @@
             [harja.kyselyt.integraatioloki :as q]
             [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.palvelut.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as tloik-kuittausanalyysi]
             [harja.pvm :as pvm]))
 
 
@@ -199,7 +200,10 @@
   component/Lifecycle
   (start [this]
     (let [db (:db-replica this)
-          http-palvelin (:http-palvelin this)]
+          http-palvelin (:http-palvelin this)
+          hae-tloik-kuittausanalyysi (fn [kayttaja {:keys [alkaen paattyen]}]
+                                       (tloik-kuittausanalyysi/hae-toimenpiteen-lahetyksen-kuittausanalyysi
+                                         db kayttaja alkaen paattyen))]
       (julkaise-palvelu http-palvelin
                         :hae-jarjestelmien-integraatiot
                         (fn [kayttaja _]
@@ -217,9 +221,11 @@
                         (fn [kayttaja tapahtuma-id]
                           (hae-integraatiotapahtuman-viestit db kayttaja tapahtuma-id)))
       (julkaise-palvelu http-palvelin
-                        :hae-epaillyt-duplikaattikuittaukset
-                        (fn [kayttaja {:keys [alkaen paattyen]}]
-                          (hae-epaillyt-duplikaattikuittaukset db kayttaja alkaen paattyen))))
+                        tloik-kuittausanalyysi/kuittausanalyysi-endpoint
+                        hae-tloik-kuittausanalyysi)
+      (julkaise-palvelu http-palvelin
+                        tloik-kuittausanalyysi/legacy-kuittausanalyysi-endpoint
+                        hae-tloik-kuittausanalyysi))
     this)
 
   (stop [this]
@@ -227,5 +233,6 @@
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumat)
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtumien-maarat)
     (poista-palvelu (:http-palvelin this) :hae-integraatiotapahtuman-viestit)
-    (poista-palvelu (:http-palvelin this) :hae-epaillyt-duplikaattikuittaukset)
+    (poista-palvelu (:http-palvelin this) tloik-kuittausanalyysi/kuittausanalyysi-endpoint)
+    (poista-palvelu (:http-palvelin this) tloik-kuittausanalyysi/legacy-kuittausanalyysi-endpoint)
     this))

@@ -1,5 +1,5 @@
 GROUND RULES
-YOU MUST use Finnish language for all code, comments, produced documentation and while chatting.
+YOU MUST use Finnish language for all code, comments, produced documentation and while chatting. Exception is for files inside .github folder.
 IF a PROJECT_SUMMARY.md file is found THEN YOU MUST read it and use it as reference for all future responses in this chat.
 Doing it right is better than doing it fast. You are not in a rush. NEVER skip steps or take shortcuts.
 DO NOT translate common technical terms into Finnish if they are written in english in our codebase or in the documentaiton.

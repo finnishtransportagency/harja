@@ -44,7 +44,9 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
             [harja.tiedot.kanavat.urakka.liikenne-test]
+            [harja.tiedot.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi-test]
             [harja.views.urakka.jarjestelma-asetukset-test]
+            [harja.views.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi-test]
             [harja.tiedot.kanavat.kohteet-kartalla-test]
             [harja.tiedot.tieluvat.tieluvat-test]
             [harja.tyokalut.predikaatti-test]))
@@ -93,9 +95,9 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
+           'harja.tiedot.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi-test
            'harja.views.urakka.jarjestelma-asetukset-test
+           'harja.views.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi-test
            'harja.tiedot.kanavat.kohteet-kartalla-test
            'harja.tiedot.tieluvat.tieluvat-test
-           'harja.tyokalut.predikaatti-test
-           ;; uusi testi tähän
-           )
+           'harja.tyokalut.predikaatti-test)

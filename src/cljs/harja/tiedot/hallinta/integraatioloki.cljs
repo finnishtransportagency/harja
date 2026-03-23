@@ -2,11 +2,13 @@
   "Hallinnoi integraatiolokin tietoja"
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!] :as async]
+            [harja.atom]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.tiedot.hallinta.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as tloik-kuittausanalyysi]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn hae-jarjestelmien-integraatiot []
   (k/post! :hae-jarjestelmien-integraatiot nil))
@@ -30,13 +32,6 @@
 
 (defn hae-integraatiotapahtuman-viestit [tapahtuma-id]
   (k/post! :hae-integraatiotapahtuman-viestit tapahtuma-id))
-
-(defn hae-epaillyt-duplikaattikuittaukset [aikavali]
-  (k/post! :hae-epaillyt-duplikaattikuittaukset
-           (when aikavali
-             {:alkaen (first aikavali)
-              :paattyen (second aikavali)})))
-
 (def nakymassa? (atom false))
 
 (defonce jarjestelmien-integraatiot (reaction<! [nakymassa? @nakymassa?]
@@ -97,7 +92,10 @@
     (when nakymassa?
       (reset! haetut-tapahtumat nil)
       (reset! tapahtumien-maarat nil)
-      (reset! epaillyt-duplikaattikuittaukset (if hae-duplikaatit? duplikaattikuittaukset-ladataan :ei-kaytossa))
+      (tloik-kuittausanalyysi/paivita-kuittausanalyysi!
+        valittu-jarjestelma
+        valittu-integraatio
+        valittu-aikavali)
       ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
       (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))
                 maarat-vastaus (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio valittu-aikavali))
