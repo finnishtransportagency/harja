@@ -46,12 +46,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: List used environment variables
+        env:
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_COMMIT_SHA: ${{ inputs.commit-sha }}
+          INPUTS_ARTIFACT_RUN_ID: ${{ inputs.artifact-run-id }}
         run: |
-          echo "Target environment: ${{ inputs.environment }}"
-          echo "Commit SHA: ${{ inputs.commit-sha }}"
-          echo "Artifact run ID: ${{ inputs.artifact-run-id }}"
+          echo "Target environment: ${INPUTS_ENVIRONMENT}"
+          echo "Commit SHA: ${INPUTS_COMMIT_SHA}"
+          echo "Artifact run ID: ${INPUTS_ARTIFACT_RUN_ID}"
           echo " --- "
           echo "Environment variables:"
           echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
@@ -80,7 +87,7 @@ jobs:
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#inputs
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v8.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           name: harja-uberjar
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +98,7 @@ jobs:
           run-id: ${{ inputs.artifact-run-id }}
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"
@@ -103,7 +110,7 @@ jobs:
       # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@c962da2960ed15f492addc26fffa274485265950 # v2.0.2
         with:
           mask-password: "true"
 
@@ -164,14 +171,14 @@ jobs:
 
       - name: Update ECS task definition (add image id)
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c # v1.8.3
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff # v2.6.0
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}

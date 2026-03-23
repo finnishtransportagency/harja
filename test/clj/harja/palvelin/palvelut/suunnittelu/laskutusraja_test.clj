@@ -91,6 +91,9 @@
         hoitovuoden-alkuvuosi 2025]
     ;; Aseta laskutusraja käyttöön
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+
 
     ;; Tallenna kustannussuunnitelma ja tarjous
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
@@ -118,6 +121,8 @@
         hoitovuoden-alkuvuosi 2024]
     ;; Varmista että laskutusraja_kaytossa = FALSE
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = FALSE WHERE urakkaid = " urakka-id)
+    ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)(apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
     ;; Tallenna kustannussuunnitelma ja tarjous
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
@@ -137,6 +142,8 @@
         hoitovuoden-alkuvuosi 2025]
     ;; Varmista että laskutusraja_kaytossa = TRUE
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
     ;; Tallenna kustannussuunnitelma ja tarjous
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
@@ -157,6 +164,9 @@
         hoitovuoden-alkuvuosi 2025]
     ;; Aseta laskutusraja käyttöön
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+
     ;; Tallenna kustannussuunnitelma ja tarjous
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
       (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi

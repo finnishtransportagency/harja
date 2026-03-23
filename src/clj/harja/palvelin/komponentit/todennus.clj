@@ -13,6 +13,7 @@
             [harja.kyselyt
              [kayttajat :as q]]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.tyokalut.loki :as loki]
             [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.todennus-varmistus :as varmistus]
@@ -120,10 +121,17 @@
       body
       (do
         ;; Virheen sattuessa palauta nil
-        (log/error "Virhe miam kutsussa :: saatu virhe: " body)
+        (log/error (->
+                     (str "Virhe miam kutsussa :: saatu virhe: ")
+                     (loki/koristele-lokiviesti loki/miam-error))
+          body)
         nil))
     (catch Exception e
-      (log/error "Virhe miam kutsussa :: poikkeus " e)
+      (log/error
+        (->
+          (str "Virhe miam kutsussa :: poikkeus ")
+          (loki/koristele-lokiviesti loki/miam-error))
+        (.getMessage e))
       ;; Palautetaan virheen sattuessa nil
       nil)))
 
@@ -167,7 +175,10 @@
         (if (or vastaus (>= yritys max-yritykset))
           vastaus
           (do
-            (log/warn (str "MIAM-kutsu epäonnistui, yritetään uudelleen " sleep-ms " päästä:  (" yritys "/" max-yritykset ")"))
+            (log/warn
+              (->
+                (str "MIAM-kutsu epäonnistui, yritetään uudelleen " sleep-ms " päästä:  (" yritys "/" max-yritykset ")")
+                (loki/koristele-lokiviesti loki/miam-retry)))
             ;; Pidetään ihan pieni tauko ennen seuraavaa yritystä
             (Thread/sleep (* yritys sleep-ms))
             (recur (inc yritys))))))))
@@ -210,7 +221,10 @@
           ;; Tarkista onko Table1 olemassa ja ei-tyhjä
           (if (or (nil? table1) (empty? table1))
             (do
-              (log/warn "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
+              (log/warn
+                (->
+                  (str "MIAM-vastaus ei sisällä Table1-kenttää tai se on tyhjä")
+                  (loki/koristele-lokiviesti loki/miam-error)))
               ;; Jos on virheellinen vastaus, niin palauta vain mahdolliset sähke-headereista saadut roolit (jos niitä on)
               (when ryhmat-asetuksista roolit-asetuksista))
             ;; Otetaan talteen roolit -> jotka on sama kuin oam_groupsit
@@ -227,7 +241,9 @@
                 oikeudet/roolit
                 ryhmat))))
         (catch Exception e
-          (log/error e "Virhe parsittaessa MIAM-rajapinnan vastausta")
+          (log/error e
+            (str "Virhe parsittaessa MIAM-rajapinnan vastausta")
+            (loki/koristele-lokiviesti loki/miam-error))
           nil)))))
 
 ;; Pidetään käyttäjätietoja muistissa 2h, jotta ei tarvitse koko ajan hakea tietokannasta tai miam-rajapinnasta
