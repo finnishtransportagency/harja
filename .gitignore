@@ -76,11 +76,3 @@ test.calva-repl
 cypress/test-results/*
 cypress/videos/*
 cypress/screenshots/*
-
-# Playwright
-.playwright-cli
-
-## Personal docs/prd
-.prd
-.docs
-plans
