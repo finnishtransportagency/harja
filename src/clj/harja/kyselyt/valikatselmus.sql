@@ -12,8 +12,8 @@ WHERE ut.urakka = :urakka-id
 
 -- name: hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
 -- single?: true
--- Käytetään esimerkiksi tavoitepalkkion laskemisessa
-SELECT ut.tavoitehinta_indeksikorjattu as tavoitehinta
+-- Käytetään esimerkiksi tavoitepalkkion laskemisessa. Pyöristä hakiessa kahteen desimaaliin. Joskus indexin laskemat voi pyöristää sen kolmeen desimaaliin.
+SELECT ROUND(ut.tavoitehinta_indeksikorjattu::NUMERIC, 2) AS tavoitehinta
   FROM urakka_tavoite ut
          JOIN urakka u ON ut.urakka = u.id
  WHERE ut.urakka = :urakka-id
