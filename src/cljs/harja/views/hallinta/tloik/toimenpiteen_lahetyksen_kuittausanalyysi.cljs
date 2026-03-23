@@ -23,6 +23,18 @@
 									")"))
 			 (str/join ", ")))
 
+(defn- nayta-kanava [kanava]
+	(let [kanava (if (keyword? kanava)
+						(name kanava)
+						kanava)]
+		(case kanava
+			"sms" "SMS"
+			"sahkoposti" "Sähköposti"
+			"harja" "Harja"
+			"ulkoinen_jarjestelma" "Ulkoinen järjestelmä"
+			"tuntematon" "Tuntematon"
+			kanava)))
+
 (defn- kuittausanalyysin-selite []
 	[:div
 	 [:div "Huom. tämä osio käyttää vain valittua aikaväliä ja valittua integraatiota. Muut tarkemmat hakuehdot eivät vaikuta tähän näkymään."]
@@ -61,7 +73,7 @@
 							   :tunniste (juxt :ilmoitusid :kuittaustyyppi :kanava)}
 							  [{:otsikko "IlmoitusId" :nimi :ilmoitusid :leveys "8%" :tyyppi :numero}
 							   {:otsikko "Tyyppi" :nimi :kuittaustyyppi :leveys "10%" :tyyppi :string}
-							   {:otsikko "Kanava" :nimi :kanava :leveys "8%" :tyyppi :string}
+									   {:otsikko "Kanava" :nimi :kanava :leveys "8%" :fmt nayta-kanava}
 							   {:otsikko "Duplikaatteja" :nimi :duplikaatteja :leveys "8%" :tyyppi :numero}
 							   {:otsikko "Uniikkeja kuittaajia" :nimi :uniikit-kuittaajat :leveys "8%" :tyyppi :numero}
 							   {:otsikko "Lähetysvirheitä" :nimi :kertyneet-lahetysvirheet :leveys "8%" :tyyppi :numero}
