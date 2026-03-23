@@ -42,7 +42,7 @@
                      ;;   -25 urakoilla on tavoitehinnan pysyviä muutoksia - niitä sanotaan kirjallisesti sovituiksi  muutoksiksi
                      (when (yhteiset/raha-arvo-olemassa? (:pysyvat_muutokset_hoitokausi_yht data))
                        (valitaulukko-rivi data false "Kirjallisesti sovitut muutokset" :pysyvat_muutokset_hoitokausi_yht nil true nil nil))
-                     (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton")
+                     (valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehintaan vaikuttavat kustannukset yhteensä" :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil nil)
                      (when (and (yhteiset/raha-arvo-olemassa? (:budjettia_jaljella data)) (not kyseessa-vapaa-aikavali?))
                        (valitaulukko-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
 
