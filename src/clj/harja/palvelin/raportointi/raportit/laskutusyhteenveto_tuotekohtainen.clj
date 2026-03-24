@@ -63,15 +63,19 @@
         oikaistu? (and
                     (some? (:tavoitehinta-oikaistu urakka-tavoite))
                     (some? (:tavoitehinta-indeksikorjattu urakka-tavoite))
-                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))]
-
-    (if urakka-tavoite
-      {:hoitokauden-alun-indeksikorjattu-tavoitehinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
-       :oikaisujen-maara (if (and (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))
+        oikaisujen-maara (if (and (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
                            (- (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
                            0)
-       :kirjallisesti-sovitut-muutokset (or (:pysyva-muutos-summa urakka-tavoite) 0M)
-       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
+        pysyvat-muutokset-summa (or (:muutos-summa urakka-tavoite) 0M)
+        hoitovuoden-lopun-tavoitehinta (+ (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) pysyvat-muutokset-summa)
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (when (:tavoitehinta-oikaistu urakka-tavoite) (- (:tavoitehinta-oikaistu urakka-tavoite) oikaisujen-maara))]
+
+    (if urakka-tavoite
+      {:hoitokauden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+       :oikaisujen-maara oikaisujen-maara
+       :kirjallisesti-sovitut-muutokset pysyvat-muutokset-summa
+       :jaljella (- hoitovuoden-lopun-tavoitehinta kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
        :oikaistu? oikaistu?}
       {:hoitokauden-alun-indeksikorjattu-tavoitehinta 0
        :jaljella 0
@@ -130,7 +134,9 @@
   (let [;; Taulukon rivit mitkä näytetään kaikkiin paitsi "MHU ja HJU hoidon johto"
         taulukko-rivit [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                         (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)]
+                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                        (when (yhteiset/raha-arvo-olemassa? (:jjh_muutokset_laskutettu data))
+                          (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutokset_laskutettu :jjh_muutokset_laskutetaan false))]
 
         rahavaraus-rivit (map (fn [nimi hoitokausi val-aika]
                                 (rivi
