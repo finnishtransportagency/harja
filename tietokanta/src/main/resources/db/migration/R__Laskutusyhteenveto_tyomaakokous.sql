@@ -203,7 +203,7 @@ DECLARE
     hankinnat_ja_hoidon_val_yht           NUMERIC;
 
     -- Tavoitehinnat yhteensä
-    tavhin_hoitokausi_yht                 NUMERIC;
+    tavhin_hoitokausi_yht                 NUMERIC; -- Tarkoittaa kertyneitä kustannuksia, joitka kuuluvat tavoitehintaan.
     tavhin_val_aika_yht                   NUMERIC;
 
     --- Lisätyöt
@@ -266,7 +266,7 @@ DECLARE
     hoitokauden_vuosi                     NUMERIC; -- Käytetään kun loopataan valitut hoitovuodet aikavälistä
     hoitovuoden_alun_indkorj_tavoitehinta NUMERIC;
     tavoitehinta_oikaisu_summa            NUMERIC;
-    hoitokauden_tavoitehinta              NUMERIC;
+    hoitokauden_tavoitehinta              NUMERIC; -- Tällä tarkoitetaan hoitokauden alun tavoitehintaa. Ole tarkkana, että milloin tähän lisätään oikaisut tai muut muutokset
     tavoitehinta_on_oikaistu              BOOLEAN;
     -- Valikatselmuksesta siirretyt kulut edelliseltä vuodelta
     hk_valikatselmus_siirrot_ed_vuodelta  NUMERIC;
@@ -302,8 +302,6 @@ DECLARE
     pysyvat_muutokset_hoitokausi_yht      NUMERIC := 0.0;
     pysyvat_muutokset_val_aika_yht        NUMERIC := 0.0;
     pysyvat_muutokset_ed_hoitokausi       NUMERIC := 0.0;
-    pysyvat_jjhmuutokset_hoitokausi_yht   NUMERIC := 0.0;
-    pysyvat_jjhmuutokset_val_aika_yht     NUMERIC := 0.0;
 
     -- Tulos 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
@@ -373,7 +371,8 @@ BEGIN
                      AND to2."hoitokauden-alkuvuosi" = hk_alkuvuosi
                      AND to2.poistettu = false), 0);
 
-              -- Lisää oikaistu määrä tavoitehintaan, oli sitten miinusta tai plussaa 
+              -- Lisää oikaistu määrä tavoitehintaan, oli sitten miinusta tai plussaa
+              -- Tässä vaiheessa tämä ei ole enää hoitokauden alun tavoitehinta, vaan vanhoille -24 ja ennen urakoille, hoitokauden lopun tavoitehinta
               hoitokauden_tavoitehinta := hoitokauden_tavoitehinta + tavoitehinta_oikaisu_summa;
 
             ELSE 
@@ -1191,82 +1190,50 @@ BEGIN
     ---------------------------------------------------------------------------------
     ------------------- Pysyvät muutokset (mhu_muutos-taulusta) ---------------------
     ---------------------------------------------------------------------------------
-    -- Haetaan pysyvät muutokset mhu_muutos-taulusta
+    -- Haetaan muutokset mhu_muutos-taulusta ja jjh--muutokset kuluista
     -- Nämä ovat tavoitehintaan vaikuttavia muutoksia (pysyva, muutostyo, johto-ja-hallintokorvaus)
 
     pysyvat_muutokset_hoitokausi_yht := 0.0;
     pysyvat_muutokset_val_aika_yht := 0.0;
     pysyvat_muutokset_ed_hoitokausi := 0.0;
-    pysyvat_jjhmuutokset_hoitokausi_yht := 0.0;
-    pysyvat_jjhmuutokset_val_aika_yht := 0.0;
 
-    -- Aktiiviset pysyvät muutokset valitun hoitokauden alusta
+    -- Aktiiviset pysyvät muutokset ja muutostyöt valitun hoitokauden alusta
     SELECT COALESCE(SUM(mmk.summa), 0)
     INTO pysyvat_muutokset_hoitokausi_yht
     FROM mhu_muutos mm
              JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
     WHERE mm.urakka = ur
-      AND mm.tyyppi IN ('pysyva'::MHU_MUUTOSTYYPPI,
-                        'muutostyo'::MHU_MUUTOSTYYPPI,
-                        'johto-ja-hallintokorvaus'::MHU_MUUTOSTYYPPI)
+      AND mm.tyyppi IN ('pysyva'::MHU_MUUTOSTYYPPI, 'muutostyo'::MHU_MUUTOSTYYPPI)
       AND mm.poistettu IS FALSE
       AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
-      AND mm.voimassa_alkaen BETWEEN hk_alkupvm AND hk_loppupvm;
+      AND mm.voimassa_alkaen BETWEEN hk_alkupvm AND aikavali_loppupvm;
 
-    -- Aktiiviset jjh muutokset kuluista koko hoitovuodelle
-    SELECT COALESCE(SUM(kokonaissumma),0) INTO pysyvat_jjhmuutokset_hoitokausi_yht
-    FROM mhu_muutos mm
-             JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
-         kulu k
-             JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
-    WHERE k.id = mmk.kulu
-      AND mm.urakka = ur
-      AND k.poistettu IS FALSE
-      AND kk.poistettu IS FALSE
-      AND k.erapaiva BETWEEN hk_alkupvm AND hk_loppupvm;
-
-    pysyvat_muutokset_hoitokausi_yht := pysyvat_muutokset_hoitokausi_yht + pysyvat_jjhmuutokset_hoitokausi_yht;
-
-    -- Aktiiviset pysyvät muutokset valitun aikavälin sisällä
+    -- -- Aktiiviset pysyvät muutokset ja muutokset valitulle aikajaksolle
     SELECT COALESCE(SUM(mmk.summa), 0)
     INTO pysyvat_muutokset_val_aika_yht
     FROM mhu_muutos mm
              JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
     WHERE mm.urakka = ur
-      AND mm.tyyppi IN ('pysyva'::MHU_MUUTOSTYYPPI,
-                        'muutostyo'::MHU_MUUTOSTYYPPI,
-                        'johto-ja-hallintokorvaus'::MHU_MUUTOSTYYPPI)
+      AND mm.tyyppi IN ('pysyva'::MHU_MUUTOSTYYPPI, 'muutostyo'::MHU_MUUTOSTYYPPI)
       AND mm.poistettu IS FALSE
       AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
       AND mm.voimassa_alkaen BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
 
-    -- Aktiiviset jjh muutokset kuluista valitulle aikajaksolle
-    SELECT COALESCE(SUM(kokonaissumma),0) INTO pysyvat_jjhmuutokset_val_aika_yht
-    FROM mhu_muutos mm
-             JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
-         kulu k
-             JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
-    WHERE k.id = mmk.kulu
-      AND mm.urakka = ur
-      AND k.poistettu IS FALSE
-      AND kk.poistettu IS FALSE
-      AND k.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
-
-    pysyvat_muutokset_val_aika_yht := pysyvat_muutokset_val_aika_yht + pysyvat_jjhmuutokset_val_aika_yht;
-
-    -- Edellisillä hoitokausilla merkityt pysyvät muutokset - Näitä ei vielä raportoida, mutta haetaan kuitenkin jo.
-    SELECT COALESCE(SUM(mmk.summa), 0)
-    INTO pysyvat_muutokset_ed_hoitokausi
+    -- Edellisillä hoitokausilla merkityt pysyvät muutokset.
+    -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan.
+    SELECT indeksikorjaa((SELECT COALESCE(SUM(mmk.summa), 0)
     FROM mhu_muutos mm
              JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
     WHERE mm.urakka = ur
       AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
       AND mm.voimassa_alkaen < (SELECT TO_DATE(hk_alkuvuosi || '-10-01', 'YYYY-MM-DD'))
-      AND mm.poistettu IS FALSE;
+      AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
+      AND mm.poistettu IS FALSE)::NUMERIC, hk_alkuvuosi::INT, 10::INT, ur::INT) INTO pysyvat_muutokset_ed_hoitokausi;
 
     RAISE NOTICE 'Pysyvät muutokset hoitokausi yhteensä: %', pysyvat_muutokset_hoitokausi_yht;
     RAISE NOTICE 'Pysyvät muutokset valittu aika yhteensä: %', pysyvat_muutokset_val_aika_yht;
     RAISE NOTICE 'Pysyvät muutokset edellisiltä hoitokausilta: %', pysyvat_muutokset_ed_hoitokausi;
+    RAISE NOTICE 'muutostyo_hoitokausi_yht: %', muutostyo_hoitokausi_yht;
 
     ---------------------------------------------------------------------------------
     --------------- Tavoitehintaan vaikuttavat kustannukset yhteensä  ---------------
@@ -1274,7 +1241,8 @@ BEGIN
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
     -- 2022-10-01 jälkeen alihankitabonus ei ole enää MHU ylläpitoon kuuluvana, vaan omana rivinään, niin iffitellään se tarvittaessa mukaan
-    -- Tavoitehinta hoitokausi 
+    -- Tavoitehinta hoitokausi
+    -- Tästä johdetaan myös "Tavoitehintaan vaikuttavat kustannukset yhteensä" -rivi Työmaakokous raporttiin. Nimet ovat siis ristiriitaisia.
     tavhin_hoitokausi_yht := 0.0;
     tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + 
@@ -1290,7 +1258,9 @@ BEGIN
             kaikki_rahavaraukset_hoitokausi_yht + 
             muut_kulut_hoitokausi_yht;
     
-    -- Tavoitehinta valittu kk 
+    -- Tavoitehinta valittu kk
+    -- Nykyään tällä ei ole mitään tekemistä tavoitehinnan kanssa. Vaan tässä lasketaan yhteen kaikki kulut
+    -- Näitä nimiä voisi joskus koittaa korjata.
     tavhin_val_aika_yht := 0.0;
     tavhin_val_aika_yht := tavhin_val_aika_yht + 
             talvihoito_val_aika_yht + 
@@ -1304,11 +1274,17 @@ BEGIN
             hjpalkkio_val_aika_yht + 
             muutostyo_val_aika_yht +
             kaikki_rahavaraukset_val_yht + 
-            muut_kulut_val_aika_yht;
+            muut_kulut_val_aika_yht +
+            pysyvat_muutokset_val_aika_yht;
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
-    budjettia_jaljella := budjettia_jaljella + hoitokauden_tavoitehinta + pysyvat_muutokset_hoitokausi_yht - tavhin_hoitokausi_yht;
+    budjettia_jaljella := (budjettia_jaljella + hoitovuoden_alun_indkorj_tavoitehinta + -- Hoitokauden alun indeksikorjattu tavoitehinta saadaan suoraan tietokannasta
+                           tavoitehinta_oikaisu_summa + -- Vanhemmilla urakoilla on oikaisuja
+                           pysyvat_muutokset_hoitokausi_yht + muutostyo_hoitokausi_yht) -- Uudemmilla urakoilla on muutokset
+                          - tavhin_hoitokausi_yht;
+
+    RAISE NOTICE 'budjettia_jaljella: %', budjettia_jaljella;
 
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------

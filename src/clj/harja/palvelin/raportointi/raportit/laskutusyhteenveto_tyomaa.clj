@@ -282,12 +282,12 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
 
-     ;; ----------------------------------------------------- ;;
-     ;;    Hoitovuoden alun indeksikorjattutavoitehinta       ;;
-     ;;    Tavoitehinnan muutokset                            ;;
-     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä   ;;
-     ;;    Budjettia jäljellä                                 ;;
-     ;; ----------------------------------------------------- ;;
+     ;; ------------------------------------------------------------ ;;
+     ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
+     ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
+     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
+     ;;    Budjettia jäljellä                                        ;;
+     ;; ------------------------------------------------------------ ;;
      (taulukot/valitaulukko {:data rivitiedot
                              :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
