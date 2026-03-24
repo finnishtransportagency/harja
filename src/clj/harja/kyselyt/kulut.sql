@@ -408,3 +408,10 @@ SELECT NULL                       AS "maksuera-numero",
  WHERE tk.urakka_id = :urakka
    AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= make_date(tk.vuosi, tk.kuukausi, 1))
    AND (:loppupvm::DATE IS NULL OR make_date(tk.vuosi, tk.kuukausi, 1) <= :loppupvm::DATE);
+
+-- name: hae-kaikkien-tehtavaryhmien-nimet
+-- Tarvitaan Kulujen kohdistus -näkymän generoitujen kulujen tehtäväryhmien nimien näyttämistä varten,
+-- jotta saadaan myös Johto- ja hallintokorvaus -tehtäväryhmän nimi näkyviin
+SELECT tr.id                      AS "tehtavaryhma",
+       tr.nimi                    AS "tehtavaryhma_nimi"
+FROM tehtavaryhma tr;

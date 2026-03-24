@@ -632,6 +632,10 @@
     {:laskutusraja laskutusraja
      :laskutusraja-kaytossa laskutusraja-kaytossa?}))
 
+(defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (q/hae-kaikkien-tehtavaryhmien-nimet db))
+
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -734,6 +738,9 @@
       (julkaise-palvelu http :hae-urakan-laskutusraja
         (fn [user hakuehdot]
           (hae-urakan-laskutusraja db user hakuehdot)))
+      (julkaise-palvelu http :hae-kaikkien-tehtavaryhmien-nimet
+        (fn [user hakuehdot]
+          (hae-kaikkien-tehtavaryhmien-nimet db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -751,7 +758,9 @@
       :tarkista-laskun-numeron-paivamaara
       :hae-urakan-hintapaatokset
       :hae-urakan-rahavaraukset
-      :hae-hoitokauden-kulujen-summa)
+      :hae-hoitokauden-kulujen-summa
+      :hae-urakan-laskutusraja
+      :hae-kaikkien-tehtavaryhmien-nimet)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)
