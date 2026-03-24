@@ -4,6 +4,7 @@
 
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -1826,6 +1827,7 @@
                 :odottaa-urakoitsijan-kannanottoa? true
                 :valikatselmus-tehty? false
                 :tavoitehinta-puuttuu? false
+                :lupausprosentit-puuttuu? false
                 :luvatut-pisteet-puuttuu? false
                 :ennusteen-tila :ennuste
                 :tallennettu-paatos nil}
@@ -1836,7 +1838,9 @@
       (is (contains? tulos :pisteet) "Sisältää pisteet")
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :tavoitehinta) "Sisältää tavoitehinta")
+      (is (contains? tulos :lupausprosentit-puuttuu?) "Sisältää lupausprosentit-puuttuu?")
       (is (= :ennuste (:ennusteen-tila tulos)) "Ennusteen tila on :ennuste")
+      (is (false? (:lupausprosentit-puuttuu? tulos)) "Lupausprosentit löytyvät")
       (is (= 100 (get-in tulos [:pisteet :maksimi])) "Maksimipisteet oikein")
       (is (= 80 (get-in tulos [:pisteet :ennuste])) "Ennustepisteet oikein")
       (is (= 85 (get-in tulos [:pisteet :toteuma])) "Toteumapisteet oikein"))))
@@ -1911,7 +1915,9 @@
 
 (deftest laske-bonus-ja-ennuste-test
   (testing "Bonus ja ennusteen tilan laskenta"
-    (let [opts {:tallennettu-paatos nil
+    (let [opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos nil
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1924,10 +1930,12 @@
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
       (is (map? (:bonus-tai-sanktio tulos)) "Bonus on map")
-      (is (or (contains? (:bonus-tai-sanktio tulos) :sanktio)
-            (contains? (:bonus-tai-sanktio tulos) :bonus)
-            (contains? (:bonus-tai-sanktio tulos) :tavoite-taytetty))
-        "Bonus-tai-sanktio sisältää joko :bonus, :sanktio tai :tavoite-taytetty")
+      (is (contains? (:bonus-tai-sanktio tulos) :sanktio)
+        "Tässä skenaariossa palautuu sanktio")
+      (is (number? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Sanktio on numero")
+      (is (pos? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Palvelun API-muodossa sanktio on positiivinen")
       (is (keyword? (:ennusteen-tila tulos)) "Ennusteen tila on keyword"))))
 
 (deftest laske-bonus-ja-ennuste-paatos-test
@@ -1936,8 +1944,10 @@
                               :luvatut_pisteet 100
                               :tavoitehinta 1000000
                               :tyyppi "sanktio"
-                              :lupaussanktio -10000M}
-          opts {:tallennettu-paatos tallennettu-paatos
+                              :lupaussanktio 10000M}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1947,12 +1957,38 @@
           tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
 
       (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
-        "Ennusteen tila on katselmoitu-toteuma kun päätös on"))))
+        "Ennusteen tila on katselmoitu-toteuma kun päätös on")
+      (is (= {:sanktio 10000M} (:bonus-tai-sanktio tulos))
+        "Tallennettu sanktio palautetaan positiivisena API-muodossa"))))
+
+(deftest laske-bonus-ja-ennuste-paatos-taytetty-test
+  (testing "Tallennettu taytetty-päätös näkyy katselmoituna toteumana"
+    (let [tallennettu-paatos {:toteutuneet_pisteet 100
+                              :luvatut_pisteet 100
+                              :tavoitehinta 1000000
+                              :tyyppi "taytetty"
+                              :lupaussanktio nil}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
+                :piste-toteuma 100
+                :piste-ennuste 100
+                :lupaus-sitoutuminen {:pisteet 100}
+                :tavoitehinta 1000000
+                :nykyhetki (pvm/luo-pvm 2020 1 15)
+                :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
+      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
+        "Tallennettu taytetty-päätös käsitellään katselmoituna toteumana")
+      (is (= {:tavoite-taytetty true} (:bonus-tai-sanktio tulos))
+        "Tallennettu taytetty-päätös näkyy API-muodossa tavoite täytetty -tilana"))))
 
 (deftest laske-bonus-ja-ennuste-ennusteen-tila-test
   (testing "Ennusteen tilan määrittely eri tilanteissa"
     ;; Alustava toteuma (hoitovuosi valmis)
-    (let [opts-alustava {:tallennettu-paatos nil
+    (let [opts-alustava {:db (:db jarjestelma)
+                         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                         :tallennettu-paatos nil
                          :piste-toteuma 85
                          :piste-ennuste 80
                          :lupaus-sitoutuminen {:pisteet 100}
@@ -1964,7 +2000,9 @@
         "Alustava toteuma kun toteuma on olemassa"))
 
     ;; Ennuste (hoitokausi alkanut, ei toteumaa)
-    (let [opts-ennuste {:tallennettu-paatos nil
+    (let [opts-ennuste {:db (:db jarjestelma)
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                        :tallennettu-paatos nil
                         :piste-toteuma nil
                         :piste-ennuste 80
                         :lupaus-sitoutuminen {:pisteet 100}
@@ -1976,7 +2014,9 @@
         "Ennuste kun hoitokausi on alkanut ja bonus on laskettavissa"))
 
     ;; Ei vielä ennustetta
-    (let [opts-ei-ennustetta {:tallennettu-paatos nil
+    (let [opts-ei-ennustetta {:db (:db jarjestelma)
+                              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                              :tallennettu-paatos nil
                               :piste-toteuma nil
                               :piste-ennuste 80
                               :lupaus-sitoutuminen {:pisteet 100}
@@ -1986,3 +2026,76 @@
           tulos-ei-ennustetta (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ei-ennustetta)]
       (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ei-ennustetta))
         "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))
+
+(deftest laske-bonus-ja-ennuste-kun-lupausprosentti-puuttuu-test
+  (testing "Puuttuva lupausprosentti estää onnistuneen ennustetilan"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [{:lupauspaatoksen_sanktioprosentti 2M
+                                :lupauspaatoksen_bonusprosentti nil}])]
+      (let [yhteiset-opts {:db (:db jarjestelma)
+                           :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                           :tallennettu-paatos nil
+                           :lupaus-sitoutuminen {:pisteet 100}
+                           :tavoitehinta 1000000
+                           :nykyhetki (pvm/luo-pvm 2020 8 31)
+                           :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+            tulos-alustava (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                             (assoc yhteiset-opts
+                               :piste-toteuma 85
+                               :piste-ennuste 80))
+            tulos-ennuste (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                            (assoc yhteiset-opts
+                              :piste-toteuma nil
+                              :piste-ennuste 80))]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-alustava))
+          "Pelkkä pisteiden toteuma ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ennuste))
+          "Pelkkä piste-ennuste ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (true? (:lupausprosentit-puuttuu? tulos-alustava))
+          "Puuttuvat prosentit merkitään eksplisiittisesti yhteenvetoa varten")
+        (is (nil? (:bonus-tai-sanktio tulos-alustava))
+          "Bonusta tai sanktiota ei voida laskea ilman kaikkia prosenttiparametreja")))))
+
+(deftest laske-bonus-ja-ennuste-kun-urakan-parametrit-puuttuvat-test
+  (testing "Myos kokonaan puuttuva parametririvi merkitään puuttuviksi lupausprosenteiksi"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [])]
+      (let [tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                    {:db (:db jarjestelma)
+                     :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                     :tallennettu-paatos nil
+                     :piste-toteuma 85
+                     :piste-ennuste 80
+                     :lupaus-sitoutuminen {:pisteet 100}
+                     :tavoitehinta 1000000
+                     :nykyhetki (pvm/luo-pvm 2020 8 31)
+                     :hk-alkupvm (pvm/luo-pvm 2019 10 1)})]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos))
+          "Ilman parametreja ennustetta ei voida laskea")
+        (is (true? (:lupausprosentit-puuttuu? tulos))
+          "Puuttuva parametririvi pitää näyttää puuttuvina lupausprosentteina")
+        (is (nil? (:bonus-tai-sanktio tulos))
+          "Bonusta tai sanktiota ei voida laskea ilman parametririviä")))))
+
+(deftest yhteinen-paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa yhteisen päätöksen API-muotoon oikein"
+    (is (= {:bonus 5200.0}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:lupausbonus 5200.0}))
+        "Bonus palautetaan positiivisena")
+    
+    (is (= {:sanktio 13200.0}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:lupaussanktio 13200.0}))
+        "Sanktio palautetaan positiivisena API-muodossa")
+    
+    (is (= {:tavoite-taytetty true}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:tavoite-taytetty true}))
+        "Tavoite täytetty palautetaan sellaisenaan")
+    
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun yhteinen päätös on nil")
+    
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio {}))
+        "Palauttaa nil kun yhteinen päätös on tyhjä map")))
