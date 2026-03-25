@@ -152,7 +152,6 @@
   käyttäjällä on jokin lukuoikeus."
   [db user elinvoimakeskukset]
   (oikeudet/ei-oikeustarkistusta!)
-  (println "hae-kayttajan-urakat :: elinvoimakeskukset: " elinvoimakeskukset)
   (kayttajan-urakat-aikavalilta
    db user
    (partial oikeudet/voi-lukea? oikeudet/urakat)

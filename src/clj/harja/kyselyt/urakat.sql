@@ -361,7 +361,6 @@ SELECT
         END                                     AS alueurakan_alue
 
 FROM urakka u
-         --LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
          LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
          LEFT JOIN organisaatio org ON u.urakoitsija = org.id
          LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
@@ -373,7 +372,6 @@ WHERE u.elinvoimakeskus_id = :elinvoimakeskusid
   AND u.poistettu = false
   AND (u.id IN (:sallitut_urakat)
     OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
-         --'hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
          'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
         OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
             :kayttajan_org_id = org.id)));
