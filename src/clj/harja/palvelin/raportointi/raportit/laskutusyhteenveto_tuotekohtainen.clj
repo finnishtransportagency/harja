@@ -309,7 +309,7 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     (taulukot/toteutuneet-valitaulukko {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
+     (taulukot/toteutuneet-valitaulukko-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
                                          :otsikko "Toteutuneet"
                                          :laskutettu-teksti laskutettu-teksti
                                          :laskutetaan-teksti laskutetaan-teksti

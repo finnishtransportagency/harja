@@ -288,7 +288,7 @@
      ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
      ;;    Budjettia jäljellä                                        ;;
      ;; ------------------------------------------------------------ ;;
-     (taulukot/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
                              :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
@@ -317,7 +317,7 @@
                             :tavoitehintainen? false}))))
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
-     (taulukot/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})

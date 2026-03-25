@@ -22,7 +22,7 @@
                              :lihavoi? lihavoi?}]))))
 
 ;; NOTE: Tätä käytetään pääasiassa työmaakokouksen laskutusyhteenvedossa
-(defn valitaulukko
+(defn valitaulukko-tyomaa
   "Työmaakokous välitaulukko ilman tyylejä"
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti]}]
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
@@ -86,8 +86,8 @@
         [:varillinen-teksti {:kustomi-tyyli tyyli :arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
 
 ;; NOTE: Tätä käytetään pääasiassa tuotekohtaisessa laskutusyteenvedossa
-(defn toteutuneet-valitaulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                                         kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
+(defn toteutuneet-valitaulukko-tuotekohtainen [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
+                                                       kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
         rivit (into []
                 (remove nil?
@@ -98,7 +98,7 @@
                      (when-not kyseessa-vapaa-aikavali?
                        (toteutuneet-rivi data kyseessa-kk-vali? "Hoitovuoden alun indeksikorjattu tavoitehinta" :hoitokauden-alun-indeksikorjattu-tavoitehinta nil true nil nil))
                      ;;   19-24 urakoilla on tavoitehinnan oikaisuja
-                     (when (yhteiset/raha-arvo-olemassa? (:oikaisujen-maara data)) (toteutuneet-rivi data kyseessa-kk-vali? "Tavoitehinnan muutokset" :oikaisujen-maara nil true nil nil))
+                     (when (and (not kyseessa-vapaa-aikavali?) (yhteiset/raha-arvo-olemassa? (:oikaisujen-maara data))) (toteutuneet-rivi data kyseessa-kk-vali? "Tavoitehinnan muutokset" :oikaisujen-maara nil true nil nil))
                      ;;   -25 urakoilla on kirjallisesti sovittuja pysyviä muutoksia
                      (when (and (yhteiset/raha-arvo-olemassa? (:kirjallisesti-sovitut-muutokset data)) (not kyseessa-vapaa-aikavali?))
                        (toteutuneet-rivi data kyseessa-kk-vali? "Kirjallisesti sovitut muutokset" :kirjallisesti-sovitut-muutokset nil true nil nil))
