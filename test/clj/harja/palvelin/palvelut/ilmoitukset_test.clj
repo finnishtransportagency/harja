@@ -124,15 +124,15 @@
         ilmoitukset-palvelusta (hae parametrit)]
 
     (testing "Uudenmaan elinvoimakeskus löytyy organisaatiotaulusta"
-      (is (some? uud-evk-id) "Uudenmaan elinvoimakeskuksen id puuttuu"))
+      (is (some? uud-evk-id) "Uudenmaan elinvoimakeskuksen id löytyy"))
 
     (testing "Kannasta löytyy oikea määrä ilmoituksia Uudenmaan elinvoimakeskukselle"
       (is (= 2 ilmoitusten-maara-suoraan-kannasta)
-          "Uudenmaan elinvoimakeskuksella ei pitäisi olla ilmoituksia testidatassa"))
+          "Uudenmaan elinvoimakeskuksella kaksi ilmoitusta kannassa"))
 
     (testing "Palvelu palauttaa tyhjän tulosjoukon elinvoimakeskukselle, jolla ei ole ilmoituksia"
       (is (= 2 (count ilmoitukset-palvelusta))
-          "Ilmoituksia ei pitäisi palautua Uudenmaan elinvoimakeskukselle"))))
+        "Uudenmaan elinvoimakeskuksella kaksi ilmoitusta palveluhaun kautta"))))
 
 (deftest hae-ilmoitukset-tyypin-mukaan
   (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit

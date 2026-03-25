@@ -58,7 +58,6 @@ SELECT u.id,
            tp.tapahtunut BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
                make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat
   FROM urakka u
-           JOIN organisaatio o ON u.hallintayksikko = o.id
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois
@@ -89,7 +88,7 @@ SELECT u.id,
           AND y.lahetys_onnistunut IS FALSE
           AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet
 FROM urakka u
-         JOIN organisaatio o ON u.hallintayksikko = o.id
+         JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
          JOIN yllapitokohde y ON y.urakka = u.id
          LEFT JOIN paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde AND pot2.poistettu IS NOT TRUE
 WHERE
@@ -103,8 +102,8 @@ WHERE
         EXTRACT (YEAR FROM u.alkupvm) AND
         EXTRACT (YEAR FROM u.loppupvm)) AND
     (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-    (:evkt_annettu IS NOT TRUE OR u.hallintayksikko IN (:evk_idt))
-GROUP BY u.id, u.nimi, u.hallintayksikko, hoitokauden_alkuvuosi
+    (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
+GROUP BY u.id, u.nimi, u.elinvoimakeskus_id, hoitokauden_alkuvuosi
 ORDER BY u.nimi;
 
 

@@ -177,6 +177,47 @@
             (= (apurit/raporttisolun-arvo tur) 7)
             (= (apurit/raporttisolun-arvo urk) 0)))))))
 
+(deftest ilmoitusraportti-koko-maa-evk-summat-tasmaa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :ilmoitusraportti
+                   :konteksti "koko maa"
+                   :hallintayksikko-id nil
+                   :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
+                                :loppupvm (pvm/->pvm "30.09.2017")
+                                :urakkatyyppi :kaikki}})
+        otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+        taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+        rivit (apurit/taulukon-rivit taulukko)
+        rivi-arvot (fn [rivi]
+                     (let [r (if (map? rivi) (:rivi rivi) rivi)]
+                       r))
+        evk-yhteensa-rivit (filter (fn [rivi]
+                                     (let [r (rivi-arvot rivi)
+                                           alue (first r)]
+                                       (and (string? alue)
+                                         (clojure.string/includes? alue "yhteensä"))))
+                             rivit)
+        koko-maa-rivi (first (filter (fn [rivi]
+                                       (let [r (rivi-arvot rivi)
+                                             alue (first r)]
+                                         (= alue "KOKO MAA")))
+                               rivit))
+        evk-tur-summa (apply + (map (fn [rivi]
+                                      (let [r (rivi-arvot rivi)]
+                                        (apurit/raporttisolun-arvo (nth r 2))))
+                                 evk-yhteensa-rivit))
+        koko-maa-tur (apurit/raporttisolun-arvo (nth (rivi-arvot koko-maa-rivi) 2))]
+
+    (testing "EVK-yhteensärivejä löytyy"
+      (is (pos? (count evk-yhteensa-rivit))
+        "Raportista löytyy EVK-yhteensärivejä"))
+
+    (testing "EVK-summien TUR-summa täsmää koko maan TUR-summaan"
+      (is (= evk-tur-summa koko-maa-tur)
+        (str "EVK-yhteensä TUR " evk-tur-summa " = KOKO MAA TUR " koko-maa-tur)))))
+
 (deftest ilmoitusraportti-koko-maa-urakoittain
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti

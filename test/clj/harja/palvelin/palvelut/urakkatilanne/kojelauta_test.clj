@@ -134,6 +134,58 @@
 
     (is (= 4 (count vastaus)) "Urakoiden lukumäärä")))
 
+(deftest kojelautaan-usealla-evkn-suodatuksella
+  (let [psu-evk-id @pohjois-suomen-evk-id
+        lapin-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Lapin elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                          :hoitokauden-alkuvuosi 2024
+                                                          :urakka-idt nil
+                                                          :evk-idt #{psu-evk-id lapin-evk-id}})
+        psu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                              :hoitokauden-alkuvuosi 2024
+                                                              :urakka-idt nil
+                                                              :evk-idt #{psu-evk-id}})
+        lappi-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                                :hoitokauden-alkuvuosi 2024
+                                                                :urakka-idt nil
+                                                                :evk-idt #{lapin-evk-id}})]
+
+    (testing "Lapin EVK löytyy"
+      (is (some? lapin-evk-id) "Lapin elinvoimakeskus löytyy kannasta"))
+
+    (testing "Kaikki palautetut urakat kuuluvat valittuihin EVK:iin"
+      (is (every? #(contains? #{psu-evk-id lapin-evk-id} (:evk_id %)) vastaus)
+        "Jokaisen urakan evk_id on joko PSU tai Lappi"))
+
+    (testing "Useamman EVK:n haku palauttaa enemmän kuin yksittäinen"
+      (is (>= (count vastaus) (count psu-vastaus))
+        "Kahden EVK:n haku palauttaa vähintään yhtä monta kuin PSU yksinään"))
+
+    (testing "Kahden EVK:n erillisten hakujen summa vastaa yhdistettyä hakua"
+      (is (= (count vastaus)
+            (+ (count psu-vastaus) (count lappi-vastaus)))
+        "Yhdistetyn haun lukumäärä = PSU + Lappi"))))
+
+(deftest kojelautaan-tyhja-evk-suodatus-palauttaa-kaikki
+  (let [vastaus-tyhjalla (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                                   :hoitokauden-alkuvuosi 2024
+                                                                   :urakka-idt nil
+                                                                   :evk-idt #{}})
+        vastaus-nililla (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                                  :hoitokauden-alkuvuosi 2024
+                                                                  :urakka-idt nil
+                                                                  :evk-idt nil})]
+    (testing "Tyhjä EVK-set palauttaa kaikki urakat"
+      (is (= (count vastaus-tyhjalla) (count vastaus-nililla))
+        "Tyhjä set ja nil tuottavat saman tuloksen")
+      (is (pos? (count vastaus-tyhjalla))
+        "Tyhjä EVK-suodatus palauttaa urakoita"))))
+
 (deftest vain-iin-mhu-kojelautaan-hk-alkuvuosi-2024
   (let [iin-mhu-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
