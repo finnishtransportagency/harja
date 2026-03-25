@@ -1,19 +1,22 @@
--- Tällä hetkellä on tiedossa vain yksi tyyppi, joka tauluun tallennetaan
-CREATE TYPE ajastettu_tehtava AS ENUM ('siirra_toteumat_analytiikalle');
+-- Mahdollistetaan muutostiedon päättely urakka_parametrit taulusta
+ALTER TABLE urakka_parametrit
+    ADD COLUMN muutosten_hallinta BOOLEAN DEFAULT FALSE NOT NULL;
 
--- Tallenna ajastettujen tehtävien logit tänne talteen.
-CREATE TABLE ajastetut_tehtavat
-(
-    tyyppi            ajastettu_tehtava not null,
-    alkuaika_valilta  timestamp DEFAULT NULL, -- Tehtävän käsittelemä aikaväli alkaa tästä ajasta
-    loppuaika_valilta timestamp DEFAULT NULL, -- Tehtävän käsittelemä aikaväli päättyy tähän aikaan
-    onnistunut        boolean,
-    virhe             text      DEFAULT NULL,
-    luotu             timestamp
-);
+COMMENT ON COLUMN urakka_parametrit.muutosten_hallinta IS 'Määrittää, onko muutokset urakalla käytössä. Oletuksena false, eli muutosten hallinta ei käytössä. Yleisesti se on käytössä vasta -25 alkaneilla ja sen jälkeisillä urakoilla.';
 
--- Oletetaan, että edellinen suoritus on onnistunut, jotta taulu ei ole tuotannossa tyhjä.
--- Seuraava ajastettu tehtävä ajetaan tässä syötetyn "suoritusyritys_aika" kohdasta eteenpäin siihen asti, missä se ajo tapahtuu.
--- Eli jos suoritusyritys-aika on vaikka 1.1.2026 klo 12:00 ja uusi ajastettu tehtävä ajetaan 2.1.2026 klo 10:00, niin ajettu tehtävä käsittelee aikavälin 1.1.2026 klo 12:00 - 2.1.2026 klo 10:00.
-INSERT INTO ajastetut_tehtavat (tyyppi, alkuaika_valilta, loppuaika_valilta, onnistunut, virhe, luotu)
-VALUES ('siirra_toteumat_analytiikalle'::ajastettu_tehtava, NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day', TRUE, NULL, NOW());
+-- Korjaa päätöksen kolumnien nimeämistä, jotta ne kuvaavat paremmin sisältöään
+ALTER TABLE paatos_hoitokauden_indeksikorjaus
+    RENAME COLUMN tavoitehinta TO hv_alun_indkorj_tavoitehinta;
+ALTER TABLE paatos_hoitokauden_indeksikorjaus
+    RENAME COLUMN tavoitehinta_ennen TO hv_lopun_tavoitehinta_ennen_indkorj;
+
+
+-- Lisätään kaikille -25 alkaneille urakalle tieto, että muutosten hallinta on käytössä
+-- Hox. Tuotannossa on urakka, joka alkaa -25 vuonna, mutta Sampon virheellisen syötön takia se alkaa 1.1. eikä 1.10.
+UPDATE urakka_parametrit
+SET muutosten_hallinta = true
+WHERE urakkaid IN (SELECT id FROM urakka WHERE alkupvm >= '2025-01-01' AND tyyppi = 'teiden-hoito');
+
+-- Nimetään hoidonjohtopalkkionpäätöksen kolumni kuvaavammiksi
+ALTER TABLE paatos_hoidonjohtopalkkio
+    RENAME COLUMN tavoitehinta TO hv_lopun_indkorjaamaton_tavoitehinta;

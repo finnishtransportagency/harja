@@ -275,6 +275,10 @@
            (ennuste-opaste [ikonit/harja-icon-status-alert]
              (str "Hoitokauden tavoitehinta puuttuu")
              "Täytä tarjouksen alkuperäinen tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
+           (get-in app [:yhteenveto :lupausprosentit-puuttuu?])
+           (ennuste-opaste [ikonit/harja-icon-status-alert]
+             "Lupausbonus- tai sanktioprosentit puuttuvat"
+             "Urakan parametreista puuttuvat lupauspäätöksen laskentaan tarvittavat prosentit.")
            (= :ei-viela-ennustetta ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-help]
              "Ei vielä ennustetta"
