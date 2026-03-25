@@ -37,8 +37,7 @@
         alkuaika (or viimeisin-ajokerta
                    (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 2 :paiva))
         alkuaika-sql (if (instance? java.sql.Timestamp alkuaika) alkuaika (konversio/joda-datetime->sql-timestamp alkuaika))
-        loppuaika (pvm/joda-timeksi (pvm/nyt))
-        loppuaika-sql (if (instance? java.sql.Timestamp loppuaika) loppuaika (konversio/joda-datetime->sql-timestamp loppuaika))]
+        loppuaika-sql (konversio/joda-datetime->sql-timestamp (pvm/joda-timeksi (pvm/nyt)))]
     (try
       (yrita-siirtaa-toteumat db alkuaika-sql loppuaika-sql)
       (log/info "Toteumien siirto analytiikan_toteumat tauluun onnistui aikaväliltä:" alkuaika-sql "-" loppuaika-sql)
