@@ -4,13 +4,18 @@ CREATE TYPE ajastettu_tehtava AS ENUM ('siirra_toteumat_analytiikalle');
 -- Tallenna ajastettujen tehtävien logit tänne talteen.
 CREATE TABLE ajastetut_tehtavat
 (
-    tyyppi            ajastettu_tehtava not null,
-    alkuaika_valilta  timestamp DEFAULT NULL, -- Tehtävän käsittelemä aikaväli alkaa tästä ajasta
-    loppuaika_valilta timestamp DEFAULT NULL, -- Tehtävän käsittelemä aikaväli päättyy tähän aikaan
-    onnistunut        boolean,
-    virhe             text      DEFAULT NULL,
-    luotu             timestamp
+    id                SERIAL PRIMARY KEY,
+    tyyppi            ajastettu_tehtava NOT NULL,
+    alkuaika_valilta  TIMESTAMP DEFAULT NULL, -- Tehtävän käsittelemä aikaväli alkaa tästä ajasta
+    loppuaika_valilta TIMESTAMP DEFAULT NULL, -- Tehtävän käsittelemä aikaväli päättyy tähän aikaan
+    onnistunut        BOOLEAN,
+    virhe             TEXT      DEFAULT NULL,
+    luotu             TIMESTAMP
 );
+
+-- Luodaan indeksi, joka nopeuttaa ajastettujen tehtävien hakua tyypin ja onnistuneiden tehtävien osalta, jotta voidaan hakea nopeasti viimeisin onnistunut ajastettu tehtävä
+CREATE INDEX idx_ajastetut_tehtavat_haku
+    ON ajastetut_tehtavat(tyyppi, loppuaika_valilta DESC) WHERE onnistunut = TRUE;
 
 -- Oletetaan, että edellinen suoritus on onnistunut, jotta taulu ei ole tuotannossa tyhjä.
 -- Seuraava ajastettu tehtävä ajetaan tässä syötetyn "suoritusyritys_aika" kohdasta eteenpäin siihen asti, missä se ajo tapahtuu.

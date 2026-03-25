@@ -14,9 +14,9 @@
   "Yrittää siirtää toteumat transaktion sisällä. Palauttaa true jos onnistui, false jos epäonnistui.
   Logittaa onnistumisen ajastetut_tehtavat tauluun. Epäonnistumisesta ei logiteta tässä, vaan kutsuvassa funktiossa."
   [db alkuaika-sql loppuaika-sql]
-  (jdbc/with-db-transaction [tx db]
-    (toteuma-kyselyt/siirra-toteumat-analytiikalle tx {:alkuaika alkuaika-sql :loppuaika loppuaika-sql})
-    (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! tx {:tyyppi "siirra_toteumat_analytiikalle"
+  (jdbc/with-db-transaction [db db]
+    (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:alkuaika alkuaika-sql :loppuaika loppuaika-sql})
+    (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle"
                                                              :alkuaika_valilta alkuaika-sql
                                                              :loppuaika_valilta loppuaika-sql
                                                              :onnistunut true
@@ -27,48 +27,29 @@
   "Toteumat siirretään aina myöhään yöllä, jotta edellisen päivän kaikki toteumat ehtivät muodostua.
   Funktio olettaa, että sitä ajetaan ajastetusti yöllä, joten käytetän - nyt - hetkeä defaulttina.
   Siirretään kaikki ne toteumat, jotka on muodostuneet (lisätty) tai päivitetty edellisen ajokerran jälkeen.
-  Edellinen ajokerta saadaan ajastetut_tehtavat taulusta.
-
-  Siirto tehdään transaktion sisällä ja yritetään maksimissaan 3 kertaa virhetilanteessa."
+  Edellinen ajokerta saadaan ajastetut_tehtavat taulusta."
   [db]
-  (let [;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
-        viimeisin-ajokerta (:loppuaika_valilta (first (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle")))
+  (let [viimeisin-ajokerta (:loppuaika_valilta (first (ajastetut-tehtavat-kyselyt/hae-viimeisin-onnistunut-ajokerta db "siirra_toteumat_analytiikalle")))
         _ (log/info "Viimeisin onnistunut ajokerta analytiikan_toteumat siirrossa:" viimeisin-ajokerta)
 
         ;; Jotta ei varmasti menetetä yhtään muokattua tai lisättyä toteumaa, niin otetaan viimeisin ajokerta mukaan isommalla pensselillä, eli poistetaan siitä vielä 3h.
         viimeisin-ajokerta (when viimeisin-ajokerta (pvm/ajan-muokkaus viimeisin-ajokerta false 3 :tunti))
-        alkuaika (or viimeisin-ajokerta                       ;; Saatiin tietokannasta
-                   (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 2 :paiva)) ;; Ensimmäisellä kerralla siirretään parin viimeisen päivän toteumat
-        alkuaika-sql (if (= "java.sql.Timestamp" (type alkuaika)) alkuaika (konversio/joda-datetime->sql-timestamp alkuaika))
-        loppuaika (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 3 :tunti)                                 ;; Aina nykyhetki + 3h eli varmuuden varalta
-        loppuaika-sql (if (= "java.sql.Timestamp" (type loppuaika)) loppuaika (konversio/joda-datetime->sql-timestamp loppuaika))
-        ;; Kovakoodattu maksimiyritysmäärä. Ei tarvetta vielä asetuksiin.
-        max-yritykset 3]
-    (loop [yritys 1
-           viimeisin-virhe nil]
-      (if
-        ;; Kaikki yritykset käytetty, kirjataan epäonnistuminen
-        (> yritys max-yritykset)
-        (do
-          ;; Olettaa, että virhe on joka kerta sama. Virhe siis logitetaan vain kerran ja se otetaan viimeisestä yrityksestä.
-          (log/error (str "Toteumien siirto analytiikan_toteumat tauluun epäonnistui " max-yritykset " yrityksen jälkeen. ERROR:" viimeisin-virhe))
-          (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle"
-                                                                   :alkuaika_valilta alkuaika-sql
-                                                                   :loppuaika_valilta loppuaika-sql
-                                                                   :onnistunut false
-                                                                   :virhe (str viimeisin-virhe)}))
-
-        ;; ELSE - eli ei olla vielä yritetty kolmesti. Yritetään siis siirtoa
-        (let [[onnistui? virhe] (try
-                                  (yrita-siirtaa-toteumat db alkuaika-sql loppuaika-sql)
-                                  [true nil]
-                                  (catch Exception e
-                                    (log/warn e (str "Toteumien siirto analytiikan_toteumat tauluun epäonnistui yrityksellä " yritys "/" max-yritykset ". Virhe: " (.getMessage e)))
-                                    [false e]))]
-          (if onnistui?
-            (log/info "Toteumien siirto analytiikan_toteumat tauluun onnistui aikaväliltä: " alkuaika-sql " - " loppuaika-sql)
-            (recur (inc yritys) virhe)))))))
-
+        alkuaika (or viimeisin-ajokerta
+                   (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) false 2 :paiva))
+        alkuaika-sql (if (instance? java.sql.Timestamp alkuaika) alkuaika (konversio/joda-datetime->sql-timestamp alkuaika))
+        loppuaika (pvm/joda-timeksi (pvm/nyt))
+        loppuaika-sql (if (instance? java.sql.Timestamp loppuaika) loppuaika (konversio/joda-datetime->sql-timestamp loppuaika))]
+    (try
+      (yrita-siirtaa-toteumat db alkuaika-sql loppuaika-sql)
+      (log/info "Toteumien siirto analytiikan_toteumat tauluun onnistui aikaväliltä:" alkuaika-sql "-" loppuaika-sql)
+      (catch Exception e
+        (log/error e (str "Toteumien siirto analytiikan_toteumat tauluun epäonnistui aikaväliltä: "
+                       alkuaika-sql " - " loppuaika-sql ". Virhe: " (.getMessage e)))
+        (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "siirra_toteumat_analytiikalle"
+                                                                 :alkuaika_valilta alkuaika-sql
+                                                                 :loppuaika_valilta loppuaika-sql
+                                                                 :onnistunut false
+                                                                 :virhe (str e)})))))
 
 (defn- ajasta [db]
   (log/info "Ajastetaan toteumien siirto analytiikan_toteumat tauluun joka päivä.")
