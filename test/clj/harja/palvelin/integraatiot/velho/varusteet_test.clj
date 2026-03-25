@@ -134,7 +134,7 @@
         (let [vastaus (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
                                                                                               :hoitokauden-alkuvuosi nil})]
           (is (= 1 (count (:toteumat vastaus))) "Ei-rajatun haun pitää edelleen palauttaa varusteet")
-          (is (= 3 (count @pyynnot)) "Haun pitää tehdä välimäisten oidien, välimäisten toimenpiteiden ja varsinaisten varusteiden pyynnöt")
+          (is (= 2 (count @pyynnot)) "Haun pitää tehdä välimäisten toimenpiteiden haku ja varsinainen varustehaku silloin kun erillisiä kohdevarusteita ei löydy")
           (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
                   (tree-seq coll? seq (walk/stringify-keys %)))
                 @pyynnot)
@@ -152,7 +152,7 @@
         (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
                                                                                 :hoitokauden-alkuvuosi nil
                                                                                 :hoitovuoden-kuukausi 10})
-        (is (= 3 (count @pyynnot)) "Kuukausen normalisointi ei saa estää koko kolmen pyynnön hakuketjua")
+        (is (= 2 (count @pyynnot)) "Kuukausen normalisointi ei saa estää välimäisten toimenpiteiden ja varsinaisen varustehaun ketjua")
         (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
                         (tree-seq coll? seq (walk/stringify-keys %)))
               @pyynnot)

@@ -443,6 +443,27 @@
   (let [varusteet-toimenpiteilla (yleiset/liita-yhteen-mapit-ja-korvaa-avain map)]
     varusteet-toimenpiteilla))
 
+(defn- tee-muutoksen-lahde-oid-parametri [oid]
+  ["kohdeluokka" "yleiset/perustiedot"
+   ["joukossa"
+    ["yleiset/perustiedot" "muutoksen-lahde-oid"]
+    [oid]]])
+
+(defn- tee-varusteen-oid-parametri [oidit]
+  ["joukossa"
+   ["yleiset/perustiedot" "oid"]
+   oidit])
+
+(defn- yhdista-varusteet-oidin-perusteella [varusteet lisa-varusteet]
+  (vals
+    (reduce (fn [varusteet-oidilla varuste]
+              (let [oid (:oid varuste)]
+                (if (contains? varusteet-oidilla oid)
+                  varusteet-oidilla
+                  (assoc varusteet-oidilla oid varuste))))
+      {}
+      (concat varusteet lisa-varusteet))))
+
 (defn hae-valimaiset-varuste-toimenpiteet-oideille [db oidit http-asetukset konteksti toimenpide]
   (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
         payload {:asetukset {:tyyppi "kohdeluokkahaku"
@@ -460,23 +481,35 @@
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
 
-(defn hae-urakan-valimaisten-varusteiden-oidit [http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri]
-  (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
-                             :liitoshaku false
-                             :palautettavat-kentat [["yleiset/perustiedot" "oid"]]}
-                 :kohdeluokat valimaiset-kohdeluokat
+(defn hae-urakan-valimaiset-varustetoimenpiteet [db http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri toimenpide]
+  (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
+        payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                             :liitoshaku false}
+                 :kohdeluokat ["toimenpiteet/valimaiset-varustetoimenpiteet"]
                  :lauseke (keep identity
                             ["ja"
-                             ["kohdeluokka" "yleiset/perustiedot"
-                              ["joukossa"
-                               ["yleiset/perustiedot"
-                                "muutoksen-lahde-oid"]
-                               [urakka-velho-oid]]]
+                             (tee-muutoksen-lahde-oid-parametri urakka-velho-oid)
+                             toimenpide-rajaus
                              alkuaika-parametri
                              loppuaika-parametri])}
         {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
+
+(defn- hae-varusteet-oideilla [http-asetukset konteksti oidit kohdeluokat varustetyypit-parametri tieosoite-parametri kuntoluokat-parametri]
+  (when (seq oidit)
+    (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                               :liitoshaku true}
+                   :kohdeluokat (mapv (comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokat)
+                   :lauseke (keep identity
+                              ["ja"
+                               (tee-varusteen-oid-parametri oidit)
+                               varustetyypit-parametri
+                               tieosoite-parametri
+                               kuntoluokat-parametri])}
+          {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+          vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
+      vastaus)))
 
 (defn test-hae-kaikki-valimaiset-varuste-toimenpiteet [http-asetukset konteksti]
   (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
@@ -576,16 +609,23 @@
                                         ["yleiset/versioitu" "version-voimassaolo" "alku"]
                                         (second aikavali)]])
 
-                valimaiset-oidit  (hae-urakan-valimaisten-varusteiden-oidit
-                                    http-asetukset
-                                    konteksti
-                                    urakka-velho-oid
-                                    alkuaika-parametri
-                                    loppuaika-parametri)
-                oidit (mapv :oid valimaiset-oidit)
-                valimaiset-toimenpiteet (when-not (empty? oidit)
-                                          (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide))
-                toimenpiteella-suodatetut-valimaiset-oidit (vec (map #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet))
+                valimaiset-toimenpiteet (hae-urakan-valimaiset-varustetoimenpiteet
+                                          db
+                                          http-asetukset
+                                          konteksti
+                                          urakka-velho-oid
+                                          alkuaika-parametri
+                                          loppuaika-parametri
+                                          toimenpide)
+                toimenpiteella-suodatetut-valimaiset-oidit (vec (distinct (keep #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet)))
+                valimaisten-toimenpiteiden-kohdevarusteet (hae-varusteet-oideilla
+                                                            http-asetukset
+                                                            konteksti
+                                                            toimenpiteella-suodatetut-valimaiset-oidit
+                                                            kohdeluokat
+                                                            varustetyypit-parametri
+                                                            tieosoite-parametri
+                                                            kuntoluokat-parametri)
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true}
@@ -606,8 +646,9 @@
                 
                 {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload)) 
                 varusteet-vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))
+                kaikki-varusteet (yhdista-varusteet-oidin-perusteella varusteet-vastaus valimaisten-toimenpiteiden-kohdevarusteet)
                 varusteet-valimaisilla-toimenpiteilla (yhdista-valimaiset-toimenpiteet-varusteisiin
-                                                        {:kokoelma1 varusteet-vastaus
+                                                        {:kokoelma1 kaikki-varusteet
                                                          :kokoelma2 valimaiset-toimenpiteet
                                                          :yhteinen-key1 [:oid]
                                                          :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
