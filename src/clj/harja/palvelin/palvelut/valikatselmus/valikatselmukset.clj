@@ -404,10 +404,10 @@
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
                        validaatio)
           ;; Jos ollaan tekemässä lupauspäätöstä, josta tulee bonusta
-          erilliskustannus_id (when (and "bonus" (:tyyppi paatos) (:lupausbonus paatos))
+          erilliskustannus_id (when (and (= "bonus" (:tyyppi paatos)) (:lupausbonus paatos))
                                 (paatos-apurit/tallenna-lupausbonus db paatos kayttaja))
           ;; Tai jos tulee sakkoja, niin tehdään sanktio
-          sanktio_id (when (and "sakko" (:tyyppi paatos) (:lupaussanktio paatos))
+          sanktio_id (when (and (= "sanktio" (:tyyppi paatos)) (:lupaussanktio paatos))
                        (paatos-apurit/tallenna-lupaussanktio db paatos kayttaja))
           paatos (-> paatos
                    (assoc :erilliskustannus_id erilliskustannus_id)
