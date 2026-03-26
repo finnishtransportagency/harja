@@ -3,7 +3,9 @@ import {avaaHarjaTimeoutilla, muokkaaTarjousRiviaArvo} from "../support/apurit.j
 
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
-const urakanNimi = 'POP MHU Kajaani 2025-2030';
+const urakanNimiKajaani = 'POP MHU Kajaani 2025-2030';
+const urakanNimiOulu = 'Oulun MHU 2019-2024';
+const hallintayksikko = 'Pohjois-Pohjanmaa';
 
 function alustaUrakkaKustannussuunnitteluun(nimi) {
     ks.alustaKanta(nimi);
@@ -19,10 +21,31 @@ function trimmaaArvo(arvo) {
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
 }
 
-describe('Laskutusraja testit', function () {
+function avaaOulunKulujenKohdistus() {
+    avaaHarjaTimeoutilla();
+
+    cy.contains('.haku-lista-item', hallintayksikko, {timeout: visibleTimeout}).click();
+    cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
+
+    // Urakka on päättynyt, joten täytyy näyttää päättyneet urakat
+    cy.contains('label', 'Näytä päättyneet', {timeout: visibleTimeout})
+        .should('be.visible')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
+
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimiOulu, {timeout: visibleTimeout}).click();
+
+    cy.get('[data-cy=tabs-taso1-Kulut]', {timeout: visibleTimeout}).click();
+    cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+}
+
+describe('Laskutusraja', function () {
 
     before(function () {
-        alustaUrakkaKustannussuunnitteluun(urakanNimi);
+        alustaUrakkaKustannussuunnitteluun(urakanNimiKajaani);
         cy.viewport(1100, 2000);
         avaaHarjaTimeoutilla();
 
@@ -35,10 +58,10 @@ describe('Laskutusraja testit', function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
         // Navigoi urakkaan
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click();
+        cy.contains('.haku-lista-item', hallintayksikko).click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimiKajaani, {timeout: clickTimeout}).click();
 
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
 
@@ -207,5 +230,51 @@ describe('Laskutusraja testit', function () {
 
         // Tarkista että Laskutusraja-osio näkyy
         tarkistaLaskutusrajaOsio();
+    });
+});
+
+describe('Harjan generoimat kulut Kulujen kohdistus -näkymässä', function () {
+
+    before(function () {
+        cy.viewport(1100, 2000);
+
+        cy.intercept('POST', '_/hae-urakan-kulut').as('hae-kulut');
+        cy.intercept('POST', '_/hae-kaikkien-tehtavaryhmien-nimet').as('hae-tehtavaryhmat');
+
+        avaaOulunKulujenKohdistus();
+    });
+
+    it('Maaliskuun 2020 kulurivi 01.03.2020 sisältää Harjan automaattisesti luoman kulun tehtäväryhmällä', function () {
+        // Valitse 1. hoitovuosi
+        cy.get('[data-cy=hoitokausi-valinta]').click();
+        cy.contains('li', '1. hoitovuosi').click();
+
+        // Valitse kuukaudeksi maaliskuu 2020
+        cy.intercept('POST', '_/hae-urakan-kulut').as('hae-kulut-maaliskuu');
+        cy.get('[id="kuukausi-valinta"]').click();
+        cy.get('ul.livi-alasvetolista').contains('li', 'Maaliskuu 2020').click();
+        cy.wait('@hae-tehtavaryhmat', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
+
+        // Odota että lataus päättyy
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+
+        // Etsi 01.03.2020 päivämäärärivi ja klikkaa sen alla oleva toimenpiderivi auki
+        cy.contains('table.grid tbody tr.klikattava td', '01.03.2020', {timeout: visibleTimeout})
+            .should('be.visible')
+            .closest('tr')
+            .click();
+
+        // Tarkista, että auki olevan rivin alla on kulu, jossa on
+        // lisätietona "Harjan automaattisesti luoma kulu" ja tehtäväryhmä on täytetty
+        cy.get('table.grid tbody')
+            .within(() => {
+                cy.contains('td', 'Harjan automaattisesti luoma kulu')
+                    .should('have.length.gte', 1)
+                    .each(($td) => {
+                        const $rivi = $td.closest('tr');
+                        // Tarkista että tehtäväryhmä-sarake (indeksi 3) ei ole tyhjä
+                        cy.wrap($rivi).find('td').eq(3).invoke('text').should('not.be.empty');
+                    });
+            });
     });
 });
