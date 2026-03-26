@@ -188,11 +188,11 @@
       (assoc :varusteet [])))
 
   HaeVarusteenHistoria
-  (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
+  (process-event [{{:keys [kohdevarusteen-kohdeluokka kohdevarusteen-oid kohdeluokka ulkoinen-oid]} :varuste} app]
     (tuck-apurit/post! :hae-varusteen-historia
       {:urakka-id @nav/valittu-urakka-id
-       :kohdeluokka kohdeluokka
-       :ulkoinen-oid ulkoinen-oid}
+       :kohdeluokka (or kohdevarusteen-kohdeluokka kohdeluokka)
+       :ulkoinen-oid (or kohdevarusteen-oid ulkoinen-oid)}
       {:onnistui ->HaeVarusteenHistoriaOnnistui
        :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})
     (assoc app :historia-haku-paalla? true))

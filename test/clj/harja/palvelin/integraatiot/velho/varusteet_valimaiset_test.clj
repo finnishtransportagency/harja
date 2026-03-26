@@ -41,7 +41,7 @@
                          [:db :integraatioloki])))
 
 (defn testidatan-lisays-fixture [testit]
-  (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide')")
+  (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtp2test', 'Toinen testivarustetoimenpide')")
   (testit)
   (u "DELETE FROM velho_nimikkeisto WHERE nimi ILIKE '%test'"))
 
@@ -112,6 +112,12 @@
               (= ["yleiset/versioitu" "version-voimassaolo" "alku"] (second %)))
         (tree-seq coll? seq payload)))
 
+(defn- loytyyko-paivamaaraehto-polulla? [payload operaattori polku]
+  (some #(and (vector? %)
+              (= operaattori (first %))
+              (= polku (second %)))
+        (tree-seq coll? seq payload)))
+
 (deftest tavoitetilan-hakuketju-kutsuu-kaksi-pyyntoa-kun-valimaisia-toimenpiteita-ei-loydy
   (let [{:keys [vastaus pyynnot]} (aja-varustehaku {:urakka-id 123
                                                     :hoitokauden-alkuvuosi 2020}
@@ -155,6 +161,22 @@
       "Myös normaali varustehaku käyttää samaa alkukenttää")
     (is (loytyyko-paivamaaraehto-alkuun? toinen "pvm-pienempi-kuin")
       "Myös normaalin varustehaun yläraja ankkuroidaan samaan kenttään")))
+
+(deftest tavoitetilan-hakuketju-fallbackaa-version-alusta-alkaen-kenttaan
+  (let [{:keys [pyynnot]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020
+                                            :hoitovuoden-kuukausi 10}
+                                           ["hakurajapinta-vastaus-tyhja.json"
+                                            "varusteiden-hakurajapinta-vastaus.json"])
+        [eka toinen] pyynnot]
+    (is (loytyyko-paivamaaraehto-polulla? eka "pvm-suurempi-kuin" ["yleiset/perustiedot" "alkaen"])
+      "Välimäisten toimenpiteiden haussa alarajan pitää fallbackata myös alkaen-kenttään")
+    (is (loytyyko-paivamaaraehto-polulla? eka "pvm-pienempi-kuin" ["yleiset/perustiedot" "alkaen"])
+      "Välimäisten toimenpiteiden haussa ylärajan pitää fallbackata myös alkaen-kenttään")
+    (is (loytyyko-paivamaaraehto-polulla? toinen "pvm-suurempi-kuin" ["yleiset/perustiedot" "alkaen"])
+      "Normaalissa varustehaussa alarajan pitää fallbackata myös alkaen-kenttään")
+    (is (loytyyko-paivamaaraehto-polulla? toinen "pvm-pienempi-kuin" ["yleiset/perustiedot" "alkaen"])
+      "Normaalissa varustehaussa ylärajan pitää fallbackata myös alkaen-kenttään")))
 
 
 (deftest rajatapauksen-raakatoimenpide-kohdistuu-projektille-kirjattuun-varusteeseen
@@ -271,3 +293,85 @@
       (is (= "Testivarustetoimenpide"
             (:toimenpide (first (:toteumat vastaus))))
         "Eksplisiittinen toimenpidesuodatus säilyttää välimäisen toimenpiteen yhdistymisen kohdevarusteeseen"))))
+
+(deftest valimainen-toimenpiderivi-palautuu-omana-rivinaan-uudella-tunnisteella
+  (let [toimenpide-oid (get-in (lue-fixture-datana "valimaisten-varustetoimenpiteiden-vastaus-urakalle.json")
+                        [:osumat 0 :oid])
+        kohdevaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
+                          [:osumat 0 :oid])
+        {:keys [vastaus]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020}
+                                           ["valimaisten-varustetoimenpiteiden-vastaus-urakalle.json"
+                                            "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
+                                            "hakurajapinta-vastaus-tyhja.json"])
+        rivi (first (:toteumat vastaus))]
+    (is (= 1 (count (:toteumat vastaus)))
+      "Yksi välimäinen toimenpide tuottaa yhden rivin")
+    (is (= :valimainen-toimenpiderivi (:rivityyppi rivi))
+      "Välimäinen toimenpide erotellaan omaksi rivityypikseen")
+    (is (= toimenpide-oid (:rivi-id rivi))
+      "Sekamuotoisen listan tunniste on välimäisellä rivillä toimenpide-oid")
+    (is (= toimenpide-oid (:toimenpide-oid rivi))
+      "Välimäisellä rivillä säilyy eksplisiittinen toimenpide-oid")
+    (is (= kohdevaruste-oid (:ulkoinen-oid rivi))
+      "Yhteensopivuussyistä ulkoinen-oid säilyy kohdevarusteen oidina")
+    (is (= kohdevaruste-oid (:kohdevarusteen-oid rivi))
+      "Historia- ja navigaatiopolulle palautetaan eksplisiittinen kohdevarusteen oid")
+    (is (= "aidat" (:kohdevarusteen-kohdeluokka rivi))
+      "Historia- ja navigaatiopolulle palautetaan eksplisiittinen kohdevarusteen kohdeluokka")
+    (is (= "Testivarustetoimenpide" (:toimenpide rivi))
+      "Toimenpiderivin toimenpide muodostuu välimäisen toimenpiteen nimikkeestä")))
+
+(deftest samalla-kohdevarusteella-voi-olla-useita-valimaisia-toimenpiteita
+  (let [toimenpiteet (get (lue-fixture-datana "valimaisten-varustetoimenpiteiden-vastaus-urakalle-kaksi-samalla-kohdevarusteella.json")
+                      :osumat)
+        kohdevaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
+                          [:osumat 0 :oid])
+        kohdevarusteen-kohdeluokka "aidat"
+        odotetut-rivi-idt (set (map :oid toimenpiteet))
+        {:keys [vastaus]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020}
+                                           ["valimaisten-varustetoimenpiteiden-vastaus-urakalle-kaksi-samalla-kohdevarusteella.json"
+                                            "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
+                                            "hakurajapinta-vastaus-tyhja.json"])
+        rivit (:toteumat vastaus)]
+    (is (= 2 (count rivit))
+      "Samalle kohdevarusteelle kirjatuista välimäisistä toimenpiteistä pitää muodostua kaksi riviä")
+    (is (= #{kohdevaruste-oid} (set (map :ulkoinen-oid rivit)))
+      "Kaikkien rivien pitää viitata samaan kohdevarusteeseen")
+    (is (= odotetut-rivi-idt (set (map :rivi-id rivit)))
+      "Jokaisella välimäisellä toimenpiteellä pitää olla oma rivi-id")
+    (is (= odotetut-rivi-idt (set (map :toimenpide-oid rivit)))
+      "Jokaisella välimäisellä toimenpiteellä pitää säilyä oma toimenpide-oid")
+    (is (= #{kohdevaruste-oid} (set (map :kohdevarusteen-oid rivit)))
+      "Kaikkien välimäisten toimenpiderivien pitää viitata samaan kohdevarusteen OID:iin")
+    (is (= #{kohdevarusteen-kohdeluokka} (set (map :kohdevarusteen-kohdeluokka rivit)))
+      "Kaikkien välimäisten toimenpiderivien pitää viitata samaan kohdevarusteen kohdeluokkaan")
+    (is (every? (fn [{:keys [rivi-id toimenpide-oid]}]
+                  (= rivi-id toimenpide-oid))
+          rivit)
+      "Välimäisillä riveillä rivi-id:n pitää vastata toimenpide-oidia")
+    (is (= 2 (count (set (map :toimenpide rivit))))
+      "Samalle kohdevarusteelle palautuvien välimäisten rivien pitää lukita eri toimenpidearvot eksplisiittisesti")
+    (is (= #{"Testivarustetoimenpide" "Toinen testivarustetoimenpide"}
+          (set (map :toimenpide rivit)))
+      "Monitoimenpidetestin pitää erottaa myös toimenpiteen tekstiarvo, ei vain eri OID:eja")))
+
+(deftest tavallinen-varusterivi-saa-yhteisen-rivitunnisteen-ilman-uutta-mallinnusta
+  (let [{:keys [vastaus]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020}
+                                           ["hakurajapinta-vastaus-tyhja.json"
+                                            "varusteiden-hakurajapinta-vastaus.json"])
+        rivi (first (:toteumat vastaus))]
+    (is (= 1 (count (:toteumat vastaus)))
+      "Perustapauksen tavallinen varusterivi säilyy mukana")
+    (is (= :tavallinen-varusterivi (:rivityyppi rivi))
+      "Tavallinen varusterivi erotellaan omaksi rivityypikseen")
+    (is (= (:ulkoinen-oid rivi) (:rivi-id rivi))
+      "Tavallisen varusterivin yhteinen tunniste on edelleen ulkoinen-oid")
+    (is (nil? (:toimenpide-oid rivi))
+      "Tavalliselle varusteriville ei lisätä turhaa toimenpide-oidia")
+    (is (= (:ulkoinen-oid rivi) (:kohdevarusteen-oid rivi))
+      "Tavallisella varusterivillä eksplisiittinen kohdevarusteen oid osoittaa samaan kohteeseen")
+    (is (= (:kohdeluokka rivi) (:kohdevarusteen-kohdeluokka rivi))
+      "Tavallisella varusterivillä eksplisiittinen kohdevarusteen kohdeluokka osoittaa samaan kohteeseen")))

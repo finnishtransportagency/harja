@@ -162,7 +162,7 @@
                            :projektivarusteen-kohdeluokka (:kohdeluokka projektivaruste)
                            :projektivarusteen-muutoksen-lahde-oid (:muutoksen-lahde-oid projektivaruste)
                            :valimainen-toimenpide-oid (:oid toimenpide)})))
-                    valimaiset-toimenpiteet)))))]
+                              valimaiset-toimenpiteet)))))]
       (reset! loydetty-kandidaatti kandidaatti)
       kandidaatti)))
 

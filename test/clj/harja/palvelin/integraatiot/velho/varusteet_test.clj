@@ -89,13 +89,18 @@
 (def odotettu-varuste
   {:alkupvm #inst "2022-10-15T00:00:00.000000000-00:00"
    :kohdeluokka "tienvarsikalusteet"
+  :kohdevarusteen-kohdeluokka "tienvarsikalusteet"
+  :kohdevarusteen-oid "1.2.345.678.9.0.12.345.678901234"
    :kuntoluokka "Testikuntoluokka"
    :lisatieto ""
    :loppupvm nil
    :muokattu nil
    :muokkaaja "MUOKKAAJA"
+  :rivi-id "1.2.345.678.9.0.12.345.678901234"
+  :rivityyppi :tavallinen-varusterivi
    :sijainti (PGgeometry. "POINT(6839198.670452601 638694.7440636739)")
    :toimenpide "Lisätty"
+  :toimenpide-oid nil
    :tr-alkuetaisyys 101
    :tr-alkuosa 1
    :tr-loppuetaisyys nil
@@ -157,36 +162,6 @@
                         (tree-seq coll? seq (walk/stringify-keys %)))
               @pyynnot)
           "Kuukausi ilman hoitovuotta ei saa lisätä payloadiin aikarajaa")))))
-
-
-(deftest yhdista-valimaiset-toimenpiteet-varusteisiin
-  (testing "Toimenpide tieto yhdistyy varusteisiin oikein"
-    (let [varusteet [{:oid "1.2.246.578.4.3.14.2171636297.4142310432"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310433"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310434"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310435"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310436"}]
-          toimenpiteet [{:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310432" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310443"}
-                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310433" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310444"}
-                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310434" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310445"}]
-          vastaus (varusteet/yhdista-valimaiset-toimenpiteet-varusteisiin {:kokoelma1 varusteet
-                                                                           :kokoelma2 toimenpiteet
-                                                                           :yhteinen-key1 [:oid]
-                                                                           :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
-                                                                           :etsittava-avain [:ominaisuudet :toimenpide]
-                                                                           :asetettava-avain :valimaiset-toimenpiteet})]
-      (is (= 5 (count vastaus)))
-      (is (= (list
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310432",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310433",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310434",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310435",
-                :valimaiset-toimenpiteet []}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310436",
-                :valimaiset-toimenpiteet []}) vastaus)))))
 
 ;; Testit tyhjien OID-listojen käsittelylle (ei saa tuottaa tyhjiä OID-listoja payloadiin)
 (deftest lisaa-oid-haku-jos-tarvitaan-test
