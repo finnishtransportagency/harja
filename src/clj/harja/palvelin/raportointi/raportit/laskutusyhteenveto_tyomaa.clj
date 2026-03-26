@@ -282,18 +282,19 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
 
-     ;; ----------------------------------------------------- ;;
-     ;;    Hankinnat ja hoidonjohto yhteensä                  ;;
-     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä   ;;
-     ;;    Tavoitehinta (indeksikorjattu)                     ;;
-     ;;    Siirto edelliseltä vuodelta                        ;;
-     ;;    Budjettia jäljellä                                 ;;
-     ;; ----------------------------------------------------- ;;
-     (taulukot/valitaulukko {:data rivitiedot
+     ;; ------------------------------------------------------------ ;;
+     ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
+     ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
+     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
+     ;;    Budjettia jäljellä                                        ;;
+     ;; ------------------------------------------------------------ ;;
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
                              :otsikko "Toteutuneet"
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
+                             :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+                             :kyseessa-kk-vali? kyseessa-kk-vali?
+                             :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
 
      ;; Ei tavoitehintaiset
      (if
@@ -316,7 +317,7 @@
                             :tavoitehintainen? false}))))
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
-     (taulukot/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})
