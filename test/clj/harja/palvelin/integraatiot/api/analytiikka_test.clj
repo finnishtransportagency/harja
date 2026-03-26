@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.analytiikka-test
-  (:require [clojure.test :refer [deftest is use-fixtures testing]]
+  (:require [clj-time.coerce :as t-coerce]
+            [clojure.test :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [cheshire.core :as cheshire]
@@ -111,12 +112,15 @@
         ;; Käyttäjällä ei ole analytiikkaoikeuksia 
         _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
         _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+
         ;; Annetaan oikeudet ja tehdään kutsu uudelleen
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)]
-    (is (= 200 (:status vastaus)))
+        uusi_vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)
+        status (:status uusi_vastaus)
+        lyhennetty-vastaus (subs (:body uusi_vastaus) 0 (min 2000 (count (:body uusi_vastaus))))]
+    (is (= 200 status))
     ;; Tämä antaa 7 virhettä, mikäli lokaali kanta on liian vanha. Resetoi tietokanta, niin ongelmat korjautuu
-    (sisaltaa-perustiedot (:body vastaus))))
+     (sisaltaa-perustiedot lyhennetty-vastaus)))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
@@ -136,13 +140,23 @@
     (is (str/includes? (:body vastaus) "Alkuaika väärässä muodossa"))))
 
 (deftest hae-toteumat-test-poistettu-onnistuu
-  (let [;; Merkitään toteuma poistetuksi
-        _ (u (str "UPDATE toteuma SET poistettu = true, muokattu = NOW() WHERE id = 9;"))
+  (let [random-paiva (pvm/ajan-muokkaus (pvm/luo-pvm 2004 3 12) false 1 :paiva)
+        alkupaiva (t-coerce/to-sql-time (pvm/paivan-alussa random-paiva))
+        alkupaiva-plus3-sql (t-coerce/to-sql-time (pvm/ajan-muokkaus alkupaiva true 3 :tunti))
+        loppupaiva (t-coerce/to-sql-time (pvm/paivan-lopussa random-paiva))
+        ;; Merkitään toteuma poistetuksi - ja muokkaus tapahtumaan eilen
+        _ (u (format "UPDATE toteuma SET poistettu = true, muokattu = '%s' WHERE id = 9;" alkupaiva-plus3-sql))
+        ;; Tyhjennä analytiikka_toteumat taulu
+        _ (u "DELETE FROM analytiikka_toteumat;")
         ;; Päivitetään analytiikka_toteumat taulun tiedot
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               alkupaiva loppupaiva))
+        _ (Thread/sleep 500)
+        toteuma_maara (:maara (first (q-map "SELECT count(*) as maara from analytiikka_toteumat;")))
+
         ;; Haetaan poistetut, jotka on muuttuneet tänään (eli muokkauksen jälkeen)
-        paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
-        paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (harja.kyselyt.konversio/java-date alkupaiva))
+        paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (harja.kyselyt.konversio/java-date loppupaiva))
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
 
         poistetut (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti)
@@ -152,7 +166,7 @@
                          (json/read-str)
                          (clojure.walk/keywordize-keys))]
     (is (= 200 (:status poistetut)))
-    (sisaltaa-perustiedot (:body poistetut))
+    (is (= 1 toteuma_maara))                                ;; Vain yhtä muokattiin
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
 (deftest hae-toteumat-test-koordinaattimuunnos-toimii
@@ -172,11 +186,10 @@
     (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
 
 (deftest materiaalin-maara-muuttuu
-  (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
+  (let [paiva-alussa-plus3-sql (t-coerce/to-sql-time (pvm/ajan-muokkaus (pvm/luo-pvm 2004 9 19) true 3 :tunti))
+        paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/luo-pvm 2004 9 19)))
 
-        nyt-paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
-        nyt-paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
 
         ;; Haetaan alkuperäinen tieto
@@ -192,10 +205,11 @@
 
         ;; Muokkaa materiaalin muokattu aikaa ja määrää
         uusi-maara 114022
-        _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (u (format "UPDATE toteuma_materiaali set muokattu = '%s', maara= %s where toteuma=9; " paiva-alussa-plus3-sql uusi-maara))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               paiva-alussa paiva-lopussa))
 
-        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
         muokattu-vastaus-body (-> (:body muokattu-vastaus)
                                 (json/read-str)
                                 (clojure.walk/keywordize-keys))
@@ -206,10 +220,11 @@
                                     (:reittitoteumat muokattu-vastaus-body)))
 
         ;; Vaihda määrä takaisin 
-        _ (u (str "UPDATE toteuma_materiaali set muokattu = NOW(), maara=25 where toteuma=9"))
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (u (format "UPDATE toteuma_materiaali set muokattu = '%s', maara=25 where toteuma = 9;" paiva-alussa-plus3-sql))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               paiva-alussa paiva-lopussa))
 
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
         vastaus-body (-> (:body vastaus)
                        (json/read-str)
                        (clojure.walk/keywordize-keys))
@@ -298,7 +313,6 @@
                luotu-hetki-sitten
                muokattu-nyt
                paikkakuvaus))
-        _ (println "Löydetään muokattava turpo" (q-map (format "SELECT * from turvallisuuspoikkeama WHERE paikan_kuvaus = '%s'", paikkakuvaus)))
         muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                            "analytiikka-testeri" portti)
         muokattu-body (cheshire/decode (:body muokattu-vastaus))

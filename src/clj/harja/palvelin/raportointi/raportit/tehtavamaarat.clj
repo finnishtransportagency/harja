@@ -5,7 +5,8 @@
              [tehtavamaarat :as tm-q]
              [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut])
   (:import (java.math RoundingMode)))
 
 (def vemtr-elementit 5)
@@ -67,11 +68,6 @@
        :hallintayksikko hallintayksikko-id
        :vain-mhut? vain-mhut?})))
 
-(defn pyorista-kahteen-decimaaliin [arvo]
-  (when (not (nil? arvo))
-    (.setScale
-      (with-precision 2 (bigdec arvo)) 2 RoundingMode/HALF_UP)))
-
 (defn- laske-toteuma-% ;:TODO voisko olla sql:ssä?
   [rivi]
   (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
@@ -83,8 +79,8 @@
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
                       :default (.setScale (* 100 (with-precision 2 (/ toteuma suunniteltu))) 0 RoundingMode/HALF_UP)))
-        suunniteltu (pyorista-kahteen-decimaaliin suunniteltu)
-        toteuma (pyorista-kahteen-decimaaliin toteuma)
+        suunniteltu (tyokalut/pyorista-kahteen-decimaaliin suunniteltu)
+        toteuma (tyokalut/pyorista-kahteen-decimaaliin toteuma)
         rivi-toteumaprosentilla (filter some?
                                   (conj (into [] (take 2 rivi)) suunniteltu toteuma toteuma-% toteutunut-materiaalimaara))]
 

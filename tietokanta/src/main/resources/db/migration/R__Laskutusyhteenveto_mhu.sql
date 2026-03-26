@@ -369,7 +369,9 @@ DROP TYPE IF EXISTS HOIDONJOHTO_RIVI CASCADE;
 CREATE TYPE HOIDONJOHTO_RIVI AS
 (
     johto_ja_hallinto_laskutettu  NUMERIC,
-    johto_ja_hallinto_laskutetaan NUMERIC
+    johto_ja_hallinto_laskutetaan NUMERIC,
+    jjh_muutokset_laskutettu NUMERIC,
+    jjh_muutokset_laskutetaan NUMERIC
 );
 
 DROP FUNCTION IF EXISTS hoidon_johto_yhteenveto(DATE, DATE, DATE, TEXT, INTEGER, INTEGER, INTEGER);
@@ -385,6 +387,8 @@ DECLARE
     johto_ja_hallinto_laskutetaan NUMERIC;
     laskutettu                    RECORD;
     laskutetaan                   RECORD;
+    jjh_muutokset_laskutettu      NUMERIC := 0.0;
+    jjh_muutokset_laskutetaan     NUMERIC := 0.0;
     tehtavaryhma_id               INTEGER;
     toimistotarvike_koodi         INTEGER;
 
@@ -411,7 +415,8 @@ BEGIN
 
         FOR laskutettu IN
             -- johto_ja_hallintokorvaus - Toteutuneet_kustannukset
-            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa,
+                     NULL AS tyyppi
               FROM toteutuneet_kustannukset tk
              WHERE tk.urakka_id = urakka_id_
                AND tk.tehtavaryhma = tehtavaryhma_id
@@ -421,7 +426,8 @@ BEGIN
              UNION ALL
 
             -- johto_ja_hallintokorvaus - lisätyt kulut
-            SELECT COALESCE(lk.summa, 0) AS summa
+            SELECT COALESCE(lk.summa, 0) AS summa,
+                   lk.tyyppi AS tyyppi
               FROM kulu l
                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
              WHERE lk.toimenpideinstanssi = t_instanssi
@@ -436,7 +442,8 @@ BEGIN
              UNION ALL
 
             -- Toimistotarvikkeet - toteutuneet_kustannukset
-            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa,
+                   NULL AS tyyppi
               FROM toteutuneet_kustannukset tk
              WHERE tk.toimenpideinstanssi = t_instanssi
                AND tk.urakka_id = urakka_id_
@@ -446,6 +453,9 @@ BEGIN
 
             LOOP
                 johto_ja_hallinto_laskutettu := johto_ja_hallinto_laskutettu + COALESCE(laskutettu.summa, 0.0);
+                IF laskutettu.tyyppi = 'jjh-muutos' THEN
+                    jjh_muutokset_laskutettu := jjh_muutokset_laskutettu + COALESCE(laskutettu.summa, 0.0);
+                END IF;
             END LOOP;
 
         -- Tarkasteltavalla aikavälillä laskutetut tai laskutettavat hoidonjohdon kustannukset
@@ -457,7 +467,8 @@ BEGIN
         -- johto_ja_hallintokorvaus - laskutetaan
         FOR laskutetaan IN
             -- johto_ja_hallintokorvaus - Toteutuneet_kustannukset
-            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa,
+                   NULL AS tyyppi
               FROM toteutuneet_kustannukset tk
              WHERE tk.urakka_id = urakka_id_
                AND tk.tehtavaryhma = tehtavaryhma_id
@@ -467,7 +478,8 @@ BEGIN
              UNION ALL
 
             -- Toimistotarvikkeet - Lisätyt kulut
-            SELECT COALESCE(lk.summa, 0) AS summa
+            SELECT COALESCE(lk.summa, 0) AS summa,
+                   lk.tyyppi AS tyyppi
               FROM kulu l
                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
              WHERE lk.toimenpideinstanssi = t_instanssi
@@ -480,7 +492,8 @@ BEGIN
              UNION ALL
 
             -- Toimistotarvikkeet - toteutuneet_kustannukset
-            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa
+            SELECT COALESCE(tk.summa_indeksikorjattu, tk.summa, 0) AS summa,
+                   NULL AS tyyppi
               FROM toteutuneet_kustannukset tk
              WHERE tk.toimenpideinstanssi = t_instanssi
                AND tk.urakka_id = urakka_id_
@@ -492,16 +505,21 @@ BEGIN
             LOOP
                 -- Kuukauden laskutettava määrä päivittyy laskutettavaan summaan ja lähetettävään maksuerään vasta kuukauden viimeisenä päivänä.
                 johto_ja_hallinto_laskutetaan := johto_ja_hallinto_laskutetaan + COALESCE(laskutetaan.summa, 0.0);
+                IF laskutetaan.tyyppi = 'jjh-muutos' THEN
+                    jjh_muutokset_laskutetaan := jjh_muutokset_laskutetaan + COALESCE(laskutetaan.summa, 0.0);
+                END IF;
             END LOOP;
     END IF; -- tuotekoodi = 23150 (Hoidonjohto)
 
-    rivi := (johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan);
+    rivi := (johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan, jjh_muutokset_laskutettu, jjh_muutokset_laskutetaan);
     RETURN NEXT rivi;
 END;
 $$ LANGUAGE plpgsql;
 
 DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
     aikavali_loppupvm DATE, ur INTEGER);
+
+DROP FUNCTION IF EXISTS mhu_laskutusyhteenveto_tuotekohtainen(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE, ur INTEGER);
 
 DROP TYPE IF EXISTS LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI CASCADE;
 
@@ -527,6 +545,8 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     -- MHU ja HJU Hoidon johto
     johto_ja_hallinto_laskutettu                                NUMERIC,
     johto_ja_hallinto_laskutetaan                               NUMERIC,
+    jjh_muutokset_laskutettu                                    NUMERIC,
+    jjh_muutokset_laskutetaan                                   NUMERIC,
     bonukset_laskutettu                                         NUMERIC,
     bonukset_laskutetaan                                        NUMERIC,
     hj_palkkio_laskutettu                                       NUMERIC,
@@ -553,7 +573,7 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
 );
 
 -- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
-CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_teiden_hoito(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
+CREATE OR REPLACE FUNCTION mhu_laskutusyhteenveto_tuotekohtainen(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
                                                                aikavali_loppupvm DATE, ur INTEGER)
                                                                RETURNS SETOF LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI
     LANGUAGE plpgsql AS
@@ -605,6 +625,8 @@ DECLARE
     erilliskustannus_rivi                 RECORD;
     johto_ja_hallinto_laskutettu          NUMERIC;
     johto_ja_hallinto_laskutetaan         NUMERIC;
+    jjh_muutokset_laskutettu              NUMERIC;
+    jjh_muutokset_laskutetaan            NUMERIC;
     -- Hoidonjohto - HJ-palkkio
     hj_palkkio_laskutettu                 NUMERIC;
     hj_palkkio_laskutetaan                NUMERIC;
@@ -836,6 +858,8 @@ BEGIN
         hj_palkkio_laskutetaan := 0.0;
         johto_ja_hallinto_laskutettu := 0.0;
         johto_ja_hallinto_laskutetaan := 0.0;
+        jjh_muutokset_laskutettu := 0.0;
+        jjh_muutokset_laskutetaan := 0.0;
         hj_erillishankinnat_laskutettu := 0.0;
         hj_erillishankinnat_laskutetaan := 0.0;
         hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu := 0.0;
@@ -1021,6 +1045,8 @@ BEGIN
 
             johto_ja_hallinto_laskutettu := h_rivi.johto_ja_hallinto_laskutettu;
             johto_ja_hallinto_laskutetaan := h_rivi.johto_ja_hallinto_laskutetaan;
+            jjh_muutokset_laskutettu := h_rivi.jjh_muutokset_laskutettu;
+            jjh_muutokset_laskutetaan := h_rivi.jjh_muutokset_laskutetaan;
 
             -- HOIDONJOHTO --  HJ-Palkkio
             hj_palkkio_rivi :=
@@ -1317,6 +1343,7 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                   sakot_laskutettu, sakot_laskutetaan,
                   alihank_bon_laskutettu, alihank_bon_laskutetaan,
                   johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
+                  jjh_muutokset_laskutettu, jjh_muutokset_laskutetaan,
                   bonukset_laskutettu, bonukset_laskutetaan,
                   hj_palkkio_laskutettu, hj_palkkio_laskutetaan,
                   hj_erillishankinnat_laskutettu, hj_erillishankinnat_laskutetaan,
