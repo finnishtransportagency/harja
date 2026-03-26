@@ -236,6 +236,7 @@
        :voi-poistaa? (constantly false) :voi-muokata? true}
       [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
         :fmt pvm/pvm-opt}
+       {:otsikko "OID" :nimi :rivi-id :leveys 8}
        {:otsikko "Tie\u00ADosoi\u00ADte" :leveys 5
         :hae v/muodosta-tr-osoite}
        {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toimenpide :leveys 3}

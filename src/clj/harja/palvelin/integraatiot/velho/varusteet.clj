@@ -308,6 +308,9 @@
                                            :kohdevarusteen-kohdeluokka (or (when (string? (:kohdeluokka kohdevaruste))
                                                                             (last (clojure.string/split (:kohdeluokka kohdevaruste) #"/")))
                                                                           (:kohdeluokka kohdevarusterivi))))
+                            (:sijainti toimenpide) (assoc :sijainti (:sijainti toimenpide))
+                            (:alkusijainti toimenpide) (assoc :alkusijainti (:alkusijainti toimenpide))
+                            (:loppusijainti toimenpide) (assoc :loppusijainti (:loppusijainti toimenpide))
                             (:version-voimassaolo toimenpide) (assoc :version-voimassaolo (:version-voimassaolo toimenpide))
                             (:alkaen toimenpide) (assoc :alkaen (:alkaen toimenpide))
                             (:paattyen toimenpide) (assoc :paattyen (:paattyen toimenpide))
@@ -658,7 +661,7 @@
                                                             toimenpiteella-suodatetut-valimaiset-oidit
                                                             kohdeluokat
                                                             varustetyypit-parametri
-                                                            tieosoite-parametri
+                                                            nil
                                                             kuntoluokat-parametri)
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"

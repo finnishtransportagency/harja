@@ -255,6 +255,30 @@
           (:toimenpide (first (:toteumat vastaus))))
       "Välimäinen toimenpide yhdistyy kohdevarusteeseen toimenpiteen-kohde OID:n kautta")))
 
+(deftest tavoitetilan-oid-haku-ei-saa-rajata-kohdevarustetta-toimenpiteen-tieosoitteella
+  (let [projektivaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
+                             [:osumat 0 :oid])
+        {:keys [pyynnot]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020
+                                            :tie 99
+                                            :aosa 5
+                                            :aeta 555}
+                                           ["valimaisten-varustetoimenpiteiden-vastaus-urakalle-eri-tieosoitteella.json"
+                                            "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
+                                            "hakurajapinta-vastaus-tyhja.json"])
+        [eka toinen kolmas] pyynnot]
+    (is (= 3 (count pyynnot))
+      "Hakuketjussa on edelleen kolme vaihetta myös tieosoitteella rajattaessa")
+    (is (loytyyko-tarkka-ehto? kolmas
+          ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}])
+      "Tavallista varustehakua saa edelleen rajata käyttöliittymän tieosoitteella")
+    (is (loytyyko-tarkka-ehto? toinen
+          ["joukossa" ["yleiset/perustiedot" "oid"] [projektivaruste-oid]])
+      "Kohdevarusteen OID-haku kohdistuu edelleen oikeaan kohteeseen")
+    (is (not-any? #(= ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}] %)
+          (tree-seq coll? seq toinen))
+      "Kohdevarusteen OID-haku ei saa käyttää toimenpiteen tieosoitesuodatinta, koska kohdevarusteen osoite voi olla eri")))
+
 (deftest tavoitetilan-haku-loytaa-projektivarusteen-eksplisiittisella-toimenpidesuodatuksella
   (with-redefs [q-nimikkeistot/hae-nimike-otsikolla
                 (fn [_ {:keys [otsikko]}]
@@ -321,6 +345,26 @@
       "Historia- ja navigaatiopolulle palautetaan eksplisiittinen kohdevarusteen kohdeluokka")
     (is (= "Testivarustetoimenpide" (:toimenpide rivi))
       "Toimenpiderivin toimenpide muodostuu välimäisen toimenpiteen nimikkeestä")))
+
+(deftest valimainen-toimenpiderivi-kayttaa-toimenpiteen-tieosoitetta
+  (let [{:keys [vastaus]} (aja-varustehaku {:urakka-id 123
+                                            :hoitokauden-alkuvuosi 2020}
+                                           ["valimaisten-varustetoimenpiteiden-vastaus-urakalle-eri-tieosoitteella.json"
+                                            "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
+                                            "hakurajapinta-vastaus-tyhja.json"])
+        rivi (first (:toteumat vastaus))]
+    (is (= 1 (count (:toteumat vastaus)))
+      "Rajatapauksessa palautuu edelleen yksi välimäinen toimenpiderivi")
+    (is (= 99 (:tr-numero rivi))
+      "Välimäisen toimenpiderivin tieosoitteen pitää tulla toimenpiteeltä, ei kohdevarusteelta")
+    (is (= 5 (:tr-alkuosa rivi))
+      "Välimäisen toimenpiderivin alkuosan pitää tulla toimenpiteeltä")
+    (is (= 555 (:tr-alkuetaisyys rivi))
+      "Välimäisen toimenpiderivin alkuetäisyyden pitää tulla toimenpiteeltä")
+    (is (nil? (:tr-loppuosa rivi))
+      "Pistemäisellä toimenpiteellä ei pidä syntyä väkisin loppuosaa kohdevarusteelta")
+    (is (nil? (:tr-loppuetaisyys rivi))
+      "Pistemäisellä toimenpiteellä ei pidä syntyä väkisin loppuetäisyyttä kohdevarusteelta")))
 
 (deftest samalla-kohdevarusteella-voi-olla-useita-valimaisia-toimenpiteita
   (let [toimenpiteet (get (lue-fixture-datana "valimaisten-varustetoimenpiteiden-vastaus-urakalle-kaksi-samalla-kohdevarusteella.json")
