@@ -21,8 +21,9 @@ BEGIN
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-                    AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
+              WHERE rp.aika::DATE BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
+                    AND (u IS NULL OR t.urakka = u) 
+                    AND t.poistettu IS FALSE
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
@@ -66,78 +67,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Päivittää (delete + insert) reittitoteuman kirjauksen yhteydessä hoitoluokittaiset määrät, annetulle ajanjaksolle. 
 -- Käytetään ajastetussa tehtävässä, joka päivittää urakan_materiaalinkaytto_hoitoluokittain välimuistitaulun joka yö.
--- Välimuistitaulussa päivitettävät rivit rajataan urakalla ja päivämäärällä. Päivämäärät saadaan hakemalla
--- niiden toteumien reittipisteiden ajankohdat, jotka saadaan rajaamalla tälle proseduurille parametrina annetuilla tiedoilla:
--- urakka ja luonti tai muokkausajankohta.
---
--- 1. Proseduuri hakee relevantit toteumat urakan (urakka) ja luonti/muokkausaikaleiman (alkupvm-loppupvm) perusteella.
--- 2. Proseduuri hakee välimuistissa päivitettävät päivämäärät palautuneiden toteumien reittipisteistä (aika) ja käsinkirjattujen toteumien alkanut-sarakkeesta.
--- 3. Proseduuri poistaa välimuistitaulusta urakan päivämäärää koskevat rivit.
--- 4. Proseduuri insertoi välimuistitauluun uudet päivämäärää koskevat rivit.
 CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla (
-  urakka_id INTEGER, muutospvm DATE)
-  RETURNS void AS $$
+    urakka_id INTEGER, muutospvm DATE
+) RETURNS void AS $$
 DECLARE
-  rivi RECORD;
-  u INTEGER;
+    rivi RECORD;
 BEGIN
-  u := urakka_id;
-
-  -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
-  FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi,
-                               sum(CASE WHEN t.poistettu IS TRUE THEN 0 ELSE mat.maara END) as summa,
-                rp.aika::DATE
-              FROM toteuma t
-                JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-                JOIN LATERAL unnest(tr.reittipisteet) rp ON true
-                JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE ((t.luotu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE))
-                    AND urakka = u
-              GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
-  -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
-  -- hoitoluokaksi 99 eli 'Käsin kirjattu'
-  UNION
-  SELECT t.urakka,
-         (CASE
-            WHEN m.materiaalityyppi = 'talvisuola' THEN 99
-            WHEN m.materiaalityyppi = 'formiaatti' THEN 99
-            ELSE NULL
-         END) AS talvihoitoluokka,
-         (CASE
-              WHEN m.materiaalityyppi = 'kesasuola' THEN 99
-              ELSE NULL
-             END) AS soratiehoitoluokka,
-         tm.materiaalikoodi,
-         sum(tm.maara) as summa,
-         t.alkanut::DATE as aika
-    FROM toteuma t
-             JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
-             JOIN materiaalikoodi m on tm.materiaalikoodi = m.id
-   WHERE t.lahde = 'harja-ui' and
-         ((t.luotu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE) OR (t.muokattu BETWEEN muutospvm::DATE AND (muutospvm + interval '1 day')::DATE))
-                    AND urakka = u AND t.poistettu IS FALSE
-   GROUP BY t.urakka, talvihoitoluokka, soratiehoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
-  LOOP
-    -- Poista päivitettävä materiaalicacherivi
-    DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain
-    WHERE pvm = rivi.aika 
-          AND urakka = u
-          AND materiaalikoodi = rivi.materiaalikoodi
-          AND talvihoitoluokka = COALESCE(rivi.talvihoitoluokka, 100)
-          AND soratiehoitoluokka = COALESCE(rivi.soratiehoitoluokka, 100);
-    INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
-    (pvm, materiaalikoodi, talvihoitoluokka, soratiehoitoluokka, urakka, maara, muokattu)
-    VALUES (rivi.aika,
-            rivi.materiaalikoodi,
-            COALESCE(rivi.talvihoitoluokka, 100),
-            COALESCE(rivi.soratiehoitoluokka, 100),
-            rivi.urakka,
-            rivi.summa,
-            current_timestamp);
-  END LOOP;
-
+    FOR rivi IN 
+        -- Valitaan viime päivältä muokatut/luodut toteumat 
+        SELECT DISTINCT 
+            rp.aika::date AS pvm
+         FROM toteuma t
+            JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+            JOIN LATERAL unnest(tr.reittipisteet) rp ON TRUE
+        WHERE t.urakka = urakka_id
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+           OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+        
+        UNION
+        
+        SELECT DISTINCT 
+            t.alkanut::date AS pvm
+         FROM toteuma t
+        WHERE t.urakka = urakka_id
+          AND t.lahde = 'harja-ui'
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+                   OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+    LOOP
+        -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
+        PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
