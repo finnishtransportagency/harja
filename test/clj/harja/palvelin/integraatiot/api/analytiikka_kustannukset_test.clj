@@ -162,7 +162,6 @@
         ;; Luodaan kulu, joka on pakko löytyä aineistosta
         kulu-summa 1000M
         uusi-kulu (uusi-kulu-tehtavalla-kustannukset-testiin urakka-id kulu-summa 2023 urakan-alkupvm)
-        _ (println "uusi-kulu: " (pr-str uusi-kulu))
         _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
             +kayttaja-jvh+
             {:urakka-id urakka-id

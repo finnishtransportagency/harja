@@ -185,7 +185,10 @@
         (let [z-raportti (raportti-zip raportti)
               siirto-rivi [[:varillinen-teksti {:arvo ""}]
                            [:varillinen-teksti
-                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
+                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}
+                            ;; Jätän kommentteihin, koska tämä voidaan ottaa pikaisesti takaisin - se sama siirrettävä arvo näkyy tavoitehintaa vaikuttavissa kustannuksissa
+                            #_ {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}
+                            ]
                            [:varillinen-teksti
                             {:itsepaisesti-maaritelty-oma-vari nil,
                              :arvo (* -1 siirto-ed-vuodelta), ;; Käännetään negatiiviseksi, koska siirto pienentää toteumia, mutta on kannassa positiivisena
@@ -223,7 +226,10 @@
         (let [z-raportti (raportti-zip raportti)
               siirto-rivi [[:varillinen-teksti {:arvo ""}]
                            [:varillinen-teksti
-                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
+                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}
+                            ;; Jätän kommentteihin, koska tämä voidaan ottaa pikaisesti takaisin - se sama siirrettävä arvo näkyy tavoitehintaa vaikuttavissa kustannuksissa
+                            #_ {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}
+                            ]
                            [:varillinen-teksti
                             {:itsepaisesti-maaritelty-oma-vari nil,
                              :arvo siirrettava-maara,
