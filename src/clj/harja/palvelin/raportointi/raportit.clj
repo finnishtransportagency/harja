@@ -21,6 +21,7 @@
   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
   [harja.palvelin.raportointi.raportit.materiaali]
   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
+  [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
@@ -302,6 +303,13 @@
     :kuvaus       "Muutos- ja lisätyöt"
     :suorita      #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyot/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
+
+   {:nimi         :muutos-ja-lisatyoraportti
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :kuvaus       "Muutos- ja lisätyöraportti"
+    :suorita      #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti/suorita
+    :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :toimenpidekilometrit
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
