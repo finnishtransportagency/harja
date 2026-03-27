@@ -97,6 +97,16 @@
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
 
+(def yllapitokohdeosa-pk-luokkaa-varten  {:nimi "Leppäjärven kohdeosa"
+                                                    :tr-kaista 11
+                                                    :tr-ajorata 1
+                                                    :tr-numero 20
+                                                    :tr-alkuosa 1
+                                                    :tr-alkuetaisyys 0
+                                                    :tr-loppuosa 3
+                                                    :tr-loppuetaisyys 0
+                                                    :id 666})
+
 (defn kohde-nimella [kohteet nimi]
   (first (filter #(= (:nimi %) nimi) kohteet)))
 
@@ -848,6 +858,45 @@
                     :toimenpide "Ei tehdä mitään"}
                    true))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
+
+(deftest tallenna-yllapitokohdeosa-kantaan-ja-hae-yllapitoluokka
+  (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (is (not (nil? yllapitokohde-id)))
+
+    (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+          sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
+
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+          :tallenna-yllapitokohdeosat +kayttaja-jvh+ {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :yllapitokohde-id yllapitokohde-id
+                                                      :osat [yllapitokohdeosa-pk-luokkaa-varten]})
+
+       (let [kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :yllapitokohteen-yllapitokohdeosat
+                                 +kayttaja-jvh+ {:urakka-id urakka-id
+                                                 :sopimus-id sopimus-id
+                                                 :yllapitokohde-id yllapitokohde-id})]
+
+        (is (not (nil? kohdeosat-kannassa)))
+        (is (match (first kohdeosat-kannassa)
+              {:tr-kaista 11
+               :sijainti _
+               :tr-ajorata 1
+               :massamaara nil
+               :tr-loppuosa 3
+               :tr-alkuosa 1
+               :tr-loppuetaisyys 0
+               :nimi "Leppäjärven kohdeosa"
+               :raekoko nil
+               :tyomenetelma nil
+               :paallystetyyppi nil
+               :yllapitoluokka 8
+               :id _
+               :tr-alkuetaisyys 0
+               :tr-numero 20
+               :toimenpide nil}
+              true))))))
 
 (deftest paivita-paallystysurakan-yllapitokohteen-aikataulu
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
