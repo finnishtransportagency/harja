@@ -570,6 +570,17 @@ WHERE yllapitokohde IN (SELECT id
                         WHERE urakka = :urakka AND
                               id = :yllapitokohdeid);
 
+-- name: paivita-yllapitokohteen-kohdeosien-sijainnit!
+-- Päivittää ylläpitokohteen kohdeosien sijainnit tierekisteriosoitteiden perusteella
+UPDATE yllapitokohdeosa
+SET sijainti = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+                FROM tierekisteriosoitteelle_viiva_ajr(tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                                                       tr_loppuosa, tr_loppuetaisyys, tr_ajorata)),
+    muokattu = NOW()
+WHERE yllapitokohde = :yllapitokohde
+  AND poistettu = FALSE
+  AND sijainti IS NULL;
+
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
@@ -1082,6 +1093,10 @@ VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahe
 -- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
 VALUES (:yllapitokohde, 0, 0, 0, 0, 0, 0);
+
+-- name: paivita-yllapitokohteen-korjausluokat-ja-yllapitoluokat
+-- Yhdistetty funktio joka päivittää sekä PK-pituudet että ylläpitoluokat samassa transaktiossa
+SELECT paivita_yllapitokohteen_korjausluokat_ja_yllapitoluokat(:id::INTEGER);
 
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT
