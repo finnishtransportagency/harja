@@ -269,6 +269,9 @@
         [eka toinen kolmas] pyynnot]
     (is (= 3 (count pyynnot))
       "Hakuketjussa on edelleen kolme vaihetta myös tieosoitteella rajattaessa")
+    (is (loytyyko-tarkka-ehto? eka
+          ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}])
+      "Välimäisten toimenpiteiden ensimmäisen haun pitää rajata toimenpiteet käyttäjän tieosoitteella")
     (is (loytyyko-tarkka-ehto? kolmas
           ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}])
       "Tavallista varustehakua saa edelleen rajata käyttöliittymän tieosoitteella")

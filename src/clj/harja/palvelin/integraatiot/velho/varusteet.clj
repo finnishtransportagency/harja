@@ -524,7 +524,7 @@
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
 
-(defn hae-urakan-valimaiset-varustetoimenpiteet [db http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri toimenpide]
+(defn hae-urakan-valimaiset-varustetoimenpiteet [db http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri tieosoite-parametri toimenpide]
   (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
         payload {:asetukset {:tyyppi "kohdeluokkahaku"
                              :liitoshaku false}
@@ -533,6 +533,7 @@
                             ["ja"
                              (tee-muutoksen-lahde-oid-parametri urakka-velho-oid)
                              toimenpide-rajaus
+                             tieosoite-parametri
                              alkuaika-parametri
                              loppuaika-parametri])}
         {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
@@ -653,6 +654,7 @@
                                           urakka-velho-oid
                                           alkuaika-parametri
                                           loppuaika-parametri
+                                          tieosoite-parametri
                                           toimenpide)
                 toimenpiteella-suodatetut-valimaiset-oidit (vec (distinct (keep #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet)))
                 valimaisten-toimenpiteiden-kohdevarusteet (hae-varusteet-oideilla
