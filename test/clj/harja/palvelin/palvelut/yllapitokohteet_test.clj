@@ -2283,7 +2283,7 @@
 
 
 (deftest pkluokkien-pituuden-nolla-pkluokka-null
-  (let [ypk-id (hae-yllapitokohteen-id-nimella "Leppäjärven ramppi")
+  (let [ypk-id (hae-yllapitokohteen-id-nimella "Oulaisten ohitusramppi")
         _ (q (format "SELECT * FROM paivita_yllapitokohteen_korjausluokat(%s);" ypk-id))
         pituudet (first (q-map (format "SELECT  y.id, y.nimi, y.pkluokka, osa.pk1_pituus , osa.pk2_pituus, osa.pk3_pituus from yllapitokohde y                                                                             join urakka u on y.urakka = u.id\n
         join yllapitokohdeosa osa ON y.id = osa.yllapitokohde WHERE y.id = %s ;" ypk-id)))]
