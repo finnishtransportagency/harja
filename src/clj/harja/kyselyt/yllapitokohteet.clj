@@ -13,7 +13,8 @@
 
 (declare paivita-yllapitokohteen-paallysteen-korjausluokka hae-yllapitokohteen-aikataulu
   paivita-yllapitokohteen-paallystysaikataulu! luo-yllapitokohteelle-tyhja-aikataulu<!
-  paivita-yllapitokohde<! luo-yllapitokohde<! hae-urakan-tyyppi)
+  paivita-yllapitokohde<! luo-yllapitokohde<! hae-urakan-tyyppi luo-yllapitokohteelle-tyhja-kustannustaulu<!
+  luo-yllapitokohdeosa<! poista-yllapitokohdeosa!)
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
