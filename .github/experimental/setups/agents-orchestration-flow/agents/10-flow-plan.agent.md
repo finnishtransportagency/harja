@@ -58,7 +58,7 @@ Use the shared planning reference for the appropriate planning-document shape, k
 
 Objective: persist the plan as the source of truth.
 
-Write the Markdown file in the shared planning location and ensure the saved document is sufficient for direct or orchestrated follow-up. Use the current feature branch name as the default `topic-slug` source when creating a new `plans/<topic-slug>/` directory, normalize it according to the shared planning reference, and ask first if the branch is missing, generic, or clearly mismatched.
+Write the Markdown file in the shared planning location and ensure the saved document is sufficient for direct or orchestrated follow-up. Use the current feature branch name as the default `topic-slug` source when creating a new `plans/<topic-slug>/` directory, normalize it according to the shared planning reference, and ask first if the branch is missing, generic, or clearly mismatched. Treat `plans/` as intentionally gitignored workspace material, not as repository-tracked product documentation, unless the user explicitly asks for a different storage target.
 
 ### Phase 4: Hand off cleanly
 
@@ -77,6 +77,7 @@ Across longer runs, keep the current planning subphase visible with short progre
 - keep phases ordered and specific
 - include validation for each phase
 - create the planning Markdown file before stopping
+- treat `plans/` as intentionally gitignored planning workspace unless the user explicitly requests a tracked destination
 - keep the saved plan/spec free of incidental asiakas- tai urakkakohtaiset muistiinpanot unless they are rewritten as general domain rules
 - keep the active planning subphase visible during longer runs, especially when context gathering or plan writing takes noticeable time
 - keep the same output structure whether invoked directly or by an orchestrating agent

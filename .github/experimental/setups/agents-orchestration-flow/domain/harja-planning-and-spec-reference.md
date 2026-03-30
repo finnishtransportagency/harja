@@ -20,6 +20,8 @@ Tyypilliset agentit:
 
 Oletussijainti on `plans/`.
 
+`plans/` on tarkoituksella gitignoressa. Näitä dokumentteja käsitellään oletuksena paikallisena työskentelymateriaalina, ei repositoryyn commitoitavana tuotteen dokumentaationa, ellei käyttäjä pyydä erikseen toista kohdetta.
+
 Suosi aihekohtaista hakemistoa muodossa:
 - `plans/<topic-slug>/plan.md`
 - `plans/<topic-slug>/spec.md`
