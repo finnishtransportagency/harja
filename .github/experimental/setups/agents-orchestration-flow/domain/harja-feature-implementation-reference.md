@@ -26,6 +26,8 @@ Pidä erityisesti mielessä:
 - urakka- ja hoitovuosikohtaiset säännöt voivat muuttaa käyttäytymistä
 - selkeä suomenkielinen domain-sanasto on ensisijainen
 - uusia frontend-testipolkuja ohjataan mieluummin tuettuihin malleihin tai E2E:hen kuin vanhoihin doo/phantom-kuvioihin
+- projektissa ei tällä hetkellä haluta uusia frontend-testejä, jotka nojaavat `lein-doo`:hon tai `PhantomJS`:ään, koska ne ovat vanhentuneita
+- frontend-muutosten varmistus tehdään ensisijaisesti Cypress E2E:llä tai muulla nykyisessä projektissa tuetulla tavalla
 
 ### Tyypillinen feature-kartta
 

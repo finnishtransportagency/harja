@@ -88,6 +88,7 @@ Across longer runs, keep the current implementation subphase visible with short 
 - run the narrowest relevant test before broader validation
 - keep changes focused and minimal
 - follow existing repository instructions when relevant
+- avoid introducing new frontend tests that depend on `lein-doo` or `PhantomJS`; prefer supported validation paths such as backend tests or Cypress E2E when the change is in the UI
 - keep the active implementation subphase visible during longer runs, especially when tests or edits take noticeable time
 - report blockers precisely instead of guessing
 - keep the same output structure whether invoked directly or by an orchestrating agent
@@ -106,6 +107,7 @@ Across longer runs, keep the current implementation subphase visible with short 
 - treat a first-run passing test as valid TDD evidence
 - perform unrelated cleanup inside the same patch
 - over-engineer a small task
+- introduce new frontend test coverage through legacy `lein-doo` or `PhantomJS` paths
 - go silent through a long-running validation or implementation step when a short subphase update would clarify that work is still progressing
 - return extra phase or commit ceremony
 
