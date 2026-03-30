@@ -27,7 +27,7 @@ Yksittäisen domain-referenssin tavoiterakenne on:
 | `harja-validation-review-reference.md` | tarkastat write-pathia, authorizationia tai validation-riskejä | `review-validation`, `12-flow-review`, `support-root-cause` |
 | `harja-e2e-testing-reference.md` | tarkastat UI-polkuja, E2E-ympäristöä tai Cypress-käytäntöjä | `support-test`, `review-pre-pr`, `14-flow-verify` |
 | `harja-style-review-reference.md` | arvioit LESS/CSS-alueita, legacy-tyylivelkaa tai stylesheet-priorisointia | `review-style`, `support-ux` |
-| `harja-planning-and-spec-reference.md` | kirjoitat `.prd`-suunnitelmaa tai spec-dokumenttia | `10-flow-plan` |
+| `harja-planning-and-spec-reference.md` | kirjoitat `plans/`-rakenteen suunnitelmaa tai spec-dokumenttia | `10-flow-plan` |
 | `harja-worktree-reference.md` | käytät Harjan worktree-helpereitä turvallisesti | `support-worktree` |
 | `harja-issue-spec-reference.md` | tarkennat ticketin speciksi tai puristat specin Jira-ready issueksi | `support-issue-spec` |
 | `harja-delivery-closeout-reference.md` | suljet flown, synkronoit totuuslähteen tai teet closeout-tarkistuksia | `15-flow-closeout` |

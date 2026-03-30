@@ -37,6 +37,7 @@ Ensure the original source-of-truth spec or planning document reflects the deliv
 ### Ask First
 
 - the source-of-truth spec or plan file cannot be identified safely
+- multiple plausible `plans/<topic-slug>/` targets exist and the normalized branch-derived slug does not disambiguate them safely
 - it is unclear whether user-facing or operational documentation should be updated
 - removing the worktree would be destructive or the user has not confirmed that local cleanup is desired
 - uncommitted changes or local-only commits suggest work would be lost by cleanup
@@ -49,6 +50,8 @@ Ensure the original source-of-truth spec or planning document reflects the deliv
 Objective: determine which artifacts and local resources the closeout must touch.
 
 Find the original spec, issue-spec, or planning document that acted as the source of truth, determine whether user-facing or operational documentation changed, and detect whether a local worktree is in use.
+Prefer the current `plans/` source-of-truth structure when it exists. During the transition, fall back to existing `.prd` or `specs/` documents instead of migrating them implicitly inside closeout.
+If a new-style `plans/` document must be identified from context, use the normalized current feature-branch name as the default `topic-slug` hint and ask first when it does not resolve safely.
 
 ### Phase 2: Sync source-of-truth artifacts
 
@@ -79,6 +82,7 @@ Summarize which source-of-truth artifacts were updated, what documentation chang
 ### Always
 
 - update the original source-of-truth spec or plan when one exists
+- prefer updating the current `plans/` source-of-truth document when one exists, and otherwise update the matching legacy source in place
 - update documentation when behavior, setup, or operations changed materially, or state explicitly that none was needed
 - keep unresolved follow-ups visible instead of implying perfect completion
 - prefer the repository's supported worktree-removal workflow when local cleanup is requested
@@ -87,6 +91,7 @@ Summarize which source-of-truth artifacts were updated, what documentation chang
 ### Ask First
 
 - use `vscode/askQuestions` when the correct source-of-truth artifact, documentation target, or cleanup intent is ambiguous
+- ask when the normalized branch-derived `topic-slug` does not identify one credible source-of-truth path
 - ask before removing a worktree
 - ask before proceeding when uncommitted changes or local-only commits would make cleanup risky
 

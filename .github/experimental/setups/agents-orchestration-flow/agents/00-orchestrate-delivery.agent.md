@@ -64,6 +64,7 @@ Objective: choose the first valid next phase without inventing hidden state.
 Inspect the prompt, the current branch context, any saved plan, and any prior flow outputs to decide whether to start from `10-flow-plan`, `11-flow-implement`, `13-flow-simplify`, `12-flow-review`, `review-fix`, `14-flow-verify`, `review-pre-pr`, or `15-flow-closeout`.
 
 Before selecting the next phase, analyze whether the current branch appears to be the correct branch for the requested work by comparing the request, branch name, saved plan or spec context, and any existing flow outputs. If the branch looks suspiciously wrong, stop and ask instead of routing deeper into the flow.
+When the next phase would create a new `plans/<topic-slug>/` path, treat the normalized feature-branch name as the default slug candidate and block routing if that candidate is missing, generic, or mismatched with the task.
 
 ### Phase 2: Delegate the next phase
 
@@ -105,6 +106,7 @@ When a delegated phase is still running, keep the active phase visible instead o
 - stop immediately when a delegated agent returns `blocked` or `failed`
 - analyze whether the current branch matches the requested work before continuing into implementation, review, verify, or closeout
 - treat branch mismatch risk as a routing blocker, not as a detail to ignore until later
+- treat branch-derived slug mismatch as a blocker before routing into plan or spec creation
 - base routing on explicit output fields, not stylistic hints or hidden assumptions
 - mark the delivery state as `in_progress` before a long-running delegated phase begins
 - keep the currently running delegated phase visible while it is still active

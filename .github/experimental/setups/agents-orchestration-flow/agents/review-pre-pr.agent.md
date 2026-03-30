@@ -110,8 +110,12 @@ Testing recommendations:
 PR description draft:
 - print the actual draft, not a summary of it
 - render it inside a fenced `markdown` code block
+- keep the draft concise and reviewer-oriented
+- start with an ultra-concise 2-3 sentence summary of what changed, why it matters, and the key impact
 - start the rendered draft with `## Tiivistelmä`
-- follow the exact section order from `pr-desc.prompt.md`: `## Tiivistelmä`, `## Muutokset`, `## Muita huomioita`
+- follow the exact section order `## Tiivistelmä`, `## Muutokset`, `## Muita huomioita`
+- in `## Muutokset`, list the key committed changes as bullets
+- in `## Muita huomioita`, include only relevant technical details, breaking changes if any, manual testing recommendations, related dependencies, and meaningful risks or considerations
 - always include the draft even when `PR Readiness` is `fix_before_pr` or `blocked`
 - when the branch is not ready, the draft must still reflect committed changes only and should not imply approval
 
@@ -125,6 +129,5 @@ Use this when the pre-PR gate is blocked by an unclear base branch, unresolved r
 - Use `../domain/harja-e2e-testing-reference.md` for test coverage expectations on UI-heavy changes.
 - Use `../domain/harja-validation-review-reference.md` when write-path validation or authorization needs deeper analysis.
 - Use `instructions/sql.instructions.md` for SQL file changes.
-- Use `pr-desc.prompt.md` as the markdown shape and brevity guide for the PR description draft.
 - Use `12-flow-review` when the user wants the default independent code review during implementation instead of a pre-PR gate.
 - Use `15-flow-closeout` when PR readiness is established and the source-of-truth docs plus local worktree should be wrapped up.

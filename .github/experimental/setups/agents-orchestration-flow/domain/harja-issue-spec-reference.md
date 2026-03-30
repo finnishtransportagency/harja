@@ -11,7 +11,7 @@ Käytä tätä referenssiä, kun tehtävään kuuluu:
 - hyväksytyn specin tai suunnitelman kääntäminen Jira-ready issueksi
 - issue-tekstin terminologian kääntäminen Harjan oikeisiin käsitteisiin
 - edge casejen, rajoitteiden ja avoimien kysymysten kerääminen ennen toteutussuunnittelua
-- iteratiivisesti päivittyvän `specs/spec-<jiraid>.md`-tiedoston ylläpito
+- iteratiivisesti päivittyvän `plans/<topic-slug>/spec.md`-tiedoston ylläpito
 
 Tyypilliset agentit:
 - `support-issue-spec`
@@ -63,7 +63,19 @@ Issue-spec on iteratiivinen työdokumentti. Pidä näkyvissä ainakin:
 
 ### Tallennussijainti
 
-Oletustallennus on `specs/spec-<jiraid>.md`.
+Oletustallennus on `plans/<topic-slug>/spec.md`.
+
+Suosi olemassa olevaa aihehakemistoa, jos sellainen on jo käytössä.
+Jos aihehakemistoa ei ole vielä olemassa, johda `topic-slug` ensisijaisesti nykyisen feature branchin nimestä.
+Jos feature branchia ei ole, branch on geneerinen eikä kuvaa tehtävää, tai branchin ja tehtävän välillä on ristiriita, kysy käyttäjältä slug ennen tallennusta.
+
+Normalisoi branch-pohjainen `topic-slug` näin:
+- muunna pieniksi kirjaimiksi
+- korvaa `/` ja `_` merkillä `-`
+- tiivistä peräkkäiset `-` merkit yhdeksi
+- poista alusta ticket-prefiksi muodossa `<kirjaimet>-<numerot>-`, jos loppuosa on edelleen kuvaava
+
+Jos vastaava legacy-dokumentti on jo olemassa polussa `specs/` tai `.prd/`, päivitä se siirtymävaiheessa paikoillaan, ellei käyttäjä pyydä nimenomaan migraatiota.
 
 Jos käyttäjä tai repository-konteksti vaatii toisen sijainnin, nosta se eksplisiittisesti esiin. Jos issue-draft tuotetaan vain vastaukseen, sano se suoraan.
 
@@ -76,7 +88,7 @@ Siirry `10-flow-plan`-agenttiin, kun:
 
 ## Ristiviitteet
 
-- Käytä `harja-planning-and-spec-reference.md`, kun issue-specistä siirrytään toteutussuunnitelmaan tai `.prd`-konvention mukaiseen dokumenttiin.
+- Käytä `harja-planning-and-spec-reference.md`, kun issue-specistä siirrytään toteutussuunnitelmaan tai `plans/`-konvention mukaiseen dokumenttiin.
 - Käytä `harja-feature-implementation-reference.md`, kun terminologia tai muutosalue pitää ankkuroida Harjan todelliseen feature-rakenteeseen.
 - Käytä `harja-validation-review-reference.md`, kun issue koskee write-pathia, authorizationia tai validation-logiikkaa.
 

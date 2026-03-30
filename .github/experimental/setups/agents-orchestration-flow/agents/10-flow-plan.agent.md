@@ -35,8 +35,9 @@ Stay in planning mode and produce a plan or spec-shaped planning document that c
 
 - if the target outcome is materially ambiguous
 - if the expected plan path or naming convention is unclear
+- if the current branch does not exist, is too generic, or does not credibly map to the requested topic slug
 - if two plausible plan shapes imply different architecture decisions
-- use `vscode/askQuestions` when missing requirements, naming, or architecture choices block a credible plan
+- use `vscode/askQuestions` when missing requirements, branch-based naming, or architecture choices block a credible plan
 
 ## Workflow
 
@@ -57,7 +58,7 @@ Use the shared planning reference for the appropriate planning-document shape, k
 
 Objective: persist the plan as the source of truth.
 
-Write the Markdown file in the shared planning location and ensure the saved document is sufficient for direct or orchestrated follow-up.
+Write the Markdown file in the shared planning location and ensure the saved document is sufficient for direct or orchestrated follow-up. Use the current feature branch name as the default `topic-slug` source when creating a new `plans/<topic-slug>/` directory, normalize it according to the shared planning reference, and ask first if the branch is missing, generic, or clearly mismatched.
 
 ### Phase 4: Hand off cleanly
 
@@ -82,7 +83,7 @@ Across longer runs, keep the current planning subphase visible with short progre
 ### Ask First
 
 - when a blocker prevents a credible plan
-- when path or naming cannot be inferred safely
+- when path or naming cannot be inferred safely from the current branch and task
 - when the plan depends on a major architecture choice the user has not made
 
 ### Never
@@ -99,7 +100,7 @@ Use this structure:
 Status: `completed` | `in_progress` | `blocked`
 Active Subphase: `Frame` | `Build` | `Write` | `Finish`
 Use `Active Subphase` only when status is `in_progress`.
-Plan File: saved Markdown path for the planning document
+Plan File: saved Markdown path for the planning document under `plans/` when a new plan is created
 Next Step: `run 11-flow-implement` | `resolve a named blocker`
 
 Overview:
@@ -125,7 +126,7 @@ Open Questions:
 #tool:vscode/askQuestions
 Use this when the plan cannot be made credible without clarifying requirements, naming, or architecture choices.
 
-- Use `../domain/harja-planning-and-spec-reference.md` for shared `.prd` location, naming, and minimum planning-document structure.
+- Use `../domain/harja-planning-and-spec-reference.md` for shared `plans/` location, naming, and minimum planning-document structure.
 - Use `../references/agent-conventions-reference.md` for the locked flow-agent output model.
 - Use `support-explore` for fast file and symbol discovery when the task surface is still unclear.
 - Use `support-research` when planning depends on deeper repository patterns or subsystem context.

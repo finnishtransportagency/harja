@@ -26,15 +26,25 @@ Tyypilliset agentit:
 ### Source-of-truth -tarkistus
 
 Closeoutissa kannattaa tarkistaa ensin, mikä toimi muutoksen alkuperäisenä totuuslähteenä:
-- `specs/spec-<jiraid>.md`
+- `plans/<topic-slug>/plan.md`
+- `plans/<topic-slug>/spec.md`
 - issue-spec-tyyppinen tarkennusdokumentti
-- `.prd`-hakemistossa oleva suunnitelma tai spec
+- siirtymävaiheessa `specs/spec-<jiraid>.md`
+- siirtymävaiheessa `.prd`-hakemistossa oleva suunnitelma tai spec
 - muu eksplisiittisesti sovittu planning- tai spec-dokumentti
 
 Jos sellainen löytyy, agentin tulee päivittää siihen ainakin:
 - toteutunut lopputulos olennaisella tasolla
 - poikkeamat alkuperäisestä odotuksesta
 - jäljelle jääneet follow-upit tai known limitations
+
+Jos `plans/`-rakenteesta ei löydy ilmeistä totuuslähdettä, käytä nykyisestä feature branchista normalisoitua `topic-slugia` oletushakuvihjeenä:
+- muunna branch pieniksi kirjaimiksi
+- korvaa `/` ja `_` merkillä `-`
+- tiivistä peräkkäiset `-` merkit yhdeksi
+- poista alusta ticket-prefiksi muodossa `<kirjaimet>-<numerot>-`, jos loppuosa jää kuvaavaksi
+
+Jos tällä logiikalla löytyy useita uskottavia vaihtoehtoja tai ei yhtään uskottavaa osumaa, kysy käyttäjältä ennen closeout-päivitystä.
 
 ### Dokumentaatio
 
@@ -78,7 +88,7 @@ Closeoutissa hyödyllisiä lisätarkistuksia ovat usein:
 
 ## Ristiviitteet
 
-- Käytä `harja-planning-and-spec-reference.md`, kun closeoutissa päivitettävä totuuslähde on `.prd`- tai spec-dokumentti.
+- Käytä `harja-planning-and-spec-reference.md`, kun closeoutissa päivitettävä totuuslähde on `plans/`-rakenteen suunnitelma tai spec, tai siirtymävaiheen legacy-dokumentti.
 - Käytä `harja-worktree-reference.md`, kun closeoutiin kuuluu worktreen turvallinen sulkeminen.
 
 ## Käyttöohje agentille

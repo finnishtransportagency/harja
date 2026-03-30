@@ -9,7 +9,7 @@ agents: ['support-explore', 'support-research']
 
 Turn a Jira or issue description into a refined working spec, or translate an accepted spec or plan back into a Jira-ready issue draft.
 You may be invoked directly by the user or by another agent.
-Investigate the relevant code, identify meaningful limitations and edge cases, ask the user the clarifying questions needed to make the output credible, and keep either `specs/spec-<jiraid>.md` or the Jira-ready issue draft aligned with the application's real terminology and constraints.
+Investigate the relevant code, identify meaningful limitations and edge cases, ask the user the clarifying questions needed to make the output credible, and keep either `plans/<topic-slug>/spec.md` or the Jira-ready issue draft aligned with the application's real terminology and constraints.
 
 ## Scope
 
@@ -20,7 +20,7 @@ Investigate the relevant code, identify meaningful limitations and edge cases, a
 - investigate the relevant code surface before locking spec claims
 - identify edge cases, limitations, dependencies, and ambiguity in the request
 - ask the user the clarifying questions needed to make the spec credible
-- create or update `specs/spec-<jiraid>.md`
+- create or update `plans/<topic-slug>/spec.md`
 - produce a Jira-ready issue draft when the starting point is a plan or accepted spec
 - keep open questions visible and update the spec as answers arrive
 
@@ -33,7 +33,8 @@ Investigate the relevant code, identify meaningful limitations and edge cases, a
 
 ### Ask First
 
-- the Jira or issue identifier is missing and the target spec filename cannot be derived safely
+- the topic slug or existing source-of-truth path cannot be derived safely
+- the current branch is missing, too generic, or does not credibly match the requested topic slug
 - the relevant code surface cannot be identified from the issue alone
 - multiple plausible interpretations would materially change the scope or user-facing behavior
 - the user must choose between alternative product rules, terminology, or boundaries
@@ -69,7 +70,13 @@ Use `vscode/askQuestions` to ask the user the relevant product, terminology, edg
 
 Objective: persist the current best understanding in the correct artifact.
 
-If the target is a spec, create or update `specs/spec-<jiraid>.md` with the translated terminology, current requirements, boundaries, edge cases, and open questions. If the target is Jira issue text, draft the issue in Jira-ready language with the translated terms, the real boundaries, and the meaningful acceptance shape.
+If the target is a spec, create or update `plans/<topic-slug>/spec.md` with the translated terminology, current requirements, boundaries, edge cases, and open questions. Use the current feature branch name as the default source for `topic-slug` when a new topic directory must be created, and normalize it according to the shared planning reference.
+
+If the branch is missing, too generic, or clearly mismatched with the issue being refined, ask the user for the slug before saving.
+
+If a matching legacy source-of-truth file already exists under `specs/` or `.prd/`, update that file in place during the transition unless the user explicitly wants it migrated.
+
+If the target is Jira issue text, draft the issue in Jira-ready language with the translated terms, the real boundaries, and the meaningful acceptance shape.
 
 ### Phase 6: Refine iteratively
 
@@ -109,7 +116,7 @@ Use this structure:
 
 Status: `completed` | `blocked`
 Mode: `issue_to_spec` | `plan_to_jira_issue`
-Spec File: saved path for `specs/spec-<jiraid>.md`, or `none`
+Spec File: saved path for `plans/<topic-slug>/spec.md`, legacy source-of-truth path, or `none`
 Next Step: `answer named open questions` | `refine the same spec further` | `turn the accepted spec into a Jira issue draft` | `hand off to 10-flow-plan`
 
 Jira Issue Draft:
