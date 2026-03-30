@@ -362,10 +362,17 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
--- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
-SELECT alkanut
-  FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+-- name: hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+SELECT alkanut,
+       MIN(alkanut) OVER () AS min_alkanut,
+       MAX(alkanut) OVER () AS max_alkanut
+  FROM (
+        SELECT DISTINCT alkanut::DATE AS alkanut
+          FROM toteuma t
+         WHERE ulkoinen_id IN (:ulkoiset-idt)
+           AND urakka = :urakka-id
+           AND poistettu IS NOT TRUE
+       ) poistettavien_paivat;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -1348,7 +1355,7 @@ WHERE ((toteuma_muutostiedot_muokattu IS NOT NULL AND toteuma_muutostiedot_muoka
     OR (toteuma_muutostiedot_muokattu IS NULL AND toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP));
 
 -- name: siirra-toteumat-analytiikalle
-select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+select siirra_toteumat_analytiikalle(:alkuaika::TIMESTAMP WITH TIME ZONE, :loppuaika::TIMESTAMP WITH TIME ZONE);
 
 -- name: lisaa-toteumalle-jsonhash!
 UPDATE toteuma SET json_hash = :hash WHERE id = :id;

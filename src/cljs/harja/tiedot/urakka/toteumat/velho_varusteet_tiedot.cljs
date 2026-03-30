@@ -61,7 +61,10 @@
       (:nimi param))))
 
 (defn hakuparametrit [{:keys [valinnat]}]
-  (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
+  (let [valinnat (if (:hoitokauden-alkuvuosi valinnat)
+                   valinnat
+                   (assoc valinnat :hoitovuoden-kuukausi nil))
+        varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
         kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))
         toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
@@ -115,7 +118,8 @@
 
   ValitseHoitokausi
   (process-event [{uusi-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi))
+    (cond-> (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi)
+      (nil? uusi-alkuvuosi) (assoc-in [:valinnat :hoitovuoden-kuukausi] nil)))
 
   ValitseHoitovuodenKuukausi
   (process-event [{hoitovuoden-kuukausi :hoitovuoden-kuukausi} app]

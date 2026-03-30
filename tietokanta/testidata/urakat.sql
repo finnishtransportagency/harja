@@ -1475,6 +1475,12 @@ UPDATE urakka_parametrit
                         WHERE alkupvm IN ('2019-10-01', '2020-10-01')
                           AND tyyppi = 'teiden-hoito');
 
+-- Lisätään kaikille -25 alkaneille urakalle tieto, että muutosten hallinta on käytössä
+-- Hox. Tuotannossa on urakka, joka alkaa -25 vuonna, mutta Sampon virheellisen syötön takia se alkaa 1.1. eikä 1.10.
+UPDATE urakka_parametrit
+SET muutosten_hallinta = true
+WHERE urakkaid IN (SELECT id FROM urakka WHERE alkupvm >= '2025-01-01' AND tyyppi = 'teiden-hoito');
+
 -- Asetetaan laskutusraja käyttöön "POP MHU Kajaani 2025-2030" -urakalle
 UPDATE urakka_parametrit
 SET laskutusraja_kaytossa = true

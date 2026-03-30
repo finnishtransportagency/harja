@@ -223,9 +223,8 @@
                                                              :alkupvm (pvm/eilinen)
                                                              :urakkaid urakka-id}))
     ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
-    (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                       :alkupvm (pvm/eilinen)
-                                                                       :loppupvm (pvm/eilinen)})))
+    (materiaalit/paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla db {:urakka urakka-id
+                                                                                    :muutospvm (pvm/eilinen)})))
 
 (defn- paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta [db]
   (let [urakka-idt (mapv :id
