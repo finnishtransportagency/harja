@@ -1,4 +1,4 @@
-# Agenttien Yhteiset Käytännöt
+# Agenttien yhteiset käytännöt
 
 ## Tavoite
 
@@ -24,6 +24,8 @@ Ei koske:
 
 Kirjoita agenttien ohjeet, kuvaukset ja muu tavallinen teksti normaalilla suomen kielellä, mukaan lukien ääkköset.
 
+Vältä otsikoissa Title Case -tyyliä. Suosi normaalia lause- ja otsikkokokoa, jossa vain ensimmäinen sana alkaa isolla kirjaimella, ellei kyse ole erisnimestä, teknisestä tunnisteesta tai lukitusta kanonisesta otsikosta kuten `Role`, `Scope`, `Workflow`, `Decision Rules`, `Output Contract` tai `References`.
+
 ASCII-oletus koskee vain koodia, tunnisteita, polkuja, komentoja, esimerkkisyntaksia ja muuta teknistä sisältöä, jossa ASCII on tarkoituksenmukainen tai vaadittu.
 
 Älä translitteroi suomenkielistä tekstiä muotoon `Tama`, `kayta` tai `yhteiset kaytannot`, ellei kyse ole koodista tai teknisestä syntaksista.
@@ -38,7 +40,7 @@ Pidetään vastuunjako vakaana:
 
 Agentti ei kanna laajoja domain-manuaaleja, jos sama tieto voidaan osoittaa yhdellä viitteellä.
 
-## Yhteinen Frontmatter
+## Yhteinen frontmatter
 
 Ei-subagent-agentin frontmatterissa käytetään vain aidosti tarpeellisia kenttiä tässä järjestyksessä:
 
@@ -66,7 +68,7 @@ Säännöt:
 - `tools` listaa vain aidosti tarvittavat työnkulut
 - `agents` ja `handoffs` pidetään minimissä
 
-## Yhteinen Osiojärjestys
+## Yhteinen osiojärjestys
 
 Kaikki ei-subagent-agentit noudattavat samaa runkoa:
 
@@ -82,7 +84,7 @@ Lisäsäännöt:
 - otsikoiden nimet pidetään samoina agenttiperheestä riippumatta
 - perhekohtainen ero syntyy sisällöstä ja painotuksesta, ei rakenteesta
 
-## Osioiden Vähimmäissisältö
+## Osioiden vähimmäissisältö
 
 ### Role
 - mitä agentti tekee
@@ -114,7 +116,7 @@ Lisäsäännöt:
 - vain lyhyet viitteet yhteisiin lähteisiin
 - ei pitkää domain-sisällön duplikaattia
 
-## Taksonomia Ja Nimeäminen
+## Taksonomia ja nimeäminen
 
 Ei-subagent-agentit jaetaan neljään perheeseen:
 
@@ -144,7 +146,7 @@ Nimeämissäännöt:
 - yksi nimi kertoo yhden ensisijaisen roolin
 - säilytä saman perheen nimet rinnakkaisina
 
-## Direct Ja Delegated Käytön Sopimus
+## Direct ja delegated käytön sopimus
 
 Agentti toimii samalla identiteetillä riippumatta siitä, ajaako sitä käyttäjä vai orkestroija.
 
@@ -161,7 +163,7 @@ Vaihtua saa vain kutsun konteksti:
 
 Context mode ei saa muuttaa agentin ydintehtävää.
 
-## Yhteinen Input-Sopimus
+## Yhteinen input-sopimus
 
 Kun agenttia kuvataan tai delegoidaan, inputissa tulee olla tunnistettavissa:
 - objective
@@ -170,7 +172,7 @@ Kun agenttia kuvataan tai delegoidaan, inputissa tulee olla tunnistettavissa:
 - success criteria
 - context mode tarvittaessa
 
-## Yhteinen Output-Sopimus
+## Yhteinen output-sopimus
 
 Kaikilla direct- ja delegated-käyttöön sovitetuilla agenteilla tulee olla tunnistettava loppurakenne:
 - `status`
@@ -186,7 +188,7 @@ Suositellut ylatasoiset statukset:
 - `blocked`
 - `failed`
 
-## Outputin Visualisointi
+## Outputin visualisointi
 
 Luettavuuden vuoksi suosi seuraavaa mallia:
 - näytä lyhyet scalar-kentät tiiviinä header-kenttinä ennen pidempiä lohkoja
@@ -229,7 +231,7 @@ Vältä oletuksena:
 
 Taulukko sopii vain pieneen metadata-headeriin, jos agenttiperheestä saadaan sillä aidosti luettavampi.
 
-## Lukitut Agenttiperhekohtaiset Outputit
+## Lukitut agenttiperhekohtaiset outputit
 
 ### support-explore
 - relevant files
@@ -320,7 +322,7 @@ UI-verifyssa raportoi aina eksplisiittisesti, tehtiinkö selaimen console- ja pa
 - unresolved point or blocker
 - next step
 
-## Perhekohtaiset Painotukset
+## Perhekohtaiset painotukset
 
 ### Flow-agentit
 - sama käyttäytyminen direct + delegated -tilassa
@@ -364,7 +366,7 @@ Jätä agenttiin:
 - output contract
 - lyhyet viittaukset tarpeellisiin lähteisiin
 
-## Milloin Eskaloida
+## Milloin eskaloida
 
 Kysy tai eskaloi, jos:
 - refaktorointi vaatisi agentin uudelleennimeämisen

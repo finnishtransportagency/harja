@@ -1,10 +1,10 @@
-# Harja Feature Implementation Reference
+# Harja feature implementation reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa Harja-featuren toteutuksen peruskartan yhteen paikkaan, jotta agenttien ei tarvitse kantaa samaa rakenne- ja naming-tietoa omissa rungoissaan.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tehtävä koskee Harja-featuren toteutusta, isompaa refaktorointia tai todennäköisten muutosalueiden kartoitusta.
 
@@ -27,7 +27,7 @@ Pidä erityisesti mielessä:
 - selkeä suomenkielinen domain-sanasto on ensisijainen
 - uusia frontend-testipolkuja ohjataan mieluummin tuettuihin malleihin tai E2E:hen kuin vanhoihin doo/phantom-kuvioihin
 
-### Tyypillinen Feature-Kartta
+### Tyypillinen feature-kartta
 
 Frontend:
 - näkymä `src/cljs/harja/views/urakka/[module]/[feature]_nakyma.cljs`
@@ -47,7 +47,7 @@ Tietokanta ja testit:
 
 Jos rollout on asteittainen, tarkista myös feature-flag-polku ja vanhan sekä uuden UI:n rinnakkaiselo.
 
-### Naming Ja Konventiot
+### Naming ja konventiot
 
 Frontend:
 - namespace `harja.views.urakka.[module].[feature]-nakyma`
@@ -63,7 +63,7 @@ Backend ja SQL:
 - migraatiot muodossa `V[number]__[description].sql`
 - nimetty kysely esimerkiksi `-- name: hae-data`
 
-### Olemassa Olevat Apualueet
+### Olemassa olevat apualueet
 
 Tarkista ennen uuden utilityn keksimistä ainakin:
 - `harja.fmt`
@@ -86,7 +86,7 @@ Utilityn sijoitus:
 - Käytä `harja-e2e-testing-reference.md`, kun muutos vaatii UI-polun tai Cypress-kattavuuden arviointia.
 - Käytä `harja-utility-namespaces` skillia ennen uuden utilityn keksimistä.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä on Harja-feature-toteutus tai iso refaktorointi
 - poimi mukaan vain tehtävän kannalta olennainen rakenne- ja naming-konteksti

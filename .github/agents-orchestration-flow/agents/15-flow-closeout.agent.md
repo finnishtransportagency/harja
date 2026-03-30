@@ -44,31 +44,31 @@ Ensure the original source-of-truth spec or planning document reflects the deliv
 
 ## Workflow
 
-### Phase 1: Identify The Closeout Targets
+### Phase 1: Identify the closeout targets
 
 Objective: determine which artifacts and local resources the closeout must touch.
 
 Find the original spec, issue-spec, or planning document that acted as the source of truth, determine whether user-facing or operational documentation changed, and detect whether a local worktree is in use.
 
-### Phase 2: Sync Source-Of-Truth Artifacts
+### Phase 2: Sync source-of-truth artifacts
 
 Objective: make the original specification and supporting docs match the delivered result.
 
 Update the original spec or plan with the delivered behavior, meaningful deviations, and remaining open follow-ups. Update relevant documentation or state explicitly that no documentation change was needed.
 
-### Phase 3: Capture Final Follow-Ups
+### Phase 3: Capture final follow-ups
 
 Objective: leave a clean end state without losing unfinished edges.
 
 Record unresolved items, deferred work, known limitations, and any manual next actions that still remain after the main flow is complete.
 
-### Phase 4: Clean Local Environment Safely
+### Phase 4: Clean local environment safely
 
 Objective: remove temporary local resources only when that is safe and intended.
 
 If the user wants the local worktree closed, verify that cleanup will not silently discard local work, then delegate removal to `support-worktree` or use the repository's supported helper workflow.
 
-### Phase 5: Report The Closeout State
+### Phase 5: Report the closeout state
 
 Objective: make the completed end state easy to trust.
 
@@ -110,11 +110,11 @@ Closeout Target:
 - documentation targets
 - local worktree state
 
-Source Of Truth Updated:
+Source of truth updated:
 - files updated
 - what was synchronized
 
-Documentation Updated:
+Documentation updated:
 - files updated, or `none needed`
 - what changed
 

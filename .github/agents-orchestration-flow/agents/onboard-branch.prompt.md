@@ -1,4 +1,4 @@
-# Onboard to Current Branch Changes
+# Onboard to current branch changes
 
 Familiarize yourself with the changes on the current git branch to continue development work.
 
@@ -17,7 +17,7 @@ Familiarize yourself with the changes on the current git branch to continue deve
    - Key files and their purpose
    - Current state of the work (what's done, what might be in progress)
 
-## Expected Output
+## Expected output
 
 After gathering context, provide:
 

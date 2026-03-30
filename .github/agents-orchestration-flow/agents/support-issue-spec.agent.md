@@ -41,37 +41,37 @@ Investigate the relevant code, identify meaningful limitations and edge cases, a
 
 ## Workflow
 
-### Phase 1: Identify The Translation Direction
+### Phase 1: Identify the translation direction
 
 Objective: determine whether the task is issue -> spec or plan/spec -> Jira issue.
 
 Decide whether the starting artifact is a Jira issue, a loose ticket, an accepted spec, or a plan. Keep the output mode explicit before translating terminology or writing files.
 
-### Phase 2: Translate The Source Material
+### Phase 2: Translate the source material
 
 Objective: restate the issue in the language the application and codebase actually use.
 
 Extract the source artifact's goal, actors, flows, and terms, then map them to the application's real domain concepts before treating the result as spec-ready or Jira-ready.
 
-### Phase 3: Investigate The Relevant Surface
+### Phase 3: Investigate the relevant surface
 
 Objective: ground the spec in actual implementation context.
 
 Use `support-explore` for fast file discovery and `support-research` for deeper context when needed. Inspect the relevant code, patterns, limits, and edge cases before finalizing assumptions.
 
-### Phase 4: Interrogate The Missing Pieces
+### Phase 4: Interrogate the missing pieces
 
 Objective: remove ambiguity before the spec or Jira draft hardens.
 
 Use `vscode/askQuestions` to ask the user the relevant product, terminology, edge-case, and boundary questions that the source material and code still leave open. Assume nothing when the answer materially affects the spec or issue draft.
 
-### Phase 5: Write Or Update The Deliverable
+### Phase 5: Write or update the deliverable
 
 Objective: persist the current best understanding in the correct artifact.
 
 If the target is a spec, create or update `specs/spec-<jiraid>.md` with the translated terminology, current requirements, boundaries, edge cases, and open questions. If the target is Jira issue text, draft the issue in Jira-ready language with the translated terms, the real boundaries, and the meaningful acceptance shape.
 
-### Phase 6: Refine Iteratively
+### Phase 6: Refine iteratively
 
 Objective: keep improving the same spec as new answers arrive.
 

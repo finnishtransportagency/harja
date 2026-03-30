@@ -1,10 +1,10 @@
-# Harja Worktree Reference
+# Harja worktree reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa Harjan worktree-käytännön turvalliselle tasolle ilman, että agentti kovakoodaa helper-skriptien tarkkaa APIa.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tehtävä koskee Harja-worktreen luontia, poistamista tai helper-skriptien turvallista käyttöä.
 
@@ -13,12 +13,12 @@ Tyypilliset agentit:
 
 ## Ydinohjeet
 
-### Tyypillinen Sijainti Harjassa
+### Tyypillinen sijainti Harjassa
 
 Harjassa worktree-helperit sijaitsevat tyypillisesti polussa `sh/git-worktree/`.
 Tarkista aina helperin usage, otsakekommentit tai muu paikallinen dokumentaatio ennen ajoa.
 
-### Suositeltu Toimintamalli
+### Suositeltu toimintamalli
 
 1. Etsi ensin helper-skripti ja käytä sitä ensisijaisesti, jos `sh/git-worktree/` löytyy.
 2. Tarkista branch, kohdepolku ja mahdolliset pakolliset parametrit ennen ajoa.
@@ -28,7 +28,7 @@ Tarkista aina helperin usage, otsakekommentit tai muu paikallinen dokumentaatio 
 
 Helper voi hoitaa myös muita asioita kuin pelkän `git worktree add` -komennon, kuten porttien valinnan, riippuvuuksien asennuksen tai käynnistysskriptin luonnin.
 
-### Mitä Agentin Kannattaa Raportoida
+### Mitä agentin kannattaa raportoida
 
 Kun Harja-worktree on luotu, raportoi ainakin:
 - luodun worktree-polun
@@ -47,7 +47,7 @@ Kun luonti estyy, raportoi ainakin:
 
 - Käytä `harja-delivery-closeout-reference.md`, kun worktree liittyy flown lopetukseen ja poistoon.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee worktree-helperien käyttöä eikä skriptien tarkkaa APIa pidä arvata
 - tarkista aina helperin oma usage ennen ajoa

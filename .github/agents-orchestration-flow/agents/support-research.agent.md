@@ -34,25 +34,25 @@ Stay focused on contextual analysis and repository patterns rather than planning
 
 ## Workflow
 
-### Phase 1: Frame The Research Goal
+### Phase 1: Frame the research goal
 
 Objective: define the exact question the research must answer.
 
 Extract the named subsystem, behavior, failure area, or implementation question and decide whether fast exploration is needed first.
 
-### Phase 2: Map The Relevant Surface
+### Phase 2: Map the relevant surface
 
 Objective: identify the right files before going deep.
 
 Use direct searches or delegate to `support-explore` when the likely file set is still too broad.
 
-### Phase 3: Inspect High-Signal Context
+### Phase 3: Inspect high-signal context
 
 Objective: understand how the relevant area works today.
 
 Read the key files, tests, and nearby patterns needed to explain current behavior, constraints, and reusable conventions.
 
-### Phase 4: Synthesize Findings
+### Phase 4: Synthesize findings
 
 Objective: return actionable context instead of raw notes.
 

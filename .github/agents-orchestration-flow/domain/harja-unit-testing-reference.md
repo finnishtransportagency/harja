@@ -1,11 +1,11 @@
-# Harja Unit Testing Reference
+# Harja unit testing reference
 
 ## Tavoite
 
 Pakattu muistilista Harjan backend-yksikkotesteihin ja kapeisiin palvelutason testeihin.
 Tavoite on suojata liiketoimintasaannot backend-testilla ennen E2E-varmistusta.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 - kirjoitat tai päivität `*_test.clj` tiedostoa
 - muutat palvelu-, kysely- tai domainlogiikkaa
@@ -24,7 +24,7 @@ Tavoite on suojata liiketoimintasaannot backend-testilla ennen E2E-varmistusta.
 - testaa yksi sääntö tai tapaus per `deftest`
 - nimeä testi niin, että suojattu sääntö selviää ilman toteutuskoodin lukemista
 
-### Testidata Ja Rakenne
+### Testidata ja rakenne
 
 - suosi olemassa olevia fixtureja ja testiapureita ad hoc -setupin sijaan
 - jos lähialue käyttää transaction-fixturea, oleta automaattinen rollback eikä manuaalista cleanupia
@@ -34,13 +34,13 @@ Tavoite on suojata liiketoimintasaannot backend-testilla ennen E2E-varmistusta.
 - tarkista paluuarvo, tallennettu tila, validointivirhe tai oikeuseston lopputulos
 - vältä toteutusdetaljien ylimääräistä lukitsemista assertioneissa
 
-### Testattavuus Ennen Redefiä
+### Testattavuus ennen redefiä
 
 - vältä `with-redefs` tai muuta redef-painotteista testausta oletusratkaisuna
 - mieluummin refaktoroi koodi helpommin testattavaksi kuin mockaa laajasti sisäisiä riippuvuuksia
 - jos redef on pakollinen, pidä se paikallisena, minimaalisena ja perusteltuna
 
-### Vältä Ainakin
+### Vältä ainakin
 
 - monta irrallista sääntöä samassa testissä
 - raskasta tai epäselvää testidataa
@@ -55,7 +55,7 @@ Tavoite on suojata liiketoimintasaannot backend-testilla ennen E2E-varmistusta.
 - käytä `harja-validation-review-reference.md`, kun authorization tai validointi on keskiössä
 - käytä `harja-e2e-testing-reference.md`, kun backend-testin rinnalle tarvitaan selaintason varmistus
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä painottuu backend-yksikkötestin kirjoittamiseen, päivitykseen tai arviointiin
 - poimi vain testin kannalta olennainen muistilista omaan analyysiin tai toteutukseen

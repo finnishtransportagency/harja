@@ -1,10 +1,10 @@
-# Harja E2E Testing Reference
+# Harja E2E testing reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa Harjan Cypress- ja E2E-testauksen minimitason domain-ohjeet yhteen paikkaan.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tehtävä koskee Harjan E2E- tai Cypress-testausta, UI-polun selainvarmennusta tai selainpohjaisen testiongelman diagnostiikkaa.
 
@@ -37,7 +37,7 @@ Tyypillisiä hyödyllisiä apureita:
 - `cy.valinnatValitse(...)`
 - `cy.terminaaliKomento()` silloin kun projekti jo käyttää sitä
 
-### Selainvirheiden Minimitarkistus
+### Selainvirheiden minimitarkistus
 
 Kun verify kohdistuu UI-polkuun, minimitason tarkistus sisältää:
 - sivu aukeaa ilman yleistä virhenäkymää
@@ -50,7 +50,7 @@ Raportoi vähintään:
 - löytyikö selvä punainen console-virhe tai toistuva virhekuvio
 - jäikö tarkistus tekemättä, ja miksi
 
-### Epävakauden Diagnostiikka
+### Epävakauden diagnostiikka
 
 Jos testi on epävakaa, tarkista ensin:
 - puuttuuko odotus loaderin loppumiselle
@@ -70,7 +70,7 @@ Vältä ainakin:
 - Käytä `harja-feature-implementation-reference.md`, kun testi tarvitsee feature-rakenteen tai naming-konvention kontekstia.
 - Käytä `harja-validation-review-reference.md`, kun E2E-havainto viittaa backendin validation-, authorization- tai write-path-riskiin.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee Harjan E2E- tai Cypress-testausta
 - poimi mukaan vain testin tai verify-polun kannalta olennainen muistilista

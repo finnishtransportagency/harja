@@ -42,25 +42,25 @@ Preserve exact behavior while improving clarity, consistency, and maintainabilit
 
 ## Workflow
 
-### Phase 1: Identify Simplification Targets
+### Phase 1: Identify simplification targets
 
 Objective: understand the intent of the current code and where clarity is lost.
 
 Inspect the changed area, nearby helpers, and the minimum surrounding context needed to name the smallest useful behavior-preserving simplifications.
 
-### Phase 2: Prefer Reuse And Existing Patterns
+### Phase 2: Prefer reuse and existing patterns
 
 Objective: fit the cleanup to the codebase instead of inventing local cleverness.
 
 Look for existing helpers, shared utilities, and established patterns before introducing anything new.
 
-### Phase 3: Apply Focused Refinements
+### Phase 3: Apply focused refinements
 
 Objective: make the code easier to read and maintain.
 
 Simplify control flow, improve names, remove redundancy, and extract only the minimum useful shared logic.
 
-### Phase 4: Verify Behavior Preservation
+### Phase 4: Verify behavior preservation
 
 Objective: confirm that the cleanup stayed behavior-neutral.
 

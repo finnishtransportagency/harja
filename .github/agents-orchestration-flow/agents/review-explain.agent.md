@@ -35,17 +35,17 @@ You do not perform the actual review unless explicitly redirected to `12-flow-re
 
 ## Workflow
 
-### Phase 1: Gather Context
+### Phase 1: Gather context
 Objective: identify the change surface and the reader's likely confusion points.
 Allowed actions: inspect the change set, read the most relevant files, and map the main execution or data flow.
 Continue when: you know what changed, where the behavior starts, and which files matter most.
 
-### Phase 2: Build The Explanation
+### Phase 2: Build the explanation
 Objective: turn the change into a concise walkthrough.
 Allowed actions: explain code flow, summarize impact, call out important dependencies, and produce a visual summary when it adds clarity.
 Continue when: a reviewer could understand the change without reading every touched file in detail.
 
-### Phase 3: Recommend The Next Review Step
+### Phase 3: Recommend the next review step
 Objective: make the explanation operationally useful.
 Allowed actions: point to the likely risk areas, identify the parts worth reviewing first, and suggest handing off to `12-flow-review`.
 Stop when: the user can move from explanation to review with less ambiguity.
@@ -76,11 +76,11 @@ Use this structure:
 
 - what changed and why it matters
 
-### Key Flow
+### Key flow
 
 - how the main behavior now works
 
-### Important Files Or Components
+### Important files or components
 
 - the parts a reviewer should understand first
 
@@ -88,7 +88,7 @@ Use this structure:
 
 - user-facing, architectural, or data-flow consequences
 
-### Next Review Focus
+### Next review focus
 
 - where `12-flow-review` or another specialist should look next
 

@@ -1,10 +1,10 @@
-# Harja Issue Spec Reference
+# Harja issue spec reference
 
 ## Tavoite
 
 Tämä dokumentti auttaa issue-spec-agenttia muuntamaan ticketin tai Jira-kuvauksen Harjan oikeaan domain-kieleen ja tuottamaan uskottavan specin tai Jira-ready issue -kuvauksen ilman arvailua.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tehtävään kuuluu:
 - ticketin tai Jira-kuvauksen tarkentaminen speciksi
@@ -18,7 +18,7 @@ Tyypilliset agentit:
 
 ## Ydinohjeet
 
-### Terminologian Kartoitus
+### Terminologian kartoitus
 
 Kun ticketissa käytetään yleistä tai epätarkkaa sanastoa, kartoita ainakin:
 - vastaava käyttöliittymän termi
@@ -29,7 +29,7 @@ Jos ticketin sana ja sovelluksen todellinen sana eroavat toisistaan, kirjaa mole
 - issue wording
 - mapped application term
 
-### Plan Tai Spec -> Jira Issue
+### Plan tai spec -> Jira issue
 
 Kun lähtömateriaalina on jo hyväksytty spec tai suunnitelma, purista siitä Jira-ready issue, joka:
 - säilyttää Harjan oikean terminologian
@@ -41,7 +41,7 @@ Tarkista ainakin:
 - mitä kannattaa nostaa kuvaustekstiin, mitä acceptance criteriaan, ja mitä open questions -listaan
 - mitkä tekniset yksityiskohdat ovat tickettiin liian matalan tason toteutusdetaljeja
 
-### Mitä Koodista Kannattaa Selvittää
+### Mitä koodista kannattaa selvittää
 
 Ennen kuin vaatimus kovettuu, tarkista mahdollisuuksien mukaan:
 - missä käyttöliittymässä tai prosessivaiheessa toiminto oikeasti elää
@@ -50,7 +50,7 @@ Ennen kuin vaatimus kovettuu, tarkista mahdollisuuksien mukaan:
 - liittyykö käyttötapaukseen authorization-, workflow- tai tilasiirtymärajoitteita
 - mitä edge caseja nykyinen toteutus tai data jo paljastaa
 
-### Specin Työskentelymuoto
+### Specin työskentelymuoto
 
 Issue-spec on iteratiivinen työdokumentti. Pidä näkyvissä ainakin:
 - ticketin tavoite omin sanoin tarkennettuna
@@ -67,7 +67,7 @@ Oletustallennus on `specs/spec-<jiraid>.md`.
 
 Jos käyttäjä tai repository-konteksti vaatii toisen sijainnin, nosta se eksplisiittisesti esiin. Jos issue-draft tuotetaan vain vastaukseen, sano se suoraan.
 
-### Milloin Siirtyä `10-flow-plan`-Agenttiin
+### Milloin siirtyä `10-flow-plan`-agenttiin
 
 Siirry `10-flow-plan`-agenttiin, kun:
 - open questions on ratkaistu riittävän hyvin
@@ -80,7 +80,7 @@ Siirry `10-flow-plan`-agenttiin, kun:
 - Käytä `harja-feature-implementation-reference.md`, kun terminologia tai muutosalue pitää ankkuroida Harjan todelliseen feature-rakenteeseen.
 - Käytä `harja-validation-review-reference.md`, kun issue koskee write-pathia, authorizationia tai validation-logiikkaa.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee Jira-kuvauksen tarkentamista speciksi tai specin puristamista Jira-ready issueksi
 - tarkenna terminologia koodista ja käyttöliittymästä ennen kuin lukitset vaatimuskielen

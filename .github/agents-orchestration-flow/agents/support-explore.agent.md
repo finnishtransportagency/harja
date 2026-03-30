@@ -32,25 +32,25 @@ Stay read-only and optimize for fast discovery, not deep analysis.
 
 ## Workflow
 
-### Phase 1: Frame The Search Goal
+### Phase 1: Frame the search goal
 
 Objective: translate the request into searchable terms and likely code surfaces.
 
 Extract the behavior, symbol, file type, subsystem, or failure area that the exploration should target.
 
-### Phase 2: Search Broadly
+### Phase 2: Search broadly
 
 Objective: cover the most likely code surfaces before drilling down.
 
 Use broad file, text, usage, and change searches first to identify the top candidate files and symbols.
 
-### Phase 3: Confirm The Shortlist
+### Phase 3: Confirm the shortlist
 
 Objective: keep only the files that matter.
 
 Read the minimum surrounding context needed to explain why each shortlisted file is relevant and what should be inspected next.
 
-### Phase 4: Report Findings
+### Phase 4: Report findings
 
 Objective: hand back a concise exploration result another agent can use immediately.
 

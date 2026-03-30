@@ -1,10 +1,10 @@
-# Harja Style Review Reference
+# Harja style review reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa Harja-spesifin style-reviewn minimitason taustatiedon ilman, että agenttiin kopioidaan laajaa stylesheet-manuaalia.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tarkastat LESS- tai CSS-tiedostoja Harjassa ja tarvitset projektin nykyiset tyyliodotukset, legacy-velan tulkinnan tai priorisointimallin.
 
@@ -14,7 +14,7 @@ Tyypilliset agentit:
 
 ## Ydinohjeet
 
-### Konteksti Ja Totuuslähteet
+### Konteksti ja totuuslähteet
 
 Projektissa elää rinnakkain legacy-tyylejä, uudempaa design-kieltä ja välimuotoja. Review'n tarkoitus ei ole pakottaa täyttä uudelleenkirjoitusta, vaan tunnistaa:
 - selvä legacy-velka
@@ -26,7 +26,7 @@ Arvioi löydöksiä erityisesti näitä vasten:
 - `dev-resources/less/vayla/typography.less`
 - `dev-resources/less/vayla/yleiset.less`
 
-### Mitä Tarkistaa
+### Mitä tarkistaa
 
 Tarkista ensisijaisesti:
 - hardkoodatut pikselit spacing- tai typografiapäätöksissä
@@ -51,7 +51,7 @@ Matala prioriteetti:
 - yksittäinen vanha arvo vakaassa legacy-alueessa
 - poikkeama, jonka korjaus olisi kallis mutta hyöty pieni
 
-### Hakuvihjeet Ja Raportointi
+### Hakuvihjeet ja raportointi
 
 Hyödyllisiä hakukuvioita:
 - hardkoodatut pikselit: `:\s*\d+px`
@@ -70,7 +70,7 @@ Hyvä raportti kertoo:
 - Käytä `harja-feature-implementation-reference.md`, kun style-löydös täytyy suhteuttaa featuren rakenteeseen tai muutosalueeseen.
 - Käytä `harja-planning-and-spec-reference.md`, kun löydös pitäisi nostaa suunnitelmalliseksi migraatioksi eikä vain yksittäiseksi korjaukseksi.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee Harjan LESS- tai CSS-reviewta
 - poimi raporttiin vain olennaiset tyylivelan, ristiriitojen ja priorisoinnin havainnot

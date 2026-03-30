@@ -57,7 +57,7 @@ This agent is the default choice when the task should be phase-coordinated rathe
 
 ## Workflow
 
-### Phase 1: Determine The Entry Point
+### Phase 1: Determine the entry point
 
 Objective: choose the first valid next phase without inventing hidden state.
 
@@ -65,7 +65,7 @@ Inspect the prompt, the current branch context, any saved plan, and any prior fl
 
 Before selecting the next phase, analyze whether the current branch appears to be the correct branch for the requested work by comparing the request, branch name, saved plan or spec context, and any existing flow outputs. If the branch looks suspiciously wrong, stop and ask instead of routing deeper into the flow.
 
-### Phase 2: Delegate The Next Phase
+### Phase 2: Delegate the next phase
 
 Objective: use the normal flow agents as-is.
 
@@ -82,13 +82,13 @@ Default routing:
 - use `review-pre-pr` when verification is complete and the next clear step is a branch-level PR-readiness gate and PR-description draft
 - use `15-flow-closeout` when the source-of-truth spec, documentation, follow-ups, and optional local worktree cleanup should be finalized
 
-### Phase 3: Decide Continue Or Pause
+### Phase 3: Decide continue or pause
 
 Objective: continue only when the contract makes the next move unambiguous.
 
 Advance automatically only from explicit statuses and next-step signals. Stop on `blocked` or `failed`, missing prerequisites, or user decisions that cannot be inferred safely.
 
-### Phase 4: Report Delivery State
+### Phase 4: Report delivery state
 
 Objective: make the orchestration legible without extra ceremony.
 

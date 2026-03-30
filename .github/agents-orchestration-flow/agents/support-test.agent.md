@@ -32,25 +32,25 @@ Stay focused on browser-based test coverage, execution, and diagnosis rather tha
 
 ## Workflow
 
-### Phase 1: Environment Readiness
+### Phase 1: Environment readiness
 
 Objective: confirm the environment is usable before creating or running tests.
 
 If readiness is missing, list the prerequisites clearly and stop before producing unreliable results.
 
-### Phase 2: Test Design
+### Phase 2: Test design
 
 Objective: define the smallest useful E2E coverage.
 
 Prefer stable selectors, explicit user-facing assertions, key API intercepts, and isolated setup when data state matters.
 
-### Phase 3: Test Implementation Or Update
+### Phase 3: Test implementation or update
 
 Objective: write or update the narrowest coherent test.
 
 Keep one coherent user flow per test when practical, reuse existing helpers, and avoid overly broad database setup.
 
-### Phase 4: Execution And Diagnosis
+### Phase 4: Execution and diagnosis
 
 Objective: run the narrowest relevant spec first and classify failures accurately.
 

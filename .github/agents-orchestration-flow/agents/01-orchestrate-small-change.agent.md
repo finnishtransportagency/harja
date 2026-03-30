@@ -57,14 +57,14 @@ This agent is a hybrid orchestrator: it executes the small change itself instead
 
 ## Workflow
 
-### Phase 1: Inspect The Smallest Relevant Context
+### Phase 1: Inspect the smallest relevant context
 
 Objective: identify the target area with minimal exploration.
 
 Read the smallest useful set of files first and avoid loading broad context unless the target area is still unclear after quick inspection.
 If the request already implies multi-phase planning or broad coordination, stop early and switch to `10-flow-plan` or `00-orchestrate-delivery`.
 
-### Phase 2: Implement Directly
+### Phase 2: Implement directly
 
 Objective: solve the request with the smallest possible change.
 
@@ -76,13 +76,13 @@ Objective: confirm the change with the narrowest useful checks.
 
 Prefer targeted validation over broad suites. Use browser verification only when the change clearly affects UI behavior and code-level validation is not enough.
 
-### Phase 4: Optional Simplify Pass
+### Phase 4: Optional simplify pass
 
 Objective: clean up local complexity without changing behavior when that improves the final diff.
 
 Use `13-flow-simplify` only when the implemented area is correct but still harder to read than it needs to be.
 
-### Phase 5: Review Loop
+### Phase 5: Review loop
 
 Objective: finish only after independent review or a clear blocker.
 

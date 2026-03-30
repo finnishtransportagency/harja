@@ -36,14 +36,14 @@ Stay focused on repository research, evidence chains, and cross-validation. Do n
 
 ## Workflow
 
-### Phase 1: Scope The Target
+### Phase 1: Scope the target
 
 Objective: identify the exact change to investigate before deeper searching.
 
 Requirement: use at least one scope anchor such as a ticket, SHA, file path plus code snippet, or time window.
 If the target is too broad, apply a default time-window scope and state it explicitly.
 
-### Phase 2: Gather Initial Findings
+### Phase 2: Gather initial findings
 
 Objective: find candidate commits and possible PR references.
 
@@ -53,7 +53,7 @@ Always use both support agents:
 
 Produce at minimum a list of: `sha`, `author date`, `commit date`, `subject`.
 
-### Phase 3: Analyze The Change From The Diff
+### Phase 3: Analyze the change from the diff
 
 Objective: determine what each relevant change does and why it was likely made.
 
@@ -61,7 +61,7 @@ Base the analysis on the diff, not just the commit subject.
 Name the intent or impact of each commit in 1 to 2 sentences and group commits into logical bundles when needed.
 Classify each fix as `retroactive`, `non-retroactive`, or `uncertain`, and add a data-correctness impact level of `high`, `medium`, or `low`.
 
-### Phase 4: Confirm The Develop Merge
+### Phase 4: Confirm the develop merge
 
 Objective: identify the first reliable point where the change entered develop.
 
@@ -74,7 +74,7 @@ Verify the develop merge with three checks:
 
 Do not report an internal feature-branch merge as the develop merge.
 
-### Phase 5: Conclude And Report
+### Phase 5: Conclude and report
 
 Objective: select one conclusion or describe uncertainty in a constrained way.
 

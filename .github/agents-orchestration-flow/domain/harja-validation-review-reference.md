@@ -1,10 +1,10 @@
-# Harja Validation Review Reference
+# Harja validation review reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa Harjan backend-validation reviewn minimitason domain-ohjeet yhteen paikkaan.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tarkastat write-pathia, authorizationia, SQL-turvallisuutta tai backend-validation puutteita.
 
@@ -16,7 +16,7 @@ Tyypilliset agentit:
 
 ## Ydinohjeet
 
-### Missä Riskit Yleensä Elävät
+### Missä riskit yleensä elävät
 
 Tarkista ensisijaisesti:
 - `src/clj/harja/palvelin/integraatiot/api/` ja siihen liittyvät validointi- ja skeematyökalut
@@ -29,7 +29,7 @@ Tyypillisiä suojaavia mekanismeja ovat:
 - oikeustarkastukset service entry pointissa
 - parameterisoidut JeeSql-kyselyt ja tietokantarajoitteet
 
-### Mitä Tarkistaa Ensin
+### Mitä tarkistaa ensin
 
 Tarkista ensimmäisenä:
 - puuttuuko input-validointi tai rajatarkistus
@@ -39,7 +39,7 @@ Tarkista ensimmäisenä:
 - vuotaako virheenkäsittely sisäisiä poikkeuksia tai puuttuuko lokitus
 - tehdäänkö coercionia ilman ennakkovalidointia
 
-### Suosi Ja Varo
+### Suosi ja varo
 
 Suosi:
 - parameterisoituja JeeSql-kyselyitä
@@ -76,7 +76,7 @@ Medium:
 - Käytä `harja-feature-implementation-reference.md`, kun tarvitset feature-rakenteen tai todennäköisten service-, query- ja testisijaintien kartan.
 - Käytä `harja-e2e-testing-reference.md`, kun validointihavainto pitää suhteuttaa UI-polkuun tai toistettavaan E2E-verifiointiin.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee Harjan backend validation reviewta
 - poimi analyysiin vain olennaiset riskiluokat, tarkistuskohdat ja priorisointi

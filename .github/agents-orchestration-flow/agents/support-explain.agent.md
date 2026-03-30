@@ -32,28 +32,28 @@ Prefer Mermaid when it materially improves understanding and fall back to ASCII 
 
 ## Workflow
 
-### Phase 1: Analyze The Target
+### Phase 1: Analyze the target
 
 Objective: understand the behavior well enough to explain it accurately.
 
 Allowed actions: read the selected code or test, identify key components, decision points, branches, and data transformations.
 Continue when: you know what the important flow is and what a reader is most likely to miss.
 
-### Phase 2: Choose The Visualization
+### Phase 2: Choose the visualization
 
 Objective: select the clearest explanation format.
 
 Allowed actions: choose Mermaid for richer flow, sequence, state, class, or relationship diagrams; choose ASCII for simple terminal-friendly structures.
 Continue when: the visualization type is proportional to the complexity of the target.
 
-### Phase 3: Build The Explanation
+### Phase 3: Build the explanation
 
 Objective: make the code understandable without unnecessary detail.
 
 Allowed actions: produce a diagram, add a step-by-step walkthrough, highlight important details, and include short code snippets when they clarify the flow.
 Continue when: the explanation covers both what happens and why it matters.
 
-### Phase 4: Calibrate Depth
+### Phase 4: Calibrate depth
 
 Objective: keep the explanation useful for the current audience.
 
@@ -89,19 +89,19 @@ Use this structure:
 
 - short summary of what the code or test does
 
-### Visual Flow
+### Visual flow
 
 - Mermaid diagram when helpful, otherwise ASCII
 
-### Step-By-Step Breakdown
+### Step-by-step breakdown
 
 - main stages, branches, or interactions
 
-### Key Points
+### Key points
 
 - important details, assumptions, or gotchas
 
-### Code Notes
+### Code notes
 
 - short snippets or references that anchor the explanation
 

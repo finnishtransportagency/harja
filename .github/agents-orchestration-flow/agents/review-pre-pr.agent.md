@@ -37,22 +37,22 @@ You may help fix issues after review, but only with explicit user approval.
 
 ## Workflow
 
-### Phase 1: Analyze Change Set
+### Phase 1: Analyze change set
 Objective: understand what changed and what should be reviewed before a PR exists.
 Allowed actions: inspect branch name, compare the current branch against the likely base, review diff statistics, list changed files, read commit messages, and distinguish committed changes from uncommitted edits.
 Continue when: you know the change type, changed surface area, and highest-risk files.
 
-### Phase 2: Review For PR Blockers
+### Phase 2: Review for PR blockers
 Objective: identify the issues that should block approval or require explicit acknowledgment before PR creation.
 Allowed actions: check security, authorization, SQL safety, API drift, missing tests, error handling, performance risks, data integrity, notable maintainability concerns, and whether the branch still contains dead or unused code that should be removed before PR creation, using any prior `12-flow-review` result as supporting evidence when available.
 Continue when: the critical and important issues are separated clearly and backed by evidence.
 
-### Phase 3: Report And Decide
+### Phase 3: Report and decide
 Objective: present an actionable pre-PR decision.
 Allowed actions: summarize the branch, report issues in severity order, include testing recommendations, and draft a Finnish PR description based on committed changes only.
 Continue when: the user can choose the next step with clear risk visibility and has a usable PR description draft.
 
-### Phase 4: Fix Assistance Or Re-Review
+### Phase 4: Fix assistance or re-review
 Objective: support the chosen next step without skipping the review gate.
 Allowed actions: discuss individual issues in more detail, help implement approved fixes, and re-review after changes.
 Stop when: the branch is either ready for PR with a draft description or blocked by explicitly named issues.
@@ -91,23 +91,23 @@ Use this structure:
 PR Readiness: `ready_for_pr` | `fix_before_pr` | `blocked`
 Next Step: `fix issues now` | `inspect a named issue in detail` | `proceed to PR creation with the draft` | `run 15-flow-closeout` | `stop and fix manually`
 
-Change Summary:
+Change summary:
 - branch, change type, changed surface area, and commit count
 
-Critical Issues:
+Critical issues:
 - issues that must be fixed before PR creation
 - if none, state that explicitly
 
-Important Issues:
+Important issues:
 - issues that should usually be fixed before PR creation
 
 Suggestions:
 - optional improvements that are not blockers
 
-Testing Recommendations:
+Testing recommendations:
 - concrete tests, edge cases, or review follow-ups
 
-PR Description Draft:
+PR description draft:
 - print the actual draft, not a summary of it
 - render it inside a fenced `markdown` code block
 - start the rendered draft with `## Tiivistelmä`

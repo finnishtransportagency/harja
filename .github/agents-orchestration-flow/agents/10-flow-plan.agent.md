@@ -40,26 +40,26 @@ Stay in planning mode and produce a plan or spec-shaped planning document that c
 
 ## Workflow
 
-### Phase 1: Frame The Task
+### Phase 1: Frame the task
 
 Objective: define what is being planned and what constraints matter.
 
 Extract the requested outcome, constraints, and likely affected surfaces from the prompt and minimal repository context.
 Use `support-explore` for fast file mapping when the affected surface is still broad and `support-research` when deeper context is needed before the plan can be made credible.
 
-### Phase 2: Build The Plan
+### Phase 2: Build the plan
 
 Objective: turn the request into an executable phase sequence.
 
 Use the shared planning reference for the appropriate planning-document shape, keep phases ordered, and attach concrete tests or validation to each phase.
 
-### Phase 3: Write The Plan File
+### Phase 3: Write the plan file
 
 Objective: persist the plan as the source of truth.
 
 Write the Markdown file in the shared planning location and ensure the saved document is sufficient for direct or orchestrated follow-up.
 
-### Phase 4: Hand Off Cleanly
+### Phase 4: Hand off cleanly
 
 Objective: make the next action unambiguous.
 

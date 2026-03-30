@@ -1,4 +1,4 @@
-# Harja Delivery Closeout Reference
+# Harja delivery closeout reference
 
 ## Tavoite
 
@@ -10,7 +10,7 @@ Periaate:
 - docs-muutokset on tehtävä tai eksplisiittisesti todettava tarpeettomiksi
 - paikallinen worktree siivotaan vain, jos se on turvallista ja oikeasti toivottua
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun tehtävään kuuluu:
 - delivery flown lopettaminen paikallisesti
@@ -23,7 +23,7 @@ Tyypilliset agentit:
 
 ## Ydinohjeet
 
-### Source-Of-Truth -Tarkistus
+### Source-of-truth -tarkistus
 
 Closeoutissa kannattaa tarkistaa ensin, mikä toimi muutoksen alkuperäisenä totuuslähteenä:
 - `specs/spec-<jiraid>.md`
@@ -46,7 +46,7 @@ Closeoutissa kannattaa tarkistaa, muuttuiko jokin seuraavista:
 
 Jos relevanttia dokumentaatiota ei tarvittu, agentin kannattaa sanoa se eksplisiittisesti eikä jättää asiaa auki.
 
-### Follow-Upit Ja Rajoitteet
+### Follow-upit ja rajoitteet
 
 Closeout ei tarkoita, että kaiken pitäisi näyttää täydelliseltä.
 
@@ -56,7 +56,7 @@ Harjassa closeout-raporttiin kannattaa jättää näkyviin ainakin:
 - avoimet kysymykset, jotka eivät blokkaa toimitusta mutta vaikuttavat seuraaviin kierroksiin
 - mahdolliset manuaaliset jatkoaskeleet
 
-### Worktree Cleanup
+### Worktree cleanup
 
 Jos työ on tehty worktreessa, closeout-vaiheessa voi olla tarve sulkea se.
 
@@ -68,7 +68,7 @@ Tämä kannattaa tehdä vain, kun:
 
 Jos repositoryssa on worktree-helper poistoon, sitä kannattaa suosia. Worktree cleanup voi samalla pysäyttää prosesseja tai siivota worktree-kohtaisia paikallisia resursseja.
 
-### Mitä Muuta On Yleensä Tarpeellista
+### Mitä muuta on yleensä tarpeellista
 
 Closeoutissa hyödyllisiä lisätarkistuksia ovat usein:
 - onko PR-draft tai muu julkaisuteksti jo olemassa ja linjassa lopputuloksen kanssa
@@ -81,7 +81,7 @@ Closeoutissa hyödyllisiä lisätarkistuksia ovat usein:
 - Käytä `harja-planning-and-spec-reference.md`, kun closeoutissa päivitettävä totuuslähde on `.prd`- tai spec-dokumentti.
 - Käytä `harja-worktree-reference.md`, kun closeoutiin kuuluu worktreen turvallinen sulkeminen.
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee flown lopetusta, dokumentaation synkronointia tai closeout-checklistaa
 - poimi raporttiin vain toteutuneeseen muutokseen liittyvät loppupään tarkistukset

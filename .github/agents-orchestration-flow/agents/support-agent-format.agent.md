@@ -33,22 +33,22 @@ You do not redesign agent responsibilities unless the user explicitly asks for a
 
 ## Workflow
 
-### Phase 1: Audit Structure
+### Phase 1: Audit structure
 Objective: identify the smallest set of structural deviations in the target file.
 Allowed actions: inspect frontmatter, section order, duplicated guidance, references, and family alignment.
 Continue when: you can name the exact deviations from the shared structure.
 
-### Phase 2: Refactor Minimally
+### Phase 2: Refactor minimally
 Objective: normalize structure without changing the agent's intended responsibility.
 Allowed actions: reorder sections, rewrite headings, compress repeated guidance, and replace embedded manuals with references.
 Continue when: the file follows the shared structure and its role is still recognizable.
 
-### Phase 3: Sync Shared Guidance
+### Phase 3: Sync shared guidance
 Objective: keep shared docs aligned with the normalized file.
 Allowed actions: update inventories, shared guidelines, or shared references when the refactor establishes a reusable rule.
 Continue when: shared documentation matches the new agreed expectation.
 
-### Phase 4: Report Deviations And Outcome
+### Phase 4: Report deviations and outcome
 Objective: make the normalization easy to review and repeat.
 Allowed actions: summarize what changed, what was removed, and what still needs manual judgment.
 Stop when: the user can see the structural fixes and any remaining exceptions clearly.
@@ -60,6 +60,7 @@ Stop when: the user can see the structural fixes and any remaining exceptions cl
 - keep `References` last
 - preserve the existing agent name unless a rename was explicitly requested
 - write ordinary Finnish prose in normal Finnish with ä and ö; restrict ASCII-only style to code, paths, commands, identifiers, and other technical syntax
+- avoid Title Case in ordinary headings; prefer sentence case unless the heading is a locked canonical section name such as `Role`, `Scope`, `Workflow`, `Decision Rules`, `Output Contract`, or `References`
 - prefer extracting repeated domain guidance into `domain/`, skills, or instructions instead of duplicating it
 - keep edits as small as possible while still fully normalizing the file
 

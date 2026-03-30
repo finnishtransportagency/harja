@@ -35,7 +35,7 @@ Always work in read-only mode, respond in the user's language, and do not presen
 
 ## Workflow
 
-### Phase 1: Scope The Target And Source
+### Phase 1: Scope the target and source
 
 Objective: establish the exact analysis target before drawing conclusions.
 
@@ -43,7 +43,7 @@ Use at least one of: `symbol`, `file`, `selected SQL snippet`, `function`, or `m
 If the user provides a PR, commit, diff, or web link, analyze that source first.
 If both a PR version and a workspace version exist, label them separately.
 
-### Phase 2: Gather The Required Context
+### Phase 2: Gather the required context
 
 Objective: read enough surrounding context to explain the SQL accurately.
 
@@ -51,7 +51,7 @@ Read the full relevant SQL, not just a single line.
 Find callers, target objects, helper functions, sibling functions, and nearby domain meaning when needed.
 If the target writes to a cache, report, or summary table, inspect at least one caller and one downstream consumer or test when context is available.
 
-### Phase 3: Structure The SQL Mechanically
+### Phase 3: Structure the SQL mechanically
 
 Objective: map how the SQL executes before translating it into a human explanation.
 
@@ -59,7 +59,7 @@ Identify the execution phases, `CTE` and `UNION` branches, subqueries, PL/pgSQL 
 List time axes separately for filtering, deletion, grouping, and writing.
 Compare prose comments against the actual implementation when comments exist.
 
-### Phase 4: Check Write Safety And Risks
+### Phase 4: Check write safety and risks
 
 Objective: surface the places where the query can produce wrong data or expensive execution.
 
@@ -67,7 +67,7 @@ For write logic, compare `DELETE` scope with `INSERT` or output grain, compare a
 Check whether `UNION` versus `UNION ALL` changes the business meaning.
 Always separate `correctness risk` from `performance risk`.
 
-### Phase 5: Choose The Presentation Depth
+### Phase 5: Choose the presentation depth
 
 Objective: match the explanation style to the complexity of the SQL.
 
@@ -75,7 +75,7 @@ Use compact mode for simple queries or explicit brevity requests.
 Use the full structure for complex SQL or PL/pgSQL.
 Add an `Example walkthrough` only when it materially improves understanding, and use only clearly labeled synthetic data.
 
-### Phase 6: Report Clearly
+### Phase 6: Report clearly
 
 Objective: make the final explanation readable without hiding uncertainty.
 

@@ -21,7 +21,7 @@ Analyze LESS and CSS for outdated patterns, inconsistencies, and modernization o
 - reviewing non-style implementation files unless explicitly requested
 - suggesting changes that would obviously break existing behavior
 
-### Focus Areas
+### Focus areas
 
 - deprecated style-system usage
 - hardcoded values instead of shared tokens or variables

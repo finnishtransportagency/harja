@@ -1,10 +1,10 @@
-# Harja Planning And Spec Reference
+# Harja planning and spec reference
 
 ## Tavoite
 
 Tämä dokumentti kokoaa yhteiset workspace-konventiot suunnitelma- ja spesifikaatiodokumenteille, jotta `10-flow-plan` ei kanna samoja rakenne- ja sijaintisääntöjä omassa rungossaan.
 
-## Milloin Käyttää
+## Milloin käyttää
 
 Käytä tätä referenssiä, kun agentin tai käyttäjän tehtävään kuuluu:
 - toteutussuunnitelman kirjoittaminen
@@ -28,7 +28,7 @@ Valitse tiedostonimi tehtävän laajuuden mukaan:
 - yksi kokonainen feature tai laaja muutos: feature-niminen PRD
 - isomman featurekokonaisuuden aliosa: component- tai osa-aluekohtainen spec
 
-### Toteutussuunnitelman Minimirakenne
+### Toteutussuunnitelman minimirakenne
 
 Kun kirjoitat suunnitelmadokumentin, sisällytä vähintään:
 - `Overview`
@@ -42,7 +42,7 @@ Tavoite:
 - esittää toteutus konkreettisina askelina
 - nimetä verifiointi ennen toteutusta
 
-### Spesifikaation Minimirakenne
+### Spesifikaation minimirakenne
 
 Kun kirjoitat tai päivität feature-specia, sisällytä vähintään:
 - status, luonti- ja päivitystiedot
@@ -56,7 +56,7 @@ Kun kirjoitat tai päivität feature-specia, sisällytä vähintään:
 - implementation tasks
 - change log silloin kun spec elää
 
-### Tehtävien Koko
+### Tehtävien koko
 
 Kun spec pilkotaan toteutustasolle, suosi tehtäviä jotka ovat:
 - selkeästi rajattuja
@@ -71,7 +71,7 @@ Kun dokumentti koskee Harja-featurea, yhdistä suunnitelma tai spec tarvittaessa
 - `harja-e2e-testing-reference.md` verifiointi- ja E2E-kattavuuteen
 - `harja-style-review-reference.md` stylesheet- tai design-system -migreeraation havaintoihin
 
-## Käyttöohje Agentille
+## Käyttöohje agentille
 
 Agentin ei tarvitse kopioida tämän dokumentin rakennelistaa omaan runkoonsa.
 

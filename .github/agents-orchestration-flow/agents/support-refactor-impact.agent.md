@@ -35,14 +35,14 @@ Do not make code changes. The result must be a focused, evidence-based report, n
 
 ## Workflow
 
-### Phase 1: Scope The Research Target
+### Phase 1: Scope the research target
 
 Objective: identify the core of the change and narrow the analysis to a manageable scope.
 
 Use at least one scope anchor: `ticket`, `sha`, `file path`, or `feature`.
 If the scope is too broad, apply a default scope and state it explicitly.
 
-### Phase 2: Build The Impact Map
+### Phase 2: Build the impact map
 
 Objective: understand where the change appears now and where it is likely to affect the system next.
 
@@ -56,7 +56,7 @@ Analyze the impact layer by layer:
 - database
 - tests
 
-### Phase 3: Identify Refactor Needs
+### Phase 3: Identify refactor needs
 
 Objective: turn findings into concrete, distinguishable actions.
 
@@ -68,14 +68,14 @@ Classify refactor needs into three groups:
 For each finding, assess the reason, impact, risk if not done, rough effort `S/M/L`, and dependencies.
 Merge overlapping findings into the same action when appropriate.
 
-### Phase 4: Prioritize And Justify
+### Phase 4: Prioritize and justify
 
 Objective: order the findings into a decision-supporting implementation path.
 
 Prioritize by business risk, technical risk, and feasibility.
 Explain why the chosen order is the right one.
 
-### Phase 5: Produce The Customer Report
+### Phase 5: Produce the customer report
 
 Objective: turn the technical analysis into concise presentation material and save it to a file.
 
@@ -114,7 +114,7 @@ Always return the following headings:
 - What refactoring is needed overall
 - What you recommend doing first
 
-### 2. Current State And Observed Impact Area
+### 2. Current state and observed impact area
 - Short description of the current state
 - Impact areas: backend / frontend / database / tests
 
@@ -127,16 +127,16 @@ Table:
 - `Effort (S/M/L)`
 - `Priority (Now / Next / Later)`
 
-### 4. Risks And Decision Points
+### 4. Risks and decision points
 - Top 3 risks from the customer perspective
 - What decisions are needed before implementation
 
-### 5. Proposed Path Forward
+### 5. Proposed path forward
 - Phasing, for example phases 1 to 3
 - What benefit each phase provides
 - What can be deferred to a later phase
 
-### 6. Confidence And Boundaries
+### 6. Confidence and boundaries
 - What could be verified
 - What could not be verified and why
 

@@ -52,25 +52,25 @@ Use `review-pre-pr` instead when the goal is a branch-level decision about PR re
 
 ## Workflow
 
-### Phase 1: Gather Context
+### Phase 1: Gather context
 
 Objective: identify the exact review target and the smallest relevant code surface.
 
 Inspect the changed files, nearby implementation, relevant tests, and optional pull request context needed to understand what actually changed.
 
-### Phase 2: Analyze Risk
+### Phase 2: Analyze risk
 
 Objective: find the issues that matter for a flow gate.
 
 Inspect behavior changes, follow call sites, compare tests to implementation, and check security, validation, performance, maintainability risks, and whether the change introduced or exposed unused or dead code paths.
 
-### Phase 3: Route Specialist Follow-Up
+### Phase 3: Route specialist follow-up
 
 Objective: escalate only when deeper specialist review is genuinely needed.
 
 Use `review-validation` for deep backend validation analysis and `review-style` for CSS or visual consistency analysis.
 
-### Phase 4: Report Findings
+### Phase 4: Report findings
 
 Objective: produce an actionable review that another flow or orchestrate agent can consume directly.
 

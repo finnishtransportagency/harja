@@ -1,4 +1,4 @@
-# Domain Knowledge
+# Domain knowledge
 
 ## Tavoite
 
@@ -8,14 +8,14 @@ Periaate:
 - agentti kuvaa käyttäytymisen, workflow'n ja outputin
 - domain-dokumentti kuvaa Harja-spesifin rakenteen, konventiot ja tarkistuslistat
 
-## Kanoninen Rakenne
+## Kanoninen rakenne
 
 Yksittäisen domain-referenssin tavoiterakenne on:
 - `Tavoite`
-- `Milloin Käyttää`
+- `Milloin käyttää`
 - `Ydinohjeet`
 - `Ristiviitteet`
-- `Käyttöohje Agentille`
+- `Käyttöohje agentille`
 - `Rajaus`
 
 ## Dokumentit
@@ -32,7 +32,7 @@ Yksittäisen domain-referenssin tavoiterakenne on:
 | `harja-issue-spec-reference.md` | tarkennat ticketin speciksi tai puristat specin Jira-ready issueksi | `support-issue-spec` |
 | `harja-delivery-closeout-reference.md` | suljet flown, synkronoit totuuslähteen tai teet closeout-tarkistuksia | `15-flow-closeout` |
 
-## Review Ja Verify -Reititys
+## Review ja verify -reititys
 
 Kun tehtävä osuu review- tai verify-haaraan:
 - aloita `harja-feature-implementation-reference.md` tiedostosta, jos tarvitset kartan muutosalueeseen

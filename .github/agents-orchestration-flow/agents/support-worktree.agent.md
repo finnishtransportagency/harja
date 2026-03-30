@@ -38,25 +38,25 @@ Prefer repository-provided helper scripts over ad hoc shell sequences, especiall
 
 ## Workflow
 
-### Phase 1: Discover The Supported Worktree Path
+### Phase 1: Discover the supported worktree path
 
 Objective: use the repository's own workflow before considering a generic fallback.
 
 Inspect the repository for worktree helper scripts, usage comments, and related startup instructions. Prefer the maintained repository entrypoint when one exists.
 
-### Phase 2: Validate Inputs And Safety
+### Phase 2: Validate inputs and safety
 
 Objective: avoid creating the wrong worktree or colliding with existing state.
 
 Confirm the branch target, detect whether the intended worktree path already exists, and identify any prerequisite tools or environment assumptions that the helper workflow expects.
 
-### Phase 3: Run The Supported Worktree Action
+### Phase 3: Run the supported worktree action
 
 Objective: run the narrowest supported create or remove flow successfully.
 
 Execute the repository helper script or the safest supported command path, capture the resulting worktree location or removal result, and keep the run focused on the requested lifecycle action rather than broad environment repair.
 
-### Phase 4: Report The Result
+### Phase 4: Report the result
 
 Objective: make the worktree result immediately usable.
 

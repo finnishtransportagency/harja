@@ -40,13 +40,13 @@ Keep the active review-fix subphase visible during longer runs so the fix path d
 
 ## Workflow
 
-### Phase 1: Gather Review Context
+### Phase 1: Gather review context
 
 Objective: map each review point to the relevant files, symbols, and tests.
 
 Define an acceptance criterion per review point before changing code.
 
-### Phase 2: Choose The Execution Path
+### Phase 2: Choose the execution path
 
 Objective: use the lightest workflow that still manages regression risk.
 
@@ -54,14 +54,14 @@ Delegate to `11-flow-implement` when a review point changes behavior, fixes a bu
 
 For purely style, naming, or documentation changes, implement the most direct sensible fix without inventing unnecessary tests.
 
-### Phase 3: Implement One Point At A Time
+### Phase 3: Implement one point at a time
 
 Objective: keep each review point as one coherent change set.
 
 Avoid bundling multiple independent comments into a single broad patch.
 Avoid stopping at a cosmetic or undersized correction when the actual review concern still remains.
 
-### Phase 4: Verify And Report
+### Phase 4: Verify and report
 
 Objective: confirm the implemented point and summarize what changed.
 
@@ -97,16 +97,16 @@ Active Subphase: `Gather` | `Route` | `Fix` | `Validate` | `Report`
 Use `Active Subphase` only when status is `in_progress`.
 Next Step: `finish` | `continue with the next review point` | `run 11-flow-implement` | `resolve a named blocker`
 
-Review Points Implemented:
+Review points implemented:
 - which review points were completed
 
-Files Changed:
+Files changed:
 - files edited or created
 
-Validation Run:
+Validation run:
 - targeted validation that was run
 
-Unresolved Point Or Blocker:
+Unresolved point or blocker:
 - any unresolved review point, risk, or blocker
 
 ## References

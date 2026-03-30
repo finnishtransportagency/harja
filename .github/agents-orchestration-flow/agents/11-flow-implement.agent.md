@@ -48,7 +48,7 @@ Produce a minimal diff and a validation report that another flow or review agent
 
 ## Workflow
 
-### Phase 1: Frame The Change
+### Phase 1: Frame the change
 
 Objective: identify the exact behavior to change and the smallest relevant file set.
 Allowed actions: read nearby code, inspect tests, search for existing patterns, clarify only if blocked.
@@ -72,7 +72,7 @@ Objective: confirm the change is stable beyond the first targeted test.
 Allowed actions: rerun the targeted test, then run the nearest reasonable suite or check for confidence.
 Continue when: the relevant validation is green or you have a precise blocker.
 
-### Phase 5: Handoff Or Finish
+### Phase 5: Handoff or finish
 
 Objective: close the implementation loop cleanly.
 Allowed actions: recommend or invoke `14-flow-verify` when browser verification is clearly needed, summarize changes, validation, and remaining risk.

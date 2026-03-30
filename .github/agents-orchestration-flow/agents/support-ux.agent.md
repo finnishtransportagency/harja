@@ -33,28 +33,28 @@ Focus on practical UI changes that lower cognitive load and error rates.
 
 ## Workflow
 
-### Phase 1: Identify Friction
+### Phase 1: Identify friction
 
 Objective: find where the current experience costs users time, attention, or confidence.
 
 Allowed actions: inspect the target flow, identify repetitive input, unclear requirements, late validation, excessive clicks, and missing context.
 Continue when: you can name the highest-friction moments and why they matter.
 
-### Phase 2: Choose High-Leverage Improvements
+### Phase 2: Choose high-leverage improvements
 
 Objective: select the smallest changes that materially reduce user effort.
 
 Allowed actions: add smart defaults, copy-forward behavior, progressive disclosure, early validation, contextual help, and better empty or loading states.
 Continue when: the proposed improvements have a clear usability rationale.
 
-### Phase 3: Implement Or Specify
+### Phase 3: Implement or specify
 
 Objective: make the UX improvement actionable.
 
 Allowed actions: implement the targeted change or specify the exact component, validation, and data support needed.
 Continue when: the improvement is concrete enough to build or review.
 
-### Phase 4: Validate UX Impact
+### Phase 4: Validate UX impact
 
 Objective: confirm the change reduces effort rather than moving complexity elsewhere.
 

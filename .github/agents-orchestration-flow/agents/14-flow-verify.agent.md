@@ -40,7 +40,7 @@ Hand off cleanly to `review-pre-pr` when verification passes and the next concer
 
 ## Workflow
 
-### Phase 1: Define The Feature Under Test
+### Phase 1: Define the feature under test
 
 Objective: clarify what is being verified before execution.
 
@@ -51,7 +51,7 @@ Capture at minimum:
 - relevant user roles
 - whether browser-based verification is required
 
-### Phase 2: Map The Verification Paths
+### Phase 2: Map the verification paths
 
 Objective: define the test plan before running it.
 
@@ -62,7 +62,7 @@ Document at minimum:
 - expected service calls
 - database targets if data changes are involved
 
-### Phase 3: Execute End To End
+### Phase 3: Execute end to end
 
 Objective: verify the feature across the main risk areas.
 
@@ -76,7 +76,7 @@ Run these checks in sequence when applicable:
 - logs and console validation
 - lightweight non-functional checks
 
-### Phase 4: Report Findings
+### Phase 4: Report findings
 
 Objective: produce a concise, reusable verification result.
 
