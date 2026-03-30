@@ -115,6 +115,5 @@ Unresolved point or blocker:
 Use this when a review finding is too ambiguous to implement safely without clarifying intent or scope.
 
 - Follow project guidance in workspace `copilot-instructions.md` when that file exists.
-- Use `/.github/instructions/sql.instructions.md` for SQL changes.
 - Use `../domain/harja-unit-testing-reference.md` for backend unit test changes and `*_test.clj` conventions.
 - Use `11-flow-implement` for behavior changes that need TDD-first implementation.

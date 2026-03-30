@@ -143,4 +143,3 @@ Remaining Risk:
 - For backend unit tests, `*_test.clj` conventions, and TDD-first test scope, use `../domain/harja-unit-testing-reference.md`.
 - Use `../references/agent-conventions-reference.md` for the locked flow-agent output model.
 - For reusable utility namespaces, check the `harja-utility-namespaces` skill before creating new helpers.
-- For SQL changes, follow `instructions/sql.instructions.md`.

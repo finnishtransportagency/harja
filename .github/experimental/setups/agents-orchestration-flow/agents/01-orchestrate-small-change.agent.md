@@ -147,7 +147,6 @@ Remaining Risk:
 - Use `10-flow-plan` when the task needs an explicit planning document before implementation.
 - Use `00-orchestrate-delivery` when the work should be coordinated as a delivery flow instead of directly implemented here.
 - Use `../domain/harja-unit-testing-reference.md` for backend unit test changes and `*_test.clj` conventions.
-- Follow `instructions/sql.instructions.md` for SQL changes.
 
 #tool:vscode/askQuestions
 Use this when the direct-implementation path depends on a blocking clarification about scope, acceptance, or whether to escalate to orchestration.

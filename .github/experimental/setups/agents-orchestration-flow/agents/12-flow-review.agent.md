@@ -131,9 +131,7 @@ Summary:
 
 ## References
 
-- Use `instructions/sql.instructions.md` when the review includes `.sql` changes.
 - Use `../domain/harja-validation-review-reference.md` when backend validation, authorization, or write-path safety needs deeper analysis.
-- Use `instructions/sql.instructions.md` when the review includes `.sql` changes.
 - Use `../references/agent-conventions-reference.md` for the locked flow-agent output model.
 - Check `api.raml` and `schema.json` impacts when the diff changes public API boundaries.
 - Use `review-pre-pr` when the user wants a branch-level readiness review before opening or updating a pull request.

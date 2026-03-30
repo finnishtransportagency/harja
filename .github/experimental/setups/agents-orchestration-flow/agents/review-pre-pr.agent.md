@@ -128,6 +128,5 @@ Use this when the pre-PR gate is blocked by an unclear base branch, unresolved r
 - Use `../domain/harja-unit-testing-reference.md` when the branch changes backend unit tests or should have gained `*_test.clj` coverage.
 - Use `../domain/harja-e2e-testing-reference.md` for test coverage expectations on UI-heavy changes.
 - Use `../domain/harja-validation-review-reference.md` when write-path validation or authorization needs deeper analysis.
-- Use `instructions/sql.instructions.md` for SQL file changes.
 - Use `12-flow-review` when the user wants the default independent code review during implementation instead of a pre-PR gate.
 - Use `15-flow-closeout` when PR readiness is established and the source-of-truth docs plus local worktree should be wrapped up.
