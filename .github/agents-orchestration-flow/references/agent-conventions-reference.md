@@ -16,7 +16,6 @@ Tätä tiedostoa käytetään, kun agentin promptia normalisoidaan, nimetään t
 Tämä koskee vain ei-subagent-agentteja tässä workspace:ssa.
 
 Ei koske:
-- Atlas-perheen erityistapauksia
 - `*-subagent.agent.md` tiedostoja
 - workspace:n ulkopuolisia yleisiä skills-tiedostoja
 
@@ -327,7 +326,6 @@ UI-verifyssa raportoi aina eksplisiittisesti, tehtiinkö selaimen console- ja pa
 ### Flow-agentit
 - sama käyttäytyminen direct + delegated -tilassa
 - output kelpaa seuraavalle vaiheelle
-- ei Atlas-tyyppistä parent-seremoniaa
 
 ### Review-agentit
 - löydöt ensin
