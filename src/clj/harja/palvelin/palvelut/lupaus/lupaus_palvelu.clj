@@ -344,6 +344,7 @@
   - odottaa-urakoitsijan-kannanottoa?: Boolean: true jos urakoitsija on antamatta kannanottoa
   - valikatselmus-tehty?: Boolean: onko välikatselmus tehty
   - tavoitehinta-puuttuu?: Boolean: puuttuuko tavoitehinta
+  - lupausprosentit-puuttuu?: Boolean: puuttuuko bonus- tai sanktioprosentti urakan parametreista
   - luvatut-pisteet-puuttuu?: Boolean: puuttuuko luvatut pisteet
   - ennusteen-tila: Ennusteen tila (:katselmoitu-toteuma, :alustava-toteuma, :ennuste, :ei-viela-ennustetta)
   - tallennettu-paatos: Tallennettu päätös (voi olla nil)
@@ -361,6 +362,7 @@
   - :odottaa-urakoitsijan-kannanottoa? - Boolean
   - :valikatselmus-tehty-urakalle? - Boolean
   - :tavoitehinta-puuttuu? - Boolean
+  - :lupausprosentit-puuttuu? - Boolean
   - :luvatut-pisteet-puuttuu? - Boolean"
   [{:keys [piste-maksimi piste-ennuste piste-toteuma
            bonus-tai-sanktio tavoitehinta
@@ -369,7 +371,7 @@
            odottaa-kannanottoa merkitsevat-odottaa-kannanottoa
            odottaa-urakoitsijan-kannanottoa?
            valikatselmus-tehty?
-           tavoitehinta-puuttuu? luvatut-pisteet-puuttuu?
+           tavoitehinta-puuttuu? lupausprosentit-puuttuu? luvatut-pisteet-puuttuu?
            ennusteen-tila tallennettu-paatos]}]
   {:pre [(keyword? ennusteen-tila)]}
   {:ennusteen-tila ennusteen-tila
@@ -393,12 +395,41 @@
    :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
    :valikatselmus-tehty-urakalle? valikatselmus-tehty?
    :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
+  :lupausprosentit-puuttuu? lupausprosentit-puuttuu?
    :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?})
+
+(defn- yhteinen-paatos->bonus-tai-sanktio
+  "Muuntaa yhteisen päätöslaskennan tuloksen palvelun API-muotoon.
+  
+  Yhteinen muoto (välikatselmuksen logiikka):
+  - {:lupausbonus <positiivinen>} -> {:bonus <positiivinen>}
+  - {:lupaussanktio <positiivinen>} -> {:sanktio <positiivinen>}
+  - {:tavoite-taytetty true} -> {:tavoite-taytetty true}
+  
+  Palvelun API-muoto:
+  - {:bonus <positiivinen>} kun bonus
+  - {:sanktio <positiivinen>} kun sanktio
+  - {:tavoite-taytetty true} kun tavoite täytetty"
+  [yhteinen-paatos]
+  (cond
+    (:lupausbonus yhteinen-paatos)
+    {:bonus (:lupausbonus yhteinen-paatos)}
+    
+    (:lupaussanktio yhteinen-paatos)
+    {:sanktio (:lupaussanktio yhteinen-paatos)}
+    
+    (:tavoite-taytetty yhteinen-paatos)
+    {:tavoite-taytetty true}
+    
+    :else
+    nil))
 
 (defn- laske-bonus-ja-ennuste
   "Laskee bonuksen/sanktion ja ennusteen tilan.
 
   Parametrit (options-map):
+  - db: Tietokantayhteys
+  - urakka-id: Urakan ID
   - tallennettu-paatos: Tallennettu lupaus-päätös (voi olla nil)
   - piste-toteuma: Toteutuneet pisteet (voi olla nil)
   - piste-ennuste: Ennustepisteet
@@ -408,20 +439,39 @@
   - hk-alkupvm: Hoitokauden alkupäivä
 
   Palauttaa mapin jossa:
-  - :bonus-tai-sanktio - Bonuksen tai sanktion määrä
-  - :ennusteen-tila - Ennusteen tila (:katselmoitu-toteuma, :alustava-toteuma, :ennuste, :ei-viela-ennustetta)"
-  [{:keys [tallennettu-paatos piste-toteuma piste-ennuste
+  - :bonus-tai-sanktio - Bonuksen tai sanktion määrä (API-muodossa: :bonus/:sanktio/:tavoite-taytetty)
+  - :ennusteen-tila - Ennusteen tila (:katselmoitu-toteuma, :alustava-toteuma, :ennuste, :ei-viela-ennustetta)
+  - :lupausprosentit-puuttuu? - Boolean: true jos bonus- tai sanktioprosentti puuttuu urakan parametreista"
+  [{:keys [db urakka-id tallennettu-paatos piste-toteuma piste-ennuste
            lupaus-sitoutuminen tavoitehinta nykyhetki hk-alkupvm]}]
-  {:pre [(inst? nykyhetki)
+  {:pre [(some? db)
+         (number? urakka-id)
+         (inst? nykyhetki)
          (or (nil? hk-alkupvm) (inst? hk-alkupvm))
          (map? lupaus-sitoutuminen)]}
-  (let [tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
-        bonus-tai-sanktio (or
+  (let [;; Jos päätös on jo tallennettu, käytä sitä (päätös on jo API-muodossa)
+        tallennettu-bonus-tai-sanktio (some-> tallennettu-paatos lupaus-domain/paatos->bonus-tai-sanktio)
+        urakan-parametrit (when-not tallennettu-bonus-tai-sanktio
+                            (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})))
+        sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+        bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+        lupausprosentit-puuttuu? (and (nil? tallennettu-bonus-tai-sanktio)
+                                      (or (nil? sanktioprosentti)
+                                          (nil? bonusprosentti)))
+        
+        ;; Laske ennuste/toteuma kanonisella funktiolla
+        bonus-tai-sanktio (if tallennettu-bonus-tai-sanktio
                             tallennettu-bonus-tai-sanktio
-                            (lupaus-domain/bonus-tai-sanktio
-                              {:toteuma (or piste-toteuma piste-ennuste)
-                               :lupaus (:pisteet lupaus-sitoutuminen)
-                               :tavoitehinta tavoitehinta}))
+                            (when (and sanktioprosentti bonusprosentti)
+                              ;; Laske yhteinen päätös ja muunna API-muotoon
+                              (some-> (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                                        {:toteutuneet-pisteet (or piste-toteuma piste-ennuste)
+                                         :luvatut-pisteet (:pisteet lupaus-sitoutuminen)
+                                         :tavoitehinta tavoitehinta
+                                         :sanktioprosentti sanktioprosentti
+                                         :bonusprosentti bonusprosentti})
+                                yhteinen-paatos->bonus-tai-sanktio)))
+        
         ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
         ennusteen-voi-tehda? (and (pvm/sama-tai-jalkeen? nykyhetki hk-alkupvm)
                                bonus-tai-sanktio)
@@ -429,7 +479,7 @@
         ennusteen-tila (cond tallennettu-bonus-tai-sanktio
                          :katselmoitu-toteuma
 
-                         hoitovuosi-valmis?
+                         (and hoitovuosi-valmis? bonus-tai-sanktio)
                          :alustava-toteuma
 
                          ennusteen-voi-tehda?
@@ -438,7 +488,8 @@
                          :else
                          :ei-viela-ennustetta)]
     {:bonus-tai-sanktio bonus-tai-sanktio
-     :ennusteen-tila ennusteen-tila}))
+      :ennusteen-tila ennusteen-tila
+      :lupausprosentit-puuttuu? lupausprosentit-puuttuu?}))
 
 (defn hae-urakan-lupaustiedot-hoitokaudelle [db {:keys [urakka-id nykyhetki
                                                         valittu-hoitokausi] :as tiedot}]
@@ -494,9 +545,11 @@
         valikatselmus-tehty? (valikatselmus-tehty-urakalle? db urakka-id hoitokauden-alkuvuosi)
 
         ;; Laske bonus ja ennuste
-        {:keys [bonus-tai-sanktio ennusteen-tila]}
+        {:keys [bonus-tai-sanktio ennusteen-tila lupausprosentit-puuttuu?]}
         (laske-bonus-ja-ennuste
-          {:tallennettu-paatos tallennettu-paatos
+          {:db db
+           :urakka-id urakka-id
+           :tallennettu-paatos tallennettu-paatos
            :piste-toteuma piste-toteuma
            :piste-ennuste piste-ennuste
            :lupaus-sitoutuminen lupaus-sitoutuminen
@@ -519,6 +572,7 @@
                       :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
                       :valikatselmus-tehty? valikatselmus-tehty?
                       :tavoitehinta-puuttuu? tavoitehinta-puuttuu?
+                      :lupausprosentit-puuttuu? lupausprosentit-puuttuu?
                       :luvatut-pisteet-puuttuu? luvatut-pisteet-puuttuu?
                       :ennusteen-tila ennusteen-tila
                       :tallennettu-paatos tallennettu-paatos})]
@@ -887,9 +941,9 @@
                                  ;; Lasketaan kuukaudet 10,11,12,1-8 mukaan ennustepisteisiin eli skipataan viimeinen, koska syyskuu on toteuma
                                  (take 11 lopulliset-pisteet)))
          toteuma-pisteet (:pisteet (last lopulliset-pisteet))
-         bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
-                                                             :lupaus (:pisteet sitoutumistiedot)
-                                                             :tavoitehinta tavoitehinta})
+         bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:toteuma (or toteuma-pisteet ennuste-pisteet)
+                                                                            :lupaus (:pisteet sitoutumistiedot)
+                                                                            :tavoitehinta tavoitehinta})
          ;; Näille -19/-20 alkaneille MH-urakoille (muita ei voi tällä funktiolla käsitellä) lasketaan
          ;; Indeksikorjaus automaattisesti hintaan mukaan
          bonus-tai-sanktio-pvm (-> (second valittu-hoitokausi)
