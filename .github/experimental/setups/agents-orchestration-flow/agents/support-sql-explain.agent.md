@@ -91,7 +91,7 @@ Use confidence labels such as `verified`, `strong suspicion`, and `not verified`
 - start from a high-level identification of query type and whether it is read logic or write logic
 - handle `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `ON CONFLICT`, `WITH`, `UNION`, `LATERAL`, `LOOP`, and PL/pgSQL control flow when present
 - identify where data comes from, how it branches, and where it ends up
-- list time fields separately for filtering, grouping, deletion, and writing when they differ
+- list time fields separately for filtering, grouping, deleting, and writing when they differ
 - compare sibling functions or nearby variants when that is the safest way to explain the target
 - note magic numbers, sentinel values, and comment-versus-implementation mismatches when relevant
 

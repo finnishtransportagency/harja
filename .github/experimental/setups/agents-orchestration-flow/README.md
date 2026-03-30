@@ -10,4 +10,3 @@
 - `agents/` sisältää varsinaiset agentit ja promptit.
 - `references/` sisältää yhteiset rakennesäännöt ja käytännöt.
 - `domain/` sisältää Harja-kohtaisen taustatiedon agenteille.
-

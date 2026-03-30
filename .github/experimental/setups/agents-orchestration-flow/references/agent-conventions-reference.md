@@ -60,7 +60,7 @@ argument-hint: Optional invocation hint
 
 Säännöt:
 - älä jätä tyhjiä placeholder-kenttiä
-- `name` on lowercase kebab-case ja voi alkaa järjestysprefiksillä kuten `00-` tai `10-`
+- `name` on lowercase kebab-case ja voi alkaa järjestysprefiksillä kuten `00-`
 - tiedostonimen ja `name`-kentän tulee vastata toisiaan
 - `description` kuvaa agentin ydintehtävän yhdellä rivillä
 - suosi yhtenäistä mallia `<Category> agent for <primary responsibility>` silloin kun se sopii agenttiin luontevasti
