@@ -38,7 +38,7 @@ Normalisoi branch-pohjainen `topic-slug` näin:
 - poista alusta ticket-prefiksi muodossa `<kirjaimet>-<numerot>-`, jos sen jälkeen jää kuvaava nimi
 
 Esimerkki:
-- branch `HARJA-1971-valimaisia-varusteita-puuttuu` -> `valimaisia-varusteita-puuttuu`
+- branch`HARJA-1971-valimaisia-varusteita-puuttuu`->`HARJA-1971-valimaisia-varusteita-puuttuu`
 
 Valitse tiedostonimi tehtävän laajuuden mukaan:
 - yksi kokonainen aihe tai laaja muutos: `plan.md` ja tarvittaessa `spec.md`
