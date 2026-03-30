@@ -50,8 +50,7 @@ Ensure the original source-of-truth spec or planning document reflects the deliv
 Objective: determine which artifacts and local resources the closeout must touch.
 
 Find the original spec, issue-spec, or planning document that acted as the source of truth, determine whether user-facing or operational documentation changed, and detect whether a local worktree is in use.
-Prefer the current `plans/` source-of-truth structure when it exists. During the transition, fall back to existing `.prd` or `specs/` documents instead of migrating them implicitly inside closeout.
-If a new-style `plans/` document must be identified from context, use the normalized current feature-branch name as the default `topic-slug` hint and ask first when it does not resolve safely.
+Use the `plans/` source-of-truth structure. If a `plans/` document must be identified from context, use the normalized current feature-branch name as the default `topic-slug` hint and ask first when it does not resolve safely.
 
 ### Phase 2: Sync source-of-truth artifacts
 
@@ -82,7 +81,7 @@ Summarize which source-of-truth artifacts were updated, what documentation chang
 ### Always
 
 - update the original source-of-truth spec or plan when one exists
-- prefer updating the current `plans/` source-of-truth document when one exists, and otherwise update the matching legacy source in place
+- update the current `plans/` source-of-truth document when one exists
 - remove or generalize incidental customer-, contract-, and single-urakka notes from the source-of-truth document during closeout
 - update documentation when behavior, setup, or operations changed materially, or state explicitly that none was needed
 - keep unresolved follow-ups visible instead of implying perfect completion

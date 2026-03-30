@@ -2,7 +2,7 @@
 
 ## Tavoite
 
-Korvata epäselvä `.prd`-hakemisto yhdellä selkeällä rakenteella, joka toimii sekä yhdelle aiheelle että useille saman aiheen alidokumenteille.
+Määrittää yksi selkeä rakenne, joka toimii sekä yhdelle aiheelle että useille saman aiheen alidokumenteille.
 
 Ehdotus nojaa olemassa olevaan repositoryn juuritason `plans/`-hakemistoon, joten uusi malli sopii nykyiseen rakenteeseen ilman uutta ylätason kansiota.
 
@@ -36,10 +36,10 @@ plans/
 
 ## Miksi tämä on parempi
 
-- `plans/` kertoo tarkoituksen suoremmin kuin `.prd/`.
+- `plans/` kertoo tarkoituksen suoraan.
 - Yhden aiheen kaikki dokumentit pysyvät samassa kansiossa.
 - Rakenne toimii sekä yhdelle dokumentille että useille ala-aiheille ilman uusia nimeämiskikkoja.
-- Agenttien ei tarvitse päätellä, tallennetaanko tiedosto `.prd/`- vai `specs/`-hakemistoon.
+- Agenttien tallennuslogiikka pysyy yksinkertaisena, koska kaikki suunnitteludokumentit asuvat samassa rakenteessa.
 - Closeout ja myöhempi ylläpito helpottuvat, koska yksi aihe löytyy yhdestä paikasta.
 
 ## Nimeämiskäytäntö
@@ -53,11 +53,12 @@ plans/
 - tarkentavat toteutustehtävät: `tasks/<task-slug>.md`
 - Jira- tai issue-lähtöiset tarkenteet tarvittaessa: `issues/<jira-id>.md`
 
-## Miten tämä korvaa nykyiset mallit
+## Malli käytännössä
 
-- nykyinen `.prd/[feature-name]-prd.md` korvautuu muodolla `plans/<topic-slug>/plan.md`
-- nykyinen `.prd/[feature]/[component]-spec.md` korvautuu muodolla `plans/<topic-slug>/tasks/<component>.md` tai `plans/<topic-slug>/spec.md` riippuen siitä, onko kyse päätason specistä vai tarkenteesta
-- nykyinen `specs/spec-<jiraid>.md` voidaan siirtää muotoon `plans/<topic-slug>/spec.md` tai `plans/<topic-slug>/issues/<jira-id>.md`, jos issue halutaan sitoa näkyvästi tiettyyn aiheeseen
+- päätason suunnitelma tallennetaan muotoon `plans/<topic-slug>/plan.md`
+- päätason spec tallennetaan muotoon `plans/<topic-slug>/spec.md`
+- tarkenteet tallennetaan muotoon `plans/<topic-slug>/tasks/<component>.md`
+- issue-kohtainen tarkenne voidaan tallentaa muotoon `plans/<topic-slug>/issues/<jira-id>.md`, jos issue halutaan sitoa näkyvästi tiettyyn aiheeseen
 
 ## Vaikutus agenteihin
 
@@ -69,14 +70,6 @@ Päivitettävät tiedostot vähintään:
 - `domain/harja-planning-and-spec-reference.md`
 - `domain/harja-issue-spec-reference.md`
 - `domain/harja-delivery-closeout-reference.md`
-- mahdolliset README- tai setup-ohjeet, joissa viitataan `.prd`-hakemistoon
-
-## Suositeltu siirtymämalli
-
-1. Ota `plans/` käyttöön uutena oletusrakenteena agenteissa.
-2. Salli siirtymävaiheessa vanhat `.prd`- ja `specs/`-polut vain olemassa oleville tiedostoille.
-3. Tee kaikki uudet suunnitelmat ja specit vain `plans/`-rakenteeseen.
-4. Siirrä vanhat dokumentit vähitellen aihehakemistoihin, kun niitä seuraavan kerran päivitetään.
 
 ## Suositus
 

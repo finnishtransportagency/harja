@@ -42,12 +42,6 @@ Valitse tiedostonimi tehtävän laajuuden mukaan:
 - yksi kokonainen aihe tai laaja muutos: `plan.md` ja tarvittaessa `spec.md`
 - isomman kokonaisuuden aliosa: `tasks/<task-slug>.md`
 
-Siirtymävaiheessa olemassa olevia legacy-dokumentteja saa päivittää paikoillaan:
-- `.prd/...`
-- `specs/...`
-
-Niitä ei tarvitse siirtää automaattisesti uuden muutoksen yhteydessä.
-
 ### Toteutussuunnitelman minimirakenne
 
 Kun kirjoitat suunnitelmadokumentin, sisällytä vähintään:

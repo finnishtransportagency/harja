@@ -74,8 +74,6 @@ If the target is a spec, create or update `plans/<topic-slug>/spec.md` with the 
 
 If the branch is missing, too generic, or clearly mismatched with the issue being refined, ask the user for the slug before saving.
 
-If a matching legacy source-of-truth file already exists under `specs/` or `.prd/`, update that file in place during the transition unless the user explicitly wants it migrated.
-
 If the target is Jira issue text, draft the issue in Jira-ready language with the translated terms, the real boundaries, and the meaningful acceptance shape.
 
 ### Phase 6: Refine iteratively
@@ -118,7 +116,7 @@ Use this structure:
 
 Status: `completed` | `blocked`
 Mode: `issue_to_spec` | `plan_to_jira_issue`
-Spec File: saved path for `plans/<topic-slug>/spec.md`, legacy source-of-truth path, or `none`
+Spec File: saved path for `plans/<topic-slug>/spec.md`, or `none`
 Next Step: `answer named open questions` | `refine the same spec further` | `turn the accepted spec into a Jira issue draft` | `hand off to 10-flow-plan`
 
 Jira Issue Draft:

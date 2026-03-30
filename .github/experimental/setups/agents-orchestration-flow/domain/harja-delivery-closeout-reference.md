@@ -29,8 +29,6 @@ Closeoutissa kannattaa tarkistaa ensin, mikä toimi muutoksen alkuperäisenä to
 - `plans/<topic-slug>/plan.md`
 - `plans/<topic-slug>/spec.md`
 - issue-spec-tyyppinen tarkennusdokumentti
-- siirtymävaiheessa `specs/spec-<jiraid>.md`
-- siirtymävaiheessa `.prd`-hakemistossa oleva suunnitelma tai spec
 - muu eksplisiittisesti sovittu planning- tai spec-dokumentti
 
 Jos sellainen löytyy, agentin tulee päivittää siihen ainakin:
@@ -94,7 +92,7 @@ Closeoutissa hyödyllisiä lisätarkistuksia ovat usein:
 
 ## Ristiviitteet
 
-- Käytä `harja-planning-and-spec-reference.md`, kun closeoutissa päivitettävä totuuslähde on `plans/`-rakenteen suunnitelma tai spec, tai siirtymävaiheen legacy-dokumentti.
+- Käytä `harja-planning-and-spec-reference.md`, kun closeoutissa päivitettävä totuuslähde on `plans/`-rakenteen suunnitelma tai spec.
 - Käytä `harja-worktree-reference.md`, kun closeoutiin kuuluu worktreen turvallinen sulkeminen.
 
 ## Käyttöohje agentille

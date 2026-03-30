@@ -90,8 +90,6 @@ Normalisoi branch-pohjainen `topic-slug` näin:
 - tiivistä peräkkäiset `-` merkit yhdeksi
 - poista alusta ticket-prefiksi muodossa `<kirjaimet>-<numerot>-`, jos loppuosa on edelleen kuvaava
 
-Jos vastaava legacy-dokumentti on jo olemassa polussa `specs/` tai `.prd/`, päivitä se siirtymävaiheessa paikoillaan, ellei käyttäjä pyydä nimenomaan migraatiota.
-
 Jos käyttäjä tai repository-konteksti vaatii toisen sijainnin, nosta se eksplisiittisesti esiin. Jos issue-draft tuotetaan vain vastaukseen, sano se suoraan.
 
 ### Milloin siirtyä `10-flow-plan`-agenttiin
