@@ -1150,6 +1150,12 @@
                    WHERE nimi = '" kohteen-nimi "';")]
     (ffirst (q query))))
 
+(defn hae-kohdeosan-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohdeosa ypko
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
+
 (defn hae-lupaus-vaihtoehdot [lupaus-id]
   (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
 
