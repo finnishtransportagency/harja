@@ -80,5 +80,5 @@ cypress/screenshots/*
 # Playwright
 .playwright-cli
 
-## Personal docs/prd
-plans
+## Personal plans
+/plans/
