@@ -83,6 +83,21 @@ Kun spec pilkotaan toteutustasolle, suosi tehtäviä jotka ovat:
 - mahdollista toteuttaa ja varmistaa yhdessä pienessä kierroksessa
 - noin 1-2 tunnin kokoisia aina kun se on realistista
 
+### Dokumenttihygienia
+
+`plans/`-rakenteen dokumentit ovat toteutuksen yleisiä totuuslähteitä, eivät asiakas-, urakka- tai yksittäistapausmuistioita.
+
+Älä kirjaa planiin tai speciin irrallisia huomioita kuten:
+- yksittäisen asiakkaan toive tai poikkeus, ellei se ole vahvistettu yleiseksi tuotteen säännöksi
+- yhden urakan, sopimuksen tai pilotin tilannehuomio, ellei se muuta yleistä domain-käyttäytymistä
+- tilapäinen analyysimuistio, jonka arvo on vain nykyisessä debug- tai selvitystilanteessa
+
+Salli tällaiset tiedot vain, jos ne ovat oikeasti osa toimitettavaa sääntöä, hyväksyttyä rajausta tai pysyvää domain-käyttäytymistä. Tällöin ne pitää kirjoittaa yleisenä sääntönä, ei asiakkaan tai urakan muistiinpanona.
+
+Esimerkki:
+- huono: `Asiakas X tarvitsee tämän näkymän urakassa Y eri tavalla`
+- parempi: `Toiminto on rajattava urakkatyypin perusteella, koska käyttöoikeus ja validointi riippuvat urakan tyypistä`
+
 ## Ristiviitteet
 
 Kun dokumentti koskee Harja-featurea, yhdistä suunnitelma tai spec tarvittaessa näihin referensseihin:
@@ -99,6 +114,7 @@ Agentin tulisi sen sijaan:
 - viitata tähän dokumenttiin, kun kirjoitettava dokumentti kuuluu `plans/`-konventioon
 - käyttää nykyistä feature branchia oletuslähteenä `topic-slugille`
 - pysähtyä kysymään, jos branch-pohjainen slug ei ole turvallinen tai uskottava
+- pitää source-of-truth -dokumentti yleisellä tuote- ja domain-tasolla ilman irrallisia asiakas- tai urakkakohtaisia muistiinpanoja
 - poimia vastaukseensa vain tehtävän kannalta olennainen osa rakenteesta
 - pitää oma promptinsa behavior- ja workflow-keskeisenä
 - kattaa tarvittaessa sekä toteutussuunnitelman että spec-tyylisen suunnitteludokumentin ohjaus saman `10-flow-plan`-vastuun alla

@@ -70,7 +70,7 @@ Use `vscode/askQuestions` to ask the user the relevant product, terminology, edg
 
 Objective: persist the current best understanding in the correct artifact.
 
-If the target is a spec, create or update `plans/<topic-slug>/spec.md` with the translated terminology, current requirements, boundaries, edge cases, and open questions. Use the current feature branch name as the default source for `topic-slug` when a new topic directory must be created, and normalize it according to the shared planning reference.
+If the target is a spec, create or update `plans/<topic-slug>/spec.md` with the translated terminology, current requirements, boundaries, edge cases, and open questions. Use the current feature branch name as the default source for `topic-slug` when a new topic directory must be created, and normalize it according to the shared planning reference. Keep the saved spec at general product/domain level instead of leaving incidental customer-, contract-, or single-urakka notes in it unless they define a real durable rule.
 
 If the branch is missing, too generic, or clearly mismatched with the issue being refined, ask the user for the slug before saving.
 
@@ -94,6 +94,7 @@ When the user answers questions or the code research reveals a new constraint, u
 - ask clarifying questions when missing answers would weaken the spec materially
 - keep open questions explicit instead of burying them in prose
 - update the saved spec or Jira draft as the understanding changes
+- keep the saved spec free of incidental asiakas- tai urakkakohtaiset muistiinpanot unless they are rewritten as general domain rules
 - keep the same output structure whether invoked directly or by another agent
 
 ### Ask First
@@ -108,6 +109,7 @@ When the user answers questions or the code research reveals a new constraint, u
 - assume product intent from vague issue wording alone
 - present unresolved ambiguity as settled spec language
 - replace code-backed terminology with a looser paraphrase when the application already has a specific term
+- leave customer-specific, contract-specific, or one-off urakka notes in the saved spec as raw observations
 - stop at a chat summary without updating the spec file or producing the Jira-ready draft
 
 ## Output Contract

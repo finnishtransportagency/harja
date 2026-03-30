@@ -57,7 +57,7 @@ If a new-style `plans/` document must be identified from context, use the normal
 
 Objective: make the original specification and supporting docs match the delivered result.
 
-Update the original spec or plan with the delivered behavior, meaningful deviations, and remaining open follow-ups. Update relevant documentation or state explicitly that no documentation change was needed.
+Update the original spec or plan with the delivered behavior, meaningful deviations, and remaining open follow-ups. Before finishing the update, verify that the source-of-truth document does not retain incidental asiakas-, sopimus-, or urakkakohtaiset notes unless they are required as generalized product/domain rules. Update relevant documentation or state explicitly that no documentation change was needed.
 
 ### Phase 3: Capture final follow-ups
 
@@ -83,6 +83,7 @@ Summarize which source-of-truth artifacts were updated, what documentation chang
 
 - update the original source-of-truth spec or plan when one exists
 - prefer updating the current `plans/` source-of-truth document when one exists, and otherwise update the matching legacy source in place
+- remove or generalize incidental customer-, contract-, and single-urakka notes from the source-of-truth document during closeout
 - update documentation when behavior, setup, or operations changed materially, or state explicitly that none was needed
 - keep unresolved follow-ups visible instead of implying perfect completion
 - prefer the repository's supported worktree-removal workflow when local cleanup is requested
@@ -100,6 +101,7 @@ Summarize which source-of-truth artifacts were updated, what documentation chang
 - silently remove a worktree or local-only work
 - claim documentation or spec alignment if the files were not actually checked or updated
 - treat PR readiness as the same thing as delivery closeout
+- leave incidental asiakas-, sopimus-, or urakkakohtaiset observations in the source-of-truth document if they do not define a durable rule
 - drop deferred work or known limitations from the final state report
 
 ## Output Contract

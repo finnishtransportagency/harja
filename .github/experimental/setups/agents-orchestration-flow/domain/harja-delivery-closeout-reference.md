@@ -38,6 +38,11 @@ Jos sellainen löytyy, agentin tulee päivittää siihen ainakin:
 - poikkeamat alkuperäisestä odotuksesta
 - jäljelle jääneet follow-upit tai known limitations
 
+Samalla kannattaa tarkistaa dokumenttihygienia:
+- poista irralliset asiakas-, sopimus- ja urakkakohtaiset muistiinpanot, jos ne eivät määritä yleistä tuotteen sääntöä
+- kirjoita pysyvät rajoitteet ja domain-säännöt yleisellä tasolla ilman viittausta yksittäiseen asiakkaaseen tai urakkaan
+- jätä tapauskohtaiset selvityshavainnot closeout-raporttiin tai muuhun erilliseen työmuistiin, ei source-of-truth -dokumentiinsa
+
 Jos `plans/`-rakenteesta ei löydy ilmeistä totuuslähdettä, käytä nykyisestä feature branchista normalisoitua `topic-slugia` oletushakuvihjeenä:
 - muunna branch pieniksi kirjaimiksi
 - korvaa `/` ja `_` merkillä `-`
@@ -84,6 +89,7 @@ Closeoutissa hyödyllisiä lisätarkistuksia ovat usein:
 - onko PR-draft tai muu julkaisuteksti jo olemassa ja linjassa lopputuloksen kanssa
 - onko verify- tai review-vaiheen olennaiset havainnot vielä näkyviin kirjattuina
 - onko alkuperäinen spec edelleen ristiriidassa toteutuksen kanssa jossain rajatapauksessa
+- sisältääkö source-of-truth -dokumentti vahingossa asiakas- tai urakkakohtaisia huomioita, jotka kuuluvat pois pysyvästä dokumentaatiosta
 - pitääkö worktree jättää auki siksi, että PR:n jälkeen odotetaan vielä nopeita lisäkorjauksia
 
 ## Ristiviitteet

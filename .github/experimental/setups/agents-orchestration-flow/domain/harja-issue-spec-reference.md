@@ -61,6 +61,21 @@ Issue-spec on iteratiivinen työdokumentti. Pidä näkyvissä ainakin:
 - open questions
 - change log tai päivitysmerkinnät, kun spec elää usean kierroksen ajan
 
+### Dokumenttihygienia
+
+`plans/<topic-slug>/spec.md` on yleinen source-of-truth -dokumentti, ei asiakas-, sopimus- tai urakkakohtainen muistio.
+
+Älä jätä speciin irrallisia huomioita kuten:
+- yksittäisen asiakkaan erityistoive, ellei siitä ole päätetty yleistä tuotteen sääntöä
+- yhden urakan, sopimuksen tai pilotin tapauskohtaista havaintoa, ellei se muuta yleistä käyttäytymistä
+- tilapäistä debug- tai selvityshavaintoa, joka ei kuulu pysyvään määrittelyyn
+
+Jos tällainen tieto on tärkeä, kirjoita se yleisenä tuotteen tai domainin sääntönä ilman viittausta yksittäiseen asiakkaaseen tai urakkaan.
+
+Esimerkki:
+- huono: `Urakassa X asiakkaalle Y näytetään eri varoitus`
+- parempi: `Varoitus näytetään vain niissä urakkatyypeissä, joissa käyttäjällä on oikeus kyseiseen toimenpiteeseen`
+
 ### Tallennussijainti
 
 Oletustallennus on `plans/<topic-slug>/spec.md`.
@@ -96,6 +111,7 @@ Siirry `10-flow-plan`-agenttiin, kun:
 
 - viittaa tähän dokumenttiin, kun tehtävä koskee Jira-kuvauksen tarkentamista speciksi tai specin puristamista Jira-ready issueksi
 - tarkenna terminologia koodista ja käyttöliittymästä ennen kuin lukitset vaatimuskielen
+- pidä tallennettu spec yleisellä tuote- ja domain-tasolla ilman irrallisia asiakas- tai urakkakohtaisia muistiinpanoja
 - pidä agenttiprompti tutkimus-, tarkennus- ja päätöksentekokeskeisenä
 
 ## Rajaus

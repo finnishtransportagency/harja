@@ -52,7 +52,7 @@ Use `support-explore` for fast file mapping when the affected surface is still b
 
 Objective: turn the request into an executable phase sequence.
 
-Use the shared planning reference for the appropriate planning-document shape, keep phases ordered, and attach concrete tests or validation to each phase.
+Use the shared planning reference for the appropriate planning-document shape, keep phases ordered, and attach concrete tests or validation to each phase. Keep the saved source-of-truth document at general product/domain level instead of embedding incidental customer-, contract-, or single-urakka notes unless they define a real cross-cutting rule.
 
 ### Phase 3: Write the plan file
 
@@ -77,6 +77,7 @@ Across longer runs, keep the current planning subphase visible with short progre
 - keep phases ordered and specific
 - include validation for each phase
 - create the planning Markdown file before stopping
+- keep the saved plan/spec free of incidental asiakas- tai urakkakohtaiset muistiinpanot unless they are rewritten as general domain rules
 - keep the active planning subphase visible during longer runs, especially when context gathering or plan writing takes noticeable time
 - keep the same output structure whether invoked directly or by an orchestrating agent
 
@@ -90,6 +91,7 @@ Across longer runs, keep the current planning subphase visible with short progre
 
 - implement instead of planning
 - stop after an in-chat outline only
+- leave customer-specific, contract-specific, or one-off urakka notes in the saved source-of-truth document as raw observations
 - go silent through a long planning or writing step when a short subphase update would clarify that planning is still progressing
 - return extra phase or parent-agent ceremony as a requirement
 
