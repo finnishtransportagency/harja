@@ -39,6 +39,12 @@ Stay in planning mode and produce a plan or spec-shaped planning document that c
 - if two plausible plan shapes imply different architecture decisions
 - use `vscode/askQuestions` when missing requirements, branch-based naming, or architecture choices block a credible plan
 
+When using `vscode/askQuestions`, interview the user relentlessly about every material aspect of the plan until a shared understanding is specific enough to implement. Walk each branch of the design tree one at a time, resolve decision dependencies in order, and provide your recommended answer with each question.
+
+Ask the questions one at a time.
+
+If a question can be answered by exploring the codebase, explore the codebase instead of asking the user.
+
 ## Workflow
 
 ### Phase 1: Frame the task
@@ -125,9 +131,6 @@ Open Questions:
 - unresolved items, if any
 
 ## References
-
-#tool:vscode/askQuestions
-Use this when the plan cannot be made credible without clarifying requirements, naming, or architecture choices.
 
 - Use `../domain/harja-planning-and-spec-reference.md` for shared `plans/` location, naming, and minimum planning-document structure.
 - Use `../references/agent-conventions-reference.md` for the locked flow-agent output model.
