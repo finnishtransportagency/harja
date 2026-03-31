@@ -10,7 +10,8 @@
   hae-paallystyksen-alikohteet-analytiikalle hae-paallystyskohteiden-aikataulut-analytiikalle
   hae-paallystysilmoitukset-analytiikalle hae-paallystysilmoitusten-kulutuskerroksen-toimenpiteet-analytiikalle
   hae-paallystysilmoitusten-alustan-toimenpiteet-analytiikalle hae-yllapitokohteen-maaramuutokset
-  hae-yllapitokohteiden-maaramuutokset)
+  hae-yllapitokohteiden-maaramuutokset luo-yllapitokohteen-maaramuutos<!
+  poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset!)
 
 (defn onko-olemassa-paallystysilmoitus? [db yllapitokohde-id]
   (:exists (first (yllapitokohteella-paallystysilmoitus

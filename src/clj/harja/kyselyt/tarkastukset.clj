@@ -14,7 +14,8 @@
 
 (declare luo-tarkastus<! luodun-tarkastuksen-id paivita-tarkastus!
   luo-talvihoitomittaus<! paivita-talvihoitomittaus! poista-talvihoitomittaus!
-  luo-soratiemittaus<! paivita-soratiemittaus! poista-soratiemittaus!)
+  luo-soratiemittaus<! paivita-soratiemittaus! poista-soratiemittaus! poista-yllapitokohteiden-tarkastuksia!
+  poista-poistetut-liitteet!)
 
 (defqueries "harja/kyselyt/tarkastukset.sql"
   {:positional? true})

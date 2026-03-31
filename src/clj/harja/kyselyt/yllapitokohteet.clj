@@ -26,7 +26,9 @@
   hae-urakan-yllapitokohteet-lomakkeelle hae-urakan-yllapitokohteen-yllapitokohdeosat
   hae-tiemerkinnan-suorittavat-urakat hae-kohteen-merkinta-ja-jyrsintatiedot merkitse-kohde-valmiiksi-tiemerkintaan<!
   tallenna-paallystyskohteen-aikataulu! tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
-  tallenna-yllapitokohteen-kustannukset-yhaid!)
+  tallenna-yllapitokohteen-kustannukset-yhaid! onko-olemassa-urakalla? hae-urakkaan-liittyvat-tiemerkintakohteet
+  hae-urakkaan-kuuluvat-yllapitokohteet paivita-yllapitokohteen-tiemerkintaaikataulu!
+  paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<! hae-kaikki-urakan-yllapitokohteet)
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 

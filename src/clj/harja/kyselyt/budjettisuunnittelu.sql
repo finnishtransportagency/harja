@@ -476,6 +476,7 @@ SELECT kat.id as "kustannus-id",
            LEFT JOIN rahavaraus rv on kat.rahavaraus_id = rv.id
            LEFT JOIN tehtava te on kat.tehtava = te.id
  WHERE u.id = :urakka-id
+   AND kat.sopimus = :sopimus-id
  ORDER BY ajankohta_vuosi, ajankohta_kuukausi, kohdistus_toimenpide, kohdistus_tehtavaryhma, kohdistus_rahavaraus, kohdistus_tehtava;
 
 -- name: johto-ja-hallintokorvaukset-analytiikan-kustannustensuunnitteluun
