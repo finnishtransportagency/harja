@@ -243,7 +243,7 @@
    {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id 5731290]
-    [:harja-id 55]
+    [:harja-id 59]
     [:sampotunnus "5731290-TES2"]
     [:tunnus "YHA5731290"]
     [:kohteet
@@ -369,7 +369,7 @@
       [:kulutuskerrokselle-tehdyt-toimet
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123457]
-        [:harja-id 45]
+        [:harja-id 82]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
@@ -412,7 +412,7 @@
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123458]
-        [:harja-id 46]
+        [:harja-id 83]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
