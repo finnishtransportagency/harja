@@ -21,8 +21,9 @@ BEGIN
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-                    AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
+              WHERE rp.aika::DATE BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
+                    AND (u IS NULL OR t.urakka = u) 
+                    AND t.poistettu IS FALSE
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
@@ -62,6 +63,41 @@ BEGIN
                muokattu = current_timestamp;
   END LOOP;
 
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Käytetään ajastetussa tehtävässä, joka päivittää urakan_materiaalinkaytto_hoitoluokittain välimuistitaulun joka yö.
+CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla (
+    urakka_id INTEGER, muutospvm DATE
+) RETURNS void AS $$
+DECLARE
+    rivi RECORD;
+BEGIN
+    FOR rivi IN 
+        -- Valitaan viime päivältä muokatut/luodut toteumat 
+        SELECT DISTINCT 
+            rp.aika::date AS pvm
+         FROM toteuma t
+            JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+            JOIN LATERAL unnest(tr.reittipisteet) rp ON TRUE
+        WHERE t.urakka = urakka_id
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+           OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+        
+        UNION
+        
+        SELECT DISTINCT 
+            t.alkanut::date AS pvm
+         FROM toteuma t
+        WHERE t.urakka = urakka_id
+          AND t.lahde = 'harja-ui'
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+                   OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+    LOOP
+        -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
+        PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
