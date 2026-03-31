@@ -3,14 +3,12 @@
             [clojure.data.json :as json]
             [clojure.test :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.kyselyt.velho-nimikkeistot :as q-nimikkeistot]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
-            [harja.testi :refer [i jarjestelma laajenna-integraatiojarjestelmafixturea u]]))
+            [harja.testi :refer [i jarjestelma laajenna-integraatiojarjestelmafixturea q-map u]]))
 
 (def kayttaja "jvh")
 
@@ -41,9 +39,14 @@
                          [:db :integraatioloki])))
 
 (defn testidatan-lisays-fixture [testit]
-  (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtp2test', 'Toinen testivarustetoimenpide')")
-  (testit)
-  (u "DELETE FROM velho_nimikkeisto WHERE nimi ILIKE '%test'"))
+  (let [alkuperainen-velho-oid (:velho_oid (first (q-map "SELECT velho_oid FROM urakka WHERE id = 123")))]
+    (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtp2test', 'Toinen testivarustetoimenpide'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'korjaustest', 'Korjaus')")
+    (u (str "UPDATE urakka SET velho_oid = '" +urakan-velho-oid+ "' WHERE id = 123"))
+    (testit)
+    (u "DELETE FROM velho_nimikkeisto WHERE nimi ILIKE '%test'")
+    (if alkuperainen-velho-oid
+      (u (str "UPDATE urakka SET velho_oid = '" alkuperainen-velho-oid "' WHERE id = 123"))
+      (u "UPDATE urakka SET velho_oid = NULL WHERE id = 123"))))
 
 (use-fixtures :each
   jarjestelma-fixture
@@ -78,8 +81,7 @@
         vastaaja (tee-hakurajapinta-vastaaja pyynnot vastaustiedostot)
         vastaus (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
                                  +velho-varusteet-hakurajapinta-url+ vastaaja]
-                  (with-redefs [urakat-q/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
-                    (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) tiedot)))]
+                  (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) tiedot))]
     {:vastaus vastaus
      :pyynnot @pyynnot}))
 
@@ -237,7 +239,7 @@
       "Välimäisten toimenpiteiden haku rajataan toimenpiteen omaan muutoksen-lahde-oidiin")
     (is (loytyyko-paivamaaraehto-alkuun? eka "pvm-suurempi-kuin")
       "Välimäisten toimenpiteiden hakua rajataan pienimmän turvallisen oletuksen mukaisesti toimenpiteen version alkuhetkellä")
-        (is (loytyyko-tarkka-ehto? toinen
+    (is (loytyyko-tarkka-ehto? toinen
           ["joukossa" ["yleiset/perustiedot" "oid"] [projektivaruste-oid]])
       "Toinen pyyntö hakee välimäisen toimenpiteen kohdevarusteen suoraan OID:lla")
     (is (not-any? #(= ["yleiset/perustiedot" "muutoksen-lahde-oid"] %)
@@ -283,43 +285,39 @@
       "Kohdevarusteen OID-haku ei saa käyttää toimenpiteen tieosoitesuodatinta, koska kohdevarusteen osoite voi olla eri")))
 
 (deftest tavoitetilan-haku-loytaa-projektivarusteen-eksplisiittisella-toimenpidesuodatuksella
-  (with-redefs [q-nimikkeistot/hae-nimike-otsikolla
-                (fn [_ {:keys [otsikko]}]
-                  (when (= "Korjaus" otsikko)
-                    "vtptest"))]
-    (let [projektivaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
-                               [:osumat 0 :oid])
-          {:keys [vastaus pyynnot]} (aja-varustehaku {:urakka-id 123
-                                                      :hoitokauden-alkuvuosi 2020
-                                                      :toimenpide :korjaus}
-                                                     ["valimaisten-varustetoimenpiteiden-vastaus-urakalle.json"
-                                                      "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
-                                                      "hakurajapinta-vastaus-tyhja.json"])
-          [eka toinen kolmas] pyynnot]
-      (is (= 3 (count pyynnot))
-        "Eksplisiittinen toimenpidesuodatus käyttää edelleen koko projektivaruste-polun hakuketjua")
-      (is (loytyyko-tarkka-ehto? eka
-            ["joukossa"
-             ["toimenpiteet/valimaiset-varustetoimenpiteet" "ominaisuudet" "toimenpide"]
-             ["varustetoimenpide/vtptest"]])
-        "Ensimmäinen pyyntö rajaa välimäiset toimenpiteet eksplisiittisellä toimenpidesuodatuksella")
-      (is (= ["ja"
-              ["joukossa"
-               ["yleiset/perustiedot" "oid"]
-               [projektivaruste-oid]]]
-            (:lauseke toinen))
-        "Kohdevarusteiden OID-haku käyttää samaa yksinkertaista lausekemuotoa kuin tunnetusti toimiva olemassa oleva OID-haku")
-      (is (loytyyko-tarkka-ehto? kolmas
+  (let [projektivaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
+                             [:osumat 0 :oid])
+        {:keys [vastaus pyynnot]} (aja-varustehaku {:urakka-id 123
+                                                    :hoitokauden-alkuvuosi 2020
+                                                    :toimenpide :korjaus}
+                                                   ["valimaisten-varustetoimenpiteiden-vastaus-urakalle-korjaus.json"
+                                                    "varusteiden-hakurajapinta-vastaus-projektivaruste.json"
+                                                    "hakurajapinta-vastaus-tyhja.json"])
+        [eka toinen kolmas] pyynnot]
+    (is (= 3 (count pyynnot))
+      "Eksplisiittinen toimenpidesuodatus käyttää edelleen koko projektivaruste-polun hakuketjua")
+    (is (loytyyko-tarkka-ehto? eka
+          ["joukossa"
+           ["toimenpiteet/valimaiset-varustetoimenpiteet" "ominaisuudet" "toimenpide"]
+           ["varustetoimenpide/korjaustest"]])
+      "Ensimmäinen pyyntö rajaa välimäiset toimenpiteet eksplisiittisellä toimenpidesuodatuksella")
+    (is (= ["ja"
             ["joukossa"
              ["yleiset/perustiedot" "oid"]
-             [projektivaruste-oid]])
-        "Varsinainen varustehaku säilyttää OID-pohjaisen liitoksen eksplisiittisen toimenpidesuodatuksen kanssa")
-      (is (= projektivaruste-oid
-            (:ulkoinen-oid (first (:toteumat vastaus))))
-        "Eksplisiittinen toimenpidesuodatus palauttaa edelleen oikean projektivarusteen")
-      (is (= "Testivarustetoimenpide"
-            (:toimenpide (first (:toteumat vastaus))))
-        "Eksplisiittinen toimenpidesuodatus säilyttää välimäisen toimenpiteen yhdistymisen kohdevarusteeseen"))))
+             [projektivaruste-oid]]]
+          (:lauseke toinen))
+      "Kohdevarusteiden OID-haku käyttää samaa yksinkertaista lausekemuotoa kuin tunnetusti toimiva olemassa oleva OID-haku")
+    (is (loytyyko-tarkka-ehto? kolmas
+          ["joukossa"
+           ["yleiset/perustiedot" "oid"]
+           [projektivaruste-oid]])
+      "Varsinainen varustehaku säilyttää OID-pohjaisen liitoksen eksplisiittisen toimenpidesuodatuksen kanssa")
+    (is (= projektivaruste-oid
+          (:ulkoinen-oid (first (:toteumat vastaus))))
+      "Eksplisiittinen toimenpidesuodatus palauttaa edelleen oikean projektivarusteen")
+    (is (= "Korjaus"
+          (:toimenpide (first (:toteumat vastaus))))
+      "Eksplisiittinen toimenpidesuodatus säilyttää välimäisen toimenpiteen yhdistymisen kohdevarusteeseen")))
 
 (deftest valimainen-toimenpiderivi-palautuu-omana-rivinaan-uudella-tunnisteella
   (let [toimenpide-oid (get-in (lue-fixture-datana "valimaisten-varustetoimenpiteiden-vastaus-urakalle.json")
