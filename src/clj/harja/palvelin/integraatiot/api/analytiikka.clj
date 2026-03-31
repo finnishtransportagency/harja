@@ -1127,12 +1127,13 @@
 (defn hae-kustannussuunnitelmat [db {:keys [urakka-id] :as parametrit}]
   (log/info "Analytiikka API hae kustannussuunnitelmat  :: parametrit" (pr-str parametrit))
   (let [urakka-id (if (integer? urakka-id) urakka-id (konversio/konvertoi->int urakka-id))
+        sopimus-id (urakat-kyselyt/urakan-paasopimus-id db urakka-id)
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
 
         kiinteat-kustannukset (budjettisuunnittelu-kyselyt/hae-kiinteat-kustannukset db {:urakka-id urakka-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         kiinteat-kustannukset (map #(konversio/alaviiva->rakenne %) kiinteat-kustannukset)
-        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id})
+        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id :sopimus-id sopimus-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         arvioidut-kustannukset (map #(konversio/alaviiva->rakenne %) arvioidut-kustannukset)
 
