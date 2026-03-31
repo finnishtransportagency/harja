@@ -344,8 +344,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-idt #{}}))
-        _ (println "vastaus: " (pr-str vastaus))]
+                                                            :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")
