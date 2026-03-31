@@ -249,7 +249,7 @@
     [:kohteet
      [:kohde
       [:yha-id 123456]
-      [:harja-id 32]
+      [:harja-id 75]
       [:kohdenumero 1]
       [:kohdetyyppi 1]
       [:kohdetyotyyppi "paallystys"]
@@ -427,7 +427,7 @@
         [:pinta-ala 2600M]
         [:paallystetyomenetelma 31]
         [:massamenekki 90.0M]
-        [:rc-prosentti 10.0M]
+        [:rc-prosentti 10M]
         [:kokonaismassamaara 260M]
         [:massa
          [:massatyyppi 12]
