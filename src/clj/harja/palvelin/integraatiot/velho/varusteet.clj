@@ -200,8 +200,9 @@
   (str/join ","
     (keep
       (fn [toimenpide]
-        (:otsikko
-         (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide}))))
+        (or (:otsikko
+              (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide})))
+          toimenpide))
       valimaiset-toimenpiteet)))
 
 (defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet paattyen alkaen oid valimaiset-toimenpiteet]}]
@@ -218,7 +219,8 @@
           (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " oid
                       " version-alku:" version-alku ". Toimenpiteet: " (str/join ", " toimenpiteet)
                       " Otetaan vain 1. toimenpide talteen.")))
-        (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
+        (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)})))
+          (first toimenpiteet)))
       (cond
         (seq valimaiset-toimenpiteet) (yhdista-valimaiset-toimenpiteet-stringiksi db valimaiset-toimenpiteet)
         (some? poistettu?) "Poistettu"
@@ -294,6 +296,7 @@
      :toimenpide-oid (:toimenpide-oid varuste)
      :kohdevarusteen-oid (or (:kohdevarusteen-oid varuste) (:oid varuste))
     :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
+    :muutoksen-lahde-oid (:muutoksen-lahde-oid varuste)
      :ulkoinen-oid (:oid varuste)}))
 
 (defn- valimainen-toimenpiderivi-velhosta->harja [db kohdevaruste toimenpide]

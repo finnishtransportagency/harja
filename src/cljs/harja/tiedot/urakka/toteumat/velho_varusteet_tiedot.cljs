@@ -60,6 +60,17 @@
       ;; Erityistapaukset, kuten puuttuva kuntoluokka, on avainsanoja.
       (:nimi param))))
 
+(defn hae-toimenpide-id [toimenpide toimenpiteet-nimikkeisto]
+  (let [raakakoodi (when (string? toimenpide)
+                     (last (str/split toimenpide #"/")))]
+    (:id
+      (first
+        (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
+                  (or (= otsikko toimenpide)
+                    (= nimi raakakoodi)
+                    (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
+          toimenpiteet-nimikkeisto)))))
+
 (defn hakuparametrit [{:keys [valinnat]}]
   (let [valinnat (if (:hoitokauden-alkuvuosi valinnat)
                    valinnat
@@ -172,8 +183,7 @@
       (map (fn [t]
              (-> t
                (assoc :tr-osoite (muodosta-tr-osoite t))
-               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t))
-                                                   (:toimenpiteet-nimikkeisto app)))))))
+               (assoc :toimenpide-id (hae-toimenpide-id (:toimenpide t) (:toimenpiteet-nimikkeisto app)))))
         (:toteumat vastaus)))
     (-> app
       (assoc :haku-paalla false)
