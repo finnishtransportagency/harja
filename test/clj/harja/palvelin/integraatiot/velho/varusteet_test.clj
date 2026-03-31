@@ -96,7 +96,6 @@
    :loppupvm nil
    :muokattu nil
    :muokkaaja "MUOKKAAJA"
-  :muutoksen-lahde-oid "urakan-velho-oid"
   :rivi-id "1.2.345.678.9.0.12.345.678901234"
   :rivityyppi :tavallinen-varusterivi
    :sijainti (PGgeometry. "POINT(6839198.670452601 638694.7440636739)")
@@ -242,18 +241,3 @@
             db
             ["varustetoimenpide/vtp-a" "varustetoimenpide/vtp-b"]))
       "Myös välimäisten toimenpiteiden yhdistetyn tekstin pitää fallbackata raakakoodeihin")))
-
-(deftest varuste-velhosta->harja-sailyttaa-muutoksen-lahde-oidin
-  (is (= "1.2.246.578.5.1.123"
-        (:muutoksen-lahde-oid
-          (varusteet/varuste-velhosta->harja
-            (:db jarjestelma)
-            {:oid "1.2.3"
-             :muutoksen-lahde-oid "1.2.246.578.5.1.123"
-             :kohdeluokka "varusteet/tienvarsikalusteet"
-             :sijainti {:tie 1 :osa 1 :etaisyys 10}
-             :keskilinjageometria {:type "Point"
-                                  :coordinates [6839198.670452601 638694.7440636739 0.0]}
-             :ominaisuudet {:rakenteelliset-ominaisuudet {:tyyppi "tvkttest"}
-                            :kunto-ja-vauriotiedot {:yleinen-kuntoluokka "kltest"}}})))
-    "Varustemuunnoksen pitää säilyttää muutoksen-lahde-oid backendistä UI:lle asti"))

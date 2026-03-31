@@ -296,7 +296,6 @@
      :toimenpide-oid (:toimenpide-oid varuste)
      :kohdevarusteen-oid (or (:kohdevarusteen-oid varuste) (:oid varuste))
     :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
-    :muutoksen-lahde-oid (:muutoksen-lahde-oid varuste)
      :ulkoinen-oid (:oid varuste)}))
 
 (defn- valimainen-toimenpiderivi-velhosta->harja [db kohdevaruste toimenpide]
