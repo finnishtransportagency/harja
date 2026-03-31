@@ -71,6 +71,25 @@
                     (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
           toimenpiteet-nimikkeisto)))))
 
+(defn hae-toimenpide-naytolle [toimenpide toimenpiteet-nimikkeisto]
+  (let [raakakoodi (when (string? toimenpide)
+                     (last (str/split toimenpide #"/")))
+        nimike (first
+                 (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
+                           (or (= otsikko toimenpide)
+                             (= nimi raakakoodi)
+                             (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
+                   toimenpiteet-nimikkeisto))]
+    (or (:otsikko nimike)
+      toimenpide)))
+
+(defn rikasta-varusterivi [rivi toimenpiteet-nimikkeisto]
+  (let [toimenpide (:toimenpide rivi)]
+    (cond-> (assoc rivi
+              :toimenpide (hae-toimenpide-naytolle toimenpide toimenpiteet-nimikkeisto)
+              :toimenpide-id (hae-toimenpide-id toimenpide toimenpiteet-nimikkeisto))
+      (:tr-numero rivi) (assoc :tr-osoite (muodosta-tr-osoite rivi)))))
+
 (defn hakuparametrit [{:keys [valinnat]}]
   (let [valinnat (if (:hoitokauden-alkuvuosi valinnat)
                    valinnat
@@ -179,15 +198,12 @@
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (reset! varusteet-kartalla/karttataso-varusteet
-      (map (fn [t]
-             (-> t
-               (assoc :tr-osoite (muodosta-tr-osoite t))
-               (assoc :toimenpide-id (hae-toimenpide-id (:toimenpide t) (:toimenpiteet-nimikkeisto app)))))
-        (:toteumat vastaus)))
-    (-> app
-      (assoc :haku-paalla false)
-      (assoc :varusteet (:toteumat vastaus))))
+    (let [varusteet (mapv #(rikasta-varusterivi % (:toimenpiteet-nimikkeisto app))
+                      (:toteumat vastaus))]
+      (reset! varusteet-kartalla/karttataso-varusteet varusteet)
+      (-> app
+        (assoc :haku-paalla false)
+        (assoc :varusteet varusteet))))
 
   HaeVarusteetEpaonnistui
   (process-event [_ app]
@@ -211,7 +227,8 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :historia-haku-paalla? false)
-      (assoc-in [:valittu-varuste :historia] vastaus)))
+      (assoc-in [:valittu-varuste :historia]
+        (mapv #(rikasta-varusterivi % (:toimenpiteet-nimikkeisto app)) vastaus))))
 
   HaeVarusteenHistoriaEpaonnistui
   (process-event [{:keys [_]} app]
