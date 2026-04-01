@@ -480,7 +480,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
-   "Muutos- ja lisätyöt" :muutos-ja-lisatyot
+   ;"Muutos- ja lisätyöraportti" :muutos-ja-lisatyoraportti ;; Jätetaan uudempi versio pois, koska se toimii vain hoitovuosi tasolla
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti

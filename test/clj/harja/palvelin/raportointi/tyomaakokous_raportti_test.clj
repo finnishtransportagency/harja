@@ -42,7 +42,7 @@
                      :laatupoikkeamaraportti false, 
                      :ilmoitusraportti false, 
                      :alkupvm #inst "2021-12-31T22:00:00.000-00:00", 
-                     :muutos-ja-lisatyot true, 
+                     ; :muutos-ja-lisatyoraportti true,  Ei tueta, koska muutos- ja lisätyöraportti toimii vain hoitovuosikohtaisesti tällä hetkellä.
                      :urakkatyyppi :teiden-hoito}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -69,7 +69,9 @@
 
 (deftest tyomaakokousraportin-suoritus-vanhalle-hoitourakalle-toimii
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        parametrit  {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2014-10-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :muutos-ja-lisatyot true, :urakkatyyppi :hoito}
+        parametrit  {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2014-10-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2014-09-30T21:00:00.000-00:00",
+                     ;;:muutos-ja-lisatyoraportti true, Ei tueta, koska muutos- ja lisätyöraportti toimii vain hoitovuosikohtaisesti tällä hetkellä.
+                     :urakkatyyppi :hoito}
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
