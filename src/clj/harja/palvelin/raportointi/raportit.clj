@@ -292,17 +292,6 @@
     :suorita      #'harja.palvelin.raportointi.raportit.siltatarkastus/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
-   {:nimi         :muutos-ja-lisatyot
-    :parametrit   [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-                   {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
-                   {:tyyppi "muutostyotyyppi", :konteksti nil, :pakollinen false, :nimi "Työn tyyppi"}
-                   {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-                   {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-                   {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
-    :kuvaus       "Muutos- ja lisätyöt"
-    :suorita      #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyot/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :muutos-ja-lisatyoraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
