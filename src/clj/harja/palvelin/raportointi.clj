@@ -268,8 +268,9 @@
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
                                               (aja-lokituksella db "paivita_raportti_toteutuneet_materiaalit"
-                                                #(do (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                                     (raportit-q/paivita_raportti_toteutuneet_materiaalit db))))
+                                                (fn []
+                                                  (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
+                                                  (raportit-q/paivita_raportti_toteutuneet_materiaalit db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -281,10 +282,11 @@
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_pohjavesialue_kooste  :: Alkaa " (pvm/nyt))
                                               (aja-lokituksella db "paivita_raportti_pohjavesialueiden_suolatoteumat"
-                                                #(do (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
-                                                     (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
-                                                     (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
-                                                     (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db))))
+                                                (fn []
+                                                  (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
+                                                  (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
+                                                  (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
+                                                  (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -296,7 +298,7 @@
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
                                               (aja-lokituksella db "paivita_raportti_toteuma_maarat"
-                                                #(raportit-q/paivita_raportti_toteuma_maarat db)))
+                                                (fn [] (raportit-q/paivita_raportti_toteuma_maarat db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
