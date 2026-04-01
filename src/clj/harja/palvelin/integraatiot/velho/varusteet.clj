@@ -298,26 +298,38 @@
     :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
      :ulkoinen-oid (:oid varuste)}))
 
+(def valimaisesta-toimenpiteesta-kopioitavat-kentat
+  [:sijainti
+   :alkusijainti
+   :loppusijainti
+   :version-voimassaolo
+   :alkaen
+   :paattyen
+   :muokattu
+   :muokkaaja])
+
+(defn- ylikirjoita-olemassa-olevat-kentat [kohde lahde kentat]
+  (reduce (fn [tulos kentta]
+            (if-let [arvo (get lahde kentta)]
+              (assoc tulos kentta arvo)
+              tulos))
+    kohde
+    kentat))
+
 (defn- valimainen-toimenpiderivi-velhosta->harja [db kohdevaruste toimenpide]
   (let [kohdevarusterivi (varuste-velhosta->harja db kohdevaruste)
-        yhdistetty-varuste (cond-> (-> kohdevaruste
-                                    (assoc-in [:ominaisuudet :toimenpiteet]
-                                      [(get-in toimenpide [:ominaisuudet :toimenpide])])
-                                    (assoc :rivityyppi :valimainen-toimenpiderivi
-                                           :rivi-id (:oid toimenpide)
-                                           :toimenpide-oid (:oid toimenpide)
-                                           :kohdevarusteen-oid (:ulkoinen-oid kohdevarusterivi)
-                                           :kohdevarusteen-kohdeluokka (or (when (string? (:kohdeluokka kohdevaruste))
-                                                                            (last (clojure.string/split (:kohdeluokka kohdevaruste) #"/")))
-                                                                          (:kohdeluokka kohdevarusterivi))))
-                            (:sijainti toimenpide) (assoc :sijainti (:sijainti toimenpide))
-                            (:alkusijainti toimenpide) (assoc :alkusijainti (:alkusijainti toimenpide))
-                            (:loppusijainti toimenpide) (assoc :loppusijainti (:loppusijainti toimenpide))
-                            (:version-voimassaolo toimenpide) (assoc :version-voimassaolo (:version-voimassaolo toimenpide))
-                            (:alkaen toimenpide) (assoc :alkaen (:alkaen toimenpide))
-                            (:paattyen toimenpide) (assoc :paattyen (:paattyen toimenpide))
-                            (:muokattu toimenpide) (assoc :muokattu (:muokattu toimenpide))
-                            (:muokkaaja toimenpide) (assoc :muokkaaja (:muokkaaja toimenpide)))]
+        kohdevarusteen-kohdeluokka (or (when (string? (:kohdeluokka kohdevaruste))
+                                         (last (clojure.string/split (:kohdeluokka kohdevaruste) #"/")))
+                                       (:kohdeluokka kohdevarusterivi))
+        yhdistetty-varuste (-> kohdevaruste
+                             (assoc-in [:ominaisuudet :toimenpiteet]
+                               [(get-in toimenpide [:ominaisuudet :toimenpide])])
+                             (assoc :rivityyppi :valimainen-toimenpiderivi
+                                    :rivi-id (:oid toimenpide)
+                                    :toimenpide-oid (:oid toimenpide)
+                                    :kohdevarusteen-oid (:ulkoinen-oid kohdevarusterivi)
+                                    :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka)
+                             (ylikirjoita-olemassa-olevat-kentat toimenpide valimaisesta-toimenpiteesta-kopioitavat-kentat))]
     (varuste-velhosta->harja db yhdistetty-varuste)))
 
 (defn- muodosta-valimaiset-toimenpiderivit [db kohdevarusteet toimenpiteet]
