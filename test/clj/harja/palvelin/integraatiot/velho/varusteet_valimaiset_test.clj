@@ -3,6 +3,7 @@
             [clojure.data.json :as json]
             [clojure.test :refer :all]
             [org.httpkit.fake :refer [with-fake-http]]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
@@ -81,7 +82,8 @@
         vastaaja (tee-hakurajapinta-vastaaja pyynnot vastaustiedostot)
         vastaus (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
                                  +velho-varusteet-hakurajapinta-url+ vastaaja]
-                  (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) tiedot))]
+                  (with-redefs [q-urakat/hae-urakan-velho-oid (fn [_ _] +urakan-velho-oid+)]
+                    (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) tiedot)))]
     {:vastaus vastaus
      :pyynnot @pyynnot}))
 
