@@ -1463,7 +1463,7 @@
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Kayttaja" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R" "W" "päätös"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W" "päätös"},
    "Tilaajan_laadunvalvoja" #{"R*" "asiatarkastus"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R" "W"}}}
@@ -1664,7 +1664,7 @@
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Kayttaja" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R" "W" "päätös"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W" "päätös"},
    "Tilaajan_laadunvalvoja" #{"R*"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R"}}}
@@ -1768,7 +1768,7 @@
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Kayttaja" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R" "W"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W" "päätös"},
    "Tilaajan_laadunvalvoja" #{"R*" "W+"},
    "Tilaajan_turvallisuusvastaava" #{"R" "W"},
    "vastuuhenkilo" #{"R" "W"}}}
@@ -1911,7 +1911,7 @@
    "Rakennuttajakonsultti" #{"R" "W"},
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R" "W"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W" "vahvistus"},
    "vastuuhenkilo" #{"R"}}}
  {:sym urakat-suunnittelu-materiaalit,
   :osio "Urakat",
