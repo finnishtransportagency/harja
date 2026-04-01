@@ -235,30 +235,41 @@
                                 (paivita-urakan-materiaalin-kayton-cachet-eiliselta db u)))
     :paivitetty))
 
+(defn- aja-lokituksella
+  "Suorittaa tehtava-fn:n try/catch-lohkossa ja kirjaa tuloksen
+   ajastetut_tehtavat-tauluun. alkuaika kattaa eilisen datan,
+   loppuaika on ajon hetki."
+  [db tyyppi tehtava-fn]
+  (let [alkuaika  (java.sql.Timestamp. (.getTime (pvm/eilinen)))
+        loppuaika (java.sql.Timestamp. (.getTime (pvm/nyt)))]
+    (try
+      (tehtava-fn)
+      (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava!
+        db {:tyyppi            tyyppi
+            :alkuaika_valilta  alkuaika
+            :loppuaika_valilta loppuaika
+            :onnistunut        true
+            :virhe             nil})
+      (log/info tyyppi ":: Loppuu" (pvm/nyt))
+      (catch Exception e
+        (log/error e (str tyyppi " :: Epäonnistui:") (.getMessage e))
+        (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava!
+          db {:tyyppi            tyyppi
+              :alkuaika_valilta  alkuaika
+              :loppuaika_valilta loppuaika
+              :onnistunut        false
+              :virhe             (str e)})))))
+
 (defn paivita_raportti_toteutuneet_materiaalit! [db]
   (ajastettu-tehtava/ajasta-paivittain [5 0 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteutuneet_materiaalit"
-                                           #(let [alkuaika (java.sql.Timestamp. (.getTime (pvm/eilinen)))
-                                                  loppuaika (java.sql.Timestamp. (.getTime (pvm/nyt)))]
+                                           #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
-                                              (try
-                                                (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                                (raportit-q/paivita_raportti_toteutuneet_materiaalit db)
-                                                (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_toteutuneet_materiaalit"
-                                                                                                         :alkuaika_valilta alkuaika
-                                                                                                         :loppuaika_valilta loppuaika
-                                                                                                         :onnistunut true
-                                                                                                         :virhe nil})
-                                                (log/info "paivita_raportti_toteutuneet_materiaalit :: Loppuu " (pvm/nyt))
-                                                (catch Exception e
-                                                  (log/error e "paivita_raportti_toteutuneet_materiaalit :: Epäonnistui:" (.getMessage e))
-                                                  (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_toteutuneet_materiaalit"
-                                                                                                           :alkuaika_valilta alkuaika
-                                                                                                           :loppuaika_valilta loppuaika
-                                                                                                           :onnistunut false
-                                                                                                           :virhe (str e)}))))
+                                              (aja-lokituksella db "paivita_raportti_toteutuneet_materiaalit"
+                                                #(do (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
+                                                     (raportit-q/paivita_raportti_toteutuneet_materiaalit db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -267,27 +278,13 @@
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
-                                           #(let [alkuaika (java.sql.Timestamp. (.getTime (pvm/eilinen)))
-                                                  loppuaika (java.sql.Timestamp. (.getTime (pvm/nyt)))]
+                                           #(do
                                               (log/info "ajasta-paivittain :: paivita_pohjavesialue_kooste  :: Alkaa " (pvm/nyt))
-                                              (try
-                                                (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
-                                                (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
-                                                (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
-                                                (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db)
-                                                (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_pohjavesialueiden_suolatoteumat"
-                                                                                                         :alkuaika_valilta alkuaika
-                                                                                                         :loppuaika_valilta loppuaika
-                                                                                                         :onnistunut true
-                                                                                                         :virhe nil})
-                                                (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Loppuu " (pvm/nyt))
-                                                (catch Exception e
-                                                  (log/error e "paivita_raportti_pohjavesialueiden_suolatoteumat :: Epäonnistui:" (.getMessage e))
-                                                  (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_pohjavesialueiden_suolatoteumat"
-                                                                                                           :alkuaika_valilta alkuaika
-                                                                                                           :loppuaika_valilta loppuaika
-                                                                                                           :onnistunut false
-                                                                                                           :virhe (str e)}))))
+                                              (aja-lokituksella db "paivita_raportti_pohjavesialueiden_suolatoteumat"
+                                                #(do (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
+                                                     (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
+                                                     (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
+                                                     (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -296,24 +293,10 @@
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteuma_maarat"
-                                           #(let [alkuaika (java.sql.Timestamp. (.getTime (pvm/eilinen)))
-                                                  loppuaika (java.sql.Timestamp. (.getTime (pvm/nyt)))]
+                                           #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
-                                              (try
-                                                (raportit-q/paivita_raportti_toteuma_maarat db)
-                                                (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_toteuma_maarat"
-                                                                                                         :alkuaika_valilta alkuaika
-                                                                                                         :loppuaika_valilta loppuaika
-                                                                                                         :onnistunut true
-                                                                                                         :virhe nil})
-                                                (log/info "paivita_raportti_toteuma_maarat :: Loppuu " (pvm/nyt))
-                                                (catch Exception e
-                                                  (log/error e "paivita_raportti_toteuma_maarat :: Epäonnistui:" (.getMessage e))
-                                                  (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava! db {:tyyppi "paivita_raportti_toteuma_maarat"
-                                                                                                           :alkuaika_valilta alkuaika
-                                                                                                           :loppuaika_valilta loppuaika
-                                                                                                           :onnistunut false
-                                                                                                           :virhe (str e)}))))
+                                              (aja-lokituksella db "paivita_raportti_toteuma_maarat"
+                                                #(raportit-q/paivita_raportti_toteuma_maarat db)))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 

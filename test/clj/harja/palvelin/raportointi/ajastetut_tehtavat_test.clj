@@ -36,6 +36,23 @@
   [_db _tunniste toiminto-fn & _]
   (toiminto-fn))
 
+(defn- tarkista-onnistuminen
+  "Tarkistaa, että ajastetut_tehtavat-tauluun on kirjattu onnistunut suoritus."
+  [tyyppi]
+  (let [rivit (q-map (str "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = '" tyyppi "'"))]
+    (is (= 1 (count rivit)) "Onnistumisesta kirjataan yksi rivi.")
+    (is (= true (:onnistunut (first rivit))) "Rivi merkitty onnistuneeksi.")
+    (is (nil? (:virhe (first rivit))) "Onnistuneessa suorituksessa ei ole virhettä.")
+    (is (not (nil? (:loppuaika_valilta (first rivit)))) "Loppuaika on tallentunut.")))
+
+(defn- tarkista-epaonnistuminen
+  "Tarkistaa, että ajastetut_tehtavat-tauluun on kirjattu epäonnistunut suoritus."
+  [tyyppi]
+  (let [rivit (q-map (str "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = '" tyyppi "'"))]
+    (is (= 1 (count rivit)) "Epäonnistumisesta kirjataan yksi rivi.")
+    (is (= false (:onnistunut (first rivit))) "Rivi merkitty epäonnistuneeksi.")
+    (is (not (nil? (:virhe (first rivit)))) "Virheviesti on tallentunut.")))
+
 ;; ---- paivita_raportti_toteutuneet_materiaalit ----
 
 (deftest paivita-raportti-toteutuneet-materiaalit-lokittaa-onnistumisen
@@ -44,11 +61,7 @@
     (with-redefs [ajastettu-tehtava/ajasta-paivittain suorita-heti
                   lukot/yrita-ajaa-lukon-kanssa ohita-lukko]
       (raportointi/paivita_raportti_toteutuneet_materiaalit! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_toteutuneet_materiaalit'")]
-      (is (= 1 (count rivit)) "Onnistumisesta kirjataan yksi rivi.")
-      (is (= true (:onnistunut (first rivit))) "Rivi merkitty onnistuneeksi.")
-      (is (nil? (:virhe (first rivit))) "Onnistuneessa suorituksessa ei ole virhettä.")
-      (is (not (nil? (:loppuaika_valilta (first rivit)))) "Loppuaika on tallentunut."))))
+    (tarkista-onnistuminen "paivita_raportti_toteutuneet_materiaalit")))
 
 (deftest paivita-raportti-toteutuneet-materiaalit-lokittaa-epaonnistumisen
   (let [db (:db jarjestelma)]
@@ -62,10 +75,7 @@
        #'raportit-q/paivita_raportti_toteutuneet_materiaalit
        (fn [_] (throw (Exception. "Testi-virhe")))}
       #(raportointi/paivita_raportti_toteutuneet_materiaalit! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_toteutuneet_materiaalit'")]
-      (is (= 1 (count rivit)) "Epäonnistumisesta kirjataan yksi rivi.")
-      (is (= false (:onnistunut (first rivit))) "Rivi merkitty epäonnistuneeksi.")
-      (is (not (nil? (:virhe (first rivit)))) "Virheviesti on tallentunut."))))
+    (tarkista-epaonnistuminen "paivita_raportti_toteutuneet_materiaalit")))
 
 ;; ---- paivita_raportti_pohjavesialueiden_suolatoteumat ----
 
@@ -75,11 +85,7 @@
     (with-redefs [ajastettu-tehtava/ajasta-paivittain suorita-heti
                   lukot/yrita-ajaa-lukon-kanssa ohita-lukko]
       (raportointi/paivita_raportti_pohjavesialueiden_suolatoteumat! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_pohjavesialueiden_suolatoteumat'")]
-      (is (= 1 (count rivit)) "Onnistumisesta kirjataan yksi rivi.")
-      (is (= true (:onnistunut (first rivit))) "Rivi merkitty onnistuneeksi.")
-      (is (nil? (:virhe (first rivit))) "Onnistuneessa suorituksessa ei ole virhettä.")
-      (is (not (nil? (:loppuaika_valilta (first rivit)))) "Loppuaika on tallentunut."))))
+    (tarkista-onnistuminen "paivita_raportti_pohjavesialueiden_suolatoteumat")))
 
 (deftest paivita-raportti-pohjavesialueiden-suolatoteumat-lokittaa-epaonnistumisen
   (let [db (:db jarjestelma)]
@@ -90,10 +96,7 @@
                   raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat
                   (fn [_] (throw (Exception. "Testi-virhe")))]
       (raportointi/paivita_raportti_pohjavesialueiden_suolatoteumat! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_pohjavesialueiden_suolatoteumat'")]
-      (is (= 1 (count rivit)) "Epäonnistumisesta kirjataan yksi rivi.")
-      (is (= false (:onnistunut (first rivit))) "Rivi merkitty epäonnistuneeksi.")
-      (is (not (nil? (:virhe (first rivit)))) "Virheviesti on tallentunut."))))
+    (tarkista-epaonnistuminen "paivita_raportti_pohjavesialueiden_suolatoteumat")))
 
 ;; ---- paivita_raportti_toteuma_maarat ----
 
@@ -103,11 +106,7 @@
     (with-redefs [ajastettu-tehtava/ajasta-paivittain suorita-heti
                   lukot/yrita-ajaa-lukon-kanssa ohita-lukko]
       (raportointi/paivita_raportti_toteuma_maarat! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_toteuma_maarat'")]
-      (is (= 1 (count rivit)) "Onnistumisesta kirjataan yksi rivi.")
-      (is (= true (:onnistunut (first rivit))) "Rivi merkitty onnistuneeksi.")
-      (is (nil? (:virhe (first rivit))) "Onnistuneessa suorituksessa ei ole virhettä.")
-      (is (not (nil? (:loppuaika_valilta (first rivit)))) "Loppuaika on tallentunut."))))
+    (tarkista-onnistuminen "paivita_raportti_toteuma_maarat")))
 
 (deftest paivita-raportti-toteuma-maarat-lokittaa-epaonnistumisen
   (let [db (:db jarjestelma)]
@@ -117,7 +116,4 @@
                   raportit-q/paivita_raportti_toteuma_maarat
                   (fn [_] (throw (Exception. "Testi-virhe")))]
       (raportointi/paivita_raportti_toteuma_maarat! db))
-    (let [rivit (q-map "SELECT * FROM ajastetut_tehtavat WHERE tyyppi = 'paivita_raportti_toteuma_maarat'")]
-      (is (= 1 (count rivit)) "Epäonnistumisesta kirjataan yksi rivi.")
-      (is (= false (:onnistunut (first rivit))) "Rivi merkitty epäonnistuneeksi.")
-      (is (not (nil? (:virhe (first rivit)))) "Virheviesti on tallentunut."))))
+    (tarkista-epaonnistuminen "paivita_raportti_toteuma_maarat")))
