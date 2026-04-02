@@ -168,6 +168,8 @@
                              "varusteet/reunapaalut"
                              "varusteet/reunatuet"])
 
+(declare hae-valimaiset-varuste-toimenpiteet-oideille)
+
 (defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti]}]
   (let [a (or sijainti alkusijainti)
         b loppusijainti
@@ -521,6 +523,114 @@
    ["yleiset/perustiedot" "oid"]
    oidit])
 
+(defn- hae-kohdeluokan-lahde [kohdeluokka]
+  (first (filter #(= (:kohdeluokka %) kohdeluokka) +tietolajien-lahteet+)))
+
+(defn- kohdeluokan-polku [lahde]
+  (str/join "/" [(:nimiavaruus lahde) (:kohdeluokka lahde)]))
+
+(defn muodosta-varusteen-historian-palautettavat-kentat [lahde]
+  (let [kohdeluokka-polku (kohdeluokan-polku lahde)]
+    [["yleiset/perustiedot" "oid"]
+     ["yleiset/perustiedot" "muutoksen-lahde-oid"]
+     ["yleiset/perustiedot" "alkaen"]
+     ["yleiset/perustiedot" "paattyen"]
+     ["yleiset/perustiedot" "muokattu"]
+     ["yleiset/perustiedot" "muokkaaja"]
+     ["yleiset/versioitu" "version-voimassaolo" "alku"]
+     ["yleiset/versioitu" "version-voimassaolo" "loppu"]
+     [kohdeluokka-polku "sijainti"]
+     [kohdeluokka-polku "alkusijainti"]
+     [kohdeluokka-polku "loppusijainti"]
+     [kohdeluokka-polku "keskilinjageometria"]
+     [kohdeluokka-polku "ominaisuudet" "kunto-ja-vauriotiedot" "yleinen-kuntoluokka"]
+     [kohdeluokka-polku "ominaisuudet" "rakenteelliset-ominaisuudet" "tyyppi"]
+     [kohdeluokka-polku "ominaisuudet" "rakenteelliset-ominaisuudet" "kaivon-tyyppi"]
+     [kohdeluokka-polku "ominaisuudet" "tyyppi"]
+     [kohdeluokka-polku "ominaisuudet" "toiminnalliset-ominaisuudet" "asetusnumero"]
+     [kohdeluokka-polku "ominaisuudet" "toiminnalliset-ominaisuudet" "lakinumero"]
+     [kohdeluokka-polku "ominaisuudet" "toiminnalliset-ominaisuudet" "lisatietoja"]
+     [kohdeluokka-polku "ominaisuudet" "toimenpiteet"]]))
+
+(defn muodosta-varusteen-historian-hakupalvelu-payload [lahde ulkoinen-oid]
+  {:asetukset {:tyyppi "kohdeluokkahaku"
+               :liitoshaku true
+               :oid-haku true
+               :palautettavat-kentat (muodosta-varusteen-historian-palautettavat-kentat lahde)}
+   :kohdeluokat [(kohdeluokan-polku lahde)]
+   :lauseke (tee-varusteen-oid-parametri [ulkoinen-oid])})
+
+(defn- varusteen-historian-jarjestysavain [varuste]
+  [(or (get-in varuste [:version-voimassaolo :alku])
+       (:alkaen varuste)
+       "")
+   (or (:muokattu varuste) "")
+   (or (:oid varuste) "")])
+
+(defn jarjesta-varusteen-historiaversiot [varusteet]
+  (sort-by varusteen-historian-jarjestysavain #(compare %2 %1) varusteet))
+
+(defn- muodosta-varusteen-historian-rivit [db varusteet]
+  (mapv (partial varuste-velhosta->harja db)
+    (jarjesta-varusteen-historiaversiot varusteet)))
+
+(defn- taydenna-varusteen-kohdeluokka [lahde varuste]
+  (if (:kohdeluokka varuste)
+    varuste
+    (assoc varuste :kohdeluokka (kohdeluokan-polku lahde))))
+
+(defn- varusteen-historiarivin-jarjestysavain [rivi]
+  [(or (:alkupvm rivi) (:muokattu rivi))
+   (:muokattu rivi)
+   (or (:rivi-id rivi) (:ulkoinen-oid rivi) "")])
+
+(defn- jarjesta-varusteen-historiarivit [rivit]
+  (sort-by varusteen-historiarivin-jarjestysavain #(compare %2 %1) rivit))
+
+(defn- valimainen-kohdeluokka? [lahde]
+  (contains? (set valimaiset-kohdeluokat) (kohdeluokan-polku lahde)))
+
+(defn- hae-varusteen-edustava-kohdeversio [lahde varusteet]
+  (some->> varusteet
+    jarjesta-varusteen-historiaversiot
+    first
+    (taydenna-varusteen-kohdeluokka lahde)))
+
+(defn- varusteen-historiaversio-sisaltaa-sijaintitiedot? [varuste]
+  (or (:sijainti varuste)
+      (:alkusijainti varuste)
+      (:keskilinjageometria varuste)))
+
+(defn- hakupalvelun-historiavastaus-riittava? [varusteet]
+  (and (seq varusteet)
+       (every? varusteen-historiaversio-sisaltaa-sijaintitiedot? varusteet)))
+
+(defn- hae-varusteen-historia-hakupalvelusta [db http-asetukset konteksti lahde ulkoinen-oid]
+  (let [payload (muodosta-varusteen-historian-hakupalvelu-payload lahde ulkoinen-oid)
+        {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+        varusteet (:osumat (json/read-str vastaus-str :key-fn keyword))]
+  varusteet))
+
+(defn- hae-varusteen-historia-kohdehistoriasta-raakana [http-asetukset konteksti]
+  (let [{vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+    (json/read-str vastaus :key-fn keyword)))
+
+(defn- hae-varusteen-historia-kohdehistoriasta [db http-asetukset konteksti]
+  (let [varusteet (hae-varusteen-historia-kohdehistoriasta-raakana http-asetukset konteksti)]
+    (muodosta-varusteen-historian-rivit db varusteet)))
+
+(defn- hae-varusteen-valimaiset-toimenpiderivit [db http-asetukset konteksti lahde ulkoinen-oid varusteet]
+  (if-let [kohdevaruste (when (valimainen-kohdeluokka? lahde)
+                          (hae-varusteen-edustava-kohdeversio lahde varusteet))]
+    (let [toimenpiteet (hae-valimaiset-varuste-toimenpiteet-oideille
+                         db
+                         [ulkoinen-oid]
+                         http-asetukset
+                         konteksti
+                         nil)]
+      (vec (muodosta-valimaiset-toimenpiderivit db [kohdevaruste] toimenpiteet)))
+    []))
+
 (defn hae-valimaiset-varuste-toimenpiteet-oideille [db oidit http-asetukset konteksti toimenpide]
   (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
         payload {:asetukset {:tyyppi "kohdeluokkahaku"
@@ -723,22 +833,38 @@
                              (swap! virheet conj (str "Virhe velho token haussa " x))
                              (log/error "Virhe velho token haussa" x)))]
           (let [otsikot (velho-yhteiset/velho-otsikot token)
-
-                {:keys [api-versio palvelu]} (first (filter #(= (:kohdeluokka %) kohdeluokka) +tietolajien-lahteet+))
-
-                http-asetukset {:metodi :GET
-                                :otsikot otsikot
-                                :url (str/join "/" (keep identity [varuste-api-juuri-url
-                                                                   palvelu "api" api-versio
-                                                                   (when-not (= "sijaintipalvelu" palvelu) "historia")
-                                                                   "kohde" ulkoinen-oid]))}
-
-                {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                varusteet (json/read-str vastaus :key-fn keyword)
-
-                varusteet
-                (mapv (partial varuste-velhosta->harja db) varusteet)]
-            varusteet))))))
+                lahde (hae-kohdeluokan-lahde kohdeluokka)]
+            (when-not lahde
+              (swap! virheet conj (str "Varusteen historian kohdeluokalle ei loytynyt Velho-lahdetta: " kohdeluokka))
+              (log/error "Varusteen historian kohdeluokalle ei loytynyt Velho-lahdetta" {:kohdeluokka kohdeluokka}))
+            (when lahde
+              (let [{:keys [api-versio palvelu]} lahde
+                    hakupalvelun-http-asetukset {:metodi :POST
+                                                 :otsikot otsikot
+                                                 :url (str varuste-api-juuri-url velho-yhteiset/hakupalvelu-url)}
+                    kohdehistorian-http-asetukset {:metodi :GET
+                                                   :otsikot otsikot
+                                                   :url (str/join "/" (keep identity [varuste-api-juuri-url
+                                                                                      palvelu "api" api-versio
+                                                                                      (when-not (= "sijaintipalvelu" palvelu) "historia")
+                                                                                      "kohde" ulkoinen-oid]))}
+                    hakupalvelun-varusteet (hae-varusteen-historia-hakupalvelusta db hakupalvelun-http-asetukset konteksti lahde ulkoinen-oid)
+                    historiavarusteet (if (hakupalvelun-historiavastaus-riittava? hakupalvelun-varusteet)
+                                        hakupalvelun-varusteet
+                                        (do
+                                          (log/info "Varusteen historian OID-haku palautti tyhjan tai puutteellisen vastauksen, kaytetaan kohdehistoriaa"
+                                            {:ulkoinen-oid ulkoinen-oid
+                                             :kohdeluokka kohdeluokka})
+                                          (hae-varusteen-historia-kohdehistoriasta-raakana kohdehistorian-http-asetukset konteksti)))
+                    historiarivit (muodosta-varusteen-historian-rivit db (mapv #(taydenna-varusteen-kohdeluokka lahde %) historiavarusteet))
+                    valimaiset-toimenpiderivit (hae-varusteen-valimaiset-toimenpiderivit
+                                                 db
+                                                 hakupalvelun-http-asetukset
+                                                 konteksti
+                                                 lahde
+                                                 ulkoinen-oid
+                                                 historiavarusteet)]
+                (vec (jarjesta-varusteen-historiarivit (concat historiarivit valimaiset-toimenpiderivit)))))))))))
 
 (defn hae-ja-tallenna-kohdeluokan-nimikkeisto [{:keys [db asetukset]} virheet hae-token-fn konteksti
                                                {:keys [kohdeluokka kohdeluokka->tyyppi-fn nimiavaruus]}

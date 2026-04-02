@@ -31,6 +31,21 @@
 (def +urakan-velho-oid+ "urakan-velho-oid")
 
 (def +tienvarsikaluste-oid+ "1.2.345.678.9.0.12.345.678901234")
+(def +aita-oid+ "1.2.345.678.9.0.12.345.678909999")
+
+(defn- varusteen-historian-hakupalvelu-vastaus []
+  (json/write-str {:osumat (reverse (json/read-str (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")))}))
+
+(defn- valimaisen-varusteen-historian-hakupalvelu-vastaus []
+  (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus-projektivaruste.json"))
+
+(defn- valimaisen-toimenpiteen-hakupalvelu-vastaus []
+  (slurp "test/resurssit/velho/varusteet/valimaisten-varustetoimenpiteiden-vastaus-urakalle-korjaus.json"))
+
+(defn- puutteellinen-varusteen-historian-hakupalvelu-vastaus []
+  (let [osumat (->> (json/read-str (slurp "test/resurssit/velho/varusteet/varusteen-historia.json") :key-fn keyword)
+                 (mapv #(dissoc % :sijainti :alkusijainti :loppusijainti :keskilinjageometria)))]
+    (json/write-str {:osumat osumat})))
 
 (defn- pyyntobody->string [body]
   (cond
@@ -54,7 +69,7 @@
                          [:db :integraatioloki])))
 
 (defn testidatan-lisays-fixture [testit]
-  (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide')")
+  (i "INSERT INTO velho_nimikkeisto (versio, tyyppi_avain, kohdeluokka, nimiavaruus, nimi, otsikko) VALUES (1, 'tienvarsikalustetyyppi', 'tienvarsikalusteet', 'varusteet', 'tvkttest', 'Testikalustetyyppi'), (1, 'kuntoluokka', '', 'kohdeluokka', 'kltest', 'Testikuntoluokka'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'vtptest', 'Testivarustetoimenpide'), (1, 'varustetoimenpide', '', 'varustetoimenpide', 'korjaustest', 'Korjaus')")
   (testit)
   (u "DELETE FROM velho_nimikkeisto WHERE nimi ILIKE '%test'"))
 
@@ -109,14 +124,117 @@
    :tyyppi "Testikalustetyyppi"
    :ulkoinen-oid "1.2.345.678.9.0.12.345.678901234"})
 
-(deftest hae-varusteen-historia-test
+  (deftest muodosta-varusteen-historian-hakupalvelu-payload-test
+    (let [payload (#'varusteet/muodosta-varusteen-historian-hakupalvelu-payload varusteet/tienvarsikalusteet +tienvarsikaluste-oid+)]
+      (is (= {:tyyppi "kohdeluokkahaku"
+      :liitoshaku true
+      :oid-haku true}
+        (select-keys (:asetukset payload) [:tyyppi :liitoshaku :oid-haku])))
+      (is (= ["varusteet/tienvarsikalusteet"] (:kohdeluokat payload)))
+      (is (= ["joukossa" ["yleiset/perustiedot" "oid"] [+tienvarsikaluste-oid+]]
+        (:lauseke payload)))
+      (is (some #{["yleiset/perustiedot" "oid"]}
+        (get-in payload [:asetukset :palautettavat-kentat])))
+          (is (some #{["yleiset/versioitu" "version-voimassaolo" "alku"]}
+        (get-in payload [:asetukset :palautettavat-kentat])))
+          (is (some #{["varusteet/tienvarsikalusteet" "sijainti"]}
+            (get-in payload [:asetukset :palautettavat-kentat])))
+          (is (some #{["varusteet/tienvarsikalusteet" "ominaisuudet" "toiminnalliset-ominaisuudet" "asetusnumero"]}
+        (get-in payload [:asetukset :palautettavat-kentat])))
+          (is (some #{["varusteet/tienvarsikalusteet" "ominaisuudet" "toiminnalliset-ominaisuudet" "lakinumero"]}
+        (get-in payload [:asetukset :palautettavat-kentat])))
+          (is (some #{["varusteet/tienvarsikalusteet" "ominaisuudet" "toiminnalliset-ominaisuudet" "lisatietoja"]}
+        (get-in payload [:asetukset :palautettavat-kentat])))))
+
+  (deftest jarjesta-varusteen-historiaversiot-test
+    (let [historiaversiot [{:oid "c"
+            :version-voimassaolo {:alku "2022-10-15"}
+            :muokattu "2023-01-01T00:00:00Z"}
+           {:oid "a"
+            :version-voimassaolo {:alku "2022-10-05"}}
+           {:oid "d"
+            :version-voimassaolo {:alku "2022-10-15"}
+            :muokattu "2023-01-02T00:00:00Z"}
+           {:oid "b"
+            :version-voimassaolo {:alku "2022-10-15"}
+            :muokattu "2023-01-01T00:00:00Z"}]]
+          (is (= ["d" "c" "b" "a"]
+        (mapv :oid (#'varusteet/jarjesta-varusteen-historiaversiot historiaversiot))))))
+
+  (deftest hae-varusteen-historia-kayttaa-oid-hakua-test
+    (let [pyynnot (atom [])
+      tallenna-pyynto! (fn [& args]
+             (let [{:keys [body]} (some #(when (map? %) %) args)]
+               (swap! pyynnot conj (json/read-str (pyyntobody->string body) :key-fn keyword)))
+             (varusteen-historian-hakupalvelu-vastaus))]
+      (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+           +velho-varusteet-hakurajapinta-url+ tallenna-pyynto!]
+    (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
+                                  :kohdeluokka "tienvarsikalusteet"})
+      pyynto (first @pyynnot)]
+      (is (= 1 (count @pyynnot)))
+      (is (= true (get-in pyynto [:asetukset :oid-haku])))
+      (is (= ["varusteet/tienvarsikalusteet"] (:kohdeluokat pyynto)))
+      (is (= ["joukossa" ["yleiset/perustiedot" "oid"] [+tienvarsikaluste-oid+]]
+        (:lauseke pyynto)))
+      (is (= 2 (count vastaus)))
+      (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
+      (is (= odotettu-varuste (first vastaus)))))))
+
+  (deftest hae-varusteen-historia-fallback-kohdehistoriaan-test
+    (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+         +velho-varusteet-hakurajapinta-url+ (json/write-str {:osumat []})
+         (str +velho-api-juuri+ "/varusterekisteri/api/v1/historia/kohde/" +tienvarsikaluste-oid+) (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")]
+      (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
+                                :kohdeluokka "tienvarsikalusteet"})]
+    (is (= 2 (count vastaus)))
+    (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
+      (is (= odotettu-varuste (first vastaus))))))
+
+(deftest hae-varusteen-historia-fallback-kohdehistoriaan-jos-hakupalveluvastaus-on-puutteellinen-test
   (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+                   +velho-varusteet-hakurajapinta-url+ (puutteellinen-varusteen-historian-hakupalvelu-vastaus)
                    (str +velho-api-juuri+ "/varusterekisteri/api/v1/historia/kohde/" +tienvarsikaluste-oid+) (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")]
     (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
                                                                                       :kohdeluokka "tienvarsikalusteet"})]
       (is (= 2 (count vastaus)))
       (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
-      (is (= odotettu-varuste (second vastaus))))))
+      (is (= odotettu-varuste (first vastaus))))))
+
+(deftest hae-varusteen-historia-sisaltaa-valimaisen-toimenpiteen-valimaiselle-kohteelle-test
+  (let [pyynnot (atom [])
+        vastaaja (fn [& args]
+                   (let [{:keys [body]} (some #(when (map? %) %) args)
+                         payload (json/read-str (pyyntobody->string body) :key-fn keyword)
+                         indeksi (count @pyynnot)]
+                     (swap! pyynnot conj payload)
+                     (case indeksi
+                       0 (valimaisen-varusteen-historian-hakupalvelu-vastaus)
+                       1 (valimaisen-toimenpiteen-hakupalvelu-vastaus)
+                       (throw (ex-info "Liikaa mockattuja historian hakupyyntoja" {:indeksi indeksi :payload payload})))))]
+    (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+                     +velho-varusteet-hakurajapinta-url+ vastaaja]
+      (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +aita-oid+
+                                                                                        :kohdeluokka "aidat"})
+            valimainen-rivi (first vastaus)
+            tavallinen-rivi (second vastaus)]
+        (is (= 2 (count @pyynnot)) "Valimaisen kohteen historiassa haetaan sekä versiot että välimäiset toimenpiteet")
+        (is (= 2 (count vastaus)) "Historiaan palautuu myös välimäinen toimenpide omana rivinään")
+        (is (= :valimainen-toimenpiderivi (:rivityyppi valimainen-rivi)))
+        (is (= :tavallinen-varusterivi (:rivityyppi tavallinen-rivi)))
+        (is (= +aita-oid+ (:ulkoinen-oid valimainen-rivi)))
+        (is (= +aita-oid+ (:kohdevarusteen-oid valimainen-rivi)))
+        (is (= "aidat" (:kohdevarusteen-kohdeluokka valimainen-rivi)))
+        (is (= "Korjaus" (:toimenpide valimainen-rivi)))
+        (is (= ["toimenpiteet/valimaiset-varustetoimenpiteet"]
+              (:kohdeluokat (second @pyynnot)))
+          "Toinen pyyntö kohdistuu saman kohdevarusteen välimäisiin toimenpiteisiin")
+        (is (= ["ja"
+                ["joukossa"
+                 ["toimenpiteet/valimaiset-varustetoimenpiteet" "ominaisuudet" "toimenpiteen-kohde"]
+                 [+aita-oid+]]]
+              (:lauseke (second @pyynnot)))
+          "Välimäiset toimenpiteet haetaan kohdevarusteen oidilla ilman ylimääräisiä suodattimia")))))
 
 (deftest hae-urakan-varustetoteumat-test
   (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
