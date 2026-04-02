@@ -9,6 +9,7 @@
             [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
             [harja.palvelin.integraatiot.velho.yhteiset :as velho-yhteiset]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
+            [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.testi :refer [i jarjestelma laajenna-integraatiojarjestelmafixturea q-map u]])
   (:import (net.postgis.jdbc PGgeometry)))
@@ -357,3 +358,16 @@
     (is (= ["Päivitetty" "Korjaus" "Lisätty"] (mapv :toimenpide tulos)))
     (is (= "Lisätty" (:toimenpide (last tulos)))
       "Ensimmäinen implisiittinen historiaversio pitää tulkita lisäykseksi, vaikka vanhempi eksplisiittinen versio olisi olemassa")))
+
+(deftest varusteen-toimenpide-tunnistaa-poiston-vasta-kun-paattymispaiva-on-mennyt
+  (with-redefs [pvm/nyt-suomessa (constantly (pvm/iso-8601->pvm "2026-04-02"))]
+    (is (= "Poistettu"
+          (#'varusteet/varusteen-toimenpide nil
+            {:paattyen "2026-04-01"
+             :ominaisuudet {:toimenpiteet []}}))
+      "Menneisyydessä päättynyt kohde pitää tulkita poistetuksi")
+    (is (= "Päivitetty"
+          (#'varusteet/varusteen-toimenpide nil
+            {:paattyen "2026-04-03"
+             :ominaisuudet {:toimenpiteet []}}))
+      "Tulevaisuudessa päättyvää kohdetta ei pidä tulkita vielä poistetuksi")))

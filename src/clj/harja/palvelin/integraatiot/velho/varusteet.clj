@@ -213,8 +213,8 @@
         toimenpiteet (:toimenpiteet ominaisuudet)
         poistettu? (and paattyen
                      (pvm/sama-tai-jalkeen?
-                       (pvm/iso-8601->pvm paattyen)
-                       (pvm/nyt-suomessa)))]
+                       (pvm/nyt-suomessa)
+                       (pvm/iso-8601->pvm paattyen)))]
     (if (seq toimenpiteet)
       (do
         (when (< (count toimenpiteet) 1)
@@ -225,7 +225,7 @@
           (first toimenpiteet)))
       (cond
         (seq valimaiset-toimenpiteet) (yhdista-valimaiset-toimenpiteet-stringiksi db valimaiset-toimenpiteet)
-        (some? poistettu?) "Poistettu"
+        poistettu? "Poistettu"
         (or
           (and (nil? version-voimassaolo) alkaen (not poistettu?))
           (and alkaen version-alku (not version-loppu) (not poistettu?))) "Lisätty"
