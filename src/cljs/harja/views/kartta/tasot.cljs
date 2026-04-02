@@ -48,7 +48,7 @@
             [harja.tiedot.urakka.toteumat.materiaalitoteumat-kartalla :as materiaalitoteumat-kartalla]
             [harja.tiedot.urakka.tienumerot-kartalla :as tienumerot-kartalla]
             [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as talvihoitoreitit])
-  
+
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -128,28 +128,33 @@
   piirretään pienemmällä zindexillä." :const true}
   oletus-zindex 4)
 
-(defn- organisaation-geometria [piirrettava]
-  (let [{:keys [stroke] :as alue} (:alue piirrettava)]
+(defn- organisaation-geometria [vari-map
+                                {:keys [elynumero alue id type valittu] :as piirrettava}]
+  (let [{:keys [stroke] :as alue} alue]
     (when (map? alue)
       (update-in piirrettava
-                 [:alue]
-                 assoc
-                 :fill (if (:valittu piirrettava) false true)
-                 :stroke (if stroke
-                           stroke
-                           (when (or (:valittu piirrettava)
-                                     (= :silta (:type piirrettava)))
-                             {:width 3}))
-                 :color (or (:color alue)
-                            (nth varit/kaikki (mod (:id piirrettava)
-                                                   (count varit/kaikki))))
-                 :zindex (or (:zindex alue)
-                             (case (:type piirrettava)
-                               :hy (kartan-asioiden-z-indeksit :hallintayksikko)
-                               :ur (kartan-asioiden-z-indeksit :urakka)
-                               :pohjavesialueet (kartan-asioiden-z-indeksit :pohjavesialueet)
-                               :sillat (kartan-asioiden-z-indeksit :sillat)
-                               oletus-zindex))))))
+        [:alue]
+        assoc
+        :fill (if valittu false true)
+        :stroke (if stroke
+                  stroke
+                  (when (or valittu
+                          (= :silta type))
+                    {:width 3}))
+        :color (or (:color alue)
+                 (if elynumero
+                   ;; Elyjen värit, sekoittaa värejä id:n mukaan, jotta eri Elyillä on eri värit
+                   (nth varit/elinvoima-varit (mod id
+                                                (count varit/elinvoima-varit)))
+                   ;; Urakkakohtaiset värit, nämä sekoitetaan aiemmassa kutsuvassa funktiossa
+                   (get vari-map id)))
+        :zindex (or (:zindex alue)
+                  (case type
+                    :hy (kartan-asioiden-z-indeksit :hallintayksikko)
+                    :ur (kartan-asioiden-z-indeksit :urakka)
+                    :pohjavesialueet (kartan-asioiden-z-indeksit :pohjavesialueet)
+                    :sillat (kartan-asioiden-z-indeksit :sillat)
+                    oletus-zindex))))))
 
 (def urakkarajan-selite
   {:teksti "Urakkaraja",
@@ -170,7 +175,7 @@
     nil
 
     (and (#{:ilmoitukset} sivu)
-         (nil? v-ur))
+      (nil? v-ur))
     [(assoc v-hal :valittu true)]
 
     (and (#{:ilmoitukset} sivu) v-ur)
@@ -180,8 +185,8 @@
     ;; urakan varsinaiset tiet. Ylläpitourakan rajat piirretään vaan näiden teiden ympärille,
     ;; joten jos tiet piirretään jo kartalle, ovat rajat täysin turhaa informaatiota.
     (and (#{:kohdeluettelo-paallystys :kohdeluettelo-paikkaus} valilehti)
-         (some? v-hal)
-         (some? v-ur))
+      (some? v-hal)
+      (some? v-ur))
     nil
 
     ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
@@ -193,31 +198,41 @@
     (nil? v-ur)
     (vec (concat [(assoc v-hal
                     :valittu true)]
-                 urakat-kartalla))
+           urakat-kartalla))
 
     ;; Valittu urakka, mitä näytetään?
     :default [(assoc v-ur
                 :valittu true)]))
 
+(defn- urakan-id->variksi-uniikki
+  "Sekoittaa värejä id:n mukaan, jotta näkyville urakoille tulee uniikki väri
+  Tämä on 'Valitse hallintayksikön urakka' -näkymälle"
+  [piirrettavat]
+  (let [idt (->> piirrettavat
+              (keep :id)
+              distinct)]
+    (zipmap idt (cycle varit/kaikki))))
+
 (def urakat-ja-organisaatiot-kartalla
   (reaction
-    (with-meta
-      (into []
-           (keep organisaation-geometria)
-           (urakat-ja-organisaatiot-kartalla*
-             @hal/vaylamuodon-hallintayksikot
-             @nav/valittu-hallintayksikko
-             @nav/valittu-urakka
-             (@reitit/url-navigaatio :sivu)
-             (nav/valittu-valilehti (@reitit/url-navigaatio :sivu))
-             @nav/urakat-kartalla))
-      ; Selite mustille urakkarajoille tilannekuvassa
-      {:selitteet
-       (if (and
-             (= :tilannekuva (@reitit/url-navigaatio :sivu))
-             @nav/tilannekuvassa-alueita-valittu?)
-         #{urakkarajan-selite}
-         #{})})))
+    (let [piirrettavat (urakat-ja-organisaatiot-kartalla*
+                         @hal/vaylamuodon-hallintayksikot
+                         @nav/valittu-hallintayksikko
+                         @nav/valittu-urakka
+                         (@reitit/url-navigaatio :sivu)
+                         (nav/valittu-valilehti (@reitit/url-navigaatio :sivu))
+                         @nav/urakat-kartalla)
+          vari-map (urakan-id->variksi-uniikki piirrettavat)]
+      (with-meta
+        (into []
+          (keep #(organisaation-geometria vari-map %))
+          piirrettavat)
+        {:selitteet
+         (if (and
+               (= :tilannekuva (@reitit/url-navigaatio :sivu))
+               @nav/tilannekuvassa-alueita-valittu?)
+           #{urakkarajan-selite}
+           #{})}))))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
@@ -234,7 +249,7 @@
 (defn- aseta-opacity [taso opacity]
   (with-meta taso
     (merge (meta taso)
-           {:opacity opacity})))
+      {:opacity opacity})))
 
 (declare tasojen-nakyvyys-atomit)
 
@@ -285,8 +300,8 @@
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
   ([avain geometria taso]
    (assert (and (map? geometria)
-                (contains? geometria :alue))
-           "Geometrian tulee olla mäpissä :alue avaimessa!")
+             (contains? geometria :alue))
+     "Geometrian tulee olla mäpissä :alue avaimessa!")
    (swap! (taso geometrioiden-atomit) assoc avain geometria)))
 
 (defn poista-geometria!
@@ -309,10 +324,10 @@
   ([nimi] (taso nimi nimi))
   ([nimi z-index]
    (nakyvat-geometriat-z-indeksilla @(geometrioiden-atomit nimi)
-                                    @(tasojen-nakyvyys-atomit nimi)
-                                    (if (number? z-index)
-                                      z-index
-                                      (kartan-asioiden-z-indeksit z-index))))
+     @(tasojen-nakyvyys-atomit nimi)
+     (if (number? z-index)
+       z-index
+       (kartan-asioiden-z-indeksit z-index))))
   ([nimi z-index opacity]
    (aseta-opacity
      (taso nimi z-index)
@@ -361,16 +376,16 @@
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
-                      (inc oletus-zindex))
+         (inc oletus-zindex))
        :infopaneelin-merkki (aseta-z-index (vec (vals @(geometrioiden-atomit :infopaneelin-merkki)))
-                                           (+ oletus-zindex 2))
+                              (+ oletus-zindex 2))
        :talvihoitoreitit (taso :talvihoitoreitit)}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
-     (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
+      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
-              (map (fn [[tason-nimi tason-sisalto]]
-                     {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
-                   @(geometrioiden-atomit :tilannekuva)))))))
+          (map (fn [[tason-nimi tason-sisalto]]
+                 {tason-nimi (aseta-z-index tason-sisalto (kartan-asioiden-z-indeksit tason-nimi))})
+            @(geometrioiden-atomit :tilannekuva)))))))
 
 (def tasojen-nakyvyys-atomit
   {:organisaatio (atom true)
@@ -417,9 +432,9 @@
 
 (defn- nykyiset-karttatasot* [atomit nimet-set]
   (->> atomit
-       (filter (comp deref val))
-       (filter (comp nimet-set key))
-       (map key)))
+    (filter (comp deref val))
+    (filter (comp nimet-set key))
+    (map key)))
 
 (def nykyiset-karttatasot (partial nykyiset-karttatasot* tasojen-nakyvyys-atomit +karttatasot+))
 
@@ -429,16 +444,16 @@
    nimi-taso-map
    filter-fn]
   (->> aktiiviset-tasot-nimet-set
-       (remove ei-halutut-tasot-set)
-       (keep nimi-taso-map)
-       (filter filter-fn)))
+    (remove ei-halutut-tasot-set)
+    (keep nimi-taso-map)
+    (filter filter-fn)))
 
 (defn aktiiviset-nakymien-tasot []
   (aktiiviset-nakymien-tasot*
-           (nykyiset-karttatasot)
-           +yleiset-tasot+
-           @geometriat-kartalle
-           taso/aktiivinen?))
+    (nykyiset-karttatasot)
+    +yleiset-tasot+
+    @geometriat-kartalle
+    taso/aktiivinen?))
 
 (defn taso-paalle! [nimi]
   (log "Karttataso päälle: " (pr-str nimi))
