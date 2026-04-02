@@ -211,11 +211,15 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
         // Siirry Paikkaukset päätabille
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
-        // Käydään alatabit läpi
         cy.get('[data-cy="tabs-taso2-Paallystysurakoiden paikkaukset"]').click()
         cy.contains('ELY').should('exist')
-        cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+        
+        // Avaa toteumat
+        cy.get('[data-cy="tabs-taso2-Kohteiden toteumat"]').click();
+        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+        cy.wait(1000);
         cy.contains('Toteuman tieosoite').should('exist')
+        
     })
 
     it("Avaa Välikatselmus", function () {
