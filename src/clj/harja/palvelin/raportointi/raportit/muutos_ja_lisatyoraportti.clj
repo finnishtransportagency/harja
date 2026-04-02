@@ -265,7 +265,7 @@
     [[:otsikko-heading "Tavoitehinnan muutokset"]
      [:teksti (str urakka-nimi " | Aikaväli: " aikajakso)]
      [:taulukko {:viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Tavoitehinnan oikaisut"}
+                 :sheet-nimi "Tavoitehinnan muutokset"}
       [{:leveys 7 :otsikko "Muutos"}
        {:leveys 15 :otsikko "Perustelu"}
        {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
