@@ -30,12 +30,17 @@
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
            (org.apache.poi.ss.usermodel HorizontalAlignment)))
 
+;; ns-unmap varmistaa, että defmulti:n dispatch-funktio päivittyy REPLissä
+(ns-unmap *ns* 'muodosta-excel)
+
 (defmulti muodosta-excel
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
   (fn [elementti workbook]
-    (assert (raportti-domain/raporttielementti? elementti))
-    (first elementti)))
+    (when-not (raportti-domain/raporttielementti? elementti)
+      (log/warn "Elementti ei ole raporttielementti, ohitetaan: " (pr-str elementti)))
+    (when (raportti-domain/raporttielementti? elementti)
+      (first elementti))))
 
 (defmulti muodosta-solu
   "Raporttisolujen tyylittely täytyy Apache POI kirjaston takia tehdä niin,
@@ -204,8 +209,17 @@
 (defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
 
-(defmethod muodosta-solu :teksti [[_ teksti] solun-tyyli]
-  [teksti solun-tyyli])
+(defmethod muodosta-excel :teksti [[_ teksti] workbook]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (let [viimeinen (.getLastRowNum sheet)]
+                        (if (and (zero? viimeinen) (nil? (.getRow sheet 0)))
+                          0
+                          (inc viimeinen)))
+          tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})
+          rivi (.createRow sheet rivi-numero)
+          cell (.createCell rivi 0)]
+      (excel/set-cell! cell teksti)
+      (excel/set-cell-style! cell tyyli))))
 
 (defmethod muodosta-solu :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Se ei ole mahdollista Excelissä, joten tehdään
@@ -576,33 +590,57 @@
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
-(defmethod muodosta-excel :otsikko [[_ _] _] nil)
-(defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
-(defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
-;; Esimerkki erillisen otsikko/teksti kentän luomisesta exceliin. Nykyiset exceliin ensimmäiseksi lisättävät
-;; tekstikentät (esim laskutusyhteenvetojen perusluvun näyttäminen) eivät toimi, koska ne eivät olet :taulukko -elementin sisällä.
-;; Tällaisella rakenteella myös :taulukko -elementin ulkopuoliset tekstit saadaan exceliin.
-;; Tämä luo tällaisenaan vain uuden sheetin, joka ei ole optimaalista, koska sen :teksti -elementin
-;; kuuluisi olla samalla sheetillä kuin muutkin elementit. Joten se on nyt kommentoitu, mutta jätetty tähän esimerkiksi.
-#_ (defmethod muodosta-excel :teksti [[_ teksti] workbook]
-  (let [sheet (last (excel/sheet-seq workbook))
-        sheet (if sheet
-                sheet
-                (excel/add-sheet! workbook
-                  (WorkbookUtil/createSafeSheetName "Tyhja")))
-        rivi-numero (inc (.getLastRowNum sheet))
+(defn- luo-otsikko-rivi-sheetille
+  "Luo otsikkorivin viimeiselle sheetille. Jos sheettejä ei ole, ohitetaan.
+  Font-koko määrittää otsikon koon ja lihavointi on oletuksena päällä."
+  [workbook teksti font-koko]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (let [viimeinen (.getLastRowNum sheet)]
+                        ;; Jos sheet on tyhjä (lastRowNum 0 ja ei rivejä), aloitetaan riviltä 0
+                        ;; Muuten jätetään yksi tyhjä rivi ennen otsikkoa
+                        (if (and (zero? viimeinen) (nil? (.getRow sheet 0)))
+                          0
+                          (+ 2 viimeinen)))
+        tyyli (excel/create-cell-style! workbook {:font (font-otsikko font-koko)})
         rivi (.createRow sheet rivi-numero)
-        cell (.createCell rivi 0)
-        sarake-tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})]
-    (excel/set-cell! cell teksti)
-    (excel/set-cell-style! cell sarake-tyyli)))
+        solu (.createCell rivi 0)]
+    (excel/set-cell! solu teksti)
+    (excel/set-cell-style! solu tyyli))))
+
+(defmethod muodosta-excel :otsikko [[_ _] _] nil)
+
+(defmethod muodosta-excel :otsikko-title [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 18))
+
+(defmethod muodosta-excel :otsikko-heading [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 14))
+
+(defmethod muodosta-excel :otsikko-heading-small [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 12))
+
+(defn- lisaa-ajettu-teksti-ensimmaiselle-sheetille!
+  "Lisää 'Ajettu'-tekstin ensimmäisen sheetin viimeiselle riville.
+  Kutsutaan kaikkien elementtien kirjoituksen jälkeen."
+  [workbook nyt]
+  (when-let [sheet (first (excel/sheet-seq workbook))]
+    (let [viimeinen-rivi (inc (.getLastRowNum sheet))
+          rivi (.createRow sheet viimeinen-rivi)
+          cell (.createCell rivi 0)]
+      (excel/set-cell! cell (str "Ajettu " nyt)))))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
-        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
+        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)
+        ;; Tulostuspäivä
+        nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
+
     (doseq [elementti (remove nil? sisalto)]
-      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+      (if (raportti-domain/raporttielementti? elementti)
+        (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook)
+        (log/warn "Ohitetaan virheellinen excel-elementti (ei raporttielementti): " (pr-str elementti))))
+
+    (lisaa-ajettu-teksti-ensimmaiselle-sheetille! workbook nyt)
     ;; Käydään lopuksi koko excel läpi ja pakotetaan solujen koot automaattisesti 20% suuremmaksi, kuin 5.2.5 versio poi kirjastosta laskee
     (doseq [sheet (excel/sheet-seq workbook)]
       (let [sarake-maara (reduce (fn [maksimi i]

@@ -180,7 +180,7 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko} raportti))
+  (#{:suolasakko :muutos-ja-lisatyoraportti} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]

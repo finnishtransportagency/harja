@@ -6,6 +6,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
+            [harja.kyselyt.kulut :as kulut-q]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [jeesql.core :refer [defqueries]]
@@ -14,7 +16,8 @@
 (defqueries "harja/palvelin/raportointi/raportit/muutos_ja_lisatyoraportti.sql"
   {:positional? true})
 
-(declare hae-aiempien-vuosien-pysyvat-muutokset-raportille hae-kirjallisesti-sovitut-muutokset-raportille)
+(declare hae-aiempien-vuosien-pysyvat-muutokset-raportille hae-kirjallisesti-sovitut-muutokset-raportille
+  hae-tavoitehinnan-oikaisut hae-lisatoiden-kulukohdistukset)
 
 (defn tyypin-nimi
   "Palauttaa muutostyypin selkokielisen nimen"
@@ -38,58 +41,269 @@
   [{:keys [tavoitehinnan_muutos talvisuola talvisuola_kerroin maara suunniteltu_maara] :as _rivi}]
   (let [tav-muutos (or tavoitehinnan_muutos 0)
         kayta-talvisuola-kerrointa? (and talvisuola
-                                        (> (or maara 0) 0)
-                                        (> (or suunniteltu_maara 0) (or maara 0)))]
+                                      (> (or maara 0) 0)
+                                      (> (or suunniteltu_maara 0) (or maara 0)))]
     (if kayta-talvisuola-kerrointa?
-      (* tav-muutos (or talvisuola_kerroin 0.7))            ;; Kovakoodattu luku. Mutta niin se on muutostenkin puolella. Olisi ehkä hyvä yhtenäistää.
+      (* tav-muutos (or talvisuola_kerroin 0.7)) ;; Kovakoodattu luku. Mutta niin se on muutostenkin puolella. Olisi ehkä hyvä yhtenäistää.
       tav-muutos)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  (log/info "Suoritetaan muutos- ja lisätyöraportti parametreilla: " (pr-str parametrit))
-  (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :koko-maa)
-        otsikko (raportin-otsikko
-                  (case konteksti
-                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    :koko-maa "KOKO MAA")
-                  "Muutos- ja lisätyöraportti" alkupvm loppupvm)
+(defn muodosta-muutosten-yhteenveto
+  "Muutosten yhteenveto on speksattu HTML raportissa sellaiseksi, ettei sitä voida toteuttaa PDF tai Excel formaatissa.
+  Päätellään siis kasittelija parametrista, että millainen osio renderöidään."
+  [db urakka-id urakka-nimi alkupvm loppupvm urakan-tiedot maaramuutokset
+   hoitokauden-alkuvuosi kasittelija]
+  (let [;; Hoitovuoden alun indeksikorjattu tavoitehinta budjettisuunnittelun kautta
+        budjettitavoite (budjetti-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (:tavoitehinta-indeksikorjattu budjettitavoite) 0)
 
-        ;; 1. Kirjallisesti sovitut muutokset
-        muutokset (when urakka-id
-                    (hae-kirjallisesti-sovitut-muutokset-raportille
-                      db {:urakka-id urakka-id
-                          :alkupvm alkupvm
-                          :loppupvm loppupvm}))
+        ;; Kirjallisesti sovitut muutokset - hyödynnetään samaa hakua kuin kirjalliset muutokset -osiossa
+        kirjallisesti-sovitut-muutokset (hae-kirjallisesti-sovitut-muutokset-raportille
+                                          db {:urakka-id urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})
+        kirjallisesti-sovitut-yht (reduce + 0 (map muutoksen-tavoitehinnan-muutos kirjallisesti-sovitut-muutokset))
+
+        maaramuutokset-yht (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
+
+        rahavaraukset (when urakka-id
+                        (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi))
+        rahavaraus-yhteenveto (first (filter #(= (:id %) :yhteenveto) rahavaraukset))
+        rahavaraukset-yht (or (:tavoitehinnan-muutos rahavaraus-yhteenveto) 0)
+
+        toteumiin-perustuvat-yht (+ maaramuutokset-yht rahavaraukset-yht)
+
+        ;; Yhteensä
+        yhteensa (+ hoitovuoden-alun-indeksikorjattu-tavoitehinta
+                   kirjallisesti-sovitut-yht
+                   toteumiin-perustuvat-yht)
+
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+
+        ;; Laskutusraja
+        hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) alkupvm)
+        laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id
+                                                                      :hoitokausinro hoitovuosinro}))
+        laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
+        laskutusraja-hoitovuoden-alussa (or (:laskutusraja laskutusraja-rivi) 0)
+        ;; Laskutusrajan automaattiset tarkistukset = kirjallisesti sovitut + toteumiin perustuvat muutokset
+        laskutusrajan-tarkistukset (+ kirjallisesti-sovitut-yht toteumiin-perustuvat-yht)
+        tarkistettu-laskutusraja (+ laskutusraja-hoitovuoden-alussa laskutusrajan-tarkistukset)]
+
+    (if (= kasittelija :excel)
+      ;; Excel raportteihin tulee vain tavalliset taulukot
+      (concat
+        [[:otsikko-heading "Muutosten yhteenveto"]
+         [:taulukko {:otsikko "Muutosten vaikutus tavoitehintaan"
+                     :viimeinen-rivi-yhteenveto? true
+                     :sheet-nimi "Muutosten yhteenveto"}
+          [{:leveys 20 :otsikko ""}
+           {:leveys 5 :otsikko "€" :fmt :raha}]
+          [{:rivi (rivi "Hoitovuoden alun indeksikorjattu tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)}
+           {:rivi (rivi "Kirjallisesti sovitut muutokset" kirjallisesti-sovitut-yht)}
+           {:rivi (rivi "Toteumiin perustuvat muutokset" toteumiin-perustuvat-yht)}
+           {:lihavoi? true
+            :korosta-hennosti? true
+            :rivi (rivi "Yhteensä" yhteensa)}]]]
+
+        ;; Laskutusrajan taulukko näytetään vain, jos laskutusraja on käytössä
+        (when laskutusraja-kaytossa?
+          [[:taulukko {:otsikko "Muutosten vaikutus laskutusrajaan"
+                       :viimeinen-rivi-yhteenveto? true
+                       :sheet-nimi "Laskutusraja"}
+            [{:leveys 20 :otsikko ""}
+             {:leveys 5 :otsikko "€" :fmt :raha}]
+            [{:rivi (rivi "Laskutusraja hoitovuoden alussa" laskutusraja-hoitovuoden-alussa)}
+             {:rivi (rivi "Laskutusrajan automaattiset tarkistukset" laskutusrajan-tarkistukset)}
+             {:lihavoi? true
+              :korosta-hennosti? true
+              :rivi (rivi "Tarkistettu laskutusraja" tarkistettu-laskutusraja)}]]]))
+
+      ;; HTML raporttiin tulee hieno sininen tausta ja kaksi vierekkäistä laatikkoa
+      [[:otsikko-heading "Muutosten yhteenveto"]
+       [:display-flex
+        [:sininen-laatikko {:otsikko "Muutosten vaikutus tavoitehintaan"}
+         [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
+           :arvo hoitovuoden-alun-indeksikorjattu-tavoitehinta :fmt :raha}
+          {:avain "Kirjallisesti sovitut muutokset"
+           :arvo kirjallisesti-sovitut-yht :fmt :raha}
+          {:avain "Toteumiin perustuvat muutokset"
+           :arvo toteumiin-perustuvat-yht :fmt :raha}
+          {:avain "Yhteensä"
+           :arvo yhteensa :fmt :raha :lihavoi? true}]]
+
+        [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
+         [{:avain "Laskutusraja hoitovuoden alussa"
+           :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
+          {:avain "Laskutusrajan automaattiset tarkistukset"
+           :arvo laskutusrajan-tarkistukset :fmt :raha}
+          {:avain "Tarkistettu laskutusraja"
+           :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]]]])))
+
+(defn muodosta-kirjalliset-muutokset [db urakka-id urakka-nimi alkupvm loppupvm]
+  (let [muutokset (hae-kirjallisesti-sovitut-muutokset-raportille db {:urakka-id urakka-id
+                                                                      :alkupvm alkupvm
+                                                                      :loppupvm loppupvm})
         muutosrivit (mapv (fn [m]
                             (rivi (tyypin-nimi (:tyyppi m))
-                                  (or (:syy m) "")
-                                  (pvm/pvm (:voimassa_alkaen m))
-                                  (muutoksen-tavoitehinnan-muutos m)))
-                          muutokset)
+                              (or (:syy m) "")
+                              (pvm/pvm (:voimassa_alkaen m))
+                              (muutoksen-tavoitehinnan-muutos m)))
+                      muutokset)
         muutokset-yhteensa (reduce + 0 (map muutoksen-tavoitehinnan-muutos muutokset))
         muutokset-yhteensarivi [{:lihavoi? true
                                  :korosta-hennosti? true
                                  :rivi (rivi "Yhteensä" "" "" muutokset-yhteensa)}]
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+    [[:taulukko {:otsikko "Kirjallisesti sovitut muutokset"
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Kirjallisesti sovitut"}
+      [{:leveys 10 :otsikko "Tyyppi"}
+       {:leveys 15 :otsikko "Muutoksen syy"}
+       {:leveys 5 :otsikko "Voimassa alkaen"}
+       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+      (into [] (concat muutosrivit muutokset-yhteensarivi))]]))
 
-        ;; 2. Aikaisempien vuosien pysyvien muutosten vaikutukset
-        aiemmat-pysyvat (when urakka-id
-                          (hae-aiempien-vuosien-pysyvat-muutokset-raportille
-                            db {:urakka-id urakka-id
-                                :alkupvm alkupvm}))
+(defn muodosta-aiempien-vuosien-muutokset [db urakka-id alkupvm]
+  (let [aiemmat-pysyvat (hae-aiempien-vuosien-pysyvat-muutokset-raportille
+                          db {:urakka-id urakka-id
+                              :alkupvm alkupvm})
         aiemmat-rivit (mapv (fn [m]
                               (rivi (or (:syy m) "Pysyvä muutos")
-                                    (pvm/pvm (:voimassa_alkaen m))
-                                    (or (:kustannusvaikutusten-summa m) 0)))
-                            aiemmat-pysyvat)
+                                (pvm/pvm (:voimassa_alkaen m))
+                                (or (:kustannusvaikutusten-summa m) 0)))
+                        aiemmat-pysyvat)
         aiemmat-yhteensa (reduce + 0 (map #(or (:kustannusvaikutusten-summa %) 0) aiemmat-pysyvat))
         aiemmat-yhteensarivi [{:lihavoi? true
                                :korosta-hennosti? true
-                               :rivi (rivi "Yhteensä" "" aiemmat-yhteensa)}]
+                               :rivi (rivi "Yhteensä" "" aiemmat-yhteensa)}]]
 
-        ;; 3. Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
-        hoitokauden-alkuvuosi (pvm/vuosi alkupvm)
+    [:taulukko {:otsikko "Aikaisempien vuosien pysyvien muutosten vaikutukset"
+                :viimeinen-rivi-yhteenveto? true
+                :sheet-nimi "Aiemmat pysyvät muutokset"}
+     [{:leveys 15 :otsikko "Muutoksen syy"}
+      {:leveys 5 :otsikko "Voimassa alkaen"}
+      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+     (into [] (concat aiemmat-rivit aiemmat-yhteensarivi))]))
+
+(defn muodosta-tehtava-ja-maaratoteuma-muutokset
+  "Vastaavanlainen taulukko, kuin muutos -sivulla."
+  [db urakka-id alkupvm loppupvm maaramuutokset]
+  (let [;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
+
+        maaramuutosrivit (mapv (fn [r]
+                                 (rivi (or (:tehtava r) "")
+                                   (or (:yksikko r) "")
+                                   (or (:syy r) "")
+                                   (:suunniteltu_maara r)
+                                   (or (:maara r) 0)
+                                   (or (:maaramuutos r) 0)
+                                   (or (:kirjatut_kulut_summa r) 0)
+                                   (laske-tavoitehinnan-muutos r)))
+                           maaramuutokset)
+        maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
+        maaramuutokset-yhteensarivi [{:lihavoi? true
+                                      :korosta-hennosti? true
+                                      :rivi (rivi "Yhteensä" "" "" "" "" "" "" maaramuutokset-yhteensa)}]]
+    [:taulukko {:otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
+                :viimeinen-rivi-yhteenveto? true
+                :sheet-nimi "Tehtävä- ja määrämuutokset"}
+     [{:leveys 10 :otsikko "Tehtävä"}
+      {:leveys 4 :otsikko "Yksikkö"}
+      {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}
+      {:leveys 4 :otsikko "Suunniteltu määrä"}
+      {:leveys 4 :otsikko "Toteutunut määrä"}
+      {:leveys 4 :otsikko "Määrämuutos (+/-)"}
+      {:leveys 5 :otsikko "Kohdistetut kulut (€)" :fmt :raha}
+      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+     (into [] (concat maaramuutosrivit maaramuutokset-yhteensarivi))]))
+
+(defn muodosta-rahavarausten-muutokset [db urakka-id hoitokauden-alkuvuosi]
+  (let [;; Rahavarausten muutokset
+        rahavaraukset (when urakka-id
+                        (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi))
+        ;; Viimeinen rivi on yhteenveto (:id :yhteenveto)
+        rahavaraus-datarivit (filterv #(not= (:id %) :yhteenveto) rahavaraukset)
+        rahavaraus-yhteenveto (first (filter #(= (:id %) :yhteenveto) rahavaraukset))
+        rahavarausrivit (mapv (fn [r]
+                                (rivi (or (:nimi r) "")
+                                  (or (:syy r) "")
+                                  (or (:summa-indeksikorjattu r) 0)
+                                  (or (:toteumat r) 0)
+                                  (or (:tavoitehinnan-muutos r) 0)))
+                          rahavaraus-datarivit)
+        rahavaraukset-yhteensarivi [{:lihavoi? true
+                                     :korosta-hennosti? true
+                                     :rivi (rivi "Yhteensä"
+                                             ""
+                                             (or (:summa-indeksikorjattu rahavaraus-yhteenveto) 0)
+                                             (or (:toteumat rahavaraus-yhteenveto) 0)
+                                             (or (:tavoitehinnan-muutos rahavaraus-yhteenveto) 0))}]]
+    [:taulukko {:otsikko "Rahavarausten muutokset"
+                :viimeinen-rivi-yhteenveto? true
+                :sheet-nimi "Rahavarausten muutokset"}
+     [{:leveys 10 :otsikko "Rahavaraus"}
+      {:leveys 10 :otsikko "Muutoksen syy"}
+      {:leveys 5 :otsikko "Suunniteltu määrä (€)" :fmt :raha}
+      {:leveys 5 :otsikko "Toteutunut määrä (€)" :fmt :raha}
+      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+     (into [] (concat rahavarausrivit rahavaraukset-yhteensarivi))]))
+
+(defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi]
+  (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
+                                                 :alkupvm alkupvm})
+        oikaisurivit (mapv (fn [r]
+                             (rivi
+                               (or (:otsikko r) "")
+                               (or (:syy r) "")
+                               (or (:tavoitehinnan_muutos r) 0)))
+                       oikaisut)
+        oikaisut-yhteensa (reduce + 0 (map #(or (:tavoitehinnan_muutos %) 0) oikaisut))
+        oikaisut-yhteensarivi [{:lihavoi? true
+                                :korosta-hennosti? true
+                                :rivi (rivi "Yhteensä" "" oikaisut-yhteensa)}]
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+    [[:otsikko-heading "Tavoitehinnan muutokset"]
+     [:teksti (str urakka-nimi " | Aikaväli: " aikajakso)]
+     [:taulukko {:viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Tavoitehinnan oikaisut"}
+      [{:leveys 7 :otsikko "Muutos"}
+       {:leveys 15 :otsikko "Perustelu"}
+       {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+      (into [] (concat oikaisurivit oikaisut-yhteensarivi))]]))
+
+(defn muodosta-lisatoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi]
+  (let [lisatyot (hae-lisatoiden-kulukohdistukset db {:urakka-id urakka-id
+                                                      :alkupvm alkupvm
+                                                      :loppupvm loppupvm})
+        lisatyorivit (mapv (fn [r]
+                             (rivi (or (pvm/pvm (:ajankohta r)) "")
+                               (or (:toimenpide r) "")
+                               (or (:lisatieto r) "")
+                               (or (:summa r) 0)))
+                       lisatyot)
+        lisatyot-yhteensa (reduce + 0 (map #(or (:summa %) 0) lisatyot))
+        lisatyot-yhteensarivi [{:lihavoi? true
+                                :korosta-hennosti? true
+                                :rivi (rivi "Lisätyöt yhteensä" "" "" lisatyot-yhteensa)}]
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+    [[:otsikko-heading "Lisätöiden kulukohdistukset"]
+     [:teksti urakka-nimi]
+     [:teksti aikajakso]
+     [:taulukko {:viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Lisätyöt"}
+      [{:leveys 3 :otsikko "Lasku pvm"}
+       {:leveys 5 :otsikko "Toimenpide"}
+       {:leveys 10 :otsikko "Lisätieto"}
+       {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+      (into [] (concat lisatyorivit lisatyot-yhteensarivi))]]))
+
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm kasittelija] :as parametrit}]
+  (log/info "Suoritetaan muutos- ja lisätyöraportti parametreilla: " (pr-str parametrit))
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        raportin-otsikko "Muutos- ja lisätyöraportti"
+        hoitokauden-alkuvuosi (pvm/vuosi alkupvm) ;; Kun raportti on vain hoitokauden ajalta, niin hoitokauden alkupvm on aina validi
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         maaramuutokset (when urakka-id
                          (muutos-kyselyt/hae-tehtava-maaramuutokset
                            db {:urakka urakka-id
@@ -98,80 +312,45 @@
                                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                :tehtava nil
                                :tehtavaryhma nil
-                               :laskenta-automatiikka? true}))
-        maaramuutosrivit (mapv (fn [r]
-                                 (rivi (or (:tehtava r) "")
-                                       (or (:yksikko r) "")
-                                       (or (:syy r) "")
-                                       (:suunniteltu_maara r)
-                                       (or (:maara r) 0)
-                                       (or (:maaramuutos r) 0)
-                                       (or (:kirjatut_kulut_summa r) 0)
-                                       (laske-tavoitehinnan-muutos r)))
-                               maaramuutokset)
-        maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
-        maaramuutokset-yhteensarivi [{:lihavoi? true
-                                      :korosta-hennosti? true
-                                      :rivi (rivi "Yhteensä" "" "" "" "" "" "" maaramuutokset-yhteensa)}]
+                               :laskenta-automatiikka? true}))]
+    (into [:raportti {:nimi raportin-otsikko
+                      :orientaatio :landscape
+                      :urakan-nimi (:nimi urakan-tiedot)
+                      :aikajakso aikajakso
+                      :otsikon-koko :iso
+                      :raportin-yleiset-tiedot {:raportin-nimi raportin-otsikko}
+                      :alkupvm alkupvm
+                      :loppupvm loppupvm}
+           [:jakaja nil]]
+      (concat
 
-        ;; 4. Rahavarausten muutokset
-        rahavaraukset (when urakka-id
-                        (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi))
-        ;; Viimeinen rivi on yhteenveto (:id :yhteenveto)
-        rahavaraus-datarivit (filterv #(not= (:id %) :yhteenveto) rahavaraukset)
-        rahavaraus-yhteenveto (first (filter #(= (:id %) :yhteenveto) rahavaraukset))
-        rahavarausrivit (mapv (fn [r]
-                                (rivi (or (:nimi r) "")
-                                      (or (:syy r) "")
-                                      (or (:summa-indeksikorjattu r) 0)
-                                      (or (:toteumat r) 0)
-                                      (or (:tavoitehinnan-muutos r) 0)))
-                              rahavaraus-datarivit)
-        rahavaraukset-yhteensarivi [{:lihavoi? true
-                                     :korosta-hennosti? true
-                                     :rivi (rivi "Yhteensä"
-                                                 ""
-                                                 (or (:summa-indeksikorjattu rahavaraus-yhteenveto) 0)
-                                                 (or (:toteumat rahavaraus-yhteenveto) 0)
-                                                 (or (:tavoitehinnan-muutos rahavaraus-yhteenveto) 0))}]]
-    [:raportti {:nimi "Muutos- ja lisätyöraportti"
-                :orientaatio :landscape}
-     [:taulukko {:otsikko (str otsikko " — Kirjallisesti sovitut muutokset")
-                 :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Kirjallisesti sovitut"}
-      [{:leveys 10 :otsikko "Tyyppi"}
-       {:leveys 15 :otsikko "Muutoksen syy"}
-       {:leveys 5 :otsikko "Voimassa alkaen"}
-       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
-      (into [] (concat muutosrivit muutokset-yhteensarivi))]
+        ;; Raportin toinen otsikko
+        [[:otsikko-title "Tavoitehinnan muutokset"]]
+        [[:teksti (str (:nimi urakan-tiedot) " | Aikaväli: " aikajakso)]]
 
-     [:taulukko {:otsikko "Aikaisempien vuosien pysyvien muutosten vaikutukset"
-                 :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Aiemmat pysyvät muutokset"}
-      [{:leveys 15 :otsikko "Muutoksen syy"}
-       {:leveys 5 :otsikko "Voimassa alkaen"}
-       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
-      (into [] (concat aiemmat-rivit aiemmat-yhteensarivi))]
+        ;; Jos muutoshallinta on päällä, niin muutosten yhteenveto esitetään ensin. Esitystapa vaihtelee html/pdf/excel formaattien välillä hieman
+        (when (:muutosten_hallinta urakan-parametrit)
+          (muodosta-muutosten-yhteenveto db urakka-id (:nimi urakan-tiedot) alkupvm loppupvm urakan-tiedot
+            maaramuutokset hoitokauden-alkuvuosi kasittelija))
 
-     [:taulukko {:otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
-                 :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Tehtävä- ja määrämuutokset"}
-      [{:leveys 10 :otsikko "Tehtävä"}
-       {:leveys 4 :otsikko "Yksikkö"}
-       {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}
-       {:leveys 4 :otsikko "Suunniteltu määrä"}
-       {:leveys 4 :otsikko "Toteutunut määrä"}
-       {:leveys 4 :otsikko "Määrämuutos (+/-)"}
-       {:leveys 5 :otsikko "Kohdistetut kulut (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
-      (into [] (concat maaramuutosrivit maaramuutokset-yhteensarivi))]
+        ;; Jos muutokset on päällä - Kirjallisesti sovitut muutokset
+        (when (:muutosten_hallinta urakan-parametrit)
+          (muodosta-kirjalliset-muutokset db urakka-id (:nimi urakan-tiedot) alkupvm loppupvm))
 
-     [:taulukko {:otsikko "Rahavarausten muutokset"
-                 :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Rahavarausten muutokset"}
-      [{:leveys 10 :otsikko "Rahavaraus"}
-       {:leveys 10 :otsikko "Muutoksen syy"}
-       {:leveys 5 :otsikko "Suunniteltu määrä (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Toteutunut määrä (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
-      (into [] (concat rahavarausrivit rahavaraukset-yhteensarivi))]]))
+        (when (:muutosten_hallinta urakan-parametrit)
+          [(muodosta-aiempien-vuosien-muutokset db urakka-id alkupvm)])
+
+        (when (:muutosten_hallinta urakan-parametrit)
+          [(muodosta-tehtava-ja-maaratoteuma-muutokset db urakka-id alkupvm loppupvm maaramuutokset)])
+
+        (when (:muutosten_hallinta urakan-parametrit)
+          [(muodosta-rahavarausten-muutokset db urakka-id hoitokauden-alkuvuosi)])
+
+        ;; Kaikilla urakoilla ei ole muutosten hallintaa käytössä, joten näytä nämä osiot vain, jos se on käytössä.
+        ;; Näytetään heille tavoitehinnan oikaisut ja lisätöiden kulukohdistukset
+        (when-not (:muutosten_hallinta urakan-parametrit)
+          (muodosta-tavoitehinnan-oikaisut db urakka-id alkupvm loppupvm (:nimi urakan-tiedot)))
+
+        ;; Lisätöiden kulukohdistukset
+        (when-not (:muutosten_hallinta urakan-parametrit)
+          (muodosta-lisatoiden-kulukohdistukset db urakka-id alkupvm loppupvm (:nimi urakan-tiedot)))))))

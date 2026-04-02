@@ -19,6 +19,7 @@
             [harja.domain.raportointi :as raportti-domain]
             [harja.loki :refer [log]]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.aikajana :as aikajana]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]))
@@ -353,20 +354,42 @@
     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
     data]])
 
+(defmethod muodosta-html :sininen-laatikko [[_ {:keys [otsikko]} data]]
+  (let [viimeinen-idx (dec (count data))]
+    (into [:div.sininen-laatikko
+           [:h3 otsikko]]
+      (map-indexed
+        (fn [i rivi]
+          ^{:key (str "sininen-laatikko-rivi-" i)}
+          [:div
+           (when (= i viimeinen-idx)
+             [:hr])
+           [:div.flex-row
+            [:div (:avain rivi)]
+            [:div.tasaa-oikealle (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
+        data))))
+
+(defmethod muodosta-html :display-flex [[_ & data]]
+  [:div.display-flex.display-container
+   (doall
+     (map-indexed
+       (fn [i d]
+         ^{:key (str "display-flex-" i)}
+         [muodosta-html d])
+       data))])
+
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}
          (mapcat identity otsikot-ja-arvot)))
 
-(defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
-  (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
-  [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
-   
-   ;; Raporteille mahdollista nyt antaa isompi otsikko
+(defn- muodosta-raportin-otsikko [raportin-tunnistetiedot]
+  ;; Raporteille mahdollista nyt antaa isompi otsikko
+  [:div
    (when (:nimi raportin-tunnistetiedot)
      (cond
        (and
-        (= (:otsikon-koko raportin-tunnistetiedot) :iso)
-        (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
+         (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+         (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
        [:h1 (:nimi raportin-tunnistetiedot)]
 
        (= (:piilota-otsikko? raportin-tunnistetiedot) true)
@@ -377,7 +400,16 @@
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
-   
+
+   (when (and (:urakan-nimi raportin-tunnistetiedot) (:aikajakso raportin-tunnistetiedot))
+     [:p {:style {:line-height "0.45rem" :font-size "0.85rem" :color " #5C5C5C"}}
+      (str (:urakan-nimi raportin-tunnistetiedot) " | Aikaväli: " (:aikajakso raportin-tunnistetiedot) " | Ajettu: "
+        (pvm/pvm-opt (pvm/nyt)) " " (pvm/aika (pvm/nyt)))])])
+
+(defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
+  (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
+  [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
+   (muodosta-raportin-otsikko raportin-tunnistetiedot)
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
