@@ -1,15 +1,13 @@
 (ns harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti
   "Muutos- ja lisätyöraportti"
   (:require [harja.palvelin.raportointi.raportit.yleinen :as yleinen
-             :refer [raportin-otsikko rivi]]
+             :refer [rivi]]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.kyselyt.kulut :as kulut-q]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]))
 

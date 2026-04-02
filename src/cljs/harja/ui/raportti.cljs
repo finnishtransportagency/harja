@@ -364,7 +364,7 @@
           [:div
            (when (= i viimeinen-idx)
              [:hr])
-           [:div.flex-row
+           [:div.flex-row (when (:lihavoi? rivi) {:style {:font-weight "bold"}})
             [:div (:avain rivi)]
             [:div.tasaa-oikealle (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
         data))))
