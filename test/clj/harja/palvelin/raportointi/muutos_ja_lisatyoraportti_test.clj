@@ -3,7 +3,6 @@
             [harja.domain.kulut :as domain-kulut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.testiapurit :as apurit]
@@ -55,35 +54,34 @@
   "Poistaa kaikki muutoksiin liittyvät tiedot testidatakannasta Kajaanin 2025-2030 urakalle."
   [urakka-id]
   (let [muutos-ehto (str " WHERE muutos IN (SELECT id FROM mhu_muutos WHERE urakka = " urakka-id ")")]
-    ;; 1. Rahavarausmuutossyyt
+    ;; Rahavarausmuutossyyt
     (u (str "DELETE FROM mhu_muutos_rahavarausmuutoksen_syy WHERE urakka = " urakka-id))
 
-    ;; 2. Liittymätaulut
+    ;; Liitetaulut
     (u (str "DELETE FROM mhu_muutos_liite_historia" muutos-ehto))
     (u (str "DELETE FROM mhu_muutos_liite" muutos-ehto))
 
-    ;; 3. Kustannusvaikutukset ja tehtävä-määräluettelo (historia ensin)
+    ;; Kustannusvaikutukset ja tehtävä-määräluettelo (historia ensin)
     (u (str "DELETE FROM mhu_muutos_kustannusvaikutus_historia" muutos-ehto))
     (u (str "DELETE FROM mhu_muutos_kustannusvaikutus" muutos-ehto))
     (u (str "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo_historia" muutos-ehto))
     (u (str "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo" muutos-ehto))
 
-    ;; 4. Tehtävätiedot
+    ;; Tehtävätiedot
     (u (str "DELETE FROM mhu_muutos_tehtava_tiedot WHERE urakka = " urakka-id))
 
-    ;; 5. Muutos-kulu linkitys — ENSIN historia, sitten päätaulu
+    ;; uutos-kulu linkitys — ENSIN historia, sitten päätaulu
     ;;    TÄMÄ TÄYTYY TAPAHTUA ENNEN kulu-taulun poistoa, koska mhu_muutos_kulu.kulu REFERENCES kulu(id)
     (u (str "DELETE FROM mhu_muutos_kulu_historia" muutos-ehto))
     (u (str "DELETE FROM mhu_muutos_kulu" muutos-ehto))
 
-    ;; 6. Kulut — nyt vasta kun mhu_muutos_kulu ei enää viittaa kulu-riveihin
+    ;; Kulut — nyt vasta kun mhu_muutos_kulu ei enää viittaa kulu-riveihin
     (u (str "UPDATE kulu_kohdistus SET poistettu = TRUE WHERE kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id ")"))
     (u (str "UPDATE kulu SET poistettu = TRUE WHERE urakka = " urakka-id))
 
-    ;; 7. Muutokset itse (historia ensin)
+    ;; Muutokset
     (u (str "DELETE FROM mhu_muutos_historia WHERE urakka = " urakka-id))
     (u (str "UPDATE mhu_muutos set poistettu = TRUE WHERE urakka = " urakka-id))))
-
 
 (defn- hae-kayttaja-id []
   (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'")))
@@ -95,7 +93,7 @@
                     LIMIT 1"))))
 
 (defn- luo-kirjallinen-muutos!
-  "Luo kirjallisesti sovitun muutoksen testidataan."
+  "Luo kirjallisesti sovitun muutoksen testidatan."
   [urakka-id tyyppi syy voimassa-alkaen]
   (let [kayttaja-id (hae-kayttaja-id)]
     (i (str "INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, syy, luoja, luotu, poistettu)
@@ -116,21 +114,21 @@
         tpi-id (hae-tpi-hoidon-johto urakka-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         jjh-ryhma-id (ffirst (q "SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus'"))
-        ;; 1. Luo muutos
+        ;; Luo muutos
         muutos-id (i (str "INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, syy, luoja)
                            VALUES (1, " urakka-id ", '" voimassa-alkaen "',
                                    'johto-ja-hallintokorvaus', '" syy "', " kayttaja-id ")"))
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
-        ;; 2. Luo kulu
+        ;; Luo kulu
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, lisatieto, koontilaskun_kuukausi)
                          VALUES (%s, '%s', %s, %s, 'JJH-testikulu', '%s')"
                      summa erapaiva urakka-id kayttaja-id koontilaskun-kuukausi))]
-    ;; 3. Luo kulukohdistus
+    ;; Luo kulukohdistus äsken luodulle kululle
     (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma,
                                          maksueratyyppi, luoja, tyyppi, tavoitehintainen)
              VALUES (0, " kulu-id ", " summa ", " tpi-id ", " jjh-ryhma-id ",
                      'kokonaishintainen', " kayttaja-id ", 'jjh-muutos', true)"))
-    ;; 4. Linkitä muutos kuluun
+    ;; Linkitä muutos aiemmin luotu muutos äsken luotuun kuluun
     (u (str "INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
              VALUES (1, " muutos-id ", " kulu-id ")"))
     muutos-id))
@@ -158,7 +156,7 @@
         (drop 2 vastaus)))
 
 ;; ============================================================
-;; Taulukko 1: Kirjallisesti sovitut muutokset
+;; Testataan Kirjallisesti sovitut muutokset
 ;; ============================================================
 
 (deftest kirjallisesti-sovitut-muutokset-happy-case
@@ -201,7 +199,7 @@
         (is (= 0 yhteensa-arvo) "Yhteensä on 0 kun dataa ei ole")))))
 
 ;; ============================================================
-;; Taulukko 2: Aikaisempien vuosien pysyvien muutosten vaikutukset
+;; Testataan: Aikaisempien vuosien pysyvien muutosten vaikutukset
 ;; ============================================================
 
 (deftest aiempien-vuosien-pysyvat-muutokset-happy-case
@@ -242,7 +240,7 @@
         (is (= 0 yhteensa-arvo) "Yhteensä on 0 kun dataa ei ole")))))
 
 ;; ============================================================
-;; Taulukko 3: Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
+;; Testataan: Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
 ;; ============================================================
 
 (deftest tehtava-maaramuutokset-happy-case
@@ -293,9 +291,7 @@
         _ (siivoa-muutosdata! urakka-id)
         ;; Poistetaan myös tehtävämäärät jotta taulukko on tyhjä
         _ (u (str "DELETE FROM urakka_tehtavamaara WHERE urakka = " urakka-id " AND \"hoitokauden-alkuvuosi\" = 2029"))
-        vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2029)
-                                 (hoitokausi-loppupvm 2029))
+        vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2029) (hoitokausi-loppupvm 2029))
         taulukko (hae-taulukko vastaus "määrätoteumiin perustuvat")]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -371,3 +367,108 @@
       (let [yhteensarivi (first rivit)
             yht-muutos (nth (:rivi yhteensarivi) 4)]
         (is (= 0 yht-muutos) "Yhteensä on 0 kun dataa ei ole")))))
+
+;; ============================================================
+;; Vanha-tyyppinen urakka (muutosten_hallinta = false) - 2024 ja aiemmin
+;; ============================================================
+
+(defn- hae-vanha-urakka-id
+  "Palauttaa Oulun MHU 2019-2024 urakan id:n (muutosten_hallinta = false, koska alkupvm < 2025-01-01)."
+  []
+  (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
+
+(defn- hae-taulukko-sheet-nimella
+  "Hakee raportin taulukon sheet-nimen perusteella. Käytetään vanhan tyyppisten urakoiden
+   osioille, joissa taulukolla ei ole :otsikko-avainta vaan :sheet-nimi."
+  [vastaus sheet-nimi-osa]
+  (some (fn [elementti]
+          (when (and (vector? elementti)
+                     (= :taulukko (first elementti))
+                     (.contains (str (:sheet-nimi (second elementti))) sheet-nimi-osa))
+            elementti))
+        (drop 2 vastaus)))
+
+(defn- siivoa-vanha-urakka-raportti-data!
+  "Poistaa tavoitehinnan oikaisut ja lisätyökulut vanhan tyyppisen urakan testidatasta."
+  [urakka-id]
+  (u (str "DELETE FROM tavoitehinnan_oikaisu WHERE \"urakka-id\" = " urakka-id))
+  (u (str "UPDATE kulu_kohdistus SET poistettu = TRUE
+           WHERE tyyppi = 'lisatyo'
+             AND kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id ")"))
+  (u (str "UPDATE kulu SET poistettu = TRUE
+           WHERE urakka = " urakka-id
+          " AND id IN (SELECT kk.kulu FROM kulu_kohdistus kk
+                        JOIN kulu k ON kk.kulu = k.id
+                       WHERE kk.tyyppi = 'lisatyo'
+                         AND k.urakka = " urakka-id ")")))
+
+(deftest vanha-urakka-tavoitehinnan-oikaisut-nakyvat
+  (let [urakka-id (hae-vanha-urakka-id)
+        _ (siivoa-vanha-urakka-raportti-data! urakka-id)
+        kayttaja-id (hae-kayttaja-id)
+        ;; Lisää tavoitehinnan oikaisu hoitokaudelle 2020
+        _ (u (str "INSERT INTO tavoitehinnan_oikaisu
+                   (\"urakka-id\", \"muokkaaja-id\", muokattu, otsikko, selite, summa, \"hoitokauden-alkuvuosi\", poistettu)
+                   VALUES (" urakka-id ", " kayttaja-id ", NOW(),
+                           'Testioikaisu', 'Syystulvat venyttivät urakkaa', 15000, 2020, false)"))
+        vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2020) (hoitokausi-loppupvm 2020))
+        taulukko (hae-taulukko-sheet-nimella vastaus "Tavoitehinnan muutokset")]
+
+    ;; Tavoitehinnan oikaisut -taulukko löytyy
+    (is (some? taulukko) "Tavoitehinnan oikaisut -taulukko löytyy vanhalla urakalla")
+    (let [rivit (apurit/taulukon-rivit taulukko)
+          datarivit (filter vector? rivit)
+          yhteensarivi (last rivit)]
+      (is (= 2 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
+
+      ;; Tarkista datarivin syy ja summa
+      (when (seq datarivit)
+        (let [rivi (first datarivit)]
+          (is (= "Syystulvat venyttivät urakkaa" (nth rivi 1)) "Oikaisun selite on oikein")
+          (is (= 15000M (nth rivi 2)) "Oikaisun summa on 15000")))
+      ;; Tarkista yhteensä
+      (is (= 15000M (nth (:rivi yhteensarivi) 2)) "Yhteensä on 15000"))
+    ;; Muutoshallinta-osiot EI näy vanhalla urakalla
+    (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut"))
+        "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla")
+    (is (nil? (hae-taulukko vastaus "Aikaisempien vuosien"))
+        "Aikaisempien vuosien -taulukko ei näy vanhalla urakalla")))
+
+(deftest vanha-urakka-lisatyot-nakyvat
+  (let [urakka-id (hae-vanha-urakka-id)
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        _ (siivoa-vanha-urakka-raportti-data! urakka-id)
+        kayttaja-id (hae-kayttaja-id)
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
+        erapaiva (pvm/->pvm (str "15.11.2020"))
+        koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
+        ;; Luo kulu
+        kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, koontilaskun_kuukausi)
+                            VALUES (%s, '%s', %s, %s, '%s')"
+                     7500 erapaiva urakka-id kayttaja-id koontilaskun-kuukausi))]
+    ;; Luo lisätyö-kohdistus
+    (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, maksueratyyppi,
+                                         luoja, tyyppi, lisatyon_lisatieto)
+             VALUES (0, " kulu-id ", 7500, " tpi-id ", 'kokonaishintainen',
+                     " kayttaja-id ", 'lisatyo', 'Testilisätyö: lumitöiden lisäkustannus')"))
+    ;; Suorita raportti
+    (let [vastaus (suorita-raportti urakka-id
+                                   (hoitokausi-alkupvm 2020)
+                                   (hoitokausi-loppupvm 2020))
+          taulukko (hae-taulukko-sheet-nimella vastaus "Lisätyöt")]
+      ;; Lisätyöt-taulukko löytyy
+      (is (some? taulukko) "Lisätyöt-taulukko löytyy vanhalla urakalla")
+      (let [rivit (apurit/taulukon-rivit taulukko)
+            datarivit (filter vector? rivit)
+            yhteensarivi (last rivit)]
+        (is (= 2 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
+        ;; Tarkista datarivin lisätieto ja summa
+        (when (seq datarivit)
+          (let [rivi (first datarivit)]
+            (is (= "Testilisätyö: lumitöiden lisäkustannus" (nth rivi 2)) "Lisätyön lisätieto on oikein")
+            (is (= 7500M (nth rivi 3)) "Lisätyön summa on 7500")))
+        ;; Tarkista yhteensä
+        (is (= 7500M (nth (:rivi yhteensarivi) 3)) "Yhteensä on 7500"))
+      ;; Muutoshallinta-osiot EI näy vanhalla urakalla
+      (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut"))
+          "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla"))))
