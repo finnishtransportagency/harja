@@ -42,11 +42,6 @@
 (defn- valimaisen-toimenpiteen-hakupalvelu-vastaus []
   (slurp "test/resurssit/velho/varusteet/valimaisten-varustetoimenpiteiden-vastaus-urakalle-korjaus.json"))
 
-(defn- puutteellinen-varusteen-historian-hakupalvelu-vastaus []
-  (let [osumat (->> (json/read-str (slurp "test/resurssit/velho/varusteet/varusteen-historia.json") :key-fn keyword)
-                 (mapv #(dissoc % :sijainti :alkusijainti :loppusijainti :keskilinjageometria)))]
-    (json/write-str {:osumat osumat})))
-
 (defn- pyyntobody->string [body]
   (cond
     (string? body) body
@@ -181,25 +176,12 @@
       (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
       (is (= odotettu-varuste (first vastaus)))))))
 
-  (deftest hae-varusteen-historia-fallback-kohdehistoriaan-test
+  (deftest hae-varusteen-historia-palauttaa-tyhjan-listan-kun-hakupalvelu-ei-palauta-osumia-test
     (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-         +velho-varusteet-hakurajapinta-url+ (json/write-str {:osumat []})
-         (str +velho-api-juuri+ "/varusterekisteri/api/v1/historia/kohde/" +tienvarsikaluste-oid+) (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")]
+         +velho-varusteet-hakurajapinta-url+ (json/write-str {:osumat []})]
       (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
                                 :kohdeluokka "tienvarsikalusteet"})]
-    (is (= 2 (count vastaus)))
-    (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
-      (is (= odotettu-varuste (first vastaus))))))
-
-(deftest hae-varusteen-historia-fallback-kohdehistoriaan-jos-hakupalveluvastaus-on-puutteellinen-test
-  (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-                   +velho-varusteet-hakurajapinta-url+ (puutteellinen-varusteen-historian-hakupalvelu-vastaus)
-                   (str +velho-api-juuri+ "/varusterekisteri/api/v1/historia/kohde/" +tienvarsikaluste-oid+) (slurp "test/resurssit/velho/varusteet/varusteen-historia.json")]
-    (let [vastaus (varusteet/hae-varusteen-historia (:velho-integraatio jarjestelma) {:ulkoinen-oid +tienvarsikaluste-oid+
-                                                                                      :kohdeluokka "tienvarsikalusteet"})]
-      (is (= 2 (count vastaus)))
-      (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
-      (is (= odotettu-varuste (first vastaus))))))
+        (is (= [] vastaus)))))
 
 (deftest hae-varusteen-historia-sisaltaa-valimaisen-toimenpiteen-valimaiselle-kohteelle-test
   (let [pyynnot (atom [])
