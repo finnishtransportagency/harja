@@ -570,9 +570,35 @@
 (defn jarjesta-varusteen-historiaversiot [varusteet]
   (sort-by varusteen-historian-jarjestysavain #(compare %2 %1) varusteet))
 
+(defn- historiaversiolla-eksplisiittinen-toimenpide? [{:keys [ominaisuudet paattyen valimaiset-toimenpiteet]}]
+  (or (seq (:toimenpiteet ominaisuudet))
+      (seq valimaiset-toimenpiteet)
+      (and paattyen
+           (pvm/sama-tai-jalkeen?
+             (pvm/iso-8601->pvm paattyen)
+             (pvm/nyt-suomessa)))))
+
+(defn- paivita-historiarivin-oletustoimenpide [rivi historiaversio vanhin-versio?]
+  (if (historiaversiolla-eksplisiittinen-toimenpide? historiaversio)
+    rivi
+    (assoc rivi :toimenpide (if vanhin-versio? "Lisätty" "Päivitetty"))))
+
+(defn- paivita-historiarivien-oletustoimenpiteet [rivit historiaversiot]
+  (let [vanhin-implisiittinen-indeksi (->> historiaversiot
+                                        (keep-indexed (fn [indeksi historiaversio]
+                                                        (when-not (historiaversiolla-eksplisiittinen-toimenpide? historiaversio)
+                                                          indeksi)))
+                                        last)]
+    (mapv (fn [indeksi rivi historiaversio]
+            (paivita-historiarivin-oletustoimenpide rivi historiaversio (= indeksi vanhin-implisiittinen-indeksi)))
+      (range)
+      rivit
+      historiaversiot)))
+
 (defn- muodosta-varusteen-historian-rivit [db varusteet]
-  (mapv (partial varuste-velhosta->harja db)
-    (jarjesta-varusteen-historiaversiot varusteet)))
+  (let [jarjestetyt-historiaversiot (jarjesta-varusteen-historiaversiot varusteet)
+        historiarivit (mapv (partial varuste-velhosta->harja db) jarjestetyt-historiaversiot)]
+    (paivita-historiarivien-oletustoimenpiteet historiarivit jarjestetyt-historiaversiot)))
 
 (defn- taydenna-varusteen-kohdeluokka [lahde varuste]
   (if (:kohdeluokka varuste)

@@ -119,6 +119,9 @@
    :tyyppi "Testikalustetyyppi"
    :ulkoinen-oid "1.2.345.678.9.0.12.345.678901234"})
 
+(def odotettu-historiavaruste
+  (assoc odotettu-varuste :toimenpide "Päivitetty"))
+
   (deftest muodosta-varusteen-historian-hakupalvelu-payload-test
     (let [payload (#'varusteet/muodosta-varusteen-historian-hakupalvelu-payload varusteet/tienvarsikalusteet +tienvarsikaluste-oid+)]
       (is (= {:tyyppi "kohdeluokkahaku"
@@ -173,8 +176,9 @@
       (is (= ["joukossa" ["yleiset/perustiedot" "oid"] [+tienvarsikaluste-oid+]]
         (:lauseke pyynto)))
       (is (= 2 (count vastaus)))
+      (is (= ["Päivitetty" "Lisätty"] (mapv :toimenpide vastaus)))
       (is (apply = (map #(dissoc % :alkupvm :loppupvm :tr-alkuetaisyys :toimenpide) vastaus)))
-      (is (= odotettu-varuste (first vastaus)))))))
+      (is (= odotettu-historiavaruste (first vastaus)))))))
 
   (deftest hae-varusteen-historia-palauttaa-tyhjan-listan-kun-hakupalvelu-ei-palauta-osumia-test
     (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
@@ -341,3 +345,15 @@
             db
             ["varustetoimenpide/vtp-a" "varustetoimenpide/vtp-b"]))
       "Myös välimäisten toimenpiteiden yhdistetyn tekstin pitää fallbackata raakakoodeihin")))
+
+(deftest historiarivien-oletustoimenpide-kayttaa-vanhinta-implisiittista-versiota
+  (let [historiaversiot [{:ominaisuudet {:toimenpiteet []}}
+                         {:ominaisuudet {:toimenpiteet ["varustetoimenpide/korjaustest"]}}
+                         {:ominaisuudet {:toimenpiteet []}}]
+        historiarivit [{:toimenpide "Lisätty"}
+                        {:toimenpide "Korjaus"}
+                        {:toimenpide "Lisätty"}]
+        tulos (#'varusteet/paivita-historiarivien-oletustoimenpiteet historiarivit historiaversiot)]
+    (is (= ["Päivitetty" "Korjaus" "Lisätty"] (mapv :toimenpide tulos)))
+    (is (= "Lisätty" (:toimenpide (last tulos)))
+      "Ensimmäinen implisiittinen historiaversio pitää tulkita lisäykseksi, vaikka vanhempi eksplisiittinen versio olisi olemassa")))
