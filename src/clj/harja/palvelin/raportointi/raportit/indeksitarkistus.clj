@@ -125,7 +125,8 @@
                           (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))]
 
     (into []
-          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
+          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+                              :orientaatio :landscape}
                    varoitus-puuttuvista-indekseista
                    (if (and urakka-id (not indeksi-kaytossa?))
                      [:varoitusteksti "Urakassa ei käytetä indeksitarkistuksia."]

@@ -20,7 +20,6 @@
   [harja.palvelin.raportointi.raportit.vemtr]
   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
   [harja.palvelin.raportointi.raportit.materiaali]
-  [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
@@ -226,7 +225,7 @@
 
    {:nimi         :tyomaakokous
     :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto" :oletusarvo true}
-                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöt" :oletusarvo true}
+                   ;;    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöraportti" :oletusarvo true} Jätetään tässä vaiheessa pois, koska muutos- ja lisätyöraportti toinmii vain hoitovuoikohtaisesti
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti" :oletusarvo true}
@@ -292,10 +291,9 @@
     :suorita      #'harja.palvelin.raportointi.raportit.siltatarkastus/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
-
    {:nimi         :muutos-ja-lisatyoraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :konteksti    #{"urakka"} ;; Mahdollista näyttää vain urakkakohtaisesti, koska eri urakan alkuvuosina on erilaisen raportti
     :kuvaus       "Muutos- ja lisätyöraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti/suorita
     :urakkatyyppi #{:teiden-hoito}}
