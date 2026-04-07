@@ -295,7 +295,7 @@
   [:h1 teksti])
 
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
-  [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
+  [:h2 {:style (merge {:font-size "20px"} tyyli)} teksti])
 
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
   [:h1 {:style {:font-size "12px"}} teksti])

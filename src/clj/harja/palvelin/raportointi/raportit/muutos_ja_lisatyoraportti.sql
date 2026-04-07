@@ -33,7 +33,8 @@ ORDER BY m.tyyppi, m.voimassa_alkaen;
 SELECT m.id,
        m.syy,
        m.voimassa_alkaen,
-       COALESCE(SUM(mmk.summa), 0) AS "kustannusvaikutusten-summa"
+       COALESCE(SUM(mmk.summa), 0) AS "kustannusvaikutusten-summa",
+       COALESCE(indeksikorjaa(COALESCE(SUM(mmk.summa), 0), extract(YEAR from :alkupvm::DATE)::INTEGER, 10, :urakka-id::INTEGER), 0) AS "indeksikorjattu-summa"
 FROM ONLY mhu_muutos m
          JOIN mhu_muutos_kustannusvaikutus mmk ON m.id = mmk.muutos
 WHERE m.urakka = :urakka-id
