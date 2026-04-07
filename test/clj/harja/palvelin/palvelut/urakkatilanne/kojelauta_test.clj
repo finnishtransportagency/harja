@@ -396,7 +396,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :evk-idt #{}}))]
+                                                            :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= psu-evk-id (get-in vastaus [:evk_id])) "PSU EVK")
     (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")

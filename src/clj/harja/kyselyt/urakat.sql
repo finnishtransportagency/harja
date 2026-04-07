@@ -283,7 +283,8 @@ WHERE u.elinvoimakeskus_id = :hallintayksikko
                 'hallintayksikko'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
                 'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
                OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-                   :kayttajan_org_id = org.id)));
+                   :kayttajan_org_id = org.id)))
+ORDER BY u.id DESC;
 
 -- name: listaa-urakat-elinvoimakeskukselle
 -- Palauttaa listan annetun elinvoimakeskus (id) urakoista. Sisältää perustiedot ja geometriat.

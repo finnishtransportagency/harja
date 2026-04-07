@@ -86,6 +86,9 @@
 (defrecord HaeUrakanRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakanRahavarauksetEpaonnistui [vastaus])
 
+(defrecord HaeKaikkiTehtavaryhmat [hakuparametrit])
+(defrecord HaeKaikkiTehtavaryhmatOnnistui [vastaus])
+
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
 
 (def muu-tehtava
@@ -777,6 +780,23 @@
         ;; Aseta ainoa tehtävä valinnaksi
         (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
         app)))
+
+  HaeKaikkiTehtavaryhmat
+  (process-event [{:keys [hakuparametrit]} app]
+    (varmista-kasittelyjen-jarjestys
+      (tuck-apurit/post! :hae-kaikkien-tehtavaryhmien-nimet
+        {:urakka-id (:id hakuparametrit)}
+        {:onnistui ->HaeKaikkiTehtavaryhmatOnnistui
+         :epaonnistui ->KutsuEpaonnistui
+         :epaonnistui-parametrit [{:viesti "Tehtäväryhmien haku epäonnistui"}]
+         :paasta-virhe-lapi? true}))
+    (update-in app [:parametrit :haetaan] inc))
+
+  HaeKaikkiTehtavaryhmatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (update-in [:parametrit :haetaan] dec)
+      (assoc :kaikkien_tehtavaryhmien_nimet vastaus)))
 
   HaeTehtavatKaikilleKohdistuksille
   (process-event [{lomake :lomake} app]
