@@ -515,9 +515,7 @@
                   (q/paivita-yllapitokohteen-kohdeosien-sijainnit! db {:yllapitokohde yllapitokohde-id})
 
                   ;; Tarkistetaan että kaikilla osilla on sijainti ennen PK-laskentaa
-                  (let [osat-ilman-sijaintia (jdbc/query db ["SELECT id, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata
-                                                               FROM yllapitokohdeosa
-                                                               WHERE yllapitokohde = ? AND sijainti IS NULL AND poistettu = FALSE" yllapitokohde-id])]
+                  (let [osat-ilman-sijaintia (q/hae-ilman-sijaintia-olevat-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id})]
                     (when (seq osat-ilman-sijaintia)
                       (log/warn "Ylläpitokohteella " yllapitokohde-id " on osia joilla sijainti on NULL ennen PK-laskentaa: " (pr-str osat-ilman-sijaintia))))
 

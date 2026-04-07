@@ -1194,3 +1194,16 @@ WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallysteen-korjausluokka
 SELECT paivita_yllapitokohteen_korjausluokat(:id::INTEGER);
+
+-- name: hae-ilman-sijaintia-olevat-yllapitokohdeosat
+SELECT id,
+       tr_numero,
+       tr_alkuosa,
+       tr_alkuetaisyys,
+       tr_loppuosa,
+       tr_loppuetaisyys,
+       tr_ajorata
+FROM yllapitokohdeosa
+WHERE yllapitokohde = :yllapitokohde
+  AND sijainti IS NULL
+  AND poistettu = FALSE;
