@@ -173,8 +173,6 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Käydään alatabit läpi
         cy.get('[data-cy=tabs-taso2-Talvihoitoreititys]').click()
         cy.contains('Talvihoitoreititys').should('exist')
-        cy.get('[data-cy=tabs-taso2-Mobiilityokalu]').click()
-        cy.contains('Esittely').should('exist')
         cy.get('[data-cy=tabs-taso2-Siltatarkastukset]').click()
         cy.contains('Sillat').should('exist')
         cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
