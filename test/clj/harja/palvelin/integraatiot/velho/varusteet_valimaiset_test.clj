@@ -262,6 +262,7 @@
 (deftest tavoitetilan-oid-haku-ei-saa-rajata-kohdevarustetta-toimenpiteen-tieosoitteella
   (let [projektivaruste-oid (get-in (lue-fixture-datana "varusteiden-hakurajapinta-vastaus-projektivaruste.json")
                              [:osumat 0 :oid])
+        tieosoite-ehto ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}]
         {:keys [pyynnot]} (aja-varustehaku {:urakka-id 123
                                             :hoitokauden-alkuvuosi 2020
                                             :tie 99
@@ -274,15 +275,15 @@
     (is (= 3 (count pyynnot))
       "Hakuketjussa on edelleen kolme vaihetta myös tieosoitteella rajattaessa")
     (is (loytyyko-tarkka-ehto? eka
-          ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}])
+          tieosoite-ehto)
       "Välimäisten toimenpiteiden ensimmäisen haun pitää rajata toimenpiteet käyttäjän tieosoitteella")
     (is (loytyyko-tarkka-ehto? kolmas
-          ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}])
+          tieosoite-ehto)
       "Tavallista varustehakua saa edelleen rajata käyttöliittymän tieosoitteella")
     (is (loytyyko-tarkka-ehto? toinen
           ["joukossa" ["yleiset/perustiedot" "oid"] [projektivaruste-oid]])
       "Kohdevarusteen OID-haku kohdistuu edelleen oikeaan kohteeseen")
-    (is (not-any? #(= ["kohteen-tieosoite" {:tie 99 :osa 5 :etaisyys 555}] %)
+    (is (not-any? #(= tieosoite-ehto %)
           (tree-seq coll? seq toinen))
       "Kohdevarusteen OID-haku ei saa käyttää toimenpiteen tieosoitesuodatinta, koska kohdevarusteen osoite voi olla eri")))
 
