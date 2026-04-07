@@ -680,8 +680,8 @@
                            ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
                            ;; käsittely onnistunut
                            mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
-                           status-element (some (fn [elem] (when (= (:tag elem) :Status) elem)) purettu-vastauksen-data)
-                           status-state (get-in status-element [:attrs :state])
+                           status-state (some #(when (= (:tag %) :Status) (get-in % [:attrs :state]))
+                                             (:content (first purettu-vastauksen-data)))
                            failure? (or (= status-state "FAILURE")
                                         (not (str/blank? mahdollinen-virhe)))
                            status (if failure? 400 200)]
