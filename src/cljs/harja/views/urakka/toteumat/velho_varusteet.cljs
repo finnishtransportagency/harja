@@ -221,7 +221,7 @@
          (if (>= lkm v/+max-toteumat+)
            (str "(Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
            (str "(" lkm ")")))
-         :tunniste :rivi-id
+       :tunniste :rivi-id
        :luokat ["varuste-taulukko" "margin-top-32"]
        :tyhja (if haku-paalla
                 [ajax-loader "Haetaan varustetapahtumia..."]
