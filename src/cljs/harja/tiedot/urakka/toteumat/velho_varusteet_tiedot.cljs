@@ -44,7 +44,7 @@
                          (filter #(and
                                     (:otsikko %)
                                     (not= (.indexOf (.toLowerCase (:otsikko %))
-                                            (.toLowerCase teksti)) -1))
+                                                    (.toLowerCase teksti)) -1))
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
@@ -64,12 +64,12 @@
   (let [raakakoodi (when (string? toimenpide)
                      (last (str/split toimenpide #"/")))]
     (:id
-      (first
-        (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
-                  (or (= otsikko toimenpide)
-                    (= nimi raakakoodi)
-                    (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
-          toimenpiteet-nimikkeisto)))))
+     (first
+       (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
+                 (or (= otsikko toimenpide)
+                   (= nimi raakakoodi)
+                   (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
+         toimenpiteet-nimikkeisto)))))
 
 (defn hae-toimenpide-naytolle [toimenpide toimenpiteet-nimikkeisto]
   (let [raakakoodi (when (string? toimenpide)
