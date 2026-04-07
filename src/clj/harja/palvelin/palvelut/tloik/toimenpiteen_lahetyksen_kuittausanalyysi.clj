@@ -39,26 +39,35 @@
 	 :esimerkkitapahtumat (mapv muodosta-esimerkkitapahtuma
 														 (get esimerkkitapahtumat-ryhmittain (:ryhmaavain yhteenveto) []))})
 
+(defn- rajaa-yhteenvedot
+	[yhteenvedot]
+	(let [katkaistu (< ryhma-limit (count yhteenvedot))]
+		{:katkaistu katkaistu
+		 :palautettavat-yhteenvedot (if katkaistu
+															(take ryhma-limit yhteenvedot)
+															yhteenvedot)}))
+
+(defn- muodosta-vastaus
+	[yhteenvedot tilastot esimerkkitapahtumat]
+	(let [{:keys [katkaistu palautettavat-yhteenvedot]} (rajaa-yhteenvedot yhteenvedot)
+			esimerkkitapahtumat-ryhmittain (group-by :ryhmaavain esimerkkitapahtumat)]
+		{:ryhmat (mapv (partial muodosta-ryhma esimerkkitapahtumat-ryhmittain)
+									 palautettavat-yhteenvedot)
+		 :kasitellyt-rivit (:kasitellyt_rivit tilastot)
+		 :ohitetut-rivit (:ohitetut_rivit tilastot)
+		 :katkaistu katkaistu}))
+
 (defn hae-toimenpiteen-lahetyksen-kuittausanalyysi
 	[db kayttaja alkaen paattyen]
 	(oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
 	(let [hakuparametrit (muodosta-hakuparametrit alkaen paattyen)
 				yhteenvetohakuparametrit (assoc hakuparametrit :limit (inc ryhma-limit))
 				yhteenvedot (q/hae-duplikaattikuittausyhteenvedot db yhteenvetohakuparametrit)
-				katkaistu (< ryhma-limit (count yhteenvedot))
-				palautettavat-yhteenvedot (if katkaistu
-																	(take ryhma-limit yhteenvedot)
-																	yhteenvedot)
-				ryhmaavaimet (mapv :ryhmaavain palautettavat-yhteenvedot)
+				ryhmaavaimet (mapv :ryhmaavain (:palautettavat-yhteenvedot (rajaa-yhteenvedot yhteenvedot)))
 				tilastot (q/hae-duplikaattikuittausten-tilastot db hakuparametrit)
 				esimerkkitapahtumat (if (seq ryhmaavaimet)
 															(q/hae-duplikaattikuittausten-esimerkkitapahtumat
 																db
 																(assoc hakuparametrit :ryhmaavaimet ryhmaavaimet))
-															[])
-				esimerkkitapahtumat-ryhmittain (group-by :ryhmaavain esimerkkitapahtumat)]
-		{:ryhmat (mapv (partial muodosta-ryhma esimerkkitapahtumat-ryhmittain)
-									 palautettavat-yhteenvedot)
-		 :kasitellyt-rivit (:kasitellyt_rivit tilastot)
-		 :ohitetut-rivit (:ohitetut_rivit tilastot)
-		 :katkaistu katkaistu}))
+															[])]
+		(muodosta-vastaus yhteenvedot tilastot esimerkkitapahtumat)))

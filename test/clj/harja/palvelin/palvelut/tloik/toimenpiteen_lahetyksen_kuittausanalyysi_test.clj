@@ -1,8 +1,6 @@
 (ns harja.palvelin.palvelut.tloik.toimenpiteen-lahetyksen-kuittausanalyysi-test
   (:require [clojure.test :refer [deftest is]]
-            [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as kuittausanalyysi-q]
             [harja.palvelin.palvelut.tloik.toimenpiteen-lahetyksen-kuittausanalyysi :as kuittausanalyysi-palvelu]))
 
 (defn- duplikaattiyhteenveto
@@ -25,10 +23,8 @@
    :ulkoinenid ulkoinen-id
    :alkanut alkanut})
 
-(deftest hae-toimenpiteen-lahetyksen-kuittausanalyysi-katkaisee-haun-ryhmatasolla
-  (let [yhteenvetoparametrit (atom nil)
-        esimerkkiparametrit (atom nil)
-        yhteenvedot (vec (for [indeksi (range 0 1001)]
+(deftest muodosta-vastaus-katkaisee-haun-ryhmatasolla
+  (let [yhteenvedot (vec (for [indeksi (range 0 1001)]
                            (duplikaattiyhteenveto indeksi
                                                   "aloitus"
                                                   "harja"
@@ -44,38 +40,24 @@
                                              "harja"
                                              indeksi
                                              (str "msg-" indeksi)
-                                             #inst "2026-03-20T08:10:00.000-00:00")))]
-    (with-redefs [oikeudet/vaadi-lukuoikeus (fn [& _])
-                  kuittausanalyysi-q/hae-duplikaattikuittausyhteenvedot
-                  (fn [_db parametrit]
-                    (reset! yhteenvetoparametrit parametrit)
-                    yhteenvedot)
-                  kuittausanalyysi-q/hae-duplikaattikuittausten-tilastot
-                  (fn [_db _]
-                    {:kasitellyt_rivit 2500
-                     :ohitetut_rivit 12})
-                  kuittausanalyysi-q/hae-duplikaattikuittausten-esimerkkitapahtumat
-                  (fn [_db parametrit]
-                    (reset! esimerkkiparametrit parametrit)
-                    esimerkit)]
-      (let [vastaus (kuittausanalyysi-palvelu/hae-toimenpiteen-lahetyksen-kuittausanalyysi
-                      :db
-                      {:id 1}
-                      #inst "2026-03-20T00:00:00.000-00:00"
-                      #inst "2026-03-20T23:59:59.000-00:00")]
-        (is (= 1001 (:limit @yhteenvetoparametrit)) "Kysely hakee yhden ylimääräisen ryhmän katkaisun tunnistamiseksi")
-        (is (= 1000 (count (:ryhmat vastaus))))
-        (is (= 1000 (count (:ryhmaavaimet @esimerkkiparametrit))))
-        (is (= "0|aloitus|harja" (first (:ryhmaavaimet @esimerkkiparametrit))))
-        (is (= "999|aloitus|harja" (last (:ryhmaavaimet @esimerkkiparametrit))))
-        (is (= "harja" (-> vastaus :ryhmat first :kanava)))
-        (is (= 3 (-> vastaus :ryhmat first :kertyneet-lahetysvirheet)))
-        (is (= 1 (-> vastaus :ryhmat first :uniikit-kuittaajat)))
-        (is (= 2500 (:kasitellyt-rivit vastaus)))
-        (is (= 12 (:ohitetut-rivit vastaus)))
-        (is (true? (:katkaistu vastaus)))))))
+                                             #inst "2026-03-20T08:10:00.000-00:00")))
+        vastaus (#'kuittausanalyysi-palvelu/muodosta-vastaus
+                  yhteenvedot
+                  {:kasitellyt_rivit 2500
+                   :ohitetut_rivit 12}
+                  esimerkit)]
+    (is (= 1000 (count (:ryhmat vastaus))))
+    (is (= 0 (-> vastaus :ryhmat first :ilmoitusid)))
+    (is (= 999 (-> vastaus :ryhmat last :ilmoitusid)))
+    (is (= "harja" (-> vastaus :ryhmat first :kanava)))
+    (is (= 3 (-> vastaus :ryhmat first :kertyneet-lahetysvirheet)))
+    (is (= 1 (-> vastaus :ryhmat first :uniikit-kuittaajat)))
+    (is (= 1 (count (-> vastaus :ryhmat first :esimerkkitapahtumat))))
+    (is (= 2500 (:kasitellyt-rivit vastaus)))
+    (is (= 12 (:ohitetut-rivit vastaus)))
+    (is (true? (:katkaistu vastaus)))))
 
-(deftest hae-toimenpiteen-lahetyksen-kuittausanalyysi-sailyttaa-duplikaatit-ja-lahetysvirheet-kanavittain
+(deftest muodosta-vastaus-sailyttaa-duplikaatit-ja-lahetysvirheet-kanavittain
   (let [pgarray-sentinel (Object.)
         yhteenvedot [(duplikaattiyhteenveto 123 "aloitus" "harja" 4 2 1
                                             #inst "2026-03-10T08:00:00.000-00:00"
@@ -115,26 +97,15 @@
                           :esimerkkitapahtumat [{:tapahtuma-id 200
                                                  :alkanut #inst "2026-03-11T09:10:00.000-00:00"
                                                  :ulkoinen-id "msg-4"}]}]]
-    (with-redefs [oikeudet/vaadi-lukuoikeus (fn [& _])
-                  konversio/pgarray->vector
+    (with-redefs [konversio/pgarray->vector
                   (fn [arvo]
                     (when (identical? arvo pgarray-sentinel)
-                      ["msg-1" "msg-2"]))
-                  kuittausanalyysi-q/hae-duplikaattikuittausyhteenvedot
-                  (fn [_db _]
-                    yhteenvedot)
-                  kuittausanalyysi-q/hae-duplikaattikuittausten-tilastot
-                  (fn [_db _]
-                    {:kasitellyt_rivit 15
-                     :ohitetut_rivit 1})
-                  kuittausanalyysi-q/hae-duplikaattikuittausten-esimerkkitapahtumat
-                  (fn [_db _]
-                    esimerkit)]
-      (let [vastaus (kuittausanalyysi-palvelu/hae-toimenpiteen-lahetyksen-kuittausanalyysi
-                      :db
-                      {:id 1}
-                      #inst "2026-03-10T00:00:00.000-00:00"
-                      #inst "2026-03-11T23:59:59.000-00:00")]
+                      ["msg-1" "msg-2"]))]
+      (let [vastaus (#'kuittausanalyysi-palvelu/muodosta-vastaus
+                      yhteenvedot
+                      {:kasitellyt_rivit 15
+                       :ohitetut_rivit 1}
+                      esimerkit)]
         (is (= odotetut-ryhmat (:ryhmat vastaus)))
         (is (= 15 (:kasitellyt-rivit vastaus)))
         (is (= 1 (:ohitetut-rivit vastaus)))
