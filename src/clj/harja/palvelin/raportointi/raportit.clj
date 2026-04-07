@@ -291,7 +291,7 @@
     :suorita      #'harja.palvelin.raportointi.raportit.siltatarkastus/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
-   {:nimi         :muutos-ja-lisatyoraportti
+   {:nimi         :muutos-ja-lisatyot
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"} ;; Mahdollista näyttää vain urakkakohtaisesti, koska eri urakan alkuvuosina on erilaisen raportti
     :kuvaus       "Muutos- ja lisätyöraportti"
