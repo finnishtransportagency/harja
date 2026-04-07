@@ -28,7 +28,7 @@
      [:div.col-md-4
       (if (nil? hallintayksikot)
         [yleiset/ajax-loader "Elinvoimakeskuksia haetaan..."]
-        [:span
+        [:div
          [:h5.haku-otsikko "Valitse elinvoimakeskus"]
          [:div
           ^{:key "hy-lista"}
