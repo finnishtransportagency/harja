@@ -12,7 +12,7 @@ describe('Osion vahvistaminen', function () {
 
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomen elinvoimakeskus', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomen', indeksit);
 
         // Valitse ensimmäinen hoitovuosi
         cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {

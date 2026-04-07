@@ -14,7 +14,7 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.viewport(1100, 2000)
         cy.intercept('POST', '_/maarien-toteutumien-toimenpiteiden-tehtavat').as('hae-tehtavat');
         cy.visit("/")
-        cy.contains('.haku-lista-item', 'Lapin elinvoimakeskus').click()
+        cy.contains('.haku-lista-item', 'Lapin').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi

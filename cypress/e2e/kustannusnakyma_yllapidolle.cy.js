@@ -35,7 +35,7 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         cy.visit("/");
 
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Suomen elinvoimakeskus').click();
+        cy.contains('.haku-lista-item', 'Pohjois-Suomen').click();
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');
