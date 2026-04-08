@@ -171,7 +171,7 @@
                         loppupvm
                         haun-loppupvm)
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
-                    laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
+                    laskutus-q/hae-laskutusyhteenvedon-tiedot-tuotekohtainen
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)
         jarjesta-fn (if (= "teiden-hoito" urakkatyyppi)
                       toimenpidekoodit/tuotteen-jarjestys-mhu

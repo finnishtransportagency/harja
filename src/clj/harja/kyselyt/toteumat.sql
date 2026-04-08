@@ -1355,7 +1355,7 @@ WHERE ((toteuma_muutostiedot_muokattu IS NOT NULL AND toteuma_muutostiedot_muoka
     OR (toteuma_muutostiedot_muokattu IS NULL AND toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP));
 
 -- name: siirra-toteumat-analytiikalle
-select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+select siirra_toteumat_analytiikalle(:alkuaika::TIMESTAMP WITH TIME ZONE, :loppuaika::TIMESTAMP WITH TIME ZONE);
 
 -- name: lisaa-toteumalle-jsonhash!
 UPDATE toteuma SET json_hash = :hash WHERE id = :id;
