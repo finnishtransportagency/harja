@@ -66,10 +66,10 @@ SELECT kk.lisatyon_lisatieto      AS lisatieto
      , COALESCE(SUM(kk.summa), 0) AS summa
      , tp.nimi                    AS toimenpide
      , MIN(k.erapaiva)            AS ajankohta
-FROM kulu_kohdistus kk
-         JOIN kulu k ON kk.kulu = k.id
-         JOIN toimenpideinstanssi tpi ON tpi.id = kk.toimenpideinstanssi
-         JOIN toimenpide tp ON tpi.toimenpide = tp.id
+ FROM kulu_kohdistus kk
+      JOIN kulu k ON kk.kulu = k.id
+      LEFT JOIN toimenpideinstanssi tpi ON tpi.id = kk.toimenpideinstanssi
+      LEFT JOIN toimenpide tp ON tpi.toimenpide = tp.id
 WHERE k.urakka = :urakka-id
   AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND k.poistettu IS NOT TRUE
@@ -77,3 +77,28 @@ WHERE k.urakka = :urakka-id
   AND kk.tyyppi = 'lisatyo'
 GROUP BY kk.lisatyon_lisatieto, tp.nimi
 ORDER BY MIN(k.erapaiva);
+
+-- name: hae-muutostoiden-kulukohdistukset
+-- Hakee urakan erillisrahoitettujen muutostöiden kulukohdistukset raporttia varten.
+-- Kulut linkittyvät muutoksiin kulu_kohdistus.muutos -kentän kautta.
+SELECT m.nimi                     AS muutostyon_nimi
+     , m.syy                      AS muutostyon_syy
+     , tp.nimi                    AS toimenpide
+     , COALESCE(SUM(kk.summa), 0) AS summa
+     , MIN(k.erapaiva)            AS ajankohta
+  FROM kulu_kohdistus kk
+       JOIN kulu k ON kk.kulu = k.id
+       LEFT JOIN toimenpideinstanssi tpi ON tpi.id = kk.toimenpideinstanssi
+       LEFT JOIN toimenpide tp ON tpi.toimenpide = tp.id
+       JOIN mhu_muutos m ON kk.muutos = m.id
+ WHERE k.urakka = :urakka-id
+   AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND k.poistettu IS NOT TRUE
+   AND kk.poistettu IS NOT TRUE
+   AND kk.tyyppi = 'erillisrahoitettu-muutos'
+   AND m.poistettu IS NOT TRUE
+   AND m.tyyppi = 'muutostyo'::MHU_MUUTOSTYYPPI
+   AND m.alityyppi = 'erillisrahoitus'::MHU_MUUTOS_ALITYYPPI
+ GROUP BY m.id, m.nimi, m.syy, tp.nimi
+ ORDER BY MIN(k.erapaiva);
+
