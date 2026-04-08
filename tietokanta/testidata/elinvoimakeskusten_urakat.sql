@@ -58,3 +58,8 @@ WHERE hallintayksikko = (select id from organisaatio where nimi = 'Sisävesiväy
 UPDATE urakka
 SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Meriväylät')
 WHERE hallintayksikko = (select id from organisaatio where nimi = 'Meriväylät');
+
+-- Varmistetaan, että Kokkolan urakka päätyy Pohjanmaan elinvoimakeskukseen, vaikka se tuotannossa kuuluikin Etelä-pohjanmaan elyyn
+UPDATE urakka
+SET elinvoimakeskus_id = (select id from organisaatio where nimi = 'Pohjanmaan elinvoimakeskus')
+WHERE nimi ilike '%Kokkola%' AND tyyppi in ('hoito','teiden-hoito');

@@ -99,3 +99,13 @@ UPDATE organisaatio
 SET alue = ST_GeomFromText(:alue) :: GEOMETRY
 WHERE tyyppi = 'elinvoimakeskus'
   AND lyhenne = :lyhenne;
+
+-- name: hae-elinvoimakeskus
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND id = :id;
+
+-- name: hae-elinvoimakeskus-nimella
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND nimi = :nimi;

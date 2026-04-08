@@ -39,7 +39,7 @@
                                                                :vesi "V"
                                                                :rata "R")))
         ;; Poista elinvoimakeskus sana nimestä, koska se toistaa itseään ja vie tilaa.
-        evkt (map #(update % :nimi (fn [nimi] (clojure.string/replace nimi #"(?i)elinvoimakeskus" ""))) evkt)]
+        evkt (map #(update % :nimi (fn [nimi] (clojure.string/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
     (into []
       (muunna-pg-tulokset :alue)
       evkt)))

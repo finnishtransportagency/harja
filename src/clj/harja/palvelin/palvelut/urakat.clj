@@ -11,6 +11,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.palvelin.palvelut.hankkeet :as hankkeet-palvelu]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
@@ -223,6 +224,16 @@
 (defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
   (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
   (let [urakat (oikeudet/kayttajan-urakat user)
+        elinvoimaskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
+        ;; Jos haetaan Pohjamaan elinvoimakeskuksen urakoita, niin näytetään myös Etelä-pohjanmaan elinvoimakeskuksen urakat.
+        ;; Eli riippumatta, haetaan eteläpohjanmaan tai pohjanmaan, niin aina haetaan molempien urakat
+        toinen-elinvoimakeskus-id (cond
+                                    (= (:nimi elinvoimaskus) "Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaan elinvoimakeskus"})))
+                                    (= (:nimi elinvoimaskus) "Etelä-Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaan elinvoimakeskus"})))
+                                    :else nil)
+         elinvoimakeskusidt (if toinen-elinvoimakeskus-id
+                               [elinvoimakeskusid toinen-elinvoimakeskus-id]
+                               [elinvoimakeskusid])
         organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
     (if (and (nil? organisaatio) (empty? urakat))
       (do
@@ -231,7 +242,7 @@
       (into []
         urakka-xf
         (q/listaa-urakat-elinvoimakeskukselle db
-          {:elinvoimakeskusid elinvoimakeskusid
+          {:elinvoimakeskusid elinvoimakeskusidt
            :kayttajan_org_id (:id organisaatio)
            :kayttajan_org_tyyppi organisaatiotyyppi
            :sallitut_urakat (if (empty? urakat)
