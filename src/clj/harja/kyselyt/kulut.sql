@@ -375,6 +375,22 @@ SELECT ut.laskutusraja,
  WHERE ut.urakka = :urakka-id
    AND ut.hoitokausi = :hoitokausinro;
 
+-- name: hae-urakan-alkuperainen_laskutusraja
+SELECT ut.laskutusraja_alkuperainen,
+       up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
+WHERE ut.urakka = :urakka-id
+  AND ut.hoitokausi = :hoitokausinro;
+
+-- name: paivita-urakan-laskutusraja!
+UPDATE urakka_tavoite
+SET laskutusraja = :laskutusraja,
+    muokattu     = CURRENT_TIMESTAMP,
+    muokkaaja    = :kayttaja
+WHERE urakka    = :urakka-id
+  AND hoitokausi = :hoitokausinro;
+
 -- name: hae-urakan-toteutuneet-kustannukset
 -- Hakee urakan toteutuneet kustannukset annetulta aikaväliltä
 -- Tehtäväryhmä haetaan tehtava-taulun kautta, jos sitä ei ole toteutuneet_kustannukset-taulussa
