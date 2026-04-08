@@ -297,7 +297,7 @@
      :rivi-id (or (:rivi-id varuste) (:oid varuste))
      :toimenpide-oid (:toimenpide-oid varuste)
      :kohdevarusteen-oid (or (:kohdevarusteen-oid varuste) (:oid varuste))
-    :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
+     :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
      :ulkoinen-oid (:oid varuste)}))
 
 (def valimaisesta-toimenpiteesta-kopioitavat-kentat
@@ -341,8 +341,8 @@
               (if-let [kohdevaruste (get kohdevarusteet-oidilla kohdevarusteen-oid)]
                 (valimainen-toimenpiderivi-velhosta->harja db kohdevaruste toimenpide)
                 (do
-                  (log/warn "Välimäiselle varustetoimenpiteelle ei löytynyt kohdevarustetta" {:toimenpide-oid (:oid toimenpide)
-                                                                                               :kohdevarusteen-oid kohdevarusteen-oid})
+                  (log/warn "Välimäiselle varustetoimenpiteelle ei löytynyt kohdevarustetta" {:toimenpide-oid (:oid toimenpide) 
+                                                                                              :kohdevarusteen-oid kohdevarusteen-oid})
                   nil))))
       toimenpiteet)))
 
