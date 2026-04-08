@@ -251,7 +251,7 @@
         {loppuetaisyys :etaisyys loppuosa :osa} (:loppusijainti varuste)
         alkupvm (some-> (or (get-in varuste [:version-voimassaolo :alku]) (:alkaen varuste))
                   (pvm/iso-8601->pvm)
-                  (varuste-vastaanottosanoma/aika->sql))
+                  (pvm/aika->sql))
         tyyppi (or
                  (get-in varuste [:ominaisuudet :rakenteelliset-ominaisuudet :tyyppi])
                  (get-in varuste [:ominaisuudet :tyyppi])
@@ -283,8 +283,8 @@
                  (get-in varuste [:version-voimassaolo :loppu])
                  pvm/iso-8601->pvm
                  (get-in varuste [:version-voimassaolo :loppu])
-                 varuste-vastaanottosanoma/aika->sql)
-     :muokattu (when (:muokattu varuste) (varuste-vastaanottosanoma/aika->sql (pvm/psql-timestamp->aika (:muokattu varuste))))
+                 pvm/aika->sql)
+     :muokattu (when (:muokattu varuste) (pvm/aika->sql (pvm/psql-timestamp->aika (:muokattu varuste))))
      :muokkaaja (get-in varuste [:muokkaaja :kayttajanimi])
      :sijainti (or (varuste-vastaanottosanoma/velhogeo->harjageo (:keskilinjageometria varuste))
                  (sijainti-kohteelle db varuste))
@@ -412,6 +412,9 @@
 (def valimainen-sijainti-polku
   ["yleiset/valisijainti"
    "alkusijainti"])
+
+;; Velhon hakulauseke muodostetaan vektoreina Velhon hakukielen mukaisesti.
+;; Hakukielen rakenne: https://ohje.velho.vaylapilvi.fi/rajapinnat/tietojen-hyodyntaminen/
 
 (defn- lisaa-oid-haku-jos-tarvitaan
   "Lisää OID-perusteisen haun 'tai'-lausekkeeseen jos oidit-lista ei ole tyhjä.
@@ -804,11 +807,7 @@
                          :kohdeluokat (mapv (comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokat)
                          :lauseke (keep identity
                                     ["ja"
-                                     ["kohdeluokka" "yleiset/perustiedot"
-                                      ["joukossa"
-                                       ["yleiset/perustiedot"
-                                        "muutoksen-lahde-oid"]
-                                       [urakka-velho-oid]]]
+                                     (tee-muutoksen-lahde-oid-parametri urakka-velho-oid)
                                      varustetyypit-parametri
                                      tieosoite-parametri
                                      kuntoluokat-parametri

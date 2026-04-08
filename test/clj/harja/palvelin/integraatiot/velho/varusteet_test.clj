@@ -268,6 +268,29 @@
               @pyynnot)
           "Kuukausi ilman hoitovuotta ei saa lisätä payloadiin aikarajaa")))))
 
+(deftest hae-urakan-varustetoteumat-rajaa-molemmat-haut-muutoksen-lahde-oidilla-test
+  (let [pyynnot (atom [])
+        tallenna-pyynto! (fn [& args]
+                           (let [{:keys [body]} (some #(when (map? %) %) args)]
+                             (swap! pyynnot conj (json/read-str (pyyntobody->string body) :key-fn keyword)))
+                           (slurp "test/resurssit/velho/varusteet/varusteiden-hakurajapinta-vastaus.json"))
+        odotettu-rajaus ["kohdeluokka" "yleiset/perustiedot"
+                         ["joukossa"
+                          ["yleiset/perustiedot" "muutoksen-lahde-oid"]
+                          [+urakan-velho-oid+]]]]
+    (with-fake-http [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+                     +velho-varusteet-hakurajapinta-url+ tallenna-pyynto!]
+      (with-redefs [urakat-q/hae-urakan-velho-oid (constantly +urakan-velho-oid+)]
+        (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
+                                                                                :hoitokauden-alkuvuosi nil})
+        (is (= 2 (count @pyynnot)) "Haun pitää tehdä välimäisten toimenpiteiden haku ja varsinainen varustehaku")
+        (is (some #(= odotettu-rajaus %)
+              (tree-seq coll? seq (:lauseke (first @pyynnot))))
+          "Välimäisten toimenpiteiden haun pitää rajautua urakan muutoksen-lahde-oidilla")
+        (is (some #(= odotettu-rajaus %)
+              (tree-seq coll? seq (:lauseke (second @pyynnot))))
+          "Varsinaisen varustehaun pitää rajautua samalla urakan muutoksen-lahde-oidilla")))))
+
 ;; Testit tyhjien OID-listojen käsittelylle (ei saa tuottaa tyhjiä OID-listoja payloadiin)
 (deftest lisaa-oid-haku-jos-tarvitaan-test
   (testing "Lisää OID-haun kun oidit on annettu"
