@@ -246,13 +246,34 @@
 
 (defn muodosta-laskutusrajan-tarkistukset [db urakka-id hoitokauden-alkuvuosi budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta]
   (let [tarkistusprosentti 3 ;; Oletettavasti joskus tämä kovakoodattu prosentti voidaan hakea tietokannasta
-        ]
+        tarkistusprosenttimaara (* (/ tarkistusprosentti 100) hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+        tarkistusrivit (mapv (fn [r]
+                               (rivi (or (:pvm r) "")
+                                 (or (:muutokset-yhteensa r) "")
+                                 (or (:prosenttia-tavoitehinnasta r) 0)
+                                 (or (:tarkistus-summa r) 0)
+                                 (or (:laskutusraja r) 0)))
+                         (list {:pvm "1.1.2025"
+                                :muutokset-yhteensa 15000M
+                                :prosenttia-tavoitehinnasta 10.0
+                                :tarkistus-summa (* 0.1 hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+                                :laskutusraja hoitovuoden-alun-indeksikorjattu-tavoitehinta}))
+
+        yhteensarivi [{:lihavoi? true
+                       :korosta-hennosti? true
+                       :rivi (rivi ""
+                               15000M
+                               ""
+                               (* 0.1 hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+                               hoitovuoden-alun-indeksikorjattu-tavoitehinta)}]]
     [[:otsikko-heading "Laskutusrajan automaattiset tarkistukset"]
      [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten
      muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatusta tavoitehinnasta." tarkistusprosentti)]
+     [:teksti ""]
      [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon
      tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset. "]
-     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." hoitovuoden-alun-indeksikorjattu-tavoitehinta tarkistusprosentti kolme-prosenttia-maara)]
+     [:teksti ""]
+     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." hoitovuoden-alun-indeksikorjattu-tavoitehinta tarkistusprosentti tarkistusprosenttimaara)]
      [:taulukko {:otsikko ""
                  :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi "Laskutusrajan tarkistukset"}
@@ -261,7 +282,7 @@
        {:leveys 5 :otsikko "%-osuus hoitovuoden alun indeksikorjatusta tavoitehinnasta"}
        {:leveys 5 :otsikko "Laskutusrajan tarkistus (€)" :fmt :raha}
        {:leveys 5 :otsikko "Laskutusraja (€)" :fmt :raha}]
-      (into [] (concat rahavarausrivit rahavaraukset-yhteensarivi))]]))
+      (into [] (concat tarkistusrivit yhteensarivi))]]))
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
@@ -366,7 +387,7 @@
           [(muodosta-rahavarausten-muutokset db urakka-id hoitokauden-alkuvuosi)])
 
         (when (:muutosten_hallinta urakan-parametrit)
-          [(muodosta-laskutusrajan-tarkistukset db urakka-id hoitokauden-alkuvuosi budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta)])
+          (muodosta-laskutusrajan-tarkistukset db urakka-id hoitokauden-alkuvuosi budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta))
 
         ;; Kaikilla urakoilla ei ole muutosten hallintaa käytössä, joten näytä nämä osiot vain, jos se on käytössä.
         ;; Näytetään heille tavoitehinnan oikaisut ja lisätöiden kulukohdistukset
