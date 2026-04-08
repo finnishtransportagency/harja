@@ -371,3 +371,11 @@
             {:paattyen "2026-04-03"
              :ominaisuudet {:toimenpiteet []}}))
       "Tulevaisuudessa päättyvää kohdetta ei pidä tulkita vielä poistetuksi")))
+
+(deftest historiaversio-tulevalla-paattymispaivalla-ei-ole-viela-eksplisiittinen-poisto
+  (with-redefs [pvm/nyt-suomessa (constantly (pvm/iso-8601->pvm "2026-04-02"))]
+    (is (false?
+          (#'varusteet/historiaversiolla-eksplisiittinen-toimenpide?
+            {:paattyen "2026-04-03"
+             :ominaisuudet {:toimenpiteet []}}))
+      "Tulevaisuudessa päättyvä historiaversio ei saa vielä näyttää eksplisiittiseltä poistotapahtumalta")))

@@ -207,14 +207,17 @@
           toimenpide))
       valimaiset-toimenpiteet)))
 
+(defn- kohde-poistettu? [paattyen]
+  (and paattyen
+    (pvm/sama-tai-jalkeen?
+      (pvm/nyt-suomessa)
+      (pvm/iso-8601->pvm paattyen))))
+
 (defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet paattyen alkaen oid valimaiset-toimenpiteet]}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
         toimenpiteet (:toimenpiteet ominaisuudet)
-        poistettu? (and paattyen
-                     (pvm/sama-tai-jalkeen?
-                       (pvm/nyt-suomessa)
-                       (pvm/iso-8601->pvm paattyen)))]
+        poistettu? (kohde-poistettu? paattyen)]
     (if (seq toimenpiteet)
       (do
         (when (< (count toimenpiteet) 1)
@@ -573,10 +576,7 @@
 (defn- historiaversiolla-eksplisiittinen-toimenpide? [{:keys [ominaisuudet paattyen valimaiset-toimenpiteet]}]
   (or (seq (:toimenpiteet ominaisuudet))
       (seq valimaiset-toimenpiteet)
-      (and paattyen
-           (pvm/sama-tai-jalkeen?
-             (pvm/iso-8601->pvm paattyen)
-             (pvm/nyt-suomessa)))))
+      (kohde-poistettu? paattyen)))
 
 (defn- paivita-historiarivin-oletustoimenpide [rivi historiaversio vanhin-versio?]
   (if (historiaversiolla-eksplisiittinen-toimenpide? historiaversio)
