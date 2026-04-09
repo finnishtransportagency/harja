@@ -503,23 +503,26 @@
               ;; Tarkista lisättiinkö meidän promise vai oliko toinen thread nopeampi
               (if (identical? p (get result kayttajanimi))
                 [p true]
-                [(get result kayttajanimi) false]))))]
+                [(get result kayttajanimi) false]))))
+        vastaus (if uusi?
+                  (do
+                    (deliver vastaus-promise
+                      (try
+                        {:ok (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)}
+                        (catch Throwable t
+                          (log/error t "Virhe käyttäjätietojen haussa")
+                          {:error t})
+                        (finally
+                          ;; Siivotaan promise pois atomista
+                          (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
+                    @vastaus-promise)
+                  ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
+                  @vastaus-promise)]
 
-    ;; Jos tämä thread loi promisen, sen täytyy deliveroida se
-    (if uusi?
-      (do
-        (deliver vastaus-promise
-          (try
-            (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)
-            (catch Throwable t
-              (log/error t "Virhe käyttäjätietojen haussa")
-              (throw t))
-            (finally
-              ;; Siivotaan promise pois atomista
-              (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
-        @vastaus-promise)
-      ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
-      @vastaus-promise)))
+    ;; Jos thread loi promisen, deliveroi aina
+    (if-let [t (:error vastaus)]
+      (throw t)
+      (:ok vastaus))))
 
 (defn koka->kayttajatiedot
   ([db integraatioloki miam headerit oikeudet kehitysmoodi?]
