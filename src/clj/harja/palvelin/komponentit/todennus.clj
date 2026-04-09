@@ -264,7 +264,7 @@
     (json/read-str oam-groups)
     (str/join ",")))
 
-(defn- jwt-vahvistus-epaonnistui? [headerit]
+(defn jwt-vahvistus-epaonnistui? [headerit]
   (boolean
     (= (get headerit "oam_groups") "failed")))
 
