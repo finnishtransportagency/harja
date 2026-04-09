@@ -52,14 +52,14 @@
    (defn varmenna-kaikki-vektori [ns]
      (refer ns :only '[kaikki])
      (let [varit (->
-                       (into #{} (keys (ns-publics ns)))
-                       (poista-testit)
-                       (poista-epavarit)
-                       (disj 'kaikki))
+                   (into #{} (keys (ns-publics ns)))
+                   (poista-testit)
+                   (poista-epavarit)
+                   (disj 'kaikki))
            kaikki (count kaikki)]
        (assert
          (= kaikki (count varit))
-         (str "\n"ns"/kaikki sisältää " kaikki " väriä, mutta näyttää siltä, että namespacessa on määritelty " (count varit) " väriä. Onko jokin unohtunut lisätä, tai onko namespaceen lisätty esimerkiksi apufunktioita?")))))
+         (str "\n" ns "/kaikki sisältää " kaikki " väriä, mutta näyttää siltä, että namespacessa on määritelty " (count varit) " väriä. Onko jokin unohtunut lisätä, tai onko namespaceen lisätty esimerkiksi apufunktioita?")))))
 
 #?(:clj
    (defn varmenna-sisalto [ns]
