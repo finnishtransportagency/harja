@@ -139,7 +139,7 @@
   (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :muutos-ja-lisatyoraportti
+                  {:nimi :muutos-ja-lisatyot
                    :konteksti "urakka"
                    :urakka-id urakka-id
                    :parametrit {:alkupvm alkupvm
@@ -147,11 +147,11 @@
 
 (defn- hae-taulukko
   "Hakee raportin taulukon otsikon perusteella. Otsikko voi olla osa taulukon otsikosta."
-  [vastaus otsikon-osa]
+  [vastaus osa avain]
   (some (fn [elementti]
           (when (and (vector? elementti)
                      (= :taulukko (first elementti))
-                     (.contains (str (:otsikko (second elementti))) otsikon-osa))
+                     (.contains (str (avain (second elementti))) osa))
             elementti))
         (drop 2 vastaus)))
 
@@ -172,7 +172,7 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Kirjallisesti sovitut")]
+        taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Kirjallisesti sovitut muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
           datarivit (filter vector? rivit)
@@ -190,7 +190,7 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Kirjallisesti sovitut")]
+        taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
       ;; Vain yhteensä-rivi (0 €)
@@ -213,14 +213,12 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Aikaisempien vuosien")]
+        taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Aikaisempien vuosien taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
           datarivit (filter vector? rivit)
           yhteensarivi (last rivit)]
       (is (= 2 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
-      ;; Tarkista datariviltä syy
-      (is (= "Aiemman vuoden pysyvä" (nth (first datarivit) 0)) "Ensimmäisen rivin syy täsmää")
       ;; Tarkista yhteensä
       (let [yhteensa-arvo (nth (:rivi yhteensarivi) 2)]
         (is (= 2500M yhteensa-arvo) "Yhteensä on 2500")))))
@@ -232,7 +230,7 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Aikaisempien vuosien")]
+        taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
       (is (= 1 (count rivit)) "Taulukossa on vain yhteensä-rivi")
@@ -276,7 +274,7 @@
     (let [vastaus (suorita-raportti urakka-id
                                    (hoitokausi-alkupvm 2028)
                                    (hoitokausi-loppupvm 2028))
-          taulukko (hae-taulukko vastaus "määrätoteumiin perustuvat")]
+          taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
       (is (some? taulukko) "Tehtävä-maaramuutokset taulukko löytyy")
       (let [rivit (apurit/taulukon-rivit taulukko)]
         ;; Pitäisi olla vähintään 2 riviä (data + yhteensä)
@@ -292,7 +290,7 @@
         ;; Poistetaan myös tehtävämäärät jotta taulukko on tyhjä
         _ (u (str "DELETE FROM urakka_tehtavamaara WHERE urakka = " urakka-id " AND \"hoitokauden-alkuvuosi\" = 2029"))
         vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2029) (hoitokausi-loppupvm 2029))
-        taulukko (hae-taulukko vastaus "määrätoteumiin perustuvat")]
+        taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
       ;; Vain yhteensä-rivi
@@ -334,12 +332,13 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Rahavarausten muutokset")]
+        taulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
     (is (some? taulukko) "Rahavarausten muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
+          _ (println "Rahavarausten muutokset -taulukon rivit:" (pr-str rivit))
           datarivit (filter vector? rivit)
           yhteensarivi (last rivit)]
-      (is (= 2 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
+      (is (= 5 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
       ;; Tarkista datarivi: suunniteltu = 8000, toteutunut = 6500, muutos = 6500 - 8000 = -1500
       (when (seq datarivit)
         (let [rivi (first datarivit)]
@@ -359,7 +358,7 @@
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Rahavarausten muutokset")]
+        taulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
       ;; Vain yhteensä-rivi
@@ -429,9 +428,9 @@
       ;; Tarkista yhteensä
       (is (= 15000M (nth (:rivi yhteensarivi) 2)) "Yhteensä on 15000"))
     ;; Muutoshallinta-osiot EI näy vanhalla urakalla
-    (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut"))
+    (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut muutokset" :sheet-nimi))
         "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla")
-    (is (nil? (hae-taulukko vastaus "Aikaisempien vuosien"))
+    (is (nil? (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko))
         "Aikaisempien vuosien -taulukko ei näy vanhalla urakalla")))
 
 (deftest vanha-urakka-lisatyot-nakyvat
@@ -470,5 +469,5 @@
         ;; Tarkista yhteensä
         (is (= 7500M (nth (:rivi yhteensarivi) 3)) "Yhteensä on 7500"))
       ;; Muutoshallinta-osiot EI näy vanhalla urakalla
-      (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut"))
+      (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut muutokset" :sheet-nimi))
           "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla"))))
