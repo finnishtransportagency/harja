@@ -480,7 +480,7 @@
           lista-tyyli?
           true))
 
-      ;;Luodaan sheet:tille apuotsikot
+      ;; Luodaan sheetille apuotsikot
       (when excel-alkutekstit
         (dorun
           (map-indexed
