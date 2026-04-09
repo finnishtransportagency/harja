@@ -156,6 +156,7 @@
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
+                :otsikon-luokka "raportti-otsikko"
                 :tunniste (fn [rivi]
                             (str "raportti_rivi_"
                               (or (::rivin-indeksi rivi)
@@ -292,16 +293,16 @@
    sarakkeet data])
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
-  [:h1 teksti])
+  [:h1.raportti-otsikko teksti])
 
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
-  [:h2 {:style (merge {:font-size "20px"} tyyli)} teksti])
+  [:h2.raportti-otsikko {:style (merge {:font-size "20px"} tyyli)} teksti])
 
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
-  [:h1 {:style {:font-size "12px"}} teksti])
+  [:h1.raportti-otsikko {:style {:font-size "12px"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
-  [:h3 teksti])
+  [:h3.raportti-otsikko teksti])
 
 (defmethod muodosta-html :jakaja [ei-valitysta]
   (if ei-valitysta
@@ -309,8 +310,11 @@
     [:hr {:style {:margin-top "30px"
                   :margin-bottom "30px"}}]))
 
+(defmethod muodosta-html :tyhja-rivi [_]
+  [:div {:style {:height "0.75rem"}}])
+
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
-  [:h3 teksti])
+  [:h3.raportti-otsikko teksti])
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
   [:div {:style (merge

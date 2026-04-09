@@ -227,6 +227,11 @@
   [[_ {:keys [boldattu-teksti teksti] :as tiedot}] solun-tyyli]
   [(str boldattu-teksti teksti) solun-tyyli])
 
+(defmethod muodosta-excel :tyhja-rivi [_ workbook]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (inc (.getLastRowNum sheet))]
+      (.createRow sheet rivi-numero))))
+
 (defn- font-otsikko
   ([] (font-otsikko 14))
   ([font-koko]
@@ -400,6 +405,24 @@
     (raportti-domain/tee-solu harmaa-sivu nil tyyli)
     rivi-numero))
 
+(defn- excel-alkuteksti->elementti
+  "Taulukon alkutekstit. Excelissä otsikointi on kinkkistä, kun ne tulevat omille sheeteilleen ja
+  näin ovat erilaisia, kuin pdf tai html versioissa. Uusi sheet tulee aina taulukon mukana.
+  Joten näillä alkuteksteillä rakennetaan samanlainen otsikointi taulukoille, kuin html ja pdf versioissa."
+  [x]
+  (cond
+    (string? x) [:teksti x]
+    (and (vector? x) (keyword? (first x))) x
+    :else [:teksti (str x)]))
+
+(defn- excel-alkuteksti-tyyli [workbook tyyppi]
+  (case tyyppi
+    :otsikko-title         (excel/create-cell-style! workbook {:font (font-otsikko 18)})
+    :otsikko-heading       (excel/create-cell-style! workbook {:font (font-otsikko 14)})
+    :otsikko-heading-small (excel/create-cell-style! workbook {:font (font-otsikko 12)})
+    :teksti                (excel/create-cell-style! workbook {:font (font-leipateksti 12)})
+    (excel/create-cell-style! workbook {:font (font-leipateksti 12)})))
+
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko excel-alkutekstit raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
@@ -457,6 +480,16 @@
           lista-tyyli?
           true))
 
+      ;;Luodaan sheet:tille apuotsikot
+      (when excel-alkutekstit
+        (dorun
+          (map-indexed
+            (fn [rivi-nro rivi]
+              (let [[tyyppi teksti] (excel-alkuteksti->elementti rivi)
+                    tyyli           (excel-alkuteksti-tyyli workbook tyyppi)]
+                (tee-tekstirivi sheet (+ 2 rivi-nro) teksti tyyli)))
+            excel-alkutekstit)))
+
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
       (when samalle-sheetille?
         ;; Jos taulukon nimeä ei ole, käytä taulukon otsikkoa
@@ -466,18 +499,6 @@
       ;;Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu
       (when otsikko
         (tee-sheet-otsikkoteksti sheet 1 otsikko raportin-tiedot-tyyli))
-
-      ;;Luodaan sheet:tille apuotsikot
-      (when excel-alkutekstit
-        (dorun
-          (map-indexed
-            (fn [rivi-nro rivi]
-              (tee-tekstirivi sheet (+ 2 rivi-nro) rivi (excel/create-cell-style! workbook {:font {:color :black
-                                                                                                            :size 14
-                                                                                                            :name "Open Sans"
-                                                                                                            :bold false}})))
-            excel-alkutekstit)))
-
 
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 

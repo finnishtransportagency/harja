@@ -474,6 +474,9 @@
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))
 
+(defmethod muodosta-pdf :tyhja-rivi [_]
+  [:fo:block {:space-after "0.5em"}])
+
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
   nil)

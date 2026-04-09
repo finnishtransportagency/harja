@@ -294,7 +294,7 @@
    {:nimi         :muutos-ja-lisatyot
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"} ;; Mahdollista näyttää vain urakkakohtaisesti, koska eri urakan alkuvuosina on erilaisen raportti
-    :kuvaus       "Muutos- ja lisätyöraportti"
+    :kuvaus       "Muutos- ja lisätyöt"
     :suorita      #'harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
