@@ -8,6 +8,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.ui.komponentti :as komp]
+            [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
+            [harja.views.urakka.yllapitokohteet.kustannukset-nakyma :as kustannukset-nakyma]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumat :as toteumat]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as paikkauskohteet]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paallystysilmoitukset]
@@ -21,8 +23,8 @@
         urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit kayttaja urakka))
         tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? (roolit/urakkaroolit kayttaja urakka) kayttaja)]
     (or (roolit/jvh? kayttaja)
-        urakoitsija?
-        tilaaja?)))
+      urakoitsija?
+      tilaaja?)))
 
 (defn paikkaukset* [e! app-state]
   (komp/luo
@@ -52,12 +54,41 @@
                   (oikeudet/urakat-paikkaukset-paikkauskohteet (:id ur)))
             [paikkauskohteet/paikkauskohteet e! app-state])
 
-          "Toteumat"
+          "Kohteiden toteumat"
           :toteumat
           (when (and (oikeudet/urakat-paikkaukset-toteumat (:id ur))
-                     (or (= :paallystys (:tyyppi ur))
-                         (and hoitourakka? tilaaja?)))
+                  (or (= :paallystys (:tyyppi ur))
+                    (and hoitourakka? tilaaja?)))
             [toteumat/toteumat ur])
+
+          "Päällystysilmoitukset"
+          :paikkausten-paallystysilmoitukset
+          (when (and
+                  (= :paallystys (:tyyppi ur))
+                  nayta-paallystysilmoitukset?)
+            [paallystysilmoitukset/paallystysilmoitukset e! app-state])
+
+          "Kohteettomat paikkaukset"
+          :paikkaukset-mpu
+          (when (and
+                  (oikeudet/urakat-paikkaukset (:id ur))
+                  (= (:tyyppi ur) :paallystys)
+                  (or
+                    (= :mpu (:sopimustyyppi ur))
+                    (= :kokonaisurakka (:sopimustyyppi ur))))
+            ^{:key "paikkaukset-mpu"}
+            [reikapaikkaukset/reikapaikkaukset ur])
+
+          "Kustannusten yhteenveto"
+          :kustannukset
+          (when (and
+                  (oikeudet/urakat-paikkaukset (:id ur))
+                  (= (:tyyppi ur) :paallystys)
+                  (or
+                    (= :mpu (:sopimustyyppi ur))
+                    (= :kokonaisurakka (:sopimustyyppi ur))))
+            ^{:key "kustannukset"}
+            [kustannukset-nakyma/kustannukset])
 
           "Päällystysurakoiden paikkaukset"
           :paallystysurakoiden-paikkauskohteet
@@ -75,14 +106,7 @@
                     (= :tiemerkinta (:tyyppi ur))))
             (if hoitourakka?
               [paikkauskohteet/aluekohtaiset-paikkauskohteet e! app-state]
-              [paikkauskohteet/paikkauskohteet e! app-state]))
-
-          "Päällystysilmoitukset"
-          :paikkausten-paallystysilmoitukset
-          (when (and
-                  (= :paallystys (:tyyppi ur))
-                  nayta-paallystysilmoitukset?)
-            [paallystysilmoitukset/paallystysilmoitukset e! app-state])]]))))
+              [paikkauskohteet/paikkauskohteet e! app-state]))]]))))
 
 (defn paikkaukset [ur]
   (swap! tila/paikkauskohteet assoc :urakka ur)
