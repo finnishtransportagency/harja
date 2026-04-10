@@ -481,9 +481,6 @@
 
 
 (defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
-  ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
-  (e! (v/->YhdistaValinnat @tiedot/valinnat))
-
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
@@ -513,6 +510,9 @@
                                            (reset! tiedot/oletus-valinnat? true)
                                            (reset! tiedot/oletus-valinnat? false)))))
     (komp/sisaan-ulos #(do
+                         ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+                         (e! (v/->YhdistaValinnat @tiedot/valinnat))
+
                          (e! (v/->HaeAiheetJaTarkenteet))
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)

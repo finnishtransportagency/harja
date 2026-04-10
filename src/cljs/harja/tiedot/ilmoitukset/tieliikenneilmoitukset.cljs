@@ -223,7 +223,6 @@
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
-    (reset! karttataso-ilmoitukset true)
     (hae
       (-> app
         (update-in [:valinnat] merge valinnat))))
