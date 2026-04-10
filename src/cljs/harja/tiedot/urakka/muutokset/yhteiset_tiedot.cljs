@@ -157,6 +157,7 @@
       :tavoitehinnan-muutokset-yhteensa tavoitehinnan-muutokset-yhteensa
       :hoitovuoden-indeksikorjattu-tavoitehinta (-> vastaus :yhteenveto :budjettitavoite :tavoitehinta-indeksikorjattu)
       :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+      :laskutusrajan-tarkistukset (:laskutusrajan-tarkistukset vastaus)
       :budjettitavoitteet (:budjettitavoitteet vastaus))))
 
 

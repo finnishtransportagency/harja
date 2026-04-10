@@ -396,6 +396,45 @@
          urakka-id hoitokauden-alkuvuosi muutokset)
        muutokset))))
 
+(defn hae-laskutusrajan-tarkistukset
+  [db urakka-id hoitokauden-alkuvuosi kirjatut-muutokset hoitovuoden-indeksikorjattu-tavoitehinta]
+  (let [urakan-tiedot (first (q-urakat/hae-urakka db {:id urakka-id}))
+        hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitokauden-alkuvuosi)
+        laskutusraja-alkuperainen (:laskutusraja_alkuperainen
+                                    (first (kulu-kyselyt/hae-urakan-alkuperainen_laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitokausinro})))]
+    (->> kirjatut-muutokset
+      (sort-by :voimassa_alkaen)
+      (filter (fn [m]
+                (let [tyyppi    (:tyyppi m)
+                      oma-summa (or (:tavoitehinnan-muutos m) 0)]
+                  (or (= tyyppi "muutostyo")
+                    (and (= tyyppi "pysyva") (pos? oma-summa))))))
+      (reduce (fn [[tulos kertymä] m]
+                (let [oma-summa     (or (:tavoitehinnan-muutos m) 0)
+                      uusi-kertymä  (+ kertymä oma-summa)
+                      prosenttiosuus (when (and hoitovuoden-indeksikorjattu-tavoitehinta
+                                             (pos? hoitovuoden-indeksikorjattu-tavoitehinta))
+                                       (tyokalut/pyorista-kahteen-decimaaliin
+                                         (* 100.0 (/ (double uusi-kertymä)
+                                                    (double hoitovuoden-indeksikorjattu-tavoitehinta)))))
+                      laskutusrajan-tarkistus (if (and prosenttiosuus (>= prosenttiosuus 3.00))
+                                                uusi-kertymä
+                                                0)
+                      tarkistettu-laskutusraja (when laskutusraja-alkuperainen
+                                               (+ laskutusraja-alkuperainen laskutusrajan-tarkistus))]
+                  [(conj tulos
+                     {:summa                    oma-summa
+                      :yhteensa                 uusi-kertymä
+                      :prosenttiosuus           prosenttiosuus
+                      :laskutusrajan-tarkistus  laskutusrajan-tarkistus
+                      :tarkistettu-laskutusraja tarkistettu-laskutusraja
+                      :voimassa_alkaen          (:voimassa_alkaen m)
+                      :tyyppi                   (:tyyppi m)
+                      :id                       (:id m)})
+                   uusi-kertymä]))
+        [[] 0])
+      first)))
+
 (defn hae-urakan-muutostiedot
   [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
@@ -429,6 +468,7 @@
                                                (concat
                                                  [(:tavoitehinnan-muutos (last rahavaraukset))]
                                                  (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
+        laskutusrajan-tarkistukset (hae-laskutusrajan-tarkistukset db urakka-id hoitokauden-alkuvuosi kirjatut-muutokset (:tavoitehinta-indeksikorjattu budjettitavoiteet))
         muutosten-vaikutus-yht (+
                                  (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
                                  (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
@@ -441,6 +481,7 @@
      ;; laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
      :lasketut-muutokset tehtava-ja-maaramuutokset
      :rahavarausten-muutokset rahavaraukset
+     :laskutusrajan-tarkistukset laskutusrajan-tarkistukset
      ;; TODO: laskennat vanhojen tavoitehintojen muutoksille jos hoitokausi ennen 2025-2026
      :tavoitehinnan-muutokset []
      ;; TODO: laskennat vanhojen suunniteltujen määrien muutoksille jos hoitokausi ennen 2025-2026
