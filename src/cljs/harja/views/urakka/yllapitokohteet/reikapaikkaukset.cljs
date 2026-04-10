@@ -34,8 +34,8 @@
                          (tiedot/voi-tallentaa? valittu-rivi app))]
 
     [:div.reikapaikkaukset
-     [:h1 "Reikäpaikkaukset"]
-     
+     [:h1 "Kohteettomat paikkaukset"]
+
      (when muokataan
        (apurit/reikapaikkaus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alasveto-kuvaukset alkuaika alasveto-valinnat))
 
