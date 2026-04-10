@@ -3,6 +3,7 @@
   Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
@@ -39,7 +40,7 @@
                                                                :vesi "V"
                                                                :rata "R")))
         ;; Poista elinvoimakeskus sana nimestä, koska se toistaa itseään ja vie tilaa.
-        evkt (map #(update % :nimi (fn [nimi] (clojure.string/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
+        evkt (map #(update % :nimi (fn [nimi] (str/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
     (into []
       (muunna-pg-tulokset :alue)
       evkt)))

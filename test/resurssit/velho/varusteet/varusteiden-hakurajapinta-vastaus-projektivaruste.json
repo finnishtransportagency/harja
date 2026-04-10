@@ -1,0 +1,43 @@
+{
+  "osumat": [
+    {
+      "sijainti": {
+        "osa": 1,
+        "tie": 1,
+        "etaisyys": 101,
+        "enkoodattu": 1234568
+      },
+      "kohdeluokka": "varusteet/aidat",
+      "version-voimassaolo": {
+        "alku": "2020-11-01",
+        "loppu": null
+      },
+      "ominaisuudet": {
+        "toimenpiteet": [],
+        "kunto-ja-vauriotiedot": {
+          "yleinen-kuntoluokka": "kuntoluokka/kltest"
+        },
+        "rakenteelliset-ominaisuudet": {
+          "tyyppi": "tienvarsikalustetyyppi/tvkttest"
+        }
+      },
+      "keskilinjageometria": {
+        "coordinates": [
+          6839198.670452601,
+          638694.7440636739,
+          0.0
+        ],
+        "type": "Point"
+      },
+      "oid": "1.2.345.678.9.0.12.345.678909999",
+      "muokkaaja": {
+        "kayttajanimi": "MUOKKAAJA"
+      },
+      "muokattu": "2020-11-01T12:00:00.00000Z",
+      "alkaen": "2020-11-01",
+      "muutoksen-lahde-oid": "projektin-velho-oid"
+    }
+  ],
+  "aggergaatiot": {},
+  "osumia": 1
+}
