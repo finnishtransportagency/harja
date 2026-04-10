@@ -190,19 +190,36 @@
      (into [] (concat aiemmat-rivit aiemmat-yhteensarivi))]))
 
 (defn muodosta-tehtava-ja-maaratoteuma-muutokset
-  "Vastaavanlainen taulukko, kuin muutos -sivulla."
+  "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset.
+  Vastaavanlainen taulukko, kuin muutos -sivulla."
   [maaramuutokset]
-  (let [;; Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
+  (let [;; Lisää väliotsikkorivit toimenpiteiden mukaan (sama logiikka kuin muutos_palvelu.clj)
+        rivit-valiotsikoineen
+        (reduce (fn [[nahty acc] rivi]
+                  (let [tp (:toimenpide rivi)]
+                    (if (contains? nahty tp)
+                      [nahty (conj acc rivi)]
+                      [(conj nahty tp)
+                       (conj acc {:valiotsikko tp} rivi)])))
+          [#{} []]
+          maaramuutokset)
+        maaramuutokset-valiotsikoineen (second rivit-valiotsikoineen)
         maaramuutosrivit (mapv (fn [r]
-                                 (rivi (or (:tehtava r) "")
-                                   (or (:yksikko r) "")
-                                   (or (:syy r) "")
-                                   (:suunniteltu_maara r)
-                                   (or (:maara r) 0)
-                                   (or (:maaramuutos r) 0)
-                                   (or (:kirjatut_kulut_summa r) 0)
-                                   (laske-tavoitehinnan-muutos r)))
-                           maaramuutokset)
+                                 (if (:valiotsikko r)
+                                   ;; Väliotsikkorivi: näytetään toimenpiteen nimi
+                                   {:korosta-harmaa? true
+                                    :lihavoi? true
+                                    :rivi (rivi (:valiotsikko r) "" "" "" "" "" "" "")}
+                                   ;; Normaali datarivi
+                                   (rivi (or (:tehtava r) "")
+                                     (or (:yksikko r) "")
+                                     (or (:syy r) "")
+                                     (:suunniteltu_maara r)
+                                     (or (:maara r) 0)
+                                     (or (:maaramuutos r) 0)
+                                     (or (:kirjatut_kulut_summa r) 0)
+                                     (laske-tavoitehinnan-muutos r))))
+                           maaramuutokset-valiotsikoineen)
         maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
         maaramuutokset-yhteensarivi [{:lihavoi? true
                                       :korosta-hennosti? true
@@ -319,9 +336,9 @@
                  :sheet-nimi "Muutostöiden kulut"
                  :excel-alkutekstit (when (= kasittelija :excel)
                                       [otsikko-title
-                                      ajankohtakuvaus
-                                      [:teksti ""]
-                                      [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
+                                       ajankohtakuvaus
+                                       [:teksti ""]
+                                       [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
       [{:leveys 3 :otsikko "Lasku pvm"}
        {:leveys 5 :otsikko "Muutostyö"}
        {:leveys 5 :otsikko "Toimenpide"}

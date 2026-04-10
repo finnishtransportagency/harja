@@ -56,6 +56,8 @@
   (let [muutos-ehto (str " WHERE muutos IN (SELECT id FROM mhu_muutos WHERE urakka = " urakka-id ")")]
     ;; Rahavarausmuutossyyt
     (u (str "DELETE FROM mhu_muutos_rahavarausmuutoksen_syy WHERE urakka = " urakka-id))
+    ;; Poista mahdolliset rahavarausliitokset
+    (u (str "DELETE FROM rahavaraus_urakka WHERE urakka_id = " urakka-id))
 
     ;; Liitetaulut
     (u (str "DELETE FROM mhu_muutos_liite_historia" muutos-ehto))
@@ -306,39 +308,45 @@
 (deftest rahavarausten-muutokset-happy-case
   (let [urakka-id (hae-kajaani-urakka-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        hoitokauden-alkuvuosi 2028
+        kuukausi 10
+        summa1 5000
+        summa2 3000
         _ (siivoa-muutosdata! urakka-id)
         kayttaja-id (hae-kayttaja-id)
         sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " urakka-id " AND paasopimus IS NULL")))
         ;; Luo rahavaraus ja liitä urakkaan
         rahavaraus-id (i (format "INSERT INTO rahavaraus (nimi, jarjestys, luoja, luotu) VALUES
         ('%s', %s, %s, NOW())" "Testirahavaraus", 1, kayttaja-id))
-        _ (u (str "INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luotu, luoja)
-                   VALUES (" urakka-id ", " rahavaraus-id ", current_timestamp, " kayttaja-id ")"))
+        _ (u (format "INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luotu, luoja)
+                   VALUES (%s, %s, NOW(), %S)"
+               urakka-id rahavaraus-id kayttaja-id))
         ;; Luo suunniteltu kustannus
         tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
-        _ (u (str "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
-                   VALUES (2028, 10, 5000, 5000, " tpi-id ", " sopimus-id ", " rahavaraus-id ", NOW(), " kayttaja-id ")"))
-        _ (u (str "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
-                   VALUES (2028, 11, 3000, 3000, " tpi-id ", " sopimus-id ", " rahavaraus-id ", NOW(), " kayttaja-id ")"))
+        _ (u (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
+               hoitokauden-alkuvuosi kuukausi summa1 summa1 tpi-id sopimus-id rahavaraus-id kayttaja-id))
+        _ (u (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
+               hoitokauden-alkuvuosi (inc kuukausi) summa2 summa2 tpi-id sopimus-id rahavaraus-id kayttaja-id))
         ;; Luo toteutunut kulu kohdistettuna rahavaraukseen
-        erapaiva (pvm/->pvm (str "15.11.2028"))
+        erapaiva (pvm/->pvm (str "15.11." hoitokauden-alkuvuosi))
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, koontilaskun_kuukausi)
         VALUES (%s, '%s', %s, %s, '%s')"
-                         6500, erapaiva urakka-id kayttaja-id, koontilaskun-kuukausi))
+                     6500, erapaiva urakka-id kayttaja-id, koontilaskun-kuukausi))
         _ (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, rahavaraus_id, maksueratyyppi, luoja)
                    VALUES (0, " kulu-id ", 6500, " tpi-id ", " rahavaraus-id ", 'kokonaishintainen', " kayttaja-id ")"))
         ;; Suorita raportti
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
-        taulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
-    (is (some? taulukko) "Rahavarausten muutokset -taulukko löytyy")
-    (let [rivit (apurit/taulukon-rivit taulukko)
-          _ (println "Rahavarausten muutokset -taulukon rivit:" (pr-str rivit))
-          datarivit (filter vector? rivit)
-          yhteensarivi (last rivit)]
-      (is (= 5 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
+        rahavaraustaulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
+    (is (some? rahavaraustaulukko) "Rahavarausten muutokset -taulukko löytyy")
+    (let [rahavarausrivit (apurit/taulukon-rivit rahavaraustaulukko)
+          datarivit (filter vector? rahavarausrivit)
+          yhteensarivi (last rahavarausrivit)]
+      (is (= 2 (count rahavarausrivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
       ;; Tarkista datarivi: suunniteltu = 8000, toteutunut = 6500, muutos = 6500 - 8000 = -1500
       (when (seq datarivit)
         (let [rivi (first datarivit)]
@@ -353,8 +361,6 @@
 (deftest rahavarausten-muutokset-ei-dataa
   (let [urakka-id (hae-kajaani-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
-        ;; Poista mahdolliset rahavarausliitokset
-        _ (u (str "DELETE FROM rahavaraus_urakka WHERE urakka_id = " urakka-id))
         vastaus (suorita-raportti urakka-id
                                  (hoitokausi-alkupvm 2028)
                                  (hoitokausi-loppupvm 2028))

@@ -30,9 +30,6 @@
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
            (org.apache.poi.ss.usermodel HorizontalAlignment)))
 
-;; ns-unmap varmistaa, että defmulti:n dispatch-funktio päivittyy REPLissä
-(ns-unmap *ns* 'muodosta-excel)
-
 (defmulti muodosta-excel
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
