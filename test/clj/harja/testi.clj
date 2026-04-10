@@ -993,6 +993,11 @@
                    FROM   organisaatio
                    WHERE  nimi = 'Meriväylät'"))))
 
+(defn hae-pohjois-pohjanmaan-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Pohjois-Pohjanmaa' and tyyppi = 'hallintayksikko'"))))
+
 (defn hae-hallintoyksikon-id-nimella [nimi]
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
