@@ -677,14 +677,18 @@
                            kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                            vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
                            purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
+                           vastauksen-sisalto (:content (first purettu-vastauksen-data))
                            ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
                            ;; käsittely onnistunut
-                           mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
-                           status-state (some #(when (= (:tag %) :Status) (get-in % [:attrs :state]))
-                                             (:content (first purettu-vastauksen-data)))
-                           failure? (or (= status-state "FAILURE")
-                                        (not (str/blank? mahdollinen-virhe)))
-                           status (if failure? 400 200)]
+                           mahdollinen-virhe (get-in (first vastauksen-sisalto) [:attrs :ErrorMessage])
+                           status-state (some (fn [{:keys [tag attrs]}]
+                                                (when (= tag :Status)
+                                                  (:state attrs)))
+                                              vastauksen-sisalto)
+                           status (if (or (= status-state "FAILURE")
+                                          (not (str/blank? mahdollinen-virhe)))
+                                    400
+                                    200)]
 
                        {:status status
                         :headers (lisaa-request-headerit true origin-header)
