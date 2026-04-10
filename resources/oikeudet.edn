@@ -1511,7 +1511,7 @@
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
    "ELY_Paakayttaja" #{"R*" "W*"},
-   "ELY_Urakanvalvoja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*" "W"},
    "Jarjestelmavastaava" #{"R*" "W*"},
    "Kayttaja" #{"R+"},
    "Laadunvalvoja" #{"R" "W"},
