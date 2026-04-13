@@ -7,14 +7,17 @@ concurrency:
 on:
   workflow_dispatch:
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
   build-and-scan:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      packages: read
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
 
     steps:
       - name: Checkout code
@@ -49,7 +52,9 @@ jobs:
           build-laadunseuranta: 'false'
 
       - name: Docker build
-        run: docker build -t harja-app:${{ github.sha }} --file aws/fargate/Dockerfile .
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+        run: docker build -t harja-app:${COMMIT_SHA} --file aws/fargate/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
