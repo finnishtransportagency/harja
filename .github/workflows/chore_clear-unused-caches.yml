@@ -24,6 +24,7 @@ permissions: {}
 
 jobs:
   cleanup:
+    name: "Clear unused caches"
     runs-on: ubuntu-latest
     permissions:
       actions: write # Tarvitaan cachejen poistamiseen

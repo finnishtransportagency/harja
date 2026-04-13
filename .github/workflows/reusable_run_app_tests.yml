@@ -234,6 +234,8 @@ jobs:
       - name: Delete old branch build artifacts (only the latest is needed)
         uses: actions/github-script@v8
         id: artifact
+        env:
+          ARTIFACT_NAME: ${{ steps.artifact-name.outputs.value }}
         with:
           script: |
             const res = await github.rest.actions.listArtifactsForRepo({
@@ -242,7 +244,7 @@ jobs:
             })
 
             res.data.artifacts
-              .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
+              .filter(({ name }) => name === process.env.ARTIFACT_NAME)
               .forEach(({ id }) => {
                 github.rest.actions.deleteArtifact({
                   owner: context.repo.owner,

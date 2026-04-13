@@ -55,6 +55,7 @@ jobs:
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
   check-status-and-notify:
+    name: "Check test status and notify"
     needs: tests
     if: always()
     runs-on: ubuntu-latest

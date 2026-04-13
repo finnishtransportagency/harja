@@ -25,6 +25,7 @@ permissions: {}
 
 jobs:
   shutdown-fargate-tasks:
+    name: "Shutdown Fargate tasks"
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 

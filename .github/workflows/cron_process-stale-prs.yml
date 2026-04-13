@@ -33,6 +33,7 @@ permissions: {}
 jobs:
   # Note: https://github.com/actions/stale
   process-stale-prs:
+    name: "Process stale PRs"
     runs-on: ubuntu-latest
     permissions:
       contents: read # Vaaditaan oletusarvoinen lukuoikeus repoon

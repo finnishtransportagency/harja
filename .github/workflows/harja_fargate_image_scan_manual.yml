@@ -13,6 +13,7 @@ permissions: {}
 
 jobs:
   build-and-scan:
+    name: "Build and scan Fargate image"
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:

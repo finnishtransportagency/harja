@@ -25,6 +25,7 @@ permissions: {}
 
 jobs:
   restart-fargate-tasks:
+    name: "Restart Fargate tasks"
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 

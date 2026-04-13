@@ -49,6 +49,7 @@ jobs:
       - run: echo "null"
 
   get-latest-successful-build:
+    name: "Get latest successful build"
     runs-on: ubuntu-latest
     needs: [ get-env-vars ]
     permissions:
@@ -85,9 +86,12 @@ jobs:
             core.setOutput("run-id", result.runId);
 
       - name: Print output results
+        env:
+          COMMIT_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
+          RUN_ID: ${{ steps.latest-successful-build.outputs.run-id }}
         run: |
-          echo "Latest successful commit SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}"
-          echo "Latest successful run ID: ${{ steps.latest-successful-build.outputs.run-id }}"
+          echo "Latest successful commit SHA: ${COMMIT_SHA}"
+          echo "Latest successful run ID: ${RUN_ID}"
 
       # TODO: Jos tämä ei osoittaudu riittävän luotettavaksi tavaksi tunnistaa viimeisin onnistunut GH deployment,
       #       niin haetaan AWS ECR:stä viimeisin deployattu image ja verrataan sen tagia viimeisimmän buildin committiin.
@@ -200,6 +204,7 @@ jobs:
   #   eikä sitä voi estää tai hallita mitenkään GitHub Actionsin puolella.
   #   Asia täytyy korjata GitHub API:n kautta itse tekemällä erillinen deployment oikealla commit SHA:lla.
   replace-latest-deployment:
+    name: "Replace latest deployment SHA"
     runs-on: ubuntu-latest
     needs: [ get-env-vars, get-latest-successful-build, deploy-to-production ]
 

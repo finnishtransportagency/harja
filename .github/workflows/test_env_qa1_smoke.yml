@@ -39,6 +39,7 @@ jobs:
   # scan-and-test-image:
   
   deploy-qa1:
+    name: "Deploy branch to QA1"
     runs-on: ubuntu-latest
     ## TODO .. 
     environment: 'test-qa1'
