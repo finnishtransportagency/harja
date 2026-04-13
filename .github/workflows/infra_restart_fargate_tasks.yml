@@ -19,6 +19,10 @@ on:
           - stg
           - prod
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
   restart-fargate-tasks:
     runs-on: ubuntu-latest
@@ -26,10 +30,8 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
-      id-token: write
-      # Contents is needed for the checkout action
-      contents: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
 
     steps:
       - name: Checkout code
@@ -39,15 +41,21 @@ jobs:
           persist-credentials: false
 
       - name: List used environment variables
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+          ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
         run: |
-          echo "Target environment: ${{ inputs.environment }}"
+          echo "Target environment: ${ENVIRONMENT}"
           echo "Environment variables:"
-          echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
-          echo "  ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}"
-          echo "  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}"
-          echo "  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}"
-          echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
-
+          echo "  ECR_REPOSITORY_NAME: ${ECR_REPOSITORY_NAME}"
+          echo "  ECS_TASK_DEFINITION_NAME: ${ECS_TASK_DEFINITION_NAME}"
+          echo "  ECS_CONTAINER_NAME: ${ECS_CONTAINER_NAME}"
+          echo "  ECS_CLUSTER_NAME: ${ECS_CLUSTER_NAME}"
+          echo "  ECS_SERVICE_NAME: ${ECS_SERVICE_NAME}"
         shell: bash
 
       - name: Assume role with OIDC
