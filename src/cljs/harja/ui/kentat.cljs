@@ -374,11 +374,11 @@
   (let [fmt-fn (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
-        id (or elementin-id (gensym))]
+        generoitu-id (gensym)]
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus elementin-id
                    disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
         (let [yksikko (if-not yksikko teksti-oikealla yksikko)
               nykyinen-data @data
@@ -410,7 +410,7 @@
                                              "})?"))]
 
           [:span.numero
-           [:input (merge {:id id
+           [:input (merge {:id (or elementin-id generoitu-id)
                            :class (cond-> nil
                                     (and lomake?
                                       (not vayla-tyyli?)) (str "form-control ")
@@ -1123,7 +1123,7 @@
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi
-                                    on-datepicker-select vayla-tyyli? elementin-id elementin-nimi]} data]
+                                    on-datepicker-select vayla-tyyli?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -1172,7 +1172,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? muokattu?]} data]
+                    kentan-tyylit virhe? muokattu? elementin-id elementin-nimi]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
