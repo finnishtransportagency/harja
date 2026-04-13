@@ -794,11 +794,12 @@ ja kaikki pakolliset kentät on täytetty"
                      (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
-                        (if-let [nappi (get-in otsikko [:optiot :nappi])]
-                          [:div.lomake-ryhman-otsikko.napilla
-                           [:h3 (:otsikko otsikko)]
-                           nappi]
-                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)])
+                        (when (:otsikko otsikko)            ;; Ei tehdä tyhjää otsikkoa, jos se on nil
+                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
+                           [:div.lomake-ryhman-otsikko.napilla
+                            [:h3 (:otsikko otsikko)]
+                            nappi]
+                           [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]))
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))
