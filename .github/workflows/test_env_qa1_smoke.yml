@@ -44,9 +44,9 @@ jobs:
     environment: 'test-qa1'
 
     permissions:
-      id-token: write
-      contents: read
-      packages: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
 
     steps:
       - name: Checkout code
