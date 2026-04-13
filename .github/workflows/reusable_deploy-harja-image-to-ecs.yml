@@ -26,6 +26,10 @@ on:
       SLACK_WEBHOOK_URL:
         required: true
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 run-name: Deploy to '${{ inputs.environment }}' AWS env by @${{ github.actor }}
 
 # Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
@@ -36,12 +40,9 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
-      id-token: write
-      # Contents is needed for the checkout action
-      contents: read
-      # Actions read lupaa tarvitaan actions/download-artifact actionissa
-      actions: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      actions: read # Tarvitaan actions/download-artifact actionissa
 
     steps:
       - name: Checkout code
