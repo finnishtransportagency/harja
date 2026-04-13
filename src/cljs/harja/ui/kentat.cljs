@@ -1123,7 +1123,7 @@
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi
-                                    on-datepicker-select vayla-tyyli? elementin-nimi]} data]
+                                    on-datepicker-select vayla-tyyli? elementin-id elementin-nimi]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -1186,9 +1186,10 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))
-               elementin-id (if elementin-nimi
-                              elementin-nimi
-                              (str (gensym "pvm-input")))
+               elementin-id (cond
+                              elementin-id elementin-id
+                              elementin-nimi elementin-nimi
+                              :else (str (gensym "pvm-input")))
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                                    (cond
                                                      kentan-tyylit (apply str kentan-tyylit)
