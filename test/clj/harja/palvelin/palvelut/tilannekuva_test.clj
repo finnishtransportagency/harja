@@ -403,7 +403,7 @@
         urakkatyypit (set (distinct (keep #(get-in % [:tyyppi]) vastaus)))
         urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))]
 
-    (is (= (count elynumerot) 6) "JVH:n pitäisi nähdä kaikki ELY:t")
+    (is (= (count elynumerot) 8) "JVH:n pitäisi nähdä kaikki ELY:t")
 
     (is (contains? urakkatyypit :hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, hoito")
     (is (contains? urakkatyypit :paallystys)  "JVH:n pitäisi nähdä kaikki urakkatyypit, paallystys")
@@ -414,12 +414,12 @@
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 54) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 56) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
         elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))]
-    (is (= (count elynumerot) 6)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
+    (is (= (count elynumerot) 8)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
 
 (deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)

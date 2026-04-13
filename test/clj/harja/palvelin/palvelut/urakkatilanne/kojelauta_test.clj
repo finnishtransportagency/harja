@@ -64,7 +64,7 @@
     (is (every? #(integer? (:hoitokauden_alkuvuosi %)) vastaus))
     (is (every? #(integer? (:evk_id %)) vastaus))
     (is (every? #(map? (:ks_tila %)) vastaus))
-    (is (= 8 (count vastaus)) "Urakoiden lukumäärä")))
+    (is (= 10 (count vastaus)) "Urakoiden lukumäärä")))
 
 (deftest kaikki-mhut-kojelautaan-hk-alkuvuosi-2024-vajaa-kayttooikeus-throwaa
   ;; Urakanvalvojan pitää nähdä
@@ -82,8 +82,8 @@
                                       :hoitokauden-alkuvuosi 2024
                                       :urakka-idt nil
                                       :evk-idt #{}})]
-    (is (= 8 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
-    (is (= 8 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
+    (is (= 10 (count vastaus-urakanvalvojalle)) "Urakanvalvoja näkee")
+    (is (= 10 (count vastaus-ely-paakayttajalle)) "ELY:n Pääkäyttäjä näkee"))
 
   ;; Urakoitsijalle ei tässä vaiheessa näytetä (myöh. suunnitelma avata oman urakan osalta)
   (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
