@@ -1519,7 +1519,7 @@
    "Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
-   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
    "vastuuhenkilo" #{"R" "W"}}}
  {:sym urakat-kulut-laskutusyhteenveto,
   :osio "Urakat",
