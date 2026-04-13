@@ -72,6 +72,10 @@ on:
         required: false
 
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
@@ -184,12 +188,9 @@ jobs:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
 
     steps:
       - name: Checkout code
@@ -264,9 +265,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-harja
     permissions:
-      contents: read
-      packages: read
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -342,10 +342,9 @@ jobs:
     env:
       TZ: "EET"
     permissions:
-      contents: read
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
@@ -393,12 +392,9 @@ jobs:
       TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
@@ -446,12 +442,8 @@ jobs:
       TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      #checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
 
     steps:
       - name: Checkout code
@@ -495,10 +487,9 @@ jobs:
       HARJA_ITMF_BROKER_AI_PORT: 8161
 
     permissions:
-      contents: read
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
@@ -560,12 +551,9 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
