@@ -30,7 +30,7 @@ on:
         type: string
         required: true
 
-run-name: "Tools: Build & deploy GHA dockerfile '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
+run-name: "Tools: Build & deploy GHA docker image '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
@@ -40,7 +40,8 @@ env:
 permissions: {}
 
 jobs:
-  build-and-push-dockerfile:
+  build-and-push-docker-image:
+    name: "Build and push Docker-image"
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
