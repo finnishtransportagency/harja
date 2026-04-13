@@ -41,14 +41,10 @@ jobs:
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
     strategy:
       # Halutaan, että kaikki testit käydään läpi.
       # Yksittäinen flaky testi ei saa kaataa koko testimatriisia.
@@ -128,10 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
 
     steps:
       - name: Checkout code
@@ -202,12 +196,9 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents is needed for the checkout action
-      contents: read
-      # Sarif-upload
-      security-events: write
-      # Packages write lupaa tarvitaan image cachen pushaamiseen GH Docker Registryyn
-      packages: write
+      contents: read # Tarvitaan checkout actionissa
+      security-events: write # Tarvitaan SARIF-tulosten uploadaamiseen GitHub Security -välilehdelle
+      packages: write # Tarvitaan image cachen pushaamiseen GH Docker Registryyn
 
     steps:
       - name: Checkout code
@@ -285,12 +276,9 @@ jobs:
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
-      id-token: write
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Actions read lupaa tarvitaan actions/download-artifact actionissa
-      actions: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      actions: read # Tarvitaan actions/download-artifact actionissa
     with:
       environment: ${{ inputs.environment }}
       # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
@@ -318,12 +306,9 @@ jobs:
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC tokenia tarvitaan AWS jobeissa roolin omaksumiseen
-      id-token: write
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Actions read lupaa tarvitaan actions/download-artifact actionissa
-      actions: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      actions: read # Tarvitaan actions/download-artifact actionissa
     with:
       environment: ${{ matrix.environment }}
       # Määrittele mistä DB-migraatiot ja build-artifact haetaan. Näiden pitää olla yhteensopivia keskenään.
