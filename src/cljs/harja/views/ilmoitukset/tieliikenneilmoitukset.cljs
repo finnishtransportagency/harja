@@ -481,6 +481,7 @@
 
 
 (defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
+  (e! (v/->YhdistaValinnat @tiedot/valinnat))
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
@@ -510,9 +511,6 @@
                                            (reset! tiedot/oletus-valinnat? true)
                                            (reset! tiedot/oletus-valinnat? false)))))
     (komp/sisaan-ulos #(do
-                         ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
-                         (e! (v/->YhdistaValinnat @tiedot/valinnat))
-
                          (e! (v/->HaeAiheetJaTarkenteet))
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -524,6 +522,9 @@
                            {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
                                                    (e! (v/->ValitseIlmoitus (:id ilmoitus-infopaneelista))))
                                        :teksti "Valitse ilmoitus"}})
+
+                         ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+                         (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
                          ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
                          ;; Kuuntelun aloittamisen yhteydessä annetaan käyttöliittymästä optioksi "valinnat",
