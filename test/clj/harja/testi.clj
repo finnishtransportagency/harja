@@ -996,7 +996,18 @@
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa' and tyyppi = 'hallintayksikko'"))))
+
+(defn hae-pohjois-pohjanmaan-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  tyyppi = 'hallintayksikko' and nimi = 'Pohjois-Pohjanmaa'"))))
+
+(defn hae-hallintoyksikon-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                   FROM   organisaatio
+                   WHERE  tyyppi = 'hallintayksikko' and nimi = '%s'"
+               nimi))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
