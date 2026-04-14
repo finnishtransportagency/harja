@@ -116,10 +116,15 @@
 
 (defonce kuukaudet (reaction-writable
                      (let [hk @u/valittu-hoitokausi
-                           vuosi @valittu-vuosi]
+                           vuosi @valittu-vuosi
+                           aikarajaus @valittu-yhteenveto-aikarajaus]
                        (into [] (concat [nil] (cond
-                                                hk (pvm/aikavalin-kuukausivalit hk)
-                                                vuosi (pvm/vuoden-kuukausivalit vuosi)
+                                                (and (= aikarajaus :hoitokausi) hk)
+                                                (pvm/aikavalin-kuukausivalit hk)
+
+                                                vuosi
+                                                (pvm/vuoden-kuukausivalit vuosi)
+
                                                 :else []))))))
 
 (defn suorita-raportti [raportin-nimi]
@@ -175,7 +180,6 @@
                                    ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
                                    :valitse-fn #(do
                                                   (reset! u/valittu-hoitokauden-kuukausi nil)
-                                                  (reset! u/valittu-hoitokausi nil)
                                                   (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
                                                   (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
                                    :vaihtoehto-nayta aikarajaus-valinnat}
@@ -199,7 +203,6 @@
               #(do
                  (reset! valittu-vuosi %)
                  (reset! u/valittu-hoitokauden-kuukausi nil)
-                 (reset! u/valittu-hoitokausi nil)
                  (reset! valittu-kuukausi nil))]
 
              [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
