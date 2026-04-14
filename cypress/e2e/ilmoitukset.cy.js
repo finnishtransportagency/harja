@@ -81,12 +81,4 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
         cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
         cy.contains('.ilmoitukset', 'Uusia ilmoituksia haetaan', {timeout: timeout})
     })
-
-    // FIXME: Tämä  testi ei toimi, koska ilmoitusten ws-yhteys on otettu pois testikäytöstä
-    //        Poista tämä testi, jos ws-yhteys poistetaan kokonaan koodipesästä
-    it.skip("Ilmoitusten ws-yhteys aktivoituu", function () {
-        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: timeout }).should('not.exist')
-        cy.contains('Aktivoi kokeellinen ilmoitusten reaaliaikahaku').click()
-        cy.contains('.ilmoitukset', 'Uusien ilmoitusten reaaliaikahaku aktiivinen')
-    })
 })
