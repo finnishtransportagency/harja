@@ -154,6 +154,9 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" --ignore-scripts \
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
 # Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
 
+# Vaihda non-root käyttäjään
+USER node
+
 # Työkalujen versiot
 RUN echo  " Node version:    $(node -v) \n" \
     "NPM version:     $(npm -v) \n" \
@@ -162,10 +165,6 @@ RUN echo  " Node version:    $(node -v) \n" \
     "Edge version:    $(edge --version) \n" \
     "User:          $(whoami) \n"
 
-
 COPY entrypoint.sh /usr/local/bin
-
-# Vaihda non-root käyttäjään
-USER node
 
 ENTRYPOINT ["entrypoint.sh"]
