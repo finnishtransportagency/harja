@@ -76,7 +76,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni? input-id piilota-haetaan-teksti-ja-spinner?]} data]
+                                     hakuikoni? piilota-haetaan-teksti-ja-spinner?]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -98,7 +98,7 @@
         edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
-      (fn [{:keys [lahde disabled?]} data]
+      (fn [{:keys [lahde disabled? elementin-id]} data]
 
         (when (and
                 tarkkaile-ulkopuolisia-muutoksia?
@@ -117,7 +117,7 @@
                              (str "input-default komponentin-input"))
                            (when disabled? "disabled"))
                   :value @teksti
-                  :id input-id
+                  :id elementin-id
                   :placeholder placeholder
                   :disabled disabled?
                   :size pituus
@@ -206,10 +206,10 @@
                 [:span.ei-hakutuloksia "Ei tuloksia"]
                 (doall (map-indexed (fn [i t]
                                       (let [checkbox-input-id (str
-                                                                (when input-id (str input-id "-"))
+                                                                (when elementin-id (str elementin-id "-"))
                                                                 (str "checkbox-id-" i))
                                             checkbox-label-id (str
-                                                                (when input-id (str input-id "-"))
+                                                                (when elementin-id (str elementin-id "-"))
                                                                 (str "label-id-" i))]
                                         ^{:key (hash t)}
                                         [:li {:class [(when (= i idx) "korostettu") "padding-left-8"

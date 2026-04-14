@@ -436,7 +436,7 @@ ja kaikki pakolliset kentät on täytetty"
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
-  (let [kentan-id (or label-for-id (str (name nimi) "-" (gensym)))]
+  (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
     [:div.form-group {:class (str
                                ;; Korostaa input/tekstikentän reunat, jos on virhe
                                (when (some? virheet) "lomake-validointivirhe ")
