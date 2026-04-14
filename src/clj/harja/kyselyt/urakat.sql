@@ -7,8 +7,8 @@ SELECT
   u.loppupvm,
   u.sampoid,
   u.urakkanro,
-  hal.id        AS hallintayksikko_id,
-  hal.nimi      AS hallintayksikko_nimi,
+  evk.id        AS elinvoimakeskus_id,
+  evk.nimi      AS elinvoimakeskus_nimi,
   org.id        AS urakoitsija_id,
   org.nimi      AS urakoitsija_nimi,
   org.ytunnus   AS urakoitsija_ytunnus,
@@ -22,7 +22,7 @@ SELECT
   sl.onnistunut AS sahkelahetys_onnistunut,
   array_to_string(ua.turvalaiteryhmat, ',') AS turvalaiteryhmat
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN sopimus s ON u.id = s.urakka
@@ -68,26 +68,31 @@ ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
 -- Palauttaa teiden-hoito-urakan hoitourakkana (MHU).
-SELECT u.id        AS urakka_id,
-       u.nimi      AS urakka_nimi,
+SELECT u.id                      AS urakka_id,
+       u.nimi                    AS urakka_nimi,
        CASE
-         WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
-         ELSE u.tyyppi
-         END       AS tyyppi,
-       o.id        AS hallintayksikko_id,
-       o.nimi      AS hallintayksikko_nimi,
-       o.elynumero AS hallintayksikko_elynumero,
-       u.urakkanro AS urakka_urakkanro
+           WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
+           ELSE u.tyyppi
+           END                   AS tyyppi,
+       evk.id                    AS elinvoimakeskus_id,
+       evk.nimi                  AS elinvoimakeskus_nimi,
+       evk.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
+       u.urakkanro               AS urakka_urakkanro
 FROM urakka u
-         JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
+         JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
+WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu)
+    OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
   AND (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija)
-  AND (:urakkatyyppi :: urakkatyyppi IS NULL OR CASE
-                                                    WHEN :urakkatyyppi = 'hoito'
-                                                        THEN u.tyyppi IN ('hoito', 'teiden-hoito')
-                                                    ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi END)
-  AND (:hallintayksikko_annettu = FALSE OR u.hallintayksikko IN (:hallintayksikko))
+  AND (:urakkatyyppi :: urakkatyyppi IS NULL
+    OR CASE
+           WHEN :urakkatyyppi = 'hoito'
+               THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+           ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
+           END)
+  AND (:hallintayksikko_annettu = FALSE
+    OR u.elinvoimakeskus_id IN (:hallintayksikko))
   AND u.poistettu = FALSE;
+
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -178,6 +183,16 @@ FROM urakka u
 WHERE o.id = :hy
 AND u.poistettu = false;
 
+-- name: hae-elinvoimakeskuksen-urakat
+SELECT
+    u.id,
+    u.nimi,
+    u.tyyppi
+FROM urakka u
+         JOIN organisaatio o ON o.id = u.elinvoimakeskus_id
+WHERE o.id = :evk_id
+  AND u.poistettu = false;
+
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
 SELECT
@@ -215,9 +230,9 @@ SELECT
   )                                       AS urakan_yhteystiedot,
   (SELECT *
    FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
-  hal.id                                  AS hallintayksikko_id,
-  hal.nimi                                AS hallintayksikko_nimi,
-  hal.lyhenne                             AS hallintayksikko_lyhenne,
+  evk.id                                  AS elinvoimakeskus_id,
+  evk.nimi                                AS elinvoimakeskus_nimi,
+  evk.lyhenne                             AS elinvoimakeskus_lyhenne,
   org.id                                  AS urakoitsija_id,
   org.nimi                                AS urakoitsija_nimi,
   org.ytunnus                             AS urakoitsija_ytunnus,
@@ -254,14 +269,14 @@ SELECT
   END                                     AS alueurakan_alue
 
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
   LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
-WHERE u.hallintayksikko = :hallintayksikko
+WHERE u.elinvoimakeskus_id = :hallintayksikko
       AND u.poistettu = false
       AND (u.id IN (:sallitut_urakat)
            OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
@@ -270,6 +285,97 @@ WHERE u.hallintayksikko = :hallintayksikko
                OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                    :kayttajan_org_id = org.id)))
 ORDER BY u.id DESC;
+
+-- name: listaa-urakat-elinvoimakeskukselle
+-- Palauttaa listan annetun elinvoimakeskus (id) urakoista. Sisältää perustiedot ja geometriat.
+SELECT
+    u.id,
+    u.nimi,
+    u.lyhyt_nimi,
+    u.sampoid,
+    CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
+             THEN ST_SimplifyPreserveTopology(u.alue, 50)
+        END as alue,
+    u.alkupvm,
+    u.loppupvm,
+    CASE
+        WHEN u.kesakausi_alkupvm IS NOT NULL THEN
+            CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_alkupvm, 'MM-DD'))::DATE
+        END AS "kesakausi-alkupvm",
+    CASE
+        WHEN u.kesakausi_loppupvm IS NOT NULL THEN
+            CONCAT(TO_CHAR(NOW(), 'YYYY'), '-', TO_CHAR(u.kesakausi_loppupvm, 'MM-DD'))::DATE
+        END AS "kesakausi-loppupvm",
+    u.tyyppi,
+    u.sopimustyyppi,
+    u.indeksi,
+    u.urakkanro,
+    (SELECT array_agg(
+                concat_ws('|',
+                          y.id,
+                          y.matkapuhelin,
+                          y.sahkoposti,
+                          y.organisaatio)
+            )
+     FROM yhteyshenkilo y
+              JOIN yhteyshenkilo_urakka yu ON yu.yhteyshenkilo = y.id
+     WHERE yu.urakka = u.id AND yu.rooli = 'Urakan yhteystiedot'
+    )                                       AS urakan_yhteystiedot,
+    (SELECT *
+     FROM indeksilaskennan_perusluku(u.id)) AS indeksilaskennan_perusluku,
+    evk.id                                  AS elinvoimakeskus_id,
+    evk.nimi                                AS elinvoimakeskus_nimi,
+    evk.lyhenne                             AS elinvoimakeskus_lyhenne,
+    org.id                                  AS urakoitsija_id,
+    org.nimi                                AS urakoitsija_nimi,
+    org.ytunnus                             AS urakoitsija_ytunnus,
+    yt.yhatunnus                            AS yha_yhatunnus,
+    yt.yhaid                                AS yha_yhaid,
+    yt.yhanimi                              AS yha_yhanimi,
+    yt.elyt :: TEXT []                      AS yha_elyt,
+    yt.vuodet :: INTEGER []                 AS yha_vuodet,
+    yt.sidonta_lukittu                      AS yha_sidonta_lukittu,
+    yt.kohdeluettelo_paivitetty             AS yha_kohdeluettelo_paivitetty,
+    yt.kohdeluettelo_paivittaja             AS yha_kohdeluettelo_paivittaja,
+    k.etunimi                               AS yha_kohdeluettelo_paivittaja_etunimi,
+    k.sukunimi                              AS yha_kohdeluettelo_paivittaja_sukunimi,
+    u.takuu_loppupvm,
+    (SELECT array_agg(concat((CASE
+                                  WHEN paasopimus IS NULL
+                                      THEN '*'
+                                  ELSE '' END),
+                             id,
+                             '=',
+                             COALESCE(sampoid, nimi)))
+     FROM sopimus s
+     WHERE urakka = u.id
+       AND s.poistettu = false)           AS sopimukset,
+    -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
+    CASE
+        WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
+            THEN ST_Simplify(sps.alue, 50)
+        WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
+            THEN ST_Simplify(tlu.alue, 50)
+        WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
+            THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
+            ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
+        END                                     AS alueurakan_alue
+
+FROM urakka u
+         LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
+         LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+         LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
+         LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
+         LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
+         LEFT JOIN yhatiedot yt ON u.id = yt.urakka
+         LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
+WHERE u.elinvoimakeskus_id IN (:elinvoimakeskusid) -- Pohjanmaan elinvoimakeskuksen urakat on palautettava, kun haetaan Etelä-Pohjanmaan elinvoimakeskuksen urakoita
+  AND u.poistettu = false
+  AND (u.id IN (:sallitut_urakat)
+    OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+         'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+        OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+            :kayttajan_org_id = org.id)));
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
 -- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat
@@ -314,9 +420,9 @@ SELECT
   u.tyyppi,
   u.sopimustyyppi,
   u.takuu_loppupvm,
-  hal.id                        AS hallintayksikko_id,
-  hal.nimi                      AS hallintayksikko_nimi,
-  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  evk.id                        AS elinvoimakeskus_id,
+  evk.nimi                      AS elinvoimakeskus_nimi,
+  evk.lyhenne                   AS elinvoimakeskus_lyhenne,
   org.id                        AS urakoitsija_id,
   org.nimi                      AS urakoitsija_nimi,
   org.ytunnus                   AS urakoitsija_ytunnus,
@@ -326,11 +432,11 @@ SELECT
          AND poistettu = FALSE) AS sopimukset,
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE u.nimi ILIKE :teksti
-      OR hal.nimi ILIKE :teksti
+      OR evk.nimi ILIKE :teksti
       OR org.nimi ILIKE :teksti
       AND u.poistettu = FALSE;
 
@@ -347,9 +453,9 @@ SELECT
   u.tyyppi,
   u.sopimustyyppi,
   u.takuu_loppupvm,
-  hal.id                        AS hallintayksikko_id,
-  hal.nimi                      AS hallintayksikko_nimi,
-  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  evk.id                        AS elinvoimakeskus_id,
+  evk.nimi                      AS elinvoimakeskus_nimi,
+  evk.lyhenne                   AS elinvoimakeskus_lyhenne,
   org.id                        AS urakoitsija_id,
   org.nimi                      AS urakoitsija_nimi,
   org.ytunnus                   AS urakoitsija_ytunnus,
@@ -359,11 +465,11 @@ SELECT
          AND poistettu = FALSE) AS sopimukset,
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
 WHERE org.id = :organisaatio
-   OR hal.id = :organisaatio;
+   OR evk.id = :organisaatio;
 
 -- name: tallenna-urakan-sopimustyyppi!
 -- Tallentaa urakalle sopimustyypin
@@ -452,20 +558,18 @@ FROM urakka u
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-organisaatiotiedot
--- Hakee joukolle urakoita urakan ja hallintayksikön nimet ja id:t
--- Palauttaa teiden-hoito-urakan hoitourakkana (MHU).
-SELECT u.id         AS urakka_id,
-       u.nimi       AS urakka_nimi,
+SELECT u.id                      AS urakka_id,
+       u.nimi                    AS urakka_nimi,
        CASE
-         WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
-         ELSE u.tyyppi
-         END        AS tyyppi,
-       hy.id        AS hallintayksikko_id,
-       hy.nimi      AS hallintayksikko_nimi,
-       hy.elynumero AS hallintayksikko_elynumero,
-       u.urakkanro  AS urakka_urakkanro
+           WHEN u.tyyppi = 'teiden-hoito' THEN 'hoito'
+           ELSE u.tyyppi
+           END                   AS tyyppi,
+       evk.id                    AS elinvoimakeskus_id,
+       evk.nimi                  AS elinvoimakeskus_nimi,
+       evk.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
+       u.urakkanro               AS urakka_urakkanro
 FROM urakka u
-       JOIN organisaatio hy ON u.hallintayksikko = hy.id
+         JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
 WHERE u.id IN (:id);
 
 -- name: hae-urakat-ytunnuksella
@@ -709,9 +813,9 @@ SELECT
   u.sopimustyyppi,
   u.takuu_loppupvm,
   u.urakkanro,
-  hal.id                        AS hallintayksikko_id,
-  hal.nimi                      AS hallintayksikko_nimi,
-  hal.lyhenne                   AS hallintayksikko_lyhenne,
+  evk.id                        AS elinvoimakeskus_id,
+  evk.nimi                      AS elinvoimakeskus_nimi,
+  evk.lyhenne                   AS elinvoimakeskus_lyhenne,
   org.id                        AS urakoitsija_id,
   org.nimi                      AS urakoitsija_nimi,
   org.ytunnus                   AS urakoitsija_ytunnus,
@@ -728,7 +832,7 @@ SELECT
          AND poistettu = FALSE) AS sopimukset,
   ST_Simplify(au.alue, 50)      AS alueurakan_alue
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka

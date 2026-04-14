@@ -3,10 +3,10 @@
   Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
@@ -29,6 +29,22 @@
                                                        :vesi "V"
                                                        :rata "R"))))))
 
+(defn hae-elinvoimakeskukset
+  "Palvelu, joka palauttaa halutun liikennemuodon elinvoimakeskukset."
+  [db user tiedot]
+  (oikeudet/ei-oikeustarkistusta!)
+  (let [liikennemuoto (:liikennemuoto tiedot)
+        evkt (q/listaa-elinvoimakeskukset-kulkumuodolle db (when liikennemuoto
+                                                             (case liikennemuoto
+                                                               :tie "T"
+                                                               :vesi "V"
+                                                               :rata "R")))
+        ;; Poista elinvoimakeskus sana nimestä, koska se toistaa itseään ja vie tilaa.
+        evkt (map #(update % :nimi (fn [nimi] (str/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
+    (into []
+      (muunna-pg-tulokset :alue)
+      evkt)))
+
 
 (defn hae-organisaatio
   "Palvelu, joka palauttaa organisaation tiedot id:llä."
@@ -45,15 +61,20 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-                      :hallintayksikot (fn [user tiedot]
-                                         (hae-hallintayksikot (:db this) user tiedot))
-                      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
+      :hallintayksikot (fn [user tiedot]
+                         (hae-hallintayksikot (:db this) user tiedot))
+      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
     (julkaise-palvelu (:http-palvelin this)
-                      :hae-organisaatio (fn [user org-id]
-                                          (hae-organisaatio (:db this) user org-id)))
+      :elinvoimakeskukset (fn [user tiedot]
+                            (hae-elinvoimakeskukset (:db this) user tiedot))
+      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
+    (julkaise-palvelu (:http-palvelin this)
+      :hae-organisaatio (fn [user org-id]
+                          (hae-organisaatio (:db this) user org-id)))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :hallintayksikot)
+    (poista-palvelu (:http-palvelin this) :elinvoimakeskukset)
     (poista-palvelu (:http-palvelin this) :hae-organisaatio)
     this))

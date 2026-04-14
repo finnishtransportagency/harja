@@ -267,7 +267,7 @@
     (when yks
       (go
         (reset! urakka-haku-kaynnissa? true)
-        (let [vastaus (<! (ur/hae-hallintayksikon-urakat yks))]
+        (let [vastaus (<! (ur/hae-elinvoimakeskuksen-urakat yks))]
           ;; Raportit näkymässä omanlainen loaderi joka tarvitsee jonkin lipun onko haku käynnissä
           (reset! urakka-haku-kaynnissa? false)
           vastaus)))))

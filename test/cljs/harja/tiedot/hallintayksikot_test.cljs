@@ -40,7 +40,7 @@
 (deftest hallintayksikoiden-haku
   (async done
     (go
-      (let [haku (utils/fake-palvelukutsu :hallintayksikot fake-hy-haku)
+      (let [haku (utils/fake-palvelukutsu :elinvoimakeskukset fake-hy-haku)
            haluttu {:vesi [{:liikennemuoto :vesi :id 1 :type :hy}] :tie [{:liikennemuoto :tie :id 2 :type :hy}
                                                                {:liikennemuoto :tie :id 3 :type :hy}]}
            alkutilanne @hy/haetut-hallintayksikot

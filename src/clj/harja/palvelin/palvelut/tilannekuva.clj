@@ -66,25 +66,16 @@
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon-xf]]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
-            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]
-            [clojure.java.jdbc :as jdbc]
-            [harja.domain.roolit :as roolit]
             [harja.domain.tielupa :as tielupa]
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [harja.palvelin.asetukset :as asetukset]
-            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
-            [harja.palvelin.palvelut.toteumat :as toteumat]))
+            [harja.palvelin.asetukset :as asetukset]))
 
 (defn- tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -575,25 +566,25 @@
                  nil (:alku tiedot) (:loppu tiedot))
 
         ;; Jos käyttällä on rooli, jolla on oikeus oman-urakan-ely,
-        ;; kasataan lista hallintayksiköistä, joihin kuuluu edes yksi urakka, johon käyttäjällä on rooli,
+        ;; kasataan lista elinvoimakeskuksista, joihin kuuluu edes yksi urakka, johon käyttäjällä on rooli,
         ;; jolla on ko. oikeus
-        saman-elyn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                            (->> (q/hallintayksikoiden-urakat
-                                   db {:hallintayksikot
+        saman-evkn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
+                            (->> (q/elinvoimakeskusten-urakat
+                                   db {:elinvoimakeskukset
                                        (set
                                          (map
                                            (fn [alue]
-                                             (get-in alue [:hallintayksikko :id]))
+                                             (get-in alue [:elinvoimakeskus :id]))
                                            urakat))})
-                                 (group-by :hallintayksikko)
-                                 (filter
-                                   (fn [[hy urakat]]
-                                     (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely"
-                                                                     oikeus-nakyma
-                                                                     (:id %)
-                                                                     user)
-                                           urakat)))
-                                 (into {})))
+                              (group-by :elinvoimakeskus)
+                              (filter
+                                (fn [[evk urakat]]
+                                  (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely"
+                                           oikeus-nakyma
+                                           (:id %)
+                                           user)
+                                    urakat)))
+                              (into {})))
         kayttajan-urakat-alueittain (->>
                                       urakat
                                       (map
@@ -601,24 +592,20 @@
                                           (update
                                             alue
                                             :urakat
-                                            ;; Suodatetaan pois urakat, joihin käyttäjällä ei ole oikeutta..
                                             (fn [urakat]
                                               (filter
                                                 (fn [urakka]
                                                   (if (and (roolit/tilaajan-kayttaja? user)
-                                                           (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
-                                                           (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
-                                                    ;; Tilaajalla on oikeus kaikkiin urakoihin..
+                                                        (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
+                                                        (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
                                                     true
-
                                                     (or
-                                                      ;; Muilla käyttäjillä pitää olla urakkaan lukuoikeus TAI
                                                       (oikeudet/voi-lukea? oikeus-nakyma
-                                                                           (:id urakka)
-                                                                           user)
-                                                      ;; Urakan pitää kuulua hallintayksikköön, johon kuuluu urakka,
-                                                      ;; johon käyttäjällä on rooli, jolla on oman-urakan-ely oikeus
-                                                      (when-let [ely-urakat (get saman-elyn-urakat (get-in alue [:hallintayksikko :id]))]
+                                                        (:id urakka)
+                                                        user)
+                                                      ;; Urakan pitää kuulua elinvoimakeskukseen, johon kuuluu urakka,
+                                                      ;; johon käyttäjällä on rooli, jolla on oman-urakan-elinvoimakeskus oikeus
+                                                      (when-let [ely-urakat (get saman-evkn-urakat (get-in alue [:elinvoimakeskus :id]))]
                                                         ((set (map :id ely-urakat)) (:id urakka))))))
                                                 urakat)))))
                                       (map

@@ -11,6 +11,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.palvelin.palvelut.hankkeet :as hankkeet-palvelu]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
@@ -212,6 +213,36 @@
         urakka-xf
         (q/listaa-urakat-hallintayksikolle db
           {:hallintayksikko hallintayksikko-id
+           :kayttajan_org_id (:id organisaatio)
+           :kayttajan_org_tyyppi organisaatiotyyppi
+           :sallitut_urakat (if (empty? urakat)
+                              ;; Jos ei urakoita, annetaan
+                              ;; dummy, jotta IN toimii
+                              [-1]
+                              urakat)})))))
+
+(defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
+  (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
+  (let [urakat (oikeudet/kayttajan-urakat user)
+        elinvoimaskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
+        ;; Jos haetaan Pohjamaan elinvoimakeskuksen urakoita, niin näytetään myös Etelä-pohjanmaan elinvoimakeskuksen urakat.
+        ;; Eli riippumatta, haetaan eteläpohjanmaan tai pohjanmaan, niin aina haetaan molempien urakat
+        toinen-elinvoimakeskus-id (cond
+                                    (= (:nimi elinvoimaskus) "Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaan elinvoimakeskus"})))
+                                    (= (:nimi elinvoimaskus) "Etelä-Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaan elinvoimakeskus"})))
+                                    :else nil)
+         elinvoimakeskusidt (if toinen-elinvoimakeskus-id
+                               [elinvoimakeskusid toinen-elinvoimakeskus-id]
+                               [elinvoimakeskusid])
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
+    (if (and (nil? organisaatio) (empty? urakat))
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        [])
+      (into []
+        urakka-xf
+        (q/listaa-urakat-elinvoimakeskukselle db
+          {:elinvoimakeskusid elinvoimakeskusidt
            :kayttajan_org_id (:id organisaatio)
            :kayttajan_org_tyyppi organisaatiotyyppi
            :sallitut_urakat (if (empty? urakat)
@@ -501,6 +532,11 @@
         (hallintayksikon-urakat db user hallintayksikko)))
 
     (julkaise-palvelu http
+      :elinvoimakeskuksen-urakat
+      (fn [user elinvoimakeskusid]
+        (elinvoimakeskuksen-urakat db user elinvoimakeskusid)))
+
+    (julkaise-palvelu http
       :hae-urakka
       (fn [user urakka-id]
         (hae-yksittainen-urakka db user urakka-id)))
@@ -551,6 +587,7 @@
         (tallenna-vesivaylaurakka db user tiedot))
       {:kysely-spec ::u/tallenna-urakka-kysely
        :vastaus-spec ::u/tallenna-urakka-vastaus})
+
     (julkaise-palvelu http
       :hae-harjassa-luodut-urakat
       (fn [user _]
@@ -562,6 +599,7 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :hallintayksikon-urakat
+      :elinvoimakeskuksen-urakat
       :hae-urakka
       :hae-urakoita
       :hae-organisaation-urakat

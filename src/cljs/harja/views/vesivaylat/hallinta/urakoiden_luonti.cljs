@@ -104,14 +104,14 @@
               :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
            (lomake/rivi
              (if haetut-hallintayksikot
-               {:otsikko "Hallintayksikkö"
+               {:otsikko "Elinvoimakeskus"
                 :nimi ::u/hallintayksikko
                 :tyyppi :valinta
                 :pakollinen? true
                 :valinnat haetut-hallintayksikot
-                :valinta-nayta #(if % (::o/nimi %) "- Valitse hallintayksikkö -")
+                :valinta-nayta #(if % (::o/nimi %) "- Valitse elinvoimakeskus -")
                 :aseta (fn [rivi arvo] (assoc rivi ::u/hallintayksikko (dissoc arvo :alue :type)))}
-               {:otsikko "Hallintayksikkö"
+               {:otsikko "Elinvoimakeskus"
                 :nimi ::u/hallintayksikko
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
