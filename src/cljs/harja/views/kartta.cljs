@@ -147,7 +147,7 @@
                           :mount true
                           :timeout
                           ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
-                          (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
+                          (do ;; (log "KARTTA LÄHTI OIKEASTI")
                             (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
                             (aseta-kartta-debug-sijainti x (- @dom/korkeus) w h false)
                             (recur nil nil nil w h nil))))
@@ -162,41 +162,41 @@
               ;; Eka kerta, asetetaan kartan sijainti
               (or (= :aseta paivita) aseta (nil? naulattu?))
               (let [naulattu? (neg? uusi-y)]
-                                        ;(log "EKA KERTA")
+                ;(log "EKA KERTA")
                 (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
                 (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
                 (when (or (not= w uusi-w) (not= h uusi-h))
                   (reagent/next-tick #(openlayers/invalidate-size!)))
                 (recur naulattu?
-                       uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                  uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               ;; Jos kartta ei ollut naulattu yläreunaan ja nyt meni negatiiviseksi
               ;; koko pitää asettaa
               (and (not naulattu?) (neg? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
-                  (aseta-kartta-debug-sijainti uusi-x uusi-y uusi-w uusi-h true)
-                  (recur true
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                (aseta-kartta-debug-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                (recur true
+                  uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
               (and naulattu? (pos? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
-                  (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
-                  (recur false
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                (recur false
+                  uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               ;; jos w/h muuttuu
               (or (not= w uusi-w)
-                  (not= h uusi-h))
+                (not= h uusi-h))
               (do (when-not transition-end-tuettu?
                     (go (<! (async/timeout 150))
-                        (openlayers/invalidate-size!)))
-                  (recur naulattu?
-                         uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
+                      (openlayers/invalidate-size!)))
+                (recur naulattu?
+                  uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               :default
               (recur naulattu?
-                     uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
+                uusi-x uusi-y uusi-w uusi-h uusi-offset-y)))))))
 
 ;; halutaan että kartan koon muutos aiheuttaa rerenderin kartan paikalle
 (defn- kartan-paikkavaraus
@@ -206,24 +206,24 @@
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
-     (komp/kuuntelija #{:ikkunan-koko-muuttunut
-                        :murupolku-naytetty-domissa?}
-                      #(paivita :aseta))
-      {:component-did-mount    #(do
-                                 (events/listen js/window
-                                                EventType/SCROLL
-                                                scroll-kuuntelija)
-                                 (paivita :mount))
-       :component-did-update   #(paivita :aseta)
+      (komp/kuuntelija #{:ikkunan-koko-muuttunut
+                         :murupolku-naytetty-domissa?}
+        #(paivita :aseta))
+      {:component-did-mount #(do
+                               (events/listen js/window
+                                 EventType/SCROLL
+                                 scroll-kuuntelija)
+                               (paivita :mount))
+       :component-did-update #(paivita :aseta)
        :component-will-unmount (fn [this]
                                  ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
                                  (events/unlisten js/window EventType/SCROLL scroll-kuuntelija)
                                  (paivita false))}
 
       (fn []
-        [:div#kartan-paikka {:style {:height        (fmt/pikseleina @kartan-korkeus)
+        [:div#kartan-paikka {:style {:height (fmt/pikseleina @kartan-korkeus)
                                      :margin-bottom "5px"
-                                     :width         "100%"}}]))))
+                                     :width "100%"}}]))))
 
 (defn kartan-paikka
   [& args]
@@ -239,12 +239,12 @@
 (reset! nav/kartan-extent +koko-suomi-extent+)
 
 (defonce urakka-kuuntelija
-         (t/kuuntele! :urakka-valittu
-                      #(openlayers/hide-popup!)))
+  (t/kuuntele! :urakka-valittu
+    #(openlayers/hide-popup!)))
 
 (defonce kartan-koon-paivitys
-         (run! (do @dom/ikkunan-koko
-                   (openlayers/invalidate-size!))))
+  (run! (do @dom/ikkunan-koko
+          (openlayers/invalidate-size!))))
 
 (defn piilota-tai-nayta-kartta-nappula
   [optiot]
@@ -259,34 +259,34 @@
         kartan-korkeus @kartan-korkeus
         v-ur @nav/valittu-urakka
         [muuta-kokoa-teksti ikoni] (case koko
-                             :M ["Suurenna karttaa" (ikonit/livicon-arrow-down)]
-                             :L ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
-                             :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
-                             ["" nil])]
+                                     :M ["Suurenna karttaa" (ikonit/livicon-arrow-down)]
+                                     :L ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
+                                     :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
+                                     ["" nil])]
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 
      ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
-     [:div.kartan-koko-napit {:style {:position   "absolute"
+     [:div.kartan-koko-napit {:style {:position "absolute"
                                       :text-align "center"
-                                      :top        (fmt/pikseleina (- kartan-korkeus
-                                                                     (if (= :S koko)
-                                                                       0
-                                                                       +kartan-napit-padding+)))
-                                      :width      "100%"
-                                      :z-index    100}}
+                                      :top (fmt/pikseleina (- kartan-korkeus
+                                                             (if (= :S koko)
+                                                               0
+                                                               +kartan-napit-padding+)))
+                                      :width "100%"
+                                      :z-index 100}}
       (if (= :S koko)
-        [:button.btn-xs.nappi-toissijainen.nappi-avaa-kartta.pull-right
+        [:button.btn-xs.nappi-toissijainen.nappi-avaa-kartta
          {:on-click #(nav/vaihda-kartan-koko! :L)}
          (ikonit/expand) " Näytä kartta"]
         [:span
          [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
-                                                         (case koko
-                                                           :M :L
-                                                           :L :M
-                                                           ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
-                                                           ;; suurenna | pienennä | piilota
-                                                           :XL :M))}
+                                                          (case koko
+                                                            :M :L
+                                                            :L :M
+                                                            ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
+                                                            ;; suurenna | pienennä | piilota
+                                                            :XL :M))}
           ikoni muuta-kokoa-teksti]
 
          [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko! :S)
@@ -308,8 +308,8 @@
                  (str "Piilota | " lukumaara-str " kpl")
                  (str "Karttaselitteet | " lukumaara-str " kpl"))]
     (if (and (not= :S @nav/kartan-koko)
-             (not (empty? selitteet))
-             @tiedot/ikonien-selitykset-nakyvissa?)
+          (not (empty? selitteet))
+          @tiedot/ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
        {:class (when (= :vasen @tiedot/ikonien-selitykset-sijainti) "kartan-ikonien-selitykset-vasen")}
        (if @tiedot/ikonien-selitykset-auki
@@ -332,8 +332,8 @@
                      (string? vari)
                      [:td.kartan-ikonien-selitykset-ikoni-sarake
                       [:div.kartan-ikoni-vari {:style {:background-color vari
-                                                       :width            (str varilaatikon-koko "px")
-                                                       :height           (str varilaatikon-koko "px")}}]]
+                                                       :width (str varilaatikon-koko "px")
+                                                       :height (str varilaatikon-koko "px")}}]]
 
                      (coll? vari)
                      (let [vk varilaatikon-koko
@@ -348,21 +348,21 @@
                            viimeinen (last solut)]
                        [:td.kartan-ikonien-selitykset-ikoni-sarake
                         [:div.kartan-ikoni-vari-pohja {:style {:background-color (second pohja)
-                                                               :width            (first pohja)
-                                                               :height           (first pohja)}}]
+                                                               :width (first pohja)
+                                                               :height (first pohja)}}]
                         (doall
                           (for [[koko v] sisakkaiset]
                             ^{:key (str koko "_" v "--" teksti)}
                             [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color v
-                                                                         :width            koko
-                                                                         :height           koko
-                                                                         :margin           (/ (- varilaatikon-koko koko) 2)}}]))
+                                                                         :width koko
+                                                                         :height koko
+                                                                         :margin (/ (- varilaatikon-koko koko) 2)}}]))
 
                         [:div.kartan-ikoni-vari-sisakkainen {:style {:background-color (second viimeinen)
-                                                                     :width            (first viimeinen)
-                                                                     :height           (first viimeinen)
-                                                                     :position         "relative"
-                                                                     :margin           (/ (- varilaatikon-koko (first viimeinen)) 2)}}]])
+                                                                     :width (first viimeinen)
+                                                                     :height (first viimeinen)
+                                                                     :position "relative"
+                                                                     :margin (/ (- varilaatikon-koko (first viimeinen)) 2)}}]])
 
 
                      :else [:td.kartan-ikonien-selitykset-ikoni-sarake
@@ -384,11 +384,11 @@
   []
   (let [sisalto @tiedot/kartan-yleiset-kontrollit-sisalto]
     (when-not (and (empty? sisalto)
-                   (not= :S @nav/kartan-koko))
+                (not= :S @nav/kartan-koko))
       [:span
        (for [[nimi sisalto] sisalto
              :let [luokka-str (or (:class (meta sisalto))
-                                  "kartan-yleiset-kontrollit")]]
+                                "kartan-yleiset-kontrollit")]]
          ^{:key (str nimi)}
          [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])])))
 
@@ -404,12 +404,12 @@
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
 (defonce kuuntele-kuvatason-paivitys
-         (t/kuuntele! :edistymispalkki/kuvataso
-                      #(reset! kuvatason-lataus %)))
+  (t/kuuntele! :edistymispalkki/kuvataso
+    #(reset! kuvatason-lataus %)))
 
 (defonce kuuntele-geometriatason-paivitys
-         (t/kuuntele! :edistymispalkki/geometriataso
-                      #(reset! geometriatason-lataus %)))
+  (t/kuuntele! :edistymispalkki/geometriataso
+    #(reset! geometriatason-lataus %)))
 
 (defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
@@ -430,17 +430,17 @@
 (defn ^:export viivan-piirto-aloita []
   (let [eventit (chan)]
     (reset! viivan-piirto
-            (tiedot/kaappaa-hiiri eventit))
+      (tiedot/kaappaa-hiiri eventit))
     (go-loop [e (<! eventit)
               pisteet []]
-             (log "LINESTRING("
-                  (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
-                  ")")
-             (when e
-               (recur (<! eventit)
-                      (if (= :click (:tyyppi e))
-                        (conj pisteet (:sijainti e))
-                        pisteet))))))
+      (log "LINESTRING("
+        (str/join ", " (map (fn [[x y]] (str x " " y)) pisteet))
+        ")")
+      (when e
+        (recur (<! eventit)
+          (if (= :click (:tyyppi e))
+            (conj pisteet (:sijainti e))
+            pisteet))))))
 
 (defn ^:export viivan-piirto-lopeta []
   (@viivan-piirto)
@@ -465,20 +465,20 @@
   (let [koordinaatti (js->clj (.-coordinate event))
         extent ((juxt :xmin :ymin :xmax :ymax) @nav/kartalla-nakyva-alue)
         nayta-neula! #(tasot/nayta-geometria! :klikattu-karttapiste
-                                              {:alue {:type :icon
-                                                      :coordinates %
-                                                      :img (kartta-ikonit/sijainti-ikoni "syaani")}}
-                                              :infopaneelin-merkki)]
+                        {:alue {:type :icon
+                                :coordinates %
+                                :img (kartta-ikonit/sijainti-ikoni "syaani")}}
+                        :infopaneelin-merkki)]
     (nayta-neula! koordinaatti)
     (swap! atomi assoc
-           :koordinaatti koordinaatti
-           :haetaan? true
-           :asiat [])
+      :koordinaatti koordinaatti
+      :haetaan? true
+      :asiat [])
 
     (go
       (let [in-ch (async/merge
-                   (map #(taso/hae-asiat-pisteessa % koordinaatti extent)
-                        (remove nil? (vals tasot))))]
+                    (map #(taso/hae-asiat-pisteessa % koordinaatti extent)
+                      (remove nil? (vals tasot))))]
         (loop [asia (<! in-ch)]
           (when asia
             (swap! atomi update :asiat conj asia)
@@ -490,23 +490,23 @@
                (if (nil? v)
                  m
                  (assoc m k (count v))))
-             {}
-             geometriat))
+    {}
+    geometriat))
 
 (defn- tapahtuman-geometria-on-hallintayksikko-tai-urakka? [geom]
   (or (= :ur (:type geom))
-      (= :hy (:type geom))))
+    (= :hy (:type geom))))
 
 (defn- tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
   ([geom] (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
-           (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko) geom))
+            (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko) geom))
   ([valittu-urakka valittu-hy geom]
    (or (and
          (= (:type geom) :ur)
          (= (:id geom) valittu-urakka))
-       (and
-         (= (:type geom) :hy)
-         (= (:id geom) valittu-hy)))))
+     (and
+       (= (:type geom) :hy)
+       (= (:id geom) valittu-hy)))))
 
 (defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
@@ -531,11 +531,11 @@
     (let [vanha-maara (geometria-maarat vanha)
           uusi-maara (geometria-maarat uusi)]
       (when (or (and (not= 1 (:infopaneelin-merkki vanha-maara))
-                     (not= 1 (:infopaneelin-merkki uusi-maara))
-                     (some tasot-joita-zoomataan-aina (keys uusi-maara)))
-                (not= (dissoc vanha-maara :infopaneelin-merkki :tienumerot)
-                      (dissoc uusi-maara :infopaneelin-merkki :tienumerot))
-                (not= (:organisaatio vanha) (:organisaatio uusi)))
+                  (not= 1 (:infopaneelin-merkki uusi-maara))
+                  (some tasot-joita-zoomataan-aina (keys uusi-maara)))
+              (not= (dissoc vanha-maara :infopaneelin-merkki :tienumerot)
+                (dissoc uusi-maara :infopaneelin-merkki :tienumerot))
+              (not= (:organisaatio vanha) (:organisaatio uusi)))
         (tiedot/zoomaa-geometrioihin)))))
 
 (defn- geometriat-muuttuneet
@@ -572,15 +572,15 @@
         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
         paallimmainen-organisatio (first klikatut-organisaatiot)
         klikatut-asiat (remove #(or (tapahtuman-geometria-on-hallintayksikko-tai-urakka? %)
-                                    (not (nayta-paneelissa?-fn %)))
-                               items)
+                                  (not (nayta-paneelissa?-fn %)))
+                         items)
         urakka? #(= :ur (:type %))
         hallintayksikko? #(= :hy (:type %))
         valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
-                                val-ur-id val-hy-id %)
+                                 val-ur-id val-hy-id %)
         avaa-paneeli?-sisaltava-item (some #(when (contains? % :avaa-paneeli?)
                                               %)
-                                           items)
+                                       items)
         avaa-paneeli? (if (nil? avaa-paneeli?-sisaltava-item) true (:avaa-paneeli? avaa-paneeli?-sisaltava-item))]
     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
@@ -596,7 +596,7 @@
     ;; Käyttäjä voi itse määrittää mitä tapahtuu, kun itemiä klikataan
     (some #(when (contains? % :on-item-click)
              ((:on-item-click %) %))
-          items)
+      items)
     (cond
       ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
       ;; vaan valitaan klikattu ilmoitus
@@ -614,15 +614,15 @@
       ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
       ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
       (and (#{:tilannekuva} sivu)
-           (empty? klikatut-asiat))
+        (empty? klikatut-asiat))
       (when-not tuplaklik?
         {:keskeyta-event? true
          :avaa-paneeli? true})
 
       ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
       (and (empty? klikatut-asiat)
-           (urakka? paallimmainen-organisatio)
-           (valittu-organisaatio? paallimmainen-organisatio))
+        (urakka? paallimmainen-organisatio)
+        (valittu-organisaatio? paallimmainen-organisatio))
       (when-not (#{:raportit} sivu)
         (when-not tuplaklik?
           {:keskeyta-event? true
@@ -630,13 +630,13 @@
 
       ;; "Ohi klikkaaminen" etusivulla ei tee mitään
       (and (empty? klikatut-asiat)
-           (hallintayksikko? paallimmainen-organisatio)
-           (valittu-organisaatio? paallimmainen-organisatio))
+        (hallintayksikko? paallimmainen-organisatio)
+        (valittu-organisaatio? paallimmainen-organisatio))
       nil
 
       ;; Urakan tai hallintayksikön valitseminen etusivulla
       (and (empty? klikatut-asiat)
-           (not-empty klikatut-organisaatiot))
+        (not-empty klikatut-organisaatiot))
       (do
         (merge
           {:keskeyta-event? true}
@@ -653,8 +653,8 @@
       (do
         (merge
           {:keskeyta-event? true
-          :avaa-paneeli? avaa-paneeli?
-          :nayta-nama-paneelissa klikatut-asiat}
+           :avaa-paneeli? avaa-paneeli?
+           :nayta-nama-paneelissa klikatut-asiat}
           (when tuplaklik? {:keskita-naihin klikatut-asiat}))))))
 
 (defn- kasittele-select!
@@ -667,7 +667,7 @@
                  avaa-paneeli?
                  nayta-nama-paneelissa
                  keskita-naihin]} (klikkauksesta-seuraavat-tapahtumat items tuplaklik? (@reitit/url-navigaatio :sivu)
-                                                                        (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko))]
+                                    (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko))]
      (when keskeyta-event?
        (.stopPropagation event)
        (.preventDefault event))
@@ -679,8 +679,8 @@
      (when valitse-ilmoitus (t/julkaise! (assoc valitse-ilmoitus :aihe :ilmoitus-klikattu)))
 
      (when avaa-paneeli? (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                  event
-                                                                  tiedot/asiat-pisteessa))
+                           event
+                           tiedot/asiat-pisteessa))
 
      (when-not (empty? nayta-nama-paneelissa)
        (apply nayta-infopaneelissa! nayta-nama-paneelissa))
@@ -694,114 +694,114 @@
 (defn kartta-openlayers []
   (komp/luo
 
-   (komp/sisaan tiedot/zoomaa-geometrioihin)
+    (komp/sisaan tiedot/zoomaa-geometrioihin)
 
-   (komp/watcher nav/kartan-koko
-                 (fn [_ _ _]
-                   (when @tiedot/pida-geometriat-nakyvilla?
-                     (log "Kartan koko muuttui, zoomataan!")
-                     (tiedot/zoomaa-geometrioihin)))
+    (komp/watcher nav/kartan-koko
+      (fn [_ _ _]
+        (when @tiedot/pida-geometriat-nakyvilla?
+          (log "Kartan koko muuttui, zoomataan!")
+          (tiedot/zoomaa-geometrioihin)))
 
-                 tasot/geometriat-kartalle
-                 (fn [_ vanha uusi]
-                   (geometriat-muuttuneet vanha uusi)))
+      tasot/geometriat-kartalle
+      (fn [_ vanha uusi]
+        (geometriat-muuttuneet vanha uusi)))
 
-   (fn []
-     (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
-                  :L
-                  @nav/kartan-koko)]
+    (fn []
+      (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+                   :L
+                   @nav/kartan-koko)]
 
-       [openlayers
-        {:id "kartta"
-         :width "100%"
-         ;; set width/height as CSS units, must set height as pixels!
-         :height (fmt/pikseleina @kartan-korkeus)
-         :style (when (= koko :S)
-                  ;; display none estää kartan korkeuden
-                  ;; animoinnin suljettaessa
-                  {:display "none"})
-         :class (when (or
-                        (= :hidden koko)
-                        (= :S koko))
-                  "piilossa")
+        [openlayers
+         {:id "kartta"
+          :width "100%"
+          ;; set width/height as CSS units, must set height as pixels!
+          :height (fmt/pikseleina @kartan-korkeus)
+          :style (when (= koko :S)
+                   ;; display none estää kartan korkeuden
+                   ;; animoinnin suljettaessa
+                   {:display "none"})
+          :class (when (or
+                         (= :hidden koko)
+                         (= :S koko))
+                   "piilossa")
 
-         ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
+          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-         :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name (@reitit/url-navigaatio :sivu)))
-         :extent @nav/kartan-extent
+          :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name (@reitit/url-navigaatio :sivu)))
+          :extent @nav/kartan-extent
 
-         :selection nav/valittu-hallintayksikko
-         :on-zoom paivita-extent
-         :on-drag (fn [item event]
-                    (paivita-extent item event)
-                    (t/julkaise! {:aihe :karttaa-vedetty}))
-         :on-postrender (fn [_]
-                          ;; Geometriatason pakottaminen valmiiksi postrenderissä
-                          ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
-                          ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
-                          (edistymispalkki/geometriataso-pakota-valmistuminen!))
-         :on-mount (fn [initialextent]
-                     (paivita-extent nil initialextent))
-         :on-click (fn [event]
-                     ;; Click tarkoittaa tyhjän pisteen klikkaamista,
-                     ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
-                     (cond
-                       ;; Näissä näkymissä ei näytetä paneelia
-                       (#{:ilmoitukset :raportit} (@reitit/url-navigaatio :sivu))
-                       nil
+          :selection nav/valittu-hallintayksikko
+          :on-zoom paivita-extent
+          :on-drag (fn [item event]
+                     (paivita-extent item event)
+                     (t/julkaise! {:aihe :karttaa-vedetty}))
+          :on-postrender (fn [_]
+                           ;; Geometriatason pakottaminen valmiiksi postrenderissä
+                           ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
+                           ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
+                           (edistymispalkki/geometriataso-pakota-valmistuminen!))
+          :on-mount (fn [initialextent]
+                      (paivita-extent nil initialextent))
+          :on-click (fn [event]
+                      ;; Click tarkoittaa tyhjän pisteen klikkaamista,
+                      ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
+                      (cond
+                        ;; Näissä näkymissä ei näytetä paneelia
+                        (#{:ilmoitukset :raportit} (@reitit/url-navigaatio :sivu))
+                        nil
 
-                       ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
-                       (and (#{:urakat} (@reitit/url-navigaatio :sivu))
-                         (not @nav/valittu-urakka))
-                       nil
+                        ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
+                        (and (#{:urakat} (@reitit/url-navigaatio :sivu))
+                          (not @nav/valittu-urakka))
+                        nil
 
-                       :default
-                       (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                         event
-                         tiedot/asiat-pisteessa))
-                     (.stopPropagation event)
-                     (.preventDefault event))
-         :on-select kasittele-select!
+                        :default
+                        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                          event
+                          tiedot/asiat-pisteessa))
+                      (.stopPropagation event)
+                      (.preventDefault event))
+          :on-select kasittele-select!
 
-         :on-dblclick nil
+          :on-dblclick nil
 
-         :on-dblclick-select kasittele-dblclick-select!
+          :on-dblclick-select kasittele-dblclick-select!
 
-         :tooltip-fn (fn [geom]
-                       ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
-                       ; on valittu hallintayksikkö tai urakka.
-                       (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
-                             (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
-                         nil
-                         (fn []
-                           (and geom
-                             [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
+          :tooltip-fn (fn [geom]
+                        ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
+                        ; on valittu hallintayksikkö tai urakka.
+                        (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
+                              (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
+                          nil
+                          (fn []
+                            (and geom
+                              [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
-         :geometries @tasot/geometriat-kartalle
-         :geometry-layers [{:id :tienumerot
-                            :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
-                            :icon (ikonit/numero-taulu-24 16 16)}]
-         :layers (keep identity [(when (or
-                                         (k/kehitysymparistossa-localhost?)
-                                         (k/kehitysymparistossa-gc?))
-                                   ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
-                                   {:type :wms
-                                    :id :kapsi
-                                    :url "https://tiles.kartat.kapsi.fi/taustakartta"
-                                    :layer "taustakartta"
-                                    :default true})
-                                 {:type :mml
-                                  :url (str (k/wmts-polku-mml) "maasto/wmts")
-                                  :layer "taustakartta"
-                                  :default true}
-                                 {:type :wms
-                                  :id :enc-merikartta
-                                  :nimi "ENC merikartta"
-                                  :icon (ikonit/ankkuri-24 16 16)
-                                  :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
-                                  :layer "cells"
-                                  :style "style-id-202"
-                                  :default false}])}]))))
+          :geometries @tasot/geometriat-kartalle
+          :geometry-layers [{:id :tienumerot
+                             :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
+                             :icon (ikonit/numero-taulu-24 16 16)}]
+          :layers (keep identity [(when (or
+                                          (k/kehitysymparistossa-localhost?)
+                                          (k/kehitysymparistossa-gc?))
+                                    ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
+                                    {:type :wms
+                                     :id :kapsi
+                                     :url "https://tiles.kartat.kapsi.fi/taustakartta"
+                                     :layer "taustakartta"
+                                     :default true})
+                                  {:type :mml
+                                   :url (str (k/wmts-polku-mml) "maasto/wmts")
+                                   :layer "taustakartta"
+                                   :default true}
+                                  {:type :wms
+                                   :id :enc-merikartta
+                                   :nimi "ENC merikartta"
+                                   :icon (ikonit/ankkuri-24 16 16)
+                                   :url "https://julkinen.vayla.fi/s57/wms?request=GetCapabilities&service=WMS"
+                                   :layer "cells"
+                                   :style "style-id-202"
+                                   :default false}])}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))

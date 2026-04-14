@@ -21,7 +21,7 @@
         :on-click #(avaa-modal-linkki osoite target)}
     teksti]))
 
-(defonce edellinen-fokusoitu-elementti (r/atom nil)) 
+(defonce edellinen-fokusoitu-elementti (r/atom nil))
 
 (def modal-sisalto (atom {:otsikko nil
                           :otsikon-alle-komp nil
@@ -42,8 +42,8 @@
 (defn- modal-container* [{:keys [modaalin-fokus-elementti]}]
   (let [modal-ref (r/atom nil)
         siirra-fokus (fn [modal-nakyma fokus-elementti]
-                        (when (and modal-nakyma fokus-elementti)
-                          (dom/siirra-fokus-nakymaan modal-nakyma fokus-elementti)))]
+                       (when (and modal-nakyma fokus-elementti)
+                         (dom/siirra-fokus-nakymaan modal-nakyma fokus-elementti)))]
     (r/create-class
       {:component-did-update (fn [this old-argv]
                                ;; Saavutettavuuden kannalta on tärkeää, että fokus pysyy modaalin sisällä ja palautetaan suljettaessa
@@ -51,7 +51,7 @@
                                (let [new-argv (rest (r/argv this))
                                      modal-nakyma @modal-ref
                                      nakyvissa-paivittyi (not= (:nakyvissa? (first new-argv)) (:nakyvissa? (second old-argv)))
-                                     modaali-suljettu? (and (false? (:nakyvissa? (first new-argv))) (true? (:nakyvissa? (second old-argv))))] 
+                                     modaali-suljettu? (and (false? (:nakyvissa? (first new-argv))) (true? (:nakyvissa? (second old-argv))))]
                                  (when (and nakyvissa-paivittyi modal-nakyma (not modaali-suljettu?)) ;; Varmistetaan että esim. input kenttään kirjoittaminen ei aiheuta fokuksen siirtymistä
                                    (reset! edellinen-fokusoitu-elementti (.-activeElement js/document)) ;; Otetaan talteen ennen modaalia fokusoitu elementti
                                    (if modaalin-fokus-elementti
@@ -64,43 +64,61 @@
        :reagent-render
        (fn [{:keys [otsikko otsikon-alle-komp otsikko-tyyli otsikko-muotoilut footer footer-tyyli nakyvissa? luokka
                     leveys content-tyyli body-tyyli modal-luokka sulje-fn sulje-ruksista-fn ruksi-tyyli]} sisalto]
-         (let [sulje!  #(do
-                          (.stopPropagation %)
-                          (when sulje-fn
-                            (sulje-fn))
-                          (piilota!))
+         (let [sulje! #(do
+                         (.stopPropagation %)
+                         (when sulje-fn
+                           (sulje-fn))
+                         (piilota!))
                sulje-ruksista-fn-fokuksella (fn []
                                               (when @edellinen-fokusoitu-elementti
                                                 (.focus @edellinen-fokusoitu-elementti))
                                               (when sulje-ruksista-fn
-                                                (sulje-ruksista-fn))) 
+                                                (sulje-ruksista-fn)))
                sulje-ruksista! (or (when sulje-ruksista-fn sulje-ruksista-fn-fokuksella) sulje!)]
            (if nakyvissa?
              ^{:key "modaali"}
-             [:div.modal.fade.in.harja-modal {:class modal-luokka
-                                              :on-click sulje!}
-              [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
+             [:div.modal.fade.show.harja-modal
+              {:class modal-luokka
+               :on-click sulje!
+               :style {:display "block"
+                       :opacity 1
+                       :z-index 1055
+                       :background-color "rgba(0,0,0,0.5)"}}
+
               [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
                       (when leveys
                         {:style {:max-width leveys}}))
+
                [:div.modal-content {:on-click #(.stopPropagation %)
                                     :style content-tyyli
                                     :tab-index "0"
                                     :ref #(reset! modal-ref %)}
+
+                [:div {:class "ms-auto"}
+                 [ikonit/sulje-ruksi sulje-ruksista!
+                  {:style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]]
+
                 (when otsikko
                   [:div.modal-header
-                   [ikonit/sulje-ruksi sulje-ruksista! {:style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]
+
+
+
                    [:h2.modal-title {:id "modal-otsikko"
                                      :class (when (= otsikko-tyyli :virhe)
                                               "modal-otsikko-virhe")
                                      :style otsikko-muotoilut}
                     otsikko]
+
+
+
                    (when otsikon-alle-komp
                      [otsikon-alle-komp])])
                 [:div.modal-body {:style body-tyyli} sisalto]
                 (when footer [:div.modal-footer {:style footer-tyyli} footer])]]]
              ^{:key "ei-modaalia"}
-             [:span.modaali-ei-nakyvissa])))})))
+             [:span.modaali-ei-nakyvissa])
+
+           ))})))
 
 (defn modal-container
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"

@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "@tabler/core": "^1.4.0",
+    "@tabler/icons-react": "^3.41.1",
+    "@tabler/icons-webfont": "^3.41.1",
     "transit-js": "^0.8.867"
   },
   "engines": {

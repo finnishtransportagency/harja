@@ -21,43 +21,43 @@
 
 (def hakutulokset
   (reaction<! [termi @hakutermi]
-              {:odota 500
-               :nil-kun-haku-kaynnissa? true}
-              (when (or
-                      (> (count termi) 1)
-                      ;; jos haetaan urakka-id:llä, sallitaan myös yksi merkki (re-matches (re-pattern "\\d+") termi)
-                      (and (= (count termi) 1) (re-matches (re-pattern "\\d+") termi)))
-                (k/post! :hae termi))))
+    {:odota 500
+     :nil-kun-haku-kaynnissa? true}
+    (when (or
+            (> (count termi) 1)
+            ;; jos haetaan urakka-id:llä, sallitaan myös yksi merkki (re-matches (re-pattern "\\d+") termi)
+            (and (= (count termi) 1) (re-matches (re-pattern "\\d+") termi)))
+      (k/post! :hae termi))))
 
 (defn nayta-organisaation-yhteystiedot
   [o]
   (modal/nayta! {:otsikko (:nimi o)
                  :luokka "yhteystieto"
                  :footer [napit/sulje #(modal/piilota!)]}
-                [:div.kayttajan-tiedot
-                 [tietoja {}
-                  "Org. tyyppi:" (name (:tyyppi o))
-                  "Y-tunnus:" (:ytunnus o)
-                  "Osoite" (:katuosoite o)
-                  "Postinumero" (:postinumero o)
-                  "Sampoid:" (or (:sampoid o) "Ei annettu")
-                  (if (= (:tyyppi o) :hallintayksikko)
-                    "Liikennemuoto:" (case (:liikennemuoto o)
-                                       "T" "Tie"
-                                       "V" "Vesi"
-                                       "R" "Rata"
-                                       "Ei annettu"))]
-                 (when-let [urakat (:urakat o)]
-                   [:span
-                    [:span.tietokentta (if (= :urakoitsija (:tyyppi o))
-                                         "Urakoitsijana urakoissa:"
-                                         "Tilaajana urakoissa:")]
-                    [:div.mukana-urakoissa
-                     (if (empty? urakat)
-                       "Ei urakoita"
-                       (for [u urakat]
-                         ^{:key (:nimi u)}
-                         [:li.tietoarvo (:nimi u)]))]])]))
+    [:div.kayttajan-tiedot
+     [tietoja {}
+      "Org. tyyppi:" (name (:tyyppi o))
+      "Y-tunnus:" (:ytunnus o)
+      "Osoite" (:katuosoite o)
+      "Postinumero" (:postinumero o)
+      "Sampoid:" (or (:sampoid o) "Ei annettu")
+      (if (= (:tyyppi o) :hallintayksikko)
+        "Liikennemuoto:" (case (:liikennemuoto o)
+                           "T" "Tie"
+                           "V" "Vesi"
+                           "R" "Rata"
+                           "Ei annettu"))]
+     (when-let [urakat (:urakat o)]
+       [:span
+        [:span.tietokentta (if (= :urakoitsija (:tyyppi o))
+                             "Urakoitsijana urakoissa:"
+                             "Tilaajana urakoissa:")]
+        [:div.mukana-urakoissa
+         (if (empty? urakat)
+           "Ei urakoita"
+           (for [u urakat]
+             ^{:key (:nimi u)}
+             [:li.tietoarvo (:nimi u)]))]])]))
 
 (defn valitse-organisaatio
   [o]
@@ -74,15 +74,15 @@
   (let [org-nimi (:nimi org)
         org-tyyppi (:tyyppi org)
         uniikit-roolit #(when-not (empty? %)
-                         (str/join ", "
-                                   (into #{}
-                                         (mapcat (partial keep oikeudet/roolin-kuvaus)
-                                                 (vals %)))))]
+                          (str/join ", "
+                            (into #{}
+                              (mapcat (partial keep oikeudet/roolin-kuvaus)
+                                (vals %)))))]
     [:div.kayttajan-tiedot
      [kaksi-palstaa-otsikkoja-ja-arvoja {}
       "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
-                                                     (modal/piilota!)
-                                                     (valitse-organisaatio org))}
+                                                   (modal/piilota!)
+                                                   (valitse-organisaatio org))}
                        (when org-nimi org-nimi)]
       "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
       "Puhelin:" (get k :puhelin)
@@ -128,35 +128,33 @@
 (defn haku []
   (komp/luo
     (komp/klikattu-ulkopuolelle #(do (reset! hakutulokset nil)
-                                     (reset! hakutermi nil)))
+                                   (reset! hakutermi nil)))
     (fn []
-      [:form.navbar-form.navbar-left {:role "search"}
-       [:div.form-group.haku
-        [suodatettu-lista {:format (fn [tulos]
-                                     [:div {:class (when (and
-                                                           (= :urakka (:tyyppi tulos))
-                                                           (= "käynnissä" (:urakan_ajankohtaisuus tulos)))
-                                                     "haku-urakka-kaynnissa")}
-                                      (or (:format tulos) (:hakusanat tulos))])
-                           :haku :hakusanat
-                           :term (r/wrap @hakutermi
-                                   (fn [uusi-termi]
-                                     (reset! hakutermi
-                                       (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
-                           :ryhmittely :tyyppi
-                           :ryhman-otsikko #(case %
-                                              :urakka "Urakat"
-                                              :organisaatio "Organisaatiot"
-                                              "Muut")
-                           :on-select #(valitse-hakutulos %)
-                           :aputeksti "Hae Harjasta"
-                           :aria-label "Hae Harjasta"
-                           :tunniste #((juxt :tyyppi :id) %)
-                           :vinkki #(when-not (empty? @hakutermi)
-                                      (if (liikaa-osumia? @hakutulokset)
-                                        "Paljon osumia, tarkenna hakua..."
-                                        (if (nil? (:organisaatio @istunto/kayttaja))
-                                          "Käyttäjän organisaatiota ei tunnistettu, hakutoiminto ei käytössä. Ota yhteys pääkäyttäjään."
-                                          (when (= [] @hakutulokset)
-                                            (str "Ei tuloksia haulla " @hakutermi)))))}
-         @hakutulokset]]])))
+      ;; d-none d-sm-block == Piilottaa pienemmällä resolla
+      [:div.d-none.d-sm-block.w-25
+       [suodatettu-lista
+        {:format (fn [tulos]
+                   [:div {:class (when (and (= :urakka (:tyyppi tulos))
+                                         (= "käynnissä" (:urakan_ajankohtaisuus tulos)))
+                                   "haku-urakka-kaynnissa")}
+                    (or (:format tulos) (:hakusanat tulos))])
+         :haku :hakusanat
+         :term (r/wrap @hakutermi
+                 (fn [uusi-termi]
+                   (reset! hakutermi
+                     (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+         :ryhmittely :tyyppi
+         :ryhman-otsikko #(case %
+                            :urakka "Urakat"
+                            :organisaatio "Organisaatiot"
+                            "Muut")
+         :on-select #(valitse-hakutulos %)
+         :aputeksti "Hae urakoita.."
+         :aria-label "Hae urakoita.."
+         :tunniste #((juxt :tyyppi :id) %)
+         :vinkki #(when-not (empty? @hakutermi)
+                    ;; (if (liikaa-osumia? @hakutulokset) "Paljon osumia, tarkenna hakua..."
+                    (if (nil? (:organisaatio @istunto/kayttaja))
+                      "Käyttäjän organisaatiota ei tunnistettu, hakutoiminto ei käytössä. Ota yhteys pääkäyttäjään."
+                      (when (= [] @hakutulokset) (str "Ei tuloksia haulla " @hakutermi))))}
+        @hakutulokset]])))

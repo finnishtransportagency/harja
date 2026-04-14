@@ -1,38 +1,25 @@
+
 .harja-modal {
   display: block;
+
+  --tblr-modal-padding: 0;
+  --tblr-modal-header-padding: 0;
+  --tblr-modal-footer-padding: 0;
+  --tblr-modal-border-width: 0;
+  --tblr-modal-inner-padding: 0;
+
   &-keskitetty {
     display: flex;
     flex-flow: column;
     justify-content: center;
     align-items: center;
   }
-  .modal-content {
-    max-height: 90%;
-    overflow-y: auto;
-    padding: @valistys-32;
-  }
-}
 
-.modal-body {
-    .kuvaus {
-        margin-bottom: 30px;
-    }
-    margin-bottom:40px;
-    padding:0;
-}
-
-.kuva-modal .modal-body {
-    /* Kun näytetään kuva, halutaan, että modal täyttää suurin piirtein koko ruudun.
-       Tämä myös varmistaa, että kuva näyttää hyvältä vaikka sen leveys tai korkeus olisi
-       huomattavasti pidempi. */
-    height: 100%;
-    max-height: 80%;
-}
-
-.modal-dialog {
+  .modal-dialog {
     width: 90%;
     max-width: 800px;
-    height: 100%; /* modal-content max-height vaatii */
+    height: 100%;
+    margin: 1.75rem auto;
 
     &-keskitetty {
       display: flex;
@@ -40,63 +27,83 @@
       margin: 0 auto;
       width: 400px;
     }
-}
-.modal-dialog.materiaalikirjasto-modal {
-    width: 90%;
-    max-width: 90%;
-    height: 100%; /* modal-content max-height vaatii */
-}
 
-.modal-dialog.yhteystieto {
-    max-width: 500px;
-}
-
-.modal-dialog.yha-tuonti {
-    max-width: 800px;
-}
-
-.modal-dialog.merkitse-valmiiksi-tiemerkintaan > .modal-content {
-    min-height: 380px;
-}
-
-.modal-dialog.palaute-dialog {
-  > .modal-content {
-    min-height: 320px;
-  }
-
-  & .palauteohje {
-    padding-top: 20px;
-    padding-bottom: 20px;
-  }
-}
-
-.modal-content {
-    width: 100%;   
-}
-
-.modal-footer {
-    border:0;
-    padding: 0;
-}
-
-.modal-header {
-    padding: 0;
-    h2.modal-title {
-        margin:0 0 @valistys-16;
+    &.materiaalikirjasto-modal {
+      width: 90%;
+      max-width: 90%;
+      height: 100%;
     }
+    &.yhteystieto {
+      max-width: 500px;
+    }
+    &.yha-tuonti {
+      max-width: 800px;
+    }
+    &.merkitse-valmiiksi-tiemerkintaan > .modal-content {
+      min-height: 380px;
+    }
+    &.palaute-dialog {
+      > .modal-content {
+        min-height: 420px;
+      }
+      & .palauteohje {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+    }
+  }
+
+  .modal-content {
+    width: 100%;
+    max-height: 90%;
+    overflow-y: auto;
+    padding: @valistys-32;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 6px;
+  }
+
+  .modal-header {
+    padding: 0;
+    border-bottom: 0;
+    
+    h2.modal-title {
+      margin: 0 0 @valistys-16;
+    }
+  }
+
+  .modal-body {
+    padding: 0;
+    margin-bottom: 40px;
+    .kuvaus {
+      margin-bottom: 30px;
+    }
+  }
+
+  .modal-footer {
+    border: 0;
+    padding: 0;
+  }
+
+  &.kuva-modal .modal-body {
+    height: 100%;
+    max-height: 80%;
+  }
 }
 
 .kuva-modalissa {
-    /* Varmistaa, että kuva näyttää hyvältä kuvasuhteesta riippumatta. */
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .modal-otsikko-virhe {
   color: @vaara;
+}
+
+.modal-ilmoita-virheesta-tiedot {
+  margin: 1.5em 0;
 }
 
 .peitto-modal {
@@ -124,7 +131,6 @@
       font-weight: 600;
       font-size: 21px;
       line-height: 36px;
-      /* identical to box height */
       color: #000000;
 
       padding:0px 32px;

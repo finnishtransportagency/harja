@@ -25,6 +25,14 @@ trap clean EXIT INT TERM
 lein deps
 [ -d node_modules ] || npm ci
 
+echo "Kopioidaan tabler CSS & fontit..."
+mkdir -p resources/public/css
+cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
+cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/
+cp -r node_modules/@tabler/icons-webfont/dist/fonts resources/public/css/
+# BS skriptit tarvitaan nykyaikaisempiin front featureihin 
+cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dev-resources/js/out/
+
 # Päätä käytetäänkö dev-ympäristöprofiilia (lataa asetukset.edn)
 # - Ilman argumenttia: build-dev-no-env (nopea, ei lataa .edn-asetuksia)
 # - Argumentilla: +dev-ymparisto profile (lataa asetukset, hitaampi käynnistys)

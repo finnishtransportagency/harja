@@ -35,7 +35,8 @@
          [:h5.haku-otsikko "Valitse hallintayksikkö"]
          [:div
           ^{:key "hy-lista"}
-          [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
+          [suodatettu-lista {:nayta-aina? true
+                             :format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko!
                              :aputeksti "Kirjoita hallintayksikön nimi tähän"
@@ -68,8 +69,10 @@
           ur/nayta-paattyneet-urakat?]
          [:div
           ^{:key "ur-lista"}
-          [suodatettu-lista {:format :nimi :haku :nimi
+          [suodatettu-lista {:format :nimi
+                             :haku :nimi
                              :selection nav/valittu-urakka
+                             :nayta-aina? true
                              :nayta-ryhmat naytettavat-ryhmat
                              :ryhmittely #(if (pvm/ennen? nyt (:alkupvm %))
                                             :tulevat

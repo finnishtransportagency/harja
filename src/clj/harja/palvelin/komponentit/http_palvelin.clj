@@ -420,9 +420,9 @@
                                                                  kehitysmoodi
                                                                  anti-csrf-token-secret-key))
                                                          (conj ui-kasittelija))]
-                        (reitita (todennus/todenna-pyynto 
-                                   todennus 
-                                   req 
+                        (reitita (todennus/todenna-pyynto
+                                   todennus
+                                   req
                                    kehitysmoodi) todennettavat-kasittelijat
                           {:vaadi-oikeustarkistus? true}))))
                   (catch [:virhe :todennusvirhe] _
@@ -432,8 +432,8 @@
                     (metriikka/muuta! mittarit
                       :aktiiviset_pyynnot dec
                       :pyyntoja_palveltu inc))))
-                      kehitysmoodi
-                      todennus-varmistus)
+              kehitysmoodi
+              todennus-varmistus)
 
             {:port portti
              :thread (or (:threads asetukset) 8)
@@ -505,13 +505,13 @@
    (luo-http-palvelin asetukset kehitysmoodi nil))
   ([asetukset kehitysmoodi todennus-varmistus]
    (->HttpPalvelin
-    asetukset
-    (atom [])
-    (atom [])
-    (atom nil)
-    kehitysmoodi
-    todennus-varmistus
-    (metriikka/luo-mittari-ref mittarit-alkuarvo))))
+     asetukset
+     (atom [])
+     (atom [])
+     (atom nil)
+     kehitysmoodi
+     todennus-varmistus
+     (metriikka/luo-mittari-ref mittarit-alkuarvo))))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))

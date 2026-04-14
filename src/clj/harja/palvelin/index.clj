@@ -25,7 +25,7 @@
   (let [secret-key (SecretKeySpec. (.getBytes
                                      (anti-forgery-seed anti-csrf-token-secret-key)
                                      "UTF-8")
-                                   "HmacSHA256")
+                     "HmacSHA256")
         mac (Mac/getInstance "HmacSHA256")]
     (.init mac secret-key)
     (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes random-string "UTF-8"))))))
@@ -51,9 +51,18 @@
       [:meta {:name "mobile-web-app-capable" :content "yes"}]
       [:meta {:charset "utf-8"}]
       [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,600,700" :rel "stylesheet" :type "text/css"}]
+
+      ;; Legacy tyylit 
       [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
+
+      ;; Tabler
+      [:link {:rel "stylesheet" :href "css/tabler.min.css"}]
+      [:link {:rel "stylesheet" :href "css/tabler-icons.min.css"}]
+
       [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]]
      [:body {:data-anti-csrf-token random-avain}
+      ;; Tarvitaan nykyaikaisiin frontti featureihin 
+      [:script {:src "/js/out/bootstrap.bundle.min.js"}]
       [:div#app
        [:div {:style "display: flex;"}
         [:div {:style "flex: 1; display: flex; justify-content: center; align-items: center; height: 100vh;"}
@@ -62,7 +71,7 @@
 
 (defn tee-ls-paasivu [random-avain devmode]
   (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
-                                    "public/laadunseuranta/img/")
+                          "public/laadunseuranta/img/")
         livicons-18 (if devmode
                       (slurp (str livicons-osoite "livicons-18.svg"))
                       (slurp (io/resource (str livicons-osoite "livicons-18.svg"))))
