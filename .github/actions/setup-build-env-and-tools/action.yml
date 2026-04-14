@@ -106,7 +106,8 @@ runs:
       # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package-lock.jsonissa
       # määritellyt moduulit workspacen node_modules kansioon, mutta cachettaa ladatut paketit ~/.npm cacheen.
       # Tämän vuoksi cache-hit tietoa ei tarkasteta ehtolauseessa.
+      # Huom: Projektin .npmrc sisältää ignore-scripts=true, mutta käytetään asetusta tässä eksplisiittisesti
       run: |
-        npm ci
+        npm ci --ignore-scripts
       shell: bash
 
