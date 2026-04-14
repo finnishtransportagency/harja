@@ -357,7 +357,7 @@
 (deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         psu-evk-id (hae-pohjois-suomen-evk-id)
-        lapin-evk-id (hae-organisaatio-id-nimella "Lapin elinvoimakeskus")
+        lapin-evk-id (hae-elinvoimakeskus-id-nimella "Lappi")
 
         ;; Tallenna lupauspäätös kantaan
         _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
