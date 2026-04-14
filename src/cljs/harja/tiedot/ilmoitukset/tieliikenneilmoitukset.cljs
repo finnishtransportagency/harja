@@ -165,14 +165,9 @@
   ([app] (hae app (maarita-hakuviive app)))
   ([app timeout] (hae app timeout false))
   ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
-   (let [;; Taustahaku pois päältä, hae van jos ollaan näkymässä
-         hae-vain-nakymassa? (and
-                               @karttataso-ilmoitukset
-                               (not @hae-ilmoituksia-taustalla?))
-         ;; Jos taustahaku päällä, salli pollaus vaikka ei olle näkymässä 
-         voi-hakea-taustalla? @hae-ilmoituksia-taustalla?
-         pollaa? (and
-                   (or hae-vain-nakymassa? voi-hakea-taustalla?)
+   (let [pollaa? (and
+                   ;; Jos taustahaku päällä, salli pollaus vaikka ei olle näkymässä 
+                   (or @hae-ilmoituksia-taustalla? @karttataso-ilmoitukset)
                    (or
                      (not taustahaku?)
                      (not (get-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?]))))]
