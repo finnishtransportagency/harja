@@ -111,6 +111,8 @@ SELECT ut.id,
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        x.hk_alkuvuosi                                                                         AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
+       ut.laskutusraja                                                                        AS "laskutusraja",
+       ut.laskutusraja_alkuperainen                                                           AS "laskutusraja-alkuperainen",
        SUM(hmum.summa)                                                                        AS "muutos-summa",
        -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
        indeksikorjaa(

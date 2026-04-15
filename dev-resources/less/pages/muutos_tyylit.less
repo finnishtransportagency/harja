@@ -16,6 +16,10 @@
 
   .muutosten-vaikutus {
     margin-top: @valistys-24;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: flex-start;
 
     .muutosten-vaikutus-container {
       background: @blue-lighter;
@@ -23,11 +27,15 @@
       border: 1px solid @blue-default;
       border-radius: @valistys-4;
       max-width: 550px;
+      width: 504px;
 
       .tietorivi {
         span.tietokentta {
           font-weight: normal;
           width: 100%;
+          ul {
+            margin-bottom: 0;
+          }
         }
         span.tietoarvo {
           font-weight: normal;
@@ -43,6 +51,9 @@
         &.piilota-rivin-sisalto {
           display: none;
         }
+        h3 {
+          margin: 0 0 0.5rem 0;
+        }
 
         .vihje-indeksikorjaus {
           border: 1px solid @blue-default;
@@ -52,6 +63,15 @@
             padding: 0.25rem 0.75rem;
           }
         }
+      }
+      .viivan-ylla {
+        padding: @valistys-8 @valistys-8 @valistys-16 @valistys-8;
+      }
+      .notifikaatio-viivan-ylla {
+        padding: 0 @valistys-8 @valistys-16 @valistys-8;
+      }
+      .viivan-alla {
+        padding: @valistys-16 @valistys-8 @valistys-8 @valistys-8;
       }
     }
   }

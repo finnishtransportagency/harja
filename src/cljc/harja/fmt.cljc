@@ -65,7 +65,13 @@
               (and nayta-euromerkki nayta-plus (< 0 eur))
               (str "\u002B" tulos " \u20AC")
 
+              (and nayta-euromerkki (= 0 eur))
+              (str tulos " \u20AC")
+
               (and nayta-euromerkki (not nayta-plus))
+              (str tulos " \u20AC")
+
+              (and nayta-euromerkki nayta-plus (< eur 0))
               (str tulos " \u20AC")
 
               (and (not nayta-euromerkki) nayta-plus (< 0 eur))

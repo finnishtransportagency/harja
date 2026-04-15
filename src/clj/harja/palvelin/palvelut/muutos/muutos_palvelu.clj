@@ -488,6 +488,8 @@
      :suunniteltujen-maarien-muutokset []
      :budjettitavoitteet {:tavoitehinta-indeksikorjattu-per-hoitovuosi tavoitehinnat-indeksikorjattu
                           :hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)
+                          :laskutusraja (:laskutusraja budjettitavoiteet)
+                          :laskutusraja_alkuperainen (:laskutusraja-alkuperainen budjettitavoiteet)
                           :aiemmat-pysyvat-muutokset-indeksikorjattu-yht aiemmat-pysyvat-muutokset-indeksikorjattu-yht
                           :kirjatut-muutokset-yht kirjatut-muutokset-yht
                           :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
