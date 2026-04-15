@@ -85,7 +85,7 @@ runs:
         DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
       run: |
         cat trivy-results.sarif | \
-          jq '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": "${DOCKERFILE_PATH}","uriBaseId": "ROOTPATH"}' | \
+          jq --arg uri "${DOCKERFILE_PATH}" '.runs[].results[].locations[].physicalLocation.artifactLocation += {"uri": $uri,"uriBaseId": "ROOTPATH"}' |
           jq '.runs[].results[].locations[].physicalLocation.region += {"startLine": 1,"startColumn": 1,"endLine": 1,"endColumn": 1}' \
         > sarif.tmp
         mv trivy-results.sarif trivy-results.sarif.orig
