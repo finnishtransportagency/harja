@@ -82,7 +82,7 @@
               (or
                 (::pot2-domain/tyyppi-tarkenne rivi)
                 (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot)
-                                                    (::pot2-domain/tyyppi rivi))))}]
+                  (::pot2-domain/tyyppi rivi))))}]
      murskeet]))
 
 (defn- tuotavat-materiaalit [e! app]
@@ -108,7 +108,7 @@
                               [napit/yleinen-ensisijainen "OK" sulje-fn {:luokka "keskitettava"}]]
                              [:div.fontti-14 tuo-materiaalit-txt]))
       :luokka (yleiset/luokat "tuo-materiaalit-modal"
-                              (when ei-loytynyt? "matala"))
+                (when ei-loytynyt? "matala"))
       :nakyvissa? nayta-muista-urakoista-tuonti?
       :sulje-fn sulje-fn}
      (when-not ei-loytynyt?
@@ -180,14 +180,14 @@
 
 (defn materiaalikirjasto-modal [e! app]
   (let [lomake-auki? (or (:pot2-massa-lomake app)
-                         (:pot2-murske-lomake app))]
+                       (:pot2-murske-lomake app))]
     [modal/modal
      {:otsikko (if lomake-auki?
                  ""
                  "Materiaalikirjasto")
       :otsikon-alle-komp (when-not lomake-auki?
                            (fn []
-                             [:span
+                             [:div.row
                               [:div.fontti-14-vaaleampi {:style {:margin-bottom "24px"}}
                                (str (:nimi @nav/valittu-urakka))]
                               [:div.fontti-14 materiaalikirjaston-otsikon-text]]))

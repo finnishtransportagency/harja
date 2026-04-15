@@ -41,14 +41,14 @@
         paikallinen-aikavali-atom (atom nil)
         urakka-id (-> @tila/yleiset :urakka :id)]
     [:div.laatupoikkeamat
-     [debug/debug app]
-     ;; Wrapataan filtterit urakkavalinnat elementin sisään
      [valinnat/urakkavalinnat {:urakka urakka-id}
+
       ^{:key "urakkavalinnat"}
       [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
        (:urakan-hoitokaudet app)
        #(e! (laatupoikkeamat/->HoitokausiVaihdettu urakka-id %))
        {:wrapper-luokka "inline-block"}]
+
       [yleiset/pudotusvalikko
        "Näytä laatupoikkeamat"
        {:valinta @laatupoikkeamat/listaus
@@ -63,6 +63,7 @@
                       :poikkeamaraportilliset "Poikkeamaraportilliset")
         :vayla-tyyli? true}
        [:kaikki :selvitys :kasitellyt :omat :poikkeamaraportilliset]]
+
       ^{:key (hash (:valittu-aikavali app))}
       [valinnat/aikavali
        (r/wrap (:valittu-aikavali app)
@@ -79,18 +80,19 @@
         :elementin-nimi "laatupoikkeamat-aikavali"}]
 
       ^{:key "urakkatoiminnot"}
-      [valinnat/urakkatoiminnot {:urakka urakka-id}
-       (let [oikeus? @laatupoikkeamat/voi-kirjata?]
-         (yleiset/wrap-if
-           (not oikeus?)
-           [yleiset/tooltip {} :%
-            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-              oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
-           ^{:key "uusi-laatupoikkeama"}
-           [:div {:style {:padding-top "12px"}}
-            [napit/uusi "Uusi laatupoikkeama"
-             #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-             {:disabled (not oikeus?)}]]))]]
+      [:div.row
+       [valinnat/urakkatoiminnot {:urakka urakka-id}
+        (let [oikeus? @laatupoikkeamat/voi-kirjata?]
+          (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+               oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+            ^{:key "uusi-laatupoikkeama"}
+            [:div {:style {:padding-top "12px"}}
+             [napit/uusi "Uusi laatupoikkeama"
+              #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+              {:disabled (not oikeus?)}]]))]]]
 
      [:div.margin-top-16
       [grid/grid

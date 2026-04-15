@@ -332,134 +332,124 @@
                            :teksti "Äänimerkki uusista ilmoituksista"}
         tiedot/aanimerkki-uusista-ilmoituksista?]]
 
-      ;; FIXME: Tämä on väliaikainen toiminto WS-kuuntelijan testikäyttöä varten.
-      ;;        Käyttäjä voi aktivoida/deaktivoida WS-kuuntelun.
-      ;;        Asetus tallennnetaan localstorageen, jolloin valittu asetus on aktiivinen myös refreshin jälkeen.
-      ;; 2024-11-28: Kokeellinen ilmoitusten reaaliaikahaku otettu pois käytöstä, koska se ei toimi kunnolla
-      ;;             Jatketaan testikäyttöä myöhemmin, jos koemme sen tarpeelliseksi tai päätetään ominaisuuden poistosta.
-
-      #_[:div.margin-top-16
-         [kentat/tee-kentta {:tyyppi :checkbox
-                             :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
-          tiedot/ws-kuuntelija-ominaisuus?]]
-
       [vihjeet ws-ilmoitusten-kuuntelu]
-
-      (when-not kuittaa-monta-nyt
-        [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
-         {:luokka "pull-right kuittaa-monta"}])
-
-      (when kuittaa-monta-nyt
-        [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
 
       [:h2 (str (count haetut-ilmoitukset) " ilmoitusta"
              (when @nav/valittu-urakka (str " urakassa " (or (:lyhyt_nimi @nav/valittu-urakka) (:nimi @nav/valittu-urakka)))))]
 
-      [grid
-       {:tyhja (if haetut-ilmoitukset
-                 "Ei löytyneitä tietoja"
-                 [ajax-loader "Haetaan ilmoituksia"])
-        :data-cy "ilmoitukset-grid"
-        :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
-                               (nil? pikakuittaus))
-                         (or valitse-ilmoitus!
-                           #(e! (v/->ValitseIlmoitus (:id %)))))
-        :piilota-toiminnot true
-        :max-rivimaara 500
-        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
-        :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
-                         "ilmoitusrivi-fade")
+      [:div
+       (when-not kuittaa-monta-nyt
+         [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
+          {:luokka "kuittaa-monta"}])
 
-        :raporttivienti #{:excel :pdf}
-        :raporttivienti-lapinakyva? true
-        :raporttiparametrit (raportit/urakkaraportin-parametrit
-                              (:id @nav/valittu-urakka)
-                              :ilmoitukset-raportti
-                              {:urakka @nav/valittu-urakka
-                               :hallintayksikko @nav/valittu-hallintayksikko
-                               :tiedot haetut-ilmoitukset
-                               :filtterit @tiedot/ilmoitukset
-                               :alkupvm valittu-alkupvm
-                               :loppupvm valittu-loppupvm
-                               :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
+       (when kuittaa-monta-nyt
+         [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
 
-       [(when kuittaa-monta-nyt
-          {:otsikko " "
-           :tasaa :keskita
-           :tyyppi :komponentti
-           :komponentti (fn [rivi]
-                          (let [liidosta-tullut? (not (:ilmoitusid rivi))
-                                kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                                   (:urakka rivi))]
-                            [:span (when liidosta-tullut?
-                                     {:title tiedot/vihje-liito})
-                             [kentat/raksiboksi {:disabled (or liidosta-tullut?
-                                                             (not kirjoitusoikeus?))
-                                                 :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
-                                                                   (nil? pikakuittaus))
-                                                             #(valitse-ilmoitus! rivi))}
-                              (boolean (valitut-ilmoitukset rivi))]]))
-           :leveys "40px"})
-        (when-not @nav/valittu-urakka
-          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys ""
-           :hae #(if-not (str/blank? (:lyhytnimi %))
-                   (:lyhytnimi %)
-                   (fmt/lyhennetty-urakan-nimi (:urakkanimi %)))
-           :solun-tooltip (fn [rivi]
-                            (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
-                              {:teksti (:urakkanimi rivi)
-                               :suunta :oikea}))})
-        {:otsikko "Saapunut" :nimi :valitetty-urakkaan
-         :hae (comp pvm/pvm-aika :valitetty-urakkaan)
-         :otsikkorivi-luokka "saapunut" :leveys ""
-         :solun-tooltip (fn [rivi]
-                          {:tooltip-tyyppi :komponentti
-                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})
-         :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunLajittelua))
-                       :suunta lajittelu-suunta}}
-        {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-         :tyyppi :komponentti
-         :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
-         :otsikkorivi-luokka "tyyppi" :leveys ""}
-        {:otsikko "Tarkenne" :nimi :tarkenne
-         :tyyppi :string
-         :luokka "pitka-teksti"
-         :hae (partial tarkenne-tai-selite-teksti aiheet-ja-tarkenteet)
-         :otsikkorivi-luokka "selite" :leveys ""}
-        {:otsikko "Kuvaus" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
-         :leveys ""
-         :luokka "lisatieto-rivi"
-         :solun-tooltip (fn [rivi]
-                          {:teksti (:lisatieto rivi)})}
+       [grid
+        {:tyhja (if haetut-ilmoitukset
+                  "Ei löytyneitä tietoja"
+                  [ajax-loader "Haetaan ilmoituksia"])
+         :data-cy "ilmoitukset-grid"
+         :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
+                                (nil? pikakuittaus))
+                          (or valitse-ilmoitus!
+                            #(e! (v/->ValitseIlmoitus (:id %)))))
+         :piilota-toiminnot true
+         :max-rivimaara 500
+         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
+         :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
+                          "ilmoitusrivi-fade")
 
-        {:otsikko "Tie" :nimi :tierekisteri
-         :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})
-         :tyyppi :string
-         :otsikkorivi-luokka "tie" :leveys ""}
-        {:otsikko "Kuittaukset" :nimi :kuittaukset
-         :tyyppi :komponentti
-         :komponentti (partial kuittauslista e! pikakuittaus)
-         :otsikkorivi-luokka "kuittaukset" :leveys ""}
-        {:otsikko "Tila" :nimi :tila :otsikkorivi-luokka "tila"
-         :leveys ""
-         :hae #(let [selite (tilan-selite (:tila %))]
-                 (cond
-                   (= :ei-valitetty (:tila %))
-                   nil
-                   (:aiheutti-toimenpiteita %)
-                   (str selite " (Toimenpitein)")
-                   :else
-                   selite))}
-        {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
-         :tyyppi :pvm :fmt pvm/pvm-aika
-         :otsikkorivi-luokka "aloitettu" :leveys ""}]
-       (mapv #(merge %
-                (when (:yhteydenottopyynto %)
-                  {:lihavoi true})
-                (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
-                  {:korosta-hennosti true}))
+         :raporttivienti #{:excel :pdf}
+         :raporttivienti-lapinakyva? true
+         :raporttiparametrit (raportit/urakkaraportin-parametrit
+                               (:id @nav/valittu-urakka)
+                               :ilmoitukset-raportti
+                               {:urakka @nav/valittu-urakka
+                                :hallintayksikko @nav/valittu-hallintayksikko
+                                :tiedot haetut-ilmoitukset
+                                :filtterit @tiedot/ilmoitukset
+                                :alkupvm valittu-alkupvm
+                                :loppupvm valittu-loppupvm
+                                :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
 
-         haetut-ilmoitukset)]]]))
+        [(when kuittaa-monta-nyt
+           {:otsikko " "
+            :tasaa :keskita
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (let [liidosta-tullut? (not (:ilmoitusid rivi))
+                                 kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                                    (:urakka rivi))]
+                             [:span (when liidosta-tullut?
+                                      {:title tiedot/vihje-liito})
+                              [kentat/raksiboksi {:disabled (or liidosta-tullut?
+                                                              (not kirjoitusoikeus?))
+                                                  :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
+                                                                    (nil? pikakuittaus))
+                                                              #(valitse-ilmoitus! rivi))}
+                               (boolean (valitut-ilmoitukset rivi))]]))
+            :leveys "40px"})
+         (when-not @nav/valittu-urakka
+           {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys ""
+            :hae #(if-not (str/blank? (:lyhytnimi %))
+                    (:lyhytnimi %)
+                    (fmt/lyhennetty-urakan-nimi (:urakkanimi %)))
+            :solun-tooltip (fn [rivi]
+                             (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
+                               {:teksti (:urakkanimi rivi)
+                                :suunta :oikea}))})
+         {:otsikko "Saapunut" :nimi :valitetty-urakkaan
+          :hae (comp pvm/pvm-aika :valitetty-urakkaan)
+          :otsikkorivi-luokka "saapunut" :leveys ""
+          :solun-tooltip (fn [rivi]
+                           {:tooltip-tyyppi :komponentti
+                            :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})
+          :sarake-sort {:fn #(e! (v/->MuutaIlmoitusHaunLajittelua))
+                        :suunta lajittelu-suunta}}
+         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
+          :tyyppi :komponentti
+          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
+          :otsikkorivi-luokka "tyyppi" :leveys ""}
+         {:otsikko "Tarkenne" :nimi :tarkenne
+          :tyyppi :string
+          :luokka "pitka-teksti"
+          :hae (partial tarkenne-tai-selite-teksti aiheet-ja-tarkenteet)
+          :otsikkorivi-luokka "selite" :leveys ""}
+         {:otsikko "Kuvaus" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
+          :leveys ""
+          :luokka "lisatieto-rivi"
+          :solun-tooltip (fn [rivi]
+                           {:teksti (:lisatieto rivi)})}
+
+         {:otsikko "Tie" :nimi :tierekisteri
+          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})
+          :tyyppi :string
+          :otsikkorivi-luokka "tie" :leveys ""}
+         {:otsikko "Kuittaukset" :nimi :kuittaukset
+          :tyyppi :komponentti
+          :komponentti (partial kuittauslista e! pikakuittaus)
+          :otsikkorivi-luokka "kuittaukset" :leveys ""}
+         {:otsikko "Tila" :nimi :tila :otsikkorivi-luokka "tila"
+          :leveys ""
+          :hae #(let [selite (tilan-selite (:tila %))]
+                  (cond
+                    (= :ei-valitetty (:tila %))
+                    nil
+                    (:aiheutti-toimenpiteita %)
+                    (str selite " (Toimenpitein)")
+                    :else
+                    selite))}
+         {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
+          :tyyppi :pvm :fmt pvm/pvm-aika
+          :otsikkorivi-luokka "aloitettu" :leveys ""}]
+        (mapv #(merge %
+                 (when (:yhteydenottopyynto %)
+                   {:lihavoi true})
+                 (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
+                   {:korosta-hennosti true}))
+
+          haetut-ilmoitukset)]]]]))
 
 (defn- oletus-hakuehdot? [haku-ehdot]
   (if (and (= (:tyypit haku-ehdot) (:tyypit tiedot/oletus-valinnat))

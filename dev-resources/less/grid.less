@@ -19,6 +19,11 @@
   width: fit-content;
 }
 
+.row .nappi-ensisijainen,
+.row .nappi-toissijainen {
+  width: fit-content;
+}
+
 .valilehti .row  {
   margin-left: unset;
   padding-top: @valistys-8;
@@ -743,16 +748,25 @@
 }
 
 .arvo-ja-nappi-container {
-  .arvo-ja-nappi-arvo {
-    float: left;
-    position: relative;
-    top: 5px;
-  }
-
-  .arvo-ja-nappi-nappi {
-    float: right;
-  }
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
+
+.arvo-ja-nappi-arvo {
+  margin: 0;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.arvo-ja-nappi-nappi {
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
 
 // Oikeasti tämän pitäisi toimia niin, että vaihdetaan inline-blockiksi kun sarakkeesta
 // alkaa loppua tila. Tämä on kuitenkin vaikeaa toteuttaa CSS:llä, joten tehdään yleispätevä

@@ -37,7 +37,7 @@
     :pakollinen? true
     ::lomake/col-luokka "col-sm-12"
     :muokattava? #(not (or (= "tilattu" (:paikkauskohteen-tila lomake))
-                           (= "valmis" (:paikkauskohteen-tila lomake))))}])
+                         (= "valmis" (:paikkauskohteen-tila lomake))))}])
 
 (defn sijainnin-kentat [lomake]
   [(lomake/ryhma
@@ -114,8 +114,8 @@
 (defn- pmr-skeema [lomake tyomenetelmat]
   (vec
     (concat (nimi-numero-ja-tp-kentat lomake tyomenetelmat)
-            (sijainnin-kentat lomake)
-            (lisatiedot-kentta))))
+      (sijainnin-kentat lomake)
+      (lisatiedot-kentta))))
 
 (defn pmr-lomake [_e! _lomake _tyomenetelmat]
   (fn [e! lomake tyomenetelmat]
@@ -126,14 +126,13 @@
       :muokkaa! #(e! (t-pmrlomake/->PaivitaPMRLomake (lomake/ilman-lomaketietoja %)))
       :footer-fn (fn [lomake]
                    [:div.row
-                    [:hr]
-                    [:div.row
-                     [:div.col-xs-8 {:style {:padding-left "0"}}
+                    [:<>
+                     [:div.col
                       [napit/tallenna
                        "Tallenna muutokset"
                        #(e! (t-pmrlomake/->TallennaPMRLomake (lomake/ilman-lomaketietoja lomake)))
                        {:disabled (not (::tila/validi? lomake))}]]
-                     [:div.col-xs-4 {:style {:text-align "end"}}
+                     [:div.col-auto
                       [napit/yleinen-toissijainen "Sulje" #(e! (t-pmrlomake/->SuljePMRLomake))]]]])}
      (pmr-skeema lomake tyomenetelmat)
      lomake]))

@@ -532,7 +532,7 @@
         tiemerkinnan-suorittavat-urakat (conj @tiedot/tiemerkinnan-suorittavat-urakat {:nimi "Ei tiemerkintäurakkaa"})]
 
     [grid/grid
-     {:otsikko [:span
+     {:otsikko [:div.pb-5
                 [:div.inline-block
                  "Kohteiden aikataulu"]
                 [yllapitokohteet-view/vasta-muokatut-vinkki]]

@@ -9,7 +9,6 @@
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.transit :as transit]
-            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -498,8 +497,7 @@
          (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row
-       [paikkauskohteet-sivu e! app]
-       [debug/debug app]])))
+       [paikkauskohteet-sivu e! app]])))
 
 (defn paikkauskohteet [e! app-state]
   (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)

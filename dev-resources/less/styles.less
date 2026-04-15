@@ -587,10 +587,34 @@ tr.uusitehtavakoodi td {
 .ala-margin-16 {
     margin-bottom:@valistys-16;
 }
+
 .paivystajat .paivystys-aikajana {
   .nappi-toissijainen {
     margin-top: @valistys-16;
     margin-bottom: @valistys-32;
+  }
+}
+
+.panel {
+  background-color: inherit;
+  .panel-heading {
+    background-color: inherit;
+  }
+}
+
+div.modal-footer {
+  background-color: inherit;
+}
+
+.modal-header {
+  display: inherit;
+}
+
+
+
+@media (min-width: 1400px) {
+  .container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl { 
+    max-width: 1440px !important; 
   }
 }
 
@@ -639,6 +663,10 @@ tr.uusitehtavakoodi td {
   min-width: 240px;
   flex: 0 0 240px;
   padding: 5px 0;
+}
+
+.card {
+  --tblr-bg-surface: @harjan-taustavari;
 }
 
 .murupolku-select .ts-wrapper,

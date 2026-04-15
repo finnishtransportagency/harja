@@ -111,27 +111,27 @@
 (def nayta-kustannusexcelin-tuonti-alkaen-vuodesta 2022)
 
 (defn excel-toiminnot [tiedot]
-  [:div.paallystyskustannusten-toiminnot-container
-   [:div.paallystyskustannusten-toiminnot
-    [:span.inline-block
-     [:form {:style {:margin-left "auto"}
-             :target "_blank" :method "POST"
-             :action (k/excel-url :paallystyskohteet-excel)}
-      [:input {:type "hidden" :name "parametrit"
-               :value (transit/clj->transit tiedot)}]
-      [:button {:type "submit"
-                :class #{"nappi-toissijainen"}}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
-    (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
-      [liitteet/lataa-tiedosto
-       {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-        :vuosi (:vuosi tiedot)}
-       {:nappi-teksti "Tuo kustannukset Excelistä"
-        :url "tuo-paallystyskustannukset-excelista"
-        :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
-        :tiedosto-ladattu #(do
-                             (paallystys-tiedot/paivita-yllapitokohteet!)
-                             (viesti/nayta! "Kustannukset päivitetty." :success))}])]])
+  [:div.d-flex.align-items-end {:style {:margin "0.25rem"}}
+   [:form
+    {:target "_blank"
+     :method "POST"
+     :action (k/excel-url :paallystyskohteet-excel)}
+    [:input {:type "hidden"
+             :name "parametrit"
+             :value (transit/clj->transit tiedot)}]
+    [:button {:type "submit"
+              :class "nappi-toissijainen"}
+     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]
+   (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
+     [liitteet/lataa-tiedosto
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :vuosi (:vuosi tiedot)}
+      {:nappi-teksti "Tuo kustannukset Excelistä"
+       :url "tuo-paallystyskustannukset-excelista"
+       :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
+       :tiedosto-ladattu #(do
+                            (paallystys-tiedot/paivita-yllapitokohteet!)
+                            (viesti/nayta! "Kustannukset päivitetty." :success))}])])
 
 (defn paallystyskohteet [ur]
   (let [tallennus-gif? (atom false)
@@ -226,16 +226,17 @@
            [:h1 "Päällystyskohteet"]
            [kartta/kartan-paikka]
 
-           [:div.flex-row {:style {:justify-content "flex-start"}}
+           [:div.d-flex.flex-wrap.align-items-end.gap-3.pb-5
             [valinnat/urakan-vuosi ur]
             [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-            [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]]
+            [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko"}]
+            [excel-toiminnot {:urakka-id (:id ur)
+                              :sopimus-id sopimus-id
+                              :vuosi vuosi
+                              :vain-yha-kohteet? true}]]
 
            [validointivirheet-modal]
-           [excel-toiminnot {:urakka-id (:id ur)
-                             :sopimus-id sopimus-id
-                             :vuosi vuosi
-                             :vain-yha-kohteet? true}]
+
            [yllapitokohteet-view/yllapitokohteet
             ur
             paallystys-tiedot/yhan-paallystyskohteet

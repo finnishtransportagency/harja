@@ -38,6 +38,7 @@ The following keys are supported in the configuration:
                             :tabs (str "nav-tabs " classes))
               tabs (filter #(not (nil? (nth % 2)))
                      (partition 3 alternating-title-and-component))
+              taso1? (boolean (re-find #"tabs-taso1" (str classes)))
               [active-tab-title active-tab-keyword active-component]
               (or (first (filter #(= @active (nth % 1)) tabs))
                 (first tabs))
@@ -48,27 +49,57 @@ The following keys are supported in the configuration:
                                          (reset! active keyword)))]
           (if (empty? tabs)
             [:span "Ei käyttöoikeutta."]
-            [:span
-             [:ul.nav {:class style-class}
-              (for [[title keyword] tabs]
-                ^{:key title}
-                [:li {:class (when (= keyword active-tab-keyword)
-                               "active")}
-                 [:a.klikattava (merge
-                                  {:tabIndex "0"
-                                   :on-click #(vaihda-aktiivinen-tabi keyword %)
-                                   :on-key-down #(when (dom/enter-nappain? %)
-                                                   (vaihda-aktiivinen-tabi keyword %))}
-                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
-                                        cy-title (-> title
-                                                   str
-                                                   (clj-str/replace #"ä" "a")
-                                                   (clj-str/replace #"ö" "o"))]
-                                    (if tabs-taso
-                                      {:data-cy (str tabs-taso "-" cy-title)}
-                                      {:data-cy cy-title})))
-                  title]])]
-             [:div.valilehti active-component]]))))))
+            (if (re-find #"tabs-taso" (str classes))
+              [:div {:class (str "card " classes)}
+               [:div {:class (str "card-header " classes)}
+                [:ul {:class (str "nav nav-tabs card-header-tabs " classes)}
+                 (for [[title keyword] tabs]
+                   ^{:key title}
+                   [:li.nav-item
+                    [:a.nav-link
+                     (merge
+                       {:href "#"
+                        :class (str
+                                 "fw-semibold "
+                                 (when (= keyword active-tab-keyword)
+                                   "active fw-bold"))
+                        :tabIndex "0"
+                        :on-click #(vaihda-aktiivinen-tabi keyword %)
+                        :on-key-down #(when (dom/enter-nappain? %)
+                                        (vaihda-aktiivinen-tabi keyword %))}
+                       (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+                             cy-title (-> title
+                                        str
+                                        (clj-str/replace #"ä" "a")
+                                        (clj-str/replace #"ö" "o"))]
+                         (if tabs-taso
+                           {:data-cy (str tabs-taso "-" cy-title)}
+                           {:data-cy cy-title})))
+                     title]])]]
+               [:div.card-body
+                [:div.valilehti active-component]]]
+
+              [:span
+               [:ul.nav {:class style-class}
+                (for [[title keyword] tabs]
+                  ^{:key title}
+                  [:li {:class (when (= keyword active-tab-keyword) "active")}
+                   [:a.klikattava
+                    (merge
+                      {:tabIndex "0"
+                       :on-click #(vaihda-aktiivinen-tabi keyword %)
+                       :on-key-down #(when (dom/enter-nappain? %)
+                                       (vaihda-aktiivinen-tabi keyword %))}
+                      (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+                            cy-title (-> title
+                                       str
+                                       (clj-str/replace #"ä" "a")
+                                       (clj-str/replace #"ö" "o"))]
+                        (if tabs-taso
+                          {:data-cy (str tabs-taso "-" cy-title)}
+                          {:data-cy cy-title})))
+                    title]])]
+               [:div.valilehti active-component]])))))))
 
 (defn navbar
   "A Bootstrap navbar component"

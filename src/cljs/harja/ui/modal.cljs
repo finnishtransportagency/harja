@@ -99,20 +99,18 @@
                   {:style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]]
 
                 (when otsikko
-                  [:div.modal-header
+                  [:div
+                   [:div.modal-header
 
-
-
-                   [:h2.modal-title {:id "modal-otsikko"
-                                     :class (when (= otsikko-tyyli :virhe)
-                                              "modal-otsikko-virhe")
-                                     :style otsikko-muotoilut}
-                    otsikko]
-
-
+                    [:h2.modal-title {:id "modal-otsikko"
+                                      :class (when (= otsikko-tyyli :virhe)
+                                               "modal-otsikko-virhe")
+                                      :style otsikko-muotoilut}
+                     otsikko]]
 
                    (when otsikon-alle-komp
-                     [otsikon-alle-komp])])
+                     [:div.pb-5
+                      [otsikon-alle-komp]])])
                 [:div.modal-body {:style body-tyyli} sisalto]
                 (when footer [:div.modal-footer {:style footer-tyyli} footer])]]]
              ^{:key "ei-modaalia"}

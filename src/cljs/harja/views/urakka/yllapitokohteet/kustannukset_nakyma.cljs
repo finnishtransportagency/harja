@@ -3,7 +3,6 @@
   (:require [tuck.core :refer [tuck]]
             [cljs-time.core :as t]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.debug :as debug]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.navigaatio :as nav]
@@ -37,7 +36,6 @@
              (apurit/kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
            [:h1 "Paikkauskustannusten yhteenveto"]
-           [debug/debug app]
            [:div.kalenterivalinta
             ;; Vuosi valinta
             [valinnat/vuosi
@@ -83,7 +81,7 @@
              [napit/yleinen-ensisijainen
               "Lisää kustannus"
               #(e! (tiedot/->AvaaLomake))
-              {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
+              {:ikoni [ikonit/harja-icon-action-add]}]]]
 
            ;; Muut kustannukset & Sanktiot ja bonukset
            (apurit/muut-kustannukset-grid app @urakka/valittu-urakan-vuosi)])))))

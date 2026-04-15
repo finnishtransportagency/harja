@@ -388,21 +388,19 @@
      (when @nav/kartta-nakyvissa?
        [kartta-layers korkeus])
 
-     ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-     ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
-     ;; se asemoidaan mountin jälkeen
      ^{:key "kartta-container"}
      [:div#kartta-container {:style {:position "absolute"
                                      :top (- korkeus)
-                                     ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
-                                     :overflow (if @nav/kartta-nakyvissa?
-                                                 "hidden"
-                                                 "visible")
-                                     ;; Jos näkymässä ei ole karttaa, älä piirrä containeria ollenkaan DOMiin
-                                     ;; Sotkee muuten näppäin navigointia (TAB) muissa näkymissä 
+                                     :left 0
+                                     :right 0
+                                     :width "100%"
+                                     :max-width "100%"
+                                     :overflow (if @nav/kartta-nakyvissa? "hidden" "visible")
                                      :display (if (and
                                                     (= @nav/kartan-koko :hidden)
-                                                    (not @nav/kartta-nakyvissa?)) "none" "block")}}
+                                                    (not @nav/kartta-nakyvissa?))
+                                                "none"
+                                                "block")}}
       [kartta/kartta]]]))
 
 (defn varoita-jos-vanha-ie []

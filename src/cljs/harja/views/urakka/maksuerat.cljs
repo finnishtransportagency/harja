@@ -184,7 +184,7 @@
             maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
                                                     (not (contains? rivi :teksti)))
                                             maksuerarivit)
-            urakan-parametrit (:urakan-parametrit(first @maksuerat/maksuerat))
+            urakan-parametrit (:urakan-parametrit (first @maksuerat/maksuerat))
             maksuera-lahetys-estetty (not (:maksuera_lahetys_sampo urakan-parametrit))]
         [:div
          [:h1 "Maksuerät"]
@@ -193,7 +193,11 @@
            :tallenna nil
            :piilota-muokkaus? true
            :tunniste :numero}
-          [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
+          [{:otsikko "Numero"
+            :nimi :numero
+            :tyyppi :numero
+            :leveys "9%"
+            :pituus 16
             :hae (fn [rivi]
                    (let [alias (:alias (:maksuera rivi))]
                      (if alias
@@ -237,7 +241,7 @@
 
          [:button.nappi-ensisijainen
           {:class (if (= (count kuittausta-odottavat)
-                         (count maksuerarivit-ilman-otsikkoja))
+                        (count maksuerarivit-ilman-otsikkoja))
                     "disabled"
                     "")
            :disabled (or (nil? maksuerarivit) maksuera-lahetys-estetty)

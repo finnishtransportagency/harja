@@ -1,7 +1,6 @@
 (ns harja.views.tieluvat.tielupa-nakyma
   (:require
     [tuck.core :refer [tuck]]
-    [harja.loki :refer [log]]
     [clojure.string :as str]
     [harja.pvm :as pvm]
     [reagent.core :as r :refer [atom]]
@@ -12,7 +11,6 @@
     [harja.ui.lomake :as lomake]
     [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
     [harja.ui.grid :as grid]
-    [harja.ui.debug :as debug]
     [harja.ui.valinnat :as valinnat]
     [harja.ui.kentat :as kentat]
     [harja.ui.napit :as napit]
@@ -20,8 +18,7 @@
     [harja.views.kartta.tasot :as tasot]
     [harja.views.tieluvat.tielupa-lomake :as tielupa-lomake])
   (:require-macros
-    [harja.makrot :refer [defc fnc]]
-    [harja.tyokalut.ui :refer [for*]]))
+    [harja.makrot :refer [defc]]))
 
 (defn suodattimet [e! valinnat alueurakat _ _]
   (let [luo-atomi (fn [avain]
@@ -88,49 +85,58 @@
         [valinnat/urakkavalinnat
          {}
          ^{:key "valinnat"}
-         [:div
+         [:div {:style {:padding "24px"}}
           [:div.row
            [:div.col-lg-5.col-md-6.col-sm-8.col-xs-12
             [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                                 :sijainti sijainti-atomi
                                 :vayla-tyyli? true
-                                ::lomake/col-luokka ""} tr-atomi]]
+                                ::lomake/col-luokka ""} tr-atomi]]]
+
+          [:div.row.g-3
            (if (nil? alueurakat)
-             [:div.col-lg-1.col-md-2.col-sm-2.col-xs-12
-              [ajax-loader-pieni "Haetaan alueurakoita..." {:style {:font-weight "normal"
-                                                                    :float "right"}}]]
-             [:div.col-lg-1.col-md-2.col-sm-2.col-xs-12
-              [kentat/tee-otsikollinen-kentta {:otsikko [:span "Alueurakka"]
-                                               :kentta-params {:tyyppi :valinta
-                                                               :valinnat (sort-by
-                                                                           :harja.domain.alueurakka-domain/nimi
-                                                                           alueurakat)
-                                                               :valinta-nayta alueurakkanayta-fn
-                                                               :vayla-tyyli? true}
-                                               :luokka ""
-                                               :arvo-atom alueurakka-atomi}]])
-           [:div.col-lg-2.col-md-2.col-sm-2.col-xs-12
-            [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
-                                             :kentta-params {:tyyppi :valinta
-                                                             :valinnat lupatyyppivalinnat
-                                                             :valinta-nayta lupatyyppinayta-fn
-                                                             :vayla-tyyli? true}
-                                             :luokka ""
-                                             :arvo-atom lupatyyppi-atomi}]]
-           [:div.col-lg-2.col-md-2.col-sm-2.col-xs-12
-            [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
-                                             :kentta-params {:tyyppi :string
-                                                             :vayla-tyyli? true}
-                                             :arvo-atom luvan-numero-atomi
-                                             :luokka ""}]]
-           [:div.col-lg-2.col-md-2.col-sm-4.col-xs-12
-            [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
-                                             :kentta-params {:tyyppi :haku
-                                                             :nayta ::tielupa/hakija-nimi
-                                                             :hae-kun-yli-n-merkkia 2
-                                                             :lahde tiedot/hakijahaku}
-                                             :luokka ""
-                                             :arvo-atom hakija-atomi}]]]
+             [:div.col-12.col-sm-6.col-lg-3
+              [ajax-loader-pieni "Haetaan alueurakoita..."
+               {:style {:font-weight "normal"}}]]
+             [:div.col-12.col-sm-6.col-lg-3
+              [kentat/tee-otsikollinen-kentta
+               {:otsikko [:span "Alueurakka"]
+                :kentta-params {:tyyppi :valinta
+                                :valinnat (sort-by
+                                            :harja.domain.alueurakka-domain/nimi
+                                            alueurakat)
+                                :valinta-nayta alueurakkanayta-fn
+                                :vayla-tyyli? true}
+                :luokka ""
+                :arvo-atom alueurakka-atomi}]])
+
+           [:div.col-12.col-sm-6.col-lg-3
+            [kentat/tee-otsikollinen-kentta
+             {:otsikko "Lupatyyppi"
+              :kentta-params {:tyyppi :valinta
+                              :valinnat lupatyyppivalinnat
+                              :valinta-nayta lupatyyppinayta-fn
+                              :vayla-tyyli? true}
+              :luokka ""
+              :arvo-atom lupatyyppi-atomi}]]
+
+           [:div.col-12.col-sm-6.col-lg-3
+            [kentat/tee-otsikollinen-kentta
+             {:otsikko "Luvan numero"
+              :kentta-params {:tyyppi :string
+                              :vayla-tyyli? true}
+              :arvo-atom luvan-numero-atomi
+              :luokka ""}]]
+
+           [:div.col-12.col-sm-6.col-lg-3
+            [kentat/tee-otsikollinen-kentta
+             {:otsikko "Hakija"
+              :kentta-params {:tyyppi :haku
+                              :nayta ::tielupa/hakija-nimi
+                              :hae-kun-yli-n-merkkia 2
+                              :lahde tiedot/hakijahaku}
+              :luokka ""
+              :arvo-atom hakija-atomi}]]]
           [:div.row
            [:div.col-lg-5.col-md-4.col-sm.6.col-xs-12
             [valinnat/aikavali voimassaolo-atomi {:otsikko "Voimassaolon aikaväli"
@@ -237,25 +243,24 @@
 (defn tieluvat* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeAlueurakat))
-                           (tasot/taso-paalle! :tieluvat)
-                           (tasot/taso-pois! :organisaatio)
-                           (kartta-tiedot/piilota-infopaneeli!)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit!
-                             {:tielupa {:toiminto (fn [lupa]
-                                                    ;; Koska ei olla täysin varmoja, että kartan tiedot
-                                                    ;; pysyy aina täysin oikeana (yksi tielupa on rikottu moneen palaan)
-                                                    (e! (tiedot/->AvaaTielupaPaneelista (::tielupa/id lupa))))
-                                        :teksti "Avaa tielupa"}}))
+                         (e! (tiedot/->HaeAlueurakat))
+                         (tasot/taso-paalle! :tieluvat)
+                         (tasot/taso-pois! :organisaatio)
+                         (kartta-tiedot/piilota-infopaneeli!)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:tielupa {:toiminto (fn [lupa]
+                                                  ;; Koska ei olla täysin varmoja, että kartan tiedot
+                                                  ;; pysyy aina täysin oikeana (yksi tielupa on rikottu moneen palaan)
+                                                  (e! (tiedot/->AvaaTielupaPaneelista (::tielupa/id lupa))))
+                                      :teksti "Avaa tielupa"}}))
       #(do (e! (tiedot/->Nakymassa? false))
-           (tasot/taso-pois! :tieluvat)
-           (tasot/taso-paalle! :organisaatio)
-           (kartta-tiedot/piilota-infopaneeli!)
-           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+         (tasot/taso-pois! :tieluvat)
+         (tasot/taso-paalle! :organisaatio)
+         (kartta-tiedot/piilota-infopaneeli!)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [e! app]
       [:div
        [kartta/kartan-paikka]
-       [debug/debug app]
        (if-not (:valittu-tielupa app)
          [tielupataulukko e! app]
          [tielupa-lomake/tielupalomake* e! app])])))

@@ -539,7 +539,7 @@
                        (when peruuta (peruuta))
                        nil)}
          "Peruuta"])])
-   (when nayta-otsikko? [:h4.panel-title otsikko])
+   (when nayta-otsikko? [:h3.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- sort-ikoni [suunta]

@@ -93,8 +93,9 @@
                                      :materiaalit materiaali-nimet}]]
 
    [lomake/lomake
-    {:otsikko "Hae suolatoteumia tieosoiteväliltä"
-     :muokkaa! #(reset! tiedot/ui-lomakkeen-tila %)
+    {:muokkaa! #(reset! tiedot/ui-lomakkeen-tila %)
+     :otsikko-komp (fn [_]
+                     [:h4.pt-5 "Hae suolatoteumia tieosoiteväliltä"])
      :footer-fn (fn [rivi]
                   [:div
                    [napit/yleinen-toissijainen "Hae"
@@ -108,10 +109,10 @@
                       (reset! tiedot/lomakkeen-tila nil)
                       (reset! tiedot/ui-lomakkeen-tila nil))]])
      :ei-borderia? true}
+
     [{:nimi :tierekisteriosoite
       :otsikko "Tieosoite"
       :tyyppi :tierekisteriosoite
-      :tyyli :rivitetty
       :sijainti (atom nil)
       :vaadi-vali? true}]
     @tiedot/ui-lomakkeen-tila]

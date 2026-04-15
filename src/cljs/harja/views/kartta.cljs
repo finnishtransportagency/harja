@@ -89,10 +89,8 @@
 (defonce paivita-kartan-sijainti (chan))
 
 (defn- aseta-kartan-sijainti [x y w h naulattu?]
-  (when-let
-    [karttasailio (dom/elementti-idlla "kartta-container")]
+  (when-let [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
-      ;;(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
       (if naulattu?
         (do
           (set! (.-position tyyli) "fixed")
@@ -107,12 +105,7 @@
           (set! (.-top tyyli) (fmt/pikseleina y))
           (set! (.-width tyyli) (fmt/pikseleina w))
           (set! (.-height tyyli) (fmt/pikseleina h))
-          (openlayers/set-map-size! w h)))
-      ;; jotta vältetään muiden kontrollien hautautuminen float:right Näytä kartta alle, kavenna kartta-container
-      (when (= :S @nav/kartan-koko)
-        (set! (.-left tyyli) "")
-        (set! (.-right tyyli) (fmt/pikseleina 20))
-        (set! (.-width tyyli) (fmt/pikseleina 100))))))
+          (openlayers/set-map-size! w h))))))
 
 (defn odota-mount-tai-timeout
   "Odottaa, että paivita-kartan-sijainti kanavaan tulee :mount tapahtuma tai 150ms timeout.
@@ -266,18 +259,25 @@
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 
-     ;; käytetään tässä inline-tyylejä, koska tarvitsemme kartan-korkeus -arvoa asemointiin
-     [:div.kartan-koko-napit {:style {:position "absolute"
-                                      :text-align "center"
-                                      :top (fmt/pikseleina (- kartan-korkeus
-                                                             (if (= :S koko)
-                                                               0
-                                                               +kartan-napit-padding+)))
-                                      :width "100%"
-                                      :z-index 100}}
+     [:div.kartan-koko-napit
+      {:style (merge
+                {:position "absolute"
+                 :top (fmt/pikseleina (- kartan-korkeus
+                                        (if (= :S koko)
+                                          0
+                                          +kartan-napit-padding+)))
+                 :width "auto"
+                 :z-index 100}
+                (if (= :S koko)
+                  {:right "0"
+                   :left "auto"
+                   :transform "none"}
+                  {:left "50%"
+                   :right "auto"
+                   :transform "translateX(-50%)"}))}
       (if (= :S koko)
         [:button.btn-xs.nappi-toissijainen.nappi-avaa-kartta
-         {:on-click #(nav/vaihda-kartan-koko! :L)}
+         {:on-click #(nav/vaihda-kartan-koko! :M)}
          (ikonit/expand) " Näytä kartta"]
         [:span
          [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!

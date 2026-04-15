@@ -41,7 +41,9 @@
     [:label.alasvedon-otsikko "Tieosoite"]
     [kentat/tee-kentta {:tyyppi :tierekisteriosoite
                         :alaotsikot? true
-                        :vayla-tyyli? true}
+                        :vayla-tyyli? true
+                        :ala-nayta-virhetta-komponentissa? true
+                        :varoita [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]}
      (r/wrap
        (:tr valinnat)
        #(e! (tiedot/->PaivitaValinnat {:tr %})))]]
@@ -56,11 +58,8 @@
       :for-teksti "filtteri-aikavali"
       :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta reikapaikkaus-pvm "}
       :vayla-tyyli? true
-      :aikavalin-rajoitus [6 :kuukausi]}]]
-
-   ;; Haku
-   [:div.haku-nappi {:style {:margin-top "14px"}}
-    [napit/yleinen-ensisijainen "Hae" #(e! (tiedot/->HaeTiedot)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]])
+      :aikavalin-rajoitus [6 :kuukausi]}]
+    [napit/yleinen-ensisijainen "Hae paikkauksia" #(e! (tiedot/->HaeTiedot)) {:data-attributes {:data-cy "hae-reikapaikkauskohteita"}}]]])
 
 
 (defn reikapaikkaus-muokkauspaneeli [e! voi-kirjoittaa? voi-tallentaa?
@@ -150,7 +149,7 @@
           ::lomake/col-luokka "col-xs-2 tr-input"
           :validoi [[:ei-tyhja "Syötä loppuetäisyys"]]
           :desimaalien-maara 0}))
-     
+
      ;; Menetelmä
      (lomake/ryhma
        {:otsikko "Menetelmä"

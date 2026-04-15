@@ -2,18 +2,18 @@
   "Aikajananäkymä, jossa voi useita eri asioita näyttää aikajanalla.
   Vähän kuten paljon käytetty gantt kaavio."
   (:require
-   [clojure.spec.alpha :as s]
-   [harja.domain.valitavoite :as vt-domain]
-   #?@(:cljs [[reagent.core :as r]
-              [harja.ui.dom :as dom]
-              [cljs-time.core :as t]
-              [harja.ui.debug :as debug]
-              [cljs.core.async :refer [<!]]]
-       :clj [[clj-time.core :as t]
-             [clojure.core.async :refer [<! go]]
-             [harja.tyokalut.spec :refer [defn+]]])
-   [harja.pvm :as pvm]
-   [clojure.string :as str])
+    [clojure.spec.alpha :as s]
+    [harja.domain.valitavoite :as vt-domain]
+    #?@(:cljs [[reagent.core :as r]
+               [harja.ui.dom :as dom]
+               [cljs-time.core :as t]
+               [harja.ui.debug :as debug]
+               [cljs.core.async :refer [<!]]]
+        :clj  [[clj-time.core :as t]
+               [clojure.core.async :refer [<! go]]
+               [harja.tyokalut.spec :refer [defn+]]])
+    [harja.pvm :as pvm]
+    [clojure.string :as str])
   #?(:cljs (:require-macros [harja.tyokalut.spec :refer [defn+]]
                             [cljs.core.async.macros :refer [go]])))
 
@@ -42,7 +42,7 @@
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
   (let [ajat (concat (keep ::alku ajat)
-                     (keep ::loppu ajat))
+               (keep ::loppu ajat))
         ajat-jarjestyksessa (sort pvm/ennen? ajat)
         aikaisin (first ajat-jarjestyksessa)
         myohaisin (last ajat-jarjestyksessa)]
@@ -55,17 +55,17 @@
          Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
   [paivat ::paivat] any?
   (reduce
-   (fn [kuukaudet paiva]
-     (let [viime-kk (last kuukaudet)]
-       (if (or (nil? viime-kk)
-               (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
-         (conj kuukaudet {:alku paiva
-                          :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
-                          :loppu paiva})
-         (update kuukaudet (dec (count kuukaudet))
-                 assoc :loppu paiva))))
-   []
-   paivat))
+    (fn [kuukaudet paiva]
+      (let [viime-kk (last kuukaudet)]
+        (if (or (nil? viime-kk)
+              (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
+          (conj kuukaudet {:alku paiva
+                           :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
+                           :loppu paiva})
+          (update kuukaudet (dec (count kuukaudet))
+            assoc :loppu paiva))))
+    []
+    paivat))
 
 (defn- paivat-ja-viikot
   "Näyttää pystyviivan jokaisen päivän kohdalla ja viikon vaihtuessa maanantain
@@ -87,20 +87,20 @@
        (let [x (paiva-x p)
              viikko-nyt (t/week-number-of-year p)
              acc (conj acc
-                       ^{:key p}
-                       [:line {:x1 x :y1 (- alku-y 5)
-                               :x2 x :y2 korkeus
-                               :stroke "lightGray"}])]
+                   ^{:key p}
+                   [:line {:x1 x :y1 (- alku-y 5)
+                           :x2 x :y2 korkeus
+                           :stroke "lightGray"}])]
          (if (and (= 1 #?(:cljs (.getWeekday p)
                           :clj  (t/day-of-week p))) (not= viikko-nyt viikko))
            ;; Maanantai ja eri viikko, lisätään viikko-indikaattori
            (recur (conj acc
-                        ^{:key (str viikko-nyt x)}
-                        [:text {:x x :y (- alku-y 10)
-                                :font-size 8}
-                         (str viikko-nyt)])
-                  viikko-nyt
-                  paivat)
+                    ^{:key (str viikko-nyt x)}
+                    [:text {:x x :y (- alku-y 10)
+                            :font-size 8}
+                     (str viikko-nyt)])
+             viikko-nyt
+             paivat)
            (recur acc viikko paivat)))))])
 
 (defn- nykyhetki
@@ -155,7 +155,7 @@
                   drag-kursori (r/atom nil) ; Nykyisen raahauksen kursorin tiedot
                   lopetetaan-raahaus? (atom false)
                   drag (r/atom [])]
-       [:div.aikajana
+       [:div.aikajana {:style {:width "100%" :overflow-x "auto"}}
         [komponentti rivit optiot
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
@@ -174,7 +174,7 @@
                            (.preventDefault e)
                            (when (.-ctrlKey e)
                              (let [olemassa-oleva-valinta (first (filter #(= (::drag %) (::drag jana))
-                                                                         @valitut-palkit))]
+                                                                   @valitut-palkit))]
                                (if olemassa-oleva-valinta
                                  (reset! valitut-palkit (set (remove #(= % olemassa-oleva-valinta) @valitut-palkit)))
                                  (reset! valitut-palkit (conj @valitut-palkit jana))))))
@@ -200,13 +200,13 @@
                                                      ::alkup-alku (::alku %)
                                                      ::alkup-loppu (::loppu %)
                                                      :avain avain})
-                                               @valitut-palkit)))))
+                                            @valitut-palkit)))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
                           (when (and (not (.-ctrlKey e))
-                                     (not @lopetetaan-raahaus?)
-                                     (not (empty? @drag)))
+                                  (not @lopetetaan-raahaus?)
+                                  (not (empty? @drag)))
                             (when (not (zero? (.-buttons e))) ;; Hiiren nappi edelleen alhaalla
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                     cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
@@ -231,26 +231,26 @@
 
                                 ;; Raahaa palkkeja
                                 (reset! drag
-                                        (map (fn [{avain :avain :as drag}]
-                                               (let [uusi-alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
-                                                     uusi-loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero))]
-                                                 (cond
-                                                   ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan
-                                                   ;; ja on aina validi.
-                                                   ;; Siirretään palkkia muutoksen verran tiettyyn suuntaan
-                                                   ;; (ei voida suoraan asettaa kursorin koordinattia uudeksi aluksi/lopuksi,
-                                                   ;; koska usean raahauksessa ei toimi hyvin)
-                                                   (and (= avain ::alku) (pvm/sama-tai-ennen? uusi-alku (::loppu drag)))
-                                                   (assoc drag avain uusi-alku)
+                                  (map (fn [{avain :avain :as drag}]
+                                         (let [uusi-alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
+                                               uusi-loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero))]
+                                           (cond
+                                             ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan
+                                             ;; ja on aina validi.
+                                             ;; Siirretään palkkia muutoksen verran tiettyyn suuntaan
+                                             ;; (ei voida suoraan asettaa kursorin koordinattia uudeksi aluksi/lopuksi,
+                                             ;; koska usean raahauksessa ei toimi hyvin)
+                                             (and (= avain ::alku) (pvm/sama-tai-ennen? uusi-alku (::loppu drag)))
+                                             (assoc drag avain uusi-alku)
 
-                                                   (and (= avain ::loppu) (pvm/sama-tai-jalkeen? uusi-loppu (::alku drag)))
-                                                   (assoc drag avain uusi-loppu)
+                                             (and (= avain ::loppu) (pvm/sama-tai-jalkeen? uusi-loppu (::alku drag)))
+                                             (assoc drag avain uusi-loppu)
 
-                                                   ;; Koko palkki, siirretään alkua ja loppua eron verran
-                                                   (= avain ::palkki)
-                                                   (assoc drag ::alku uusi-alku ::loppu uusi-loppu)
-                                                   :default drag)))
-                                             @drag)))))))
+                                             ;; Koko palkki, siirretään alkua ja loppua eron verran
+                                             (= avain ::palkki)
+                                             (assoc drag ::alku uusi-alku ::loppu uusi-loppu)
+                                             :default drag)))
+                                    @drag)))))))
           :on-mouse-up! (fn [e]
                           (let [tyhjenna-muokkaustila! (fn []
                                                          (reset! drag [])
@@ -265,7 +265,7 @@
                                                (tyhjenna-muokkaustila!))]
                             ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                             (when (and (not (.-ctrlKey e))
-                                       (empty? @drag))
+                                    (empty? @drag))
                               (reset! valitut-palkit #{}))
 
                             ;; Käsittele muutos, jos raahattiin palkkeja
@@ -279,10 +279,10 @@
 #?(:clj
    (defn- jodaksi [rivi]
      (update rivi ::ajat
-             (fn [ajat]
-               (mapv #(-> %
-                          (update ::alku pvm/joda-timeksi)
-                          (update ::loppu pvm/joda-timeksi)) ajat)))))
+       (fn [ajat]
+         (mapv #(-> %
+                  (update ::alku pvm/joda-timeksi)
+                  (update ::loppu pvm/joda-timeksi)) ajat)))))
 
 (defn- marker [{:keys [x y reuna korkeus hover-y teksti alku-x
                        paivan-leveys show-tooltip! hide-tooltip! suunta vari]}]
@@ -297,22 +297,22 @@
       [:g {:transform (str "translate( " (case suunta
                                            :vasen (- x paivan-leveys puolikas-paiva)
                                            :oikea x)
-                           ", " y ")")}
+                        ", " y ")")}
        [:path {:d (case suunta
                     :oikea
                     (str "M " 0 " " 0
-                         " L " (+ 0 paivan-leveys) " " 0
-                         " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 puolikas-korkeus)
-                         " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
-                         " L " 0 " " (+ 0 korkeus)
-                         " L 0 0")
+                      " L " (+ 0 paivan-leveys) " " 0
+                      " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 puolikas-korkeus)
+                      " L " (+ 0 paivan-leveys) " " (+ 0 korkeus)
+                      " L " 0 " " (+ 0 korkeus)
+                      " L 0 0")
                     :vasen
                     (str "M " (+ 0 paivan-leveys puolikas-paiva) " " 0
-                         " L " (+ 0 puolikas-paiva) " " 0
-                         " L " 0 " " (+ 0 puolikas-korkeus)
-                         " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
-                         " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
-                         " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
+                      " L " (+ 0 puolikas-paiva) " " 0
+                      " L " 0 " " (+ 0 puolikas-korkeus)
+                      " L " (+ 0 puolikas-paiva) " " (+ 0 korkeus)
+                      " L " (+ 0 paivan-leveys puolikas-paiva) " " (+ 0 korkeus)
+                      " L " (+ 0 paivan-leveys puolikas-paiva) " " 0))
                :fill vari
                :fill-opacity (if vari 1.0 0.0)
                :stroke reuna
@@ -324,7 +324,7 @@
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip! valitut-palkit drag-kursori
                                        drag click-select! drag-start! drag-move! on-mouse-up! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
-                 :clj  (map jodaksi rivit))
+                 :clj (map jodaksi rivit))
         rivin-korkeus 20
         alku-x 150 ; Kuvaa pistettä, josta aikajana alkaa (kohteiden nimien jälkeen)
         alku-y 50
@@ -354,13 +354,13 @@
                           (- y 15)
                           (+ y 30))))
             paiva-x #(+ alku-x (* (- leveys alku-x)
-                                  ((if (pvm/ennen? % min-aika)
-                                     - +)
-                                   (/ (or (pvm/paivia-valissa-opt % min-aika)
-                                          0)
-                                      paivia))))
+                                 ((if (pvm/ennen? % min-aika)
+                                    - +)
+                                  (/ (or (pvm/paivia-valissa-opt % min-aika)
+                                       0)
+                                    paivia))))
             x->paiva #(t/plus min-aika
-                              (t/days (/ % paivan-leveys)))
+                        (t/days (/ % paivan-leveys)))
             kuukaudet (kuukaudet paivat)
 
             rajaa-nakyvaan-alueeseen (fn [x jana-leveys]
@@ -370,8 +370,12 @@
 
         [:svg#aikajana
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
-          :width leveys :height korkeus
+          :width leveys
+          :height korkeus
           :viewBox (str "0 0 " leveys " " korkeus)
+          :preserveAspectRatio "xMinYMin meet"
+          :style {:display "block"
+                  :cursor (when raahataan? "ew-resize")}
           :on-context-menu (fn [e]
                              ;; Ainakin Mac-koneissa Ctrl+Click = Hiiren kakkospainikkeella klikkaus
                              ;; Ctrl+Click käytetään asioiden valitsemiseen, estetään siis oletus-action eli context-menu
@@ -379,8 +383,7 @@
                              false)
           :on-mouse-up on-mouse-up!
           :on-mouse-move (when drag-move!
-                           (drag-move! alku-x hover-y x->paiva))
-          :style {:cursor (when raahataan? "ew-resize")}}
+                           (drag-move! alku-x hover-y x->paiva))}
 
          #?(:cljs
             [paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat]
@@ -388,119 +391,119 @@
             (paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat))
 
          (map-indexed
-          (fn [i {ajat ::ajat :as rivi}]
-            (let [y (rivin-y i)]
-              ^{:key i}
-              [:g
-               [:rect {:x (inc alku-x) :y (- y bar-y-offset)
-                       :width (- leveys alku-x)
-                       :height taustapalkin-korkeus
-                       :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
-               (keep-indexed
-                (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
-                        teksti ::teksti :as jana}]
-                  (let [alku-ja-loppu? (and alku loppu)
-                        taman-janan-raahaus (first (filter #(= (::drag %) (::drag jana)) drag))
-                        [alku loppu] (if (and raahataan? taman-janan-raahaus)
-                                       [(::alku taman-janan-raahaus) (::loppu taman-janan-raahaus)]
-                                       [alku loppu])
-                        ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
-                        x (inc (paiva-x (or alku loppu)))
-                        jana-valittu? (valitut-palkit jana)
-                        jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
-                        [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
-                        ;; Vähennä väritetyn korkeutta 2px
-                        y (if vari (inc y) y)
-                        korkeus (if vari (- jana-korkeus 2) jana-korkeus)
-                        voi-raahata? (some? (::drag jana))]
-                    ^{:key j}
-                    [:g
-                     (if alku-ja-loppu?
-                       ;; Piirä yksittäinen aikajana
-                       (when (pos? jana-leveys)
-                         [:g [:rect (merge
-                                     (when voi-raahata?
-                                       {:style {:cursor "move"}
-                                        :on-mouse-down (fn [e]
-                                                         (click-select! e jana ::palkki)
-                                                         (drag-start! e jana ::palkki))})
-                                     {:x x :y y
-                                      :width jana-leveys
-                                      :height korkeus
-                                      :fill (or vari "white")
-                                      ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                      ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                      :fill-opacity (if vari 1.0 0.0)
-                                      :stroke (if jana-valittu? "red" reuna)
-                                      :rx 3 :ry 3
-                                      :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
-                                                                      :y (hover-y y)
-                                                                      :text teksti})
-                                      :on-mouse-out hide-tooltip!})]
-                          ;; kahvat draggaamiseen
-                          (when voi-raahata?
-                            [:rect {:x (- x 3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::alku)}])
-                          (when voi-raahata?
-                            [:rect {:x (+ x jana-leveys -3) :y y :width 7 :height korkeus
-                                    :style {:fill "white" :opacity 0.0
-                                            :cursor "ew-resize"}
-                                    :on-mouse-down #(drag-start! % jana ::loppu)}])])
-                       ;; Vain alku tai loppu, piirrä marker
-                       #?(:cljs
-                          [marker {:x x :hover-y hover-y :teksti teksti
-                                   :korkeus korkeus :alku-x alku-x
-                                   :paivan-leveys paivan-leveys
-                                   :y y :show-tooltip! show-tooltip!
-                                   :hide-tooltip! hide-tooltip! :reuna reuna
-                                   :vari vari :suunta (if alku :oikea :vasen)}]
-                          :clj
-                          (marker {:x x :hover-y hover-y :teksti teksti
-                                   :korkeus korkeus :alku-x alku-x
-                                   :y y :show-tooltip! show-tooltip!
-                                   :paivan-leveys paivan-leveys
-                                   :hide-tooltip! hide-tooltip! :reuna reuna
-                                   :vari vari :suunta (if alku :oikea :vasen)})))
+           (fn [i {ajat ::ajat :as rivi}]
+             (let [y (rivin-y i)]
+               ^{:key i}
+               [:g
+                [:rect {:x (inc alku-x) :y (- y bar-y-offset)
+                        :width (- leveys alku-x)
+                        :height taustapalkin-korkeus
+                        :fill (if (even? i) "#f0f0f0" "#d0d0d0")}]
+                (keep-indexed
+                  (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
+                          teksti ::teksti :as jana}]
+                    (let [alku-ja-loppu? (and alku loppu)
+                          taman-janan-raahaus (first (filter #(= (::drag %) (::drag jana)) drag))
+                          [alku loppu] (if (and raahataan? taman-janan-raahaus)
+                                         [(::alku taman-janan-raahaus) (::loppu taman-janan-raahaus)]
+                                         [alku loppu])
+                          ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
+                          x (inc (paiva-x (or alku loppu)))
+                          jana-valittu? (valitut-palkit jana)
+                          jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
+                          [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
+                          ;; Vähennä väritetyn korkeutta 2px
+                          y (if vari (inc y) y)
+                          korkeus (if vari (- jana-korkeus 2) jana-korkeus)
+                          voi-raahata? (some? (::drag jana))]
+                      ^{:key j}
+                      [:g
+                       (if alku-ja-loppu?
+                         ;; Piirä yksittäinen aikajana
+                         (when (pos? jana-leveys)
+                           [:g [:rect (merge
+                                        (when voi-raahata?
+                                          {:style {:cursor "move"}
+                                           :on-mouse-down (fn [e]
+                                                            (click-select! e jana ::palkki)
+                                                            (drag-start! e jana ::palkki))})
+                                        {:x x :y y
+                                         :width jana-leveys
+                                         :height korkeus
+                                         :fill (or vari "white")
+                                         ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                         ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                         :fill-opacity (if vari 1.0 0.0)
+                                         :stroke (if jana-valittu? "red" reuna)
+                                         :rx 3 :ry 3
+                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
+                                                                         :y (hover-y y)
+                                                                         :text teksti})
+                                         :on-mouse-out hide-tooltip!})]
+                            ;; kahvat draggaamiseen
+                            (when voi-raahata?
+                              [:rect {:x (- x 3) :y y :width 7 :height korkeus
+                                      :style {:fill "white" :opacity 0.0
+                                              :cursor "ew-resize"}
+                                      :on-mouse-down #(drag-start! % jana ::alku)}])
+                            (when voi-raahata?
+                              [:rect {:x (+ x jana-leveys -3) :y y :width 7 :height korkeus
+                                      :style {:fill "white" :opacity 0.0
+                                              :cursor "ew-resize"}
+                                      :on-mouse-down #(drag-start! % jana ::loppu)}])])
+                         ;; Vain alku tai loppu, piirrä marker
+                         #?(:cljs
+                            [marker {:x x :hover-y hover-y :teksti teksti
+                                     :korkeus korkeus :alku-x alku-x
+                                     :paivan-leveys paivan-leveys
+                                     :y y :show-tooltip! show-tooltip!
+                                     :hide-tooltip! hide-tooltip! :reuna reuna
+                                     :vari vari :suunta (if alku :oikea :vasen)}]
+                            :clj
+                            (marker {:x x :hover-y hover-y :teksti teksti
+                                     :korkeus korkeus :alku-x alku-x
+                                     :y y :show-tooltip! show-tooltip!
+                                     :paivan-leveys paivan-leveys
+                                     :hide-tooltip! hide-tooltip! :reuna reuna
+                                     :vari vari :suunta (if alku :oikea :vasen)})))
 
-                     ;; Välitavoitteet
-                     (map-indexed
-                      (fn [i valitavoite]
-                        (let [vari-kesken "#FFA500"
-                              vari-valmis "#00cc25"
-                              vari-myohassa "#da252e"
-                              vari (case (vt-domain/valmiustila valitavoite)
-                                     :valmis vari-valmis
-                                     :myohassa vari-myohassa
-                                     vari-kesken)
-                              x (paiva-x (:takaraja valitavoite))]
-                          (when (>= x alku-x)
-                            ^{:key i}
-                            [:rect {:x x
-                                    :y y
-                                    :width 5
-                                    :height korkeus
-                                    :fill vari
-                                    :fill-opacity 1.0
-                                    :on-mouse-over #(show-tooltip!
-                                                     {:x x
-                                                      :y (hover-y y)
-                                                      :text (str (:nimi valitavoite)
-                                                                 " ("
-                                                                 (str/lower-case
-                                                                  (vt-domain/valmiustilan-kuvaus-yksinkertainen
-                                                                   valitavoite))
-                                                                 ", takaraja "
-                                                                 (pvm/pvm (:takaraja valitavoite))
-                                                                 ")")})
-                                    :on-mouse-out hide-tooltip!}])))
-                      (filter :takaraja (::valitavoitteet rivi)))]))
-                ajat)
-               [:text {:x 0 :y (+ text-y-offset y)
-                       :font-size 10}
-                (::otsikko rivi)]]))
-          rivit)
+                       ;; Välitavoitteet
+                       (map-indexed
+                         (fn [i valitavoite]
+                           (let [vari-kesken "#FFA500"
+                                 vari-valmis "#00cc25"
+                                 vari-myohassa "#da252e"
+                                 vari (case (vt-domain/valmiustila valitavoite)
+                                        :valmis vari-valmis
+                                        :myohassa vari-myohassa
+                                        vari-kesken)
+                                 x (paiva-x (:takaraja valitavoite))]
+                             (when (>= x alku-x)
+                               ^{:key i}
+                               [:rect {:x x
+                                       :y y
+                                       :width 5
+                                       :height korkeus
+                                       :fill vari
+                                       :fill-opacity 1.0
+                                       :on-mouse-over #(show-tooltip!
+                                                         {:x x
+                                                          :y (hover-y y)
+                                                          :text (str (:nimi valitavoite)
+                                                                  " ("
+                                                                  (str/lower-case
+                                                                    (vt-domain/valmiustilan-kuvaus-yksinkertainen
+                                                                      valitavoite))
+                                                                  ", takaraja "
+                                                                  (pvm/pvm (:takaraja valitavoite))
+                                                                  ")")})
+                                       :on-mouse-out hide-tooltip!}])))
+                         (filter :takaraja (::valitavoitteet rivi)))]))
+                  ajat)
+                [:text {:x 0 :y (+ text-y-offset y)
+                        :font-size 10}
+                 (::otsikko rivi)]]))
+           rivit)
 
          #?(:cljs
             [nykyhetki paiva-x alku-y korkeus]
@@ -516,11 +519,11 @@
                          :y (:tooltip-y @drag-kursori)
                          :text (if (= (count drag) 1)
                                  (str (pvm/pvm (::alku (first drag))) " \u2013 "
-                                      (pvm/pvm (::loppu (first drag))))
+                                   (pvm/pvm (::loppu (first drag))))
                                  ;; Näytetään valittujen palkkien aikaisin ja viimeisin pvm
                                  (str "Koko aikaväli: "
-                                      (pvm/pvm (first (sort t/before? (map ::alku drag)))) " \u2013 "
-                                      (pvm/pvm (last (sort t/before? (map ::loppu drag))))))}
+                                   (pvm/pvm (first (sort t/before? (map ::alku drag)))) " \u2013 "
+                                   (pvm/pvm (last (sort t/before? (map ::loppu drag))))))}
                         tooltip)])]))))
 
 (defn aikajana

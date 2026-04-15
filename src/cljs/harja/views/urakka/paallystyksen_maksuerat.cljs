@@ -61,12 +61,12 @@
            :tallennus-ei-mahdollinen-tooltip
            (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-kohdeluettelo-maksuerat)}
 
-          [{:otsikko "Kohde\u00ADnumero" :leveys 5 :nimi :kohdenumero
+          [{:otsikko "Kohde\u00ADnumero" :leveys 10 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Tunnus" :leveys 10 :nimi :tunnus :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
-           {:otsikko "Kokonais\u00ADhinta" :leveys 5 :nimi :kokonaishinta
+           {:otsikko "Kokonais\u00ADhinta" :leveys 20 :nimi :kokonaishinta
             :tyyppi :numero :fmt fmt/euro-opt :muokattava? (constantly false)}
            {:otsikko "1. maksu\u00ADerä" :leveys 10 :nimi :maksuera1 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
@@ -78,7 +78,7 @@
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
            {:otsikko "5. maksu\u00ADerä" :leveys 10 :nimi :maksuera5 :tyyppi :string :pituus-max 512
             :muokattava? (constantly voi-tayttaa-maksuerat?)}
-           {:otsikko "Lasku\u00ADtuksen maksuerä\u00ADtunnus" :leveys 10 :nimi :maksueratunnus
+           {:otsikko "Lasku\u00ADtuksen maksuerä\u00ADtunnus" :leveys 15 :nimi :maksueratunnus
             :tyyppi :string :pituus-max 512 :muokattava? (constantly voi-tayttaa-maksueratunnuksen?)}]
           (-> maksuerat
             (yllapitokohteet/suodata-yllapitokohteet {:tienumero (:tienumero valinnat)
