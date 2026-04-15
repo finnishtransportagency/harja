@@ -30,7 +30,7 @@ LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/
 # NPM pakettien versiot Docker build argumentteina
 ARG NPM_CYPRESS_VERSION
 
-# "Docker actions must be run by the default Docker user (root)."
+# Riippuvuudet asennetaan roottina. Kontti ajetaan runtimessa node-käyttäjänä (-u node).
 USER root
 
 
@@ -150,21 +150,27 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" --ignore-scripts \
     # Tulosta polku mistä Node lataa tarvittavat moduulit
     && node -p 'module.paths'
 
+# Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
+# jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
+RUN chmod -R a+rX /root/.cache
+
 # Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
 # Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
 
+COPY entrypoint.sh /usr/local/bin
+
 # Vaihda non-root käyttäjään
+# https://github.com/cypress-io/cypress-docker-images/tree/master/examples/included-as-non-root
 USER node
 
-# Työkalujen versiot
+# Työkalujen versiot ja käyttäjätiedot
 RUN echo  " Node version:    $(node -v) \n" \
     "NPM version:     $(npm -v) \n" \
     "Debian version:  $(cat /etc/debian_version) \n" \
     "Chrome version:  $(google-chrome --version) \n" \
     "Edge version:    $(edge --version) \n" \
-    "User:          $(whoami) \n"
-
-COPY entrypoint.sh /usr/local/bin
+    "User:          $(whoami) \n" \
+    "User ID: $(id -u) \n"
 
 ENTRYPOINT ["entrypoint.sh"]
