@@ -69,25 +69,13 @@
                                :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
-(defn harja-info [s]
-  [:a.klikattava
-   {:id "info"
-    :href "#"
-    :class (str "info-nakyma" (when (= s :info) " aktiivinen"))
-    :on-click #(do
-                 (.preventDefault %)
-                 (nav/vaihda-sivu! :info))}
-
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
-
-(defn- mobiiliselain? []
-  (some #(re-matches % (str/lower-case js/window.navigator.userAgent))
-    [#".*android.*" #".*ipad.*"]))
-
 (defn kayttaja-dropdown [s]
   (let [auki? (reagent.core/atom false)]
     (fn [s]
-      [:div {:class "nav-item dropdown"}
+      [:div {:class "nav-item dropdown"
+             :on-blur (fn [e]
+                        (when-not (.contains (.-currentTarget e) (.-relatedTarget e))
+                          (reset! auki? false)))}
 
        ;; ===============================
        ;; Käyttäjä nimi & organisaatio
@@ -281,9 +269,12 @@
           ]]]]]]]])
 
 (defn ladataan []
-  [:div {:style {:position "absolute" :top "50%" :left "50%"}}
-   [:div {:style {:position "relative" :left "-50px" :top "-20px"}}
-    [ajax-loader "Ladataan..." {:luokka "ladataan-harjaa"}]]])
+  [:div {:style {:position "absolute"
+                 :top "50%"
+                 :left "50%"
+                 :transform "translate(-50%, -50%)"}}
+   [:div {:style {:width "320px"}}
+    [ajax-loader "Ladataan..."]]])
 
 (defn yleinen-varoituspalkki
   "Näyttää yleisluontoisen varoituspalkin selaimen ylänurkassa.

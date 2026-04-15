@@ -136,7 +136,7 @@
                            (if tehtava
                              [:<> tehtava]
                              [:div.body-text.strong valiotsikko]))
-            :leveys 35}
+            :leveys 30}
 
            {:otsikko "Yksikkö"
             :nimi :yksikko
@@ -189,7 +189,7 @@
             :fmt fmt/euro-opt
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
-            :leveys 15}
+            :leveys 20}
 
            {:otsikko "Yksikköhinnan keskiarvo (€)"
             :nimi :yksikkohinta
@@ -197,7 +197,7 @@
             :fmt fmt/euro-opt
             :solun-luokka solun-luokka-fn
             :muokattava? (constantly false)
-            :leveys 15}
+            :leveys 20}
 
            {:otsikko "Tavoitehinnan muutos (€)"
             :nimi :tavoitehinnan_muutos
@@ -212,7 +212,7 @@
             :muokattava? #(and
                             (not haku-kaynnissa?)
                             (true? (:anna-kirjata-tavoitehinta? %)))
-            :leveys 22}
+            :leveys 20}
 
            ;; Aseta yksikköhinta
            {:otsikko ""
@@ -230,6 +230,6 @@
                                     (not (:anna-kirjata-tavoitehinta? valittu-rivi)))
                               [:div.nappi-toissijainen
                                {:on-click #(e! (t-lasketut/->AvaaYksikkohintaModal valittu-rivi tehtava_id))} "Aseta yksikköhinta"])])
-            :leveys 22}]
+            :leveys 20}]
 
           tehtava-maaramuutokset]]))}])

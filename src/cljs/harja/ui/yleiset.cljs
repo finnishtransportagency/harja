@@ -1,22 +1,18 @@
 (ns harja.ui.yleiset
   "Yleisiä UI komponentteja"
-  (:require [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.ikonit :as ikonit]
-            [reagent.core :refer [atom] :as r]
-            [reagent.dom :as rdom]
-            [reagent.ratom :as ratom]
-            [harja.ui.komponentti :as komp]
-            [goog.events :as events]
-            [goog.events.EventType :as EventType]
-            [harja.ui.dom :as dom]
-            [harja.fmt :as fmt]
+  (:require [reagent.dom :as rdom]
             [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :as loki]
-            [harja.ui.viesti :as viesti])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.tyokalut.ui :refer [for*]]
-                   [reagent.ratom :refer [reaction run!]]))
+            [reagent.core :refer [atom] :as r]
+            [goog.events.EventType :as EventType]
+
+            [harja.ui.loader :refer [loader]]
+
+            [harja.ui.dom :as dom]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.komponentti :as komp]
+            [harja.asiakas.kommunikaatio :as k])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn placeholder
   "Näyttää helposti huomattavan placeholder elementin, jota voi käyttää sommitteluun"
@@ -51,12 +47,16 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti {:keys [luokka sama-rivi?] :as opts}]
-   [:div {:class (str "ajax-loader-valistys ajax-loader " (when luokka luokka))}
-    [:img {:alt "Ladataan sisältöä." :src "images/ajax-loader.gif"}]
-    (when viesti
-      (if sama-rivi?
-        [:span.viesti (str " " viesti)]
-        [:div.viesti viesti]))]))
+   ;; Legacy
+   (comment
+     [:div {:class (str "ajax-loader-valistys ajax-loader " (when luokka luokka))}
+      [:img {:alt "Ladataan sisältöä." :src "images/ajax-loader.gif"}]
+      (when viesti
+        (if sama-rivi?
+          [:span.viesti (str " " viesti)]
+          [:div.viesti viesti]))])
+   ;; Uudistettu loader
+   [loader viesti]))
 
 (defn ajax-loader-pieni
   "Näyttää pienen inline latausanimaatiokuvan ja optionaalisen viestin."
@@ -779,7 +779,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:span.nav-link-icon [:i.icon.ti.ti-info-hexagon]]
      [:div.vihjeteksti teksti]]]))
 
 (defn toast-viesti
@@ -820,7 +820,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:span.nav-link-icon [:i.icon.ti.ti-info-hexagon]]
      [:div.vihjeteksti elementti]]]))
 
 (defn keltainen-vihjelaatikko

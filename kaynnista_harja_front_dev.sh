@@ -30,8 +30,13 @@ mkdir -p resources/public/css
 cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
 cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/
 cp -r node_modules/@tabler/icons-webfont/dist/fonts resources/public/css/
+cp node_modules/@tabler/core/dist/css/tabler-vendors.min.css resources/public/css/
 # BS skriptit tarvitaan nykyaikaisempiin front featureihin 
+mkdir -p dev-resources/js/out
 cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dev-resources/js/out/
+# Nykyaikaisempi dropdown kirjasto 
+cp node_modules/tom-select/dist/js/tom-select.complete.min.js dev-resources/js/out/
+cp node_modules/tom-select/dist/css/tom-select.bootstrap5.css resources/public/css/
 
 # Päätä käytetäänkö dev-ympäristöprofiilia (lataa asetukset.edn)
 # - Ilman argumenttia: build-dev-no-env (nopea, ei lataa .edn-asetuksia)
