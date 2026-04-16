@@ -32,7 +32,7 @@
 
 (defn poista-lukitus [e! urakka]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))]
+                        (:id urakka))]
     [:div
      [napit/palvelinkutsu-nappi
       "Avaa lukitus"
@@ -46,8 +46,8 @@
 
 (defn otsikkotiedot [e! {:keys [tila] :as perustiedot} urakka]
   [:span
-   [:h1 (str "Päällystysilmoitus - "
-             (paallystyskohteen-fmt perustiedot))]
+   [:h1.pt-3 (str "Päällystysilmoitus - "
+               (paallystyskohteen-fmt perustiedot))]
    [:div
     [:div.inline-block
      [:div.inline-block.pot-tila {:class (when tila (name tila))}
@@ -71,8 +71,8 @@
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
-             takuupvm
-             (> valmispvm-paallystys takuupvm))
+          takuupvm
+          (> valmispvm-paallystys takuupvm))
     "Takuupvm on yleensä kohteen valmistumisen jälkeen."))
 
 (defn tr-kentta [{:keys [muokkaa-lomaketta data]} e!
@@ -81,28 +81,28 @@
                   ohjauskahvat :ohjauskahvat
                   {:keys [vayla-tyyli?]} :optiot}]
   (let [osoite-sama-kuin-yhasta-tuodessa? (tr/sama-tr-osoite? perustiedot yha-tr-osoite)
-        muuta!  (fn [kentta]
-                  #(do
-                     (.preventDefault %)
-                     (let [v (-> % .-target .-value)]
-                       (when (re-matches #"\d*" v)
-                         (let [arvo (if (= "" v)
-                                      nil
-                                      (js/parseInt v))]
-                           (muokkaa-lomaketta (-> data
-                                                  (assoc-in [:tr-osoite kentta] arvo)
-                                                  (assoc kentta arvo)))
-                           (e! (paallystys/->HaeTrOsienTiedot (if (= :tr-numero kentta)
-                                                                arvo tr-numero)
-                                                              (if (= :tr-alkuosa kentta)
-                                                                arvo tr-alkuosa)
-                                                              (if (= :tr-loppuosa kentta)
-                                                                arvo tr-loppuosa)))
-                           ;; when-kääreet koska kyseessä POT1-spesifiset validoinnit
-                           (when (:tierekisteriosoitteet ohjauskahvat)
-                             (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))
-                           (when (:alustalle-tehdyt-toimet ohjauskahvat)
-                             (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat))))))))]
+        muuta! (fn [kentta]
+                 #(do
+                    (.preventDefault %)
+                    (let [v (-> % .-target .-value)]
+                      (when (re-matches #"\d*" v)
+                        (let [arvo (if (= "" v)
+                                     nil
+                                     (js/parseInt v))]
+                          (muokkaa-lomaketta (-> data
+                                               (assoc-in [:tr-osoite kentta] arvo)
+                                               (assoc kentta arvo)))
+                          (e! (paallystys/->HaeTrOsienTiedot (if (= :tr-numero kentta)
+                                                               arvo tr-numero)
+                                (if (= :tr-alkuosa kentta)
+                                  arvo tr-alkuosa)
+                                (if (= :tr-loppuosa kentta)
+                                  arvo tr-loppuosa)))
+                          ;; when-kääreet koska kyseessä POT1-spesifiset validoinnit
+                          (when (:tierekisteriosoitteet ohjauskahvat)
+                            (grid/validoi-grid (:tierekisteriosoitteet ohjauskahvat)))
+                          (when (:alustalle-tehdyt-toimet ohjauskahvat)
+                            (grid/validoi-grid (:alustalle-tehdyt-toimet ohjauskahvat))))))))]
     [:div
      [:table
       [:thead
@@ -143,7 +143,7 @@
           "Let" tr-loppuetaisyys :tr-loppuetaisyys false (or vayla-tyyli? false)]]]]]
      ;; relevantti vain päällystyskohteissa, halutaan nähdä alkuperäinen YHA TR-osoite
      (when (and (not paikkauskohde-id)
-                (not osoite-sama-kuin-yhasta-tuodessa?))
+             (not osoite-sama-kuin-yhasta-tuodessa?))
        [:div {:style {:margin-top "4px"}}
         [:label.kentan-label "Alkuperäinen suunniteltu tieosoite:"]
         [:div {:style {}}
@@ -173,8 +173,8 @@
   (let [pot-tila-lukittu? (= :lukittu tila)
         muokattava? (and
                       (oikeudet/on-muu-oikeus? "asiatarkastus"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))
+                        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                        (:id urakka))
                       (not pot-tila-lukittu?)
                       (false? lukittu?))
         pakolliset-kentat (-> asiatarkastus-validointi meta :pakolliset)]
@@ -189,11 +189,11 @@
          :voi-muokata? muokattava?
          :data-cy "paallystysilmoitus-asiatarkastus"}
         [{:otsikko "Tarkastettu" :kaariva-luokka "tarkastusaika"
-          :nimi :tarkastusaika  ::lomake/col-luokka "col-sm-6"
+          :nimi :tarkastusaika ::lomake/col-luokka "col-sm-6"
           :tyyppi :pvm
           :huomauta tarkastusaika}
          {:otsikko "Tarkastaja" :kaariva-luokka :tarkastaja
-          :nimi :tarkastaja  ::lomake/col-luokka "col-sm-6"
+          :nimi :tarkastaja ::lomake/col-luokka "col-sm-6"
           :tyyppi :string
           :huomauta tarkastaja
           :pituus-max 1024}
@@ -210,8 +210,8 @@
    lukittu? muokkaa! {{{:keys [kasittelyaika paatos perustelu] :as tekninen-osa-validointi} :tekninen-osa} :perustiedot}]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "päätös"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))
+                        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                        (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))
         nayta-kasittelyosiot? (#{:valmis :lukittu} tila)]
@@ -260,22 +260,22 @@
 
 (defn- hintatiedot-puuttuvat-komp
   [e! toast? paikkauskohde?]
-  (let [komponentti  [:span {:class (when toast? "pot2-hintatiedon-toast")}
-                      [:span.otsikko {:class (if toast?
-                                               "bold inline-block"
-                                               "punainen-teksti")}
-                       (str teksti-hintatiedot-puuttuvat-otsikko
-                            (when-not toast? ". "))]
-                      [(if toast? :div :span) {:class "hintatiedot-info"}
-                       (if paikkauskohde?
-                         teksti-hintatiedot-puuttuvat-paikkaus
-                         teksti-hintatiedot-puuttuvat-paallystys)
-                       (when-not paikkauskohde?
-                         [yleiset/linkki teksti-kirjaa-hintatiedot-linkki
-                          #(do
-                             ;; Usein käyttäjän flow menee siten, että päällystysilmoitukselta puuttuu kustannustieto. Hän klikkaa tässä handlerissä itsensä syöttämään hintatiedon. POT-lomake jäisi muuten auki vanhalla datalla (ilman kustannustietoa), joten se on suljettava tässä Tuck-eventillä. Kuitenkin siirtymä-funktio on kutsuttava tästä, eikä päällystys-tiedot ns:stä, koska muuten tulisi circular-dependency.
-                             (e! (paallystys/->SuljePaallystysilmoitus))
-                             (siirtymat/paallystysten-kohdeluetteloon))])]]]
+  (let [komponentti [:span {:class (when toast? "pot2-hintatiedon-toast")}
+                     [:span.otsikko {:class (if toast?
+                                              "bold inline-block"
+                                              "punainen-teksti")}
+                      (str teksti-hintatiedot-puuttuvat-otsikko
+                        (when-not toast? ". "))]
+                     [(if toast? :div :span) {:class "hintatiedot-info"}
+                      (if paikkauskohde?
+                        teksti-hintatiedot-puuttuvat-paikkaus
+                        teksti-hintatiedot-puuttuvat-paallystys)
+                      (when-not paikkauskohde?
+                        [yleiset/linkki teksti-kirjaa-hintatiedot-linkki
+                         #(do
+                            ;; Usein käyttäjän flow menee siten, että päällystysilmoitukselta puuttuu kustannustieto. Hän klikkaa tässä handlerissä itsensä syöttämään hintatiedon. POT-lomake jäisi muuten auki vanhalla datalla (ilman kustannustietoa), joten se on suljettava tässä Tuck-eventillä. Kuitenkin siirtymä-funktio on kutsuttava tästä, eikä päällystys-tiedot ns:stä, koska muuten tulisi circular-dependency.
+                            (e! (paallystys/->SuljePaallystysilmoitus))
+                            (siirtymat/paallystysten-kohdeluetteloon))])]]]
     [:div {:class (when toast? "hintatiedot-puuttuvat-container")}
      (if toast?
        [yleiset/toast-viesti komponentti "varoitus"]
@@ -300,8 +300,8 @@
          lukittu? muokkaa! validoinnit huomautukset paikkauskohteet?]
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
-                                      (false? lukittu?)
-                                      kirjoitusoikeus?))]
+                                   (false? lukittu?)
+                                   kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
@@ -394,7 +394,7 @@
   (let [{:keys [tila asiatarkastus versio]} perustiedot
         nayta-kasittelyosiot? (#{:valmis :lukittu} tila)
         asiatarkastus-sis-tietoja? (some #(some? (val %))
-                                         (lomake/ilman-lomaketietoja asiatarkastus))]
+                                     (lomake/ilman-lomaketietoja asiatarkastus))]
     (fn [e! {:keys [perustiedot] :as app} urakka lukittu?
          muokkaa! validoinnit huomautukset]
       (let [kokonaishinta (toteuman-kokonaishinta-hae-fn perustiedot)

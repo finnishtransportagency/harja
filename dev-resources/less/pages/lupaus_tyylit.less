@@ -14,6 +14,20 @@
     }
 }
 
+#app .lupaukset-sivu .row {
+  display: block;
+  margin-left: 0;
+  margin-right: 0;
+  --tblr-gutter-x: 0;
+  --tblr-gutter-y: 0;
+}
+
+#app .lupaukset-sivu .row > * {
+  width: revert !important;
+  max-width: revert !important;
+  flex-shrink: revert !important;
+}
+
 .lupausten-yhteenveto {
     display: flex;
     justify-content: space-between;
@@ -42,7 +56,7 @@
         margin-right: 24px;
     }
     > div div.pisteluku {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         padding-top: 2px;
     }
 

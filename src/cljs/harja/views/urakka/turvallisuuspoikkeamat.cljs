@@ -525,19 +525,21 @@
   []
   (let [urakka @nav/valittu-urakka]
     [:div.turvallisuuspoikkeamat
-     [:span.turvallisuuspoikkeama-hoitokausi
-      [urakka-valinnat/urakan-hoitokausi urakka]]
+     [:div.d-flex.flex-wrap.align-items-end.gap-3
+      [:span.turvallisuuspoikkeama-hoitokausi
+       [urakka-valinnat/urakan-hoitokausi urakka]]
 
-     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
-       (yleiset/wrap-if
-         (not oikeus?)
-         [yleiset/tooltip {} :%
-          (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
-         [napit/uusi "Lisää turvallisuuspoikkeama"
-          #(tiedot/uusi-turvallisuuspoikkeama (:id urakka))
-          {:disabled (or
-                       @tiedot/turvallisuuspoikkeaman-luonti-kesken?
-                       (not oikeus?))}]))
+      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
+        (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
+          [:div {:style {:margin "0.25rem"}}
+           [napit/uusi "Lisää turvallisuuspoikkeama"
+            #(tiedot/uusi-turvallisuuspoikkeama (:id urakka))
+            {:disabled (or
+                         @tiedot/turvallisuuspoikkeaman-luonti-kesken?
+                         (not oikeus?))}]]))]
 
      [:div.turvallisuuspoikkeama-taulukko
       [grid/grid

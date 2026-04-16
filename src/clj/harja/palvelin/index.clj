@@ -43,6 +43,7 @@
     [:html {:lang "fi"}
      [:head
       [:title "HARJA"]
+      [:meta {:name "description" :content "Teiden kunnossapidon tietojärjestelmä"}]
       [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
       ;; Edge yrittää muuttaa isot numerot puhelinnumerolinkeiksi. Ei haluta sitä käytöstä.
       [:meta {:name "format-detection" :content "telephone=no"}]

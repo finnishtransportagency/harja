@@ -116,7 +116,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
          (enter)))))
 
 (defn virheen-ohje
-  "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
   ([virheet] (virheen-ohje virheet :virhe))
   ([virheet tyyppi] (virheen-ohje virheet tyyppi {}))
   ([virheet tyyppi {:keys [virheet-ulos? max-width]}]
@@ -130,14 +129,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            :huomautus "huomautus")}
             (when max-width
               {:style {:max-width max-width}}))
-     (doall (for* [v (distinct virheet)]
-
-              [:span (when virheet-ulos?
-                       {:style {:display "block"}})
-               #_(case tyyppi
-                   :huomautus (ikonit/livicon-info-circle)
-                   (ikonit/livicon-warning-sign))
-               (str " " v)]))]]))
+     (for [v (distinct virheet)]
+       ^{:key v}
+       [:div
+        (when virheet-ulos?
+          {:style {:display "block"}})
+        (str " " v)])]]))
 
 
 (defn linkki

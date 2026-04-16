@@ -40,6 +40,7 @@
        :class "form-select"
        :value (or (some-> valittu :id str) "")
        :placeholder "Koko maa"
+       :aria-label "Elinvoimakeskus"
        :on-change (fn [e]
                     (let [id (.. e -target -value)
                           yksikko (some #(when (= (str (:id %)) id) %) vaihtoehdot)]
@@ -77,6 +78,7 @@
          :class "form-select w-100 select--nowrap"
          :value (or (some-> valittu :id str) "")
          :placeholder "- Urakka -"
+         :aria-label "Urakka"
          :on-change (fn [e]
                       (let [arvo (.. e -target -value)]
                         (nav/valitse-urakka-varmistuksella! (hae-valinta arvo))))
@@ -121,6 +123,7 @@
        :value (or (some-> valittu :id str) "")
        :disabled disabled?
        :data-cy "murupolku-urakoitsija"
+       :aria-label "Urakoitsija"
        :on-change (fn [e]
                     (let [arvo (.. e -target -value)]
                       (nav/valitse-urakoitsija-varmistuksella! (hae-valinta arvo))))
@@ -156,6 +159,7 @@
        :value (->arvo valittu)
        :disabled disabled?
        :data-cy "murupolku-urakkatyyppi"
+       :aria-label "Urakkatyyppi"
        :on-change (fn [e]
                     (let [arvo (.. e -target -value)]
                       (nav/vaihda-urakkatyyppi! (hae-valinta arvo))))

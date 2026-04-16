@@ -58,13 +58,13 @@
     :else "ennuste-pisteet"))
 
 (defn- lupaus-kuukausi-rivi [e! app {:keys [lupaus-kuukaudet] :as lupaus}]
-  [:div.row.kk-tilanne
+  [:div.kk-tilanne
    [:div.col-xs-3 {:style {:padding-right "0px"}}
     [:div.lupaus-jarjestys-ja-kuvaus
      [:div.lupaus-jarjestys.semibold (str "Lupaus " (:lupaus-jarjestys lupaus))]
      [:div.lupaus-kuvaus.caption (:kuvaus lupaus)]]]
    [:div.col-xs-7.vastaus-kolumni.vasen-reuna
-    [:div.row
+    [:div
      (for [lupaus-kuukausi lupaus-kuukaudet]
        ^{:key (str "kk-rivi-" lupaus-kuukausi "-" (hash lupaus-kuukausi))}
        [kuukausivastauksen-status e! app lupaus lupaus-kuukausi])]]
@@ -102,8 +102,8 @@
 (defn- lupausryhma-rivi [e! app ryhma ryhman-vastaukset]
   (let [auki? (contains? (:avoimet-lupausryhmat app) (:kirjain ryhma))]
     [:div.lupausryhmalistaus {:style {:border-bottom "1px solid #D6D6D6"}}
-     [:div.row.lupausryhma-rivi {:style {:align-items "center"}
-                                 :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
+     [:div.lupausryhma-rivi {:style {:align-items "center"}
+                             :on-click #(e! (lupaus-tiedot/->AvaaLupausryhma (:kirjain ryhma)))}
       [:div.col-xs-3.lupausryhma-nimi
        [:div {:style {:display "flex"
                       :align-items "center"
@@ -136,8 +136,8 @@
      (when auki?
        (for [lupaus (:lupaukset ryhma)]
          ^{:key (str "Lupausrivi" (hash lupaus))}
-         [:div.row {:style {:clear "both"
-                            :height "67px"}}
+         [:div {:style {:clear "both"
+                        :height "67px"}}
           [lupaus-kuukausi-rivi e! app lupaus]]))]))
 
 (defn- pisteympyra
@@ -364,7 +364,7 @@
           (when urakka
             (e! (lupaus-tiedot/->ValitseUrakka urakka)))))
       (fn [e! app]
-        [:span.lupaukset-sivu
+        [:div.lupaukset-sivu
          (when (:vastaus-lomake app)
            [vastauslomake/vastauslomake e! app])
          [:div.otsikko-ja-hoitokausi
@@ -377,9 +377,9 @@
          ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
          (when (>= (pvm/vuosi (:alkupvm urakka)) 2021)
            (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
-             [:div.row {:style (merge {}
-                                 (when (not (empty? (:lupausryhmat app)))
-                                   {:border-top "1px solid #D6D6D6"}))}
+             [:div.lupaukset-rivi {:style (merge {}
+                                            (when (not (empty? (:lupausryhmat app)))
+                                              {:border-top "1px solid #D6D6D6"}))}
               (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
                 (for [ryhma lupausryhmat]
                   ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
