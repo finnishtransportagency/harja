@@ -1013,7 +1013,7 @@
 (defn hae-pohjois-suomen-evk-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Suomen elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))))
+                   WHERE  nimi = 'Pohjois-Suomi' AND tyyppi = 'elinvoimakeskus'"))))
 
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []

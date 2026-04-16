@@ -451,7 +451,7 @@
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
               :elinvoimakeskus {:id 12
-                                :nimi "Pohjois-Suomen elinvoimakeskus"
+                                :nimi "Pohjois-Suomi"
                                 :evknumero 9}
               :urakat #{{:id 4
                          :nimi "Oulun alueurakka 2014-2019"

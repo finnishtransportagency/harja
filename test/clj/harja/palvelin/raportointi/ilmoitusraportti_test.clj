@@ -55,7 +55,7 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "09 Pohjois-Suomen elinvoimakeskus"}
+                                      {:otsikko "09 Pohjois-Suomi"}
                                       ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -69,7 +69,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Suomen elinvoimakeskus, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Pohjois-Suomi, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -126,7 +126,7 @@
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "Pohjois-Suomen elinvoimakeskus, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "Pohjois-Suomi, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -135,7 +135,7 @@
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       (fn [[alue tpp tur urk & _]]
-                                        (and (= alue "Pohjois-Suomen elinvoimakeskus")
+                                        (and (= alue "Pohjois-Suomi")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
@@ -162,12 +162,12 @@
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
         (fn [{[alue tpp tur urk & _] :rivi}]
-          (and (= alue "Uudenmaan elinvoimakeskus yhteensä")
+          (and (= alue "Uusimaa yhteensä")
             (= (apurit/raporttisolun-arvo tpp) 0)
             (= (apurit/raporttisolun-arvo tur) 2)
             (= (apurit/raporttisolun-arvo urk) 0)))
         (fn [{[alue tpp tur urk & _] :rivi}]
-          (and (= alue "Pohjois-Suomen elinvoimakeskus yhteensä")
+          (and (= alue "Pohjois-Suomi yhteensä")
             (= (apurit/raporttisolun-arvo tpp) 0)
             (= (apurit/raporttisolun-arvo tur) 5)
             (= (apurit/raporttisolun-arvo urk) 0)))
@@ -245,7 +245,7 @@
       (apurit/tarkista-taulukko-rivit
         tyyppilajit-taulukko
         (fn [{otsikko :otsikko}]
-          (= otsikko "01 Uudenmaan elinvoimakeskus"))
+          (= otsikko "01 Uusimaa"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Espoon alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
@@ -257,13 +257,13 @@
                (= (apurit/raporttisolun-arvo tur) 1)
                (= (apurit/raporttisolun-arvo urk) 0)))
         (fn [{[alue tpp tur urk & _] :rivi}]
-          (and (= alue "Uudenmaan elinvoimakeskus yhteensä")
+          (and (= alue "Uusimaa yhteensä")
                (= (apurit/raporttisolun-arvo tpp) 0)
                (= (apurit/raporttisolun-arvo tur) 2)
                (= (apurit/raporttisolun-arvo urk) 0)))
 
         (fn [{otsikko :otsikko}]
-          (= otsikko "09 Pohjois-Suomen elinvoimakeskus"))
+          (= otsikko "09 Pohjois-Suomi"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Kajaanin alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
@@ -280,7 +280,7 @@
                (= (apurit/raporttisolun-arvo tur) 3)
                (= (apurit/raporttisolun-arvo urk) 0)))
         (fn [{[alue tpp tur urk & _] :rivi}]
-          (and (= alue "Pohjois-Suomen elinvoimakeskus yhteensä")
+          (and (= alue "Pohjois-Suomi yhteensä")
                (= (apurit/raporttisolun-arvo tpp) 0)
                (= (apurit/raporttisolun-arvo tur) 5)
                (= (apurit/raporttisolun-arvo urk) 0)))

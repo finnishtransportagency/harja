@@ -1317,7 +1317,7 @@ BEGIN
   END IF;
   urakan_paattymis_pvm = urakan_aloitus_pvm + interval '5 years';
   lapin_hallintayksikko = (SELECT id FROM organisaatio WHERE nimi = 'Lappi' AND tyyppi='hallintayksikko'::organisaatiotyyppi);
-  lapin_elinvoimakeskus = (SELECT id FROM organisaatio WHERE nimi = 'Lapin elinvoimakeskus' AND tyyppi='elinvoimakeskus'::organisaatiotyyppi);
+  lapin_elinvoimakeskus = (SELECT id FROM organisaatio WHERE nimi = 'Lappi' AND tyyppi='elinvoimakeskus'::organisaatiotyyppi);
   urakoitsija = (SELECT id FROM organisaatio WHERE ytunnus = '1565583-5');
 
   -- Muutama testeissä käytetty urakka

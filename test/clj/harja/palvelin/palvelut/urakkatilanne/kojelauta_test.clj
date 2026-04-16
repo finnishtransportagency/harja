@@ -136,7 +136,7 @@
 
 (deftest kojelautaan-usealla-evkn-suodatuksella
   (let [psu-evk-id @pohjois-suomen-evk-id
-        lapin-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Lapin elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))
+        lapin-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Lappi' AND tyyppi = 'elinvoimakeskus'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
