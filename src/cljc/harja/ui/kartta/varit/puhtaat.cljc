@@ -24,6 +24,7 @@
 
 ;; Näitä värejä käytetään hexoina vektori-ikoneiden värjäämiseen.
 ;; Värit figmasta.
+(def tarkastus-default "#94A7C2")
 (def fig-default "#00B0CC")
 (def lemon-default "#FFC300")
 (def eggplant-default "#A050A0")
@@ -36,9 +37,8 @@
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen
-   tummansininen violetti lime pinkki
-   fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
+  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen tummansininen violetti lime pinkki
+   tarkastus-default fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
 
 #?(:clj
    (defn- poista-testit [setti]
