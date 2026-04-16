@@ -224,12 +224,12 @@
 (defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
   (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
   (let [urakat (oikeudet/kayttajan-urakat user)
-        elinvoimaskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
+        elinvoimakeskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
         ;; Jos haetaan Pohjamaan elinvoimakeskuksen urakoita, niin näytetään myös Etelä-pohjanmaan elinvoimakeskuksen urakat.
         ;; Eli riippumatta, haetaan eteläpohjanmaan tai pohjanmaan, niin aina haetaan molempien urakat
         toinen-elinvoimakeskus-id (cond
-                                    (= (:nimi elinvoimaskus) "Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaa"})))
-                                    (= (:nimi elinvoimaskus) "Etelä-Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaa"})))
+                                    (= (:nimi elinvoimakeskus) "Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaa"})))
+                                    (= (:nimi elinvoimakeskus) "Etelä-Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaa"})))
                                     :else nil)
          elinvoimakeskusidt (if toinen-elinvoimakeskus-id
                                [elinvoimakeskusid toinen-elinvoimakeskus-id]

@@ -375,7 +375,8 @@ WHERE u.elinvoimakeskus_id IN (:elinvoimakeskusid) -- Pohjanmaan elinvoimakeskuk
     OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
          'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
         OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-            :kayttajan_org_id = org.id)));
+            :kayttajan_org_id = org.id)))
+ORDER BY u.id DESC;;
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
 -- Listaa ELY-kohtaista laskutusyhteenvetoa varten aikavälillä käynnissäolevat hoitourakat

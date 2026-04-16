@@ -204,8 +204,8 @@
                   "Urakoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
         [{:otsikko "Nimi" :nimi ::u/nimi}
-         {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
-          :hae #(get-in % [::u/hallintayksikko ::o/nimi])}
+         {:otsikko "Hallintayksikkö/evk" :nimi :elinvoimakeskus-nimi
+          :hae #(get-in % [::u/elinvoimakeskus ::o/nimi])}
          {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [::u/hanke ::h/nimi])}
          {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [::u/urakoitsija ::o/nimi])}
          {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % ::u/sopimukset))}
