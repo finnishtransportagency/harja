@@ -234,7 +234,9 @@
          elinvoimakeskusidt (if toinen-elinvoimakeskus-id
                                [elinvoimakeskusid toinen-elinvoimakeskus-id]
                                [elinvoimakeskusid])
-        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
+        ;; Varmisettaan, että jvh käyttäjällä on elinvoimakeskus urakkatyyppi
+        organisaatiotyyppi (if (roolit/jvh? user) "elinvoimakeskus" organisaatiotyyppi)]
     (if (and (nil? organisaatio) (empty? urakat))
       (do
         (oikeudet/ei-oikeustarkistusta!)

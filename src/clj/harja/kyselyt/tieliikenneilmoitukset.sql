@@ -117,6 +117,7 @@ ORDER BY CASE WHEN :lajittelu-suunta = 'nouseva' THEN ulompi_i."valitetty-urakka
          CASE WHEN :lajittelu-suunta = 'laskeva' THEN ulompi_i."valitetty-urakkaan" END DESC,
          it.kuitattu DESC;
 
+
 -- name: hae-ilmoitukset-raportille
 SELECT
   i.urakka,
@@ -126,7 +127,7 @@ SELECT
   i.ilmoitustyyppi,
   evk.id                                                              AS evk_id,
   evk.nimi                                                            AS evk_nimi,
-  lpad(cast(evk.elinvoimakeskusnumero as varchar), 2, '0')            AS evk_evknumero
+  right(cast(evk.elinvoimakeskusnumero as varchar), 2)                AS evk_evknumero
 FROM ilmoitus i
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'elinvoimakeskus')

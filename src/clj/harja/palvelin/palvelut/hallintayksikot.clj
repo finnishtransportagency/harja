@@ -38,9 +38,7 @@
                                                              (case liikennemuoto
                                                                :tie "T"
                                                                :vesi "V"
-                                                               :rata "R")))
-        ;; Poista elinvoimakeskus sana nimestä, koska se toistaa itseään ja vie tilaa.
-        evkt (map #(update % :nimi (fn [nimi] (str/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
+                                                               :rata "R")))]
     (into []
       (muunna-pg-tulokset :alue)
       evkt)))

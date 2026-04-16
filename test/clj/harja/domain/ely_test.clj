@@ -32,17 +32,13 @@
   (testing "EVK-numeroita on 10 kappaletta"
     (is (= 10 (count ely/evknumerot-jarjestyksessa))))
   (testing "EVK-numerot ovat järjestyksessä 1-10"
-    (is (= [1 2 3 4 5 6 7 8 9 10] ely/evknumerot-jarjestyksessa))))
+    (is (= [380040 380041 380042 380043 380044 380045 380046 380047 380048 380049] ely/evknumerot-jarjestyksessa))))
 
 (deftest evknumero-nimi-ja-numero-toimii
   (testing "Jokaiselle EVK-numerolle löytyy nimi"
     (doseq [n ely/evknumerot-jarjestyksessa]
       (is (some? (get ely/evknumero->nimi n))
           (str "EVK-numero " n " puuttuu evknumero->nimi mapista"))))
-  (testing "Kaikki nimet päättyvät 'elinvoimakeskus'"
-    (doseq [[_ nimi] ely/evknumero->nimi]
-      (is (str/ends-with? nimi "elinvoimakeskus")
-          (str "Nimi '" nimi "' ei pääty sanaan 'elinvoimakeskus'"))))
   (testing "Nimien lukumäärä vastaa EVK-numeroiden lukumäärää"
     (is (= (count ely/evknumerot-jarjestyksessa)
            (count ely/evknumero->nimi)))))

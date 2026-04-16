@@ -55,7 +55,7 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "09 Pohjois-Suomi"}
+                                      {:otsikko "48 Pohjois-Suomi"}
                                       ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -245,7 +245,7 @@
       (apurit/tarkista-taulukko-rivit
         tyyppilajit-taulukko
         (fn [{otsikko :otsikko}]
-          (= otsikko "01 Uusimaa"))
+          (= otsikko "40 Uusimaa"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Espoon alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
@@ -263,7 +263,7 @@
                (= (apurit/raporttisolun-arvo urk) 0)))
 
         (fn [{otsikko :otsikko}]
-          (= otsikko "09 Pohjois-Suomi"))
+          (= otsikko "48 Pohjois-Suomi"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Kajaanin alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
