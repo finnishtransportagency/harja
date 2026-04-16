@@ -672,7 +672,7 @@ WHERE st.poistettu IS NULL
 
 -- name: urakoitsijan-urakat
 SELECT
-  u.id, u.hallintayksikko
+  u.id, u.hallintayksikko, u.elinvoimakeskus_id
 FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE urk.id = :organisaatio;
@@ -688,7 +688,6 @@ WHERE hal.id IN (:hallintayksikot);
 SELECT u.id,
        u.elinvoimakeskus_id AS elinvoimakeskus
 FROM urakka u
-         LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
 
 -- name: hae-viimeisin-toteuma
