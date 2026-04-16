@@ -47,7 +47,7 @@
 
 (use-fixtures :each
   (compose-fixtures jarjestelma-fixture urakkatieto-fixture)
-  (fn [f] (tyhjenna-cachemit!) (f)))
+  (fn [f] (tyhjenna-tilannekuvan-cachet!) (f)))
 
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
@@ -465,7 +465,7 @@
         ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
         (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
           (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
-        _ (tyhjenna-cachemit!)
+        _ (tyhjenna-tilannekuvan-cachet!)
         urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
         (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
 
@@ -478,7 +478,7 @@
           ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
           (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
             (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
-          _ (tyhjenna-cachemit!)
+          _ (tyhjenna-tilannekuvan-cachet!)
           vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
           (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
 
