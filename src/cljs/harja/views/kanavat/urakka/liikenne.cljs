@@ -91,7 +91,7 @@
                        (if-not (tiedot/ketjutuksen-poisto-kaynnissa? app alus)
                          [:span.klikattava {:on-click
                                             #(do (.preventDefault %)
-                                                 (e! (tiedot/->PoistaKetjutus alus)))}
+                                               (e! (tiedot/->PoistaKetjutus alus)))}
                           (ikonit/livicon-trash)]
 
                          [ajax-loader-pieni]))
@@ -109,12 +109,12 @@
         uusi-id (if (empty? (keys @alukset-atom))
                   0
                   (inc (apply max (keys @alukset-atom))))
-        
+
         ;; Asettaa "Ei aluslajia" ylimmäksi 
         lajit (mapv (fn [a] a) (keys @lt-alus/aluslajit*))
         lajit-sortattu (into (sorted-map)
-                        (map (fn [[k v]] [k (vec (sort v))]))
-                        {:sorted lajit})]
+                         (map (fn [[k v]] [k (vec (sort v))]))
+                         {:sorted lajit})]
 
     [grid/muokkaus-grid
      {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
@@ -152,16 +152,16 @@
        :komponentti (fn [rivi]
                       (let [suunta (::lt-alus/suunta rivi)
                             valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)
-                            toiminnot #{(::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))  
-                                       (::toiminto/toimenpide (second (::lt/toiminnot valittu-liikennetapahtuma)))}
+                            toiminnot #{(::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))
+                                        (::toiminto/toimenpide (second (::lt/toiminnot valittu-liikennetapahtuma)))}
                             toiminto-sulutus? (contains? toiminnot :sulutus)]
                         [napit/yleinen-toissijainen
                          (suunta->str suunta)
                          #(e! (tiedot/->VaihdaSuuntaa rivi suunta))
                          {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
-                                       (= :alas suunta) (ikonit/livicon-arrow-down)
-                                       (= :ei-suuntaa suunta) (ikonit/livicon-minus)
-                                       :else (ikonit/livicon-question))
+                                   (= :alas suunta) (ikonit/livicon-arrow-down)
+                                   (= :ei-suuntaa suunta) (ikonit/livicon-minus)
+                                   :else (ikonit/livicon-question))
                           :luokka "nappi-grid"
                           :disabled (or toiminto-sulutus? (some? (#{:ylos :alas :ei-suuntaa} valittu-suunta)))}]))
        :leveys 1}
@@ -391,7 +391,7 @@
                      :desimaalien-maara 2
                      :nimi ::lt/vesipinta-alaraja}
                     {:otsikko "Yläpinta"
-                     :tyyppi  :numero
+                     :tyyppi :numero
                      :desimaalien-maara 2
                      :nimi ::lt/vesipinta-ylaraja}])
 
@@ -430,7 +430,7 @@
         {lataa-aloitustiedot :lataa-aloitustiedot} app
         suunta-vaihtoehdot (keys @lt/suunnat-atom)
         suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
-    
+
     [:div.liikennetapahtumien-suodattimet
      ;; Näytä suodattimet kun aloitustiedot ladattu 
      (when-not lataa-aloitustiedot
@@ -471,7 +471,7 @@
            {:otsikko "Aluksen nimi"
             :kentta-params {:tyyppi :string}
             :arvo-atom (atomi ::lt-alus/nimi)}]
-          
+
           ;; Urakkavuosi
           [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
 
@@ -517,7 +517,7 @@
                             :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
                             :vaihtoehto-nayta lt/sulku-toimenpide->str}
             :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
-        
+
         ;; 'footer'
         [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
          [napit/uusi
@@ -526,60 +526,60 @@
 
 (def liikennetapahtumat-sarakkeet
   (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
-  [{:otsikko "Aika"
-    :leveys 3
-    :nimi ::lt/aika
-    :fmt pvm/pvm-aika-opt}
-   {:otsikko "Kohde"
-    :leveys 3
-    :nimi ::lt/kohde
-    :fmt kohde/fmt-kohteen-nimi}
-   {:otsikko "Tyyppi"
-    :leveys 3
-    :nimi :toimenpide
-    :hae tiedot/toimenpide->str}
-   {:otsikko "Sil\u00ADlan ava\u00ADus"
-    :leveys 1
-    :nimi :sillan-avaus?
-    :hae tiedot/silta-avattu?
-    :fmt totuus-ikoni}
-   {:otsikko "Pal\u00ADvelu\u00ADmuoto"
-    :leveys 3
-    :nimi :palvelumuoto-ja-lkm
-    :hae tiedot/palvelumuoto->str}
-   {:otsikko "Suun\u00ADta"
-    :leveys 2
-    :nimi ::lt-alus/suunta
-    :fmt suunta->str}
-   {:otsikko "Alus"
-    :leveys 3
-    :nimi ::lt-alus/nimi}
-   {:otsikko "Alus\u00ADlaji"
-    :leveys 2
-    :nimi ::lt-alus/laji
-    :fmt lt-alus/aluslaji->laji-str}
-   {:otsikko "Aluk\u00ADsia"
-    :leveys 1
-    :nimi ::lt-alus/lkm}
-   {:otsikko "Mat\u00ADkus\u00ADta\u00ADji\u00ADa"
-    :leveys 1
-    :nimi ::lt-alus/matkustajalkm}
-   {:otsikko "Nip\u00ADpu\u00ADja"
-    :leveys 1
-    :nimi ::lt-alus/nippulkm}
-   {:otsikko "Ylä\u00ADvesi"
-    :leveys 2
-    :nimi ::lt/vesipinta-ylaraja}
-   {:otsikko "Ala\u00ADvesi"
-    :leveys 2
-    :nimi ::lt/vesipinta-alaraja}
-   {:otsikko "Lisä\u00ADtiedot"
-    :leveys 5
-    :nimi ::lt/lisatieto}
-   {:otsikko "Kuit\u00ADtaaja"
-    :leveys 3
-    :nimi ::lt/kuittaaja
-    :fmt kayttaja/kayttaja->str}]))
+    [{:otsikko "Aika"
+      :leveys 2
+      :nimi ::lt/aika
+      :fmt pvm/pvm-aika-opt}
+     {:otsikko "Kohde"
+      :leveys 3
+      :nimi ::lt/kohde
+      :fmt kohde/fmt-kohteen-nimi}
+     {:otsikko "Tyyppi"
+      :leveys 3
+      :nimi :toimenpide
+      :hae tiedot/toimenpide->str}
+     {:otsikko "Sil\u00ADlan ava\u00ADus"
+      :leveys 2
+      :nimi :sillan-avaus?
+      :hae tiedot/silta-avattu?
+      :fmt totuus-ikoni}
+     {:otsikko "Pal\u00ADvelu\u00ADmuoto"
+      :leveys 3
+      :nimi :palvelumuoto-ja-lkm
+      :hae tiedot/palvelumuoto->str}
+     {:otsikko "Suun\u00ADta"
+      :leveys 2
+      :nimi ::lt-alus/suunta
+      :fmt suunta->str}
+     {:otsikko "Alus"
+      :leveys 3
+      :nimi ::lt-alus/nimi}
+     {:otsikko "Alus\u00ADlaji"
+      :leveys 2
+      :nimi ::lt-alus/laji
+      :fmt lt-alus/aluslaji->laji-str}
+     {:otsikko "Aluk\u00ADsia"
+      :leveys 2
+      :nimi ::lt-alus/lkm}
+     {:otsikko "Mat\u00ADkus\u00ADta\u00ADji\u00ADa"
+      :leveys 2
+      :nimi ::lt-alus/matkustajalkm}
+     {:otsikko "Nip\u00ADpu\u00ADja"
+      :leveys 2
+      :nimi ::lt-alus/nippulkm}
+     {:otsikko "Ylä\u00ADvesi"
+      :leveys 2
+      :nimi ::lt/vesipinta-ylaraja}
+     {:otsikko "Ala\u00ADvesi"
+      :leveys 2
+      :nimi ::lt/vesipinta-alaraja}
+     {:otsikko "Lisä\u00ADtiedot"
+      :leveys 4
+      :nimi ::lt/lisatieto}
+     {:otsikko "Kuit\u00ADtaaja"
+      :leveys 3
+      :nimi ::lt/kuittaaja
+      :fmt kayttaja/kayttaja->str}]))
 
 (defn liikennetapahtumien-yhteenveto [{:keys [yhteenveto rivimaara-ylittynyt] :as app}]
   [:div.liikenne-header
@@ -593,7 +593,7 @@
               :value (t/clj->transit @tiedot/raportin-parametrit)}]
      [napit/tallenna "Tallenna PDF" (constantly true)
       {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-ensisijainen" :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]
-    
+
     ;; Excel
     ^{:key "raporttixls"}
     [:form {:target "_blank" :method "POST"
@@ -602,13 +602,13 @@
               :value (t/clj->transit @tiedot/raportin-parametrit)}]
      [napit/tallenna "Tallenna Excel" (constantly true)
       {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-ensisijainen" :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]]
-   
+
    (if rivimaara-ylittynyt
      [:div.kayttajia-ei-loydy.fontti-14
       [yleiset/keltainen-vihjelaatikko [:div "Tulokset rajattu " (fmt/formatoi-numero-tuhansittain lt/+rajoita-tapahtumien-maara+) " tapahtumaan. Tarkenna hakua."] :info]
       [:h3 "Liikennetapahtumat"]]
      [:h3 "Liikennetapahtumat"])
-   
+
    [:div.urakkavalinnat
     [:div.liikenneyhteenveto
      [:div.toimenpiteet-rivi
@@ -629,12 +629,12 @@
       [:span.body-text.strong "Muu: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :muu])]]
       [:span.body-text.strong "Sulutukset yhteensä: " [:span.caption.musta (get-in yhteenveto [:palvelumuoto :yhteensa])]]]]]])
 
-(defn liikennetapahtumataulukko [e! {:keys [lataa-aloitustiedot 
+(defn liikennetapahtumataulukko [e! {:keys [lataa-aloitustiedot
                                             tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
-   [debug app] 
+   [debug app]
    [valinnat e! app kohteet]
 
    (if (or

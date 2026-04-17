@@ -783,22 +783,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
   ([teksti] (toast-viesti teksti nil))
   ([teksti luokka]
-   (let [ikoni-fn (if (vector? teksti)
-                    ikonit/ikoni-ja-elementti
-                    ikonit/ikoni-ja-teksti)
-         ikoni (if (= "varoitus" luokka)
-                 (ikonit/livicon-warning-sign)
-                 (ikonit/status-info-inline-svg +vari-lemon-dark+))]
-     [:div {:class
-            (luokat
-              "yleinen-pikkuvihje"
-              "inline-block"
-              (viesti/+toast-viesti-luokat+ (if (= "varoitus" luokka)
-                                              :varoitus
-                                              :neutraali))
-              (or luokka ""))}
-      [:div.vihjeen-sisalto
-       (ikoni-fn ikoni teksti)]])))
+   (let [vakavuustaso (viesti/toast-luokka->vakavuustaso luokka)]
+     [:div
+      {:class (str "alert " (viesti/vakavuustaso-class vakavuustaso))
+       :role "alert"}
+      [:div {:class "d-flex"}
+       [:div {:class "alert-icon me-3"}
+        [viesti/alert-icon vakavuustaso]]
+       [:div teksti]]])))
 
 (def tietyoilmoitus-siirtynyt-txt
   [:div.inline-block.tietyo-info

@@ -135,7 +135,10 @@
                      (merge (assoc rivi :id -1 :nimi "" :jarjestys (+ 99 (count muokkaus-toimenkuvat)) :yhteensa 0) vuosi-map)))
       :voi-kumota? false
       :piilota-toiminnot? false
-      :tunniste :nimi
+      :tunniste #(str (:nimi %) "-"
+                   (:rahavaraus-id %) "-"
+                   (:toimenkuva-id %) "-"
+                   (:tehtavaryhma-id %))
       :jarjesta :jarjestys
       :muutos #(do
                  (let [toimenkuvat (vals (grid/hae-muokkaustila %))
@@ -364,7 +367,7 @@
                           (second yhteensa)
                           (merge
                             (second yhteensa)
-                            #_ {:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)")}
+                            #_{:nimi (str "Tarjouksen kattohinta (" (fmt/desimaaliluku kattohintakerroin nil nil false) " x tarjouksen tavoitehinta)")}
                             (zipmap (keys (:vuosikohtaiset-summat gridien-yhteensa))
                               (map #(* kattohintakerroin %) (vals (:vuosikohtaiset-summat gridien-yhteensa))))
                             {:yhteensa (* kattohintakerroin (:yhteensa gridien-yhteensa))}))]

@@ -9,7 +9,7 @@
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
             [harja.ui.palaute :as palaute]
-            [harja.ui.viesti :refer [viesti-container toast-viesti-container]]
+            [harja.ui.viesti :refer [toast-viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.loki :refer [log logt]]
@@ -319,7 +319,7 @@
                          :tiedote "hairioilmoitin-tyyppi-tiedote"
                          "hairioilmoitin-tyyppi-hairio")
          hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
-     [:div.hairioilmoitin {:class (str tyyppi-luokka (when margin-bottom? " margin-bottom-16"))}
+     [:div.container-sm.hairioilmoitin {:class (str tyyppi-luokka (when margin-bottom? " margin-bottom-16"))}
       [:div.margin-right-32.lihavoitu
        (str otsikko " " hairio-pvm ": " (::hairio/viesti hairiotiedot))]
       [napit/sulje-ruksi #(hairiotiedot/piilota-hairioilmoitus-tyypilla! tyyppi) {:style {:margin "0px"}}]])))
@@ -380,7 +380,6 @@
           ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
           [urakat/urakat])]]]
      [modal/modal-container]
-     [viesti-container]
      [toast-viesti-container]
      ;; Aria-live containerit eri prioriteeteille  
      [saavutettavuus/aria-live-container (:polite @saavutettavuus/aria-viestit) {:kohteliaisuus "polite"}]

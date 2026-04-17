@@ -94,67 +94,69 @@
         (into [nil] @kanavaurakka/kanavakohteet)
         #(if-not (empty? (::kohde/nimi %))
            (::kohde/nimi %)
-           "Kaikki")]]]
+           "Kaikki")]]]]))
 
-     ^{:key "urakkatoiminnot"}
-     [valinnat/urakkatoiminnot {:urakka valittu-urakka}
-      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (:id valittu-urakka))]
-        ^{:key "lisaysnappi"}
-        [napit/uusi "Lisää häiriötilanne"
-         #(e! (tiedot/->LisaaHairiotilanne))
-         {:disabled (not oikeus?)}])]]))
+(defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa? valinnat] :as app}]
+  [:<>
+   [:div.md-3.pb-5
+    ^{:key "urakkatoiminnot"}
+    [valinnat/urakkatoiminnot {:urakka (:urakka valinnat)}
+     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (:id (:urakka valinnat)))]
+       ^{:key "lisaysnappi"}
+       [napit/uusi "Lisää häiriötilanne"
+        #(e! (tiedot/->LisaaHairiotilanne))
+        {:disabled (not oikeus?)}])]]
 
-(defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
-  [grid/grid
-   {:otsikko (if (and (some? hairiotilanteet) hairiotilanteiden-haku-kaynnissa?)
-               [ajax-loader-pieni "Päivitetään listaa"]
-               "Häiriötilanteet")
-    :tunniste ::hairiotilanne/id
-    :tyhja (if (nil? hairiotilanteet)
-             [ajax-loader "Haetaan häiriötilanteita"]
-             "Häiriötilanteita ei löytynyt")
-    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne
-                          (assoc % ::hairiotilanne/havaintoaika (::hairiotilanne/havaintoaika %))))
+   [grid/grid
+    {:otsikko (if (and (some? hairiotilanteet) hairiotilanteiden-haku-kaynnissa?)
+                [ajax-loader-pieni "Päivitetään listaa"]
+                "Häiriötilanteet")
+     :tunniste ::hairiotilanne/id
+     :tyhja (if (nil? hairiotilanteet)
+              [ajax-loader "Haetaan häiriötilanteita"]
+              "Häiriötilanteita ei löytynyt")
+     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne
+                           (assoc % ::hairiotilanne/havaintoaika (::hairiotilanne/havaintoaika %))))
 
-    :raporttivienti #{:excel :pdf}
-    :raporttiparametrit (raportit/urakkaraportin-parametrit
-                          (:id @nav/valittu-urakka)
-                          :kanavien-hairiotilanteet
-                          {:urakka @nav/valittu-urakka
-                           :hallintayksikko @nav/valittu-hallintayksikko
-                           :aikavali @u/valittu-aikavali
-                           :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
-   [{:otsikko "Havaintoaika"
-     :nimi
-     ::hairiotilanne/havaintoaika
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt
-     :leveys 5}
-    {:otsikko "Kohde"
-     :nimi :hairiotilanteen-kohde
-     :hae (juxt ::hairiotilanne/kohde ::hairiotilanne/kohteenosa)
-     :tyyppi :string
-     :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
-     :leveys 6}
-    {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 4
-     :fmt hairiotilanne/fmt-vikaluokka}
-    {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
-    ;; Vesiliikenne
-    {:otsikko "Vesi odotus (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 2}
-    {:otsikko "Ammatti lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
-    {:otsikko "Huvi lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
-    ;; Tieliikenne
-    {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 2}
-    {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 3.5 :desimaalien-maara 0}
-    
-    {:otsikko "Korjaaja" :nimi ::hairiotilanne/korjaajan-nimi :tyyppi :string :leveys 6}
-    {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
-    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 3.5 :desimaalien-maara 2}
-    {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 5
-     :fmt hairiotilanne/fmt-korjauksen-tila}
-    {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
-     :tyyppi :string :fmt fmt/totuus :leveys 4}]
-   hairiotilanteet])
+     :raporttivienti #{:excel :pdf}
+     :raporttiparametrit (raportit/urakkaraportin-parametrit
+                           (:id @nav/valittu-urakka)
+                           :kanavien-hairiotilanteet
+                           {:urakka @nav/valittu-urakka
+                            :hallintayksikko @nav/valittu-hallintayksikko
+                            :aikavali @u/valittu-aikavali
+                            :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
+    [{:otsikko "Havaintoaika"
+      :nimi
+      ::hairiotilanne/havaintoaika
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt
+      :leveys 6}
+     {:otsikko "Kohde"
+      :nimi :hairiotilanteen-kohde
+      :hae (juxt ::hairiotilanne/kohde ::hairiotilanne/kohteenosa)
+      :tyyppi :string
+      :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
+      :leveys 6}
+     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 5
+      :fmt hairiotilanne/fmt-vikaluokka}
+     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
+     ;; Vesiliikenne
+     {:otsikko "Vesi odotus (h)" :nimi ::hairiotilanne/vesiodotusaika-h :tyyppi :numero :leveys 4 :desimaalien-maara 2}
+     {:otsikko "Ammatti lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 4 :desimaalien-maara 0}
+     {:otsikko "Huvi lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 4 :desimaalien-maara 0}
+     ;; Tieliikenne
+     {:otsikko "Tie odotus (h)" :nimi ::hairiotilanne/tieodotusaika-h :tyyppi :numero :leveys 4 :desimaalien-maara 2}
+     {:otsikko "Ajoneuvo lkm" :nimi ::hairiotilanne/ajoneuvo-lkm :tyyppi :numero :leveys 4 :desimaalien-maara 0}
+
+     {:otsikko "Korjaaja" :nimi ::hairiotilanne/korjaajan-nimi :tyyppi :string :leveys 6}
+     {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 7}
+     {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 4 :desimaalien-maara 2}
+     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 5
+      :fmt hairiotilanne/fmt-korjauksen-tila}
+     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
+      :tyyppi :string :fmt fmt/totuus :leveys 5}]
+    hairiotilanteet]])
 
 (defn materiaalitaulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
@@ -205,7 +207,7 @@
 
 (defn- lomake-valiotsikko []
   {:tyyppi :komponentti
-   :komponentti (fn []  [:div.kanava-hairio-lomake])})
+   :komponentti (fn [] [:div.kanava-hairio-lomake])})
 
 (defn odottavan-vesiliikenteen-kentat []
   (lomake/ryhma
@@ -498,7 +500,7 @@
          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:span
        [kartta/kartan-paikka]
        [:div

@@ -172,6 +172,7 @@
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
+               elementin-id (if (fn? elementin-id) (elementin-id rivi) elementin-id)
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
                  voi-muokata?)
@@ -288,7 +289,7 @@
       [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
                                                   "ei-muokattava"
                                                   (grid-yleiset/tiivis-tyyli skeema))]
-      ^{:keys (str i "-" nimi)}
+      ^{:keys (str i "-" nimi "-" id "-" tyyppi)}
       [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet
        kentan-varoitukset kentan-huomautukset tulevat-elementit])))
 
