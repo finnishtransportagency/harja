@@ -105,7 +105,7 @@ WHERE tyyppi = 'elinvoimakeskus'
 -- name: hae-elinvoimakeskus
 -- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
 SELECT id,nimi,tyyppi FROM organisaatio
-WHERE tyyppi = 'elinvoimakeskus' AND id = :id;
+WHERE id = :id;
 
 -- name: hae-elinvoimakeskus-nimella
 -- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella

@@ -113,7 +113,7 @@
     (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")))
 
 (deftest hae-ilmoituksia-uudenmaan-elinvoimakeskukselle
-  (let [uud-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Uudenmaan elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))
+  (let [uud-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa' AND tyyppi = 'elinvoimakeskus'"))
         parametrit (merge hae-ilmoitukset-parametrit {:hallintayksikko uud-evk-id})
         ilmoitusten-maara-suoraan-kannasta (ffirst (q (format "SELECT count(*)
                                                                 FROM ilmoitus i
@@ -123,7 +123,7 @@
                                                               uud-evk-id)))
         ilmoitukset-palvelusta (hae parametrit)]
 
-    (testing "Uudenmaan elinvoimakeskus löytyy organisaatiotaulusta"
+    (testing "Uusimaa löytyy organisaatiotaulusta"
       (is (some? uud-evk-id) "Uudenmaan elinvoimakeskuksen id löytyy"))
 
     (testing "Kannasta löytyy oikea määrä ilmoituksia Uudenmaan elinvoimakeskukselle"
@@ -724,7 +724,7 @@
           "Elinvoimakeskuksen nimi ei täsmää kantaan"))
 
     (testing "Elinvoimakeskus on Pohjois-Suomen elinvoimakeskus (Oulun alueurakan perusteella)"
-      (is (= "Pohjois-Suomen elinvoimakeskus" (get-in ilmoitus [:elinvoimakeskus :nimi]))))))
+      (is (= "Pohjois-Suomi" (get-in ilmoitus [:elinvoimakeskus :nimi]))))))
 
 (def ilmoituksien-lkm-perffitestissa 10000)
 

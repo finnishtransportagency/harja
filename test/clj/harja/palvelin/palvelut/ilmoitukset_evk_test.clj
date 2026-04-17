@@ -44,7 +44,7 @@
 
 (deftest hae-ilmoituksia-eri-elinvoimakeskukset-eivat-sekoitu
   (let [psu-evk-id (hae-pohjois-suomen-evk-id)
-        uud-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Uudenmaan elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))
+        uud-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa' AND tyyppi = 'elinvoimakeskus'"))
         psu-parametrit (merge hae-ilmoitukset-parametrit {:hallintayksikko psu-evk-id})
         uud-parametrit (merge hae-ilmoitukset-parametrit {:hallintayksikko uud-evk-id})
         psu-ilmoitukset (hae psu-parametrit)

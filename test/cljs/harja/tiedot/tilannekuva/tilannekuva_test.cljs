@@ -45,13 +45,13 @@
   (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 {} {})) "Oletuksena funktio palauttaa false"))
 
 (deftest aluesuodattimet-nested-mapiksi
-  (let [payload [{:tyyppi :hoito :elinvoimakeskus {:id 1 :nimi "Lapin elinvoimakeskus"} :urakat [{:id 1 :nimi "Kuusamo"} {:id 2 :nimi "Rovaniemi"}]}
-                 {:tyyppi :hoito :elinvoimakeskus {:id 2 :nimi "Uudenmaan elinvoimakeskus"} :urakat [{:id 3 :nimi "Vantaa"} {:id 4 :nimi "Helsinki"}]}
-                 {:tyyppi :hoito :elinvoimakeskus {:id 3 :nimi "Sisä-Suomen elinvoimakeskus"} :urakat [{:id 5 :nimi "Tampere"} {:id 6 :nimi "Nokia"}]}
+  (let [payload [{:tyyppi :hoito :elinvoimakeskus {:id 1 :nimi "Lappi"} :urakat [{:id 1 :nimi "Kuusamo"} {:id 2 :nimi "Rovaniemi"}]}
+                 {:tyyppi :hoito :elinvoimakeskus {:id 2 :nimi "Uusimaa"} :urakat [{:id 3 :nimi "Vantaa"} {:id 4 :nimi "Helsinki"}]}
+                 {:tyyppi :hoito :elinvoimakeskus {:id 3 :nimi "Sisä-Suomi"} :urakat [{:id 5 :nimi "Tampere"} {:id 6 :nimi "Nokia"}]}
 
-                 {:tyyppi :paallystys :elinvoimakeskus {:id 1 :nimi "Lapin elinvoimakeskus"} :urakat [{:id 7 :nimi "Kuusamo"} {:id 8 :nimi "Rovaniemi"}]}
-                 {:tyyppi :paallystys :elinvoimakeskus {:id 2 :nimi "Uudenmaan elinvoimakeskus"} :urakat [{:id 9 :nimi "Vantaa"} {:id 10 :nimi "Helsinki"}]}
-                 {:tyyppi :paallystys :elinvoimakeskus {:id 3 :nimi "Sisä-Suomen elinvoimakeskus"} :urakat [{:id 11 :nimi "Tampere"} {:id 12 :nimi "Nokia"}]}]
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 1 :nimi "Lappi"} :urakat [{:id 7 :nimi "Kuusamo"} {:id 8 :nimi "Rovaniemi"}]}
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 2 :nimi "Uusimaa"} :urakat [{:id 9 :nimi "Vantaa"} {:id 10 :nimi "Helsinki"}]}
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 3 :nimi "Sisä-Suomi"} :urakat [{:id 11 :nimi "Tampere"} {:id 12 :nimi "Nokia"}]}]
         tulos (tk/aluesuodattimet-nested-mapiksi payload)]
     (is (every? true? (mapcat (fn [[tyyppi aluekokonaisuudet]]
                                 (concat [(some? (#{:hoito :paallystys} tyyppi))]
@@ -73,7 +73,7 @@
   (is (= false (tk/uusi-tai-vanha-suodattimen-arvo false nil))) "Jos vanha arvo löytyy, käytä sitä")
 
 (deftest yhdista-aluesuodattimet
-  (let [evk-lappi {:nimi "Lapin elinvoimakeskus" :id 13 :evknumero 10}
+  (let [evk-lappi {:nimi "Lappi" :id 13 :evknumero 10}
         urakka-kuusamo {:nimi :kuusamo :id 1}
         urakka-kajaani {:nimi :kajaani :id 1}
         urakka-rovaniemi {:nimi :rovaniemi :id 2}

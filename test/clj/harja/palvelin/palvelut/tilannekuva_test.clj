@@ -45,7 +45,9 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
+(use-fixtures :each
+  (compose-fixtures jarjestelma-fixture urakkatieto-fixture)
+  (fn [f] (tyhjenna-tilannekuvan-cachet!) (f)))
 
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
@@ -434,13 +436,13 @@
         evknumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))
         eka-evk (first evknumerot)]
 
-    (is (= eka-evk 9))
+    (is (= eka-evk 380048))
     (is (every? #(= % eka-evk) evknumerot)
       "Pääsy vain omaan urakkaan ja sen Elinvoimakeskuksen urakoihin --> kaikki EVK-numerot tulee olla samoja")))
 
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
-  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+  (with-redefs [oikeudet/tilannekuva-historia (oikeudet/->KayttoOikeus "tilannekuva historia" {"vastuuhenkilo" #{"R"}})]
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
       (is (every?
             (fn [hy]
@@ -451,8 +453,8 @@
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
               :elinvoimakeskus {:id 12
-                                :nimi "Pohjois-Suomen elinvoimakeskus"
-                                :evknumero 9}
+                                :nimi "Pohjois-Suomi"
+                                :evknumero 380048}
               :urakat #{{:id 4
                          :nimi "Oulun alueurakka 2014-2019"
                          :urakkanro "1238"
@@ -463,6 +465,7 @@
         ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
         (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
           (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
+        _ (tyhjenna-tilannekuvan-cachet!)
         urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
         (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
 
@@ -475,6 +478,7 @@
           ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
           (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
             (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
+          _ (tyhjenna-tilannekuvan-cachet!)
           vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
           (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
 

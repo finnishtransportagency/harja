@@ -136,7 +136,7 @@
 
 (deftest kojelautaan-usealla-evkn-suodatuksella
   (let [psu-evk-id @pohjois-suomen-evk-id
-        lapin-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Lapin elinvoimakeskus' AND tyyppi = 'elinvoimakeskus'"))
+        lapin-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Lappi' AND tyyppi = 'elinvoimakeskus'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                           :hoitokauden-alkuvuosi 2024
@@ -357,7 +357,7 @@
 (deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         psu-evk-id (hae-pohjois-suomen-evk-id)
-        lapin-evk-id (hae-organisaatio-id-nimella "Lapin elinvoimakeskus")
+        lapin-evk-id (hae-elinvoimakeskus-id-nimella "Lappi")
 
         ;; Tallenna lupauspäätös kantaan
         _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)

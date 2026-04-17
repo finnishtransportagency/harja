@@ -7,7 +7,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
-            [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
+            [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat elinvoimakeskuksen-urakat]]
             [harja.geo :refer [muunna-pg-tulokset]]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -38,9 +38,7 @@
                                                              (case liikennemuoto
                                                                :tie "T"
                                                                :vesi "V"
-                                                               :rata "R")))
-        ;; Poista elinvoimakeskus sana nimestä, koska se toistaa itseään ja vie tilaa.
-        evkt (map #(update % :nimi (fn [nimi] (str/replace nimi #"(?i) elinvoimakeskus" ""))) evkt)]
+                                                               :rata "R")))]
     (into []
       (muunna-pg-tulokset :alue)
       evkt)))
@@ -54,7 +52,7 @@
                        organisaatio-xf (org-q/hae-organisaatio db org-id)))
         organisaation-urakat (if (= :urakoitsija (:tyyppi o))
                                (map #(dissoc % :alue) (hae-organisaation-urakat db user org-id))
-                               (map #(dissoc % :alue) (hallintayksikon-urakat db user org-id)))]
+                               (map #(dissoc % :alue) (elinvoimakeskuksen-urakat db user org-id)))]
     (assoc o :urakat organisaation-urakat)))
 
 (defrecord Hallintayksikot []

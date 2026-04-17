@@ -164,9 +164,9 @@
 
         (map pura-yhteystiedot)
 
-        (map #(assoc % :hallintayksikko {:id      (:hallintayksikko_id %)
-                                         :nimi    (:hallintayksikko_nimi %)
-                                         :lyhenne (:hallintayksikko_lyhenne %)}))
+        (map #(assoc % :elinvoimakeskus {:id (:elinvoimakeskus_id %)
+                                         :nimi (:elinvoimakeskus_nimi %)
+                                         :lyhenne (:elinvoimakeskus_lyhenne %)}))
 
         (map #(if-let [tyyppi (:tyyppi %)]
                 ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
@@ -224,17 +224,19 @@
 (defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
   (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
   (let [urakat (oikeudet/kayttajan-urakat user)
-        elinvoimaskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
+        elinvoimakeskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
         ;; Jos haetaan Pohjamaan elinvoimakeskuksen urakoita, niin näytetään myös Etelä-pohjanmaan elinvoimakeskuksen urakat.
         ;; Eli riippumatta, haetaan eteläpohjanmaan tai pohjanmaan, niin aina haetaan molempien urakat
         toinen-elinvoimakeskus-id (cond
-                                    (= (:nimi elinvoimaskus) "Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaan elinvoimakeskus"})))
-                                    (= (:nimi elinvoimaskus) "Etelä-Pohjanmaan elinvoimakeskus") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaan elinvoimakeskus"})))
+                                    (= (:nimi elinvoimakeskus) "Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaa"})))
+                                    (= (:nimi elinvoimakeskus) "Etelä-Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaa"})))
                                     :else nil)
          elinvoimakeskusidt (if toinen-elinvoimakeskus-id
                                [elinvoimakeskusid toinen-elinvoimakeskus-id]
                                [elinvoimakeskusid])
-        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))]
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
+        ;; Varmisettaan, että jvh käyttäjällä on elinvoimakeskus urakkatyyppi
+        organisaatiotyyppi (if (roolit/jvh? user) "elinvoimakeskus" organisaatiotyyppi)]
     (if (and (nil? organisaatio) (empty? urakat))
       (do
         (oikeudet/ei-oikeustarkistusta!)
@@ -509,13 +511,13 @@
                            (map konv/alaviiva->rakenne)
                            (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
                            (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+                           (map #(assoc % :elinvoimakeskus (when (get-in % [:elinvoimakeskus :id]) (:elinvoimakeskus %)))))
                          (q/hae-harjassa-luodut-urakat db))
                    {:sopimus      :sopimukset
                     ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
                     :sahkelahetys :sahkelahetykset})]
       (namespacefy urakat {:ns    :harja.domain.urakka
-                           :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
+                           :inner {:elinvoimakeskus {:ns :harja.domain.organisaatio}
                                    :urakoitsija     {:ns :harja.domain.organisaatio}
                                    :sopimukset      {:ns :harja.domain.sopimus}
                                    :hanke           {:ns :harja.domain.hanke}}}))))
