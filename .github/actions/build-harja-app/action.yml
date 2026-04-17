@@ -43,6 +43,18 @@ runs:
         npx lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
+        echo "Copying tabler styles..."
+        mkdir -p resources/public/css
+        cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
+        cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/
+        cp -r node_modules/@tabler/icons-webfont/dist/fonts resources/public/css/
+        cp node_modules/@tabler/core/dist/css/tabler-vendors.min.css resources/public/css/
+        mkdir -p dev-resources/js/out
+        cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dev-resources/js/out/
+        cp node_modules/tom-select/dist/js/tom-select.complete.min.js dev-resources/js/out/
+        cp node_modules/tom-select/dist/css/tom-select.bootstrap5.css resources/public/css/
+        echo "Done."
+        
         echo "Building cljs (with lein default profiles + prod-cljs)..."
         lein with-profile +prod-cljs compile-prod
         echo "Done."
