@@ -907,8 +907,10 @@
               (hae-laskutusrajan-konteksti conn db urakka-id hk-alkuvuosi (when paivitetaan? (:id muutos)))
               aiempi-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
               summa (:summa (first kustannusvaikutukset))
-              muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta) )))
-              muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta) )))]
+              muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
+                (when hoitovuoden-tavoitehinta (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
+              muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
+                (when hoitovuoden-tavoitehinta (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
 
           ;; Tallenna liitteet
           (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
@@ -940,7 +942,7 @@
               (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
           ;; Tarkistetaan laskutusrajan päivitystarve, kun luodaan uusi muutos
-          (when (and (not paivitetaan?) (or tyyppi-muutostyo? (and tyyppi-pysyva? (pos? summa))) (> muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa 3.00)
+          (when (and hoitovuoden-tavoitehinta (not paivitetaan?) (or tyyppi-muutostyo? (and tyyppi-pysyva? (pos? summa))) (> muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa 3.00)
                   laskutusraja laskutusraja_alkuperainen)
             (kulu-kyselyt/paivita-urakan-laskutusraja! conn
               {:urakka-id urakka-id
@@ -949,7 +951,7 @@
                :kayttaja (:id kayttaja)}))
 
           ;; Tarkistetaan laskutusrajaa, kun päivitetään olemassa olevan muutoksen kustannusvaikutuksia, ja muutosten prosenttiosuus on yli 3
-          (when (and paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?)
+          (when (and hoitovuoden-tavoitehinta paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?)
                   (> muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00) laskutusraja laskutusraja_alkuperainen)
             (kulu-kyselyt/paivita-urakan-laskutusraja! conn
               {:urakka-id urakka-id
@@ -959,7 +961,7 @@
 
           ;; Palautetaan laskutusraja alkuperäiseksi, kun päivitetään olemassa olevan muutoksen kustannusvaikutuksia,
           ;; niin että muutosten prosenttiosuus tippuu alle 3, mutta laskutusrajaa on jo aeimmin nostettu
-          (when (and paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?)
+          (when (and hoitovuoden-tavoitehinta paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?)
                   (< muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00) laskutusrajaa_nostettu? laskutusraja laskutusraja_alkuperainen)
             (kulu-kyselyt/paivita-urakan-laskutusraja! conn
               {:urakka-id urakka-id
