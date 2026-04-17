@@ -234,7 +234,7 @@
                                     "resources/public/js/harja"]
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "src/shared-cljc"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "test/cljc" "laadunseuranta/test-src/clj"]
   ;;     aot == Ahead of time compilation
   ;;     "..source code is compiled before the program is run, rather than at runtime"
