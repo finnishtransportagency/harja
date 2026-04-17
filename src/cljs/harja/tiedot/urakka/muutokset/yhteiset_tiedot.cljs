@@ -553,7 +553,7 @@
             nil
             nil
             {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
-           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\"-osiossa."]])
+           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
         ;; Laskutusraja ei muuttunut: näytä vain toast
         (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)))
 
@@ -609,7 +609,7 @@
             nil
             nil
             {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
-           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\"-osiossa."]])
+           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
         ;; Laskutusraja ei muuttunut: näytä vain toast
         (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)))
 
