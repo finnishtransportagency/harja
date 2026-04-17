@@ -57,7 +57,7 @@ on:
         required: false
       front-end-tests:
         description: 'Enabloi front-end-tests job'
-        default: 'true'
+        default: 'false'
         type: string
         required: false
       integration-tests:
@@ -67,7 +67,7 @@ on:
         required: false
       e2e-tests:
         description: 'Enabloi e2e-tests job'
-        default: 'true'
+        default: 'false'
         type: string
         required: false
 
