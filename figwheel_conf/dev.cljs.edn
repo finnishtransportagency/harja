@@ -24,4 +24,6 @@
  ;; HUOMIO: Voi aiheuttaa ongelmia käännöksessä. Aseta true, jos kohtaat outoja käännösongelmia.
  ;;         Älä aseta :reload-dependents asetusta kuitenkaan koskaan falseksi.
  :recompile-dependents false
- }
+
+ ;;Kertoo cljs complierille ettei uudelleennimeä tiettyjä JS property nimiä 
+ :infer-externs true}

@@ -1,6 +1,11 @@
 (ns harja.ui.tom
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]))
+            [reagent.dom :as rdom]
+            [goog.object :as gobj]))
+
+
+(defn call-method [obj method & args]
+  (.apply (gobj/get obj method) obj (to-array args)))
 
 
 (defn tom-select [attrs & children]
@@ -14,33 +19,38 @@
                      p (r/props this)
                      inst (js/TomSelect. el (or (:ts/options p) #js {}))
                      reposition (fn []
-                                  ;; Fixes dropdowns
-                                  (let [^js dp (.-dropdown inst)
-                                        ^js ctl (.-control inst)
+                                  (let [dp (gobj/get inst "dropdown")
+                                        ctl (gobj/get inst "control")
                                         r (.getBoundingClientRect ctl)]
                                     (set! (.. dp -style -position) "fixed")
                                     (set! (.. dp -style -left) (str (.-left r) "px"))
                                     (set! (.. dp -style -top) (str (.-bottom r) "px"))
                                     (set! (.. dp -style -width) (str (.-width r) "px"))))]
-                 (set! (.-_ts this) inst)
-                 (.on inst "dropdown_open" (fn [] (reposition)
-                                             (.addEventListener js/window "resize" reposition)))
-                 (.on inst "dropdown_close" (fn [] (.removeEventListener js/window "resize" reposition)))
-                 (when-let [v (:value p)] (.setValue inst (clj->js v) true)))))
+                 (gobj/set this "_ts" inst)
+                 (call-method inst "on" "dropdown_open"
+                   (fn []
+                     (reposition)
+                     (.addEventListener js/window "resize" reposition)))
+                 (call-method inst "on" "dropdown_close"
+                   (fn []
+                     (.removeEventListener js/window "resize" reposition)))
+                 (when-let [v (:value p)]
+                   (call-method inst "setValue" (clj->js v) true)))))
 
            :component-did-update
            (fn [this _]
-             (when-let [inst (.-_ts this)]
+             (when-let [inst (gobj/get this "_ts")]
                (when-let [v (:value (r/props this))]
-                 (.setValue inst (clj->js v) true))))
+                 (call-method inst "setValue" (clj->js v) true))))
 
            :component-will-unmount
-           (fn [this] (some-> (.-_ts this) .destroy))
+           (fn [this]
+             (when-let [inst (gobj/get this "_ts")]
+               (call-method inst "destroy")))
 
            :reagent-render
            (fn [attrs & props]
              (into [:select.form-select (dissoc attrs :ts/options :value)] props))})]
-
     (into [Core attrs] children)))
 
 

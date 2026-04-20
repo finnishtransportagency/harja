@@ -15,4 +15,7 @@
  :rename-prefix "h"
 
  ;:parallel-build false Failaa randomisti
- :closure-output-charset "US-ASCII"}
+ :closure-output-charset "US-ASCII"
+
+ ;; Kertoo cljs complierille ettei uudelleennimeä tiettyjä JS property nimiä 
+ :infer-externs true}

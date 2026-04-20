@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "@tabler/core": "^1.4.0",
-    "@tabler/icons-react": "^3.41.1",
     "@tabler/icons-webfont": "^3.41.1",
     "tom-select": "^2.5.2",
     "transit-js": "^0.8.867"
@@ -15,7 +14,7 @@
     "nodemon": "^3.1.11"
   },
   "scripts": {
-    "build-css": "lessc dev-resources/less/application.less resources/public/css/application.css && lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css",
+    "build-css": "lessc dev-resources/less/application.less resources/public/css/application.css",
     "less": "nodemon --watch dev-resources/less -e less --exec \"npm run build-css\""
   }
 }

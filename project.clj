@@ -231,7 +231,8 @@
                                     "dev-resources/tmp"
                                     "target"
                                     "resources/public/js/harja.js"
-                                    "resources/public/js/harja"]
+                                    "resources/public/js/harja"
+                                    "resources/public/laadunseuranta/js/compiled/out"]
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
