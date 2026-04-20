@@ -2,10 +2,11 @@ TRUNCATE TABLE public.tehtavaryhmaotsikko ;
 DELETE FROM rahavaraus_tehtava ;
 
 -- Kävin yksitelleen taulut läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi: 
---   sanktiotyyppi, rahavaraus, sekä rahavaraus_tehtava. 
+--   sanktiotyyppi, sanktio_laji, sanktio_profiili, sanktio_profiili_rivi,
+--   rahavaraus, sekä rahavaraus_tehtava. 
 -- 
 -- Nuo yllä olevat on populoitu flyway migraatioissa, ja cleanataan uudelleen tässä.    
--- Päivitin nämä testidataan ->   sanktiotyypit.sql,   __Rahavaraus_Kopio_01.sql
+-- Päivitin nämä testidataan -> sanktiotyypit.sql, sanktio_konfiguraatio.sql, __Rahavaraus_Kopio_01.sql
 -- 
 -- Nämä taulut halutaan clenata:
 -- TRUNCATE TABLE public.tehtavaryhmaotsikko CASCADE;
@@ -22,7 +23,8 @@ TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava,
     mhu_muutos_tehtava_ja_maaraluettelo, mhu_muutos_tehtava_tiedot, vv_materiaali, kan_hinta,
     kan_tyo, kan_toimenpide_kommentti, suunnittelu_kustannussuunnitelman_muutos, mhu_muutos,
     mhu_muutos_kustannusvaikutus, mhu_muutos_liite, mhu_muutos_kulu, toimenpide, toimenpideinstanssi,
-    sanktiotyyppi, tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
+    sanktio_profiili_rivi, sanktio_profiili, sanktio_laji, sanktiotyyppi,
+    tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
     toimenpideinstanssi_vesivaylat, kustannussuunnitelma, erilliskustannus_liite, paatos_lupaus, rahavaraus,
     rahavaraus_urakka, mhu_muutos_rahavarausmuutoksen_syy;
 

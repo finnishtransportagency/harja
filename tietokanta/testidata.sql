@@ -85,6 +85,9 @@ SELECT setval(
 -- Luodaan sanktiotyypit
 \i testidata/sanktiotyypit.sql
 
+-- Luodaan sanktio-konfiguraatio
+\i testidata/sanktio_konfiguraatio.sql
+
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
 
