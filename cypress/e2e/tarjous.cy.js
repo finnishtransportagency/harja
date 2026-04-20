@@ -94,7 +94,7 @@ describe('Tarjous-näkymä', function () {
     describe('Johto- ja hallintokorvaus-gridin testit 2025 urakalle', function () {
 
         beforeEach(function () {
-            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Johto- ja hallintokorvaus-grid näkyy oikein', function () {
@@ -167,7 +167,7 @@ describe('Tarjous-näkymä', function () {
     describe('Varmista tarjouksen tietojen näkyminen Kustannussuunnitelmassa 2025 urakalla', function () {
 
         beforeEach(function () {
-            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Tallennetut tarjoushinnat on kustannussuunnitelmassa', function () {
@@ -217,7 +217,7 @@ describe('Tarjous-näkymä', function () {
             cy.get('h1').should('contain', 'Tarjouksen tiedot');
 
             // Siirrytään kustiksen puolelle
-            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
 
             // Varmista tarjoussummat kustiksessa
             cy.contains('Kilpailutettavat hankinnat').should('be.visible');

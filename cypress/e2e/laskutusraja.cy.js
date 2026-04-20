@@ -5,7 +5,7 @@ const clickTimeout = 6000;
 const visibleTimeout = 30000;
 const urakanNimiKajaani = 'POP MHU Kajaani 2025-2030';
 const urakanNimiOulu = 'Oulun MHU 2019-2024';
-const elinvoimakeskus = 'Pohjois-Suomen';
+const elinvoimakeskus = 'Pohjois-Suomi';
 
 function alustaUrakkaKustannussuunnitteluun(nimi) {
     ks.alustaKanta(nimi);

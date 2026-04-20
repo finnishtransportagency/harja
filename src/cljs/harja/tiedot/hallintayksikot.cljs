@@ -26,6 +26,13 @@
 ;; Estää useampien samanaikaisten HTTP-kutsujen käynnistymisen (race condition).
 (def ^:private haku-kaynnissa (atom nil))
 
+(defn nollaa-tila!
+  "Nollaa hallintayksiköiden tilan. Käytetään testeissä."
+  []
+  (reset! haku-kaynnissa nil)
+  (reset! haetut-hallintayksikot nil)
+  (reset! vaylamuodon-hallintayksikot nil))
+
 (defn- vaylamuoto-str->keyword [vaylamuoto]
   ({"V" :vesi
     "T" :tie} vaylamuoto))

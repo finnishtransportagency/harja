@@ -17,7 +17,7 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Suomen').click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
