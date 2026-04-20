@@ -288,7 +288,7 @@
 
 (def tieturvallisuusverkko-selite
   {:teksti "Tieturvallisuustarkastu-\nkseen kuuluva tie"
-   :vari puhtaat/fig-default})
+   :vari puhtaat/tarkastus-default})
 
 (def heatmap-selite
   {:heatmap? true
