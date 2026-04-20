@@ -15,9 +15,9 @@ updates:
       docker-login-action:
         patterns:
           - "docker/login-action*"
-      sarif-upload-action:
+      codeql-action:
         patterns:
-          - "github/codeql-action/upload-sarif*"
+          - "github/codeql-action*"
       cache-action:
         patterns:
           - "actions/cache*"
