@@ -1,14 +1,15 @@
 (ns harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti
   "Muutos- ja lisätyöraportti"
-  (:require [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+  (:require [taoensso.timbre :as log]
+            [jeesql.core :refer [defqueries]]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.kyselyt.kulut :as kulut-q]
-            [harja.pvm :as pvm]
-            [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]))
 
 (defqueries "harja/palvelin/raportointi/raportit/muutos_ja_lisatyoraportti.sql"
   {:positional? true})
@@ -53,7 +54,8 @@
         kirjallisesti-sovitut-muutokset (hae-kirjallisesti-sovitut-muutokset-raportille
                                           db {:urakka-id urakka-id
                                               :alkupvm alkupvm
-                                              :loppupvm loppupvm})
+                                              :loppupvm loppupvm
+                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         kirjallisesti-sovitut-yht (reduce + 0 (map muutoksen-tavoitehinnan-muutos kirjallisesti-sovitut-muutokset))
 
         maaramuutokset-yht (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
@@ -124,18 +126,21 @@
           {:avain "Yhteensä"
            :arvo yhteensa :fmt :raha :lihavoi? true}]]
 
-        [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
-         [{:avain "Laskutusraja hoitovuoden alussa"
-           :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
-          {:avain "Laskutusrajan automaattiset tarkistukset"
-           :arvo laskutusrajan-tarkistukset :fmt :raha}
-          {:avain "Tarkistettu laskutusraja"
-           :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]]]])))
+        ;; Laskutusrajan laatikko näytetään vain, jos laskutusraja on käytössä
+        (when laskutusraja-kaytossa?
+          [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
+           [{:avain "Laskutusraja hoitovuoden alussa"
+             :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
+            {:avain "Laskutusrajan automaattiset tarkistukset"
+             :arvo laskutusrajan-tarkistukset :fmt :raha}
+            {:avain "Tarkistettu laskutusraja"
+             :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]])]])))
 
-(defn muodosta-kirjalliset-muutokset [db urakka-id alkupvm loppupvm hoitovuosinro kasittelija]
+(defn muodosta-kirjalliset-muutokset [db urakka-id alkupvm loppupvm hoitovuosinro hoitokauden-alkuvuosi kasittelija]
   (let [muutokset (hae-kirjallisesti-sovitut-muutokset-raportille db {:urakka-id urakka-id
                                                                       :alkupvm alkupvm
-                                                                      :loppupvm loppupvm})
+                                                                      :loppupvm loppupvm
+                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         muutosrivit (mapv (fn [m]
                             (rivi (tyypin-nimi (:tyyppi m))
                               (or (:syy m) "")
@@ -273,7 +278,7 @@
 (defn muodosta-laskutusrajan-tarkistukset [db urakka-id hoitokauden-alkuvuosi budjettitavoite
                                            hoitovuoden-alun-indeksikorjattu-tavoitehinta]
   (let [tarkistusprosentti 3 ;; Oletettavasti joskus tämä kovakoodattu prosentti voidaan hakea tietokannasta
-        tarkistusprosenttimaara (* (/ tarkistusprosentti 100) hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+        tarkistusprosenttimaara (fmt/desimaaliluku-opt (* (/ tarkistusprosentti 100) hoitovuoden-alun-indeksikorjattu-tavoitehinta) 2 true)
         tarkistusrivit (mapv (fn [r]
                                (rivi (or (:pvm r) "")
                                  (or (:muutokset-yhteensa r) "")
@@ -304,12 +309,12 @@
        {:leveys 5 :otsikko "Laskutusraja (€)" :fmt :raha}]
       (into [] (concat tarkistusrivit yhteensarivi))]
      [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten
-     muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatusta tavoitehinnasta." tarkistusprosentti)]
+     muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatussa tavoitehinnasta." tarkistusprosentti)]
      [:tyhja-rivi nil]
      [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon
      tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset. "]
      [:tyhja-rivi nil]
-     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." hoitovuoden-alun-indeksikorjattu-tavoitehinta tarkistusprosentti tarkistusprosenttimaara)]
+     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." (fmt/desimaaliluku-opt hoitovuoden-alun-indeksikorjattu-tavoitehinta 2 true) tarkistusprosentti tarkistusprosenttimaara)]
      [:tyhja-rivi nil]]))
 
 (defn muodosta-muutostoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
@@ -438,7 +443,7 @@
 
         ;; Jos muutokset on päällä - Kirjallisesti sovitut muutokset
         (when (:muutosten_hallinta urakan-parametrit)
-          (muodosta-kirjalliset-muutokset db urakka-id alkupvm loppupvm hoitovuosinro kasittelija))
+          (muodosta-kirjalliset-muutokset db urakka-id alkupvm loppupvm hoitovuosinro hoitokauden-alkuvuosi kasittelija))
 
         (when (:muutosten_hallinta urakan-parametrit)
           [(muodosta-aiempien-vuosien-muutokset db urakka-id alkupvm)])

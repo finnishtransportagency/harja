@@ -15,9 +15,9 @@ SELECT m.id,
           AND k.erapaiva BETWEEN :alkupvm AND :loppupvm)                         AS "jjh-muutosten-summa",
        -- Muiden muutosten summa tulee kustannusvaikutuksista
        (SELECT SUM(kust.summa)
-        FROM mhu_muutos_kustannusvaikutus kust
-        WHERE kust.muutos = m.id
-          AND kust.hoitokauden_alkuvuosi = extract(YEAR FROM m.voimassa_alkaen)) AS "kustannusvaikutusten-summa"
+          FROM mhu_muutos_kustannusvaikutus kust
+         WHERE kust.muutos = m.id
+           AND kust.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi) AS "kustannusvaikutusten-summa"
 FROM ONLY mhu_muutos m
 WHERE m.urakka = :urakka-id
   AND m.tyyppi IN ('pysyva', 'muutostyo', 'johto-ja-hallintokorvaus')

@@ -14,20 +14,20 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :pdf-vienti (component/using
-                                      (pdf-vienti/luo-pdf-vienti)
-                                      [:http-palvelin])
-                        :raportointi (component/using
-                                      (raportointi/luo-raportointi)
-                                      [:db :pdf-vienti])
-                        :raportit (component/using
-                                    (raportit/->Raportit)
-                                    [:http-palvelin :db :raportointi :pdf-vienti])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :pdf-vienti (component/using
+                        (pdf-vienti/luo-pdf-vienti)
+                        [:http-palvelin])
+          :raportointi (component/using
+                         (raportointi/luo-raportointi)
+                         [:db :pdf-vienti])
+          :raportit (component/using
+                      (raportit/->Raportit)
+                      [:http-palvelin :db :raportointi :pdf-vienti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -37,7 +37,7 @@
 
 ;; Apufunktiot
 
-(defn- hae-kajaani-urakka-id []
+(defn- hae-kajaani-2025-urakka-id []
   (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
 
 (defn- hoitokausi-alkupvm
@@ -139,41 +139,41 @@
   "Suorittaa Muutos- ja lisätyöraportin kutsu-palvelua kautta."
   [urakka-id alkupvm loppupvm]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :suorita-raportti
-                  +kayttaja-jvh+
-                  {:nimi :muutos-ja-lisatyot
-                   :konteksti "urakka"
-                   :urakka-id urakka-id
-                   :parametrit {:alkupvm alkupvm
-                                :loppupvm loppupvm}}))
+    :suorita-raportti
+    +kayttaja-jvh+
+    {:nimi :muutos-ja-lisatyot
+     :konteksti "urakka"
+     :urakka-id urakka-id
+     :parametrit {:alkupvm alkupvm
+                  :loppupvm loppupvm}}))
 
 (defn- hae-taulukko
   "Hakee raportin taulukon otsikon perusteella. Otsikko voi olla osa taulukon otsikosta."
   [vastaus osa avain]
   (some (fn [elementti]
           (when (and (vector? elementti)
-                     (= :taulukko (first elementti))
-                     (.contains (str (avain (second elementti))) osa))
+                  (= :taulukko (first elementti))
+                  (.contains (str (avain (second elementti))) osa))
             elementti))
-        (drop 2 vastaus)))
+    (drop 2 vastaus)))
 
 ;; ============================================================
 ;; Testataan Kirjallisesti sovitut muutokset
 ;; ============================================================
 
 (deftest kirjallisesti-sovitut-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Luo testiaineisto: yksi kutakin tyyppiä
         pysyva-id (luo-kirjallinen-muutos! urakka-id "pysyva" "Pysyvä syy" "2028-11-01")
         _ (luo-kustannusvaikutus! pysyva-id 2028 5000)
         muutostyo-id (luo-kirjallinen-muutos! urakka-id "muutostyo" "Muutostyö syy" "2028-12-15")
         _ (luo-kustannusvaikutus! muutostyo-id 2028 3000)
-        jjh-id (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028"))  (pvm/->pvm (str "15.10.2028")) 1500)
+        jjh-id (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028")) (pvm/->pvm (str "15.10.2028")) 1500)
         ;; Suorita raportti hoitokaudelle 2028-2029
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Kirjallisesti sovitut muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
@@ -186,12 +186,12 @@
         (is (= 9500M yhteensa-arvo) "Yhteensä-rivin tavoitehinnan muutos on 9500")))))
 
 (deftest kirjallisesti-sovitut-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Suorita raportti ilman testiaineistoa
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -205,7 +205,7 @@
 ;; ============================================================
 
 (deftest aiempien-vuosien-pysyvat-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Luo pysyvä muutos, joka on voimassa alkaen EDELLISELTÄ hoitokaudelta
         ;; mutta jolla on kustannusvaikutus nykyiselle hoitokaudelle 2028
@@ -213,8 +213,8 @@
         _ (luo-kustannusvaikutus! muutos-id 2028 2500)
         ;; Suorita raportti hoitokaudelle 2028-2029
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Aikaisempien vuosien taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
@@ -226,12 +226,12 @@
         (is (= 2500M yhteensa-arvo) "Yhteensä on 2500")))))
 
 (deftest aiempien-vuosien-pysyvat-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Suorita raportti ilman testiaineistoa
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -244,16 +244,16 @@
 ;; ============================================================
 
 (deftest tehtava-maaramuutokset-happy-case
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         _ (siivoa-muutosdata! urakka-id)
         kayttaja-id (hae-kayttaja-id)
         ;; Hae tehtävä jolla on tehtavamaara (suunniteltu) tässä urakassa
         tehtava-rivi (first (q (str
-                                "SELECT ut.tehtava AS tehtava_id, ut.maara AS suunniteltu_maara
-                                   FROM urakka_tehtavamaara ut
-                                        JOIN tehtava tk ON tk.id = ut.tehtava
-                                  WHERE ut.urakka = " urakka-id "
+                                 "SELECT ut.tehtava AS tehtava_id, ut.maara AS suunniteltu_maara
+                                    FROM urakka_tehtavamaara ut
+                                         JOIN tehtava tk ON tk.id = ut.tehtava
+                                   WHERE ut.urakka = " urakka-id "
                                     AND ut.\"hoitokauden-alkuvuosi\" = 2028
                                     AND ut.maara > 0
                                     AND ut.poistettu IS NOT TRUE
@@ -274,8 +274,8 @@
              VALUES (0, " kulu-id ", 800, " tpi-id ", " tehtava-id ", 'kokonaishintainen', " kayttaja-id ")"))
     ;; Suorita raportti
     (let [vastaus (suorita-raportti urakka-id
-                                   (hoitokausi-alkupvm 2028)
-                                   (hoitokausi-loppupvm 2028))
+                    (hoitokausi-alkupvm 2028)
+                    (hoitokausi-loppupvm 2028))
           taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
       (is (some? taulukko) "Tehtävä-maaramuutokset taulukko löytyy")
       (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -287,7 +287,7 @@
           (is (:lihavoi? viimeinen) "Yhteensä-rivi on lihavoitu"))))))
 
 (deftest tehtava-maaramuutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Poistetaan myös tehtävämäärät jotta taulukko on tyhjä
         _ (u (str "DELETE FROM urakka_tehtavamaara WHERE urakka = " urakka-id " AND \"hoitokauden-alkuvuosi\" = 2029"))
@@ -306,7 +306,7 @@
 ;; ============================================================
 
 (deftest rahavarausten-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         hoitokauden-alkuvuosi 2028
         kuukausi 10
@@ -359,11 +359,11 @@
         (is (= -1500M (nth yht 4)) "Yhteensä tavoitehinnan muutos on -1500")))))
 
 (deftest rahavarausten-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-urakka-id)
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
         _ (siivoa-muutosdata! urakka-id)
         vastaus (suorita-raportti urakka-id
-                                 (hoitokausi-alkupvm 2028)
-                                 (hoitokausi-loppupvm 2028))
+                  (hoitokausi-alkupvm 2028)
+                  (hoitokausi-loppupvm 2028))
         taulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -388,10 +388,10 @@
   [vastaus sheet-nimi-osa]
   (some (fn [elementti]
           (when (and (vector? elementti)
-                     (= :taulukko (first elementti))
-                     (.contains (str (:sheet-nimi (second elementti))) sheet-nimi-osa))
+                  (= :taulukko (first elementti))
+                  (.contains (str (:sheet-nimi (second elementti))) sheet-nimi-osa))
             elementti))
-        (drop 2 vastaus)))
+    (drop 2 vastaus)))
 
 (defn- siivoa-vanha-urakka-raportti-data!
   "Poistaa tavoitehinnan oikaisut ja lisätyökulut vanhan tyyppisen urakan testidatasta."
@@ -402,10 +402,10 @@
              AND kulu IN (SELECT id FROM kulu WHERE urakka = " urakka-id ")"))
   (u (str "UPDATE kulu SET poistettu = TRUE
            WHERE urakka = " urakka-id
-          " AND id IN (SELECT kk.kulu FROM kulu_kohdistus kk
-                        JOIN kulu k ON kk.kulu = k.id
-                       WHERE kk.tyyppi = 'lisatyo'
-                         AND k.urakka = " urakka-id ")")))
+       " AND id IN (SELECT kk.kulu FROM kulu_kohdistus kk
+                     JOIN kulu k ON kk.kulu = k.id
+                    WHERE kk.tyyppi = 'lisatyo'
+                      AND k.urakka = " urakka-id ")")))
 
 (deftest vanha-urakka-tavoitehinnan-oikaisut-nakyvat
   (let [urakka-id (hae-vanha-urakka-id)
@@ -435,9 +435,9 @@
       (is (= 15000M (nth (:rivi yhteensarivi) 2)) "Yhteensä on 15000"))
     ;; Muutoshallinta-osiot EI näy vanhalla urakalla
     (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut muutokset" :sheet-nimi))
-        "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla")
+      "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla")
     (is (nil? (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko))
-        "Aikaisempien vuosien -taulukko ei näy vanhalla urakalla")))
+      "Aikaisempien vuosien -taulukko ei näy vanhalla urakalla")))
 
 (deftest vanha-urakka-lisatyot-nakyvat
   (let [urakka-id (hae-vanha-urakka-id)
@@ -458,8 +458,8 @@
                      " kayttaja-id ", 'lisatyo', 'Testilisätyö: lumitöiden lisäkustannus')"))
     ;; Suorita raportti
     (let [vastaus (suorita-raportti urakka-id
-                                   (hoitokausi-alkupvm 2020)
-                                   (hoitokausi-loppupvm 2020))
+                    (hoitokausi-alkupvm 2020)
+                    (hoitokausi-loppupvm 2020))
           taulukko (hae-taulukko-sheet-nimella vastaus "Lisätyöt")]
       ;; Lisätyöt-taulukko löytyy
       (is (some? taulukko) "Lisätyöt-taulukko löytyy vanhalla urakalla")
@@ -476,4 +476,4 @@
         (is (= 7500M (nth (:rivi yhteensarivi) 3)) "Yhteensä on 7500"))
       ;; Muutoshallinta-osiot EI näy vanhalla urakalla
       (is (nil? (hae-taulukko vastaus "Kirjallisesti sovitut muutokset" :sheet-nimi))
-          "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla"))))
+        "Kirjallisesti sovitut -taulukko ei näy vanhalla urakalla"))))
