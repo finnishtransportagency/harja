@@ -1133,7 +1133,7 @@
         kiinteat-kustannukset (budjettisuunnittelu-kyselyt/hae-kiinteat-kustannukset db {:urakka-id urakka-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         kiinteat-kustannukset (map #(konversio/alaviiva->rakenne %) kiinteat-kustannukset)
-        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id :sopimus-id sopimus-id})
+        arvioidut-kustannukset (budjettisuunnittelu-kyselyt/hae-arvioidut-kustannukset db {:urakka-id urakka-id})
         ;; Järjestä tulokset jsonia varten omiin objekteihinsa
         arvioidut-kustannukset (map #(konversio/alaviiva->rakenne %) arvioidut-kustannukset)
 
