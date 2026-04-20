@@ -30,29 +30,8 @@
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
-(defn- aja-sanktio-konfiguraation-migraatio-testikantaan!
-  []
-  (let [taulu-olemassa? (:taulu (first (q-map "SELECT to_regclass('public.sanktio_profiili') AS taulu")))
-        profiileja (when taulu-olemassa?
-                     (:maara (first (q-map "SELECT COUNT(*) AS maara FROM sanktio_profiili"))))
-        riveja (when taulu-olemassa?
-                 (:maara (first (q-map "SELECT COUNT(*) AS maara FROM sanktio_profiili_rivi"))))]
-    (when (or (not taulu-olemassa?)
-            (zero? profiileja)
-            (zero? riveja))
-    (jdbc/with-db-connection [db (luo-testitietokanta)]
-      (with-open [yhteys (jdbc/get-connection db)
-                  lause (.createStatement yhteys)]
-        (when taulu-olemassa?
-          (.execute lause "DROP TABLE IF EXISTS sanktio_profiili_rivi")
-          (.execute lause "DROP TABLE IF EXISTS sanktio_profiili")
-          (.execute lause "DROP TABLE IF EXISTS sanktio_laji"))
-        (.execute lause
-          (slurp (io/file "tietokanta/src/main/resources/db/migration/V1_1254__.sql"))))))))
-
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
-  (aja-sanktio-konfiguraation-migraatio-testikantaan!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start

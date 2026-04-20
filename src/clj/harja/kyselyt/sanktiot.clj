@@ -3,7 +3,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
-(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
+(declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
   hae-urakan-sanktiot-analytiikalle)
 
 ;; Käytössä jeesql:ssä
