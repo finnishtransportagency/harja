@@ -1,5 +1,64 @@
--- Sanktio-konfiguraation paikallinen testidata.
--- Ajetaan testidata.sql:sta sen jalkeen, kun sanktiotyypit on luotu.
+CREATE TABLE sanktio_laji (
+    id          SERIAL PRIMARY KEY,
+    koodi       TEXT                     NOT NULL UNIQUE,
+    nimi        TEXT                     NOT NULL,
+    kuvaus      TEXT,
+    aktiivinen  BOOLEAN                  NOT NULL DEFAULT TRUE,
+    jarjestys   INTEGER                  NOT NULL,
+    luoja       INTEGER                  NOT NULL REFERENCES kayttaja (id),
+    luotu       TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja   INTEGER                  NOT NULL REFERENCES kayttaja (id),
+    muokattu    TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sanktio_profiili (
+    id                 SERIAL PRIMARY KEY,
+    nimi               TEXT              NOT NULL UNIQUE,
+    urakkatyyppi       TEXT              NOT NULL,
+    hoitovuosi_alku    INTEGER           NOT NULL,
+    hoitovuosi_loppu   INTEGER           NOT NULL,
+    alkupvm            DATE              NOT NULL,
+    loppupvm           DATE,
+    aktiivinen         BOOLEAN           NOT NULL DEFAULT TRUE,
+    luoja              INTEGER           NOT NULL REFERENCES kayttaja (id),
+    luotu              TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja          INTEGER           NOT NULL REFERENCES kayttaja (id),
+    muokattu           TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (hoitovuosi_alku <= hoitovuosi_loppu),
+    CHECK (loppupvm IS NULL OR alkupvm <= loppupvm)
+);
+
+CREATE TABLE sanktio_profiili_rivi (
+    id                   SERIAL PRIMARY KEY,
+    sanktio_profiili_id  INTEGER          NOT NULL REFERENCES sanktio_profiili (id),
+    sanktio_laji_id      INTEGER          NOT NULL REFERENCES sanktio_laji (id),
+    sanktiotyyppi_id     INTEGER          NOT NULL REFERENCES sanktiotyyppi (id),
+    soveltuvuuskonteksti TEXT             NOT NULL,
+    jarjestys            INTEGER          NOT NULL,
+    aktiivinen           BOOLEAN          NOT NULL DEFAULT TRUE,
+    lisametatiedot       JSONB,
+    luoja                INTEGER          NOT NULL REFERENCES kayttaja (id),
+    luotu                TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja            INTEGER          NOT NULL REFERENCES kayttaja (id),
+    muokattu             TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti),
+    CHECK (soveltuvuuskonteksti IN ('urakka', 'laatupoikkeama'))
+);
+
+CREATE INDEX sanktio_profiili_haku_idx
+    ON sanktio_profiili (urakkatyyppi, aktiivinen, alkupvm, loppupvm, hoitovuosi_alku, hoitovuosi_loppu);
+
+CREATE INDEX sanktio_profiili_rivi_haku_idx
+    ON sanktio_profiili_rivi (sanktio_profiili_id, soveltuvuuskonteksti, aktiivinen, jarjestys);
+
+COMMENT ON TABLE sanktio_laji
+                IS 'Sanktioiden lajimasterdata parametrisoitua sanktio-konfiguraatiota varten.';
+
+COMMENT ON TABLE sanktio_profiili
+                IS 'Urakka- ja hoitovuosikontekstissa resolvoitava sanktioiden konfiguraatioprofiili.';
+
+COMMENT ON TABLE sanktio_profiili_rivi
+                IS 'Sallitut sanktio_laji- ja sanktiotyyppi-yhdistelmät profiileittain ja soveltuvuuskonteksteittain.';
 
 WITH integraatio AS (
     SELECT id
@@ -8,17 +67,17 @@ WITH integraatio AS (
 )
 INSERT INTO sanktio_laji (koodi, nimi, kuvaus, aktiivinen, jarjestys, luoja, luotu, muokkaaja, muokattu)
 VALUES ('muistutus', 'Muistutus', 'Hoidon muistutus', TRUE, 1, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('A', 'A-ryhma (tehtavakohtainen sanktio)', 'A-ryhman sanktio', TRUE, 2, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('B', 'B-ryhma (vakava laiminlyonti)', 'B-ryhman sanktio', TRUE, 3, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('C', 'C-ryhma (maarapaivan ylitys, hallinnollinen laiminlyonti jne.)', 'C-ryhman sanktio', TRUE, 4, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('arvonvahennyssanktio', 'Arvonvahennys', 'Arvonvahennys', TRUE, 5, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('pohjavesisuolan_ylitys', 'Pohjavesialueen suolankayton ylitys', 'Pohjavesialueen suolankayton ylitys', TRUE, 6, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('talvisuolan_ylitys', 'Talvisuolan kokonaiskayton ylitys', 'Talvisuolan kokonaiskayton ylitys', TRUE, 7, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('tenttikeskiarvo-sanktio', 'Vastuuhenkilon tenttipistemaaran alentuminen', 'Tenttikeskiarvoon liittyva sanktio', TRUE, 8, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('testikeskiarvo-sanktio', 'Vastuuhenkilon testipistemaaran alentuminen', 'Testikeskiarvoon liittyva sanktio', TRUE, 9, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('vaihtosanktio', 'Vastuuhenkilon vaihto', 'Vastuuhenkilon vaihtoon liittyva sanktio', TRUE, 10, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('yllapidon_sakko', 'Sakko', 'Yllapidon sakko', TRUE, 1, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('yllapidon_muistutus', 'Muistutus', 'Yllapidon muistutus', TRUE, 2, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP);
+       ('A', 'A-ryhmä (tehtäväkohtainen sanktio)', 'A-ryhmän sanktio', TRUE, 2, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('B', 'B-ryhmä (vakava laiminlyönti)', 'B-ryhmän sanktio', TRUE, 3, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('C', 'C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)', 'C-ryhmän sanktio', TRUE, 4, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('arvonvahennyssanktio', 'Arvonvähennys', 'Arvonvähennys', TRUE, 5, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('pohjavesisuolan_ylitys', 'Pohjavesialueen suolankäytön ylitys', 'Pohjavesialueen suolankäytön ylitys', TRUE, 6, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('talvisuolan_ylitys', 'Talvisuolan kokonaiskäytön ylitys', 'Talvisuolan kokonaiskäytön ylitys', TRUE, 7, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('tenttikeskiarvo-sanktio', 'Vastuuhenkilön tenttipistemäärän alentuminen', 'Tenttikeskiarvoon liittyvä sanktio', TRUE, 8, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('testikeskiarvo-sanktio', 'Vastuuhenkilön testipistemäärän alentuminen', 'Testikeskiarvoon liittyvä sanktio', TRUE, 9, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('vaihtosanktio', 'Vastuuhenkilön vaihto', 'Vastuuhenkilön vaihtoon liittyvä sanktio', TRUE, 10, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('yllapidon_sakko', 'Sakko', 'Ylläpidon sakko', TRUE, 1, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('yllapidon_muistutus', 'Muistutus', 'Ylläpidon muistutus', TRUE, 2, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP);
 
 WITH integraatio AS (
     SELECT id
