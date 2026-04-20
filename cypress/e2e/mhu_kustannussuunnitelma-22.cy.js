@@ -11,7 +11,7 @@ function alustaTampereenUrakka() {
 describe('Johto- & Hallintokorvaukset, 2022->', () => {        
     before(function () {
         alustaTampereenUrakka();
-        avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Sisä-Suomen', indeksit);
+        avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Sisä-Suomi', indeksit);
     })
     
     describe('Ennen urakkaa valmistelukausi', () => {
@@ -284,7 +284,7 @@ describe('Johto- & Hallintokorvaukset, 2022->', () => {
                 .should('equal', 200)
         })
         it('Vakiotoimenkuvien erikseen syotetyt summat palautuvat oikein', () => {
-            avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Sisä-Suomen', indeksit);
+            avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Sisä-Suomi', indeksit);
 
             let kuluvaHKVuosi = kuluvaHoitokausiAlkuvuosi();
             let kuluvaHoitokausiNro = kuluvaHKVuosi - 2022 + 1;
