@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
 
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.tyokalut.yleiset :refer :all]
@@ -28,7 +29,10 @@
                      [:http-palvelin :db])
           :kulut (component/using
                    (kulut/->Kulut)
-                   [:http-palvelin :db])))))
+                   [:http-palvelin :db])
+          :muutokset (component/using
+                       (muutos-palvelu/->Muutos {:kehitysmoodi true})
+                       [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -85,6 +89,14 @@
      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
      :vahvista? vahvista?}))
 
+(defn- tallenna-muutos!
+  [urakka-id muutos-payload hoitokaudet]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+    :tallenna-muutos +kayttaja-jvh+
+    {:urakka-id urakka-id
+     :valittu-hoitokausi (first hoitokaudet)
+     :hoitokaudet hoitokaudet
+     :muutos muutos-payload}))
 
 (deftest laskutusraja-paivittyy-tavoite-ja-kattohinnan-vahvistuksessa
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -336,3 +348,186 @@
 
       ;; Siivoa
       (poista-kulut! kulu-id1 kulu-id2))))
+
+(deftest laskutusraja-nousee-kun-muutostyo-ylittaa-3-prosenttia
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    ;; 1. Aseta laskutusraja käyttöön
+    (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    ;; 2. Poista vanhat tarjoukset
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    ;; 3. Tallenna kustannussuunnitelma ja tarjous (jotta tavoitehinta löytyy) ja vahvista
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
+    ;; 4. Hae laskutusraja ennen muutosta
+    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+          _ (is (not (nil? laskutusraja-ennen)) "Laskutusrajan pitäisi olla asetettu vahvistuksen jälkeen")
+
+          ;; 5. Tallenna muutostyö jonka summa on > 3% tavoitehinnasta
+          tavoitehinta (first (map :tavoitehinta_indeksikorjattu
+                                (q-map (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = 1" urakka-id))))
+          suuri-summa (when tavoitehinta (* tavoitehinta 0.05)) ;; 5% tavoitehinnasta -> ylittää 3%
+          muutos-payload {:tyyppi "muutostyo"
+                          :alityyppi :erillisrahoitus
+                          :nimi "Testimuutostyö"
+                          :syy "Testitarkoitus"
+                          :voimassa_alkaen #inst "2025-11-01T00:00:00.000-00:00"
+                          :tavoitehinnan-muutos suuri-summa}
+          _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)
+
+          ;; 6. Tarkista, että laskutusraja on noussut
+          laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
+      (is (not (nil? laskutusraja-jalkeen)) "Laskutusrajan pitäisi olla olemassa")
+      (is (> laskutusraja-jalkeen laskutusraja-ennen) "Laskutusrajan pitäisi olla noussut muutostyön jälkeen"))))
+
+(deftest laskutusraja-nousee-kun-pysyva-muutos-positiivinen-ensimmaisena-hoitovuonna
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
+    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+          _ (is (not (nil? laskutusraja-ennen)) "Laskutusrajan pitäisi olla asetettu vahvistuksen jälkeen")
+
+          ;; Pysyvä muutos: positiivinen kustannusvaikutus hoitovuodelle 2025
+          ;; -> pitäisi nostaa laskutusrajaa
+          muutos-payload {:tyyppi "pysyva"
+                          :nimi "Testipysyvä"
+                          :syy "Testitarkoitus"
+                          :voimassa_alkaen #inst "2025-10-01T00:00:00.000-00:00"
+                          :tavoitehinnan-muutos 5000
+                          :kustannusvaikutukset [{:toimenpideinstanssi 129
+                                                  :kustannuslaji "hankintakustannukset"
+                                                  :summa 5000
+                                                  :hoitokauden_alkuvuosi 2025}]
+                          :tehtavat_ja_maarat [{:tehtava 6953
+                                                :maaramuutos 100
+                                                :hoitokauden_alkuvuosi 2025}]}
+          _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)
+          laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
+
+      (is (not (nil? laskutusraja-jalkeen)) "Laskutusrajan pitäisi olla olemassa")
+      (is (> laskutusraja-jalkeen laskutusraja-ennen)
+        "Laskutusrajan pitäisi nousta kun pysyvän muutoksen tavoitehinnan muutos on positiivinen"))))
+
+(deftest laskutusraja-ei-nouse-kun-pysyva-muutos-negatiivinen
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
+    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+
+          ;; Negatiivinen kustannusvaikutus -> ei pidä nostaa laskutusrajaa
+          muutos-payload {:tyyppi "pysyva"
+                          :nimi "Testipysyvä negatiivinen"
+                          :syy "Testitarkoitus"
+                          :voimassa_alkaen #inst "2025-10-01T00:00:00.000-00:00"
+                          :tavoitehinnan-muutos -5000
+                          :kustannusvaikutukset [{:toimenpideinstanssi 129
+                                                  :kustannuslaji "hankintakustannukset"
+                                                  :summa -5000
+                                                  :hoitokauden_alkuvuosi 2025}]
+                          :tehtavat_ja_maarat [{:tehtava 6953
+                                                :maaramuutos -100
+                                                :hoitokauden_alkuvuosi 2025}]}
+          _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)
+          laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
+
+      (is (= laskutusraja-ennen laskutusraja-jalkeen)
+        "Laskutusrajan ei pitäisi muuttua kun pysyvän muutoksen tavoitehinnan muutos on negatiivinen"))))
+
+(deftest jhh-muutos-ei-vaikuta-laskutusrajaan
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+          jhh-muutos {:tyyppi "johto-ja-hallintokorvaus"
+                      :voimassa_alkaen #inst "2025-10-01"
+                      :syy "JHH-muutos testiin"
+                      :nimi "JHH testi"
+                      :kulut [{:pvm #inst "2025-10-01" :tavoitehinnan-muutos -1000}]}
+          _ (tallenna-muutos! urakka-id jhh-muutos +hoitokaudet+)
+          laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
+      (testing "JHH-muutos ei muuta laskutusrajaa"
+        (is (= laskutusraja-ennen laskutusraja-jalkeen)
+          "Laskutusrajan pitäisi pysyä samana JHH-muutoksen jälkeen")))))
+
+(deftest laskutusraja-paivittyy-kun-muutostyo-poistetaan
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        hoitokaudet [(pvm/hoitokauden-alkupvm 2025) (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm 2026))]]
+    (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id)
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+          _ (is (not (nil? laskutusraja-ennen)) "Laskutusrajan pitäisi olla asetettu vahvistuksen jälkeen")
+          summa 5000
+          muutos-payload {:tyyppi "muutostyo"
+                          :alityyppi :erillisrahoitus
+                          :nimi "Testimuutostyö muutoksen poistamisen testausta varten"
+                          :syy "Testitarkoitus"
+                          :voimassa_alkaen #inst "2025-11-01T00:00:00.000-00:00"
+                          :tavoitehinnan-muutos summa}
+          tallenna-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-muutos +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :valittu-hoitokausi hoitokaudet
+                                  :hoitokaudet [hoitokaudet]
+                                  :laskenta-automatiikka? true
+                                  :muutos muutos-payload})
+          muutos-id (->> (:kirjatut-muutokset tallenna-vastaus)
+                                (filter #(= (:nimi %) "Testimuutostyö muutoksen poistamisen testausta varten"))
+                                first
+                                :id)
+          laskutusraja-tallennuksen-jalkeen (hae-urakan-laskutusraja urakka-id)
+          ;; Poistetaan muutos
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :poista-muutos +kayttaja-jvh+
+                           {:muutos-id muutos-id
+                            :urakka-id urakka-id
+                            :valittu-hoitokausi hoitokaudet
+                            :hoitokaudet [hoitokaudet]
+                            :laskenta-automatiikka? true})
+          laskutusraja-poistamisen-jalkeen (hae-urakan-laskutusraja urakka-id)]
+      (is (some? laskutusraja-tallennuksen-jalkeen) "Laskutusrajan pitäisi olla olemassa tallennuksen jälkeen")
+      (is (some? laskutusraja-poistamisen-jalkeen) "Laskutusrajan pitäisi olla olemassa poistamisen jälkeen")
+      (is (< laskutusraja-poistamisen-jalkeen laskutusraja-tallennuksen-jalkeen)
+        "Laskutusrajan pitäisi pienentyä muutoksen poistamisen jälkeen")
+      (is (= (- laskutusraja-tallennuksen-jalkeen summa) laskutusraja-poistamisen-jalkeen) "Laskutusrajan pitäisi olla
+        poistamisen jälkeen sama kuin tallennuksen jälkeen vähennettynä muutoksen summalla"))))
