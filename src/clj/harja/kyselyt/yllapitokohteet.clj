@@ -13,8 +13,10 @@
 
 (declare paivita-yllapitokohteen-paallysteen-korjausluokka hae-yllapitokohteen-aikataulu
   paivita-yllapitokohteen-paallystysaikataulu! luo-yllapitokohteelle-tyhja-aikataulu<!
-  paivita-yllapitokohde<! luo-yllapitokohde<! hae-urakan-tyyppi luo-yllapitokohteelle-tyhja-kustannustaulu<!
-  luo-yllapitokohdeosa<! poista-yllapitokohdeosa! paallystyskohteen-saa-poistaa
+  paivita-yllapitokohde<! luo-yllapitokohde<! hae-urakan-tyyppi
+  paivita-yllapitokohteen-korjausluokat-ja-yllapitoluokat paivita-yllapitokohteen-kohdeosien-sijainnit!
+  hae-ilman-sijaintia-olevat-yllapitokohdeosat luo-yllapitokohteelle-tyhja-kustannustaulu<! luo-yllapitokohdeosa<!
+  poista-yllapitokohdeosa! paallystyskohteen-saa-poistaa
   hae-urakan-yllapitokohteiden-yllapitokohdeosat-alueelle hae-urakan-yllapitokohteiden-yllapitokohdeosat
   hae-yllapitokohteen-suorittava-tiemerkintaurakka-id hae-yllapitokohteen-urakka-id hae-paikkauskohteen-urakka-id
   yllapitokohde-sisaltaa-kirjauksia-urakassa hae-yllapitokohteen-tiemerkintaaikataulu
@@ -28,7 +30,9 @@
   tallenna-paallystyskohteen-aikataulu! tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
   tallenna-yllapitokohteen-kustannukset-yhaid! onko-olemassa-urakalla? hae-urakkaan-liittyvat-tiemerkintakohteet
   hae-urakkaan-kuuluvat-yllapitokohteet paivita-yllapitokohteen-tiemerkintaaikataulu!
-  paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<! hae-kaikki-urakan-yllapitokohteet)
+  paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<! hae-kaikki-urakan-yllapitokohteet
+  hae-paikkauskohteen-paikkaukset-alueelle hae-paikkauskohteen-paikkaukset
+  hae-yllapitokohteiden-tiedot-sahkopostilahetykseen)
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 

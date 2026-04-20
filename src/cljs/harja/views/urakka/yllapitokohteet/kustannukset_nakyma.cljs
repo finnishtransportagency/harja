@@ -21,7 +21,7 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan #(e! (tiedot/->HaeKustannustiedot)))
-    
+
     (fn [e! {:keys [haku-kaynnissa? tallennus-kaynnissa? lomake-valinnat muokataan tyomenetelmittain] :as app}]
       (let [urakka @nav/valittu-urakka
             voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-paikkaukset-paikkauskohteet @nav/valittu-urakka-id @istunto/kayttaja)
@@ -36,7 +36,7 @@
            (when muokataan
              (apurit/kustannuksen-lisays-lomake e! app voi-tallentaa?))
 
-           [:h1 "Kustannukset"]
+           [:h1 "Paikkauskustannusten yhteenveto"]
            [debug/debug app]
            [:div.kalenterivalinta
             ;; Vuosi valinta

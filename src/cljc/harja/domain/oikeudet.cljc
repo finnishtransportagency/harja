@@ -31,6 +31,7 @@
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
   urakat-laadunseuranta-tarkastukset
+  urakat-laadunseuranta-laatupoikkeamat
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
   urakat-kohdeluettelo-paallystyskohteet

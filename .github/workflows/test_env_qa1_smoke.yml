@@ -101,7 +101,7 @@ jobs:
       # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@c962da2960ed15f492addc26fffa274485265950
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78
         with:
           mask-password: 'true'
 
@@ -150,7 +150,7 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff
+        uses: aws-actions/amazon-ecs-deploy-task-definition@fc8fc60f3a60ffd500fcb13b209c59d221ac8c8c
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
