@@ -44,7 +44,7 @@ function taytaArvoja() {
 describe('Testaa Kittilän MHU kustannussuunnitelmanäkymää', () => {
     before(() => {
             alustaKittilanUrakka();
-            avaaKustannussuunnittelu('Kittilän MHU 2019-2024', 'Lapin', indeksit);
+            avaaKustannussuunnittelu('Kittilän MHU 2019-2024', 'Lappi', indeksit);
             taytaArvoja();
         }
     )

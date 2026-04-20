@@ -27,7 +27,7 @@ let avaaPaikkauskohteetSuoraan = function () {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lapin').click()
+    cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
@@ -51,7 +51,7 @@ let avaaToteumat = () => {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lapin').click()
+    cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
@@ -78,7 +78,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
 
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
 
