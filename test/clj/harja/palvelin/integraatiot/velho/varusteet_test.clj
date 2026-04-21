@@ -89,13 +89,18 @@
 (def odotettu-varuste
   {:alkupvm #inst "2022-10-15T00:00:00.000000000-00:00"
    :kohdeluokka "tienvarsikalusteet"
+   :kohdevarusteen-kohdeluokka "tienvarsikalusteet"
+   :kohdevarusteen-oid "1.2.345.678.9.0.12.345.678901234"
    :kuntoluokka "Testikuntoluokka"
    :lisatieto ""
    :loppupvm nil
    :muokattu nil
    :muokkaaja "MUOKKAAJA"
+   :rivi-id "1.2.345.678.9.0.12.345.678901234"
+   :rivityyppi :tavallinen-varusterivi
    :sijainti (PGgeometry. "POINT(6839198.670452601 638694.7440636739)")
    :toimenpide "Lisätty"
+   :toimenpide-oid nil
    :tr-alkuetaisyys 101
    :tr-alkuosa 1
    :tr-loppuetaisyys nil
@@ -134,11 +139,11 @@
         (let [vastaus (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
                                                                                               :hoitokauden-alkuvuosi nil})]
           (is (= 1 (count (:toteumat vastaus))) "Ei-rajatun haun pitää edelleen palauttaa varusteet")
-          (is (= 3 (count @pyynnot)) "Haun pitää tehdä välimäisten oidien, välimäisten toimenpiteiden ja varsinaisten varusteiden pyynnöt")
+          (is (= 2 (count @pyynnot)) "Haun pitää tehdä välimäisten toimenpiteiden haku ja varsinainen varustehaku silloin kun erillisiä kohdevarusteita ei löydy")
           (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
-                  (tree-seq coll? seq (walk/stringify-keys %)))
+                         (tree-seq coll? seq (walk/stringify-keys %)))
                 @pyynnot)
-          "Ei-rajatun haun payloadiin ei saa päätyä aikarajausehtoja"))))))
+            "Ei-rajatun haun payloadiin ei saa päätyä aikarajausehtoja"))))))
 
 (deftest hae-urakan-varustetoteumat-ohittaa-kuukauden-ilman-hoitovuotta-test
   (let [pyynnot (atom [])
@@ -152,41 +157,11 @@
         (varusteet/hae-urakan-varustetoteumat (:velho-integraatio jarjestelma) {:urakka-id 123
                                                                                 :hoitokauden-alkuvuosi nil
                                                                                 :hoitovuoden-kuukausi 10})
-        (is (= 3 (count @pyynnot)) "Kuukausen normalisointi ei saa estää koko kolmen pyynnön hakuketjua")
+        (is (= 2 (count @pyynnot)) "Kuukausen normalisointi ei saa estää välimäisten toimenpiteiden ja varsinaisen varustehaun ketjua")
         (is (every? #(not-any? #{"pvm-suurempi-kuin" "pvm-pienempi-kuin"}
-                        (tree-seq coll? seq (walk/stringify-keys %)))
+                       (tree-seq coll? seq (walk/stringify-keys %)))
               @pyynnot)
           "Kuukausi ilman hoitovuotta ei saa lisätä payloadiin aikarajaa")))))
-
-
-(deftest yhdista-valimaiset-toimenpiteet-varusteisiin
-  (testing "Toimenpide tieto yhdistyy varusteisiin oikein"
-    (let [varusteet [{:oid "1.2.246.578.4.3.14.2171636297.4142310432"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310433"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310434"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310435"}
-                     {:oid "1.2.246.578.4.3.14.2171636297.4142310436"}]
-          toimenpiteet [{:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310432" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310443"}
-                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310433" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310444"}
-                        {:ominaisuudet {:toimenpiteen-kohde "1.2.246.578.4.3.14.2171636297.4142310434" :toimenpide "varustetoimenpide/vtp01"} :oid "1.2.246.578.12.2.2171636297.4142310445"}]
-          vastaus (varusteet/yhdista-valimaiset-toimenpiteet-varusteisiin {:kokoelma1 varusteet
-                                                                           :kokoelma2 toimenpiteet
-                                                                           :yhteinen-key1 [:oid]
-                                                                           :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
-                                                                           :etsittava-avain [:ominaisuudet :toimenpide]
-                                                                           :asetettava-avain :valimaiset-toimenpiteet})]
-      (is (= 5 (count vastaus)))
-      (is (= (list
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310432",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310433",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310434",
-                :valimaiset-toimenpiteet ["varustetoimenpide/vtp01"]}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310435",
-                :valimaiset-toimenpiteet []}
-               {:oid "1.2.246.578.4.3.14.2171636297.4142310436",
-                :valimaiset-toimenpiteet []}) vastaus)))))
 
 ;; Testit tyhjien OID-listojen käsittelylle (ei saa tuottaa tyhjiä OID-listoja payloadiin)
 (deftest lisaa-oid-haku-jos-tarvitaan-test
@@ -197,7 +172,7 @@
       (is (= ["tai"
               ["ja" ["kohdeluokka" "test"] ["olemassa" "kentta"]]
               ["joukossa" ["yleiset/perustiedot" "oid"] ["oid-1" "oid-2" "oid-3"]]]
-            tulos))
+             tulos))
       (is (not (some #{[]} (flatten tulos))) "Ei saa sisältää tyhjiä vektoreita")))
 
   (testing "Ei lisää OID-hakua kun oidit on tyhjä lista"
@@ -223,7 +198,7 @@
       (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
       (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")
       (is (some #(= ["joukossa" ["yleiset/perustiedot" "oid"] ["oid-1" "oid-2"]] %)
-              (tree-seq coll? seq tulos-oidit))
+            (tree-seq coll? seq tulos-oidit))
         "OID-listan kanssa pitää sisältää OID-haku")))
 
   (testing "tee-kohteen-poisto-parametri ei tuota tyhjiä OID-listoja"
@@ -253,3 +228,16 @@
         (is (not (some #{[]} (flatten tulos-tyhja))) "Tyhjä lista ei saa tuottaa tyhjiä vektoreita")
         (is (not (some #{[]} (flatten tulos-nil))) "nil ei saa tuottaa tyhjiä vektoreita")
         (is (not (some #{[]} (flatten tulos-oidit))) "OID-lista ei saa tuottaa tyhjiä vektoreita")))))
+
+(deftest varusteen-toimenpide-fallbackaa-raakaan-koodiin-jos-nimikkeisto-puuttuu
+  (let [db (:db jarjestelma)]
+    (is (= "varustetoimenpide/vtp-tuntematon"
+           (#'varusteet/varusteen-toimenpide
+            db
+            {:ominaisuudet {:toimenpiteet ["varustetoimenpide/vtp-tuntematon"]}}))
+      "Jos nimikkeistöstä ei löydy otsikkoa, toimenpiteen pitää fallbackata raakakoodiin merkkijonona")
+    (is (= "varustetoimenpide/vtp-a,varustetoimenpide/vtp-b"
+           (#'varusteet/yhdista-valimaiset-toimenpiteet-stringiksi
+            db
+            ["varustetoimenpide/vtp-a" "varustetoimenpide/vtp-b"]))
+      "Myös välimäisten toimenpiteiden yhdistetyn tekstin pitää fallbackata raakakoodeihin")))
