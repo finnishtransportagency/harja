@@ -72,6 +72,8 @@ SELECT setval(
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
 \i testidata/urakat2.sql
+-- Luodaan päällystysurakoita
+\i testidata/paallystysurakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql

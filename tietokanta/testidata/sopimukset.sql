@@ -83,10 +83,8 @@ BEGIN
     ('Rovaniemen MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-ROV', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka (1. hoitovuosi)')),
     ('Pellon MHU testiurakan sopimus',urakan_aloitus_pvm - interval '2 years',urakan_paattymis_pvm - interval '2 years','MHU-TESTI-LAP-PEL', (SELECT id FROM urakka WHERE nimi='Pellon MHU testiurakka (3. hoitovuosi)')),
     ('Kemin MHU testiurakan sopimus',urakan_aloitus_pvm - interval '5 years', urakan_paattymis_pvm - interval '5 years','MHU-TESTI-LAP-KEM', (SELECT id FROM urakka WHERE nimi='Kemin MHU testiurakka (5. hoitovuosi)')),
-    ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)')),
+    ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)'));
 
-    -- Päällystysurakat
-    ('Utajärven päällystyksen pääsopimus', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),'5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
 END $$;
 
 -- Aktiivinen oulu

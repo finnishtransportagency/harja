@@ -42,6 +42,7 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-tyomaapaivakirja
+  urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
   urakat-yleiset
