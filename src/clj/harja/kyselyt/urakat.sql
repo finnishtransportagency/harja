@@ -1314,7 +1314,8 @@ FROM urakka u
               WHERE k.kayttajanimi = :kayttajanimi
                     AND k.jarjestelma IS TRUE
                     AND o.tyyppi = 'liikennevirasto'))
-      AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+      AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+ORDER BY u.alkupvm ASC;
 
 -- name: urakan-paasopimus-id
 -- single?: true
