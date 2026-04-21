@@ -195,11 +195,11 @@
 
         ;; Poista käsitellyt avaimet
 
-        (map #(dissoc %
-                      :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
-                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
-                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
+    (map #(dissoc %
+            :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
+            :elinvoimakeskus_id :elinvoimakeskus_nimi :elinvoimakeskus_lyhenne
+            :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
+            :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
@@ -237,7 +237,7 @@
         organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
         ;; Varmisettaan, että jvh käyttäjällä on elinvoimakeskus urakkatyyppi
         organisaatiotyyppi (if (roolit/jvh? user) "elinvoimakeskus" organisaatiotyyppi)]
-    (if (and (nil? organisaatio) (empty? urakat))
+    (if (and (nil? organisaatio) (empty? urakat) (not (roolit/jvh? user))) ;; Varmista, että jvh käyttäjä ei jää osattomaksi koskaan.
       (do
         (oikeudet/ei-oikeustarkistusta!)
         [])

@@ -514,7 +514,8 @@ FROM urakka u
 WHERE (u.nimi ILIKE :termi
        OR u.sampoid ILIKE :termi OR
        :numero::INTEGER IS NOT NULL AND u.id = :numero)
-      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+      AND (('elinvoimakeskus' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+            'hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = org.id))

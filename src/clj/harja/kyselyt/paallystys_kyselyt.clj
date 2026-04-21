@@ -35,10 +35,7 @@
                                   (contains? tilat (:tila %)))))
                      (when (and (seq evkt)
                              (not (contains? evkt 0)))
-                       (filter #(do
-                                  (println "-> " (:evk %))
-                                  (or (empty? evkt)
-                                    (contains? evkt (:evk %))))))]
+                       (filter #(or (empty? evkt) (contains? evkt (:evk %)))))]
         filtteri-xform (apply comp
                          (vec
                            (keep identity

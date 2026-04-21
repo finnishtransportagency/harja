@@ -182,12 +182,12 @@
                                :else
                                ;; Rakennuttajakonsultit näkevät oman elinvoimakeskuksensa urakat, joihin heille
                                ;; on merkitty lukuoikeus.
-                               (let [_ (when-not (= "elinvoimakeskus" (get-in user [:organisaatio :tyyppi]))
-                                         (log/error "Odotettiin Rakennuttajakonsulttia, mutta saatiin user:" (pr-str user)))
+                               (let [_ (when-not (= :konsultti (roolit/osapuoli (get-in user [:organisaatio :tyyppi])))
+                                         (log/error "Odotettiin Rakennuttajakonsulttia, mutta saatiin käyttäjä:" (pr-str user)))
                                      urakat (q/elinvoimakeskusten-urakat db {:elinvoimakeskukset [(get-in user [:organisaatio :id])]})]
                                  ;; Jos käyttäjällä on rooli, jolla on oman-urakan-ely oikeus..
                                  (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                                   (let [hy-urakat (group-by :hallintayksikko urakat)]
+                                   (let [hy-urakat (group-by :elinvoimakeskus urakat)]
                                      ;; Käydään jokaisen hallintayksikön urakat läpi..
                                      (set
                                        (mapcat

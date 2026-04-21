@@ -396,12 +396,31 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-idt #{}}))]
+                                                            :evk-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= psu-evk-id (get-in vastaus [:evk_id])) "PSU EVK")
     (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")
     (is (= 76 (get-in vastaus [:toteutuneet_pisteet])) "luvatut_pisteet")
     (is (= "taytetty" (get-in vastaus [:lupauspaatos])) "Lupauksen pitäisi olla täytetty")))
+
+
+(deftest haku-ei-loyda-kun-evk-ja-urakka-ristiriidassa
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        psu-evk-id (hae-pohjois-suomen-evk-id)
+        ;; Tallenna lupauspäätös kantaan
+        _ (tallenna-lupauspaatos urakka-id "taytetty" 76 76)
+
+        vastaus (first
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                            :hoitokauden-alkuvuosi 2024
+                                                            :urakka-idt [urakka-id]
+                                                            :evk-idt #{123}}))]
+    (is (nil? (get-in vastaus [:id])) "Ei löydy urakkaa, koska 123 elinvoimakeskusta ei ole.")
+    (is (nil? (get-in vastaus [:evk_id])) "Ei löydy elinvoimakeskusta.")
+    (is (nil? (get-in vastaus [:luvatut_pisteet])) "Ei löydy pisteitä")
+    (is (nil? (get-in vastaus [:toteutuneet_pisteet])) "Ei löydy pisteitä")
+    (is (nil? (get-in vastaus [:lupauspaatos])) "Ei löydy lupauspäätöstä")))
 
 (deftest poikkeamat-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
