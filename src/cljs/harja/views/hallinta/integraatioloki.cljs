@@ -115,22 +115,51 @@
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
 
-(defn tapahtumien-maarat-graafi [tiedot]
+(def granulariteetti-asetukset
+  "Granulariteettikohtaiset UI-asetukset pylväsgraafille."
+  {:minute {:otsikkoteksti "Pyynnöt minuuteittain "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :5-min {:otsikkoteksti "Pyynnöt 5 min välein "
+           :otsikon-pvm-fn pvm/pvm-aika
+           :label-fn #(pvm/aika (:pvm %))}
+   :15-min {:otsikkoteksti "Pyynnöt 15 min välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :30-min {:otsikkoteksti "Pyynnöt 30 min välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(pvm/aika (:pvm %))}
+   :hour {:otsikkoteksti "Pyynnöt tunneittain "
+          :otsikon-pvm-fn pvm/pvm-aika
+          :label-fn #(if (zero? (pvm/tunti (:pvm %)))
+                       (pvm/paiva-kuukausi (:pvm %))
+                       (pvm/aika (:pvm %)))}
+   :3-hour {:otsikkoteksti "Pyynnöt 3 tunnin välein "
+            :otsikon-pvm-fn pvm/pvm-aika
+            :label-fn #(str (pvm/paiva-kuukausi (:pvm %)) " " (pvm/aika (:pvm %)))}
+   :day {:otsikkoteksti "Pyynnöt päivittäin "
+         :otsikon-pvm-fn pvm/pvm
+         :label-fn #(pvm/paiva-kuukausi (:pvm %))}})
+
+(defn tapahtumien-maarat-graafi [tiedot granulariteetti]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 3))
+        ;; Hae granulariteettiin liittyvät asetukset, käytä :day-tasoa defaulttina
+        {:keys [otsikkoteksti otsikon-pvm-fn label-fn]}
+        (get granulariteetti-asetukset granulariteetti (:day granulariteetti-asetukset))
         tiedot-pvm-sortattu (sort-by :pvm tiedot)
-        eka-pvm (pvm/pvm (:pvm (first tiedot-pvm-sortattu)))
-        vika-pvm (pvm/pvm (:pvm (last tiedot-pvm-sortattu)))
+        eka-pvm (otsikon-pvm-fn (:pvm (first tiedot-pvm-sortattu)))
+        vika-pvm (otsikon-pvm-fn (:pvm (last tiedot-pvm-sortattu)))
         pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
         pvm-kohtaiset-maarat-summattu (sort-by :pvm
-                                               (map (fn [rivit]
-                                                      (zipmap [:pvm :maara]
-                                                              [(:pvm (first rivit))
-                                                               (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
+                                        (map (fn [rivit]
+                                               (zipmap [:pvm :maara]
+                                                 [(:pvm (first rivit))
+                                                  (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
     [:span.pylvaat
      [:h5 {:on-click #(tiedot/nayta-graafit!)
            :style {:cursor "pointer"}}
-      (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa) <Avaa klikkaamalla>")]
+      (str otsikkoteksti eka-pvm " - " vika-pvm " <Avaa klikkaamalla>")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))
@@ -142,7 +171,7 @@
          [vis/bars {:width w
                     :height (min 200 h)
                     :label-fn #(if nayta-labelit?
-                                 (pvm/paiva-kuukausi (:pvm %))
+                                 (label-fn %)
                                  "")
                     :value-fn :maara
                     :format-amount str
@@ -228,7 +257,8 @@
            :valinta-nayta second
            :valinnat [[:kaikki "Kaikki"]
                       [:onnistuneet "Onnistuneet"]
-                      [:epaonnistuneet "Epäonnistuneet"]]}
+                      [:epaonnistuneet "Epäonnistuneet"]
+                      [:kesken "Kesken"]]}
           {:otsikko "Tapahtuman kesto minuuteissa yli"
            :nimi :tapahtumien-kesto
            :tyyppi :positiivinen-numero
@@ -258,7 +288,7 @@
 
         (if-not (empty? @tiedot/tapahtumien-maarat)
           [:div.integraatio-tilastoja
-           [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
+           [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat @tiedot/maarat-granulariteetti]
            (when-not @tiedot/valittu-integraatio
              [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
           [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])

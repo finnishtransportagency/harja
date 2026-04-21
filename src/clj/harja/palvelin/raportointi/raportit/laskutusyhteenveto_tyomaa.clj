@@ -213,7 +213,6 @@
                                       (yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
                               urakoiden-parametrit)
 
-
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
 
@@ -307,13 +306,13 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
 
-     ;; ----------------------------------------------------- ;;
-     ;;    Hankinnat ja hoidonjohto yhteensä                  ;;
-     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä   ;;
-     ;;    Tavoitehinta (indeksikorjattu)                     ;;
-     ;;    Siirto edelliseltä vuodelta                        ;;
-     ;;    Budjettia jäljellä                                 ;;
-     ;; ----------------------------------------------------- ;;
+     ;; ------------------------------------------------------------ ;;
+     ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
+     ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
+     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
+     ;;    Budjettia jäljellä                                        ;;
+     ;; ------------------------------------------------------------ ;;
+
 
      (if laskutusraja-kaytossa?
        (taulukot/valitaulukko-laskutusraja {:data rivitiedot
@@ -325,12 +324,13 @@
                                             :laskutusraja hk-laskutusraja
                                             :laskutusraja-ylittynyt? laskutusraja-ylittynyt?})
 
-       (taulukot/valitaulukko {:data rivitiedot
-                               :otsikko "Toteutuneet"
-                               :laskutettu-teksti laskutettu-teksti
-                               :laskutetaan-teksti laskutetaan-teksti
-                               :kyseessa-kk-vali? kyseessa-kk-vali?
-                               :kyseessa-valittu-aikavali? valittu-aikavali?}))
+       (taulukot/valitaulukko-tyomaa {:data rivitiedot
+                                      :otsikko "Toteutuneet"
+                                      :laskutettu-teksti laskutettu-teksti
+                                      :laskutetaan-teksti laskutetaan-teksti
+                                      :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+                                      :kyseessa-kk-vali? kyseessa-kk-vali?
+                                      :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
 
      ;; Ei tavoitehintaiset
      (if
@@ -353,7 +353,7 @@
                             :tavoitehintainen? false}))))
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
-     (taulukot/valitaulukko {:data rivitiedot
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
                              :laskutettu-teksti laskutettu-teksti
                              :laskutetaan-teksti laskutetaan-teksti
                              :kyseessa-kk-vali? kyseessa-kk-vali?})

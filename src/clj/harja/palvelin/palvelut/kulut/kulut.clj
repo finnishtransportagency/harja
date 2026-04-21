@@ -24,6 +24,7 @@
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]])
@@ -164,9 +165,13 @@
   [db hakuehdot]
   (let [kulukohdistukset (group-by :id (into []
                                          (map konv/alaviiva->rakenne)
-                                         (q/hae-urakan-kulut-kohdistuksineen db {:urakka (:urakka-id hakuehdot)
-                                                                                 :alkupvm (:alkupvm hakuehdot)
-                                                                                 :loppupvm (:loppupvm hakuehdot)})))
+                                         (concat
+                                           (q/hae-urakan-kulut-kohdistuksineen db {:urakka (:urakka-id hakuehdot)
+                                                                                   :alkupvm (:alkupvm hakuehdot)
+                                                                                   :loppupvm (:loppupvm hakuehdot)})
+                                           (q/hae-urakan-toteutuneet-kustannukset db {:urakka (:urakka-id hakuehdot)
+                                                                                   :alkupvm (:alkupvm hakuehdot)
+                                                                                   :loppupvm (:loppupvm hakuehdot)}))))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -182,12 +187,15 @@
   "Palauttaa hoitokauden kulujen summan laskutusrajaa varten."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulut (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
-                                                       :alkupvm alkupvm
-                                                       :loppupvm loppupvm})
+  (let [kulut (concat (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm})
+                      (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
+                                                                 :alkupvm alkupvm
+                                                                 :loppupvm loppupvm}))
         ;; Lasketaan summa kaikista kohdistuksista
         summa (reduce (fn [acc kulu]
-                        (+ acc (or (:summa kulu) 0)))
+                        (+ acc (or (tyokalut/pyorista-kahteen-decimaaliin (:summa kulu)) 0)))
                       0
                       kulut)]
     summa))
@@ -624,6 +632,10 @@
     {:laskutusraja laskutusraja
      :laskutusraja-kaytossa laskutusraja-kaytossa?}))
 
+(defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
+  (q/hae-kaikkien-tehtavaryhmien-nimet db))
+
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -726,6 +738,9 @@
       (julkaise-palvelu http :hae-urakan-laskutusraja
         (fn [user hakuehdot]
           (hae-urakan-laskutusraja db user hakuehdot)))
+      (julkaise-palvelu http :hae-kaikkien-tehtavaryhmien-nimet
+        (fn [user hakuehdot]
+          (hae-kaikkien-tehtavaryhmien-nimet db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel
@@ -743,7 +758,9 @@
       :tarkista-laskun-numeron-paivamaara
       :hae-urakan-hintapaatokset
       :hae-urakan-rahavaraukset
-      :hae-hoitokauden-kulujen-summa)
+      :hae-hoitokauden-kulujen-summa
+      :hae-urakan-laskutusraja
+      :hae-kaikkien-tehtavaryhmien-nimet)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
     (when (:excel-vienti this)

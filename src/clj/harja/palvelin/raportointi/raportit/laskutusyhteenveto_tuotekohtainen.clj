@@ -63,14 +63,24 @@
         oikaistu? (and
                     (some? (:tavoitehinta-oikaistu urakka-tavoite))
                     (some? (:tavoitehinta-indeksikorjattu urakka-tavoite))
-                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))]
+                    (not= (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite)))
+        oikaisujen-maara (if (and (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                           (- (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
+                           0)
+        pysyvat-muutokset-summa (or (:muutos-summa urakka-tavoite) 0M)
+        hoitovuoden-lopun-tavoitehinta (+ (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) pysyvat-muutokset-summa)
+        hoitovuoden-alun-indeksikorjattu-tavoitehinta (when (:tavoitehinta-oikaistu urakka-tavoite) (- (:tavoitehinta-oikaistu urakka-tavoite) oikaisujen-maara))]
 
     (if urakka-tavoite
-      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
-       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
+      {:hoitokauden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
+       :oikaisujen-maara oikaisujen-maara
+       :kirjallisesti-sovitut-muutokset pysyvat-muutokset-summa
+       :jaljella (- hoitovuoden-lopun-tavoitehinta kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
        :oikaistu? oikaistu?}
-      {:tavoite-hinta 0
+      {:hoitokauden-alun-indeksikorjattu-tavoitehinta 0
        :jaljella 0
+       :kirjallisesti-sovitut-muutokset nil
+       :oikaisujen-maara nil
        :oikaistu? oikaistu?})))
 
 
@@ -124,7 +134,9 @@
   (let [;; Taulukon rivit mitkä näytetään kaikkiin paitsi "MHU ja HJU hoidon johto"
         taulukko-rivit [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                         (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)]
+                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                        (when (yhteiset/raha-arvo-olemassa? (:jjh_muutokset_laskutettu data))
+                          (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutokset_laskutettu :jjh_muutokset_laskutetaan false))]
 
         rahavaraus-rivit (map (fn [nimi hoitokausi val-aika]
                                 (rivi
@@ -235,7 +247,6 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                               urakoiden-parametrit)
-        
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
@@ -298,17 +309,9 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     (taulukot/toteutuneet-valitaulukko {:data (first koostettu-yhteenveto)
+     (taulukot/toteutuneet-valitaulukko-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
                                          :otsikko "Toteutuneet"
                                          :laskutettu-teksti laskutettu-teksti
                                          :laskutetaan-teksti laskutetaan-teksti
-                                         :kyseessa-kk-vali? kyseessa-kk-vali?})
-     ;; Näytetään nämä vain jos hoitokausi valittuna
-     (when hoitokausi?
-       (taulukot/toteutuneet-valitaulukko {:data (second koostettu-yhteenveto)
-                                           :otsikko ""
-                                           :laskutettu-teksti (str (if (-> koostettu-yhteenveto second :oikaistu?)
-                                                                     "Tavoitehinta (oikaistu)"
-                                                                     "Tavoitehinta (indeksikorjattu)"))
-                                           :laskutetaan-teksti "Budjettia jäljellä"
-                                           :kyseessa-kk-vali? true}))]))
+                                         :kyseessa-kk-vali? kyseessa-kk-vali?
+                                         :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})]))
