@@ -304,8 +304,8 @@
 
 (deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-        lapin-hallintayksikko-id (hae-organisaatio-id-nimella "Lappi")
+        hallintayksikko-id (hae-hallintoyksikon-id-nimella "Pohjois-Pohjanmaa")
+        lapin-hallintayksikko-id (hae-hallintoyksikon-id-nimella "Lappi")
 
         ;; Tallenna lupauspäätös kantaan
         _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
@@ -344,8 +344,7 @@
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :ely-idt #{}}))
-        _ (println "vastaus: " (pr-str vastaus))]
+                                                            :ely-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= hallintayksikko-id (get-in vastaus [:ely_id])) "POP ELY")
     (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")

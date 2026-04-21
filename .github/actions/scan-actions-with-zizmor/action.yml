@@ -54,7 +54,7 @@ runs:
   using: "composite"
   steps:
     - name: Install uv
-      uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
 
     - name: Run zizmor (SARIF report)
       id: zizmor-sarif
@@ -103,7 +103,7 @@ runs:
 
 
     - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162 # v4.32.5
+      uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
       if: ${{ inputs.upload-sarif == 'true' }}
       with:
         sarif_file: zizmor-results.sarif

@@ -57,6 +57,8 @@ SELECT setval(
 
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
+-- Lisätään elinvoimakeskuksille geometriat
+\i testidata/elinvoimakeskukset.sql
 
 -- Luodaan urakoitsijat
 \i testidata/urakoitsijat.sql
@@ -69,6 +71,8 @@ SELECT setval(
 
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
+-- Luodaan päällystysurakoita
+\i testidata/paallystysurakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
@@ -320,3 +324,6 @@ ON CONFLICT DO NOTHING;
 
 -- Päivitetään toimenkuvat -25 urakoille
 SELECT lisaa_toimenkuvat_urakalle('2025-10-01'::DATE);
+
+-- Tarjoukset
+\i testidata/tarjous.sql

@@ -82,7 +82,7 @@
 
 (defn- mobiiliselain? []
   (some #(re-matches % (str/lower-case js/window.navigator.userAgent))
-        [#".*android.*" #".*ipad.*"]))
+    [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
   [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])}
@@ -115,7 +115,7 @@
        [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
 
     (when (and (oikeudet/tieluvat)
-               (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
+            (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
       [:li {:class (when (= s :tienpidon-luvat) "active")}
        [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
 
@@ -125,13 +125,7 @@
 
     (when (oikeudet/hallinta)
       [:li {:class (when (= s :hallinta) "active")}
-       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
-
-    (when (and (mobiiliselain?)
-               (oikeudet/laadunseuranta))
-      [:li
-       [staattinen-linkki-uuteen-valilehteen "Laadunseurannan mobiilityökalu"
-        (str k/+polku+ "laadunseuranta")]])]
+       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])]
 
    :right
    [harja-info s]
@@ -177,19 +171,28 @@
 (defn yhteys-palautunut-ilmoitus []
   [:div.yhteysilmoitin.yhteys-palautunut-ilmoitus "Yhteys palautui!"])
 
-(defn hairioilmoitus [hairiotiedot]
-  (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
-        tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
-                        :tiedote "hairioilmoitin-tyyppi-tiedote"
-                        "hairioilmoitin-tyyppi-hairio")
-        hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
-    [:div.hairioilmoitin.margin-bottom-16 {:class tyyppi-luokka}
-     [:div.margin-right-32.lihavoitu
-      (str otsikko " " hairio-pvm ": " (::hairio/viesti hairiotiedot))]
-     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]]))
+(defn hairioilmoitus
+  ([hairiotiedot] (hairioilmoitus hairiotiedot {}))
+  ([hairiotiedot {:keys [margin-bottom?] :or {margin-bottom? true}}]
+   (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
+         tyyppi (::hairio/tyyppi hairiotiedot)
+         tyyppi-luokka (case tyyppi
+                         :tiedote "hairioilmoitin-tyyppi-tiedote"
+                         "hairioilmoitin-tyyppi-hairio")
+         hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
+     [:div.hairioilmoitin {:class (str tyyppi-luokka (when margin-bottom? " margin-bottom-16"))}
+      [:div.margin-right-32.lihavoitu
+       (str otsikko " " hairio-pvm ": " (::hairio/viesti hairiotiedot))]
+      [napit/sulje-ruksi #(hairiotiedot/piilota-hairioilmoitus-tyypilla! tyyppi) {:style {:margin "0px"}}]])))
 
 (defn paasisalto [sivu korkeus]
-  (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
+  (let [tyypeittain @hairiotiedot/hairioilmoitukset-tyypeittain
+        nayta-tyypeittain @hairiotiedot/nayta-hairioilmoitus-tyypeittain?
+        hairio-ilmoitus (:hairio tyypeittain)
+        tiedote-ilmoitus (:tiedote tyypeittain)
+        nayta-hairio? (and hairio-ilmoitus (:hairio nayta-tyypeittain))
+        nayta-tiedote? (and tiedote-ilmoitus (:tiedote nayta-tyypeittain))
+        molemmat-nakyvissa? (and nayta-hairio? nayta-tiedote?)]
     [:div
      [debug/df-shell-kaikki]
      (cond
@@ -213,8 +216,11 @@
      [:div.container
       [murupolku/murupolku]]
 
-     (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
-       [hairioilmoitus hairiotiedot])
+     (when nayta-hairio?
+       [hairioilmoitus hairio-ilmoitus {:margin-bottom? (not molemmat-nakyvissa?)}])
+
+     (when nayta-tiedote?
+       [hairioilmoitus tiedote-ilmoitus])
 
      ^{:key "harjan-paasisalto"}
      [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
@@ -237,8 +243,8 @@
      [modal/modal-container]
      [viesti-container]
      [toast-viesti-container]
-      ;; Aria-live containerit eri prioriteeteille  
-     [saavutettavuus/aria-live-container (:polite @saavutettavuus/aria-viestit) {:kohteliaisuus "polite"}]  
+     ;; Aria-live containerit eri prioriteeteille  
+     [saavutettavuus/aria-live-container (:polite @saavutettavuus/aria-viestit) {:kohteliaisuus "polite"}]
      [saavutettavuus/aria-live-container (:assertive @saavutettavuus/aria-viestit) {:kohteliaisuus "assertive"}]
      (when @nav/kartta-nakyvissa?
        [kartta-layers korkeus])
@@ -266,16 +272,16 @@
                    :footer [:span
                             [:button.nappi-toissijainen {:type "button"
                                                          :on-click #(do (.preventDefault %)
-                                                                        (modal/piilota!))}
+                                                                      (modal/piilota!))}
                              "OK"]]}
-                  [:div
-                   [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
+      [:div
+       [:p "Käytössäsi on vanhentunut Internet Explorer -selaimen versio. Emme voi taata, että kaikki Harjan ominaisuudet toimivat täysin oikein."]])))
 
 (defn ei-kayttooikeutta? [kayttaja]
   (or (:poistettu kayttaja)
-      (and (empty? (:roolit kayttaja))
-           (empty? (:urakkaroolit kayttaja))
-           (empty? (:organisaatioroolit kayttaja)))))
+    (and (empty? (:roolit kayttaja))
+      (empty? (:urakkaroolit kayttaja))
+      (empty? (:organisaatioroolit kayttaja)))))
 
 (defn todennus-varmistus-epaonnistui? [kayttaja]
   ;; Tarkoittaa että todennus epäonnistui, tästä laukaistaan myös slack häly: JWT-ERROR
@@ -284,8 +290,8 @@
 (defn kuuntele-oikeusvirheita []
   (t/kuuntele! :ei-oikeutta (fn [tiedot]
                               (viesti/nayta! (:viesti tiedot)
-                                             :warning
-                                             viesti/viestin-nayttoaika-pitka))))
+                                :warning
+                                viesti/viestin-nayttoaika-pitka))))
 
 (defn main
   "Harjan UI:n pääkomponentti"

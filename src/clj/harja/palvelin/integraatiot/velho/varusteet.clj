@@ -200,8 +200,9 @@
   (str/join ","
     (keep
       (fn [toimenpide]
-        (:otsikko
-         (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide}))))
+        (or (:otsikko
+              (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi toimenpide})))
+          toimenpide))
       valimaiset-toimenpiteet)))
 
 (defn varusteen-toimenpide [db {:keys [version-voimassaolo ominaisuudet paattyen alkaen oid valimaiset-toimenpiteet]}]
@@ -218,7 +219,8 @@
           (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " oid
                       " version-alku:" version-alku ". Toimenpiteet: " (str/join ", " toimenpiteet)
                       " Otetaan vain 1. toimenpide talteen.")))
-        (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)}))))
+        (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db {:tyyppi-nimi (first toimenpiteet)})))
+          (first toimenpiteet)))
       (cond
         (seq valimaiset-toimenpiteet) (yhdista-valimaiset-toimenpiteet-stringiksi db valimaiset-toimenpiteet)
         (some? poistettu?) "Poistettu"
@@ -264,7 +266,11 @@
 
         kuntoluokka (or (:otsikko (first (memoized-hae-nimikkeen-tiedot db
                                            {:tyyppi-nimi kuntoluokka})))
-                      "Kuntoluokka puuttuu")]
+                      "Kuntoluokka puuttuu")
+        kohdevarusteen-kohdeluokka (or (:kohdevarusteen-kohdeluokka varuste)
+                                     (when (string? (:kohdeluokka varuste))
+                                       (last (clojure.string/split (:kohdeluokka varuste) #"/")))
+                                     kohdeluokka)]
     {:alkupvm alkupvm
      :kuntoluokka kuntoluokka
      :lisatieto (liikennemerkin-lisatieto db varuste)
@@ -285,7 +291,58 @@
      :tr-alkuetaisyys alkuet
      :tr-loppuosa loppuosa
      :tr-loppuetaisyys loppuetaisyys
+     :rivityyppi (or (:rivityyppi varuste) :tavallinen-varusterivi)
+     :rivi-id (or (:rivi-id varuste) (:oid varuste))
+     :toimenpide-oid (:toimenpide-oid varuste)
+     :kohdevarusteen-oid (or (:kohdevarusteen-oid varuste) (:oid varuste))
+     :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka
      :ulkoinen-oid (:oid varuste)}))
+
+(def valimaisesta-toimenpiteesta-kopioitavat-kentat
+  [:sijainti
+   :alkusijainti
+   :loppusijainti
+   :version-voimassaolo
+   :alkaen
+   :paattyen
+   :muokattu
+   :muokkaaja])
+
+(defn- ylikirjoita-olemassa-olevat-kentat [kohde lahde kentat]
+  (reduce (fn [tulos kentta]
+            (if-let [arvo (get lahde kentta)]
+              (assoc tulos kentta arvo)
+              tulos))
+    kohde
+    kentat))
+
+(defn- valimainen-toimenpiderivi-velhosta->harja [db kohdevaruste toimenpide]
+  (let [kohdevarusterivi (varuste-velhosta->harja db kohdevaruste)
+        kohdevarusteen-kohdeluokka (or (when (string? (:kohdeluokka kohdevaruste))
+                                         (last (clojure.string/split (:kohdeluokka kohdevaruste) #"/")))
+                                       (:kohdeluokka kohdevarusterivi))
+        yhdistetty-varuste (-> kohdevaruste
+                             (assoc-in [:ominaisuudet :toimenpiteet]
+                               [(get-in toimenpide [:ominaisuudet :toimenpide])])
+                             (assoc :rivityyppi :valimainen-toimenpiderivi
+                                    :rivi-id (:oid toimenpide)
+                                    :toimenpide-oid (:oid toimenpide)
+                                    :kohdevarusteen-oid (:ulkoinen-oid kohdevarusterivi)
+                                    :kohdevarusteen-kohdeluokka kohdevarusteen-kohdeluokka)
+                             (ylikirjoita-olemassa-olevat-kentat toimenpide valimaisesta-toimenpiteesta-kopioitavat-kentat))]
+    (varuste-velhosta->harja db yhdistetty-varuste)))
+
+(defn- muodosta-valimaiset-toimenpiderivit [db kohdevarusteet toimenpiteet]
+  (let [kohdevarusteet-oidilla (into {} (map (juxt :oid identity) kohdevarusteet))]
+    (keep (fn [toimenpide]
+            (let [kohdevarusteen-oid (get-in toimenpide [:ominaisuudet :toimenpiteen-kohde])]
+              (if-let [kohdevaruste (get kohdevarusteet-oidilla kohdevarusteen-oid)]
+                (valimainen-toimenpiderivi-velhosta->harja db kohdevaruste toimenpide)
+                (do
+                  (log/warn "Välimäiselle varustetoimenpiteelle ei löytynyt kohdevarustetta" {:toimenpide-oid (:oid toimenpide) 
+                                                                                              :kohdevarusteen-oid kohdevarusteen-oid})
+                  nil))))
+      toimenpiteet)))
 
 (def loppuaika-olemassa ["tai" ["olemassa" ["yleiset/perustiedot"
                                             "paattyen"]]
@@ -302,6 +359,40 @@
      (pvm/joda-date-timeksi)
      (pvm/suomen-aikavyohykkeeseen)
      pvm/pvm->iso-8601-pvm-aika-ei-ms)])
+
+(defn- normalisoi-hoitovuosirajaus [{:keys [hoitokauden-alkuvuosi] :as tiedot}]
+  (if hoitokauden-alkuvuosi
+    tiedot
+    (assoc tiedot :hoitovuoden-kuukausi nil)))
+
+(defn- muodosta-aikavali [hoitokauden-alkuvuosi hoitovuoden-kuukausi]
+  (when hoitokauden-alkuvuosi
+    (if hoitovuoden-kuukausi
+      (->>
+        (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi)
+        pvm/joda-timeksi
+        pvm/suomen-aikavyohykkeeseen
+        pvm/kuukauden-aikavali
+        (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/joda-date-timeksi)))
+
+      (->>
+        (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi 9)
+        pvm/paivamaaran-hoitokausi
+        (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))))
+
+(def version-alku-polku ["yleiset/versioitu" "version-voimassaolo" "alku"])
+
+(def alkaen-polku ["yleiset/perustiedot" "alkaen"])
+
+(defn- tee-alkupvm-rajaus-fallbackilla [operaattori aikaleima]
+  ["tai"
+   ["kohdeluokka" "yleiset/versioitu"
+    [operaattori version-alku-polku aikaleima]]
+   ["ja"
+    ["ei" ["kohdeluokka" "yleiset/versioitu"
+            ["olemassa" version-alku-polku]]]
+    ["kohdeluokka" "yleiset/perustiedot"
+     [operaattori alkaen-polku aikaleima]]]])
 
 (def varustetoimenpiteet-polku
   ["toimenpiteet/varustetoimenpiteet"
@@ -419,9 +510,16 @@
                                              (str/capitalize (name toimenpide)))
     (log/error "Yritettiin hakea valimaisia-varustetoimenpiteitä tuntemattomalla varustetoimenpiteellä" (name toimenpide))))
 
-(defn yhdista-valimaiset-toimenpiteet-varusteisiin [map]
-  (let [varusteet-toimenpiteilla (yleiset/liita-yhteen-mapit-ja-korvaa-avain map)]
-    varusteet-toimenpiteilla))
+(defn- tee-muutoksen-lahde-oid-parametri [oid]
+  ["kohdeluokka" "yleiset/perustiedot"
+   ["joukossa"
+    ["yleiset/perustiedot" "muutoksen-lahde-oid"]
+    [oid]]])
+
+(defn- tee-varusteen-oid-parametri [oidit]
+  ["joukossa"
+   ["yleiset/perustiedot" "oid"]
+   oidit])
 
 (defn hae-valimaiset-varuste-toimenpiteet-oideille [db oidit http-asetukset konteksti toimenpide]
   (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
@@ -440,23 +538,36 @@
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
 
-(defn hae-urakan-valimaisten-varusteiden-oidit [http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri]
-  (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
-                             :liitoshaku false
-                             :palautettavat-kentat [["yleiset/perustiedot" "oid"]]}
-                 :kohdeluokat valimaiset-kohdeluokat
+(defn hae-urakan-valimaiset-varustetoimenpiteet [db http-asetukset konteksti urakka-velho-oid alkuaika-parametri loppuaika-parametri tieosoite-parametri toimenpide]
+  (let [toimenpide-rajaus (when toimenpide (tee-valimainen-toimenpide-parametri db toimenpide))
+        payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                             :liitoshaku false}
+                 :kohdeluokat ["toimenpiteet/valimaiset-varustetoimenpiteet"]
                  :lauseke (keep identity
                             ["ja"
-                             ["kohdeluokka" "yleiset/perustiedot"
-                              ["joukossa"
-                               ["yleiset/perustiedot"
-                                "muutoksen-lahde-oid"]
-                               [urakka-velho-oid]]]
+                             (tee-muutoksen-lahde-oid-parametri urakka-velho-oid)
+                             toimenpide-rajaus
+                             tieosoite-parametri
                              alkuaika-parametri
                              loppuaika-parametri])}
         {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
         vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
     vastaus))
+
+(defn- hae-varusteet-oideilla [http-asetukset konteksti oidit kohdeluokat varustetyypit-parametri tieosoite-parametri kuntoluokat-parametri]
+  (when (seq oidit)
+    (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
+                               :liitoshaku true}
+                   :kohdeluokat (mapv (comp #(str/join "/" %) (juxt :nimiavaruus :kohdeluokka)) kohdeluokat)
+                   :lauseke (keep identity
+                              ["ja"
+                               (tee-varusteen-oid-parametri oidit)
+                               varustetyypit-parametri
+                               tieosoite-parametri
+                               kuntoluokat-parametri])}
+          {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
+          vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))]
+      vastaus)))
 
 (defn test-hae-kaikki-valimaiset-varuste-toimenpiteet [http-asetukset konteksti]
   (let [payload {:asetukset {:tyyppi "kohdeluokkahaku"
@@ -471,11 +582,13 @@
 
 
 (defn hae-urakan-varustetoteumat [{:keys [integraatioloki db asetukset]}
-                                  {:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
-                                          hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}]
+          tiedot]
   (integraatiotapahtuma/suorita-integraatio db integraatioloki "velho" "varustetoteumien-haku" nil
     (fn [konteksti]
-      (let [virheet (atom #{})
+      (let [{:keys [urakka-id kohdeluokat varustetyypit kuntoluokat tie aosa aeta losa leta
+        hoitovuoden-kuukausi hoitokauden-alkuvuosi toimenpide]}
+      (normalisoi-hoitovuosirajaus tiedot)
+      virheet (atom #{})
             {:keys [token-url
                     varuste-kayttajatunnus
                     varuste-salasana
@@ -540,39 +653,32 @@
                                                         kuntoluokat-parametri
                                                         ei-kuntoluokkaa-parametri]))
 
-                aikavali (if hoitovuoden-kuukausi
-                           (->>
-                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi)
-                             pvm/joda-timeksi
-                             pvm/suomen-aikavyohykkeeseen
-                             pvm/kuukauden-aikavali
-                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/joda-date-timeksi)))
+                aikavali (muodosta-aikavali hoitokauden-alkuvuosi hoitovuoden-kuukausi)
 
-                           (->>
-                             (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi 9)
-                             pvm/paivamaaran-hoitokausi
-                             (map (comp pvm/pvm->iso-8601-pvm-aika-ei-ms pvm/utc-aikavyohykkeeseen pvm/joda-timeksi))))
+                alkuaika-parametri (when aikavali
+                                     (tee-alkupvm-rajaus-fallbackilla "pvm-suurempi-kuin" (first aikavali)))
 
-                alkuaika-parametri ["kohdeluokka" "yleiset/versioitu"
-                                    ["pvm-suurempi-kuin"
-                                     ["yleiset/versioitu" "version-voimassaolo" "alku"]
-                                     (first aikavali)]]
+                loppuaika-parametri (when aikavali
+                                      (tee-alkupvm-rajaus-fallbackilla "pvm-pienempi-kuin" (second aikavali)))
 
-                loppuaika-parametri ["kohdeluokka" "yleiset/versioitu"
-                                     ["pvm-pienempi-kuin"
-                                      ["yleiset/versioitu" "version-voimassaolo" "alku"]
-                                      (second aikavali)]]
-
-                valimaiset-oidit  (hae-urakan-valimaisten-varusteiden-oidit
-                                    http-asetukset
-                                    konteksti
-                                    urakka-velho-oid
-                                    alkuaika-parametri
-                                    loppuaika-parametri)
-                oidit (mapv :oid valimaiset-oidit)
-                valimaiset-toimenpiteet (when-not (empty? oidit)
-                                          (hae-valimaiset-varuste-toimenpiteet-oideille db oidit http-asetukset konteksti toimenpide))
-                toimenpiteella-suodatetut-valimaiset-oidit (vec (map #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet))
+                valimaiset-toimenpiteet (hae-urakan-valimaiset-varustetoimenpiteet
+                                          db
+                                          http-asetukset
+                                          konteksti
+                                          urakka-velho-oid
+                                          alkuaika-parametri
+                                          loppuaika-parametri
+                                          tieosoite-parametri
+                                          toimenpide)
+                toimenpiteella-suodatetut-valimaiset-oidit (vec (distinct (keep #(get-in % [:ominaisuudet :toimenpiteen-kohde]) valimaiset-toimenpiteet)))
+                valimaisten-toimenpiteiden-kohdevarusteet (hae-varusteet-oideilla
+                                                            http-asetukset
+                                                            konteksti
+                                                            toimenpiteella-suodatetut-valimaiset-oidit
+                                                            kohdeluokat
+                                                            varustetyypit-parametri
+                                                            nil
+                                                            kuntoluokat-parametri)
                 varustetoimenpide-parametri (when toimenpide (tee-toimenpide-parametri db toimenpide toimenpiteella-suodatetut-valimaiset-oidit)) 
                 payload {:asetukset {:tyyppi "kohdeluokkahaku"
                                      :liitoshaku true}
@@ -593,16 +699,14 @@
                 
                 {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload)) 
                 varusteet-vastaus (:osumat (json/read-str vastaus-str :key-fn keyword))
-                varusteet-valimaisilla-toimenpiteilla (yhdista-valimaiset-toimenpiteet-varusteisiin
-                                                        {:kokoelma1 varusteet-vastaus
-                                                         :kokoelma2 valimaiset-toimenpiteet
-                                                         :yhteinen-key1 [:oid]
-                                                         :yhteinen-key2 [:ominaisuudet :toimenpiteen-kohde]
-                                                         :etsittava-avain [:ominaisuudet :toimenpide]
-                                                         :asetettava-avain :valimaiset-toimenpiteet})
+                tavalliset-varusterivit (mapv (partial varuste-velhosta->harja db) varusteet-vastaus)
+                valimaiset-toimenpiderivit (vec (muodosta-valimaiset-toimenpiderivit
+                                                 db
+                                                 valimaisten-toimenpiteiden-kohdevarusteet
+                                                 valimaiset-toimenpiteet))
                 varusteet (sort-by :alkupvm
                             #(compare %2 %1)
-                            (mapv (partial varuste-velhosta->harja db) varusteet-valimaisilla-toimenpiteilla))]
+                            (concat tavalliset-varusterivit valimaiset-toimenpiderivit))]
             {:urakka-id urakka-id :toteumat varusteet}))))))
 
 (defn hae-varusteen-historia [{:keys [integraatioloki db asetukset]}

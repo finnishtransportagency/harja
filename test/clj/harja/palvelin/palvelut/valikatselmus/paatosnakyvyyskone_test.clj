@@ -1,10 +1,13 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as kone]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]))
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -226,7 +229,7 @@
     (is (= 21 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 21 (count urakan-alkuvuosi-2023-paatokset)))
     (is (= 21 (count urakan-alkuvuosi-2024-paatokset)))
-    (is (= 19 (count urakan-alkuvuosi-2025-paatokset)))))
+    (is (= 18 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-vuodesta-test
   (let [nakyvyysvuosi-2019-paatokset (kone/mahdolliset-paatokset-nakyvyys-vuodella 2019 kone/paatostyypit)
@@ -309,4 +312,111 @@
                           luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
         _ (is (= 1 (count paatokset-bonus)))
         _ (is (= "bonus" (:tyyppi (first paatokset-bonus))))]))
+
+(deftest valmistele-lupauspaatokset-laskenta-yhdenmukaisuus-test
+  (testing "Varmistetaan, että lupausbonus/sanktio lasketaan yhteisen domain-funktion mukaisesti"
+    (let [urakkaid 36
+          indeksi "MAKU 2015"
+          valittu-hoitovuosi 2024
+          paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
+                     {:nimi "Lupaukset" :tyyppi "sanktio" :jarjestys 2}
+                     {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]
+          toteutuneet-pisteet 15
+          luvatut-pisteet 10
+          tarjous-tavoitehinta 100000M ;; 100 000 €
+          tavoitehinta 99000M
+          ;; Haetaan urakan parametrit bonus/sanktioprosenteille
+          urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          
+          ;; Lasketaan odotettu bonussumma yhteisellä funktiolla
+          yhteinen-tulos (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                           {:toteutuneet-pisteet toteutuneet-pisteet
+                            :luvatut-pisteet luvatut-pisteet
+                            :tavoitehinta tarjous-tavoitehinta
+                            :sanktioprosentti sanktioprosentti
+                            :bonusprosentti bonusprosentti})
+          odotettu-bonus (:lupausbonus yhteinen-tulos)
+          
+          ;; Valmistele lupauspaatos
+          valmistellut-paatokset (kone/valmistele-lupauspaatokset 
+                                   (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset 
+                                   toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
+          lupauspaatos (first valmistellut-paatokset)]
+      
+      (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
+      (is (= "bonus" (:tyyppi lupauspaatos)) "Päätös on bonuspäätös")
+      (is (= odotettu-bonus (:lupausbonus lupauspaatos))
+          "Lupausbonus vastaa yhteistä laskentaa"))))
+
+(deftest valmistele-lupauspaatokset-sanktio-laskenta-yhdenmukaisuus-test
+  (testing "Varmistetaan, että lupaussanktio lasketaan yhteisen domain-funktion mukaisesti"
+    (let [urakkaid 36
+          indeksi "MAKU 2015"
+          valittu-hoitovuosi 2024
+          paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
+                     {:nimi "Lupaukset" :tyyppi "sanktio" :jarjestys 2}
+                     {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]
+          toteutuneet-pisteet 10
+          luvatut-pisteet 15
+          tarjous-tavoitehinta 100000M ;; 100 000 €
+          tavoitehinta 99000M
+          ;; Haetaan urakan parametrit bonus/sanktioprosenteille
+          urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          
+          ;; Lasketaan odotettu sanktiosumma yhteisellä funktiolla
+          yhteinen-tulos (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                           {:toteutuneet-pisteet toteutuneet-pisteet
+                            :luvatut-pisteet luvatut-pisteet
+                            :tavoitehinta tarjous-tavoitehinta
+                            :sanktioprosentti sanktioprosentti
+                            :bonusprosentti bonusprosentti})
+          odotettu-sanktio (:lupaussanktio yhteinen-tulos)
+          
+          ;; Valmistele lupauspaatos
+          valmistellut-paatokset (kone/valmistele-lupauspaatokset 
+                                   (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset 
+                                   toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
+          lupauspaatos (first valmistellut-paatokset)]
+      
+      (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
+      (is (= "sanktio" (:tyyppi lupauspaatos)) "Päätös on sanktioon johtava päätös")
+      (is (= odotettu-sanktio (:lupaussanktio lupauspaatos)) 
+          "Lupaussanktio vastaa yhteistä laskentaa"))))
+
+
+(deftest valmistele-lupauspaatokset-puuttuvat-prosentit-test
+  (testing "Varmistetaan, että puuttuvilla bonus/sanktioprosenteilla palautetaan virheellinen Lupaukset-päätös"
+    (let [urakkaid 36
+          indeksi "MAKU 2015"
+          valittu-hoitovuosi 2024
+          paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}
+                     {:nimi "Lupaukset" :tyyppi "sanktio" :jarjestys 2}
+                     {:nimi "Lupaukset" :tyyppi "taytetty" :jarjestys 3}]
+          toteutuneet-pisteet 15
+          luvatut-pisteet 10
+          tarjous-tavoitehinta 100000M
+          tavoitehinta 99000M]
+      
+      ;; Stubataan urakan parametrit niin että bonus- ja sanktioprosentit puuttuvat (nil)
+      (with-redefs [urakat-kyselyt/hae-urakan-parametrit 
+                    (fn [db params] 
+                      [{:lupauspaatoksen_bonusprosentti nil
+                        :lupauspaatoksen_sanktioprosentti nil}])]
+        (let [valmistellut-paatokset (kone/valmistele-lupauspaatokset 
+                                       (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset 
+                                       toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi)
+              lupauspaatos (first valmistellut-paatokset)]
+          
+          (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
+          (is (= "Lupaukset" (:nimi lupauspaatos)) "Päätöksen nimi on Lupaukset")
+          (is (some? (:virhe lupauspaatos)) "Päätöksessä on virhe")
+          (is (str/includes? (:virhe lupauspaatos) "prosentit") 
+              "Virheviesti mainitsee puuttuvat prosentit")
+          ;; Varmistetaan että päätös EI ole taytetty-tyyppinen (vanha bugi)
+          (is (not= "taytetty" (:tyyppi lupauspaatos)) 
+              "Päätös ei saa olla taytetty-tyyppinen kun prosentit puuttuvat"))))))
 

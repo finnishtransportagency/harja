@@ -30,24 +30,27 @@ on:
         type: string
         required: true
 
-run-name: "Tools: Build & deploy GHA dockerfile '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
+run-name: "Tools: Build & deploy GHA docker image '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
 
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
-  build-and-push-dockerfile:
+  build-and-push-docker-image:
+    name: "Build and push Docker-image"
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages write lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden päivitykseen
-      packages: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: write # Tarvitaan Docker imageiden päivitykseen GH Container Registryyn
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -80,11 +83,11 @@ jobs:
         # Ota QEMU ja Buildx käyttöön multi-arch buildeja varten
         # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU (For multi-arch buils)
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
       - name: Log in to the Container registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -100,7 +103,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_harjadb}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_harjadb
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         if: ${{ inputs.dockerfile == 'harja_harjadb' }}
         env:
           TAGS: ${{ steps.tietokanta-tags.outputs.tags }}
@@ -149,7 +152,7 @@ jobs:
         run: echo "value=$(node -pe 'require("./package").devDependencies.cypress')" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_cypress
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         if: ${{ inputs.dockerfile == 'harja_cypress' }}
         env:
           CYPRESS_VERSION: ${{ steps.cypress-version.outputs.value }}
@@ -204,7 +207,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_activemq_artemis}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_activemq_artemis
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         if: ${{ inputs.dockerfile == 'harja_activemq_artemis' }}
         env:
           TAGS: ${{ steps.activemq-artemis-tags.outputs.tags }}
@@ -246,7 +249,7 @@ jobs:
         run: echo "tags=${TAGS//<image>/finnishtransportagency\/harja_activemq}" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_activemq
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         if: ${{ inputs.dockerfile == 'harja_activemq' }}
         env:
           TAGS: ${{ steps.activemq-tags.outputs.tags }}

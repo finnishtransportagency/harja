@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+
+# Huom: Tämä skripti vaatii bashin.
+# Jos käyttäjä ajaa sen vahingossa sh:lla, bash-spesifi syntaksi (esim. process substitution) kaatuu epäselvästi.
+# Tarkistus on tarkoituksella POSIX-yhteensopiva, jotta se toimii myös /bin/sh:lla.
+if [ -z "${BASH_VERSION-}" ]; then
+    echo "❌ Tämä skripti vaatii bashin (sitä ei voi ajaa sh:lla)." >&2
+    echo "   Käytä joko: bash sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]" >&2
+    echo "   tai:        ./sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]" >&2
+    exit 2
+fi
+
 set -euo pipefail
 
 #═══════════════════════════════════════════════════════════════════════════════
@@ -9,11 +20,14 @@ set -euo pipefail
 # useiden haarojen samanaikaisen kehityksen omissa hakemistoissaan.
 #
 # KÄYTTÖ:
-#   sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]
+#   bash sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]
+#   ./sh/git-worktree/luo-uusi-worktree.sh <haara-nimi> [portti]
 #
 # ESIMERKIT:
-#   sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus
-#   sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus 3005
+#   bash sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus
+#   bash sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus 3005
+#   ./sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus
+#   ./sh/git-worktree/luo-uusi-worktree.sh HAR-1234-uusi-ominaisuus 3005
 #
 # MITÄ SKRIPTI TEKEE:
 #   1. Luo uuden git worktreen annetulle haaralle
@@ -108,6 +122,22 @@ etsi_vapaa_tietokanta_portti() {
     return 1
 }
 
+etsi_vapaa_backend_nrepl_portti() {
+    # Oletus nREPL-portti on 4005 (profiles.clj). Worktree-ajossa tarvitaan vapaa portti.
+    local alku_portti=4006
+    local loppu_portti=4099
+
+    for portti in $(seq $alku_portti $loppu_portti); do
+        if ! lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo "$portti"
+            return 0
+        fi
+    done
+
+    echo ""
+    return 1
+}
+
 tukeeko_dynaamista_porttia() {
     local worktree_kansio="$1"
 
@@ -135,6 +165,39 @@ tukeeko_dynaamista_frontend_repl_porttia() {
 portti_varattu() {
     local portti="$1"
     lsof -Pi :"$portti" -sTCP:LISTEN -t >/dev/null 2>&1
+}
+
+paivita_worktree_profiles_nrepl_portti() {
+    local worktree_kansio="$1"
+    local profiles_polku="$worktree_kansio/profiles.clj"
+
+    if [ ! -f "$profiles_polku" ]; then
+        return 0
+    fi
+
+    # Jos worktree-haarassa on jo tuki env-portille, älä koske.
+    if grep -q 'System/getenv "HARJA_NREPL_PORTTI"' "$profiles_polku" 2>/dev/null; then
+        return 0
+    fi
+
+    # Vain jos löytyy kiinteä 4005-linja (yleinen konfliktin syy, kun päärepo kuuntelee 4005:ssä).
+    if grep -qE '^[[:space:]]*:port[[:space:]]+4005[[:space:]]*$' "$profiles_polku" 2>/dev/null; then
+        local tmp
+        tmp="$(mktemp)"
+
+        sed -E 's|^([[:space:]]*):port[[:space:]]+4005[[:space:]]*$|\1:port #=(eval (let [p (System/getenv "HARJA_NREPL_PORTTI")] (if (and p (re-matches #"[0-9]+" p)) (Integer/parseInt p) 4005)))|' \
+            "$profiles_polku" > "$tmp"
+
+        mv "$tmp" "$profiles_polku"
+            if grep -q 'System/getenv "HARJA_NREPL_PORTTI"' "$profiles_polku" 2>/dev/null; then
+                echo -e "${VIHREA}✓ Päivitettiin profiles.clj: nREPL-portti tukee HARJA_NREPL_PORTTI${EI_VARIA}"
+                return 0
+            fi
+    fi
+
+        echo -e "${PUNAINEN}❌ Worktree-haaran profiles.clj ei tue HARJA_NREPL_PORTTI-asetusta eikä sitä voitu päivittää turvallisesti.${EI_VARIA}"
+        echo -e "${KELTAINEN}   Päivitä haaraan profiles.clj-muutos tai muuta nREPL-portin määritys käsin ennen käynnistystä.${EI_VARIA}"
+        return 1
 }
 
 # Funktio kysymään tietokannan uudelleenkäynnistyksestä
@@ -284,6 +347,15 @@ fi
 echo -e "${SININEN}📁 Luodaan worktree...${EI_VARIA}"
 git worktree add "${WORKTREE_KANSIO}" "${HAARAN_NIMI}"
 
+# Varmista että worktree tukee nREPL-portin yliajoa (muuten se yrittää usein porttia 4005 ja törmää pääinstanssiin).
+if ! paivita_worktree_profiles_nrepl_portti "$WORKTREE_KANSIO"; then
+    echo ""
+    echo -e "${KELTAINEN}Worktree jätetään paikoilleen käsin korjattavaksi:${EI_VARIA}"
+    echo -e "${KELTAINEN}   $WORKTREE_KANSIO/profiles.clj${EI_VARIA}"
+    echo -e "${KELTAINEN}Lisää tiedostoon HARJA_NREPL_PORTTI-tuki tai muuta :port-määritys käsin ennen käynnistystä.${EI_VARIA}"
+    exit 1
+fi
+
 # Jos porttia ei ole vielä määritetty, tarkista tukeeko worktree-branch dynaamisia portteja
 if [ -z "$HTTP_PORTTI" ]; then
     if tukeeko_dynaamista_porttia "$WORKTREE_KANSIO"; then
@@ -367,10 +439,23 @@ echo -e "${VIHREA}✓ Löydettiin vapaa tietokantaportti: $TIETOKANTA_PORTTI${EI
 echo -e "${VIHREA}✓ Tietokanta-kontin nimi: $POSTGRESQL_NAME${EI_VARIA}"
 echo ""
 
+echo -e "${SININEN}Etsitään vapaata backend nREPL -porttia rangesta 4006-4099...${EI_VARIA}"
+BACKEND_NREPL_PORTTI=$(etsi_vapaa_backend_nrepl_portti)
+if [ -z "$BACKEND_NREPL_PORTTI" ]; then
+    echo -e "${PUNAINEN}❌ Ei vapaita backend nREPL -portteja rangesta 4006-4099!${EI_VARIA}"
+    echo -e "${KELTAINEN}Sulje joitain lein repl -instansseja tai aseta HARJA_NREPL_PORTTI käsin.${EI_VARIA}"
+    cd "$PROJEKTIN_JUURI"
+    git worktree remove "$WORKTREE_KANSIO" --force
+    exit 1
+fi
+echo -e "${VIHREA}✓ Löydettiin vapaa backend nREPL -portti: $BACKEND_NREPL_PORTTI${EI_VARIA}"
+echo ""
+
 echo -e "${KELTAINEN}HTTP-portti:${EI_VARIA}    $HTTP_PORTTI"
 echo -e "${KELTAINEN}Frontend REPL-portti:${EI_VARIA} $FRONTEND_REPL_PORTTI"
 echo -e "${KELTAINEN}Tietokanta-portti:${EI_VARIA} $TIETOKANTA_PORTTI"
 echo -e "${KELTAINEN}Tietokanta-kontti:${EI_VARIA} $POSTGRESQL_NAME"
+echo -e "${KELTAINEN}Backend nREPL-portti:${EI_VARIA} $BACKEND_NREPL_PORTTI"
 echo ""
 
 # Asenna npm-riippuvuudet
@@ -475,6 +560,7 @@ WORKTREE_KANSIO="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 export HARJA_HTTP_PORTTI=$HTTP_PORTTI
 export HARJA_ENV_HARJA_URL="localhost:$HTTP_PORTTI"
 export FRONTEND_REPL_PORT=$FRONTEND_REPL_PORTTI
+export HARJA_NREPL_PORTTI=$BACKEND_NREPL_PORTTI
 
 clean() {
     set +e
@@ -518,6 +604,7 @@ echo "   Backend-portti: \$HARJA_HTTP_PORTTI"
 echo "   Backend URL: http://localhost:\$HARJA_HTTP_PORTTI"
 echo "   Frontend (Figwheel) portti: \$FRONTEND_REPL_PORT"
 echo "   Frontend (Figwheel) URL: http://localhost:\$FRONTEND_REPL_PORT"
+echo "   Backend nREPL portti: \$HARJA_NREPL_PORTTI"
 echo "   Tietokanta portti: \$HARJA_TIETOKANTA_PORTTI"
 echo "   Tietokanta kontti: \$POSTGRESQL_NAME"
 echo ""
@@ -577,7 +664,10 @@ timeout=180
 elapsed=0
 while [ \$elapsed -lt \$timeout ]; do
     if grep -q "nREPL server started" "\$WORKTREE_KANSIO/backend.log" 2>/dev/null; then
-        NREPL_PORT=\$(grep "nREPL server started" "\$WORKTREE_KANSIO/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+')
+        NREPL_PORT=\$(grep "nREPL server started" "\$WORKTREE_KANSIO/backend.log" | grep -oE 'port [0-9]+' | grep -oE '[0-9]+' || true)
+        if [ -z "\${NREPL_PORT:-}" ]; then
+            NREPL_PORT="\$HARJA_NREPL_PORTTI"
+        fi
         echo "✅ Backend käynnistyi!"
         echo "   nREPL portti: \$NREPL_PORT"
         echo "   Yhdistä editorilla porttiin: \$NREPL_PORT"

@@ -525,7 +525,8 @@
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
                                         :teksti "Valitse tarkastus"}})
-                         (nav/vaihda-kartan-koko! :M))
+                         (nav/vaihda-kartan-koko! :M)
+                         (kartta-tiedot/piilota-infopaneeli!))
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (reset! tarkastukset-kartalla/karttataso-tarkastukset false)

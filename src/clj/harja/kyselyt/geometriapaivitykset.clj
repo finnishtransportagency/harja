@@ -11,7 +11,7 @@
 (defqueries "harja/kyselyt/geometriapaivitykset.sql"
             {:positional? true})
 
-(declare hae-paivitys paivita-viimeisin-paivitys)
+(declare hae-paivitys paivita-viimeisin-paivitys paivita-viimeisin-lahde! hae-karttapvm)
 
 (defn pitaako-paivittaa? [db paivitystunnus]
       (let [aineisto (geometria-aineistot/hae-voimassaoleva-geometria-aineisto db paivitystunnus)
