@@ -54,6 +54,12 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
 
         // Tallenna jotain kipailutettaviin hankintoihin
         muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 10);
+        // Tallenna jotain erillishankintoihin
+        muokkaaTarjousRiviaArvo('tarjous-erillishankinnat-grid', 'Erillishankinnat', 0, 20);
+        // Tallenna jotain erillishankintoihin
+        muokkaaTarjousRiviaArvo('tarjous-toimenkuvat-grid', 'Vastuunalainen työnjohtaja', 0, 30);
+        // Tallenna jotain erillishankintoihin
+        muokkaaTarjousRiviaArvo('tarjous-hoidonjohtopalkkio-grid', 'Hoidonjohtopalkkio', 0, 40);
         // Tallenna muutokset
         cy.contains('button', 'Tallenna muutokset').click();
 
@@ -199,8 +205,8 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.get('[data-cy=tabs-taso1-Muutokset]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
-        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span')
-            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function (text1) {
+        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')
+            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().next().then(function (text1) {
             const trimmattuTodellinen = trimmaaArvo(text1);
             const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
             expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);

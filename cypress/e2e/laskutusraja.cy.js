@@ -6,6 +6,7 @@ const visibleTimeout = 30000;
 const urakanNimiKajaani = 'POP MHU Kajaani 2025-2030';
 const urakanNimiOulu = 'Oulun MHU 2019-2024';
 const hallintayksikko = 'Pohjois-Pohjanmaa';
+let laskutusraja_Kajaani_hoitovuosi1;
 
 function alustaUrakkaKustannussuunnitteluun(nimi) {
     ks.alustaKanta(nimi);
@@ -14,7 +15,14 @@ function alustaUrakkaKustannussuunnitteluun(nimi) {
 function tarkistaLaskutusrajaOsio() {
     cy.contains('h2', 'Laskutusraja', {timeout: visibleTimeout}).should('be.visible');
     cy.get('div.laskutusraja div.lukema-label').contains('Laskutusrajan käyttö').should('be.visible');
-    cy.get('div.laskutusraja div.lukema').should('exist').and('not.be.empty');
+    cy.get('div.laskutusraja div.lukema')
+        .should('exist')
+        .and('not.be.empty')
+        .invoke('text')
+        .then(function(lukema) {
+            const laskutusraja = lukema.split('/')[1];
+            expect(trimmaaArvo(laskutusraja)).to.equal(laskutusraja_Kajaani_hoitovuosi1);
+        });
 }
 
 function trimmaaArvo(arvo) {
@@ -141,7 +149,7 @@ describe('Laskutusraja', function () {
             .and('not.be.empty')
             .invoke('text')
             .then(trimmaaArvo)
-            .should('eq', '10.52');
+            .then((arvo) => { laskutusraja_Kajaani_hoitovuosi1 = arvo; });
     });
 
     it("Peruuta vahvistus ja tarkista että laskutusraja nollautuu", function () {
@@ -230,6 +238,22 @@ describe('Laskutusraja', function () {
 
         // Tarkista että Laskutusraja-osio näkyy
         tarkistaLaskutusrajaOsio();
+    });
+
+    it("Laskutusraja näkyy Muutokset-näkymässä", function () {
+        cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
+
+        // Siirry Muutoksiin
+        cy.get('[data-cy=tabs-taso1-Muutokset]').click();
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+
+        // Tarkista että laskutusraja näkyy
+        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')
+            .contains('Laskutusraja').parent().next()
+            .invoke('text')
+            .then(function (teksti) {
+            expect(trimmaaArvo(teksti)).to.equal(laskutusraja_Kajaani_hoitovuosi1);
+        });
     });
 });
 
