@@ -15,7 +15,24 @@
   paivita-yllapitokohteen-paallystysaikataulu! luo-yllapitokohteelle-tyhja-aikataulu<!
   paivita-yllapitokohde<! luo-yllapitokohde<! hae-urakan-tyyppi
   paivita-yllapitokohteen-korjausluokat-ja-yllapitoluokat paivita-yllapitokohteen-kohdeosien-sijainnit!
-  hae-ilman-sijaintia-olevat-yllapitokohdeosat)
+  hae-ilman-sijaintia-olevat-yllapitokohdeosat luo-yllapitokohteelle-tyhja-kustannustaulu<! luo-yllapitokohdeosa<!
+  poista-yllapitokohdeosa! paallystyskohteen-saa-poistaa
+  hae-urakan-yllapitokohteiden-yllapitokohdeosat-alueelle hae-urakan-yllapitokohteiden-yllapitokohdeosat
+  hae-yllapitokohteen-suorittava-tiemerkintaurakka-id hae-yllapitokohteen-urakka-id hae-paikkauskohteen-urakka-id
+  yllapitokohde-sisaltaa-kirjauksia-urakassa hae-yllapitokohteen-tiemerkintaaikataulu
+  yllapitokohteen-saa-poistaa hae-urakan-sopimuksen-yllapitokohteet yllapitokohteet-joille-linkityksia
+  hae-yllapitokohteiden-aikataulun-muokkaus-aika paivita-paallystys-tai-paikkausurakan-geometria
+  tallenna-tiemerkintakohteen-aikataulu! tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
+  poista-valmistuneen-tiemerkinnan-sahkopostitiedot! tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
+  hae-tiemerkintaurakan-aikataulu hae-paallystysurakan-aikataulu hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
+  hae-urakan-yllapitokohteet-lomakkeelle hae-urakan-yllapitokohteen-yllapitokohdeosat
+  hae-tiemerkinnan-suorittavat-urakat hae-kohteen-merkinta-ja-jyrsintatiedot merkitse-kohde-valmiiksi-tiemerkintaan<!
+  tallenna-paallystyskohteen-aikataulu! tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
+  tallenna-yllapitokohteen-kustannukset-yhaid! onko-olemassa-urakalla? hae-urakkaan-liittyvat-tiemerkintakohteet
+  hae-urakkaan-kuuluvat-yllapitokohteet paivita-yllapitokohteen-tiemerkintaaikataulu!
+  paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<! hae-kaikki-urakan-yllapitokohteet
+  hae-paikkauskohteen-paikkaukset-alueelle hae-paikkauskohteen-paikkaukset
+  hae-yllapitokohteiden-tiedot-sahkopostilahetykseen)
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
