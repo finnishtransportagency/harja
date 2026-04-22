@@ -73,7 +73,7 @@ jobs:
           persist-credentials: false
 
       - name: Get latest successful build
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: latest-successful-build
         with:
           retries: 3
@@ -98,7 +98,7 @@ jobs:
       # Yrittää löytää viimeisimmän onnistuneen deploymentin kohdeympäristöön.
       # Palauttaa tyhjän ouputin, jos deploymenttia ei löydy, mutta ei merkitse steppiä epäonnistuneeksi.
       - name: Get latest GitHub deployment by latest successful build commit SHA
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: latest-deployment
         env:
           ## Scriptin käyttämät ympäristömuuttujat ##
@@ -219,7 +219,7 @@ jobs:
           persist-credentials: false
 
       - name: Replace latest deployment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           DEPLOYMENT_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
           DEPLOYMENT_REF: ${{ needs.get-latest-successful-build.outputs.commit-sha }}
