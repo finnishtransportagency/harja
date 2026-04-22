@@ -30,6 +30,8 @@
   urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
+  urakat-laadunseuranta-tarkastukset
+  urakat-laadunseuranta-laatupoikkeamat
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
   urakat-kohdeluettelo-paallystyskohteet
@@ -40,6 +42,7 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-tyomaapaivakirja
+  urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
   urakat-yleiset
