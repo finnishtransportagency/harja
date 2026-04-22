@@ -102,6 +102,11 @@ SELECT sp.id                    AS profiili_id,
        sl.jarjestys             AS laji_jarjestys,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,
+       spr.voi_puolittaa_omailmoituksella AS profiilirivi_voi_puolittaa_omailmoituksella,
+       COALESCE((SELECT ARRAY_AGG(sprls.summa_euroina ORDER BY sprls.jarjestys)
+                   FROM sanktio_profiili_rivi_lukittu_summa sprls
+                  WHERE sprls.sanktio_profiili_rivi_id = spr.id),
+                ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
        st.koodi                 AS sanktiotyyppi_koodi,
        st.nimi                  AS sanktiotyyppi_nimi,
@@ -138,6 +143,11 @@ SELECT sp.id                    AS profiili_id,
        sl.jarjestys             AS laji_jarjestys,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,
+       spr.voi_puolittaa_omailmoituksella AS profiilirivi_voi_puolittaa_omailmoituksella,
+       COALESCE((SELECT ARRAY_AGG(sprls.summa_euroina ORDER BY sprls.jarjestys)
+                   FROM sanktio_profiili_rivi_lukittu_summa sprls
+                  WHERE sprls.sanktio_profiili_rivi_id = spr.id),
+                ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
        st.koodi                 AS sanktiotyyppi_koodi,
        st.nimi                  AS sanktiotyyppi_nimi,

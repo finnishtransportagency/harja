@@ -18,6 +18,12 @@
 	(sanktio-domain/rivin-tyyppi {:laji laji
 																:bonus? (boolean (sanktio-domain/bonuslaji->teksti laji))}))
 
+(defn- muodosta-sanktiotyyppi-dto
+	[{:keys [sanktiotyyppi profiilirivi]}]
+	(assoc sanktiotyyppi
+		:voi-puolittaa-omailmoituksella (boolean (:voi-puolittaa-omailmoituksella profiilirivi))
+		:lukitut-summat (vec (:lukitut-summat profiilirivi))))
+
 (defn- muodosta-sanktio-laji
 	[rivit]
 	(let [eka-rivi (first rivit)
@@ -27,7 +33,7 @@
 		 :nimi (get-in eka-rivi [:laji :nimi])
 		 :jarjestys (get-in eka-rivi [:laji :jarjestys])
 		 :rivin-tyyppi (laji->rivin-tyyppi laji)
-		 :sanktiotyypit (mapv :sanktiotyyppi rivit)}))
+		 :sanktiotyypit (mapv muodosta-sanktiotyyppi-dto rivit)}))
 
 (defn- muodosta-sanktio-lajit
 	[rivit]
@@ -46,8 +52,10 @@
 			(mapv (fn [{:keys [soveltuvuuskonteksti sanktiotyyppi] :as rivi}]
 					{:id (get-in rivi [:profiilirivi :id])
 					 :jarjestys (get-in rivi [:profiilirivi :jarjestys])
+					 :voi-puolittaa-omailmoituksella (boolean (get-in rivi [:profiilirivi :voi-puolittaa-omailmoituksella]))
+					 :lukitut-summat (vec (get-in rivi [:profiilirivi :lukitut-summat]))
 					 :soveltuvuuskonteksti soveltuvuuskonteksti
-					 :sanktiotyyppi sanktiotyyppi}))))
+					 :sanktiotyyppi (muodosta-sanktiotyyppi-dto rivi)}))))
 
 (defn- muodosta-sanktio-laji-admin
 	[rivit]
@@ -146,9 +154,8 @@
 
 	rivit)
 
-(defn hae-urakan-sanktio-konfiguraatio
-	[db user {:keys [urakka-id hoitovuosi soveltuvuuskonteksti]}]
-	(oikeudet/vaadi-lukuoikeus @urakat-laadunseuranta-sanktiot-oikeus user urakka-id)
+(defn- hae-sanktio-profiilin-rivit-kontekstissa
+	[db {:keys [urakka-id hoitovuosi soveltuvuuskonteksti]}]
 	(let [soveltuvuuskonteksti (vaadi-kelvollinen-soveltuvuuskonteksti soveltuvuuskonteksti)
 				profiili (vaadi-yksiselitteinen-sanktio-profiili
 						 (q/hae-urakan-sanktio-profiilit
@@ -159,10 +166,48 @@
 						  :hoitovuosi hoitovuosi
 						  :soveltuvuuskonteksti soveltuvuuskonteksti})
 				rivit (->> (q/hae-sanktio-profiilin-rivit
+							 db
+							 {:sanktio_profiili_id (:id profiili)
+							  :soveltuvuuskonteksti (name soveltuvuuskonteksti)})
+						 (vaadi-profiililla-rivit profiili soveltuvuuskonteksti))]
+		{:profiili profiili
+		 :soveltuvuuskonteksti soveltuvuuskonteksti
+		 :rivit rivit}))
+
+(defn vaadi-sallittu-sanktiokonfiguraatiorivi
+	[db {:keys [urakka-id hoitovuosi soveltuvuuskonteksti laji sanktiotyyppi-id]}]
+	(let [{:keys [rivit]} (hae-sanktio-profiilin-rivit-kontekstissa
 								 db
-								 {:sanktio_profiili_id (:id profiili)
-								  :soveltuvuuskonteksti (name soveltuvuuskonteksti)})
-						(vaadi-profiililla-rivit profiili soveltuvuuskonteksti))]
+								 {:urakka-id urakka-id
+								  :hoitovuosi hoitovuosi
+								  :soveltuvuuskonteksti soveltuvuuskonteksti})
+				lajin-rivit (filterv #(= laji (get-in % [:laji :koodi])) rivit)
+				sentinel-rivi (first (filter #(= 0 (get-in % [:sanktiotyyppi :koodi])) lajin-rivit))]
+		(cond
+			(empty? lajin-rivit)
+			(throw (IllegalArgumentException.
+					 (str "Sanktiolaji " (name laji) " ei ole sallittu urakan sanktio-konfiguraatiossa.")))
+
+			(nil? sanktiotyyppi-id)
+			(if (and sentinel-rivi (= 1 (count lajin-rivit)))
+				sentinel-rivi
+				(throw (IllegalArgumentException.
+						 (str "Sanktiotyyppi puuttuu lajille " (name laji) "."))))
+
+			:else
+			(or (some #(when (= sanktiotyyppi-id (get-in % [:sanktiotyyppi :id])) %) lajin-rivit)
+					(throw (IllegalArgumentException.
+							 (str "Sanktiolaji: " (name laji)
+									" ei mahdollinen sanktiotyypille id: " sanktiotyyppi-id)))))))
+
+(defn hae-urakan-sanktio-konfiguraatio
+	[db user {:keys [urakka-id hoitovuosi soveltuvuuskonteksti]}]
+	(oikeudet/vaadi-lukuoikeus @urakat-laadunseuranta-sanktiot-oikeus user urakka-id)
+	(let [{:keys [profiili rivit soveltuvuuskonteksti]} (hae-sanktio-profiilin-rivit-kontekstissa
+															 db
+															 {:urakka-id urakka-id
+															  :hoitovuosi hoitovuosi
+															  :soveltuvuuskonteksti soveltuvuuskonteksti})]
 		{:profiili profiili
 		 :soveltuvuuskonteksti soveltuvuuskonteksti
 		 :sanktio-lajit (muodosta-sanktio-lajit rivit)}))

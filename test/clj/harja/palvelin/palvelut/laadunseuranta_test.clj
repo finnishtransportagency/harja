@@ -1015,3 +1015,254 @@
             :hae-sanktio-profiilin-detalji-admin
             +kayttaja-ulle+
             {:sanktio-profiili-id profiili-id})))))
+
+(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-rivin-metadatan
+  (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
+        sentinel-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
+                          {:nimi "admin-rivimetadata-testi"
+                           :urakkatyyppi "teiden-hoito"
+                           :hoitovuosi_alku 30
+                           :hoitovuosi_loppu 30
+                           :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
+                           :loppupvm nil
+                           :aktiivinen true
+                           :luoja integraatio-id
+                           :muokkaaja integraatio-id})
+                        first
+                        :id)
+        profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
+                             {:sanktio_profiili_id profiili-id
+                              :sanktio_laji_id laji-id
+                              :sanktiotyyppi_id sentinel-tyyppi-id
+                              :soveltuvuuskonteksti "laatupoikkeama"
+                              :jarjestys 1
+                              :aktiivinen true
+                              :voi_puolittaa_omailmoituksella true
+                              :luoja integraatio-id
+                              :muokkaaja integraatio-id})
+                           first
+                           :id)]
+    (try
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :summa_euroina 6000M
+         :jarjestys 1
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :summa_euroina 12000M
+         :jarjestys 2
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+                      (:db jarjestelma)
+                      +kayttaja-jvh+
+                      {:sanktio-profiili-id profiili-id})
+            rivi (-> vastaus :sisalto first :lajit first :rivit first)]
+        (is (= true (:voi-puolittaa-omailmoituksella rivi))
+          "Admin-detaljin pitää näyttää profiilirivin 50 % -sääntö")
+        (is (= [6000M 12000M] (:lukitut-summat rivi))
+          "Admin-detaljin pitää näyttää profiiliriviin kytketyt lukitut summat"))
+      (finally
+        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
+
+(deftest hae-urakan-sanktio-konfiguraatio-palauttaa-rivin-metadatan
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
+        sentinel-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
+                          {:nimi "konfiguraatio-rivimetadata-testi"
+                           :urakkatyyppi "teiden-hoito"
+                           :hoitovuosi_alku 30
+                           :hoitovuosi_loppu 30
+                           :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
+                           :loppupvm nil
+                           :aktiivinen true
+                           :luoja integraatio-id
+                           :muokkaaja integraatio-id})
+                        first
+                        :id)
+        profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
+                             {:sanktio_profiili_id profiili-id
+                              :sanktio_laji_id laji-id
+                              :sanktiotyyppi_id sentinel-tyyppi-id
+                              :soveltuvuuskonteksti "laatupoikkeama"
+                              :jarjestys 1
+                              :aktiivinen true
+                              :voi_puolittaa_omailmoituksella true
+                              :luoja integraatio-id
+                              :muokkaaja integraatio-id})
+                           first
+                           :id)]
+    (try
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :summa_euroina 6000M
+         :jarjestys 1
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :summa_euroina 12000M
+         :jarjestys 2
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (let [vastaus (ls/hae-urakan-sanktio-konfiguraatio
+                      (:db jarjestelma)
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :hoitovuosi 30
+                       :soveltuvuuskonteksti :laatupoikkeama})
+            sanktiotyyppi (-> vastaus :sanktio-lajit first :sanktiotyypit first)]
+        (is (= true (:voi-puolittaa-omailmoituksella sanktiotyyppi))
+          "Konfiguraatiohaun pitää palauttaa profiilirivin 50 % -metadata sanktiotyypin yhteydessä")
+        (is (= [6000M 12000M] (:lukitut-summat sanktiotyyppi))
+          "Konfiguraatiohaun pitää palauttaa profiiliriviin sidotut lukitut summat sanktiotyypin yhteydessä"))
+      (finally
+        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
+
+(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-seedatun-mhu2026-metadatan
+  (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
+        vastaus (when profiili-id
+                  (ls/hae-sanktio-profiilin-detalji-admin
+                    (:db jarjestelma)
+                    +kayttaja-jvh+
+                    {:sanktio-profiili-id profiili-id}))
+        kaikki-rivit (mapcat :rivit (mapcat :lajit (:sisalto vastaus)))
+        metadataa-sisaltavat-rivit (filter #(or (:voi-puolittaa-omailmoituksella %)
+                                               (seq (:lukitut-summat %)))
+                                         kaikki-rivit)]
+    (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa admin-testausta varten")
+    (is (seq metadataa-sisaltavat-rivit)
+      "Seedatusta MHU2026-profiilista pitää löytyä ainakin yksi rivi, jossa uusi metadata näkyy admin-näkymässä")))
+
+(deftest tallenna-suorasanktio-kayttaa-sentinel-tyyppia-kun-profiili-sallii-sen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
+        sentinel-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        tpi-id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
+                          {:nimi "write-path-sentinel-testi"
+                           :urakkatyyppi "teiden-hoito"
+                           :hoitovuosi_alku 30
+                           :hoitovuosi_loppu 30
+                           :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
+                           :loppupvm nil
+                           :aktiivinen true
+                           :luoja integraatio-id
+                           :muokkaaja integraatio-id})
+                        first
+                        :id)
+        perustelu "HARJA-2294 sentinel write-path"
+        perintapvm (pvm/->pvm-aika "2.10.2050 22:00:00")
+        hk-alkupvm (pvm/->pvm "1.10.2050")
+        hk-loppupvm (pvm/->pvm "30.9.2051")]
+    (try
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
+        {:sanktio_profiili_id profiili-id
+         :sanktio_laji_id laji-id
+         :sanktiotyyppi_id sentinel-tyyppi-id
+         :soveltuvuuskonteksti "laatupoikkeama"
+         :jarjestys 1
+         :aktiivinen true
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+
+                         {:suorasanktio true
+                          :laji :A
+                          :summa 777
+                          :indeksi "MAKU 2015"
+                          :toimenpideinstanssi tpi-id
+                          :perintapvm perintapvm}
+                         {:tekijanimi "Max Power"
+                          :paatos {:paatos "sanktio"
+                                   :kasittelyaika (pvm/->pvm-aika "2.10.2050 22:00:00")
+                                   :kasittelytapa :kommentit
+                                   :perustelu perustelu}
+                          :aika (pvm/->pvm-aika "1.10.2050 08:00:00")
+                          :urakka urakka-id}
+                         hk-alkupvm
+                         hk-loppupvm)
+            tallennettu (first (q-map (format "SELECT st.koodi AS sanktiotyyppi_koodi FROM sanktio s JOIN sanktiotyyppi st ON st.id = s.tyyppi WHERE s.id = %s" sanktio-id)))]
+        (is (= 0 (:sanktiotyyppi_koodi tallennettu))
+          "Kun profiili sallii vain sentinel-tyypin, tallennuksen pitää käyttää koodia 0 eikä legacy-oletustyyppiä"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)
+        (u (format "DELETE FROM sanktio_profiili_rivi WHERE sanktio_profiili_id = %s" profiili-id))
+        (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
+
+(deftest tallenna-suorasanktio-epaonnistuu-kun-tyyppi-puuttuu-ja-profiili-vaatii-sen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
+  olemassa-oleva-mhu2026-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+  luotu-mhu2026-tyyppi-id (when-not olemassa-oleva-mhu2026-tyyppi-id
+         (:id (first (jdbc/insert! (:db jarjestelma) :sanktiotyyppi
+                 {:nimi "Talvihoito Ise/Is/L"
+            :toimenpidekoodi 618
+            :koodi 18
+            :poistettu false}))))
+  mhu2026-tyyppi-id (or olemassa-oleva-mhu2026-tyyppi-id luotu-mhu2026-tyyppi-id)
+        tpi-id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
+                          {:nimi "write-path-puuttuva-tyyppi-testi"
+                           :urakkatyyppi "teiden-hoito"
+                           :hoitovuosi_alku 31
+                           :hoitovuosi_loppu 31
+                           :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
+                           :loppupvm nil
+                           :aktiivinen true
+                           :luoja integraatio-id
+                           :muokkaaja integraatio-id})
+                        first
+                        :id)
+        perustelu "HARJA-2294 puuttuva tyyppi"
+        perintapvm (pvm/->pvm-aika "2.10.2051 22:00:00")
+        hk-alkupvm (pvm/->pvm "1.10.2051")
+        hk-loppupvm (pvm/->pvm "30.9.2052")]
+    (try
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
+        {:sanktio_profiili_id profiili-id
+         :sanktio_laji_id laji-id
+         :sanktiotyyppi_id mhu2026-tyyppi-id
+         :soveltuvuuskonteksti "laatupoikkeama"
+         :jarjestys 1
+         :aktiivinen true
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Sanktiotyyppi puuttuu"
+            (palvelukutsu-tallenna-suorasanktio
+              +kayttaja-jvh+
+              {:suorasanktio true
+               :laji :A
+               :summa 777
+               :indeksi "MAKU 2015"
+               :toimenpideinstanssi tpi-id
+               :perintapvm perintapvm}
+              {:tekijanimi "Max Power"
+               :paatos {:paatos "sanktio"
+                        :kasittelyaika (pvm/->pvm-aika "2.10.2051 22:00:00")
+                        :kasittelytapa :kommentit
+                        :perustelu perustelu}
+               :aika (pvm/->pvm-aika "1.10.2051 08:00:00")
+               :urakka urakka-id}
+              hk-alkupvm
+              hk-loppupvm))
+        "Kun profiili vaatii oikean sanktiotyypin, puuttuva tyyppi ei saa muuttua hiljaisesti legacy-oletukseksi")
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)
+        (u (format "DELETE FROM sanktio_profiili_rivi WHERE sanktio_profiili_id = %s" profiili-id))
+        (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))
+        (when luotu-mhu2026-tyyppi-id
+          (u (format "DELETE FROM sanktiotyyppi WHERE id = %s" luotu-mhu2026-tyyppi-id)))))))
