@@ -293,7 +293,8 @@
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
                                                   :poista-liite-fn poista-liite}]))
-            inputin-id (or elementin-id (str "tiedoston-lataus-input-" (gensym)))]
+            button-id (or elementin-id (str "tiedoston-lataus-input-" (gensym)))
+            inputin-id (str "input-" (gensym))]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -308,7 +309,7 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:button {:id (or elementin-id "tiedoston-lataus-label")
+            [:button {:id button-id
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
