@@ -4,7 +4,7 @@ SELECT
     nimi,
     alue,
     liikennemuoto,
-    right(cast(elinvoimakeskusnumero AS VARCHAR), 2, '0') AS evknumero
+    right(cast(elinvoimakeskusnumero AS VARCHAR), 2) AS evknumero
 FROM organisaatio
 WHERE (
     -- Joko haetaan elinvoimakeskuksia, joiden liikennemuoto on T, tai hallintayksiköitä (kanavat yms), joiden liikennemuoto on V
