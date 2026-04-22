@@ -44,6 +44,12 @@
 		 :fmt #(get % :nimi)}
 		{:nimi :sanktiotyyppi :otsikko "Koodi" :leveys 0.7 :muokattava? (constantly false)
 		 :fmt #(get % :koodi)}
+		{:nimi :voi-puolittaa-omailmoituksella :otsikko "50 %" :leveys 0.7 :muokattava? (constantly false)
+		 :fmt #(if % "Kyllä" "Ei")}
+		{:nimi :lukitut-summat :otsikko "Lukitut summat" :leveys 1.2 :muokattava? (constantly false)
+		 :fmt #(if (seq %)
+				 (str/join ", " (map str %))
+				 "-")}
 		{:nimi :sanktiotyyppi :otsikko "Toimenpidekoodi" :leveys 1 :muokattava? (constantly false)
 		 :fmt #(or (get % :toimenpidekoodi) "-")}]
 	 rivit])
