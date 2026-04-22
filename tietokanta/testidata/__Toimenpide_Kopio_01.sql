@@ -3,6 +3,7 @@ DELETE FROM rahavaraus_tehtava ;
 
 -- Kävin yksitelleen taulut läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi: 
 --   sanktiotyyppi, sanktio_laji, sanktio_profiili, sanktio_profiili_rivi,
+--   sanktio_profiili_rivi_lukittu_summa,
 --   rahavaraus, sekä rahavaraus_tehtava. 
 -- 
 -- Nuo yllä olevat on populoitu flyway migraatioissa, ja cleanataan uudelleen tässä.    
@@ -23,7 +24,7 @@ TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava,
     mhu_muutos_tehtava_ja_maaraluettelo, mhu_muutos_tehtava_tiedot, vv_materiaali, kan_hinta,
     kan_tyo, kan_toimenpide_kommentti, suunnittelu_kustannussuunnitelman_muutos, mhu_muutos,
     mhu_muutos_kustannusvaikutus, mhu_muutos_liite, mhu_muutos_kulu, toimenpide, toimenpideinstanssi,
-    sanktio_profiili_rivi, sanktio_profiili, sanktio_laji, sanktiotyyppi,
+    sanktio_profiili_rivi_lukittu_summa, sanktio_profiili_rivi, sanktio_profiili, sanktio_laji, sanktiotyyppi,
     tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
     toimenpideinstanssi_vesivaylat, kustannussuunnitelma, erilliskustannus_liite, paatos_lupaus, rahavaraus,
     rahavaraus_urakka, mhu_muutos_rahavarausmuutoksen_syy;

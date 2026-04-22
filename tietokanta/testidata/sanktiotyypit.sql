@@ -14,6 +14,10 @@ INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (9, 'Talvihoito, päätiet', 618, 13, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (10, 'Talvihoito, muut tiet', 618, 14, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (19, 'Muut hoitourakan tehtäväkokonaisuudet', null, 17, false);
+INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (20, 'Talvihoito Ise/Is/L', 618, 18, false);
+INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (21, 'Talvihoito Ib/Ic/K1/K2', 618, 19, false);
+INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (22, 'Talvihoito II/III', 618, 20, false);
+INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (23, 'Hallinnollinen laiminlyonti', null, 21, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (1, 'Muu tuote', null, 1, true);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (17, 'Ei tarvita sanktiotyyppiä', 601, 0, false);
 INSERT INTO sanktiotyyppi (id, nimi, toimenpidekoodi, koodi, poistettu) VALUES (2, 'Talvihoito', 618, 2, true);

@@ -36,6 +36,7 @@ CREATE TABLE sanktio_profiili_rivi (
     soveltuvuuskonteksti TEXT             NOT NULL,
     jarjestys            INTEGER          NOT NULL,
     aktiivinen           BOOLEAN          NOT NULL DEFAULT TRUE,
+    voi_puolittaa_omailmoituksella BOOLEAN NOT NULL DEFAULT FALSE,
     lisametatiedot       JSONB,
     luoja                INTEGER          NOT NULL REFERENCES kayttaja (id),
     luotu                TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -51,6 +52,22 @@ CREATE INDEX sanktio_profiili_haku_idx
 CREATE INDEX sanktio_profiili_rivi_haku_idx
     ON sanktio_profiili_rivi (sanktio_profiili_id, soveltuvuuskonteksti, aktiivinen, jarjestys);
 
+CREATE TABLE sanktio_profiili_rivi_lukittu_summa (
+    id                       SERIAL PRIMARY KEY,
+    sanktio_profiili_rivi_id INTEGER       NOT NULL REFERENCES sanktio_profiili_rivi (id),
+    summa_euroina            NUMERIC(12,2) NOT NULL,
+    jarjestys                INTEGER       NOT NULL DEFAULT 1,
+    luoja                    INTEGER       NOT NULL REFERENCES kayttaja (id),
+    luotu                    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja                INTEGER       NOT NULL REFERENCES kayttaja (id),
+    muokattu                 TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (sanktio_profiili_rivi_id, jarjestys),
+    CHECK (summa_euroina >= 0)
+);
+
+CREATE INDEX sanktio_profiili_rivi_lukittu_summa_haku_idx
+    ON sanktio_profiili_rivi_lukittu_summa (sanktio_profiili_rivi_id, jarjestys);
+
 COMMENT ON TABLE sanktio_laji
                 IS 'Sanktioiden lajimasterdata parametrisoitua sanktio-konfiguraatiota varten.';
 
@@ -59,6 +76,20 @@ COMMENT ON TABLE sanktio_profiili
 
 COMMENT ON TABLE sanktio_profiili_rivi
                 IS 'Sallitut sanktio_laji- ja sanktiotyyppi-yhdistelmät profiileittain ja soveltuvuuskonteksteittain.';
+
+COMMENT ON TABLE sanktio_profiili_rivi_lukittu_summa
+                IS 'Sanktio-profiiliriviin sidotut lukitut euromaarat.';
+
+WITH uudet_sanktiotyypit (nimi, toimenpidekoodi, koodi) AS (
+    VALUES ('Talvihoito Ise/Is/L', 618, 18),
+           ('Talvihoito Ib/Ic/K1/K2', 618, 19),
+           ('Talvihoito II/III', 618, 20),
+           ('Hallinnollinen laiminlyonti', NULL, 21)
+)
+INSERT INTO sanktiotyyppi (nimi, toimenpidekoodi, koodi)
+SELECT nimi, toimenpidekoodi, koodi
+  FROM uudet_sanktiotyypit
+ON CONFLICT (koodi) DO NOTHING;
 
 WITH integraatio AS (
     SELECT id
@@ -89,6 +120,7 @@ VALUES ('hoito-legacy', 'hoito', 1, 20, DATE '1900-01-01', DATE '2020-12-31', TR
        ('teiden-hoito-legacy', 'teiden-hoito', 1, 20, DATE '1900-01-01', DATE '2020-12-31', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('hoito-2021-ja-uudemmat', 'hoito', 1, 20, DATE '2021-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('teiden-hoito-2021-ja-uudemmat', 'teiden-hoito', 1, 20, DATE '2021-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+  ('teiden-hoito-mhu2026', 'teiden-hoito', 1, 20, DATE '2026-10-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('paallystys-oletus', 'paallystys', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('paikkaus-oletus', 'paikkaus', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('tiemerkinta-oletus', 'tiemerkinta', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
@@ -260,6 +292,47 @@ WITH profiilirivit (profiili_nimi, laji_koodi, sanktiotyyppi_koodi, soveltuvuusk
         ('teiden-hoito-2021-ja-uudemmat', 'C', 12, 'laatupoikkeama', 5),
         ('teiden-hoito-2021-ja-uudemmat', 'arvonvahennyssanktio', 0, 'laatupoikkeama', 1),
 
+        ('teiden-hoito-mhu2026', 'muistutus', 18, 'urakka', 1),
+        ('teiden-hoito-mhu2026', 'muistutus', 19, 'urakka', 2),
+        ('teiden-hoito-mhu2026', 'muistutus', 20, 'urakka', 3),
+        ('teiden-hoito-mhu2026', 'muistutus', 21, 'urakka', 4),
+        ('teiden-hoito-mhu2026', 'muistutus', 17, 'urakka', 5),
+        ('teiden-hoito-mhu2026', 'A', 18, 'urakka', 1),
+        ('teiden-hoito-mhu2026', 'A', 19, 'urakka', 2),
+        ('teiden-hoito-mhu2026', 'A', 20, 'urakka', 3),
+        ('teiden-hoito-mhu2026', 'A', 21, 'urakka', 4),
+        ('teiden-hoito-mhu2026', 'A', 17, 'urakka', 5),
+        ('teiden-hoito-mhu2026', 'B', 18, 'urakka', 1),
+        ('teiden-hoito-mhu2026', 'B', 19, 'urakka', 2),
+        ('teiden-hoito-mhu2026', 'B', 20, 'urakka', 3),
+        ('teiden-hoito-mhu2026', 'B', 21, 'urakka', 4),
+        ('teiden-hoito-mhu2026', 'B', 17, 'urakka', 5),
+        ('teiden-hoito-mhu2026', 'C', 18, 'urakka', 1),
+        ('teiden-hoito-mhu2026', 'C', 19, 'urakka', 2),
+        ('teiden-hoito-mhu2026', 'C', 20, 'urakka', 3),
+        ('teiden-hoito-mhu2026', 'C', 21, 'urakka', 4),
+        ('teiden-hoito-mhu2026', 'C', 17, 'urakka', 5),
+        ('teiden-hoito-mhu2026', 'muistutus', 18, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2026', 'muistutus', 19, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2026', 'muistutus', 20, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2026', 'muistutus', 21, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2026', 'muistutus', 17, 'laatupoikkeama', 5),
+        ('teiden-hoito-mhu2026', 'A', 18, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2026', 'A', 19, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2026', 'A', 20, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2026', 'A', 21, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2026', 'A', 17, 'laatupoikkeama', 5),
+        ('teiden-hoito-mhu2026', 'B', 18, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2026', 'B', 19, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2026', 'B', 20, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2026', 'B', 21, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2026', 'B', 17, 'laatupoikkeama', 5),
+        ('teiden-hoito-mhu2026', 'C', 18, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2026', 'C', 19, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2026', 'C', 20, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2026', 'C', 21, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2026', 'C', 17, 'laatupoikkeama', 5),
+
         ('paallystys-oletus', 'yllapidon_sakko', 3, 'urakka', 1),
         ('paallystys-oletus', 'yllapidon_muistutus', 5, 'urakka', 1),
         ('paallystys-oletus', 'yllapidon_sakko', 3, 'laatupoikkeama', 1),
@@ -301,3 +374,67 @@ SELECT sp.id,
          ON sl.koodi = pr.laji_koodi
        JOIN sanktiotyyppi st
          ON st.koodi = pr.sanktiotyyppi_koodi;
+
+WITH integraatio AS (
+    SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'Integraatio'
+),
+kohderivi AS (
+    SELECT spr.id,
+           i.id AS integraatio_id
+      FROM sanktio_profiili_rivi spr
+           JOIN sanktio_profiili sp
+             ON sp.id = spr.sanktio_profiili_id
+           JOIN sanktio_laji sl
+             ON sl.id = spr.sanktio_laji_id
+           JOIN sanktiotyyppi st
+             ON st.id = spr.sanktiotyyppi_id
+           CROSS JOIN integraatio i
+     WHERE sp.nimi = 'teiden-hoito-mhu2026'
+       AND sl.koodi = 'A'
+       AND st.koodi = 18
+       AND spr.soveltuvuuskonteksti = 'laatupoikkeama'
+)
+UPDATE sanktio_profiili_rivi spr
+   SET voi_puolittaa_omailmoituksella = TRUE,
+       muokkaaja                    = kohderivi.integraatio_id,
+       muokattu                     = CURRENT_TIMESTAMP
+  FROM kohderivi
+ WHERE spr.id = kohderivi.id;
+
+WITH integraatio AS (
+    SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'Integraatio'
+),
+kohderivi AS (
+    SELECT spr.id,
+           i.id AS integraatio_id
+      FROM sanktio_profiili_rivi spr
+           JOIN sanktio_profiili sp
+             ON sp.id = spr.sanktio_profiili_id
+           JOIN sanktio_laji sl
+             ON sl.id = spr.sanktio_laji_id
+           JOIN sanktiotyyppi st
+             ON st.id = spr.sanktiotyyppi_id
+           CROSS JOIN integraatio i
+     WHERE sp.nimi = 'teiden-hoito-mhu2026'
+       AND sl.koodi = 'A'
+       AND st.koodi = 18
+       AND spr.soveltuvuuskonteksti = 'laatupoikkeama'
+),
+lukitut_summat (summa_euroina, jarjestys) AS (
+    VALUES (6000.00, 1),
+           (12000.00, 2)
+)
+INSERT INTO sanktio_profiili_rivi_lukittu_summa (sanktio_profiili_rivi_id, summa_euroina, jarjestys, luoja, luotu, muokkaaja, muokattu)
+SELECT kohderivi.id,
+       lukitut_summat.summa_euroina,
+       lukitut_summat.jarjestys,
+       kohderivi.integraatio_id,
+       CURRENT_TIMESTAMP,
+       kohderivi.integraatio_id,
+       CURRENT_TIMESTAMP
+  FROM kohderivi
+       CROSS JOIN lukitut_summat;
