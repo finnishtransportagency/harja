@@ -2,6 +2,7 @@
 	(:require [clojure.string :as str]
 						[reagent.core :refer [atom]]
 						[tuck.core :as tuck]
+						[harja.domain.urakka :as urakka-domain]
 						[harja.ui.viesti :as viesti]
 						[harja.tyokalut.tuck :as tuck-apurit]))
 
@@ -25,6 +26,17 @@
 (defrecord HaeSanktioProfiilinDetaljiOnnistui [profiili-id vastaus])
 (defrecord HaeSanktioProfiilinDetaljiEpaonnistui [profiili-id vastaus])
 (defrecord PaivitaSuodatin [avain arvo])
+
+(def urakkatyyppi-erikoistekstit
+	{:teiden-hoito "MHU"
+	 :hoito "Alueurakka"})
+
+(defn urakkatyyppi-teksti
+	[urakkatyyppi]
+	(or (get urakkatyyppi-erikoistekstit urakkatyyppi)
+			(get urakka-domain/urakkatyyppi->otsikko urakkatyyppi)
+			(some-> urakkatyyppi name)
+			"-"))
 
 (defn- hae-detalji!
 	[profiili-id]

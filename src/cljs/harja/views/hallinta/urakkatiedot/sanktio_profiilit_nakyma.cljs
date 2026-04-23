@@ -6,9 +6,6 @@
 						[harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
 						[harja.tiedot.hallinta.urakkatiedot.sanktio-profiilit-tiedot :as tiedot]))
 
-(defn- urakkatyyppi-teksti [urakkatyyppi]
-	(or (some-> urakkatyyppi name)
-		"-"))
 
 (defn- aktiivisuus-teksti [aktiivinen]
 	(if aktiivinen "Aktiivinen" "Passiivinen"))
@@ -116,7 +113,7 @@
 			 [:option {:value "kaikki"} "Kaikki"]
 			 (for [nykyinen-urakkatyyppi urakkatyypit]
 				 ^{:key (name nykyinen-urakkatyyppi)}
-				 [:option {:value (name nykyinen-urakkatyyppi)} (urakkatyyppi-teksti nykyinen-urakkatyyppi)])]]
+				 [:option {:value (name nykyinen-urakkatyyppi)} (tiedot/urakkatyyppi-teksti nykyinen-urakkatyyppi)])]]
 		 [:div.col-md-4
 			[:label "Aktiivisuus"]
 			[:select.form-control
@@ -129,10 +126,11 @@
 (defn- profiilin-yhteenveto [{:keys [profiili]}]
 	[:div
 	 [:h3 (:nimi profiili)]
-	 [yleiset/info-laatikko :neutraali (:yhteenveto profiili)]
+	 [:div.sanktio-profiilit-yhteenveto-laatikko.margin-bottom-16
+ [yleiset/info-laatikko :neutraali (:yhteenveto profiili)]]
 	 [:div.row
 		[:div.col-md-6
-		 [:p [:strong "Urakkatyyppi: "] (urakkatyyppi-teksti (:urakkatyyppi profiili))]
+		 [:p [:strong "Urakkatyyppi: "] (tiedot/urakkatyyppi-teksti (:urakkatyyppi profiili))]
 		 [:p [:strong "Hoitovuodet: "] (hoitovuosivali-teksti profiili)]
 		 [:p [:strong "Voimassaolo: "] (paivavali-teksti profiili)]]
 		[:div.col-md-6
@@ -140,12 +138,14 @@
 		 [:p [:strong "Kontekstit: "] (kontekstit-teksti (:soveltuvuuskontekstit profiili))]
 		 [:p [:strong "Lajeja / rivejä: "] (str (:lajimaara profiili) " / " (:rivimaara profiili))]]]])
 
-(defn- profiililista [e! profiilit]
+(defn- profiililista [e! profiilit valittu-profiili-id]
 	(let [profiilit (mapv (fn [profiili]
 													(assoc profiili
-														:urakkatyyppi-teksti (urakkatyyppi-teksti (:urakkatyyppi profiili))
+														:urakkatyyppi-teksti (tiedot/urakkatyyppi-teksti (:urakkatyyppi profiili))
 														:hoitovuosivali (hoitovuosivali-teksti profiili)
-														:aktiivisuus-teksti (aktiivisuus-teksti (:aktiivinen profiili))))
+														:aktiivisuus-teksti (aktiivisuus-teksti (:aktiivinen profiili))
+                      :rivin-luokka (when (= (:id profiili) valittu-profiili-id)
+                                      "sanktio-profiili-valittu")))
 										profiilit)]
 		[grid/grid
 		 {:piilota-toiminnot? true
@@ -153,7 +153,7 @@
 			:voi-poistaa? (constantly false)
 			:reunaviiva? true
 			:tunniste :id
-			:mahdollista-rivin-valinta? true
+			:rivin-luokka :rivin-luokka
 			:rivi-klikattu #(e! (tiedot/->ValitseSanktioProfiili (:id %)))}
 		 [{:nimi :nimi :otsikko "Profiili" :leveys 2 :muokattava? (constantly false)}
 			{:nimi :urakkatyyppi-teksti :otsikko "Urakkatyyppi" :leveys 1.1 :muokattava? (constantly false)}
@@ -172,7 +172,7 @@
 		(fn [e! {:keys [haku-kaynnissa? detalji-haku-kaynnissa? valittu-profiili-id profiilin-detaljit suodattimet profiilit] :as app}]
 			(let [suodatetut-profiilit (tiedot/suodata-profiilit app)
 						valitun-profiilin-detalji (get profiilin-detaljit valittu-profiili-id)]
-				[:div
+				[:div.sanktio-profiilit-hallinta
 				 [:h2 "Sanktio-profiilit"]
 				 [:p "Selaa sanktio-profiileja profiilikeskeisesti. Vasemmalta valitaan profiili, oikealta näkyvät yhteenveto ja lajeittain ryhmitelty sisältö."]
 				 [suodatin-rivi e! suodattimet profiilit]
@@ -180,7 +180,8 @@
 					[:div.col-md-5
 					 (if haku-kaynnissa?
 						 [ajax-loader-pieni "Haetaan sanktio-profiileja..."]
-						 [profiililista e! suodatetut-profiilit])]
+						 [:div.sanktio-profiilit-profiililista
+   [profiililista e! suodatetut-profiilit valittu-profiili-id]])]
 					[:div.col-md-7
 					 (cond
 						 (nil? valittu-profiili-id)
