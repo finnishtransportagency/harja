@@ -1511,7 +1511,7 @@
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
    "ELY_Paakayttaja" #{"R*" "W*"},
-   "ELY_Urakanvalvoja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*" "W"},
    "Jarjestelmavastaava" #{"R*" "W*"},
    "Kayttaja" #{"R+"},
    "Laadunvalvoja" #{"R" "W"},
@@ -1519,7 +1519,7 @@
    "Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
-   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
    "vastuuhenkilo" #{"R" "W"}}}
  {:sym urakat-kulut-laskutusyhteenveto,
   :osio "Urakat",

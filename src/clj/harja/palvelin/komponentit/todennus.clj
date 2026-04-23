@@ -264,6 +264,10 @@
     (json/read-str oam-groups)
     (str/join ",")))
 
+(defn jwt-vahvistus-epaonnistui? [headerit]
+  (boolean
+    (= (get headerit "oam_groups") "failed")))
+
 (defn- pura-cognito-headerit
   "Purkaa AWS Cognitolta palautuneet headerit ja hakee niistä OAM-tiedot.
    Tiedot mapataan vanhan mallisiksi OAM_-headereiksi
@@ -396,74 +400,77 @@
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
    ja palauttaa käyttäjätiedot"
-  [db integraatioloki miam {kayttajanimi "oam_remote_user"
-                            ryhmat "oam_groups"
-                            organisaationumero "oam_departmentnumber"
-                            organisaation_nimi "oam_organization"
-                            etunimi "oam_user_first_name"
-                            sukunimi "oam_user_last_name"
-                            sahkoposti "oam_user_mail"
-                            puhelin "oam_user_mobile"
-                            y-tunnus "oam_user_companyid"
-                            :as headerit}]
-
-  ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
-  (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
-  (if (q/onko-jarjestelma? db kayttajanimi)
-    (throw+ todennusvirhe)
-    (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
-                   ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
-                   (kayttajan-roolit
-                     (partial q/hae-urakan-id-sampo-idlla db)
-                     (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                     oikeudet/roolit
-                     ryhmat)
-                   ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
-                   (kayttajaroolit-rajapintavastauksesta db
-                     (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi)
-                     ryhmat))
-          elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
-          ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
-          organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
-          kayttaja {:kayttajanimi kayttajanimi
-                    :etunimi etunimi
-                    :sukunimi sukunimi
-                    :sahkoposti sahkoposti
-                    :puhelin puhelin
-                    :organisaatio (:id organisaatio)}
-          kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
-          piilota-nimi? (:piilota_nimi kayttaja-kannassa)
-          kayttaja-id-kannassa (:id kayttaja-kannassa)
-          kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
-                                                                    :etunimi
-                                                                    :sukunimi
-                                                                    :sahkoposti
-                                                                    :puhelin})
-                              {:organisaatio (:org_id kayttaja-kannassa)})
-          kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
-          kayttaja-id (or
-                        kayttaja-id-kannassa
-                        (:id (q/luo-kayttaja<! db kayttaja)))
-          ;; Päivitetään käyttäjätiedot Jarjestelmavastaava :lle, jos nimeä ei ole vielä piilotettu
-          _ (when (and (not piilota-nimi?) (contains? (:roolit roolit) "Jarjestelmavastaava"))
-              (q/piilota-jvh-nimi! db {:id kayttaja-id}))]
-      (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
-        (q/paivita-kayttaja! db (merge kayttaja
-                                  {:id kayttaja-id})))
-      (log/info
-        "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
-        "; ELY-NUMERO: " ely
-        "; ORGANISAATION NIMI: " organisaation_nimi
-        "; Y-TUNNUS: " y-tunnus
-        "; KÄYTTÄJÄ ID: " kayttaja-id
-        "; ORGANISAATIO: " organisaatio)
-      (merge (assoc kayttaja
-               :organisaatio organisaatio
-               :organisaation-urakat (into #{}
-                                       (map :id)
-                                       (q/hae-organisaation-urakat db (:id organisaatio)))
-               :id kayttaja-id)
-        roolit))))
+  ([db integraatioloki miam headerit]
+   (varmista-kayttajatiedot db integraatioloki miam headerit false))
+  ([db integraatioloki miam {kayttajanimi "oam_remote_user"
+                             ryhmat "oam_groups"
+                             organisaationumero "oam_departmentnumber"
+                             organisaation_nimi "oam_organization"
+                             etunimi "oam_user_first_name"
+                             sukunimi "oam_user_last_name"
+                             sahkoposti "oam_user_mail"
+                             puhelin "oam_user_mobile"
+                             y-tunnus "oam_user_companyid"
+                             :as headerit} token-epaonnistui?]
+   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
+   (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
+   (if (q/onko-jarjestelma? db kayttajanimi)
+     (throw+ todennusvirhe)
+     (let [roolit (if (or (ominaisuus-kaytossa? :header-roolit) (empty? (:apiavain miam))) ;; Varmistetaan että miam api-avain on määritetty ja ominaisuus on käytössä
+                    ;; Vanha tapa käsitellä roolit on muodostaa ne suoraan OAM headereista
+                    (kayttajan-roolit
+                      (partial q/hae-urakan-id-sampo-idlla db)
+                      (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                      oikeudet/roolit
+                      ryhmat)
+                    ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
+                    (kayttajaroolit-rajapintavastauksesta db
+                      (if token-epaonnistui?
+                        nil
+                        (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi))
+                      ryhmat))
+           elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+           ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
+           organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)
+           kayttaja {:kayttajanimi kayttajanimi
+                     :etunimi etunimi
+                     :sukunimi sukunimi
+                     :sahkoposti sahkoposti
+                     :puhelin puhelin
+                     :organisaatio (:id organisaatio)}
+           kayttaja-kannassa (first (q/hae-kayttaja-kayttajanimella db {:kayttajanimi kayttajanimi}))
+           piilota-nimi? (:piilota_nimi kayttaja-kannassa)
+           kayttaja-id-kannassa (:id kayttaja-kannassa)
+           kayttaja-kannassa (merge (select-keys kayttaja-kannassa #{:kayttajanimi
+                                                                     :etunimi
+                                                                     :sukunimi
+                                                                     :sahkoposti
+                                                                     :puhelin})
+                               {:organisaatio (:org_id kayttaja-kannassa)})
+           kayttajan-tiedot-samat? (= kayttaja kayttaja-kannassa)
+           kayttaja-id (or
+                         kayttaja-id-kannassa
+                         (:id (q/luo-kayttaja<! db kayttaja)))
+           ;; Päivitetään käyttäjätiedot Jarjestelmavastaava :lle, jos nimeä ei ole vielä piilotettu
+           _ (when (and (not piilota-nimi?) (contains? (:roolit roolit) "Jarjestelmavastaava"))
+               (q/piilota-jvh-nimi! db {:id kayttaja-id}))]
+       (when (and kayttaja-id-kannassa (not kayttajan-tiedot-samat?))
+         (q/paivita-kayttaja! db (merge kayttaja
+                                   {:id kayttaja-id})))
+       (log/info
+         "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
+         "; ELY-NUMERO: " ely
+         "; ORGANISAATION NIMI: " organisaation_nimi
+         "; Y-TUNNUS: " y-tunnus
+         "; KÄYTTÄJÄ ID: " kayttaja-id
+         "; ORGANISAATIO: " organisaatio)
+       (merge (assoc kayttaja
+                :organisaatio organisaatio
+                :organisaation-urakat (into #{}
+                                        (map :id)
+                                        (q/hae-organisaation-urakat db (:id organisaatio)))
+                :id kayttaja-id)
+         roolit)))))
 
 (defn- ohita-oikeudet
   "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
@@ -496,42 +503,51 @@
               ;; Tarkista lisättiinkö meidän promise vai oliko toinen thread nopeampi
               (if (identical? p (get result kayttajanimi))
                 [p true]
-                [(get result kayttajanimi) false]))))]
+                [(get result kayttajanimi) false]))))
+        vastaus (if uusi?
+                  (do
+                    (deliver vastaus-promise
+                      (try
+                        {:ok (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)}
+                        (catch Throwable t
+                          (log/error t "Virhe käyttäjätietojen haussa")
+                          {:error t})
+                        (finally
+                          ;; Siivotaan promise pois atomista
+                          (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
+                    @vastaus-promise)
+                  ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
+                  @vastaus-promise)]
 
-    ;; Jos tämä thread loi promisen, sen täytyy deliveroida se
-    (if uusi?
-      (do
-        (deliver vastaus-promise
-          (try
-            (varmista-kayttajatiedot db integraatioloki miam oam-tiedot)
-            (catch Throwable t
-              (log/error t "Virhe käyttäjätietojen haussa")
-              (throw t))
-            (finally
-              ;; Siivotaan promise pois atomista
-              (swap! odottavat-kutsut-atom dissoc kayttajanimi))))
-        @vastaus-promise)
-      ;; Koska kyselyt on jo menossa, niin muuten vain palautetaan promisen odotus
-      @vastaus-promise)))
+    ;; Jos thread loi promisen, deliveroi aina
+    (if-let [t (:error vastaus)]
+      (throw t)
+      (:ok vastaus))))
 
 (defn koka->kayttajatiedot
   ([db integraatioloki miam headerit oikeudet kehitysmoodi?]
    (koka->kayttajatiedot db integraatioloki miam headerit oikeudet kehitysmoodi? nil))
   ([db integraatioloki miam headerit oikeudet kehitysmoodi? todennus-varmistus-asetukset]
    (let [headerit (prosessoi-kayttaja-headerit headerit kehitysmoodi? todennus-varmistus-asetukset)
-         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
-     (try
-       ;; Tarkista ensin cachesta
-       (if-let [cached (cache/lookup @kayttajatiedot-cache-atom oam-tiedot)]
-         ;; Cache-osuma, palauta arvo
-         cached
-         ;; Cache-huti, hae tai odota (hakuja tehdään vain yksi, muut säikeet odottavat sen valmistumista)
-         (let [result (hae-tai-odota-kayttajatietoja db integraatioloki miam oam-tiedot)]
-           ;; Tallenna cacheen
-           (swap! kayttajatiedot-cache-atom cache/miss oam-tiedot result)
-           result))
-       (catch Throwable t
-         (log/error t "Käyttäjätietojen varmistuksessa virhe!"))))))
+         oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)
+         jwt-epaonnistui? (jwt-vahvistus-epaonnistui? oam-tiedot)]
+     (if jwt-epaonnistui?
+       ;; JW Token epäonnistui (tässä on aiheelliset hälytykset jo) 
+       ;; Älä etene miam hakuun, vaan mene suoraan varmistukseen  
+       ;;     Tämä ohjaa  -> div.ei-kayttooikeutta -> "Todennus epäonnistui"
+       (varmista-kayttajatiedot db integraatioloki miam oam-tiedot jwt-epaonnistui?)
+       (try
+         ;; Tarkista ensin cachesta
+         (if-let [cached (cache/lookup @kayttajatiedot-cache-atom oam-tiedot)]
+           ;; Cache-osuma, palauta arvo
+           cached
+           ;; Cache-huti, hae tai odota (hakuja tehdään vain yksi, muut säikeet odottavat sen valmistumista)
+           (let [result (hae-tai-odota-kayttajatietoja db integraatioloki miam oam-tiedot)]
+             ;; Tallenna cacheen
+             (swap! kayttajatiedot-cache-atom cache/miss oam-tiedot result)
+             result))
+         (catch Throwable t
+           (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
