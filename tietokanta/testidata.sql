@@ -1,10 +1,22 @@
 -- Luodaan Liikennevirasto
-INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
+INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus)
+SELECT 'liikennevirasto', 'Liikennevirasto', 'Livi', '1010547-1'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM organisaatio
+     WHERE ytunnus = '1010547-1'
+);
+
+TRUNCATE TABLE rahavaraus_tehtava,
+               rahavaraus,
+               tehtava,
+               materiaalikoodi,
+               tehtavaryhma,
+               tehtavaryhmaotsikko
+RESTART IDENTITY CASCADE;
 
 -- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
-\i testidata/__Toimenpide_Kopio_01.sql 
-\i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
 \i testidata/__Materiaalikoodi_Kopio_01.sql
@@ -81,12 +93,6 @@ SELECT setval(
 
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
-
--- Luodaan sanktiotyypit
-\i testidata/sanktiotyypit.sql
-
--- Luodaan sanktio-konfiguraatio
-\i testidata/sanktio_konfiguraatio.sql
 
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
