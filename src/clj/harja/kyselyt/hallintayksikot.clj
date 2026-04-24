@@ -5,4 +5,4 @@
   {:positional? true})
 
 (declare hae-organisaatio listaa-hallintayksikot-kulkumuodolle listaa-elinvoimakeskukset-kulkumuodolle
-  hae-organisaation-tunnistetiedot)
+  hae-organisaation-tunnistetiedot hallintayksikot-ilman-geometriaa)

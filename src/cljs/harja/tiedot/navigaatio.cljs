@@ -313,7 +313,7 @@
             (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
               :tie
               (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                kayttajan-oletus-tyyppi
+                (or kayttajan-oletus-tyyppi :hoito)
                 :hoito)
 
               :vesi
