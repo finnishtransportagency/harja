@@ -190,7 +190,7 @@
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
-                  [{:otsikko "Hallintayksikkö"}])
+                  [{:otsikko "Elinvoimakeskus"}])
                 [{:otsikko "Lievät"}
                  {:otsikko "Vakavat"}])))
 

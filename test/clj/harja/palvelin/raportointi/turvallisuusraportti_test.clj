@@ -113,7 +113,7 @@
                          "Etelä-Pohjanmaa" "Pohjois-Suomi"
                          "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Hallintayksikkö"}
+                                        {:otsikko "Elinvoimakeskus"}
                                         {:otsikko "Työtapaturmat"}
                                         {:otsikko "Vaaratilanteet"}
                                         {:otsikko "Turvallisuushavainnot"}
@@ -128,7 +128,7 @@
                                                   (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
-                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Elinvoimakeskus"}
                                           {:otsikko "Lievät"}
                                           {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus
@@ -190,7 +190,7 @@
         hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
     (= hallintayksikot #{"Sisävesiväylät" "Meriväylät" "Kanavat ja avattavat sillat" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Hallintayksikkö"}
+                                        {:otsikko "Elinvoimakeskus"}
                                         {:otsikko "Työtapaturmat"}
                                         {:otsikko "Vaaratilanteet"}
                                         {:otsikko "Turvallisuushavainnot"}
@@ -205,7 +205,7 @@
                                                   (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
-                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Elinvoimakeskus"}
                                           {:otsikko "Lievät"}
                                           {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus
