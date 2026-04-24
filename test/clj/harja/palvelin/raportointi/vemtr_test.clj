@@ -102,8 +102,8 @@
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi :tehtavamaarat
-                           :konteksti "hallintayksikko"
-                           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                           :konteksti "elinvoimakeskus"
+                           :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                            :parametrit {:alkupvm (c/to-date (t/local-date 2020 10 1))
                                         :loppupvm (c/to-date (t/local-date 2021 10 1))}})]
 
