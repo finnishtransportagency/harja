@@ -14,8 +14,8 @@ t.tyyppi,
 t.vakavuusaste,
 u.id as urakka_id,
 u.nimi as urakka_nimi,
-o.id as hallintayksikko_id,
-o.nimi as hallintayksikko_nimi
+o.id as elinvoimakeskus_id,
+o.nimi as elinvoimakeskus_nimi
   FROM turvallisuuspoikkeama t
        JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
        JOIN organisaatio o ON u.elinvoimakeskus_id = o.id

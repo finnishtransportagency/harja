@@ -54,6 +54,8 @@
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql"
             {:positional? true})
 
+(declare hae-turvallisuuspoikkeamat)
+
 (def turvallisuuspoikkeama-tyyppi
   {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
    "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
@@ -119,8 +121,8 @@
                                            turpot)))
         hallintayksikon-turpot (fn [turpot alue]
                                  (filter
-                                   #(= (get-in % [:hallintayksikko :id])
-                                       (:hallintayksikko-id alue))
+                                   #(= (get-in % [:elinvoimakeskus :id])
+                                       (:elinvoimakeskus-id alue))
                                    turpot))
         turporivi (fn [turpot alue]
                     [(:nimi alue)
@@ -149,7 +151,7 @@
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
-                  [{:otsikko "Hallintayksikkö"}])
+                  [{:otsikko "Elinvoimakeskus"}])
                 [{:otsikko "Työtapaturmat"}
                  {:otsikko "Vaaratilanteet"}
                  {:otsikko "Turvallisuushavainnot"}
@@ -160,8 +162,8 @@
                                         (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))
         hallintayksikon-turpot (fn [turpot alue]
                                  (filter
-                                   #(= (get-in % [:hallintayksikko :id])
-                                       (:hallintayksikko-id alue))
+                                   #(= (get-in % [:elinvoimakeskus :id])
+                                       (:elinvoimakeskus-id alue))
                                    turpot))
         turporivi (fn [turpot alue]
                     [(:nimi alue)
