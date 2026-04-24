@@ -41,7 +41,7 @@
     [:div.label-ja-alasveto
      [:label.alasvedon-otsikko {:for "elyhaku"} "Hallintayksikkö"]
      [kentat/tee-kentta
-      {:input-id "elyhaku" :tyyppi :haku
+      {:elementin-id "elyhaku" :tyyppi :haku
        :nayta #(hal/elynumero-ja-nimi %)
        :lahde elyhaku
        :hakuikoni? true
@@ -72,7 +72,7 @@
     [:div.label-ja-alasveto
      [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
      [kentat/tee-kentta
-      {:input-id "urakkahaku" :tyyppi :haku
+      {:elementin-id "urakkahaku" :tyyppi :haku
        :nayta :nimi
        :hae-kun-yli-n-merkkia 0
        :lahde urakkahaku
