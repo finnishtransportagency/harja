@@ -393,8 +393,8 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
                             FROM urakka_parametrit up
                            WHERE up.urakkaid = ut.urakka
                              AND up.laskutusraja_kaytossa = TRUE)
-                        THEN ut.tavoitehinta_indeksikorjattu
-                        ELSE NULL
+                        THEN ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
+                        ELSE ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
                     END,
     laskutusraja_alkuperainen = CASE
                                     WHEN :vahvista?::BOOLEAN = TRUE
@@ -404,7 +404,7 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
                                        WHERE up.urakkaid = ut.urakka
                                          AND up.laskutusraja_kaytossa = TRUE)
                                     THEN ut.tavoitehinta_indeksikorjattu
-                                    ELSE NULL
+                                    ELSE ut.tavoitehinta_indeksikorjattu
                                 END
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1

@@ -158,10 +158,19 @@ SET tavoitehinta = :tavoitehinta,
     kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja,
-    tarjous_tavoitehinta = :tarjous_tavoitehinta
+    tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    laskutusraja = :laskutusraja,
+    laskutusraja_alkuperainen = :laskutusraja_alkuperainen
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-urakan-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, tarjous_tavoitehinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta,
+                            kattohinta_indeksikorjattu, tarjous_tavoitehinta, laskutusraja, laskutusraja_alkuperainen, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta,
+        :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, :laskutusraja, :laskutusraja_alkuperainen, NOW(), :luoja);
+
+-- name: hae-laskutusraja-kaytossa
+SELECT up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+FROM urakka_parametrit up
+WHERE up.urakkaid = :urakka-id;

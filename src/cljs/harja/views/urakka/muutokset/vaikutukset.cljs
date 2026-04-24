@@ -8,34 +8,35 @@
             [harja.domain.muutos-domain :as muutos-domain]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
-(defn muutosten-vaikutus-laskutusrajaan-rivit* [budjettitavoitteet laskutusrajan-tarkistukset]
-  (let [{:keys [laskutusraja laskutusraja_alkuperainen]} budjettitavoitteet]
-    [(when (> laskutusraja laskutusraja_alkuperainen) [:div "Laskutusraja hoitovuoden alussa"])
-     (when (> laskutusraja laskutusraja_alkuperainen) (fmt/euro-opt true false laskutusraja_alkuperainen))
+(defn muutosten-vaikutus-laskutusrajaan-rivit* [budjettitavoitteet laskutusrajan-tarkistukset indeksikorjaus-vahvistettu?]
+  (let [{:keys [laskutusraja laskutusraja_alkuperainen]} budjettitavoitteet
+        muutoksia_tehty (and laskutusraja laskutusraja_alkuperainen (> laskutusraja laskutusraja_alkuperainen))]
+    [(when (and indeksikorjaus-vahvistettu? muutoksia_tehty) [:div "Laskutusraja hoitovuoden alussa"])
+     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty) (fmt/euro-opt true false laskutusraja_alkuperainen))
 
-     (when (> laskutusraja laskutusraja_alkuperainen)
+     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty)
        ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Laskutusrajan automaattiset tarkistukset"])
-     (when (> laskutusraja laskutusraja_alkuperainen)
+     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty)
        ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} (fmt/euro-opt true true (some-> laskutusrajan-tarkistukset last :laskutusrajan-tarkistus)))
 
-     (when (and laskutusraja (= laskutusraja laskutusraja_alkuperainen))
+     (when (and laskutusraja indeksikorjaus-vahvistettu? (= laskutusraja laskutusraja_alkuperainen))
        ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Ei vaikutusta laskutusrajaan"])
-     (when (and laskutusraja (= laskutusraja laskutusraja_alkuperainen))
+     (when (and laskutusraja indeksikorjaus-vahvistettu? (= laskutusraja laskutusraja_alkuperainen))
        ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div ""])
 
      ^{:koko-rivin-leveys? true :viiva-rivin-alle? true :tietorivi-luokka (str "keskita-rivin-sisalto notifikaatio-viivan-ylla"
-                                                    (when laskutusraja
+                                                    (when indeksikorjaus-vahvistettu?
                                                       " piilota-rivin-sisalto"))}
      [yleiset/info-laatikko :vahva-ilmoitus
       "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
-      "Laskentaa ei voida tehdä kaikkien tietojen osalta."
+      "Laskenta tehdään ei-vahvistetuilla tiedoilla, jotka saattavat päivittyä, kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan."
       nil
       {:ikoni-fn #(ikonit/harja-icon-status-alert)}] [:div ""]
 
-     (if (> laskutusraja laskutusraja_alkuperainen)
-       ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Tarkistettu laskutusraja"] ^{:tietorivi-luokka "viivan-alla"}[:span.semibold "Laskutusraja"])
+     (if muutoksia_tehty
+       ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Tarkistettu laskutusraja"] ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Laskutusraja"])
      (if laskutusraja
-       ^{:tietorivi-luokka "viivan-alla"} [:span.semibold (fmt/euro-opt true false laskutusraja)] ^{:tietorivi-luokka "viivan-alla"}[:span.semibold "Ei saatavilla"])]))
+       ^{:tietorivi-luokka "viivan-alla"} [:span.semibold (fmt/euro-opt true false laskutusraja)] ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Ei saatavilla"])]))
 
 (defn uusi-muutosten-vaikutus-rivit* [budjettitavoitteet valittu-hoitokausi indeksikorjaus-vahvistettu?]
   (let [aiemmat-pysyvat-muutokset (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet)
@@ -128,7 +129,7 @@
           [:h3 "Muutosten vaikutus laskutusrajaan"] ""]
          (if haku-kaynnissa?
            [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
-           (muutosten-vaikutus-laskutusrajaan-rivit* budjettitavoitteet laskutusrajan-tarkistukset))))]))
+           (muutosten-vaikutus-laskutusrajaan-rivit* budjettitavoitteet laskutusrajan-tarkistukset indeksikorjaus-vahvistettu?))))]))
 
 
 (defn muutosten-vaikutukset-vanha
