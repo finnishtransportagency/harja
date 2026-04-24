@@ -685,7 +685,7 @@
                                                 (when (= tag :Status)
                                                   (:state attrs)))
                                               vastauksen-sisalto)
-                           status (if (or (= status-state "FAILURE")
+                           status (if (or (= (some-> status-state str/lower-case) "failure")
                                           (not (str/blank? mahdollinen-virhe)))
                                     400
                                     200)]
