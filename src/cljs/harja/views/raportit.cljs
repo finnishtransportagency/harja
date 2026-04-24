@@ -1,6 +1,7 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.istunto :as istunto]
+            [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.urakka :as urakka-domain]
             [harja.ui.komponentti :as komp]
@@ -73,7 +74,7 @@
                                            ;; Jos urakkakin on valittu, tulee pelkästään "urakka"
                                            (cond
                                              (when v-ur "urakka") #{"urakka"}
-                                             (when v-hal "hallintayksikko") #{"hallintayksikko"}
+                                             (when v-hal "elinvoimakeskus") #{"elinvoimakeskus"}
                                              :default #{"koko maa"})
                                            #{"urakka"})
                   sopimustyypin-raportit (filter
@@ -811,7 +812,7 @@
             [:h3 "Raportin tiedot"]
 
             [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
-             "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             "Elinvoimakeskus" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
                         (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)

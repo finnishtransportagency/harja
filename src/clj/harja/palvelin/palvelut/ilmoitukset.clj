@@ -277,19 +277,19 @@
 
 (defn hae-ilmoitukset-raportille
   "Palauttaa ilmoitukset raporttia varten, minimaalisella tietosisällöllä ja ilman hidastavaa sorttausta."
-  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali]}]
+  [db user {:keys [elinvoimakeskus urakka urakoitsija urakkatyyppi aikavali]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-timestamp (first aikavali)))
         aikavali-loppu (when (second aikavali)
                          (konv/sql-timestamp (second aikavali)))
         urakat (cond urakka
-                     [urakka]
+                 [urakka]
 
-                     hallintayksikko
-                     (map :id (ur-q/hae-elinvoimakeskuksen-urakat db {:evk_id hallintayksikko}))
+                 elinvoimakeskus
+                 (map :id (ur-q/hae-elinvoimakeskuksen-urakat db {:evk_id elinvoimakeskus}))
 
-                     :default ;; Kaikki urakat
-                     nil)
+                 :default ;; Kaikki urakat
+                 nil)
         debug-viesti (str "Haetaan ilmoituksia raportille: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti urakat "urakoista" "ilman urakoita")
