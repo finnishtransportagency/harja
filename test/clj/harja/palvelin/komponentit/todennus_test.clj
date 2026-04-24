@@ -414,7 +414,7 @@
                             "oam_user_last_name" "Elinvoimakeskus"
                             "oam_user_mail" "testi@example.com"
                             "oam_user_mobile" "0401234567"
-                            "oam_organization" "Lapin elinvoimakeskus"
+                            "oam_organization" "Lappi"
                             "oam_groups" "ELY_Paakayttaja"}
             kayttaja (#'todennus/varmista-kayttajatiedot db integraatioloki miam-asetukset evk-headerit)
             kayttaja-kannassa (first (kayttaja-kyselyt/hae-kayttaja-kayttajanimella db {:kayttajanimi evk-kayttajanimi}))]
@@ -426,7 +426,7 @@
         (is (= "Elinvoimakeskus" (:sukunimi kayttaja)))
         (is (= "testi@example.com" (:sahkoposti kayttaja)))
         (is (= "0401234567" (:puhelin kayttaja)))
-        (is (= "Lapin elinvoimakeskus" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
+        (is (= "Lappi" (get-in kayttaja [:organisaatio :nimi])) "Organisaatio on asetettu")))
 
     ;; Siivoa testi-käyttäjä lopuksi
     (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
