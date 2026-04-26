@@ -113,7 +113,6 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     laskutusraja_ylittynyt                           BOOLEAN,
     laskutusrajan_ylittynyt_osuus                    NUMERIC,
     kk_sallittu_laskutusosuus                        NUMERIC,
-    muut_kulut_ei_tavoite_val_aika_yht               NUMERIC,
 
     -- Pysyvät muutokset (mhu_muutos-taulusta)
     pysyvat_muutokset_hoitokausi_yht                 NUMERIC,
@@ -1664,13 +1663,14 @@ BEGIN
               -- Ei tavoitehintaiset 
               muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
               muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht,
+        -- Laskutusraja
+              onko_laskutusraja_kaytossa, hk_laskutusraja, laskutusrajaan_jaljella, laskutusraja_ylittynyt,
+              laskutusrajan_ylittynyt_osuus, kk_sallittu_laskutusosuus,
         -- Pysyvät muutokset
               pysyvat_muutokset_hoitokausi_yht,
               pysyvat_muutokset_val_aika_yht,
-              pysyvat_muutokset_ed_hoitokausi,
-        -- Laskutusraja
-              onko_laskutusraja_kaytossa, hk_laskutusraja, laskutusrajaan_jaljella, laskutusraja_ylittynyt,
-              laskutusrajan_ylittynyt_osuus, kk_sallittu_laskutusosuus
+              pysyvat_muutokset_ed_hoitokausi
+
         );
     return next tulos;
 END;

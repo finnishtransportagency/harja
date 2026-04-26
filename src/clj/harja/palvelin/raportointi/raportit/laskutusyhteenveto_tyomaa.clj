@@ -330,6 +330,7 @@
                                       :laskutetaan-teksti laskutetaan-teksti
                                       :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
                                       :kyseessa-kk-vali? kyseessa-kk-vali?
+                                      :kyseessa-valittu-aikavali? valittu-aikavali?
                                       :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
 
      ;; Ei tavoitehintaiset
