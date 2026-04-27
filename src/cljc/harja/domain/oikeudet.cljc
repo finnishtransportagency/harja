@@ -41,6 +41,7 @@
   urakat-vesivayla-materiaalit
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
+  urakat-toteumat-kokonaishintaisettyot
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit

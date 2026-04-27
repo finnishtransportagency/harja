@@ -146,7 +146,8 @@
                            :hoitokauden-alkuvuosi hoitovuosi
                            :alkupvm hoitokauden-alkupvm
                            :loppupvm hoitokauden-loppupvm})
-        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)]
+        urakan-sopimustyyppi (:sopimustyyppi (first (urakat-q/hae-urakan-tiedot db urakkaid)))
+        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset urakan-sopimustyyppi)]
     kustannukset-jarjestettyna))
 
 (defn- hae-perustiedot
