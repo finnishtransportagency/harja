@@ -98,7 +98,7 @@ label.radio- {
     &:focus-visible:not([disabled]) + label.indeterminate {
       &:before {
         color: @white-default;
-        background: @blue-darker;
+        background: @blue-light;
       }
     }
   }
@@ -116,7 +116,7 @@ label.radio- {
     &:hover:not([disabled]) + label,
     &:focus-visible:not([disabled]) + label {
       &:before {
-        background: @blue-dark;
+        background: @blue-light;
         color: @white-default;
       }
     }
@@ -161,7 +161,14 @@ label.radio- {
 }
 
 .vayla-radio {
-  display: none;
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 
   & + .radio-column {
     margin-top: @valistys-6;
