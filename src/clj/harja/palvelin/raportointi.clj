@@ -116,7 +116,7 @@
                                            :as kaikki-parametrit} raportti]
   (let [urakka (when urakka-id
                  (first (urakat-q/hae-urakka db urakka-id)))
-        hy-nimi (when elinvoimakeskus-id
+        evk-nimi (when elinvoimakeskus-id
                   (-> (organisaatiot-q/hae-organisaatio db elinvoimakeskus-id)
                       first
                       :nimi))]
@@ -129,7 +129,7 @@
 
                           "monta-urakkaa" (str/join ", " urakoiden-nimet)
 
-                          "elinvoimakeskus" hy-nimi
+                          "elinvoimakeskus" evk-nimi
 
                           "koko maa" "Koko maa")
                 :alkupvm (or
@@ -148,7 +148,7 @@
                           "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
                                             "Monta urakkaa"
                                             "Urakka")
-                          "elinvoimakeskus" "Hallintayksikkö"
+                          "elinvoimakeskus" "Elinvoimakeskus"
                           "koko maa" "Koko maa")]] t
               (if (= "urakka" konteksti)
                 (concat t [["Urakka" (:nimi urakka)]
@@ -163,7 +163,7 @@
                 t)
 
               (if (= "elinvoimakeskus" konteksti)
-                (concat t [["Hallintayksikkö" hy-nimi]
+                (concat t [["Elinvoimakeskus" evk-nimi]
                            (if (and (:urakkatyyppi parametrit)
                                     ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
                                     (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
