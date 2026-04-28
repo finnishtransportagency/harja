@@ -112,8 +112,8 @@
       (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
       (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
 
-    ;; Varmista että laskutusraja on NULL ennen vahvistusta
-    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL ennen vahvistusta")
+    ;; Varmista että laskutusraja on asetettu jo ennen vahvistusta
+    (is (not (nil? (hae-urakan-laskutusraja urakka-id))) "Laskutusrajan pitäisi olla asetettu jo ennen vahvistusta, koska laskutusraja_kaytossa = TRUE")
 
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
@@ -169,7 +169,7 @@
       :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ {:urakka-id urakka-id
                                                       :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
                                                       :vahvista? false})
-    (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL vahvistuksen kumouksen jälkeen")))
+    (is (not (nil? (hae-urakan-laskutusraja urakka-id))) "Laskutusrajan ei pitäisi olla NULL vahvistuksen kumouksen jälkeen")))
 
 (deftest hae-urakan-laskutusraja-kun-asetettu
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
@@ -403,6 +403,8 @@
 
     (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
           _ (is (not (nil? laskutusraja-ennen)) "Laskutusrajan pitäisi olla asetettu vahvistuksen jälkeen")
+          toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
+          tehtava-id  (ffirst (q "SELECT id FROM tehtava WHERE poistettu IS NOT TRUE LIMIT 1"))
 
           ;; Pysyvä muutos: positiivinen kustannusvaikutus hoitovuodelle 2025
           ;; -> pitäisi nostaa laskutusrajaa
@@ -411,11 +413,11 @@
                           :syy "Testitarkoitus"
                           :voimassa_alkaen #inst "2025-10-01T00:00:00.000-00:00"
                           :tavoitehinnan-muutos 5000
-                          :kustannusvaikutukset [{:toimenpideinstanssi 129
+                          :kustannusvaikutukset [{:toimenpideinstanssi toimenpideinstanssi-id
                                                   :kustannuslaji "hankintakustannukset"
                                                   :summa 5000
                                                   :hoitokauden_alkuvuosi 2025}]
-                          :tehtavat_ja_maarat [{:tehtava 6953
+                          :tehtavat_ja_maarat [{:tehtava tehtava-id
                                                 :maaramuutos 100
                                                 :hoitokauden_alkuvuosi 2025}]}
           _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)

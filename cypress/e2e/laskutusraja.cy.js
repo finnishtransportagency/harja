@@ -165,14 +165,13 @@ describe('Laskutusraja', function () {
         cy.get('button.nappi-toissijainen[type="button"]').contains('Peruuta vahvistus').click();
         cy.wait('@vahvista-tavoite-ja-kattohinta').its('response.statusCode').should('equal', 200);
 
-        // Tarkista että laskutusraja on 0,00
+        // Tarkista että laskutusraja on asetettu
         cy.get('div #tavoite-ja-kattohinta-elementti div')
             .contains('Laskutusraja')
             .next()
             .invoke('text')
-            .should('satisfy', (text) => {
-                const trimmed = trimmaaArvo(text);
-                return trimmed === '0.00';
+            .then(function (teksti) {
+                expect(trimmaaArvo(teksti)).to.equal(laskutusraja_Kajaani_hoitovuosi1);
             });
 
         // Vahvista tavoite- ja kattohinta uudestaan
