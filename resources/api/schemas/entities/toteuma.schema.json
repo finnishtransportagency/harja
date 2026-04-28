@@ -59,7 +59,7 @@
     },
     "toteumatyyppi": {
       "id": "urn:harja/toteumat/0/toteuma/kokonaishintainenTyo",
-      "required": true,
+      "required": false,
       "enum": [
         "yksikkohintainen",
         "kokonaishintainen",

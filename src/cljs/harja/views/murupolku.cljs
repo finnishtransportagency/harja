@@ -97,7 +97,7 @@
   (let [valittu @nav/valittu-hallintayksikko
         valittu-rivi (atom nil)]
     [:li.murupolkuvalitsin
-     [:label {:for "alasveto-hallintayksikko"} "Elinvoimakeskus"]
+     [:label {:for "button-alasveto-hallintayksikko"} "Elinvoimakeskus"]
      [:div.dropdown.livi-alasveto {:id "alasveto-hallintayksikko"
                                   :class (when (= :hallintayksikko @valinta-auki) "open")}
       (let [vu @nav/valittu-urakka
@@ -112,7 +112,8 @@
           [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Elinvoimakeskus -") " "]))
 
       [:button.nappi-murupolkualasveto.dropdown-toggle
-       {:aria-label "Avaa hallintayksikkö-valikko"
+       {:id "button-alasveto-hallintayksikko"
+        :aria-label "Avaa hallintayksikkö-valikko"
         :on-click #(swap! valinta-auki
                      (fn [v]
                        (if (= v :hallintayksikko)
@@ -153,13 +154,14 @@
   (when @nav/valittu-hallintayksikko
     (let [valittu @nav/valittu-urakka]
       [:li.murupolkuvalitsin
-       [:label {:for "alasveto-urakka"} "Urakka"]
+       [:label {:for "button-alasveto-urakka"} "Urakka"]
        [:div.dropdown.livi-alasveto {:id "alasveto-urakka"
                                     :class (when (= :urakka @valinta-auki) "open")}
         [:span.valittu-urakka.murupolkuteksti (or (:nimi valittu) "- Urakka -") " "]
 
         [:button.nappi-murupolkualasveto.dropdown-toggle
-         {:aria-label "Avaa urakka-valikko"
+         {:id "button-alasveto-urakka"
+          :aria-label "Avaa urakka-valikko"
           :on-click #(swap! valinta-auki
                        (fn [v]
                          (if (= v :urakka)

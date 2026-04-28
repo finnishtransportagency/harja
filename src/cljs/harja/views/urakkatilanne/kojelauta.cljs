@@ -39,9 +39,9 @@
       nav/+urakkatyypit+)]
    [:div
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko {:for "evkhaku"} "Hallintayksikkö"]
+     [:label.alasvedon-otsikko {:for "evkhaku"} "Elinvoimakeskus"]
      [kentat/tee-kentta
-      {:input-id "evkhaku" :tyyppi :haku
+      {:elementin-id "evkhaku" :tyyppi :haku
        :nayta #(hal/evknumero-ja-nimi %)
        :lahde evkhaku
        :hakuikoni? true
@@ -52,7 +52,7 @@
        :monivalinta-teksti #(case (count %)
                               0 "Kaikki"
                               1 (hal/evknumero-ja-nimi (first %))
-                              (str (count %) " hallintayksikköä valittu"))
+                              (str (count %) " elinvoimakeskusta valittu"))
        :disabled? haku-kaynnissa?}
       (r/wrap (:evkt valinnat) #(do
                                   (e! (tiedot/->AsetaSuodatin :evkt %))
@@ -72,7 +72,7 @@
     [:div.label-ja-alasveto
      [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
      [kentat/tee-kentta
-      {:input-id "urakkahaku" :tyyppi :haku
+      {:elementin-id "urakkahaku" :tyyppi :haku
        :nayta :nimi
        :hae-kun-yli-n-merkkia 0
        :lahde urakkahaku
