@@ -111,7 +111,7 @@
                 ;; hae hallintayksikön urakat jo tässä, jottei urakkaa aseteta ennen kuin
                 ;; urakkalista on päivittynyt. Muuten voi tulla ajoitusongelma toisinaan, mikä johtaa siihen että URL-parametriin ei tule urakan id:tä.
                 hallintayksikon-urakkalista (<! (urakat/hae-elinvoimakeskuksen-urakat
-                                                  {:id (:elinvoimakeskus haettu-urakka [:elinvoimakeskus :id])}))]
+                                                  {:id (get-in haettu-urakka [:elinvoimakeskus :id])}))]
             (reset! nav/hallintayksikon-urakkalista hallintayksikon-urakkalista)
             (nav/aseta-hallintayksikko-ja-urakka-varmistuksella! (get-in haettu-urakka [:elinvoimakeskus :id]) haettu-urakka))
           :organisaatio
