@@ -742,7 +742,7 @@
                                    first
                                    :tavoitehinta-indeksikorjattu)
         laskutusraja (:laskutusraja (first (kulu-kyselyt/hae-urakan-laskutusraja conn {:urakka-id urakka-id :hoitokausinro hoitokausinro})))
-        laskutusraja-alkuperainen (:laskutusraja_alkuperainen (first (kulu-kyselyt/hae-urakan-alkuperainen_laskutusraja conn {:urakka-id urakka-id :hoitokausinro hoitokausinro})))
+        laskutusraja-alkuperainen (:laskutusraja_alkuperainen (first (kulu-kyselyt/hae-urakan-alkuperainen-laskutusraja conn {:urakka-id urakka-id :hoitokausinro hoitokausinro})))
         muutokset-yhteensa-kaikki (-> (muutos-kyselyt/hae-laskutusrajan-muutosten-summa-hoitovuodelle
                                        conn {:urakka-id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi :paivitettava-muutos-id nil})
                                        first :muutokset_yhteensa (or 0))

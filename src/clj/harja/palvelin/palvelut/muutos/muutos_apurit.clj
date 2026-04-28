@@ -35,7 +35,7 @@
   (let [urakan-tiedot (first (q-urakat/hae-urakka db {:id urakka-id}))
         hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitokauden-alkuvuosi)
         laskutusraja-alkuperainen (:laskutusraja_alkuperainen
-                                    (first (kulu-kyselyt/hae-urakan-alkuperainen_laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitokausinro})))]
+                                    (first (kulu-kyselyt/hae-urakan-alkuperainen-laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitokausinro})))]
     (->> kirjatut-muutokset
       (sort-by :voimassa_alkaen)
       (filter (fn [m]

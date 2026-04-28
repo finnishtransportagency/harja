@@ -163,6 +163,38 @@
       :laskutusrajan-tarkistukset (:laskutusrajan-tarkistukset vastaus)
       :budjettitavoitteet (:budjettitavoitteet vastaus))))
 
+(defn- laskutusrajan-tarkistus-modaali
+  [app vastaus toast-viesti]
+  (let [vanha-laskutusraja (get-in app [:budjettitavoitteet :laskutusraja])
+        uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])]
+    (if (and vanha-laskutusraja uusi-laskutusraja
+          (not= vanha-laskutusraja uusi-laskutusraja))
+      ;; Laskutusraja muuttui: näytä modaali, toast tulee vasta Sulje-napista
+      (modal/nayta!
+        {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
+         :luokka "modal-dialog-keskitetty-leveampi"
+         :otsikko "Laskutusraja on muuttunut"
+         :footer [napit/yleinen-ensisijainen "Sulje" #(do
+                                                        (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)
+                                                        (modal/piilota!))]}
+        [:div
+         [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
+         [yleiset/info-laatikko :vahva-ilmoitus
+          (str "Tarkistettu laskutusraja on " (fmt/euro-opt true false uusi-laskutusraja))
+          nil
+          nil
+          {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+         [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
+      ;; Laskutusraja ei muuttunut: näytä vain toast
+      (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)))
+
+  (-> app
+    ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
+    (assoc
+      :viimeksi-valittu nil
+      :muokattava-muutos nil
+      :tallennus-kesken? false)
+    (vastaus-haku-onnistui vastaus)))
 
 (defn pienin-hoitokauden-alkuvuosi-jossa-kirjauksia
   "Hakee toimenpiteiden tiedoista pienimmän hoitovuoden alkukauden jossa kirjauksia"
@@ -534,36 +566,7 @@
 
   TallennaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [vanha-laskutusraja (get-in app [:budjettitavoitteet :laskutusraja])
-          uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])]
-      (if (and vanha-laskutusraja uusi-laskutusraja
-               (not= vanha-laskutusraja uusi-laskutusraja))
-        ;; Laskutusraja muuttui: näytä modaali, toast tulee vasta Sulje-napista
-        (modal/nayta!
-          {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
-           :luokka "modal-dialog-keskitetty-leveampi"
-           :otsikko "Laskutusraja on muuttunut"
-           :footer [napit/yleinen-ensisijainen "Sulje" #(do
-                                   (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-                                   (modal/piilota!))]}
-          [:div
-           [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
-           [yleiset/info-laatikko :vahva-ilmoitus
-            (str "Tarkistettu laskutusraja on " (fmt/euro-opt true false uusi-laskutusraja))
-            nil
-            nil
-            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
-           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
-        ;; Laskutusraja ei muuttunut: näytä vain toast
-        (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)))
-
-    (-> app
-      ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen tallennus onnistui"))
 
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -590,36 +593,7 @@
 
   PoistaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (let [vanha-laskutusraja (:laskutusraja-ennen-poistoa app)
-          uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])]
-      (if (and vanha-laskutusraja uusi-laskutusraja
-            (not= vanha-laskutusraja uusi-laskutusraja))
-        ;; Laskutusraja muuttui: näytä modaali, toast tulee vasta Sulje-napista
-        (modal/nayta!
-          {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
-           :luokka "modal-dialog-keskitetty-leveampi"
-           :otsikko "Laskutusraja on muuttunut"
-           :footer [napit/yleinen-ensisijainen "Sulje" #(do
-                                                          (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-                                                          (modal/piilota!))]}
-          [:div
-           [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
-           [yleiset/info-laatikko :vahva-ilmoitus
-            (str "Tarkistettu laskutusraja on " (fmt/euro-opt true false uusi-laskutusraja))
-            nil
-            nil
-            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
-           [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
-        ;; Laskutusraja ei muuttunut: näytä vain toast
-        (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)))
-
-    (-> app
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false
-        :laskutusraja-ennen-poistoa nil)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen poistaminen onnistui"))
 
   PoistaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]

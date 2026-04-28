@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kulut.mhu-kustannusten-seuranta
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
+            [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -467,8 +468,10 @@
   [e! app valittu-hoitokausi hoitokaudet valittu-kuukausi]
   [tuck/tuck tila/laskutus-kohdistetut-kulut
    (fn [e! kulut-app]
-     (let [valittu-kuukausi (if (= valittu-kuukausi "Kaikki") nil valittu-kuukausi)]
-       [kulut/laskutusraja-komponentti e! kulut-app valittu-hoitokausi hoitokaudet valittu-kuukausi true]))])
+     (let [valittu-kuukausi (if (= valittu-kuukausi "Kaikki") nil valittu-kuukausi)
+           yhdistetty-app (merge kulut-app
+                            (select-keys app [:urakan-tavoitehintojen-tilat]))]
+       [kulut/laskutusraja-komponentti e! yhdistetty-app  valittu-hoitokausi hoitokaudet valittu-kuukausi true]))])
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -587,7 +590,8 @@
                                 nil
                                 (second valittu-kuukausi))))
                         (e! (kustannusten-seuranta-tiedot/->HaeOnkoPaatoksiaTekematta valittu-urakka-id hoitokauden-alkuvuosi))
-                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
+                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi))
+                        (e! (tiedot/->HaeUrakanTavoitehintojenTilat)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        [:div
