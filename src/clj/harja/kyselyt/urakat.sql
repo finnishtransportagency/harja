@@ -388,7 +388,7 @@ SELECT
   alkupvm
 FROM urakka u
 WHERE :urakkaid :: INTEGER IS NULL AND
-      u.hallintayksikko = :hallintayksikkoid AND
+      u.elinvoimakeskus_id = :elinvoimakeskus-id AND
       u.tyyppi = :urakkatyyppi :: urakkatyyppi AND
       (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
        u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
@@ -408,6 +408,11 @@ WHERE u.id = :urakka;
 SELECT hallintayksikko AS "hallintayksikko-id"
 FROM urakka
 WHERE id = :id;
+
+-- name: urakan-elinvoimakeskus
+SELECT elinvoimakeskus_id
+  FROM urakka
+ WHERE id = :id;
 
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
@@ -872,22 +877,22 @@ WHERE u.id IN (SELECT id
                       :vuosi <= (SELECT EXTRACT(YEAR FROM u.loppupvm))));
 
 -- name: hae-hallintayksikon-kaynnissa-olevat-urakat
--- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakoista
+-- Palauttaa nimen ja id:n elinvoimakeskuksen käynnissä olevista urakoista
 SELECT
   id,
   nimi
 FROM urakka
-WHERE hallintayksikko = :hal
+WHERE elinvoimakeskus_id = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date);
 
 -- name: hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
--- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakkatyypin urakoista
+-- Palauttaa nimen ja id:n elinvoimakeskuksen käynnissä olevista urakkatyypin urakoista
 SELECT
   id,
   nimi
 FROM urakka
-WHERE hallintayksikko = :hal
+WHERE elinvoimakeskus_id = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi);

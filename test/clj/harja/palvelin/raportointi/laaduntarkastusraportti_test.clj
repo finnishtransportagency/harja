@@ -105,8 +105,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :laaduntarkastusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa'")))
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa'")))
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :urakkatyyppi :hoito}})]

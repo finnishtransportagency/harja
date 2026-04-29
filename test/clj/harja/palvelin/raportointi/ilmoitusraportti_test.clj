@@ -63,8 +63,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-suomen-evk-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
@@ -118,8 +118,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-suomen-evk-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki}})
@@ -146,7 +146,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki}})
@@ -183,7 +183,7 @@
                   +kayttaja-jvh+
                   {:nimi :ilmoitusraportti
                    :konteksti "koko maa"
-                   :hallintayksikko-id nil
+                   :elinvoimakeskus-id nil
                    :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                 :loppupvm (pvm/->pvm "30.09.2017")
                                 :urakkatyyppi :kaikki}})
@@ -224,7 +224,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki
@@ -306,7 +306,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki
