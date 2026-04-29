@@ -36,7 +36,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         cy.visit("/");
 
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click();
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click();
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');

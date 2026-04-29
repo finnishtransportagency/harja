@@ -28,13 +28,13 @@
 
 (defn hae-erilliskustannukset-aikavalille
   [db user urakka-annettu? urakka-id
-   urakkatyyppi hallintayksikko-annettu? hallintayksikko-id
+   urakkatyyppi elinvoimakeskus-annettu? elinvoimakeskus-id
    toimenpide-id alkupvm loppupvm]
   (let [kustannukset (hae-erilliskustannukset
                        db
                        urakka-annettu? urakka-id
                        urakkatyyppi
-                       hallintayksikko-annettu? hallintayksikko-id
+                       elinvoimakeskus-annettu? elinvoimakeskus-id
                        toimenpide-id
                        alkupvm loppupvm)]
     (into []
@@ -50,24 +50,24 @@
             (map konv/alaviiva->rakenne))
           kustannukset)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id toimenpide-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         urakka-annettu? (boolean urakka-id)
-        hallintayksikko-annettu? (boolean hallintayksikko-id)
+        elinvoimakeskus-annettu? (boolean elinvoimakeskus-id)
         erilliskustannukset (reverse (sort-by (juxt (comp :id :urakka) :pvm)
                                               (hae-erilliskustannukset-aikavalille db user
                                                                                    urakka-annettu? urakka-id
                                                                                    (when urakkatyyppi (name urakkatyyppi))
-                                                                                   hallintayksikko-annettu? hallintayksikko-id
+                                                                                   elinvoimakeskus-annettu? elinvoimakeskus-id
                                                                                    toimenpide-id
                                                                                    alkupvm loppupvm)))
         raportin-nimi "Erilliskustannusten raportti"
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         ;; odotellaan tarviiko asiakas ryhmittelyä hallintayksiköiden mukaan..

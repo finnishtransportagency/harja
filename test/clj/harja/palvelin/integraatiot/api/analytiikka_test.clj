@@ -71,7 +71,10 @@
     (sisaltaa-perustiedot (:body vastaus-ok))
     ;; Toisen pitäisi epäonnistua ja antaa virhekoodin
     (is (= 400 (:status vastaus-epaonnistuu)))
-    (is (str/includes? (-> vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))))
+    (is (str/includes? (-> vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
@@ -80,7 +83,10 @@
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
-    (sisaltaa-perustiedot (:body vastaus))))
+    (sisaltaa-perustiedot (:body vastaus))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu
   (let [alkuaika "2015-01-19T00:00:00+03"
@@ -101,7 +107,10 @@
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
-    (sisaltaa-perustiedot (:body vastaus))))
+    (sisaltaa-perustiedot (:body vastaus))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu-2
   (let [alkuaika-paiva-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 1 86400 1000))))
@@ -120,7 +129,10 @@
         lyhennetty-vastaus (subs (:body uusi_vastaus) 0 (min 2000 (count (:body uusi_vastaus))))]
     (is (= 200 status))
     ;; Tämä antaa 7 virhettä, mikäli lokaali kanta on liian vanha. Resetoi tietokanta, niin ongelmat korjautuu
-     (sisaltaa-perustiedot lyhennetty-vastaus)))
+     (sisaltaa-perustiedot lyhennetty-vastaus)
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
@@ -129,7 +141,10 @@
     (is (= 403 (:status vastaus)))
     (is (str/includes? (:body vastaus) "virheet"))
     (is (str/includes? (:body vastaus) "koodi"))
-    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))))
+    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [alkuaika "2005-01-01T00:00:00"
@@ -183,7 +198,10 @@
         loppuaika "2015-01-19T21:00:00+03"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001")] kayttaja-analytiikka portti)]
     (is (= 400 (:status vastaus)))
-    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
+    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest materiaalin-maara-muuttuu
   (let [paiva-alussa-plus3-sql (t-coerce/to-sql-time (pvm/ajan-muokkaus (pvm/luo-pvm 2004 9 19) true 3 :tunti))
@@ -240,7 +258,10 @@
         lopullinen-maara (get-in toteuma-9-lopullinen [:toteuma :materiaalit 0 :maara :maara])]
 
     (is (= alkup-maara lopullinen-maara))
-    (is (= uusi-maara muokattu-maara))))
+    (is (= uusi-maara muokattu-maara))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttajaa
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
@@ -463,16 +484,25 @@
 
 (deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-alkuvuosi-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/abc/2023")] kayttaja-analytiikka portti)]
-    (is (= 400 (:status vastaus)))))
+    (is (= 400 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-loppuvuosi-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/xyz")] kayttaja-analytiikka portti)]
     ;; API palauttaa 500 kun konversio->int epäonnistuu
-    (is (= 500 (:status vastaus)))))
+    (is (= 500 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest api-analytiikka-suunnitellut-tehtavat-alkuvuosi-suurempi-kuin-loppuvuosi-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2023/2020")] kayttaja-analytiikka portti)]
-    (is (= 400 (:status vastaus)))))
+    (is (= 400 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest api-analytiikka-suunnitellut-tehtavat-onnistunut-kutsu-test
   (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/2023")] kayttaja-analytiikka portti)
@@ -542,7 +572,10 @@
     (is (= 400 (:status hylattava-haku)))
     (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))
     (is (= 400 (:status hylattava-aikavali)))
-    (is (str/includes? (:body hylattava-aikavali) "Alkuaika ei voi olla loppuajan jälkeen."))))
+    (is (str/includes? (:body hylattava-aikavali) "Alkuaika ei voi olla loppuajan jälkeen."))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest toteuma-haku-ilman-reittipistetta-perustoiminnallisuus
   (let [alku-aika "2004-10-19T00:00:00+03"
@@ -552,7 +585,10 @@
                 [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-aika "/" loppu-aika)]
                 kayttaja-analytiikka portti)]
     (is (= 200 (:status tulos)))
-    (validoi-vastaus-ilman-reittipistetta (:body tulos))))
+    (validoi-vastaus-ilman-reittipistetta (:body tulos))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest toteuma-haku-ilman-reittipistetta-puutteelliset-oikeudet
   (let [alku-aika "2004-10-19T00:00:00+03"
@@ -562,7 +598,10 @@
                     kayttaja-yit portti)]
     (is (= 403 (:status hylattava)))
     (is (str/includes? (:body hylattava) "virheet"))
-    (is (str/includes? (:body hylattava) "kayttajalla-puutteelliset-oikeudet"))))
+    (is (str/includes? (:body hylattava) "kayttajalla-puutteelliset-oikeudet"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest toteuma-haku-ilman-reittipistetta-virheellinen-aikaformaatti
   (let [vaara-alku "2005-01-01T00:00:00"
@@ -572,7 +611,10 @@
                        [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" vaara-alku "/" oikea-loppu)]
                        kayttaja-analytiikka portti)]
     (is (= 400 (:status virheellinen)))
-    (is (str/includes? (:body virheellinen) "Alkuaika väärässä muodossa"))))
+    (is (str/includes? (:body virheellinen) "Alkuaika väärässä muodossa"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest toteuma-haku-ilman-reittipistetta-oikeustarkastus
   (let [alku-hetki "2015-01-19T00:00:00+03"
@@ -591,4 +633,7 @@
                      [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-hetki "/" loppu-hetki)]
                      kayttaja-analytiikka portti)]
       (is (= 200 (:status sallittu)))
-      (validoi-vastaus-ilman-reittipistetta (:body sallittu)))))
+      (validoi-vastaus-ilman-reittipistetta (:body sallittu)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))

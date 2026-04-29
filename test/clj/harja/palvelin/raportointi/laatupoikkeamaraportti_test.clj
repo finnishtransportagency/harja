@@ -148,12 +148,12 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :laatupoikkeamaraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))
                                               :urakkatyyppi :hoito}})
-        otsikko "Pohjois-Pohjanmaa, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
+        otsikko "Pohjois-Suomi, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
         taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])
         rivit (into #{} (apurit/taulukon-rivit taulukko))]
     (is (vector? vastaus))

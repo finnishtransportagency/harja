@@ -12,6 +12,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
+(declare hae-kokonaishintaiset-toteumat)
+
 (defn alueen-hoitoluokkasarakkeet [alue hoitoluokat tehtava toteumat]
   (mapv
     (fn [hoitoluokka]
@@ -42,9 +44,9 @@
       tehtava-nimet)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
-                               hallintayksikko-id urakkatyyppi] :as parametrit}]
+                               elinvoimakeskus-id urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         hoitoluokat (apply sorted-set
                            (or hoitoluokat
@@ -53,12 +55,12 @@
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat-domain/talvihoitoluokat)
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
                                                        {:urakka urakka-id
-                                                        :hallintayksikko hallintayksikko-id
+                                                        :elinvoimakeskus elinvoimakeskus-id
                                                         :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                         :alku alkupvm
                                                         :loppu loppupvm})
         toteumat (hae-kokonaishintaiset-toteumat db {:urakka urakka-id
-                                                     :hallintayksikko hallintayksikko-id
+                                                     :elinvoimakeskus elinvoimakeskus-id
                                                      :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                      :alku alkupvm
                                                      :loppu loppupvm})
@@ -66,7 +68,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         otsikkorivit (into [] (concat
