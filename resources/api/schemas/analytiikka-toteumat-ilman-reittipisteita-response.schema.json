@@ -61,10 +61,11 @@
                   "luotu": {"type": "string", "format": "date-time"},  
                   "luoja": {"type": "string"},  
                   "muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]},  
-                  "muokkaaja": {"type": "string"}  
+                  "muokkaaja": {"type": "string"},
+                  "poistettu": {"type": "boolean"}
                 },  
                 "additionalProperties": false  
-              }  
+              }
             },  
             "additionalProperties": true  
           }  

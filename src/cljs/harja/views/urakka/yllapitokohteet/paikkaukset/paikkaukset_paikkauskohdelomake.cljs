@@ -151,6 +151,7 @@
                    true)}
      {:otsikko "Yksikkö"
       :tyyppi :valinta
+      :label-for-id "form-paikkauskohde-yksikko"
       :valinnat (vec paikkaus/paikkauskohteiden-yksikot)
       :nimi :yksikko
       :pakollinen? true
