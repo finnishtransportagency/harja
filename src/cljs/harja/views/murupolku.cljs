@@ -97,7 +97,7 @@
   (let [valittu @nav/valittu-hallintayksikko
         valittu-rivi (atom nil)]
     [:li.murupolkuvalitsin
-     [:label {:for "button-alasveto-hallintayksikko"} "Hallintayksikkö"]
+     [:label {:for "button-alasveto-hallintayksikko"} "Elinvoimakeskus"]
      [:div.dropdown.livi-alasveto {:id "alasveto-hallintayksikko"
                                   :class (when (= :hallintayksikko @valinta-auki) "open")}
       (let [vu @nav/valittu-urakka
@@ -107,9 +107,9 @@
                                :on-click #(do
                                             (.preventDefault %)
                                             (nav/valitse-hallintayksikko-varmistuksella! valittu))}
-           (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
+           (str (or (:nimi valittu) "- Elinvoimakeskus -") " ")]
 
-          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
+          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Elinvoimakeskus -") " "]))
 
       [:button.nappi-murupolkualasveto.dropdown-toggle
        {:id "button-alasveto-hallintayksikko"
@@ -144,7 +144,7 @@
                                 (reset! valinta-auki nil)
                                 (nav/valitse-hallintayksikko-varmistuksella! muu-yksikko)
                                 (r/after-render (fn [] (.focus alasvedon-nappi)))))))}
-          [linkki (hal/elynumero-ja-nimi muu-yksikko)
+          [linkki (hal/evknumero-ja-nimi muu-yksikko)
            #(do (reset! valinta-auki nil)
               (nav/valitse-hallintayksikko-varmistuksella! muu-yksikko))]])]]]))
 

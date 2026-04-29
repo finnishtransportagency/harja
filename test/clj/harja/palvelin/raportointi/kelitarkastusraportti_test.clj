@@ -75,13 +75,13 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :kelitarkastusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+    (let [otsikko "Pohjois-Suomi, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Päivämäärä"}

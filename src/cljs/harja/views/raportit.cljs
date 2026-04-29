@@ -1,6 +1,7 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.istunto :as istunto]
+            [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.urakka :as urakka-domain]
             [harja.ui.komponentti :as komp]
@@ -73,7 +74,7 @@
                                            ;; Jos urakkakin on valittu, tulee pelkästään "urakka"
                                            (cond
                                              (when v-ur "urakka") #{"urakka"}
-                                             (when v-hal "hallintayksikko") #{"hallintayksikko"}
+                                             (when v-hal "elinvoimakeskus") #{"elinvoimakeskus"}
                                              :default #{"koko maa"})
                                            #{"urakka"})
                   sopimustyypin-raportit (filter
@@ -745,11 +746,11 @@
      {:valitse-fn nav/valitse-hallintayksikko!
       :valinta v-hal
       :class "raportti-alasveto"
-      :format-fn (fnil hy/elynumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
-                                                     "Valitse hallintayksikkö"
+      :format-fn (fnil hy/evknumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
+                                                     "Valitse elinvoimakeskus"
                                                      (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                                         "Kaikki ELYt"
-                                                         "Valitse ELY"))})}
+                                                         "Kaikki Elinvoimakeskukset"
+                                                         "Valitse Elinvoimakeskus"))})}
      (concat (if (and
                    (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
                    ;; vesiväylille ei haluta "Kaikki ELYt" vaihtoehtoa
@@ -769,7 +770,7 @@
   (if (and (nil? valittu-urakka)
            (or (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?))
                (= urakkatyyppi "vesiväylät")))              ;Vesiväylissä raportteja toistaiseksi vain urakkatasolla
-    (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
+    (str "Valitse elinvoimakeskus ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
 (defn raporttivalinnat [ensimmainen-urakka-viimeksi]
@@ -811,7 +812,7 @@
             [:h3 "Raportin tiedot"]
 
             [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
-             "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             "Elinvoimakeskus" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
                         (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)

@@ -41,7 +41,7 @@
                       urakkatieto-fixture))
 
 (defn raportti-testien-vastaus
-  [{:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm
+  [{:keys [konteksti urakka-id elinvoimakeskus-id alkupvm loppupvm
            urakkatyyppi tarkistettavat-sarakkett]}]
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -49,7 +49,7 @@
                                 {:nimi :turvallisuus
                                  :konteksti konteksti
                                  :urakka-id urakka-id
-                                 :hallintayksikko-id hallintayksikko-id
+                                 :elinvoimakeskus-id elinvoimakeskus-id
                                  :parametrit {:alkupvm (c/to-date (apply t/local-date alkupvm))
                                               :loppupvm (c/to-date (apply t/local-date loppupvm))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
@@ -78,16 +78,16 @@
     (apurit/tarkista-taulukko-yhteensa taulukko 1)))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
-  (let [konteksti "hallintayksikko"
-        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+  (let [konteksti "elinvoimakeskus"
+        hallintayksikko-id (hae-pohjois-suomen-evk-id)
         alkupvm [2014 10 1]
         loppupvm [2015 10 1]
         urakkatyyppi :hoito
 
-        vastaus (raportti-testien-vastaus {:konteksti konteksti :hallintayksikko-id hallintayksikko-id :alkupvm alkupvm
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :elinvoimakeskus-id hallintayksikko-id :alkupvm alkupvm
                                            :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
 
-        otsikko (str "Pohjois-Pohjanmaa, "
+        otsikko (str "Pohjois-Suomi, "
                      "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
         taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
     (apurit/tarkista-taulukko-otsikko taulukko otsikko)
@@ -110,10 +110,10 @@
         hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
     (= hallintayksikot #{"Uusimaa" "Varsinais-Suomi" "Kaakkois-Suomi"
                          "Pirkanmaa" "Pohjois-Savo" "Keski-Suomi"
-                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa"
+                         "Etelä-Pohjanmaa" "Pohjois-Suomi"
                          "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Hallintayksikkö"}
+                                        {:otsikko "Elinvoimakeskus"}
                                         {:otsikko "Työtapaturmat"}
                                         {:otsikko "Vaaratilanteet"}
                                         {:otsikko "Turvallisuushavainnot"}
@@ -128,7 +128,7 @@
                                                   (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
-                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Elinvoimakeskus"}
                                           {:otsikko "Lievät"}
                                           {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus
@@ -158,13 +158,13 @@
     (apurit/tarkista-taulukko-yhteensa taulukko 1)))
 
 (deftest raportin-suoritus-vesivayla-hallintayksikolle-toimii
-  (let [konteksti "hallintayksikko"
+  (let [konteksti "elinvoimakeskus"
         hallintayksikko-id (hae-merivayla-hallintayksikon-id)
         alkupvm [2017 1 1]
         loppupvm [2017 12 31]
         urakkatyyppi :vesivayla
 
-        vastaus (raportti-testien-vastaus {:konteksti konteksti :hallintayksikko-id hallintayksikko-id :alkupvm alkupvm
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :elinvoimakeskus-id hallintayksikko-id :alkupvm alkupvm
                                            :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
 
         otsikko (str "Meriväylät, "
@@ -190,7 +190,7 @@
         hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
     (= hallintayksikot #{"Sisävesiväylät" "Meriväylät" "Kanavat ja avattavat sillat" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
-                                        {:otsikko "Hallintayksikkö"}
+                                        {:otsikko "Elinvoimakeskus"}
                                         {:otsikko "Työtapaturmat"}
                                         {:otsikko "Vaaratilanteet"}
                                         {:otsikko "Turvallisuushavainnot"}
@@ -205,7 +205,7 @@
                                                   (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
-                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Elinvoimakeskus"}
                                           {:otsikko "Lievät"}
                                           {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus

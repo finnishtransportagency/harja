@@ -12,6 +12,7 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?
+  raporttioikeudet
   raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
@@ -83,7 +84,8 @@
   roolit
   tilannekuva-nykytilanne
   tilannekuva-historia
-  urakkatilanne)
+  urakkatilanne
+  ilmoitukset-ilmoitukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

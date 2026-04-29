@@ -96,6 +96,18 @@ SELECT id, ytunnus, nimi, lyhenne, tyyppi,
 
 -- name: paivita-elinvoimakeskus-geometria!
 UPDATE organisaatio
-SET alue = ST_GeomFromText(:alue) :: GEOMETRY
+SET alue = ST_SimplifyPreserveTopology(
+    ST_GeomFromText(:alue)::geometry,
+    5)
 WHERE tyyppi = 'elinvoimakeskus'
   AND lyhenne = :lyhenne;
+
+-- name: hae-elinvoimakeskus
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE id = :id;
+
+-- name: hae-elinvoimakeskus-nimella
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND nimi = :nimi;
