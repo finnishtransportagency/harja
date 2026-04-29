@@ -23,7 +23,7 @@
   hae-urakan-hoitokaudet aseta-laskutusraja-kaytossa-true! hae-90pv-paattyneet-urakat hae-urakoiden-organisaatiotiedot
   hae-kaikki-urakat-aikavalilla hae-elinvoimakeskuksen-urakat hae-urakoiden-tunnistetiedot
   hae-jarjestelmakayttajan-urakat hae-urakat-ytunnuksella hae-urakat-joihin-jarjestelmalla-erillisoikeus
-  hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat hae-hallintayksikon-kaynnissa-olevat-urakat
+  hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat hae-hallintayksikon-kaynnissa-olevat-urakat
   hae-kaynnissa-olevat-urakkatyypin-urakat hae-kaynnissa-olevat-urakat hae-kaynnissa-olevat-hoitourakat)
 
 (defn onko-olemassa? [db id]

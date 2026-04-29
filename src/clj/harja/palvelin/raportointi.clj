@@ -126,11 +126,8 @@
         [1 :raportin-yleiset-tiedot]
         (merge {:urakka (case konteksti
                           "urakka" (:nimi urakka)
-
                           "monta-urakkaa" (str/join ", " urakoiden-nimet)
-
                           "elinvoimakeskus" evk-nimi
-
                           "koko maa" "Koko maa")
                 :alkupvm (or
                            (some-> parametrit :alkupvm pvm/pvm)
@@ -168,8 +165,8 @@
                                     ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
                                     (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
                              [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
-                              (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
-                                       db {:hal elinvoimakeskus-id
+                              (count (urakat-q/hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat
+                                       db {:elinvoimakeskus-id elinvoimakeskus-id
                                            :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
                              ["Urakoita käynnissä"
                               (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat

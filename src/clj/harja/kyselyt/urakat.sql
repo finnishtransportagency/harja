@@ -886,13 +886,13 @@ WHERE elinvoimakeskus_id = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date);
 
--- name: hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
+-- name: hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat
 -- Palauttaa nimen ja id:n elinvoimakeskuksen käynnissä olevista urakkatyypin urakoista
 SELECT
   id,
   nimi
 FROM urakka
-WHERE elinvoimakeskus_id = :hal
+WHERE elinvoimakeskus_id = :elinvoimakeskus-id
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi);
