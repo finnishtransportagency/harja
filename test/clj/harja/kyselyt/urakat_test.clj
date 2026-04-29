@@ -25,7 +25,8 @@
                  {:elinvoimakeskusid psu-evk-id
                   :kayttajan_org_id 1
                   :kayttajan_org_tyyppi "liikennevirasto"
-                  :sallitut_urakat nil})]
+                  :urakat_annettu false
+                  :sallitut_urakat [-1]})]
 
     (testing "PSU EVK löytyy"
       (is (some? psu-evk-id) "Pohjois-Suomen elinvoimakeskus löytyy kannasta"))
@@ -68,11 +69,12 @@
                  {:elinvoimakeskusid -999
                   :kayttajan_org_id 1
                   :kayttajan_org_tyyppi "liikennevirasto"
-                  :sallitut_urakat nil})]
+                  :urakat_annettu false
+                  :sallitut_urakat [-1]})]
     (testing "Olemattomalle EVK ID:lle ei löydy urakoita"
       (is (empty? urakat) "Olemattomalla EVK:lla ei pitäisi olla urakoita"))))
 
-(deftest listaa-urakat-elinvoimakeskukselle-urakoitsijana
+(deftest listaa-urakat-elinvoimakeskukselle-urakoitsijana-toimii
   (let [db (:db jarjestelma)
         psu-evk-id (hae-pohjois-suomen-evk-id)
         urakoitsija-id (ffirst (q "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' LIMIT 1"))
@@ -80,7 +82,8 @@
                  {:elinvoimakeskusid psu-evk-id
                   :kayttajan_org_id urakoitsija-id
                   :kayttajan_org_tyyppi "urakoitsija"
-                  :sallitut_urakat nil})]
+                  :urakat_annettu false
+                  :sallitut_urakat [-1]})]
 
     (testing "Urakoitsija näkee vain omat urakkansa"
       (doseq [urakka urakat]
