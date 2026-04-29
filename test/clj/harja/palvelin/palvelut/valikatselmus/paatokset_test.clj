@@ -1000,10 +1000,11 @@
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                           budjettisuunnittelu-kyselyt/hae-budjettitavoite
                           (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                    :hoitovuoden-lopun-tavoitehinta tavoitehinta
+                                                    :tavoitehinta-oikaistu tavoitehinta
                                                     :hoitovuoden-lopun-kattohinta (* 1.1 tavoitehinta)}])]
               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
-            (catch Exception e e))
+            (catch Exception e e
+              (println "ERROR:" (.getMessage e))))
         ;; Haetaan sen sijaan tehty päätös suoraan tietokannasta
         haettavat-paatokset [{:nimi "Tavoitehinnan ylitys" :tyyppi "A" :jarjestys 10}]
         tietokantapaatokset (paatos-kyselyt/hae-paatokset (:db jarjestelma) haettavat-paatokset urakkaid hoitokauden-alkuvuosi)
@@ -1412,7 +1413,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :hoitovuoden-lopun-tavoitehinta hv_lopun_tavoitehinta_ennen_indkorj}]
+                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
                   (with-redefs [valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
@@ -1420,7 +1421,8 @@
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e e
+                    (println "Virhe tapahtui: " (.getMessage e)) e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
@@ -1459,7 +1461,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :hoitovuoden-lopun-tavoitehinta (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
+                                       :tavoitehinta-oikaistu (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
                                        :muutos-summa muutokset}]
         vastaus (try
                   (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
@@ -1469,7 +1471,8 @@
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
+                  (catch Exception e e
+                    (println "Virhe tapahtui: " (.getMessage e)) e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
@@ -1507,7 +1510,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :hoitovuoden-lopun-tavoitehinta hv_lopun_tavoitehinta_ennen_indkorj}]
+                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
                   (with-redefs [;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
@@ -1617,7 +1620,7 @@
                   (with-redefs [;; Feikataan vastaukset
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite
                                 (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                          :hoitovuoden-lopun-tavoitehinta tavoitehinta_jalkeen
+                                                          :tavoitehinta-oikaistu tavoitehinta_jalkeen
                                                           :hoitovuoden-lopun-kattohinta kattohinta}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
@@ -1715,16 +1718,19 @@
         paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
+        kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                       :tavoitehinta-oikaistu hv_lopun_indkorjaamaton_tavoitehinta}]
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hv_lopun_indkorjaamaton_tavoitehinta)
+                                ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
                   (catch Exception e
-                    (println "ERROR:: e" e)))
+                    (println "ERROR: e" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)]
     (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
