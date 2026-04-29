@@ -4,7 +4,8 @@
 						[harja.ui.komponentti :as komp]
 						[harja.ui.grid :as grid]
 						[harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
-						[harja.tiedot.hallinta.urakkatiedot.sanktio-profiilit-tiedot :as tiedot]))
+						[harja.tiedot.hallinta.urakkatiedot.sanktio-profiilit-tiedot :as tiedot]
+  [harja.views.hallinta.urakkatiedot.bonus-profiilit-nakyma :as bonus-profiilit]))
 
 
 (defn- aktiivisuus-teksti [aktiivinen]
@@ -23,6 +24,14 @@
 	(str alkupvm
 		(when loppupvm
 			(str " - " loppupvm))))
+
+(defn- uudelleennimeaminen-solu [{:keys [uudelleennimetty uudelleennimeaminen]}]
+	(if uudelleennimetty
+		[:div
+		 [:div {:style {:margin-bottom "0.35rem"}}
+			[:span.label.label-warning "Nimetty uudelleen"]]
+		 [:div uudelleennimeaminen]]
+		"-"))
 
 (defn- kontekstit-teksti [soveltuvuuskontekstit]
 	(str/join ", " (map soveltuvuuskonteksti-teksti soveltuvuuskontekstit)))
@@ -63,6 +72,9 @@
 									 lajit)}
 	 [{:tyyppi :vetolaatikon-tila :leveys 0.4 :muokattava? (constantly false)}
 		{:nimi :nimi :otsikko "Laji" :leveys 2 :muokattava? (constantly false)}
+		{:nimi :uudelleennimeaminen :otsikko "Uudelleennimeäminen" :leveys 2.4 :muokattava? (constantly false)
+		 :hae identity
+		 :fmt uudelleennimeaminen-solu}
 		{:nimi :laji :otsikko "Koodi" :leveys 1 :muokattava? (constantly false)
 		 :fmt name}
 		{:nimi :rivin-tyyppi :otsikko "Rivin tyyppi" :leveys 1.2 :muokattava? (constantly false)
@@ -173,7 +185,7 @@
 			(let [suodatetut-profiilit (tiedot/suodata-profiilit app)
 						valitun-profiilin-detalji (get profiilin-detaljit valittu-profiili-id)]
 				[:div.sanktio-profiilit-hallinta
-				 [:h2 "Sanktio-profiilit"]
+				 [:h3 "Sanktio-profiilit"]
 				 [:p "Selaa sanktio-profiileja profiilikeskeisesti. Vasemmalta valitaan profiili, oikealta näkyvät yhteenveto ja lajeittain ryhmitelty sisältö."]
 				 [suodatin-rivi e! suodattimet profiilit]
 				 [:div.row {:style {:margin-top "1rem"}}
@@ -200,4 +212,8 @@
 						 [yleiset/info-laatikko :varoitus "Profiilin detaljia ei saatu ladattua."])]]]))))
 
 (defn sanktio-profiilit []
-	[tuck tiedot/tila sanktio-profiilit*])
+	[:div
+  [:h2 "Sanktio- ja bonusprofiilit"]
+  [tuck tiedot/tila sanktio-profiilit*]
+  [:hr]
+  [bonus-profiilit/bonus-profiilit]])
