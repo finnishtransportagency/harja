@@ -19,7 +19,7 @@
                :profiilit [{:id 1 :nimi "Aktiivinen profiili" :urakkatyyppi :teiden-hoito :aktiivinen true}
                            {:id 2 :nimi "Piiloutuva profiili" :urakkatyyppi :teiden-hoito :aktiivinen false}]
                :profiilin-detaljit {1 {:profiili {:id 1}}
-                                   2 {:profiili {:id 2}}}
+                                    2 {:profiili {:id 2}}}
                :valittu-profiili-id 2)
         tulos (tuck-apurit/e! (tiedot/->PaivitaSuodatin :aktiivisuus :aktiiviset) tila)]
     (is (= :aktiiviset (get-in tulos [:suodattimet :aktiivisuus])))
@@ -32,7 +32,7 @@
                              :urakkatyyppi :kaikki
                              :aktiivisuus :aktiiviset}
                :profiilin-detaljit {1 {:profiili {:id 1}}
-                                   2 {:profiili {:id 2}}}
+                                    2 {:profiili {:id 2}}}
                :valittu-profiili-id 2)
         vastaus [{:id 1 :nimi "Aktiivinen profiili" :urakkatyyppi :teiden-hoito :aktiivinen true}
                  {:id 2 :nimi "Piiloutuva profiili" :urakkatyyppi :teiden-hoito :aktiivinen false}]

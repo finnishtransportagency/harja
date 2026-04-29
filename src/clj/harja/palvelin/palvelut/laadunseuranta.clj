@@ -220,7 +220,7 @@
     (if (= :yllapidon_bonus laji)
       (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi laji alkupvm)
             sanktiotyyppi-id (or annettu-tyyppi-id
-                                 (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit}))))]
+                               (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit}))))]
         (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db (name laji) sanktiotyyppi-id alkupvm)
         sanktiotyyppi-id)
       (-> (sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
@@ -257,7 +257,7 @@
                   indeksi)
         sanktiolaji (when laji (keyword laji))
         sanktiotyyppi (when sanktiolaji
-            (ratkaise-sanktion-tyyppi-id db (assoc urakan-tiedot :id urakka) (assoc sanktio :laji sanktiolaji)))
+                        (ratkaise-sanktion-tyyppi-id db (assoc urakan-tiedot :id urakka) (assoc sanktio :laji sanktiolaji)))
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -502,12 +502,12 @@
         (hae-sanktio-profiilin-detalji-admin db user tiedot))
 
       :hae-bonus-profiilit-admin
-(fn [user _]
-  (hae-bonus-profiilit-admin db user))
+      (fn [user _]
+        (hae-bonus-profiilit-admin db user))
 
-:hae-bonus-profiilin-detalji-admin
-(fn [user tiedot]
-  (hae-bonus-profiilin-detalji-admin db user tiedot))
+      :hae-bonus-profiilin-detalji-admin
+      (fn [user tiedot]
+        (hae-bonus-profiilin-detalji-admin db user tiedot))
 
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
@@ -537,7 +537,7 @@
       :hae-sanktio-profiilit-admin
       :hae-sanktio-profiilin-detalji-admin
       :hae-bonus-profiilit-admin
-:hae-bonus-profiilin-detalji-admin
+      :hae-bonus-profiilin-detalji-admin
       :tallenna-suorasanktio
       :poista-suorasanktio
       :hae-urakan-laatupoikkeama-liitteet

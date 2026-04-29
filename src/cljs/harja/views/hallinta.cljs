@@ -96,20 +96,20 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat]) 
-    
+      [tarjoushinnat/tarjoushinnat])
+
     "Lupaukset"
     :lupaukset
     (when (oikeudet/hallinta-lupaukset)
       ^{:key "lupaukset"}
       [lupaukset/lupaukset])
-    
+
     "Paallystysilmoitukset"
     :paallystysilmoitukset
     (when (oikeudet/hallinta-paallystysilmoitukset)
       ^{:key "paallystysilmoitukset"}
       [paallystysilmoitukset/paallystysilmoitukset])
-    
+
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)

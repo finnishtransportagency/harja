@@ -34,44 +34,44 @@
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :karttakuvat (component/using
-                                       (karttakuvat/luo-karttakuvat)
-                                       [:http-palvelin :db])
-                        :fim (component/using
-                               (fim/->FIM {:url +testi-fim+})
-                               [:db :integraatioloki])
-                        :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
-                        :pdf-vienti (component/using
-                                      (pdf-vienti/luo-pdf-vienti)
-                                      [:http-palvelin])
-                        :raportointi (component/using
-                                       (raportointi/luo-raportointi)
-                                       [:db :pdf-vienti])
-                        :raportit (component/using
-                                    (raportit/->Raportit)
-                                    [:http-palvelin :db :raportointi :pdf-vienti])
-                        :itmf (feikki-jms "itmf")
-                        :api-sahkoposti (component/using
-                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
-                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
-                                                                                            :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
-                                                                                            :palvelin "http://localhost:8084"
-                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
-                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
-                                          [:http-palvelin :db :integraatioloki :itmf])
-                        :sms (component/using (sms/luo-tekstiviesti-komponentti
-                                                {:url +testi-sms-url+ :apiavain "testiapiavain"})
-                                      [:http-palvelin :db :integraatioloki])
-                        :laadunseuranta (component/using
-                                          (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :api-sahkoposti :sms])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :karttakuvat (component/using
+                         (karttakuvat/luo-karttakuvat)
+                         [:http-palvelin :db])
+          :fim (component/using
+                 (fim/->FIM {:url +testi-fim+})
+                 [:db :integraatioloki])
+          :integraatioloki (component/using
+                             (integraatioloki/->Integraatioloki nil)
+                             [:db])
+          :pdf-vienti (component/using
+                        (pdf-vienti/luo-pdf-vienti)
+                        [:http-palvelin])
+          :raportointi (component/using
+                         (raportointi/luo-raportointi)
+                         [:db :pdf-vienti])
+          :raportit (component/using
+                      (raportit/->Raportit)
+                      [:http-palvelin :db :raportointi :pdf-vienti])
+          :itmf (feikki-jms "itmf")
+          :api-sahkoposti (component/using
+                            (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                              :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                              :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                                                                              :palvelin "http://localhost:8084"
+                                                                              :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                             :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                            [:http-palvelin :db :integraatioloki :itmf])
+          :sms (component/using (sms/luo-tekstiviesti-komponentti
+                                  {:url +testi-sms-url+ :apiavain "testiapiavain"})
+                 [:http-palvelin :db :integraatioloki])
+          :laadunseuranta (component/using
+                            (ls/->Laadunseuranta)
+                            [:http-palvelin :db :fim :api-sahkoposti :sms])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -118,30 +118,30 @@
 
     (testing "Laatupoikkeaman tallennus"
       (let [vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama
-                                         +kayttaja-jvh+
-                                         laatupoikkeama)
+                      +kayttaja-jvh+
+                      laatupoikkeama)
             id (:id vastaus)]
 
         (is (number? id) "Tallennus palauttaa uuden id:n")))
 
     (testing "sanktiollisen-laatupoikkeaman-tallennus"
       (let [vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama
-                                         +kayttaja-jvh+
-                                         (assoc laatupoikkeama
-                                           :paatos paatos
-                                           :sanktiot [uusi-sanktio]))]
+                      +kayttaja-jvh+
+                      (assoc laatupoikkeama
+                        :paatos paatos
+                        :sanktiot [uusi-sanktio]))]
         (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
         (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")
         (is (number? (get-in vastaus [:sanktiot 0 :id])) "Uudelle sanktiolle luodaan uusi id")))
 
     (testing "Laatupoikkeaman luominen epäonnistuu jos sanktio ei kuulu urakkaan"
       (is (thrown? SecurityException
-                   (kutsu-http-palvelua :tallenna-laatupoikkeama
-                                        +kayttaja-jvh+
-                                        (assoc laatupoikkeama
-                                          :urakka 1
-                                          :paatos paatos
-                                          :sanktiot [olemassa-oleva-sanktio])))))
+            (kutsu-http-palvelua :tallenna-laatupoikkeama
+              +kayttaja-jvh+
+              (assoc laatupoikkeama
+                :urakka 1
+                :paatos paatos
+                :sanktiot [olemassa-oleva-sanktio])))))
 
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
@@ -336,13 +336,13 @@
         hk-alkupvm (pvm/->pvm "1.10.2021")
         hk-loppupvm (pvm/->pvm "31.12.2021")
         sanktio-id (palvelukutsu-tallenna-suorasanktio
-                                 +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+                     +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
         sanktiot-sakon-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-          :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                           :alku hk-alkupvm
-                                                           :loppu hk-loppupvm})
+                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :alku hk-alkupvm
+                                                                                  :loppu hk-loppupvm})
         lisatty-hoidon-sakko (first (filter #(= (get-in % [:laatupoikkeama :paatos :perustelu]) perustelu)
-                                            sanktiot-sakon-jalkeen))]
+                                      sanktiot-sakon-jalkeen))]
     (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
     (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
     (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
@@ -428,7 +428,7 @@
         hk-alkupvm (pvm/->pvm "1.10.2016")
         hk-loppupvm (pvm/->pvm "30.09.2017")
         lisatyn-sanktion-id (palvelukutsu-tallenna-suorasanktio
-                     +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
+                              +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
         sanktiot-suorasanktion-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                           :alku hk-alkupvm
@@ -489,8 +489,8 @@
 (deftest hae-laatupoikkeaman-tiedot
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                            :laatupoikkeama-id 3})]
+                  :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :laatupoikkeama-id 3})]
     (is (not (empty? vastaus)))
     (is (string? (:kuvaus vastaus)))
     (is (>= (count (:kuvaus vastaus)) 10))))
@@ -498,21 +498,21 @@
 (deftest hae-urakan-laatupoikkeamat
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-laatupoikkeamat +kayttaja-jvh+
-                                {:listaus :kaikki
-                                 :urakka-id urakka-id
-                                 :alku (pvm/luo-pvm (+ 1900 100) 9 1)
-                                 :loppu (pvm/luo-pvm (+ 1900 110) 8 30)})]
+                  :hae-urakan-laatupoikkeamat +kayttaja-jvh+
+                  {:listaus :kaikki
+                   :urakka-id urakka-id
+                   :alku (pvm/luo-pvm (+ 1900 100) 9 1)
+                   :loppu (pvm/luo-pvm (+ 1900 110) 8 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
 
 (deftest hae-urakan-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                 :alku (pvm/luo-pvm 2015 10 1)
-                                                                                 :loppu (pvm/luo-pvm 2016 10 30)
-                                                                                 :hae-bonukset? false})]
+                  :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :alku (pvm/luo-pvm 2015 10 1)
+                                                                   :loppu (pvm/luo-pvm 2016 10 30)
+                                                                   :hae-bonukset? false})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
@@ -533,10 +533,10 @@
 (deftest hae-urakan-jalkeiset-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                 :alku (pvm/luo-pvm 2018 10 1)
-                                                                                 :loppu (pvm/luo-pvm 2019 10 30)
-                                                                                 :vain-yllapitokohteettomat? nil})]
+                  :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :alku (pvm/luo-pvm 2018 10 1)
+                                                                   :loppu (pvm/luo-pvm 2019 10 30)
+                                                                   :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
 ;;  Tämä testi varmistaa, että hoidon alueurakoissa (urakan tyyppi = 'hoito'), jotka ovat alkaneet 2018 tai aiemmin, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
@@ -545,23 +545,23 @@
         alkupvm (pvm/luo-pvm 2016 9 1)
         loppupvm (pvm/luo-pvm 2017 8 30)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                 :alku alkupvm
-                                                                                 :loppu loppupvm
-                                                                                 :vain-yllapitokohteettomat? nil})
+                  :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :alku alkupvm
+                                                                   :loppu loppupvm
+                                                                   :vain-yllapitokohteettomat? nil})
         sanktio-100e (first (filter #(= -100.0 (:summa %)) vastaus))
         summat-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :summa vastaus))))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :indeksikorjaus vastaus))))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :suorita-raportti
-                                        +kayttaja-jvh+
-                                        {:nimi :sanktioraportti
-                                         :konteksti "urakka"
-                                         :urakka-id urakka-id
-                                         :parametrit {:urakkatyyppi :hoito
-                                                      :alkupvm alkupvm
-                                                      :loppupvm loppupvm}})
+                          :suorita-raportti
+                          +kayttaja-jvh+
+                          {:nimi :sanktioraportti
+                           :konteksti "urakka"
+                           :urakka-id urakka-id
+                           :parametrit {:urakkatyyppi :hoito
+                                        :alkupvm alkupvm
+                                        :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
         sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
         sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
@@ -622,14 +622,14 @@
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :suorita-raportti
-                                        +kayttaja-jvh+
-                                        {:nimi :sanktioraportti
-                                         :konteksti "urakka"
-                                         :urakka-id urakka-id
-                                         :parametrit {:urakkatyyppi :teiden-hoito
-                                                      :alkupvm alkupvm
-                                                      :loppupvm loppupvm}})
+                          :suorita-raportti
+                          +kayttaja-jvh+
+                          {:nimi :sanktioraportti
+                           :konteksti "urakka"
+                           :urakka-id urakka-id
+                           :parametrit {:urakkatyyppi :teiden-hoito
+                                        :alkupvm alkupvm
+                                        :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
         sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 35)))
         sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
@@ -650,11 +650,11 @@
     (is (= (:summa sanktio) -100.2) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio) -8.1162) "sanktion indeksikorjaus laskettu oikein")
     (is (= (fmt/desimaaliluku (- summat-yhteensa-hae-sanktiot-palvelusta) 2)
-          (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
-          "100,20") "Sanktioiden summat palvelusta.")
+           (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
+           "100,20") "Sanktioiden summat palvelusta.")
     (is (= (fmt/desimaaliluku (- indeksikorotukset-yhteensa-hae-sanktiot-palvelusta) 2)
-          (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
-          "8,12") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
+           "8,12") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
     (is (= (fmt/desimaaliluku (- sakot-indeksikorotuksineen-laskutusyhteenvedosta) 2) "108,32") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
 
     (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
@@ -666,23 +666,23 @@
         alkupvm (pvm/luo-pvm 2022 8 1)
         loppupvm (pvm/luo-pvm 2022 8 30)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                 :alku alkupvm
-                                                                                 :loppu loppupvm
-                                                                                 :vain-yllapitokohteettomat? nil})
+                  :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :alku alkupvm
+                                                                   :loppu loppupvm
+                                                                   :vain-yllapitokohteettomat? nil})
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :summa vastaus))))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :suorita-raportti
-                                        +kayttaja-jvh+
-                                        {:nimi :sanktioraportti
-                                         :konteksti "urakka"
-                                         :urakka-id urakka-id
-                                         :parametrit {:urakkatyyppi :teiden-hoito
-                                                      :alkupvm alkupvm
-                                                      :loppupvm loppupvm}})
+                          :suorita-raportti
+                          +kayttaja-jvh+
+                          {:nimi :sanktioraportti
+                           :konteksti "urakka"
+                           :urakka-id urakka-id
+                           :parametrit {:urakkatyyppi :teiden-hoito
+                                        :alkupvm alkupvm
+                                        :loppupvm loppupvm}})
         sanktiotaulukko (nth sanktioraportti 4)
         sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
         sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
@@ -712,7 +712,7 @@
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-sanktiotyypit +kayttaja-jvh+)]
+                  :hae-sanktiotyypit +kayttaja-jvh+)]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 9))))
 
@@ -820,7 +820,7 @@
     (is (= :urakka (:soveltuvuuskonteksti vastaus)))
     (is (= :muistutus (:laji muistutus)))
     (is (= [13 14 17 10]
-          (mapv :koodi (:sanktiotyypit muistutus))))))
+           (mapv :koodi (:sanktiotyypit muistutus))))))
 
 (deftest hae-urakan-sanktio-konfiguraatio-validoi-soveltuvuuskontekstin
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
@@ -874,7 +874,7 @@
                               {:urakka-id urakka-id
                                :hoitovuosi 1
                                :soveltuvuuskonteksti :urakka})
-                    [:profiili :id])
+                      [:profiili :id])
         profiili (first (q-map (format "SELECT urakkatyyppi, hoitovuosi_alku, hoitovuosi_loppu, alkupvm, loppupvm FROM sanktio_profiili WHERE id = %s" profiili-id)))]
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili
@@ -1156,7 +1156,7 @@
     (is (= profiili-id (get-in vastaus [:profiili :id])))
     (is (string? (get-in vastaus [:profiili :yhteenveto])) "Profiilin summaryn pitää tulla backendista valmiina")
     (is (= #{:urakka :laatupoikkeama}
-          (into #{} (map :soveltuvuuskonteksti (:sisalto vastaus))))
+           (into #{} (map :soveltuvuuskonteksti (:sisalto vastaus))))
       "Detailin pitää ryhmitellä sisältö vähintään soveltuvuuskontekstin mukaan")
     (is (= :muistutus (:laji muistutuslaji)) "Urakkakontekstin muistutuslajin pitää löytyä ryhmittelystä")
     (is (contains? ensimmainen-rivi :sanktiotyyppi) "Detailin alin taso pitää olla profiilirivi eikä raaka join-rivi")
@@ -1177,8 +1177,8 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)]
+                      first
+                      :id)]
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
         {:sanktio_profiili_id profiili-id
@@ -1223,8 +1223,8 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)]
+                      first
+                      :id)]
     (try
       (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
@@ -1264,20 +1264,20 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)
+                      first
+                      :id)
         profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
-                             {:sanktio_profiili_id profiili-id
-                              :sanktio_laji_id laji-id
-                              :sanktiotyyppi_id sentinel-tyyppi-id
-                              :soveltuvuuskonteksti "laatupoikkeama"
-                              :jarjestys 1
-                              :aktiivinen true
-                              :voi_puolittaa_omailmoituksella true
-                              :luoja integraatio-id
-                              :muokkaaja integraatio-id})
-                           first
-                           :id)]
+                              {:sanktio_profiili_id profiili-id
+                               :sanktio_laji_id laji-id
+                               :sanktiotyyppi_id sentinel-tyyppi-id
+                               :soveltuvuuskonteksti "laatupoikkeama"
+                               :jarjestys 1
+                               :aktiivinen true
+                               :voi_puolittaa_omailmoituksella true
+                               :luoja integraatio-id
+                               :muokkaaja integraatio-id})
+                          first
+                          :id)]
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
         {:sanktio_profiili_rivi_id profiilirivi-id
@@ -1320,20 +1320,20 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)
+                      first
+                      :id)
         profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
-                             {:sanktio_profiili_id profiili-id
-                              :sanktio_laji_id laji-id
-                              :sanktiotyyppi_id sentinel-tyyppi-id
-                              :soveltuvuuskonteksti "laatupoikkeama"
-                              :jarjestys 1
-                              :aktiivinen true
-                              :voi_puolittaa_omailmoituksella true
-                              :luoja integraatio-id
-                              :muokkaaja integraatio-id})
-                           first
-                           :id)]
+                              {:sanktio_profiili_id profiili-id
+                               :sanktio_laji_id laji-id
+                               :sanktiotyyppi_id sentinel-tyyppi-id
+                               :soveltuvuuskonteksti "laatupoikkeama"
+                               :jarjestys 1
+                               :aktiivinen true
+                               :voi_puolittaa_omailmoituksella true
+                               :luoja integraatio-id
+                               :muokkaaja integraatio-id})
+                          first
+                          :id)]
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
         {:sanktio_profiili_rivi_id profiilirivi-id
@@ -1372,8 +1372,8 @@
                     {:sanktio-profiili-id profiili-id}))
         kaikki-rivit (mapcat :rivit (mapcat :lajit (:sisalto vastaus)))
         metadataa-sisaltavat-rivit (filter #(or (:voi-puolittaa-omailmoituksella %)
-                                               (seq (:lukitut-summat %)))
-                                         kaikki-rivit)]
+                                              (seq (:lukitut-summat %)))
+                                     kaikki-rivit)]
     (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa admin-testausta varten")
     (is (seq metadataa-sisaltavat-rivit)
       "Seedatusta MHU2026-profiilista pitää löytyä ainakin yksi rivi, jossa uusi metadata näkyy admin-näkymässä")))
@@ -1566,8 +1566,8 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)
+                      first
+                      :id)
         perustelu "HARJA-2294 sentinel write-path"
         perintapvm (pvm/->pvm-aika "2.10.2050 22:00:00")
         hk-alkupvm (pvm/->pvm "1.10.2050")
@@ -1611,14 +1611,14 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
-  olemassa-oleva-mhu2026-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
-  luotu-mhu2026-tyyppi-id (when-not olemassa-oleva-mhu2026-tyyppi-id
-         (:id (first (jdbc/insert! (:db jarjestelma) :sanktiotyyppi
-                 {:nimi "Talvihoito Ise/Is/L"
-            :toimenpidekoodi 618
-            :koodi 18
-            :poistettu false}))))
-  mhu2026-tyyppi-id (or olemassa-oleva-mhu2026-tyyppi-id luotu-mhu2026-tyyppi-id)
+        olemassa-oleva-mhu2026-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        luotu-mhu2026-tyyppi-id (when-not olemassa-oleva-mhu2026-tyyppi-id
+                                  (:id (first (jdbc/insert! (:db jarjestelma) :sanktiotyyppi
+                                                {:nimi "Talvihoito Ise/Is/L"
+                                                 :toimenpidekoodi 618
+                                                 :koodi 18
+                                                 :poistettu false}))))
+        mhu2026-tyyppi-id (or olemassa-oleva-mhu2026-tyyppi-id luotu-mhu2026-tyyppi-id)
         tpi-id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
                           {:nimi "write-path-puuttuva-tyyppi-testi"
@@ -1630,8 +1630,8 @@
                            :aktiivinen true
                            :luoja integraatio-id
                            :muokkaaja integraatio-id})
-                        first
-                        :id)
+                      first
+                      :id)
         perustelu "HARJA-2294 puuttuva tyyppi"
         perintapvm (pvm/->pvm-aika "2.10.2051 22:00:00")
         hk-alkupvm (pvm/->pvm "1.10.2051")
