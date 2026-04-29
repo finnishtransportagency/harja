@@ -5,10 +5,10 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.kyselyt.kulut :as kulut-q]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]))
 
 (defqueries "harja/palvelin/raportointi/raportit/muutos_ja_lisatyoraportti.sql"
@@ -198,18 +198,7 @@
   "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset.
   Vastaavanlainen taulukko, kuin muutos -sivulla."
   [maaramuutokset]
-  (let [;; Lisää väliotsikkorivit toimenpiteiden mukaan (sama logiikka kuin muutos_palvelu.clj)
-        rivit-valiotsikoineen
-        (reduce (fn [[nahty acc] rivi]
-                  (let [tp (:toimenpide rivi)]
-                    (if (contains? nahty tp)
-                      [nahty (conj acc rivi)]
-                      [(conj nahty tp)
-                       (conj acc {:valiotsikko tp} rivi)])))
-          [#{} []]
-          maaramuutokset)
-        maaramuutokset-valiotsikoineen (second rivit-valiotsikoineen)
-        maaramuutosrivit (mapv (fn [r]
+  (let [maaramuutosrivit (mapv (fn [r]
                                  (if (:valiotsikko r)
                                    ;; Väliotsikkorivi: näytetään toimenpiteen nimi
                                    {:korosta-harmaa? true
@@ -224,7 +213,7 @@
                                      (or (:maaramuutos r) 0)
                                      (or (:kirjatut_kulut_summa r) 0)
                                      (laske-tavoitehinnan-muutos r))))
-                           maaramuutokset-valiotsikoineen)
+                           maaramuutokset)
         maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
         maaramuutokset-yhteensarivi [{:lihavoi? true
                                       :korosta-hennosti? true
@@ -405,19 +394,16 @@
   (log/info "Suoritetaan muutos- ja lisätyöraportti parametreilla: " (pr-str parametrit))
   (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        urakan-hoitokaudet (mapv (fn [m] (vec (vals m))) (urakat-q/hae-urakan-hoitokaudet db urakka-id))
         raportin-otsikko "Muutos- ja lisätyöraportti"
         hoitokauden-alkuvuosi (pvm/vuosi alkupvm) ;; Kun raportti on vain hoitokauden ajalta, niin hoitokauden alkupvm on aina validi
         hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) alkupvm)
         aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         maaramuutokset (when urakka-id
-                         (muutos-kyselyt/hae-tehtava-maaramuutokset
-                           db {:urakka urakka-id
-                               :alkupvm alkupvm
-                               :loppupvm loppupvm
-                               :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                               :tehtava nil
-                               :tehtavaryhma nil
-                               :laskenta-automatiikka? true}))
+                         (muutos-palvelu/hae-tehtava-maaramuutokset db _user {:urakka-id urakka-id
+                                                                              :valittu-hoitokausi [alkupvm loppupvm]
+                                                                              :hoitokaudet urakan-hoitokaudet
+                                                                              :laskenta-automatiikka? true}))
         ;; Hoitovuoden alun indeksikorjattu tavoitehinta budjettisuunnittelun kautta
         budjettitavoite (budjetti-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (:tavoitehinta-indeksikorjattu budjettitavoite) 0)]

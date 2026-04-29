@@ -25,8 +25,6 @@ WHERE m.urakka = :urakka-id
   AND m.poistettu IS FALSE
 ORDER BY m.tyyppi, m.voimassa_alkaen;
 
-
-
 -- name: hae-aiempien-vuosien-pysyvat-muutokset-raportille
 -- Hakee aikaisempien hoitovuosien pysyvät muutokset, joilla on kustannusvaikutuksia
 -- valitulla aikavälillä. Ks. budjettisuunnittelu.sql rivi 116.
@@ -101,4 +99,3 @@ SELECT m.nimi                     AS muutostyon_nimi
    AND m.alityyppi = 'erillisrahoitus'::MHU_MUUTOS_ALITYYPPI
  GROUP BY m.id, m.nimi, m.syy, tp.nimi
  ORDER BY MIN(k.erapaiva);
-
