@@ -141,7 +141,7 @@
       ^{:key "urakkahenkilot"}
       [urakkaparametrit/urakkaparametrit])
 
-    "Sanktio-profiilit"
+    "Sanktio- ja bonusprofiilit"
     :sanktio-profiilit
     (when (oikeudet/hallinta-urakkahenkilot)
       ^{:key "sanktio-profiilit"}
