@@ -28,6 +28,21 @@ CREATE TABLE sanktio_profiili (
     CHECK (loppupvm IS NULL OR alkupvm <= loppupvm)
 );
 
+  CREATE TABLE sanktio_profiili_laji_esitystiedot (
+    id                  SERIAL PRIMARY KEY,
+    sanktio_profiili_id INTEGER                  NOT NULL REFERENCES sanktio_profiili (id),
+    sanktio_laji_id     INTEGER                  NOT NULL REFERENCES sanktio_laji (id),
+    nimi                TEXT,
+    kuvaus              TEXT,
+    luoja               INTEGER                  NOT NULL REFERENCES kayttaja (id),
+    luotu               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja           INTEGER                  NOT NULL REFERENCES kayttaja (id),
+    muokattu            TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (sanktio_profiili_id, sanktio_laji_id),
+    CHECK (nimi IS NOT NULL OR kuvaus IS NOT NULL),
+    CHECK (nimi IS NULL OR btrim(nimi) <> '')
+  );
+
 CREATE TABLE sanktio_profiili_rivi (
     id                   SERIAL PRIMARY KEY,
     sanktio_profiili_id  INTEGER          NOT NULL REFERENCES sanktio_profiili (id),
@@ -48,6 +63,9 @@ CREATE TABLE sanktio_profiili_rivi (
 
 CREATE INDEX sanktio_profiili_haku_idx
     ON sanktio_profiili (urakkatyyppi, aktiivinen, alkupvm, loppupvm, hoitovuosi_alku, hoitovuosi_loppu);
+
+CREATE INDEX sanktio_profiili_laji_esitystiedot_haku_idx
+  ON sanktio_profiili_laji_esitystiedot (sanktio_profiili_id, sanktio_laji_id);
 
 CREATE INDEX sanktio_profiili_rivi_haku_idx
     ON sanktio_profiili_rivi (sanktio_profiili_id, soveltuvuuskonteksti, aktiivinen, jarjestys);
@@ -74,14 +92,28 @@ COMMENT ON TABLE sanktio_laji
 COMMENT ON TABLE sanktio_profiili
                 IS 'Urakka- ja hoitovuosikontekstissa resolvoitava sanktioiden konfiguraatioprofiili.';
 
+COMMENT ON TABLE sanktio_profiili_laji_esitystiedot
+                IS 'Sanktiolajin profiilikohtaiset esitystiedot, kuten nimi ja kuvaus.';
+
 COMMENT ON TABLE sanktio_profiili_rivi
                 IS 'Sallitut sanktio_laji- ja sanktiotyyppi-yhdistelmät profiileittain ja soveltuvuuskonteksteittain.';
 
 COMMENT ON TABLE sanktio_profiili_rivi_lukittu_summa
                 IS 'Sanktio-profiiliriviin sidotut lukitut euromaarat.';
 
-WITH uudet_sanktiotyypit (nimi, toimenpidekoodi, koodi) AS (
-    VALUES ('Talvihoito Ise/Is/L', 618, 18),
+-- Lisätään uusien lisäksi lokaalista puuttuvat sanktiotyypit
+WITH uudet_ja_puuttuvat_sanktiotyypit (nimi, toimenpidekoodi, koodi) AS (
+    VALUES ('Määräpäivän ylitys', NULL, 8),
+           ('Työn tekemättä jättäminen', NULL, 9),
+           ('Hallinnolliset laiminlyönnit', NULL, 10),
+           ('Muu sopimuksen vastainen toiminta', NULL, 11),
+           ('Asiakirjamerkintöjen paikkansa pitämättömyys', NULL, 12),
+           ('Talvihoito, päätiet', NULL, 13),
+           ('Talvihoito, muut tiet', NULL, 14),
+           ('Liikenneympäristön hoito', NULL, 15),
+           ('Sorateiden hoito ja ylläpito', NULL, 16),
+           ('Muut hoitourakan tehtäväkokonaisuudet', NULL, 17),
+           ('Talvihoito Ise/Is/L', 618, 18),
            ('Talvihoito Ib/Ic/K1/K2', 618, 19),
            ('Talvihoito II/III', 618, 20),
            ('Hallinnollinen laiminlyonti', NULL, 21),
@@ -90,7 +122,7 @@ WITH uudet_sanktiotyypit (nimi, toimenpidekoodi, koodi) AS (
 )
 INSERT INTO sanktiotyyppi (nimi, toimenpidekoodi, koodi)
 SELECT nimi, toimenpidekoodi, koodi
-  FROM uudet_sanktiotyypit
+  FROM uudet_ja_puuttuvat_sanktiotyypit
 ON CONFLICT (koodi) DO NOTHING;
 
 WITH integraatio AS (
@@ -109,14 +141,14 @@ VALUES ('muistutus', 'Muistutus', 'Hoidon muistutus', TRUE, 1, (SELECT id FROM i
        ('tenttikeskiarvo-sanktio', 'Vastuuhenkilön tenttipistemäärän alentuminen', 'Tenttikeskiarvoon liittyvä sanktio', TRUE, 8, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('testikeskiarvo-sanktio', 'Vastuuhenkilön testipistemäärän alentuminen', 'Testikeskiarvoon liittyvä sanktio', TRUE, 9, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('vaihtosanktio', 'Vastuuhenkilön vaihto', 'Vastuuhenkilön vaihtoon liittyvä sanktio', TRUE, 10, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('tyon_tekematta_jattaminen', 'Työn tekemättä jättäminen', 'MHU2026 työn tekemättä jättäminen', TRUE, 11, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('asiakirjamerkintojen_paikkansa_pitamattomyys', 'Asiakirjamerkintöjen paikkansa pitämättömyys', 'MHU2026 asiakirjamerkintöjen paikkansa pitämättömyys', TRUE, 12, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('muu_sopimuksen_vastainen_toiminta', 'Muu sopimuksen vastainen toiminta', 'MHU2026 muu sopimuksen vastainen toiminta', TRUE, 13, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('talvisuolan_kokonaiskayton_ylitys', 'Talvisuolan kokonaiskäytön ylitys', 'MHU2026 talvisuolan kokonaiskäytön ylitys', TRUE, 14, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('laskutus_yli_laskutusrajan', 'Laskutus yli laskutusrajan', 'MHU2026 laskutus yli laskutusrajan', TRUE, 15, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('laskutus_ilman_laskutuskelpoisuutta', 'Laskutus ilman laskutuskelpoisuutta', 'MHU2026 laskutus ilman laskutuskelpoisuutta', TRUE, 16, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('vastuuhenkilon_tenttipistemaara_alentuminen', 'Vastuuhenkilön tenttipistemäärän alentuminen', 'MHU2026 vastuuhenkilön tenttipistemäärän alentuminen', TRUE, 17, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('vastuuhenkilon_vaihto', 'Vastuuhenkilön vaihto', 'MHU2026 vastuuhenkilön vaihto', TRUE, 18, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('tyon_tekematta_jattaminen', 'Työn tekemättä jättäminen', 'MHU2026 työn tekemättä jättäminen', TRUE, 11, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('asiakirjamerkintojen_paikkansa_pitamattomyys', 'Asiakirjamerkintöjen paikkansa pitämättömyys', 'MHU2026 asiakirjamerkintöjen paikkansa pitämättömyys', TRUE, 12, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('muu_sopimuksen_vastainen_toiminta', 'Muu sopimuksen vastainen toiminta', 'MHU2026 muu sopimuksen vastainen toiminta', TRUE, 13, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('talvisuolan_kokonaiskayton_ylitys', 'Talvisuolan kokonaiskäytön ylitys', 'MHU2026 talvisuolan kokonaiskäytön ylitys', TRUE, 14, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('laskutus_yli_laskutusrajan', 'Laskutus yli laskutusrajan', 'MHU2026 laskutus yli laskutusrajan', TRUE, 15, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('laskutus_ilman_laskutuskelpoisuutta', 'Laskutus ilman laskutuskelpoisuutta', 'MHU2026 laskutus ilman laskutuskelpoisuutta', TRUE, 16, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('vastuuhenkilon_tenttipistemaara_alentuminen', 'Vastuuhenkilön tenttipistemäärän alentuminen', 'MHU2026 vastuuhenkilön tenttipistemäärän alentuminen', TRUE, 17, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('vastuuhenkilon_vaihto', 'Vastuuhenkilön vaihto', 'MHU2026 vastuuhenkilön vaihto', TRUE, 18, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('yllapidon_sakko', 'Sakko', 'Ylläpidon sakko', TRUE, 1, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('yllapidon_muistutus', 'Muistutus', 'Ylläpidon muistutus', TRUE, 2, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP);
 
@@ -126,15 +158,40 @@ WITH integraatio AS (
      WHERE kayttajanimi = 'Integraatio'
 )
 INSERT INTO sanktio_profiili (nimi, urakkatyyppi, hoitovuosi_alku, hoitovuosi_loppu, alkupvm, loppupvm, aktiivinen, luoja, luotu, muokkaaja, muokattu)
-VALUES ('hoito-legacy', 'hoito', 1, 20, DATE '1900-01-01', DATE '2020-12-31', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('teiden-hoito-legacy', 'teiden-hoito', 1, 20, DATE '1900-01-01', DATE '2020-12-31', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('hoito-2021-ja-uudemmat', 'hoito', 1, 20, DATE '2021-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-       ('teiden-hoito-2021-ja-uudemmat', 'teiden-hoito', 1, 20, DATE '2021-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
-  ('teiden-hoito-mhu2026', 'teiden-hoito', 1, 20, DATE '2026-10-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+VALUES ('hoito-legacy', 'hoito', 1, 20, DATE '1900-01-01', DATE '2021-09-30', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('teiden-hoito-legacy', 'teiden-hoito', 1, 20, DATE '1900-01-01', DATE '2021-09-30', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('hoito-2021-ja-uudemmat', 'hoito', 1, 20, DATE '2021-10-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('teiden-hoito-2021-ja-uudemmat', 'teiden-hoito', 1, 20, DATE '2021-10-01', DATE '2025-09-30', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('teiden-hoito-mhu2025', 'teiden-hoito', 1, 20, DATE '2025-10-01', DATE '2026-09-30', TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
+       ('teiden-hoito-mhu2026', 'teiden-hoito', 1, 20, DATE '2026-10-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('paallystys-oletus', 'paallystys', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('paikkaus-oletus', 'paikkaus', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('tiemerkinta-oletus', 'tiemerkinta', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP),
        ('valaistus-oletus', 'valaistus', 1, 20, DATE '1900-01-01', NULL, TRUE, (SELECT id FROM integraatio), CURRENT_TIMESTAMP, (SELECT id FROM integraatio), CURRENT_TIMESTAMP);
+
+WITH esitystiedot (profiili_nimi, laji_koodi, nimi) AS (
+    VALUES ('teiden-hoito-mhu2026', 'A', 'A - Tehtäväkohtainen sanktio'),
+           ('teiden-hoito-mhu2026', 'B', 'B - Vakava laiminlyönti'),
+           ('teiden-hoito-mhu2026', 'C', 'C - Määräpäivän ylitys')
+),
+integraatio AS (
+    SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'Integraatio'
+)
+INSERT INTO sanktio_profiili_laji_esitystiedot (sanktio_profiili_id, sanktio_laji_id, nimi, luoja, luotu, muokkaaja, muokattu)
+SELECT sp.id,
+       sl.id,
+       e.nimi,
+       (SELECT id FROM integraatio),
+       CURRENT_TIMESTAMP,
+       (SELECT id FROM integraatio),
+       CURRENT_TIMESTAMP
+  FROM esitystiedot e
+       JOIN sanktio_profiili sp
+         ON sp.nimi = e.profiili_nimi
+       JOIN sanktio_laji sl
+         ON sl.koodi = e.laji_koodi;
 
 WITH profiilirivit (profiili_nimi, laji_koodi, sanktiotyyppi_koodi, soveltuvuuskonteksti, jarjestys) AS (
     VALUES
@@ -301,6 +358,46 @@ WITH profiilirivit (profiili_nimi, laji_koodi, sanktiotyyppi_koodi, soveltuvuusk
         ('teiden-hoito-2021-ja-uudemmat', 'C', 11, 'laatupoikkeama', 4),
         ('teiden-hoito-2021-ja-uudemmat', 'C', 12, 'laatupoikkeama', 5),
         ('teiden-hoito-2021-ja-uudemmat', 'arvonvahennyssanktio', 0, 'laatupoikkeama', 1),
+
+        ('teiden-hoito-mhu2025', 'muistutus', 13, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'muistutus', 14, 'urakka', 2),
+        ('teiden-hoito-mhu2025', 'muistutus', 17, 'urakka', 3),
+        ('teiden-hoito-mhu2025', 'muistutus', 10, 'urakka', 4),
+        ('teiden-hoito-mhu2025', 'A', 13, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'A', 14, 'urakka', 2),
+        ('teiden-hoito-mhu2025', 'A', 17, 'urakka', 3),
+        ('teiden-hoito-mhu2025', 'B', 13, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'urakka', 2),
+        ('teiden-hoito-mhu2025', 'B', 17, 'urakka', 3),
+        ('teiden-hoito-mhu2025', 'C', 8, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'C', 9, 'urakka', 2),
+        ('teiden-hoito-mhu2025', 'C', 10, 'urakka', 3),
+        ('teiden-hoito-mhu2025', 'C', 11, 'urakka', 4),
+        ('teiden-hoito-mhu2025', 'C', 12, 'urakka', 5),
+        ('teiden-hoito-mhu2025', 'arvonvahennyssanktio', 0, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'pohjavesisuolan_ylitys', 7, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'talvisuolan_ylitys', 7, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'tenttikeskiarvo-sanktio', 0, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'testikeskiarvo-sanktio', 0, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'vaihtosanktio', 0, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'laskutus_yli_laskutusrajan', 0, 'urakka', 1),
+        ('teiden-hoito-mhu2025', 'muistutus', 13, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2025', 'muistutus', 14, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2025', 'muistutus', 17, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2025', 'muistutus', 10, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2025', 'A', 13, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2025', 'A', 14, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2025', 'A', 17, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2025', 'B', 13, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2025', 'B', 17, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2025', 'C', 8, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2025', 'C', 9, 'laatupoikkeama', 2),
+        ('teiden-hoito-mhu2025', 'C', 10, 'laatupoikkeama', 3),
+        ('teiden-hoito-mhu2025', 'C', 11, 'laatupoikkeama', 4),
+        ('teiden-hoito-mhu2025', 'C', 12, 'laatupoikkeama', 5),
+        ('teiden-hoito-mhu2025', 'arvonvahennyssanktio', 0, 'laatupoikkeama', 1),
+        ('teiden-hoito-mhu2025', 'laskutus_yli_laskutusrajan', 0, 'laatupoikkeama', 1),
 
         ('teiden-hoito-mhu2026', 'muistutus', 18, 'urakka', 1),
         ('teiden-hoito-mhu2026', 'muistutus', 19, 'urakka', 2),

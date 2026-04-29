@@ -24,13 +24,34 @@
 		:voi-puolittaa-omailmoituksella (boolean (:voi-puolittaa-omailmoituksella profiilirivi))
 		:lukitut-summat (vec (:lukitut-summat profiilirivi))))
 
+(defn- sanktio-lajin-nayttonimi
+  [rivit]
+  (let [nimi (get-in (first rivit) [:laji :esitystiedot :nimi])]
+    (when-not (str/blank? nimi)
+      nimi)))
+
+(defn- sanktio-lajin-tehokas-nimi
+  [rivit]
+  (or (sanktio-lajin-nayttonimi rivit)
+    (get-in (first rivit) [:laji :nimi])))
+
+(defn- sanktio-lajin-uudelleennimeamis-tiedot
+  [rivit]
+  (let [masterdatan-nimi (get-in (first rivit) [:laji :nimi])
+        tehokas-nimi (sanktio-lajin-tehokas-nimi rivit)
+        uudelleennimetty? (not= masterdatan-nimi tehokas-nimi)]
+    {:masterdatan-nimi masterdatan-nimi
+     :uudelleennimetty uudelleennimetty?
+     :uudelleennimeaminen (when uudelleennimetty?
+                            (str masterdatan-nimi " -> " tehokas-nimi))}))
+
 (defn- muodosta-sanktio-laji
 	[rivit]
 	(let [eka-rivi (first rivit)
 				laji (get-in eka-rivi [:laji :koodi])]
 		{:id (get-in eka-rivi [:laji :id])
 		 :laji laji
-		 :nimi (get-in eka-rivi [:laji :nimi])
+		 :nimi (sanktio-lajin-tehokas-nimi rivit)
 		 :jarjestys (get-in eka-rivi [:laji :jarjestys])
 		 :rivin-tyyppi (laji->rivin-tyyppi laji)
 		 :sanktiotyypit (mapv muodosta-sanktiotyyppi-dto rivit)}))
@@ -49,7 +70,7 @@
 	(->> rivit
 			(sort-by (juxt #(get-in % [:profiilirivi :jarjestys])
 							 #(get-in % [:profiilirivi :id])))
-			(mapv (fn [{:keys [soveltuvuuskonteksti sanktiotyyppi] :as rivi}]
+			(mapv (fn [{:keys [soveltuvuuskonteksti] :as rivi}]
 					{:id (get-in rivi [:profiilirivi :id])
 					 :jarjestys (get-in rivi [:profiilirivi :jarjestys])
 					 :voi-puolittaa-omailmoituksella (boolean (get-in rivi [:profiilirivi :voi-puolittaa-omailmoituksella]))
@@ -60,10 +81,14 @@
 (defn- muodosta-sanktio-laji-admin
 	[rivit]
 	(let [eka-rivi (first rivit)
-				laji (get-in eka-rivi [:laji :koodi])]
+				laji (get-in eka-rivi [:laji :koodi])
+ {:keys [masterdatan-nimi uudelleennimetty uudelleennimeaminen]} (sanktio-lajin-uudelleennimeamis-tiedot rivit)]
 		{:id (get-in eka-rivi [:laji :id])
 		 :laji laji
-		 :nimi (get-in eka-rivi [:laji :nimi])
+		 :nimi (sanktio-lajin-tehokas-nimi rivit)
+:masterdatan-nimi masterdatan-nimi
+:uudelleennimetty uudelleennimetty
+:uudelleennimeaminen uudelleennimeaminen
 		 :jarjestys (get-in eka-rivi [:laji :jarjestys])
 		 :rivin-tyyppi (laji->rivin-tyyppi laji)
 		 :rivit (muodosta-profiilirivit rivit)}))
@@ -107,15 +132,33 @@
 			 (str kontekstimaara " kontekstia")
 			 (muotoile-paivavali profiili)])))
 
+(defn- muodosta-bonus-profiilin-yhteenveto
+  [{:keys [lajimaara rivimaara] :as profiili}]
+  (str/join ", "
+    [(str (muotoile-hoitovuosivali profiili) " hoitovuotta")
+     (str lajimaara " lajia")
+     (str rivimaara " riviä")
+     (muotoile-paivavali profiili)]))
+
 (defn- taydenna-profiilin-yhteenveto
 	[profiili]
 	(assoc profiili :yhteenveto (muodosta-profiilin-yhteenveto profiili)))
+
+(defn- taydenna-bonus-profiilin-yhteenveto
+  [profiili]
+  (assoc profiili :yhteenveto (muodosta-bonus-profiilin-yhteenveto profiili)))
 
 (defn- hae-sanktio-profiili-admin-tiedot
 	[db sanktio-profiili-id]
 	(or (first (q/hae-sanktio-profiili-admin db {:sanktio_profiili_id sanktio-profiili-id}))
 		(throw (IllegalArgumentException.
 				 (str "Sanktio-profiilia id:llä " sanktio-profiili-id " ei löytynyt.")))))
+
+(defn- hae-bonus-profiili-admin-tiedot
+  [db bonus-profiili-id]
+  (or (first (q/hae-bonus-profiili-admin db {:bonus_profiili_id bonus-profiili-id}))
+    (throw (IllegalArgumentException.
+             (str "Bonus-profiilia id:llä " bonus-profiili-id " ei löytynyt.")))))
 
 (defn- vaadi-kelvollinen-soveltuvuuskonteksti
 	[soveltuvuuskonteksti]
@@ -226,3 +269,82 @@
 				rivit (q/hae-sanktio-profiilin-rivit-admin db {:sanktio_profiili_id sanktio-profiili-id})]
 		{:profiili profiili
 		 :sisalto (muodosta-sisalto-admin rivit)}))
+
+(defn- muodosta-bonus-profiilirivit
+  [rivit]
+  (->> rivit
+    (sort-by (juxt #(get-in % [:profiilirivi :jarjestys])
+               #(get-in % [:profiilirivi :toimenpideinstanssi-t2-koodi])
+               #(get-in % [:profiilirivi :id])))
+    (mapv (fn [rivi]
+            {:id (get-in rivi [:profiilirivi :id])
+             :jarjestys (get-in rivi [:profiilirivi :jarjestys])
+             :toimenpideinstanssi-t2-koodi (get-in rivi [:profiilirivi :toimenpideinstanssi-t2-koodi])
+             :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
+             :urakat (->> (get-in rivi [:profiilirivi :urakat])
+                       sort
+                       vec)}))))
+
+
+(defn- bonus-lajin-nayttonimi
+  [rivit]
+  (let [nimi (get-in (first rivit) [:laji :esitystiedot :nimi])]
+    (when-not (str/blank? nimi)
+      nimi)))
+
+(defn- bonus-lajin-tehokas-nimi
+  [rivit]
+  (or (bonus-lajin-nayttonimi rivit)
+    (get-in (first rivit) [:laji :nimi])))
+
+(defn- bonus-lajin-uudelleennimeamis-tiedot
+  [rivit]
+  (let [masterdatan-nimi (get-in (first rivit) [:laji :nimi])
+        tehokas-nimi (bonus-lajin-tehokas-nimi rivit)
+        uudelleennimetty? (not= masterdatan-nimi tehokas-nimi)]
+    {:masterdatan-nimi masterdatan-nimi
+     :uudelleennimetty uudelleennimetty?
+     :uudelleennimeaminen (when uudelleennimetty?
+                            (str masterdatan-nimi " -> " tehokas-nimi))}))
+
+(defn- muodosta-bonus-laji-admin
+  [rivit]
+  (let [eka-rivi (first rivit)
+        laji (get-in eka-rivi [:laji :koodi])
+        {:keys [masterdatan-nimi uudelleennimetty uudelleennimeaminen]} (bonus-lajin-uudelleennimeamis-tiedot rivit)]
+    {:id (get-in eka-rivi [:laji :id])
+     :laji laji
+     :nimi (bonus-lajin-tehokas-nimi rivit)
+     :masterdatan-nimi masterdatan-nimi
+     :uudelleennimetty uudelleennimetty
+     :uudelleennimeaminen uudelleennimeaminen
+     :jarjestys (get-in eka-rivi [:laji :jarjestys])
+     :rivin-tyyppi (laji->rivin-tyyppi laji)
+     :kirjaustapa (get-in eka-rivi [:laji :kirjaustapa])
+     :automaattinen (boolean (get-in eka-rivi [:laji :automaattinen]))
+     :rivit (muodosta-bonus-profiilirivit rivit)}))
+
+(defn- muodosta-bonus-lajit-admin
+  [rivit]
+  (->> rivit
+    (filter #(get-in % [:laji :id]))
+    (group-by #(get-in % [:laji :koodi]))
+    vals
+    (map muodosta-bonus-laji-admin)
+    (sort-by :jarjestys)
+    vec))
+
+(defn hae-bonus-profiilit-admin
+  [db user]
+  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (->> (q/hae-bonus-profiilit-admin db)
+    (mapv taydenna-bonus-profiilin-yhteenveto)))
+
+(defn hae-bonus-profiilin-detalji-admin
+  [db user {:keys [bonus-profiili-id]}]
+  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (let [profiili (-> (hae-bonus-profiili-admin-tiedot db bonus-profiili-id)
+                   taydenna-bonus-profiilin-yhteenveto)
+        rivit (q/hae-bonus-profiilin-rivit-admin db {:bonus_profiili_id bonus-profiili-id})]
+    {:profiili profiili
+     :lajit (muodosta-bonus-lajit-admin rivit)}))

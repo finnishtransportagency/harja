@@ -28,6 +28,12 @@
 		(muunna-urakkatyyppi [:urakkatyyppi])
 		muunna-soveltuvuuskontekstit))
 
+(defn muunna-bonus-profiili-admin-listarivi
+  [{:as rivi}]
+  (-> rivi
+    konv/alaviiva->rakenne
+    (muunna-urakkatyyppi [:urakkatyyppi])))
+
 (defn- normalisoi-profiilirivin-metatiedot
 	[rivi]
 	(let [voi-puolittaa-omailmoituksella (or (get-in rivi [:profiilirivi :voi-puolittaa-omailmoituksella])
@@ -70,6 +76,37 @@
 			(get-in rivi [:laji :koodi])
 			(update-in [:laji :koodi] keyword))))
 
+(defn muunna-bonus-konfiguraatiorivi
+  [{:as rivi}]
+  (let [rivi (konv/alaviiva->rakenne rivi)
+        urakkarajausten-maara (or (get-in rivi [:profiilirivi :urakkarajausten-maara])
+                                (get-in rivi [:profiilirivi :urakkarajausten :maara]))]
+    (cond-> rivi
+      (some? urakkarajausten-maara)
+      (->
+        (assoc-in [:profiilirivi :urakkarajausten-maara] urakkarajausten-maara)
+        (update :profiilirivi dissoc :urakkarajausten))
+
+      (get-in rivi [:profiilirivi :urakat])
+      (update-in [:profiilirivi :urakat]
+        #(cond
+           (nil? %) []
+           (vector? %) %
+           (instance? java.sql.Array %) (vec (.getArray ^java.sql.Array %))
+           :else [%]))
+
+      (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi])
+      (->
+        (assoc-in [:profiilirivi :toimenpideinstanssi-t2-koodi]
+          (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi]))
+        (update-in [:profiilirivi :toimenpideinstanssi] dissoc :t2))
+
+      (get-in rivi [:profiili :urakkatyyppi])
+      (muunna-urakkatyyppi [:profiili :urakkatyyppi])
+
+      (get-in rivi [:laji :koodi])
+      (update-in [:laji :koodi] keyword))))
+
 (defqueries "harja/kyselyt/sanktio_konfiguraatio.sql")
 
 (declare hae-urakan-sanktio-profiilit)
@@ -77,3 +114,6 @@
 (declare hae-sanktio-profiili-admin)
 (declare hae-sanktio-profiilin-rivit)
 (declare hae-sanktio-profiilin-rivit-admin)
+(declare hae-bonus-profiilit-admin)
+(declare hae-bonus-profiili-admin)
+(declare hae-bonus-profiilin-rivit-admin)

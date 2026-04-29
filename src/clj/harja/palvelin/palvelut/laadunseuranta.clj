@@ -392,6 +392,14 @@
   [db user tiedot]
   (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
 
+(defn hae-bonus-profiilit-admin
+  [db user]
+  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
+
+(defn hae-bonus-profiilin-detalji-admin
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
+
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
@@ -493,6 +501,14 @@
       (fn [user tiedot]
         (hae-sanktio-profiilin-detalji-admin db user tiedot))
 
+      :hae-bonus-profiilit-admin
+(fn [user _]
+  (hae-bonus-profiilit-admin db user))
+
+:hae-bonus-profiilin-detalji-admin
+(fn [user tiedot]
+  (hae-bonus-profiilin-detalji-admin db user tiedot))
+
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
         (hae-urakan-laatupoikkeama-liitteet db user urakka-id alkupvm loppupvm))
@@ -520,6 +536,8 @@
       :hae-urakan-sanktio-konfiguraatio
       :hae-sanktio-profiilit-admin
       :hae-sanktio-profiilin-detalji-admin
+      :hae-bonus-profiilit-admin
+:hae-bonus-profiilin-detalji-admin
       :tallenna-suorasanktio
       :poista-suorasanktio
       :hae-urakan-laatupoikkeama-liitteet
