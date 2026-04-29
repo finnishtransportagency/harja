@@ -166,7 +166,7 @@ SELECT bp.id,
        CURRENT_TIMESTAMP,
        (SELECT id FROM integraatio),
        CURRENT_TIMESTAMP
-  FROM profiilirivit pr
+FROM profiilirivit pr
        JOIN bonus_profiili bp
          ON bp.nimi = pr.profiili_nimi
        JOIN bonus_laji bl
@@ -189,7 +189,7 @@ SELECT bpr.id,
        CURRENT_TIMESTAMP,
        (SELECT id FROM integraatio),
        CURRENT_TIMESTAMP
-    FROM urakkarajaukset ur
+FROM urakkarajaukset ur
              JOIN bonus_profiili bp
                  ON bp.nimi = ur.profiili_nimi
              JOIN bonus_laji bl
@@ -202,4 +202,3 @@ SELECT bpr.id,
                  ON u.lyhyt_nimi = ur.urakka_lyhyt_nimi
                 AND u.tyyppi = 'teiden-hoito'
                 AND u.alkupvm = DATE '2026-10-01';
-

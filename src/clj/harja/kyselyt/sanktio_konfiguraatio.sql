@@ -12,10 +12,10 @@ SELECT sp.id,
        sp.urakkatyyppi,
        sp.hoitovuosi_alku,
        sp.hoitovuosi_loppu
-  FROM sanktio_profiili sp
+FROM sanktio_profiili sp
        JOIN valittu_urakka vu
          ON vu.urakkatyyppi = sp.urakkatyyppi
- WHERE sp.aktiivinen IS TRUE
+WHERE sp.aktiivinen IS TRUE
    AND vu.alkupvm >= sp.alkupvm
    AND (sp.loppupvm IS NULL OR vu.alkupvm <= sp.loppupvm)
    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
@@ -161,8 +161,8 @@ SELECT bp.id                    AS profiili_id,
        bl.id                    AS laji_id,
        bl.koodi                 AS laji_koodi,
        bl.nimi                  AS laji_nimi,
-        bplet.nimi               AS laji_esitystiedot_nimi,
-        bplet.kuvaus             AS laji_esitystiedot_kuvaus,
+       bplet.nimi               AS laji_esitystiedot_nimi,
+       bplet.kuvaus             AS laji_esitystiedot_kuvaus,
        bl.jarjestys             AS laji_jarjestys,
        bl.kirjaustapa           AS laji_kirjaustapa,
        bl.automaattinen         AS laji_automaattinen,
@@ -220,8 +220,8 @@ SELECT sp.id                    AS profiili_id,
        sl.id                    AS laji_id,
        sl.koodi                 AS laji_koodi,
        sl.nimi                  AS laji_nimi,
-  splet.nimi               AS laji_esitystiedot_nimi,
-  splet.kuvaus             AS laji_esitystiedot_kuvaus,
+       splet.nimi               AS laji_esitystiedot_nimi,
+       splet.kuvaus             AS laji_esitystiedot_kuvaus,
        sl.jarjestys             AS laji_jarjestys,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,
@@ -266,8 +266,8 @@ SELECT sp.id                    AS profiili_id,
        sl.id                    AS laji_id,
        sl.koodi                 AS laji_koodi,
        sl.nimi                  AS laji_nimi,
-  splet.nimi               AS laji_esitystiedot_nimi,
-  splet.kuvaus             AS laji_esitystiedot_kuvaus,
+       splet.nimi               AS laji_esitystiedot_nimi,
+       splet.kuvaus             AS laji_esitystiedot_kuvaus,
        sl.jarjestys             AS laji_jarjestys,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,

@@ -122,7 +122,7 @@ WITH uudet_ja_puuttuvat_sanktiotyypit (nimi, toimenpidekoodi, koodi) AS (
 )
 INSERT INTO sanktiotyyppi (nimi, toimenpidekoodi, koodi)
 SELECT nimi, toimenpidekoodi, koodi
-  FROM uudet_ja_puuttuvat_sanktiotyypit
+FROM uudet_ja_puuttuvat_sanktiotyypit
 ON CONFLICT (koodi) DO NOTHING;
 
 WITH integraatio AS (
@@ -187,7 +187,7 @@ SELECT sp.id,
        CURRENT_TIMESTAMP,
        (SELECT id FROM integraatio),
        CURRENT_TIMESTAMP
-  FROM esitystiedot e
+FROM esitystiedot e
        JOIN sanktio_profiili sp
          ON sp.nimi = e.profiili_nimi
        JOIN sanktio_laji sl
@@ -494,7 +494,7 @@ SELECT sp.id,
        CURRENT_TIMESTAMP,
        (SELECT id FROM integraatio),
        CURRENT_TIMESTAMP
-  FROM profiilirivit pr
+FROM profiilirivit pr
        JOIN sanktio_profiili sp
          ON sp.nimi = pr.profiili_nimi
        JOIN sanktio_laji sl
@@ -524,11 +524,11 @@ kohderivi AS (
        AND spr.soveltuvuuskonteksti = 'laatupoikkeama'
 )
 UPDATE sanktio_profiili_rivi spr
-   SET voi_puolittaa_omailmoituksella = TRUE,
+SET voi_puolittaa_omailmoituksella = TRUE,
        muokkaaja                    = kohderivi.integraatio_id,
        muokattu                     = CURRENT_TIMESTAMP
-  FROM kohderivi
- WHERE spr.id = kohderivi.id;
+FROM kohderivi
+WHERE spr.id = kohderivi.id;
 
 WITH integraatio AS (
     SELECT id
@@ -563,5 +563,5 @@ SELECT kohderivi.id,
        CURRENT_TIMESTAMP,
        kohderivi.integraatio_id,
        CURRENT_TIMESTAMP
-  FROM kohderivi
+FROM kohderivi
        CROSS JOIN lukitut_summat;
