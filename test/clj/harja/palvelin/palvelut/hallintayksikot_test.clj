@@ -24,10 +24,10 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest hallintayksikoiden-haku-toimii
+(deftest elinvoimakeskusten-haku-toimii
   (testing "Tie-hallintayksiköiden haku"
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hallintayksikot +kayttaja-jvh+ {:liikennemuoto :tie})]
+                                 :elinvoimakeskukset +kayttaja-jvh+ {:liikennemuoto :tie})]
 
      (is (not (nil? vastaus)))
      (is (every? (comp (partial = "T") :liikennemuoto) vastaus))
@@ -36,7 +36,7 @@
 
   (testing "Vesi-hallintayksiköiden haku"
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hallintayksikot +kayttaja-jvh+ {:liikennemuoto :vesi})]
+                    :elinvoimakeskukset +kayttaja-jvh+ {:liikennemuoto :vesi})]
 
       (is (not (nil? vastaus)))
       (is (every? (comp (partial = "V") :liikennemuoto) vastaus))
@@ -45,7 +45,7 @@
 
   (testing "Kaikkien hallintayksiköiden haku"
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hallintayksikot +kayttaja-jvh+ {:liikennemuoto nil})]
+                    :elinvoimakeskukset +kayttaja-jvh+ {:liikennemuoto nil})]
 
       (is (not (nil? vastaus)))
       (is (>= (count vastaus) 5))

@@ -20,7 +20,7 @@ export function alustaPaikkausKustannuksetUrakalle(urakkaNimi) {
     });
 }
 
-describe('Kustannusnäkymä toimii MPU urakalle', function () {
+describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
     // Aina ennen testien ajoa deletoidaan kaikki kustannukset
     before(function () {
         alustaPaikkausKustannuksetUrakalle("Muhoksen päällystysurakka");
@@ -30,12 +30,13 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         cy.viewport(1100, 2000);
         cy.intercept('POST', '_/hae-paikkaus-kustannukset').as('kustannukset');
         cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot');
+        cy.intercept('POST', '_/paikkauskohteet-urakalle').as('paikkauskohteet');
 
         // Avaa päänäkymä
         cy.visit("/");
 
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click();
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click();
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');
@@ -46,14 +47,22 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         // Valitse oikea urakka
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: clickTimeout}).click();
 
-        // Avaa kustannukset
-        cy.get('[data-cy=tabs-taso1-Kustannukset]').click();
+        // Avaa paikkaukset
+        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click();
 
         // Kutsu pitäisi triggeraa, odota että taulukko lataa ja sorttaa
-        cy.wait('@kustannukset', {timeout: clickTimeout});
-        cy.wait('@sanktiot', {timeout: clickTimeout});
+        cy.wait('@paikkauskohteet', {timeout: clickTimeout});
 
         // Hyrrää ei pitäisi olla
+        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+        cy.wait(1000);
+        
+        // Avaa kustannusten yhteenveto
+        cy.get('[data-cy="tabs-taso2-Kustannusten yhteenveto"]').click();
+
+        // Sama homma
+        cy.wait('@kustannukset', {timeout: clickTimeout});
+        cy.wait('@sanktiot', {timeout: clickTimeout});
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
         cy.wait(1000);
 
@@ -141,13 +150,15 @@ describe('Kustannusnäkymä toimii MPU urakalle', function () {
         cy.contains('Selite', {timeout: clickTimeout});
 
         // Selite -> Oma cypress selite
-        cy.get('label[for="kustannus-selite"]').parent().find('input').type('Oma cypress selite').blur();
+        cy.get('label[for*="kustannus-selite"]').should('be.visible')
+        cy.get('label[for*="kustannus-selite"] + div input').type('Oma cypress selite').blur();
 
         // Tallenna napin ei pitäisi olla vielä näkyvissä
         cy.get('[data-cy="tallena-yllapito-kustannus"]').should('be.disabled');
 
         // Kustannus -> 123456,12 e
-        cy.get('label[for="kustannus"]').parent().find('input').type('123456.12').blur();
+        cy.get('label[for*="kustannus-G"]').should('be.visible')
+        cy.get('label[for*="kustannus-G"] + span input').type('123456.12').blur();
 
         // Kaikki syötetty, tallenna napin pitäisi näkyä
         cy.get('[data-cy="tallena-yllapito-kustannus"]', {timeout: clickTimeout})

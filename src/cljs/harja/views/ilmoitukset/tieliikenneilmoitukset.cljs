@@ -9,7 +9,6 @@
             [harja.domain.palautevayla-domain :as palautevayla]
             [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -45,8 +44,8 @@
                 itemit (if (< (count teksti) 1)
                          selitteet
                          (filter #(not= (.indexOf (.toLowerCase (haku %))
-                                                  (.toLowerCase teksti)) -1)
-                                 selitteet))]
+                                          (.toLowerCase teksti)) -1)
+                           selitteet))]
             (vec (sort itemit)))))))
 
 (defn vihjeet [{ws-kuuntelu-aktiivinen? :aktiivinen? :as ws-ilmoitusten-kuuntelu}]
@@ -61,14 +60,14 @@
      [:span.selite-virkaapu "punaisella"]
      [:span " selitelaatikossa."]]
     [:div [:i (if ws-kuuntelu-aktiivinen?
-                 "Uusien ilmoitusten reaaliaikahaku aktiivinen"
-                 (str "Uusia ilmoituksia haetaan " (/ tiedot/taustahaun-viive-ms 1000) " sekunnin välein."))]]]])
+                "Uusien ilmoitusten reaaliaikahaku aktiivinen"
+                (str "Uusia ilmoituksia haetaan " (/ tiedot/taustahaun-viive-ms 1000) " sekunnin välein."))]]]])
 
 (defn ilmoituksen-tiedot [e! ilmoitus aiheet-ja-tarkenteet]
   [:div
    [:span
     [:div.margin-vertical-16
-     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta)) {:luokka "nappi-reunaton"} ]]
+     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta)) {:luokka "nappi-reunaton"}]]
     [it/ilmoitus e! ilmoitus aiheet-ja-tarkenteet]]])
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
@@ -106,14 +105,14 @@
          :let [kuitattu? (contains? kuittaukset-tyypin-mukaan kuittaustyyppi)]]
         [yleiset/tooltip {}
          [:div.kuittaus {:class (str (name kuittaustyyppi)
-                                     (when-not kuitattu?
-                                       "-ei-kuittausta")
-                                     (when-not oikeus?
-                                       " ei-sallittu"))
+                                  (when-not kuitattu?
+                                    "-ei-kuittausta")
+                                  (when-not oikeus?
+                                    " ei-sallittu"))
                          :on-click #(do (.stopPropagation %)
-                                        (.preventDefault %)
-                                        (when oikeus?
-                                          (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi))))}
+                                      (.preventDefault %)
+                                      (when oikeus?
+                                        (e! (v/->AloitaPikakuittaus ilmoitus kuittaustyyppi))))}
           [:span (kuittaustyypin-lyhenne kuittaustyyppi)]]
          [kuittaus-tooltip (last (kuittaukset-tyypin-mukaan kuittaustyyppi)) kuittaustyyppi kuitattu? oikeus?]])]]))
 
@@ -132,7 +131,8 @@
                     #(e! (v/->PalautaOletusHakuEhdot))
                     {:disabled @tiedot/oletus-valinnat?
                      :luokka "button-secondary-default"}])}
-     [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
+     [
+      (valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
         tiedot/aikavalit
         (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
         {:vakioaikavali :valitetty-urakkaan-vakioaikavali
@@ -153,6 +153,8 @@
          :aikavalivalitsin-flex? true
          :palstoja 2
          :vayla-tyyli? true})
+
+
       {:nimi :hakuehto :otsikko "Hakusana"
        :placeholder "Hae tekstillä..."
        :tyyppi :string
@@ -223,6 +225,7 @@
        :placeholder "Rajaa ilmoittajan puhelinnumerolla"
        :tyyppi :puhelin}
       {:nimi :selite
+       :label-for-id "hakuehto"
        :palstoja 2
        :otsikko "Selite"
        :placeholder "Hae ja valitse selite"
@@ -318,10 +321,13 @@
 
 
     [:span.ilmoitukset
-     [debug/debug ilmoitukset]
-
      [ilmoitusten-hakuehdot e! valinnat-nyt aiheet-ja-tarkenteet]
      [:div
+      [:div.margin-top-16
+       [kentat/tee-kentta {:tyyppi :checkbox
+                           :teksti "Hae ilmoituksia taustalla"}
+        tiedot/hae-ilmoituksia-taustalla?]]
+
       [:div.margin-top-16
        [kentat/tee-kentta {:tyyppi :checkbox
                            :teksti "Äänimerkki uusista ilmoituksista"}
@@ -334,9 +340,9 @@
       ;;             Jatketaan testikäyttöä myöhemmin, jos koemme sen tarpeelliseksi tai päätetään ominaisuuden poistosta.
 
       #_[:div.margin-top-16
-       [kentat/tee-kentta {:tyyppi :checkbox
-                           :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
-        tiedot/ws-kuuntelija-ominaisuus?]]
+         [kentat/tee-kentta {:tyyppi :checkbox
+                             :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
+          tiedot/ws-kuuntelija-ominaisuus?]]
 
       [vihjeet ws-ilmoitusten-kuuntelu]
 
@@ -349,22 +355,22 @@
 
       [:h2 (str (count haetut-ilmoitukset) " ilmoitusta"
              (when @nav/valittu-urakka (str " urakassa " (or (:lyhyt_nimi @nav/valittu-urakka) (:nimi @nav/valittu-urakka)))))]
-      
+
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
                  [ajax-loader "Haetaan ilmoituksia"])
         :data-cy "ilmoitukset-grid"
         :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
-                                  (nil? pikakuittaus))
+                               (nil? pikakuittaus))
                          (or valitse-ilmoitus!
-                             #(e! (v/->ValitseIlmoitus (:id %)))))
+                           #(e! (v/->ValitseIlmoitus (:id %)))))
         :piilota-toiminnot true
         :max-rivimaara 500
         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
         :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
                          "ilmoitusrivi-fade")
-        
+
         :raporttivienti #{:excel :pdf}
         :raporttivienti-lapinakyva? true
         :raporttiparametrit (raportit/urakkaraportin-parametrit
@@ -385,21 +391,21 @@
            :komponentti (fn [rivi]
                           (let [liidosta-tullut? (not (:ilmoitusid rivi))
                                 kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                                                           (:urakka rivi))]
+                                                   (:urakka rivi))]
                             [:span (when liidosta-tullut?
                                      {:title tiedot/vihje-liito})
                              [kentat/raksiboksi {:disabled (or liidosta-tullut?
-                                                               (not kirjoitusoikeus?))
+                                                             (not kirjoitusoikeus?))
                                                  :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
-                                                                      (nil? pikakuittaus))
+                                                                   (nil? pikakuittaus))
                                                              #(valitse-ilmoitus! rivi))}
                               (boolean (valitut-ilmoitukset rivi))]]))
            :leveys "40px"})
         (when-not @nav/valittu-urakka
           {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys ""
            :hae #(if-not (str/blank? (:lyhytnimi %))
-            (:lyhytnimi %)
-            (fmt/lyhennetty-urakan-nimi (:urakkanimi %))) 
+                   (:lyhytnimi %)
+                   (fmt/lyhennetty-urakan-nimi (:urakkanimi %)))
            :solun-tooltip (fn [rivi]
                             (when-not (= (:urakkanimi rivi) (or (:lyhytnimi rivi) (fmt/lyhennetty-urakan-nimi (:urakkanimi rivi))))
                               {:teksti (:urakkanimi rivi)
@@ -449,18 +455,18 @@
          :tyyppi :pvm :fmt pvm/pvm-aika
          :otsikkorivi-luokka "aloitettu" :leveys ""}]
        (mapv #(merge %
-                     (when (:yhteydenottopyynto %)
-                       {:lihavoi true})
-                     (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
-                       {:korosta-hennosti true}))
+                (when (:yhteydenottopyynto %)
+                  {:lihavoi true})
+                (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
+                  {:korosta-hennosti true}))
 
-             haetut-ilmoitukset)]]]))
+         haetut-ilmoitukset)]]]))
 
 (defn- oletus-hakuehdot? [haku-ehdot]
   (if (and (= (:tyypit haku-ehdot) (:tyypit tiedot/oletus-valinnat))
         (= (:tilat haku-ehdot) (:tilat tiedot/oletus-valinnat))
         (str/blank? (:ilmoittaja-nimi haku-ehdot))
-        (str/blank? (:hakuehto  haku-ehdot))
+        (str/blank? (:hakuehto haku-ehdot))
         (str/blank? (:ilmoittaja-puhelin haku-ehdot))
         (empty? (:vaikutukset haku-ehdot))
         (or (nil? (:selite haku-ehdot)) (nil? (first (:selite haku-ehdot))))
@@ -473,10 +479,10 @@
         (= (:aloituskuittauksen-ajankohta haku-ehdot) (:aloituskuittauksen-ajankohta tiedot/oletus-valinnat)))
     true
     false))
-(defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
-  ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
-  (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
+
+(defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
+  (e! (v/->YhdistaValinnat @tiedot/valinnat))
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
@@ -493,10 +499,10 @@
 
     ;; FIXME: Tämä on väliaikainen ominaisuus WS-kuuntelijan testikäyttöä varten.
     #_(komp/watcher tiedot/ws-kuuntelija-ominaisuus?
-      (fn [_ _ uusi-tila]
-        (if (true? uusi-tila)
-          (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
-          (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
+        (fn [_ _ uusi-tila]
+          (if (true? uusi-tila)
+            (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
+            (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (komp/watcher tiedot/ilmoitukset (fn [_ _ uudet]
                                        (let [uudet-hakuehdot
                                              (select-keys (:valinnat uudet)
@@ -518,22 +524,25 @@
                                                    (e! (v/->ValitseIlmoitus (:id ilmoitus-infopaneelista))))
                                        :teksti "Valitse ilmoitus"}})
 
+                         ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+                         (e! (v/->YhdistaValinnat @tiedot/valinnat))
+
                          ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
                          ;; Kuuntelun aloittamisen yhteydessä annetaan käyttöliittymästä optioksi "valinnat",
                          ;; jotka toimivat suodattimina WebSocketin kautta vastaanotettaville ilmoituksille
                          ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
                          ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
                          #_(when @tiedot/ws-kuuntelija-ominaisuus?
-                           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
-                      #(do
-                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                             (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
+      #(do
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
+         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
 
-                         ;; Katkaise WS-yhteys ja lopeta samalla uusien ilmoitusten kuuntelu WebSocketin kautta
-                         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
-                         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
-                         #_(when @tiedot/ws-kuuntelija-ominaisuus?
-                           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
+         ;; Katkaise WS-yhteys ja lopeta samalla uusien ilmoitusten kuuntelu WebSocketin kautta
+         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
+         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
+         #_(when @tiedot/ws-kuuntelija-ominaisuus?
+             (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (fn [e! {:keys [valittu-ilmoitus aiheet-ja-tarkenteet] :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]
@@ -541,11 +550,11 @@
          [ilmoituksen-tiedot e! valittu-ilmoitus aiheet-ja-tarkenteet]
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 
+
 (defn ilmoitukset []
   (fn []
     (if-not (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
       [tuck tiedot/ilmoitukset ilmoitukset*]
-      ;; else
       [bs/tabs {:style :tabs :classes "tabs-taso1"
                 :active (nav/valittu-valilehti-atom :ilmoitukset)}
 

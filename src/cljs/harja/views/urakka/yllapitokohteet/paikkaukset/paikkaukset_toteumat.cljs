@@ -593,7 +593,7 @@
 
 (defn view [e! app]
   [:div
-   [:h1 "Paikkaustoteumat"]
+   [:h1 "Paikkauskohteiden toteumat"]
    [:div.row.filtterit {:style {:padding "16px"}}
     [yhteinen-view/hakuehdot
      {:tila-atomi app

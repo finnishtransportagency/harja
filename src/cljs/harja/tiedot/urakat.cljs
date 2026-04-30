@@ -13,8 +13,8 @@
   "Backendistä tulevien urakoiden muunnos sopivaan muotoon."
   (map #(assoc % :type :ur)))
 
-(defn hae-hallintayksikon-urakat [hallintayksikko]
-  (k/post! :hallintayksikon-urakat (:id hallintayksikko) urakka-xf))
+(defn hae-elinvoimakeskuksen-urakat [elinvoimakeskus]
+  (k/post! :elinvoimakeskuksen-urakat (:id elinvoimakeskus) urakka-xf))
 
 (def nayta-paattyneet-urakat? (local-storage (atom false) :nayta-paattyneet-urakat))
 

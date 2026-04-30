@@ -20,17 +20,17 @@
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
-(defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
+(defn hae-summatut-tehtavat-hallintayksikolle [db {:keys [elinvoimakeskus-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle-urakoittain db
-                                                                                       {:hallintayksikko hallintayksikko-id
+                                                                                       {:elinvoimakeskus elinvoimakeskus-id
                                                                                         :urakkatyyppi urakkatyyppi
                                                                                         :alkupvm alkupvm
                                                                                         :loppupvm loppupvm
                                                                                         :rajaa_tpi (not (nil? toimenpide-id))
                                                                                         :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-tehtavittain-summattuna-hallintayksikolle db
-                                                                           {:hallintayksikko hallintayksikko-id
+                                                                           {:elinvoimakeskus elinvoimakeskus-id
                                                                             :urakkatyyppi urakkatyyppi
                                                                             :alkupvm alkupvm
                                                                             :loppupvm loppupvm
@@ -52,9 +52,9 @@
                                                                       :rajaa_tpi (not (nil? toimenpide-id))
                                                                       :tpi toimenpide-id})))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         urakkatyyppi (when urakkatyyppi
                        [(name urakkatyyppi)])
@@ -68,9 +68,9 @@
                                                              :loppupvm loppupvm
                                                              :toimenpide-id toimenpide-id
                                                              :suunnittelutiedot suunnittelutiedot})
-                            :hallintayksikko
+                            :elinvoimakeskus
                             (hae-summatut-tehtavat-hallintayksikolle db
-                                                                     {:hallintayksikko-id hallintayksikko-id
+                                                                     {:elinvoimakeskus-id elinvoimakeskus-id
                                                                       :alkupvm alkupvm
                                                                       :loppupvm loppupvm
                                                                       :toimenpide-id toimenpide-id
@@ -87,7 +87,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape

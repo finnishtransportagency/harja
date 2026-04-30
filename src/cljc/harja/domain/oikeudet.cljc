@@ -12,6 +12,7 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?
+  raporttioikeudet
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
@@ -30,6 +31,8 @@
   urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
+  urakat-laadunseuranta-tarkastukset
+  urakat-laadunseuranta-laatupoikkeamat
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
   urakat-kohdeluettelo-paallystyskohteet
@@ -40,6 +43,7 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-tyomaapaivakirja
+  urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
   urakat-yleiset
@@ -79,7 +83,8 @@
   roolit
   tilannekuva-nykytilanne
   tilannekuva-historia
-  urakkatilanne)
+  urakkatilanne
+  ilmoitukset-ilmoitukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
