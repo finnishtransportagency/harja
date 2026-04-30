@@ -9,6 +9,8 @@
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.palvelin.palvelut.indeksit :refer :all]
+            [harja.palvelin.palvelut.indeksit :as indeksit]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
             [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
@@ -32,7 +34,10 @@
                    [:http-palvelin :db])
           :muutokset (component/using
                        (muutos-palvelu/->Muutos {:kehitysmoodi true})
-                       [:http-palvelin :db])))))
+                       [:http-palvelin :db])
+          :indeksit (component/using
+                      (->Indeksit)
+                      [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -533,3 +538,105 @@
         "Laskutusrajan pitäisi pienentyä muutoksen poistamisen jälkeen")
       (is (= (- laskutusraja-tallennuksen-jalkeen summa) laskutusraja-poistamisen-jalkeen) "Laskutusrajan pitäisi olla
         poistamisen jälkeen sama kuin tallennuksen jälkeen vähennettynä muutoksen summalla"))))
+
+(deftest laskutusraja-paivittyy-kun-indeksi-muuttuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        indeksi "TESTI-INDEKSI-LASKUTUSRAJA-2015"
+        hoitokausi 1
+        tavoitehinta 100000M
+        kattohinta 110000M
+        muutostyo-osuus 5000M  ;; simuloi muutostöiden kumulatiivinen summa
+        laskutusraja-alkuperainen tavoitehinta
+        laskutusraja-nykyinen (+ tavoitehinta muutostyo-osuus)]
+
+    ;; 1. Aseta laskutusraja käyttöön
+    (u (str "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " urakka-id))
+
+    ;; 2. Tallenna peruslukua varten 2024 syys/loka/marras-indeksit
+    ;;    (urakka alkaa 2025, joten perusluku lasketaan 2024 syksystä)
+    (indeksit/tallenna-indeksi db +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2024
+                   8 100.0
+                   9 101.0
+                   10 102.0
+                   11 103.0}]})
+
+    ;; 3. Vaihda urakka käyttämään testi-indeksiä
+    (u (format "UPDATE urakka SET indeksi = '%s' WHERE id = %s" indeksi urakka-id))
+
+    ;; 4. Lisää urakka_tavoite-rivi laskutusrajoineen
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka-id hoitokausi))
+    (u (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, laskutusraja, laskutusraja_alkuperainen)
+                VALUES (%s, %s, %s, %s, %s, %s)"
+         urakka-id hoitokausi tavoitehinta kattohinta laskutusraja-nykyinen laskutusraja-alkuperainen))
+
+    (let [ut-id (ffirst (q (format "SELECT id FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka-id hoitokausi)))]
+      ;; 5. Tallenna elokuun indeksi vuodelle 2025 → laukaisee paivita-urakka-tavoite-indeksille!
+      (indeksit/tallenna-indeksi db +kayttaja-jvh+
+        {:nimi indeksi
+         :indeksit [{:kannassa? false
+                     :vuosi 2025
+                     8 108.0}]})
+
+      ;; 6. Tarkista että laskutusraja on päivittynyt
+      (let [uusi-tavoitehinta-indeksikorjattu (ffirst (q (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite WHERE id = %s AND hoitokausi = %s" ut-id hoitokausi)))
+            uusi-laskutusraja (ffirst (q (format "SELECT laskutusraja FROM urakka_tavoite WHERE id = %s AND hoitokausi = %s" ut-id hoitokausi)))]
+        (is (some? uusi-tavoitehinta-indeksikorjattu) "Tavoitehinta_indeksikorjattu pitäisi olla päivitetty")
+        (is (some? uusi-laskutusraja) "Laskutusrajan pitäisi olla olemassa")
+        ;; Muutostöiden osuus = laskutusraja_nykyinen - laskutusraja_alkuperainen = 5000
+        ;; Uusi laskutusraja = uusi tavoitehinta_indeksikorjattu + 5000
+        (is (= uusi-laskutusraja (+ uusi-tavoitehinta-indeksikorjattu muutostyo-osuus))
+          "Laskutusrajan pitäisi olla uusi tavoitehinta_indeksikorjattu + muutostöiden osuus")))))
+
+(deftest laskutusraja-ei-paivity-kun-indeksi-muuttuu-ennen-2025-alkaneella-urakalla
+  (let [db (:db jarjestelma)
+        urakka (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        indeksi "TESTI-INDEKSI-LASKUTUSRAJA-2015"
+        hoitokausi 4]
+
+    ;; 1. Vaihda urakka käyttämään testi-indeksiä
+    (u (format "UPDATE urakka SET indeksi = '%s' WHERE id = %s" indeksi urakka))
+
+    ;; 2. Lisää testi-indeksin perusluku (2020 syys-loka-marras)
+    (indeksit/tallenna-indeksi
+      (:db jarjestelma)
+      +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2020
+                   9 101.1
+                   10 101.6
+                   11 101.8}]})
+
+    ;; 3. Lisää syyskuun 2024 indeksi jotta voidaan laskea lokakuun indeksikorjaus
+    (indeksit/tallenna-indeksi
+      (:db jarjestelma)
+      +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2024
+                   9 102.9M}]})
+
+    ;; 4. Tarkista alkutilanne
+    (let [alkuperainen-tavoitehinta (ffirst (q (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka hoitokausi)))
+          alkuperainen-laskutusraja (ffirst (q (format "SELECT laskutusraja FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka hoitokausi)))]
+      (is (some? alkuperainen-tavoitehinta))
+      (is (nil? alkuperainen-laskutusraja)) ;; Ei pitäisi olla asetettu
+
+      ;; 5. Päivitä indeksiä (muuta syyskuun 2024 arvoa)
+      (indeksit/tallenna-indeksi
+        (:db jarjestelma)
+        +kayttaja-jvh+
+        {:nimi indeksi
+         :indeksit [{:kannassa? true
+                     :vuosi 2024
+                     9 150.0M}]}) ;; Muutettu arvo
+
+      ;; 6. Tarkista että vain tavoitehinta_indeksikorjattu on päivittynyt
+      (let [uusi-tavoitehinta (ffirst (q (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka hoitokausi)))
+            uusi-laskutusraja (ffirst (q (format "SELECT laskutusraja FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka hoitokausi)))]
+        (is (not= alkuperainen-tavoitehinta uusi-tavoitehinta) "tavoitehinta_indeksikorjattu pitäisi päivittyä")
+        (is (nil? uusi-laskutusraja) "laskutusraja ei pitäisi päivittyä ennen 2025 alkaneella urakalla")))))

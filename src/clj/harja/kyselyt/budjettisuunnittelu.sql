@@ -389,7 +389,9 @@ with muuttuneet as (
                             ut.kattohinta,
                             EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
                             10,
-                            u.id)                             as kattohinta_indeksikorjattu_uusi
+                            u.id)                             as kattohinta_indeksikorjattu_uusi,
+                    ut.laskutusraja                           as laskutusraja_nykyinen,
+                    ut.laskutusraja_alkuperainen              as laskutusraja_alkuperainen
              from urakka_tavoite ut
                       join urakka u on ut.urakka = u.id
              where u.tyyppi = 'teiden-hoito'
@@ -404,6 +406,17 @@ with muuttuneet as (
 update urakka_tavoite
 set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorjattu_uusi,
     kattohinta_indeksikorjattu             = muuttuneet.kattohinta_indeksikorjattu_uusi,
+    -- Uusi laskutusraja = tavoitehinta_indeksikorjattu_uusi + muutostöiden osuus
+    laskutusraja                 = CASE
+                                       WHEN muuttuneet.laskutusraja_nykyinen IS NOT NULL
+                                           AND EXISTS (SELECT 1 FROM urakka_parametrit up
+                                                        WHERE up.urakkaid = urakka_tavoite.urakka
+                                                         AND up.laskutusraja_kaytossa = TRUE)
+                                           THEN muuttuneet.tavoitehinta_indeksikorjattu_uusi
+                                           + (muuttuneet.laskutusraja_nykyinen
+                                               - COALESCE(muuttuneet.laskutusraja_alkuperainen, muuttuneet.laskutusraja_nykyinen))
+                                       ELSE NULL
+                                    END,
     muokkaaja                              = (select id from kayttaja where kayttajanimi = 'Integraatio'),
     muokattu                               = NOW()
 from muuttuneet
