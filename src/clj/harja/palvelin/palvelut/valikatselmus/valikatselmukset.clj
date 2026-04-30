@@ -78,8 +78,10 @@
 (defn maarita-hv-lopun-indeksikorjaamaton-tavoitehinta
   "Useimmat päätökset vaativat tietää hoitovuoden lopun tavoitehinnan.
   Sitä ei ole ikävä kyllä tallennettu kantaan valmiiksi.
-  Tällä helpperillä määrittetään hoitovuoden lopun tavoitehinta, jossa EI ole mukana hoitovuoden lopun indeksikorjausta.
-  Mutta siinä on mukana mahdolliset pysyvät muutokset, vanhoille urakoille tehdyt oikaisut, sekä tehtävä- ja määrämuutosten vaikutus ja rahavarausten vaikutus."
+  Tällä helpperillä määrittetään hoitovuoden lopun tavoitehinta, jossa on mukana indeksikorjauspäätöksen vaikutus, mikäli päätös on tehty.
+
+  Budjettitavoite-vuodelle parametrin sisältämä tavoitehinta-oikaistu arvo sisältää mahdolliset tavoitehinnan oikaisut,
+  joita on tehty 2024 ja sitä aemmin alkaneille urakoille."
   [db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle]
   (let [;; Haetaan pysyvät muutokset, jotka vaikuttavat tähän hoitovuoteen
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
