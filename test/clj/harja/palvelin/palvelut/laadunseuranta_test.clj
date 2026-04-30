@@ -1412,6 +1412,19 @@
                (:uudelleennimeaminen laji))
           (str "MHU2026-profiilin lajin " laji-koodi " pitää palauttaa läpinäkyvä uudelleennimeäminen"))))))
 
+(deftest hae-sanktio-profiilin-detalji-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
+  (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
+        vastaus (when profiili-id
+                  (ls/hae-sanktio-profiilin-detalji-admin
+                    (:db jarjestelma)
+                    +kayttaja-jvh+
+                    {:sanktio-profiili-id profiili-id}))
+        laatupoikkeama-konteksti (first (filter #(= :laatupoikkeama (:soveltuvuuskonteksti %)) (:sisalto vastaus)))
+        lajit (mapv :laji (:lajit laatupoikkeama-konteksti))]
+    (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa laatupoikkeama-testausta varten")
+    (is (= [:muistutus :A :B :C] lajit)
+      "MHU2026-profiilin laatupoikkeama-kontekstin pitää sisältää vain ryhmälajit nykyisen speksitiedon perusteella")))
+
 (deftest hae-sanktio-profiilin-detalji-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (when profiili-id
@@ -1518,14 +1531,9 @@
               (map (fn [{:keys [soveltuvuuskonteksti lajit]}]
                      [soveltuvuuskonteksti (lajit->yhteenveto lajit)]))
               (:sisalto vastaus)))
-          (lisaa-laskutusrajalaji [yhteenveto]
-            (into {}
-              (map (fn [[soveltuvuuskonteksti lajit]]
-                     [soveltuvuuskonteksti
-                      (conj (vec lajit)
-                        {:laji :laskutus_yli_laskutusrajan
-                         :sanktiotyyppi-koodit [0]})]))
-              yhteenveto))]
+          (lisaa-urakan-laskutusrajalaji [yhteenveto]
+            (update yhteenveto :urakka conj {:laji :laskutus_yli_laskutusrajan
+                                             :sanktiotyyppi-koodit [0]}))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -1540,15 +1548,18 @@
                             {:sanktio-profiili-id mhu25-profiili-id}))
           mhu21-24-yhteenveto (vastaus->yhteenveto mhu21-24-vastaus)
           mhu25-yhteenveto (vastaus->yhteenveto mhu25-vastaus)
-          odotettu-mhu25-yhteenveto (lisaa-laskutusrajalaji mhu21-24-yhteenveto)
+          odotettu-mhu25-yhteenveto (lisaa-urakan-laskutusrajalaji mhu21-24-yhteenveto)
           mhu25-urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
+          mhu25-laatupoikkeama-konteksti (first (filter #(= :laatupoikkeama (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           laskutus-laji (first (filter #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-urakka-konteksti)))]
       (is mhu21-24-profiili-id "Vertailun pohjana käytettävän MHU21-24-profiilin pitää olla olemassa")
       (is mhu25-profiili-id "Seedatyn MHU2025-profiilin pitää olla olemassa admin-testausta varten")
       (is (= odotettu-mhu25-yhteenveto mhu25-yhteenveto)
-        "MHU25-profiilin koko admin-detailin pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji molemmissa konteksteissa")
+        "MHU25-profiilin koko admin-detailin pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
-        "MHU25-profiilin laskutusrajalajin pitää käyttää sentinel-tyyppiä"))))
+        "MHU25-profiilin laskutusrajalajin pitää käyttää sentinel-tyyppiä")
+      (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
+        "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
 (deftest tallenna-suorasanktio-kayttaa-sentinel-tyyppia-kun-profiili-sallii-sen
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)

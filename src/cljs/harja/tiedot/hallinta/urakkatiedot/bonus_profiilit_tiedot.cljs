@@ -28,6 +28,9 @@
 (defrecord PaivitaSuodatin [avain arvo])
 
 (def urakkatyyppi-teksti sanktio-tiedot/urakkatyyppi-teksti)
+(def vaikutusajan-alku-teksti sanktio-tiedot/vaikutusajan-alku-teksti)
+(def vaikutusaika-teksti sanktio-tiedot/vaikutusaika-teksti)
+(def vaikutusajan-loppu-teksti sanktio-tiedot/vaikutusajan-loppu-teksti)
 
 (defn suodata-profiilit
   [{:keys [profiilit suodattimet]}]

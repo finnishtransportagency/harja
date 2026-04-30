@@ -39,3 +39,19 @@
         tulos (tuck-apurit/e! (tiedot/->HaeSanktioProfiilitOnnistui vastaus) tila)]
     (is (= 1 (:valittu-profiili-id tulos))
       "Listapäivityksen jälkeen detail-paneeli ei saa jäädä osoittamaan suodatettua profiilia")))
+
+(deftest vaikutusaika-teksti-kuvaa-alkupohjaisen-valinnan
+  (is (= "Valitaan urakoille, joiden alkupäivä on 01.10.2025 - 30.09.2026. Profiili pysyy samana koko sopimuskauden."
+    (tiedot/vaikutusaika-teksti {:alkupvm "20251001T000000"
+             :loppupvm "20260930T000000"})))
+  (is (= "Valitaan urakoille, joiden alkupäivä on 01.10.2026 tai myöhemmin. Profiili pysyy samana koko sopimuskauden."
+    (tiedot/vaikutusaika-teksti {:alkupvm "20261001T000000"
+             :loppupvm nil}))))
+
+(deftest vaikutusajan-paivamaarat-formatoidaan-luettaviksi
+  (is (= "01.10.2026"
+    (tiedot/vaikutusajan-alku-teksti {:alkupvm "20261001T000000"})))
+  (is (= "30.09.2027"
+    (tiedot/vaikutusajan-loppu-teksti {:loppupvm "20270930T000000"})))
+  (is (= "toistaiseksi"
+    (tiedot/vaikutusajan-loppu-teksti {:loppupvm nil}))))

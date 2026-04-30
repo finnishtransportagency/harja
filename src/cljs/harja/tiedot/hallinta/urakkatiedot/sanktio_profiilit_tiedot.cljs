@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [reagent.core :refer [atom]]
             [tuck.core :as tuck]
+            [harja.pvm :as pvm]
             [harja.domain.urakka :as urakka-domain]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]))
@@ -37,6 +38,36 @@
     (get urakka-domain/urakkatyyppi->otsikko urakkatyyppi)
     (some-> urakkatyyppi name)
     "-"))
+
+(defn- vaikutusajan-pvm-teksti
+  [arvo]
+  (cond
+    (nil? arvo) ""
+    (string? arvo)
+    (if-let [[_ vuosi kuukausi paiva] (re-matches #"(\d{4})(\d{2})(\d{2})T\d{6}" arvo)]
+      (str paiva "." kuukausi "." vuosi)
+      arvo)
+    :else
+    (pvm/pvm-opt arvo)))
+
+(defn vaikutusajan-alku-teksti
+  [{:keys [alkupvm]}]
+  (vaikutusajan-pvm-teksti alkupvm))
+
+(defn vaikutusajan-loppu-teksti
+  [{:keys [loppupvm]}]
+  (if loppupvm
+    (vaikutusajan-pvm-teksti loppupvm)
+    "toistaiseksi"))
+
+(defn vaikutusaika-teksti
+  [{:keys [alkupvm] :as profiili}]
+  (str "Valitaan urakoille, joiden alkupäivä on "
+    (vaikutusajan-pvm-teksti alkupvm)
+    (if (:loppupvm profiili)
+      (str " - " (vaikutusajan-loppu-teksti profiili))
+      " tai myöhemmin")
+    ". Profiili pysyy samana koko sopimuskauden."))
 
 (defn- hae-detalji!
   [profiili-id]

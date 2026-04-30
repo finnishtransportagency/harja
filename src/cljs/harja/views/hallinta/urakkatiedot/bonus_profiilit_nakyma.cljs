@@ -14,9 +14,9 @@
   (str hoitovuosi-alku "-" hoitovuosi-loppu))
 
 (defn- paivavali-teksti [{:keys [alkupvm loppupvm]}]
-  (str alkupvm
-    (when loppupvm
-      (str " - " loppupvm))))
+  (str (tiedot/vaikutusajan-alku-teksti {:alkupvm alkupvm})
+    " - "
+    (tiedot/vaikutusajan-loppu-teksti {:loppupvm loppupvm})))
 
 (defn- t2-koodi-teksti [arvo]
   (if (= "__kaikki__" arvo) "Kaikki" arvo))
@@ -28,6 +28,16 @@
       [:span.label.label-warning "Nimetty uudelleen"]]
      [:div uudelleennimeaminen]]
     "-"))
+
+(defn- vaikutusaika-visualisointi [profiili]
+  [:div.sanktio-profiilit-vaikutusaika.margin-bottom-16
+   [:h4.sanktio-profiilit-vaikutusaika-otsikko "Vaikutusaika"]
+   [:div.sanktio-profiilit-vaikutusaika-palkki
+    [:span.sanktio-profiilit-vaikutusaika-pvm (tiedot/vaikutusajan-alku-teksti profiili)]
+    [:span.sanktio-profiilit-vaikutusaika-erotin " - "]
+    [:span.sanktio-profiilit-vaikutusaika-pvm (tiedot/vaikutusajan-loppu-teksti profiili)]]
+   [:div.sanktio-profiilit-vaikutusaika-selite
+    (tiedot/vaikutusaika-teksti profiili)]])
 
 (defn- profiilirivit-grid [rivit]
   [grid/grid
@@ -107,6 +117,7 @@
    [:h4 (:nimi profiili)]
    [:div.sanktio-profiilit-yhteenveto-laatikko.margin-bottom-16
     [yleiset/info-laatikko :neutraali (:yhteenveto profiili)]]
+  [vaikutusaika-visualisointi profiili]
    [:div.row
     [:div.col-md-6
      [:p [:strong "Urakkatyyppi: "] (tiedot/urakkatyyppi-teksti (:urakkatyyppi profiili))]
