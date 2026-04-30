@@ -152,7 +152,7 @@
             korosta-rivit korostustyyli
             oikealle-tasattavat-kentat vetolaatikot 
             esta-tiivis-grid? avattavat-rivit 
-            sivuttain-rullattava? ensimmainen-sarake-sticky?
+            sivuttain-rullattava? ensimmainen-sarake-sticky? ei-footer-muokkauspaneelia?
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
@@ -168,7 +168,8 @@
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
                 :esta-tiivis-grid? esta-tiivis-grid?
                 :piilota-border? piilota-border?
-                :raportin-tunniste raportin-tunniste}
+                :raportin-tunniste raportin-tunniste
+                :ei-footer-muokkauspaneelia? ei-footer-muokkauspaneelia?}
      (into []
        (map-indexed
          (fn [i sarake]
@@ -280,7 +281,8 @@
                                                tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
-                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
+                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
+                                               ei-footer-muokkauspaneelia?]}
 
                                      sarakkeet data]]
   [grid otsikko viimeinen-rivi-yhteenveto?
@@ -289,7 +291,7 @@
    korosta-rivit korostustyyli
    oikealle-tasattavat-kentat vetolaatikot 
    esta-tiivis-grid? avattavat-rivit 
-   sivuttain-rullattava? ensimmainen-sarake-sticky?
+   sivuttain-rullattava? ensimmainen-sarake-sticky? ei-footer-muokkauspaneelia?
    sarakkeet data])
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]

@@ -114,7 +114,8 @@
               :rivi (rivi "Tarkistettu laskutusraja" tarkistettu-laskutusraja)}]]]))
 
       ;; HTML raporttiin tulee hieno sininen tausta ja kaksi vierekkäistä laatikkoa
-      [[:otsikko-heading "Muutosten yhteenveto"]
+      [[:tyhja-rivi nil]
+       [:otsikko-heading "Muutosten yhteenveto"]
        [:display-flex
         [:sininen-laatikko {:otsikko "Muutosten vaikutus tavoitehintaan"}
          [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
@@ -220,7 +221,8 @@
                                       :rivi (rivi "Yhteensä" "" "" "" "" "" "" maaramuutokset-yhteensa)}]]
     [:taulukko {:otsikko "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"
                 :viimeinen-rivi-yhteenveto? true
-                :sheet-nimi "Tehtävä- ja määrämuutokset"}
+                :sheet-nimi "Tehtävä- ja määrämuutokset"
+                :ei-footer-muokkauspaneelia? true}
      [{:leveys 10 :otsikko "Tehtävä"}
       {:leveys 4 :otsikko "Yksikkö"}
       {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}
@@ -304,6 +306,8 @@
      tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset. "]
      [:tyhja-rivi nil]
      [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." (fmt/desimaaliluku-opt hoitovuoden-alun-indeksikorjattu-tavoitehinta 2 true) tarkistusprosentti tarkistusprosenttimaara)]
+     [:tyhja-rivi nil]
+     [:tyhja-rivi nil]
      [:tyhja-rivi nil]]))
 
 (defn muodosta-muutostoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
