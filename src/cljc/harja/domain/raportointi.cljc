@@ -60,8 +60,8 @@
        :font {:color :black :name "Open Sans" :size 12}}
 
       korosta-harmaa?
-      (merge rajat-excel {:background :grey_25_percent
-                          :font {:color :black :name "Open Sans" :size 12}})
+      {:background :grey_25_percent
+       :font {:color :black :name "Open Sans" :size 12}}
 
       :else
       {:font {:color :black :name "Open Sans" :size 12}})
