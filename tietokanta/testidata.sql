@@ -17,6 +17,8 @@ RESTART IDENTITY CASCADE;
 
 -- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
+\i testidata/__Toimenpide_Kopio_01.sql
+\i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
 \i testidata/__Materiaalikoodi_Kopio_01.sql
@@ -96,6 +98,9 @@ SELECT setval(
 
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
+
+-- Luodaan sanktiotyypit
+\i testidata/sanktiotyypit.sql
 
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
