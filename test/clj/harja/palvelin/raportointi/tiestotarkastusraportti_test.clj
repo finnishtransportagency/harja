@@ -129,8 +129,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :tiestotarkastusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
@@ -140,7 +140,7 @@
                      :orientaatio :landscape
                      :rajoita-pdf-rivimaara 30000}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Suomi, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Tiestötarkastusraportti"
                       :tyhja nil}
                      [{:leveys 10

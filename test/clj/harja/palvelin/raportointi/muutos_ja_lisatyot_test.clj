@@ -44,8 +44,8 @@
                                    :suorita-raportti
                                    +kayttaja-jvh+
                                    {:nimi :muutos-ja-lisatyot
-                                    :konteksti "hallintayksikko"
-                                    :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                    :konteksti "elinvoimakeskus"
+                                    :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                     :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                                  :loppupvm (c/to-date (t/local-date 2015 9 30))
                                                  :urakkatyyppi :hoito
@@ -55,18 +55,18 @@
                                   :suorita-raportti
                                   +kayttaja-jvh+
                                   {:nimi :muutos-ja-lisatyot
-                                   :konteksti "hallintayksikko"
-                                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                   :konteksti "elinvoimakeskus"
+                                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                    :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                                 :loppupvm (c/to-date (t/local-date 2015 9 30))
                                                 :urakkatyyppi :hoito
                                                 :toimenpide-id nil
                                                 :muutostyotyyppi :lisatyo}})]
     (is (vector? vastaus-kaikki-tyotyypit))
-    (let [otsikko-kaikki-tyotyypit "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+    (let [otsikko-kaikki-tyotyypit "Pohjois-Suomi, Muutos- ja lisätöiden raportti, kaikki työtyypit ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
           taulukko-kaikki-tyotyypit (apurit/taulukko-otsikolla vastaus-kaikki-tyotyypit otsikko-kaikki-tyotyypit)
           nurkkasumman-teksti-kaikki-tyotyypit (last (last vastaus-kaikki-tyotyypit))
-          otsikko-kaikki-lisatyot "Pohjois-Pohjanmaa, Lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
+          otsikko-kaikki-lisatyot "Pohjois-Suomi, Lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Toimenpide: kaikki"
           taulukko-kaikki-lisatyot (apurit/taulukko-otsikolla vastaus-kaikki-lisatyot otsikko-kaikki-lisatyot)
           nurkkasumman-teksti-kaikki-lisatyot (last (last vastaus-kaikki-lisatyot))]
       (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti-kaikki-tyotyypit) "nurkkasumman teksti")

@@ -1233,9 +1233,10 @@
                                        :sopimus-id sopimus-id
                                        :vuosi vuosi
                                        :kohteet kohteet})
+              yllapitokohde-id (:id (first vastaus))
               mailitiedot-paivityksen-jalkeen (q-map
-                                                (str "SELECT * FROM yllapitokohteen_sahkopostitiedot
-                                         WHERE yllapitokohde_id = " 1 ";"))
+                                                (format "SELECT * FROM yllapitokohteen_sahkopostitiedot
+                                         WHERE yllapitokohde_id = %s;" yllapitokohde-id))
               mailitiedot (first mailitiedot-paivityksen-jalkeen)]
 
           ;; Sähköpostitiedot päivittyi
@@ -1526,22 +1527,53 @@
         (is (= oletettu-takaraja-pvm (:aikataulu-tiemerkinta-takaraja kohde-testin-jalkeen)))
         (is (= tiemerkintapvm (:valmis-tiemerkintaan kohde-testin-jalkeen)))))))
 
-(defn yllapitokohde-aikataulun-tallentamiseen [kohde-id kasin?]
+(defn yllapitokohde-aikataulun-tallentamiseen [kohde-id sopimus-id kasin?]
   (let [takaraja (when kasin?
                    #inst "2022-03-07T22:00:00.000-00:00")
-        aikataulurivin-id (ffirst (q "SELECT id FROM yllapitokohteen_aikataulu WHERE yllapitokohde = " kohde-id ";"))]
+        ;aikataulurivin-id (ffirst (q "SELECT id FROM yllapitokohteen_aikataulu WHERE yllapitokohde = " kohde-id ";"))
+        ]
     {:tr-kaista nil, :valitavoitteet (), :kohdenumero "L15", :aikataulu-tiemerkinta-takaraja takaraja,
      :aikataulu-tiemerkinta-takaraja-kasin kasin?
-     :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00", :aikataulu-kohde-alku #inst "2022-06-18T21:00:00.000-00:00", :tr-ajorata nil, :aikataulu-tiemerkinta-merkinta "muu", :aikataulu-tiemerkinta-alku nil, :tarkka-aikataulu (), :aikataulu-muokattu #inst "2022-03-01T13:19:57.000-00:00", :tr-loppuosa 2, :aikataulu-tiemerkinta-loppu nil, :aikataulu-muokkaaja 3, :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää", :aikataulu-tiemerkinta-loppu-alkuperainen nil, :tr-alkuosa 2, :urakka 7, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kohdeosat [{:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :id 9, :yllapitokohde-id kohde-id, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}], :yllapitoluokka nil, :id aikataulurivin-id, :sopimus 37, :aikataulu-paallystys-loppu #inst "2022-06-20T21:00:00.000-00:00", :paallystysurakka "Utajärven päällystysurakka", :pituus 1000, :tr-alkuetaisyys 0, :tr-numero 837, :aikataulu-paallystys-alku #inst "2022-06-18T21:00:00.000-00:00", :sahkopostitiedot nil, :tietyoilmoitus-id nil, :aikataulu-kohde-valmis nil, :muokattu nil}))
+     :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00",
+     :aikataulu-kohde-alku #inst "2022-06-18T21:00:00.000-00:00",
+     :tr-ajorata nil,
+     :aikataulu-tiemerkinta-merkinta "muu",
+     :aikataulu-tiemerkinta-alku nil,
+     :tarkka-aikataulu (),
+     :aikataulu-muokattu #inst "2022-03-01T13:19:57.000-00:00",
+     :tr-loppuosa 2,
+     :aikataulu-tiemerkinta-loppu nil,
+     :aikataulu-muokkaaja 3,
+     :aikataulu-tiemerkinta-jyrsinta "ei jyrsintää",
+     :aikataulu-tiemerkinta-loppu-alkuperainen nil,
+     :tr-alkuosa 2,
+     :urakka 7,
+     :tr-loppuetaisyys 1000,
+     :nimi "Puolangantie",
+     :kohdeosat [{:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]},
+                  :tr-ajorata 0, :massamaara nil,
+                  :tr-loppuosa 2, :tr-alkuosa 2,
+                  :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa",
+                  :raekoko nil, :tyomenetelma nil,
+                  :paallystetyyppi nil, :id (hae-kohdeosan-id-nimella "Puolangantien kohdeosa"),
+                  :yllapitokohde-id kohde-id, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}],
+     :yllapitoluokka nil,
+     :id kohde-id,
+     :sopimus sopimus-id,
+     :aikataulu-paallystys-loppu #inst "2022-06-20T21:00:00.000-00:00",
+     :paallystysurakka "Utajärven päällystysurakka", :pituus 1000,
+     :tr-alkuetaisyys 0, :tr-numero 837,
+     :aikataulu-paallystys-alku #inst "2022-06-18T21:00:00.000-00:00",
+     :sahkopostitiedot nil, :tietyoilmoitus-id nil, :aikataulu-kohde-valmis nil, :muokattu nil}))
 
 ;; testataan ns. normaalitapaus, missä ei ole arkipyhiä ja tiemerkintä voidaan aloittaa tiistaina
 (deftest tiemerkinnan-takarajan-laskenta-normaalitapaus
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P")
         paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id paallystysurakan-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
         vuosi 2023
-        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id false)]
+        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id sopimus-id false)]
         kohde (first kohteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu
@@ -1560,12 +1592,11 @@
     (is (= (:aikataulu-tiemerkinta-takaraja puolangantie-vastauksessa) #inst "2022-03-17T22:00:00.000-00:00") " takaraja laskettu oikein")))
 
 (deftest tiemerkinnan-takarajan-asettaminen-kasin
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
-        paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P")
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
         vuosi 2023
-        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id true)]
+        kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id sopimus-id true)]
         kohde (first kohteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu
@@ -1576,7 +1607,8 @@
                                  :kohteet kohteet})
         puolangantie-vastauksessa (first (filter (fn [k]
                                                    (= "Puolangantie" (:nimi k)))
-                                                 vastaus))]
+                                                 vastaus))
+        paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")]
     (is (= paallystysurakan-id (:urakka puolangantie-vastauksessa)) "paallystysurakan-id")
     (is (= puolangantie-kohde-id (:id kohde)) "kohde-id")
     ;; :valmis-tiemerkintaan #inst "2022-03-02T22:00:00.000-00:00" eli 3.3.
@@ -1648,7 +1680,6 @@
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         puolangantie-id (hae-yllapitokohteen-id-nimella "Puolangantie")
-        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2023
         viesti-id (str (UUID/randomUUID))]
@@ -1694,7 +1725,7 @@
                   integraatio-sahkopostit))
         (is (every? #(clj-str/includes? (:sisalto %) "<lahettaja>harja-ala-vastaa@vayla.fi</lahettaja>") integraatio-sahkopostit))
         (is (every? #(clj-str/includes? (:sisalto %) "Kohteen 'Puolangantie' tiemerkinnän voi aloittaa 23.05.2023") integraatio-sahkopostit))
-        (is (every? #(clj-str/includes? (:sisalto %) "<table><tr><td><b>Kohde</b></td><td>Puolangantie</td></tr><tr><td><b>TR-osoite</b></td><td>837 / 2 / 0 / 2 / 1000</td></tr><tr><td><b>Ajoradat</b></td><td>0</td></tr><tr><td><b>Kaistat</b></td><td>11</td></tr><tr><td><b>Pituus</b></td><td>1000</td></tr><tr><td><b>Päällysteet</b></td><td></td></tr><tr><td><b>Toimenpiteet</b></td><td></td></tr><tr><td><b>Valmis tiemerkintään</b></td><td>23.05.2023</td></tr><tr><td><b>Tiemerkintäurakka</b></td><td>Oulun tiemerkinnän palvelusopimus 2017-2024</td></tr><tr><td><b>Merkitsijä</b></td><td>Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)</td></tr><tr><td><b>Merkitsijän urakka</b></td><td>Utajärven päällystysurakka</td></tr></table>") integraatio-sahkopostit))
+        (is (every? #(clj-str/includes? (:sisalto %) "<table><tr><td><b>Kohde</b></td><td>Puolangantie</td></tr><tr><td><b>TR-osoite</b></td><td>837 / 2 / 0 / 2 / 1000</td></tr><tr><td><b>Ajoradat</b></td><td>0</td></tr><tr><td><b>Kaistat</b></td><td>11</td></tr><tr><td><b>Pituus</b></td><td>1000</td></tr><tr><td><b>Päällysteet</b></td><td></td></tr><tr><td><b>Toimenpiteet</b></td><td></td></tr><tr><td><b>Valmis tiemerkintään</b></td><td>23.05.2023</td></tr><tr><td><b>Tiemerkintäurakka</b></td><td>Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P</td></tr><tr><td><b>Merkitsijä</b></td><td>Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)</td></tr><tr><td><b>Merkitsijän urakka</b></td><td>Utajärven päällystysurakka</td></tr></table>") integraatio-sahkopostit))
 
 
 
@@ -1870,15 +1901,33 @@
 
 
 (def tarkea-kohde-testidata
-  {:id 27
+  {:id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
    :sopimuksen-mukaiset-tyot 12,
    :arvonvahennykset 34
    :bitumi-indeksi 56
    :kaasuindeksi 78
-
-   :maaramuutokset-ennustettu? false, :tila :kohde-valmis, :tr-kaista nil, :tiemerkinta-alkupvm #inst "2021-06-21T21:00:00.000-00:00", :kohdenumero "L42", :paallystys-loppupvm #inst "2021-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 0, :kohde-valmispvm #inst "2021-06-23T21:00:00.000-00:00", :toteutunut-hinta nil, :tiemerkinta-loppupvm #inst "2021-06-22T21:00:00.000-00:00", :aikataulu-muokattu #inst "2022-01-25T06:15:47.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 1, :yha-kohdenumero 116, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus nil, :lihavoi true, :tr-alkuosa 1, :urakka "Utajärven päällystysurakka"
-
-   :yllapitokohteen-voi-poistaa? false, :tr-alkuetaisyys 1062 :tr-loppuetaisyys 3827, :nimi "Tärkeä kohde mt20",  :tr-numero 20 :yllapitokohdetyotyyppi :paallystys :kohdeosat []})
+   :maaramuutokset-ennustettu? false,
+   :tila :kohde-valmis,
+   :tr-kaista nil,
+   :tiemerkinta-alkupvm #inst "2021-06-21T21:00:00.000-00:00",
+   :kohdenumero "L42",
+   :paallystys-loppupvm #inst "2021-06-20T21:00:00.000-00:00",
+   :tr-ajorata nil,
+   :urakka-id 7,
+   :maaramuutokset 0,
+   :kohde-valmispvm #inst "2021-06-23T21:00:00.000-00:00",
+   :toteutunut-hinta nil,
+   :tiemerkinta-loppupvm #inst "2021-06-22T21:00:00.000-00:00",
+   :aikataulu-muokattu #inst "2022-01-25T06:15:47.000-00:00",
+   :sakot-ja-bonukset nil,
+   :tr-loppuosa 1,
+   :yha-kohdenumero 116,
+   :yllapitokohdetyyppi :paallyste,
+   :nykyinen-paallyste nil, :tunnus nil, :lihavoi true, :tr-alkuosa 1, :urakka "Utajärven päällystysurakka"
+   :yllapitokohteen-voi-poistaa? false,
+   :tr-alkuetaisyys 1062
+   :tr-loppuetaisyys 3827,
+   :nimi "Tärkeä kohde mt20",  :tr-numero 20 :yllapitokohdetyotyyppi :paallystys :kohdeosat []})
 
 (deftest tallenna-yllapitokohteen-kustannukset
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
@@ -1912,8 +1961,26 @@
       (is (= (count (filter #(= (:nimi %) "Tärkeä kohde mt20") vastauksen-kohteet)) 1)))))
 
 (def puolangantie-testidata
-  {:tila :ei-aloitettu, :tr-kaista nil, :tiemerkinta-alkupvm nil, :kohdenumero "L15", :paallystys-loppupvm #inst "2023-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 5000, :yotyo false
-   :maku-paallysteet 2000M, :kohde-valmispvm nil, :toteutunut-hinta nil, :tiemerkinta-loppupvm nil, :aikataulu-muokattu #inst "2023-01-20T06:26:18.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 2, :yha-kohdenumero 115, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus "A", :tr-alkuosa 2, :urakka "Utajärven päällystysurakka", :sopimuksen-mukaiset-tyot 1000, :yllapitokohteen-voi-poistaa? true, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kaasuindeksi 1000, :kohdeosat (list {:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :yllapitoluokka 8, :id 9, :yllapitokohde-id 25, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}), :bitumi-indeksi 3000, :yllapitokohdetyotyyppi :paallystys, :yllapitoluokka {:nimi "Ei pk-luokkaa", :lyhyt-nimi "-", :numero nil}, :id 25, :paallystysilmoitus-tila nil, :pituus 1000, :tr-alkuetaisyys 0, :vuodet #{2023}, :tr-numero 837, :urakoitsija "Skanska Asfaltti Oy", :paallystys-alkupvm #inst "2023-06-18T21:00:00.000-00:00", :kohde-alkupvm #inst "2023-06-13T21:00:00.000-00:00", :arvonvahennykset nil, :muokattu nil, :paallystysilmoitus-id nil, :yhaid 13375, :keskimaarainen-vuorokausiliikenne nil})
+  {:tila :ei-aloitettu, :tr-kaista nil, :tiemerkinta-alkupvm nil, :kohdenumero "L15",
+   :paallystys-loppupvm #inst "2023-06-20T21:00:00.000-00:00",
+   :tr-ajorata nil, :urakka-id 7, :maaramuutokset 5000, :yotyo false
+   :maku-paallysteet 2000M, :kohde-valmispvm nil, :toteutunut-hinta nil,
+   :tiemerkinta-loppupvm nil, :aikataulu-muokattu #inst "2023-01-20T06:26:18.000-00:00", :sakot-ja-bonukset nil,
+   :tr-loppuosa 2, :yha-kohdenumero 115, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil,
+   :tunnus "A", :tr-alkuosa 2, :urakka "Utajärven päällystysurakka", :sopimuksen-mukaiset-tyot 1000,
+   :yllapitokohteen-voi-poistaa? true, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kaasuindeksi 1000,
+   :kohdeosat (list {:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :yllapitoluokka 8,
+                     :id (hae-yllapitokohteen-id-nimella "Puolangantien kohdeosa"), :yllapitokohde-id 25, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}),
+   :bitumi-indeksi 3000,
+   :yllapitokohdetyotyyppi :paallystys,
+   :yllapitoluokka {:nimi "Ei pk-luokkaa", :lyhyt-nimi "-", :numero nil},
+   :id (hae-yllapitokohteen-id-nimella "Puolangantie"), :paallystysilmoitus-tila nil, :pituus 1000,
+   :tr-alkuetaisyys 0, :vuodet #{2023},
+   :tr-numero 837, :urakoitsija "Skanska Asfaltti Oy",
+   :paallystys-alkupvm #inst "2023-06-18T21:00:00.000-00:00",
+   :kohde-alkupvm #inst "2023-06-13T21:00:00.000-00:00",
+   :arvonvahennykset nil, :muokattu nil,
+   :paallystysilmoitus-id nil, :yhaid 13375, :keskimaarainen-vuorokausiliikenne nil})
 
 (deftest tallenna-yllapitokohteen-kustannukset-maaramuutokset-kokonaissummana
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
@@ -1994,7 +2061,8 @@
 
 
 (def odotetut-tiedot-sahkopostilahetykseen
-  {:tiemerkintaurakka-id 12, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "4242523-TES4", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827, :id 27, :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Oulun tiemerkinnän palvelusopimus 2017-2024", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
+  {:tiemerkintaurakka-id 52, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "PR00057561", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+   :id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20"), :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
    :kaistat "11, 12" :ajoradat "1"
    :paallysteet "AB16, AN14; SMA16, AN7"
    :toimenpiteet "MPK; MPKJ"
@@ -2010,7 +2078,8 @@
 (deftest yllapitokohteiden-tiedot-sahkopostilahestykseen-jos-alikohteet-poistettu
   ;; poistettujen alikohteiden kaistoja, ajorataa, toimenpiteitä ja päällystettä ei saa nostaa sähköpostiin
   (let [kohteen-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
-        poista-alikohteet (u (str "UPDATE yllapitokohdeosa SET poistettu = true WHERE yllapitokohde = " kohteen-id))
+        ;; Poista alikohteet
+        _ (u (str "UPDATE yllapitokohdeosa SET poistettu = true WHERE yllapitokohde = " kohteen-id))
         tiedot (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                  (:db jarjestelma)
                  [kohteen-id])]
@@ -2082,8 +2151,488 @@
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
                   :loppusarake "I"}]]}
-    [nil nil nil nil nil nil nil nil nil nil]
-    [nil nil nil nil nil nil nil nil nil nil]
+    {:lihavoi? false
+     :rivi [1186201842
+            "70"
+            nil
+            "Vt 4 Oulu moottoritie 1"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1186201853
+            "71"
+            nil
+            "Vt 4 Oulu moottoritie 2"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1304505423
+            "72"
+            nil
+            "Vt 4 Ii"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1304505229
+            "74"
+            nil
+            "Kt 86 Vihanti-Paavola"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1304505448
+            "75"
+            nil
+            "St 813 rantakylä-vt 8"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1304505458
+            "76"
+            nil
+            "St 815 Lentokentäntie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1088682287
+            "77"
+            nil
+            "St 816 Hailuodontie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1078970135
+            "78"
+            nil
+            "St 827 Tyrnäväntie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1078970092
+            "80"
+            nil
+            "St 847 Haukiputaantie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1078970450
+            "82"
+            nil
+            "St 848 Kiiminkijoentie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1089158378
+            "84"
+            nil
+            "Yt 8162 Pölläntie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1088682050
+            "85"
+            nil
+            "Mt 18666 Liminka-Tupos"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1088682055
+            "87"
+            nil
+            "Mt 18709 Alakyläntie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1305280889
+            "88"
+            nil
+            "Mt 18732 Takalontie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941666
+            "92"
+            nil
+            "70816/805 KLV Hailuodontie 1"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941670
+            "92"
+            nil
+            "70816/805 KLV Hailuodontie 2"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941674
+            "92"
+            nil
+            "70816/808 KLV Hailuodontie 3"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941543
+            "93"
+            nil
+            "78460/855 KLV Haukipudas"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941710
+            "93"
+            nil
+            "88727/804 KLV Haukipudas"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941719
+            "94"
+            nil
+            "70004/836 KLV Ii/vt 4"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941707
+            "94"
+            nil
+            "70851/852 KLV Ii Asematie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941693
+            "95"
+            nil
+            "88637/820 KLV Ketolanperäntie1"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941690
+            "95"
+            nil
+            "88637/854 KLV Ketolanperäntie2"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941696
+            "95"
+            nil
+            "88637/870 KLV Ketolanperäntie3"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941684
+            "96"
+            nil
+            "88681/805 KLV Kokkokankaantie1"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941681
+            "96"
+            nil
+            "88681/855 KLV Kokkokankaantie2"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941550
+            "97"
+            nil
+            "70022/810 KLV Muhos 1"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941553
+            "97"
+            nil
+            "70022/860 KLV Muhos 2"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941678
+            "98"
+            nil
+            "88676/850 KLV Karhuojantie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941713
+            "99"
+            nil
+            "78281/851 KLV Leppiniementie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941687
+            "100"
+            nil
+            "70022/857 KLV Pikkarala-Kosunl"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941699
+            "101"
+            nil
+            "88666/851 KLV Tupoksentie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    {:lihavoi? false
+     :rivi [1227941547
+            "102"
+            nil
+            "88670/850 KLV Vesikarintie"
+            nil
+            nil
+            nil
+            nil
+            nil
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "I"}]]}
+    [nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil]
+    [nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil
+     nil]
     [nil
      nil
      nil
@@ -2091,27 +2640,27 @@
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]
+       :loppurivi 38}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]
+       :loppurivi 38}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]
+       :loppurivi 38}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]
+       :loppurivi 38}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]
+       :loppurivi 38}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
-       :loppurivi 5}]]))
+       :loppurivi 38}]]))
 
 (deftest muodosta-paallystysexcelin-kohteiden-rivit-2023
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
@@ -2276,8 +2825,8 @@
                :muokkaaja user-id}
         _ (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db kohde)
         kohteen-kustannukset-jalkeen (hae-yllapitokohteen-kustannukset yhaid)]
-    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil nil 0M]) "kustannukset ennen tallennusta")
-    (is (= (take 8 kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset tallennuksen jälkeen")
+    (is (= (butlast kohteen-kustannukset-ennen) [15 70 0M 0M 0M 0M toteutunut-hinta nil nil 0M]) "kustannukset ennen tallennusta")
+    (is (= (take 8 kohteen-kustannukset-jalkeen) [15 70 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset tallennuksen jälkeen")
     (is (= (nth kohteen-kustannukset-jalkeen 9) 4M) "määrämuutokset tallennuksen jälkeen")
     (is (= (nth kohteen-kustannukset-jalkeen 10) 5M) "maku päällysteet tallennuksen jälkeen")))
 

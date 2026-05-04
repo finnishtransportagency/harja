@@ -288,7 +288,7 @@
 
 (def tieturvallisuusverkko-selite
   {:teksti "Tieturvallisuustarkastu-\nkseen kuuluva tie"
-   :vari puhtaat/fig-default})
+   :vari puhtaat/tarkastus-default})
 
 (def heatmap-selite
   {:heatmap? true
@@ -455,7 +455,7 @@
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
   (defn generoitu-tyyli [tehtavan-nimi]
-    (log/debug tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
+    (log/debug "Tehtävän: " tehtavan-nimi " määritys puuttuu esitettävistä asioista, generoidaan tyyli koneellisesti!")
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
@@ -501,17 +501,20 @@
    "MUUT VALAISTUSURAKOIDEN TOIMENPITEET" "Muut toimenpiteet"})
 
 (defn tehtavan-nimi [tehtavat]
-  (str/join ", " (into []
-                   (comp
-                     (map str/capitalize)
-                     (map #(or (get tehtavien-nimet (str/upper-case %)) %)))
-                   tehtavat)))
+  (when (seq tehtavat)
+    (str/join ", " (into []
+                     (comp
+                       (remove nil?)
+                       (map str/capitalize)
+                       (map #(or (get tehtavien-nimet (str/upper-case %)) %)))
+                     tehtavat))))
 
 
 (defn- maaritelty-tyyli [tehtava]
-  (let [koodi (into #{} (map str/upper-case tehtava))
-        tulos (get ulkoasu/tehtavien-varit koodi)]
-    (when-not (empty? tulos) tulos)))
+  (when tehtava
+    (let [koodi (into #{} (map str/upper-case tehtava))
+          tulos (get ulkoasu/tehtavien-varit koodi)]
+      (when-not (empty? tulos) tulos))))
 
 (defn kasvata-viivan-leveytta
   "Kasvattaa viivan leveyttä kahdella, jos leveys on määritelty"
@@ -549,11 +552,11 @@
   ;; nuoli-ikonista tehdään :nuoli,
   ;; ja jos viivoille on määritelty leveydet (monivärinen nuoli),
   ;; niin kasvatetaan niitä jos toteuma on valittu.
-  (-> (or (maaritelty-tyyli tehtava)
-        (generoitu-tyyli (str/join ", " tehtava)))
-    validoi-viiva
-    (viimeistele-asetukset valittu?)))
-
+  (let [tehtava (remove nil? tehtava)]  ;; suodata nil-arvot heti alussa
+   (-> (or (and tehtava (maaritelty-tyyli tehtava))
+         (generoitu-tyyli (str/join ", " tehtava)))
+     validoi-viiva
+     (viimeistele-asetukset valittu?))))
 
 (defn toimenpiteen-selite
   "Antaa toimenpiteen nimelle sopivan selitteen"
@@ -787,7 +790,8 @@
   muotoon."
   ([] (kartalla-esitettavaan-muotoon-xf nil nil))
   ([valittu-fn asia-xf]
-   (comp #?(:cljs (fn [asia] (edistymispalkki/geometriataso-lataus-valmis!) asia))
+   (comp #?(:cljs (fn [asia] (edistymispalkki/geometriataso-lataus-valmis!) asia)
+            :clj identity)
      (or asia-xf identity)
      (mapcat pura-geometry-collection)
      (map #(kartalla-xf % valittu-fn))

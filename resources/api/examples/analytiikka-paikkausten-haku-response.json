@@ -1,7 +1,7 @@
 {
   "paikkaukset": [
     {
-      "urakka": 56,
+      "urakka": 62,
       "urakkatunnus": "analytiikka1",
       "kustannus": 1234.56,
       "leveys": 1.4,
@@ -22,7 +22,7 @@
       "harjaId": 274,
       "poistettu": false,
       "alkupvm": "2023-11-02",
-      "paikkauskohdeId": 17
+      "paikkauskohdeId": 84
     }
   ]
 }

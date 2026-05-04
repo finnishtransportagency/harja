@@ -106,7 +106,7 @@ FROM toteuma tot
   JOIN tehtava t4 ON tt.toimenpidekoodi=t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko
+                     WHERE elinvoimakeskus_id = :elinvoimakeskus
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
@@ -132,7 +132,7 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko
+                     WHERE elinvoimakeskus_id = :elinvoimakeskus
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
@@ -217,7 +217,7 @@ FROM toteuma tot
   JOIN tehtava t4 ON tt.toimenpidekoodi = t4.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko
+                     WHERE elinvoimakeskus_id = :elinvoimakeskus
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)
@@ -241,7 +241,7 @@ FROM toteuma tot
   JOIN urakka u ON tot.urakka = u.id
 WHERE tot.urakka IN (SELECT id
                      FROM urakka
-                     WHERE hallintayksikko = :hallintayksikko
+                     WHERE elinvoimakeskus_id = :elinvoimakeskus
                            AND (TRUE IN (SELECT UNNEST(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))
                            AND urakkanro IS NOT NULL)
       AND (tot.alkanut >= :alkupvm AND tot.alkanut <= :loppupvm)

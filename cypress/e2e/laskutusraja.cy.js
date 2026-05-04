@@ -5,7 +5,7 @@ const clickTimeout = 6000;
 const visibleTimeout = 30000;
 const urakanNimiKajaani = 'POP MHU Kajaani 2025-2030';
 const urakanNimiOulu = 'Oulun MHU 2019-2024';
-const hallintayksikko = 'Pohjois-Pohjanmaa';
+const elinvoimakeskus = 'Pohjois-Suomi';
 
 function alustaUrakkaKustannussuunnitteluun(nimi) {
     ks.alustaKanta(nimi);
@@ -24,7 +24,7 @@ function trimmaaArvo(arvo) {
 function avaaOulunKulujenKohdistus() {
     avaaHarjaTimeoutilla();
 
-    cy.contains('.haku-lista-item', hallintayksikko, {timeout: visibleTimeout}).click();
+    cy.contains('.haku-lista-item', elinvoimakeskus, {timeout: visibleTimeout}).click();
     cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
 
     // Urakka on päättynyt, joten täytyy näyttää päättyneet urakat
@@ -58,7 +58,7 @@ describe('Laskutusraja', function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
         // Navigoi urakkaan
-        cy.contains('.haku-lista-item', hallintayksikko).click();
+        cy.contains('.haku-lista-item', elinvoimakeskus).click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimiKajaani, {timeout: clickTimeout}).click();
