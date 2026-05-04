@@ -36,35 +36,27 @@
 
 (defn bonus-sanktio-valikko
   [tila]
-  (let [container-ref (atom nil)]
-    (komp/luo
-      (komp/piirretty
-        (fn [comp]
-          ;; Aseta focus ensimmäiseen radio-buttoniin (Sanktio) kun komponentti mounttautuu
-          (when-let [node @container-ref]
-            (when-let [radio (.querySelector node "input[type='radio']")]
-              (.focus radio)))))
-      (fn [tila] [:<>
-                  [kentat/tee-kentta {:tyyppi :radio-group
-                                      :vaihtoehdot [:sanktiot :bonukset]
-                                      :vayla-tyyli? true
-                                      :nayta-rivina? true
-                                      :vaihtoehto-nayta {:sanktiot "Sanktio"
-                                                         :bonukset "Bonus"}
-                                      :valitse-fn (fn [valinta]
-                                                    ;; Alusta sanktio/bonus joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
-                                                    ;; lomakkeelle ei jää aiemman lomakkeen dataa.
-                                                    ;; Note: Tätä ei tarvitse tehdä, kun saadaan myös sanktiolomake ja s&b listaus
-                                                    ;;       kunnolla tuck tilanhallinnan piiriin.
-                                                    ;;       Tällöin lomaketta avatessa voidaan alustaa helpommin tila halutuksi.
-                                                    (case valinta
-                                                      :sanktiot
-                                                      (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
-                                                      :bonukset
-                                                      (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
-                                                      nil))}
-                   tila]
-                  [:hr]]))))
+  [:<>
+   [kentat/tee-kentta {:tyyppi :radio-group
+                       :vaihtoehdot [:sanktiot :bonukset]
+                       :vayla-tyyli? true
+                       :nayta-rivina? true
+                       :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                          :bonukset "Bonus"}
+                       :valitse-fn (fn [valinta]
+                                     ;; Alusta sanktio/bonus joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
+                                     ;; lomakkeelle ei jää aiemman lomakkeen dataa.
+                                     ;; Note: Tätä ei tarvitse tehdä, kun saadaan myös sanktiolomake ja s&b listaus
+                                     ;;       kunnolla tuck tilanhallinnan piiriin.
+                                     ;;       Tällöin lomaketta avatessa voidaan alustaa helpommin tila halutuksi.
+                                     (case valinta
+                                       :sanktiot
+                                       (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
+                                       :bonukset
+                                       (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
+                                       nil))}
+    tila]
+   [:hr]])
 
 
 (defn sivupaneeli
