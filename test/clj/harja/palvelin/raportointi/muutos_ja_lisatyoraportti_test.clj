@@ -155,7 +155,7 @@
                   (= :taulukko (first elementti))
                   (.contains (str (avain (second elementti))) osa))
             elementti))
-    (drop 2 vastaus)))
+    vastaus))
 
 ;; ============================================================
 ;; Testataan Kirjallisesti sovitut muutokset
@@ -169,7 +169,7 @@
         _ (luo-kustannusvaikutus! pysyva-id 2028 5000)
         muutostyo-id (luo-kirjallinen-muutos! urakka-id "muutostyo" "Muutostyö syy" "2028-12-15")
         _ (luo-kustannusvaikutus! muutostyo-id 2028 3000)
-        jjh-id (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028")) (pvm/->pvm (str "15.10.2028")) 1500)
+        _ (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028")) (pvm/->pvm (str "15.10.2028")) 1500)
         ;; Suorita raportti hoitokaudelle 2028-2029
         vastaus (suorita-raportti urakka-id
                   (hoitokausi-alkupvm 2028)
@@ -195,10 +195,8 @@
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
-      ;; Vain yhteensä-rivi (0 €)
-      (is (= 1 (count rivit)) "Taulukossa on vain yhteensä-rivi")
-      (let [yhteensa-arvo (nth (:rivi (first rivit)) 3)]
-        (is (= 0 yhteensa-arvo) "Yhteensä on 0 kun dataa ei ole")))))
+      ;; Vain yhteensä-rivi (0 €)§
+      (is (= 0 (count rivit)) "Taulukossa ei ole dataa"))))
 
 ;; ============================================================
 ;; Testataan: Aikaisempien vuosien pysyvien muutosten vaikutukset
@@ -235,9 +233,7 @@
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
-      (is (= 1 (count rivit)) "Taulukossa on vain yhteensä-rivi")
-      (let [yhteensa-arvo (nth (:rivi (first rivit)) 2)]
-        (is (= 0 yhteensa-arvo) "Yhteensä on 0 kun dataa ei ole")))))
+      (is (= 0 (count rivit)) "Taulukossa ei ole dataa."))))
 
 ;; ============================================================
 ;; Testataan: Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset
@@ -296,10 +292,7 @@
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
       ;; Vain yhteensä-rivi
-      (is (= 1 (count rivit)) "Taulukossa on vain yhteensä-rivi")
-      (let [yhteensarivi (first rivit)
-            yhteensa-arvo (nth (:rivi yhteensarivi) 7)]
-        (is (= 0 yhteensa-arvo) "Yhteensä on 0 kun dataa ei ole")))))
+      (is (= 0 (count rivit)) "Taulukossa ei ole dataa."))))
 
 ;; ============================================================
 ;; Taulukko 4: Rahavarausten muutokset
