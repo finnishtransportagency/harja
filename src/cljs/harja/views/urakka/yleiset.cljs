@@ -64,8 +64,8 @@
         (reset! yhteyshenkilot res)
         (reset! paivystajat/yhteyshenkilot-haettu? false)
         (go (reset! paivystajat/paivystajaksi-merkityt
-                    (reverse (sort-by :loppu
-                                      (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
+              (reverse (sort-by :loppu
+                         (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
         true)))
 
 
@@ -651,7 +651,9 @@
       (komp/kun-muuttuu hae!)
       (fn [ur]
         [grid/grid
-         {:otsikko "Yhteyshenkilöt"
+         {;; Näkymässä voi olla sama henkilö, erillä roolilla
+          :tunniste #(str (:id %) "_" (:rooli %))
+          :otsikko "Yhteyshenkilöt"
           :tyhja "Ei yhteyshenkilöitä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                       #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}

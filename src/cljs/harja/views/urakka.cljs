@@ -7,7 +7,6 @@
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
             [harja.views.urakka.yllapitokohteet.kustannukset-nakyma :as kustannukset-nakyma]
-            [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
@@ -139,11 +138,6 @@
     :kustannusten-yhteenveto (and
                                (oikeudet/urakat-tiemerkinta-kustannukset id)
                                (= tyyppi :tiemerkinta))
-
-    :paikkaukset-mpu (and
-                       (oikeudet/urakat-paikkaukset id)
-                       (= tyyppi :paallystys)
-                       (= :mpu sopimustyyppi))
 
     :valikatselmus (and
                      (oikeudet/urakat-kulut-valikatselmus id)
@@ -290,25 +284,11 @@
          ^{:key "paallystykset"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-       (if (= sopimustyyppi :mpu)
-         "Muut paikkaukset"
-         "Paikkaukset")
+       "Paikkaukset"
        :paikkaukset-yllapito
        (when (valilehti-mahdollinen? :paikkaukset-yllapito ur)
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])
-
-       "Reikäpaikkaukset"
-       :paikkaukset-mpu
-       (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
-         ^{:key "paikkaukset-mpu"}
-         [reikapaikkaukset/reikapaikkaukset ur])
-
-       "Kustannukset"
-       :kustannukset
-       (when (valilehti-mahdollinen? :kustannukset ur)
-         ^{:key "kustannukset"}
-         [kustannukset-nakyma/kustannukset])
 
        "Laadunseuranta"
        :laadunseuranta

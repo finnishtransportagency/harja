@@ -625,7 +625,7 @@
     first
     (taydenna-varusteen-kohdeluokka lahde)))
 
-(defn- hae-varusteen-historia-hakupalvelusta [_db http-asetukset konteksti lahde ulkoinen-oid]
+(defn- hae-varusteen-historia-hakupalvelusta [http-asetukset konteksti lahde ulkoinen-oid]
   (let [payload (muodosta-varusteen-historian-hakupalvelu-payload lahde ulkoinen-oid)
         {vastaus-str :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset (json/write-str payload))
         varusteet (:osumat (json/read-str vastaus-str :key-fn keyword))]
@@ -849,7 +849,7 @@
               (let [hakupalvelun-http-asetukset {:metodi :POST
                                                  :otsikot otsikot
                                                  :url (str varuste-api-juuri-url velho-yhteiset/hakupalvelu-url)}
-                    hakupalvelun-varusteet (hae-varusteen-historia-hakupalvelusta db hakupalvelun-http-asetukset konteksti lahde ulkoinen-oid)
+                    hakupalvelun-varusteet (hae-varusteen-historia-hakupalvelusta hakupalvelun-http-asetukset konteksti lahde ulkoinen-oid)
                     historiavarusteet hakupalvelun-varusteet
                     historiarivit (muodosta-varusteen-historian-rivit db (mapv #(taydenna-varusteen-kohdeluokka lahde %) historiavarusteet))
                     valimaiset-toimenpiderivit (hae-varusteen-valimaiset-toimenpiderivit

@@ -35,14 +35,10 @@ jobs:
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     with:
       test-db-service: harjadb-latest
@@ -59,6 +55,7 @@ jobs:
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
   check-status-and-notify:
+    name: "Check test status and notify"
     needs: tests
     if: always()
     runs-on: ubuntu-latest
