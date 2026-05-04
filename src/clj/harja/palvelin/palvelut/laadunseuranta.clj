@@ -206,32 +206,6 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
-(defn- laske-sanktion-hoitovuosi
-  [{:keys [alkupvm]} perintapvm]
-  (pvm/paivamaara->mhu-hoitovuosi-nro alkupvm perintapvm))
-
-(defn- ratkaise-sanktion-tyyppi-id
-  [db {:keys [id alkupvm] :as urakan-tiedot} {:keys [laji tyyppi perintapvm poistettu]}]
-  (let [annettu-tyyppi-id (cond
-                            (map? tyyppi) (:id tyyppi)
-                            (integer? tyyppi) tyyppi
-                            :else nil)
-        validoinnin-perintapvm (or perintapvm (when poistettu (pvm/nyt)) (pvm/nyt))]
-    (if (= :yllapidon_bonus laji)
-      (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi laji alkupvm)
-            sanktiotyyppi-id (or annettu-tyyppi-id
-                               (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit}))))]
-        (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db (name laji) sanktiotyyppi-id alkupvm)
-        sanktiotyyppi-id)
-      (-> (sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
-            db
-            {:urakka-id id
-             :hoitovuosi (laske-sanktion-hoitovuosi urakan-tiedot validoinnin-perintapvm)
-             :soveltuvuuskonteksti :laatupoikkeama
-             :laji laji
-             :sanktiotyyppi-id annettu-tyyppi-id})
-        (get-in [:sanktiotyyppi :id])))))
-
 (defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
   [db urakka-id sanktio-id]
@@ -255,9 +229,13 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
-        sanktiolaji (when laji (keyword laji))
-        sanktiotyyppi (when sanktiolaji
-                        (ratkaise-sanktion-tyyppi-id db (assoc urakan-tiedot :id urakka) (assoc sanktio :laji sanktiolaji)))
+        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
+                                       (keyword laji) (:alkupvm urakan-tiedot))
+        sanktiotyyppi (if (:id tyyppi)
+                        (:id tyyppi)
+                        (when laji
+                          (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
