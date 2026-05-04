@@ -281,6 +281,35 @@
       (catch EiOikeutta e
         (is e))))
 
+(deftest elinvoimakeskuksen-urakat-palauttaa-oikean-urakan
+  (let [psu-evk-id (hae-pohjois-suomen-evk-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :elinvoimakeskuksen-urakat +kayttaja-jvh+ psu-evk-id)
+        urakat-kannasta (map first (q (format "SELECT id FROM urakka WHERE elinvoimakeskus_id = %s AND poistettu = false" psu-evk-id)))]
+
+    (testing "Palvelu palauttaa urakoita"
+      (is (seq vastaus) "Urakoita löytyy PSU:n elinvoimakeskukselle"))
+
+    (testing "Palautetut urakat kuuluvat oikeaan elinvoimakeskukseen"
+      (let [palautetut-idt (set (map :id vastaus))
+            kannan-idt (set urakat-kannasta)]
+        (is (every? #(contains? kannan-idt %) palautetut-idt)
+          "Kaikki palautetut urakat löytyvät kannasta kyseisen EVK:n alta")))
+
+    (testing "Urakoissa on pakolliset kentät"
+      (doseq [urakka vastaus]
+        (is (integer? (:id urakka)) "Urakalla on id")
+        (is (string? (:nimi urakka)) "Urakalla on nimi")))))
+
+(deftest elinvoimakeskuksen-urakat-nil-evk-id
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :elinvoimakeskuksen-urakat +kayttaja-jvh+ nil)]
+    (testing "Nil EVK-id:llä palvelu ei kaadu"
+      (is (or (nil? vastaus)
+            (empty? vastaus)
+            (vector? vastaus))
+        "Palvelu palauttaa tyhjän tai nil vastauksen"))))
+
 (deftest urakan-kesa-ajan-tallennus-ei-tilaajan-kayttaja
   (try+
     (let [kesa-ajan-alku "01.05"

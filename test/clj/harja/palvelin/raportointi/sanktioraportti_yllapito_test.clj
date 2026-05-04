@@ -121,8 +121,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :sanktioraportti-yllapito
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.12.2017")
                                               :urakkatyyppi :paallystys}})
@@ -202,55 +202,57 @@
     (is (=marginaalissa? nurkkasumma -5500.00M))
     (let [otsikko "Sakot ja bonukset"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko ""}
-                                          {:otsikko "01 Uusimaa"}
-                                          {:otsikko "02 Varsinais-Suomi"}
-                                          {:otsikko "03 Kaakkois-Suomi"}
-                                          {:otsikko "04 Pirkanmaa"}
-                                          {:otsikko "08 Pohjois-Savo"}
-                                          {:otsikko "09 Keski-Suomi"}
-                                          {:otsikko "10 Etelä-Pohjanmaa"}
-                                          {:otsikko "12 Pohjois-Pohjanmaa"}
-                                          {:otsikko "14 Lappi"}
-                                          {:otsikko "Yh\u00ADteen\u00ADsä"})
+      (apurit/tarkista-taulukko-sarakkeet
+        taulukko
+        {:otsikko ""}
+        {:otsikko "40 Uusimaa"}
+        {:otsikko "41 Lounais-Suomi"}
+        {:otsikko "42 Kaakkois-Suomi"}
+        {:otsikko "43 Sisä-Suomi"}
+        {:otsikko "44 Keski-Suomi"}
+        {:otsikko "45 Itä-Suomi"}
+        {:otsikko "46 Etelä-Pohjanmaa"}
+        {:otsikko "47 Pohjanmaa"}
+        {:otsikko "48 Pohjois-Suomi"}
+        {:otsikko "49 Lappi"}
+        {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "PK-luokka 1"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
                                        :lihavoi? false,
-                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-yhteenveto-solu 0)]}
-                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 2000M 0 (summa-yhteenveto-solu 2000M)]}
+                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-yhteenveto-solu 0)]}
+                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0 2000M 0 (summa-yhteenveto-solu 2000M)]}
 
                                       {:otsikko "PK-luokka 2"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
                                        :lihavoi? false,
-                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
-                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0 0 (summa-yhteenveto-solu 0)]}
+                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
+                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0 0 0 (summa-yhteenveto-solu 0)]}
 
                                       {:otsikko "PK-luokka 3"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
                                        :lihavoi? false,
-                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
-                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 -3000M 0 (summa-yhteenveto-solu -3000M)]}
+                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
+                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0 -3000M 0 (summa-yhteenveto-solu -3000M)]}
 
                                       {:otsikko "Ei PK-luokkaa"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
                                        :lihavoi? false,
-                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-yhteenveto-solu 0)]}
-                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -1500M 0 (summa-yhteenveto-solu -4500M)]}
+                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-yhteenveto-solu 0)]}
+                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 0 -1500M 0 (summa-yhteenveto-solu -4500M)]}
 
                                       {:otsikko "Yhteensä"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
                                        :lihavoi? false,
-                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 2) (muistutus-solu 0) (muistutus-yhteenveto-solu 2)]}
-                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -2500M 0 (summa-yhteenveto-solu -5500M)]}))))
+                                       :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 2) (muistutus-solu 0) (muistutus-yhteenveto-solu 2)]}
+                                      {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 0 -2500M 0 (summa-yhteenveto-solu -5500M)]}))))

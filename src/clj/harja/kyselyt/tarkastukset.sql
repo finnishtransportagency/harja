@@ -509,7 +509,7 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id
                    FROM urakka
-                   WHERE hallintayksikko = :hallintayksikko
+                   WHERE elinvoimakeskus_id = :elinvoimakeskus
                          AND (:urakkatyyppi IS NULL OR (
                             CASE WHEN :urakkatyyppi = 'hoito' THEN tyyppi IN ('hoito', 'teiden-hoito')
                             ELSE tyyppi = :urakkatyyppi::urakkatyyppi
@@ -656,7 +656,7 @@ FROM tarkastus t
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id
                    FROM urakka
-                   WHERE hallintayksikko = :hallintayksikko
+                   WHERE elinvoimakeskus_id = :elinvoimakeskus
                          AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                               CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
                                     tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
@@ -787,7 +787,7 @@ FROM tarkastus t
   JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id
                    FROM urakka u
-                   WHERE hallintayksikko = :hallintayksikko
+                   WHERE elinvoimakeskus_id = :elinvoimakeskus
                          AND (:urakkatyyppi :: urakkatyyppi IS NULL OR (
                        CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
                             ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
@@ -904,7 +904,7 @@ WHERE t.tyyppi = 'laatu' :: tarkastustyyppi
       AND (t.aika BETWEEN :alku AND :loppu)
       AND (:tienumero :: INTEGER IS NULL OR t.tr_numero = :tienumero)
       AND ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR t.urakka = :urakka)
-      AND (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:elinvoimakeskus :: INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
       AND (:laadunalitus :: BOOLEAN IS NULL OR t.laadunalitus = :laadunalitus)
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND t.poistettu IS NOT TRUE;
