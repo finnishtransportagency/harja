@@ -173,17 +173,17 @@
 
 (deftest tehtavamaarien-riviprosessointiharvelien-testit
   (testing "Rivien yhdistelyhärveli yhdistää saman tehtävän ja hallintayksikön sisältävät rivit"
-    (let [rivit [{:nimi "Erillinen1" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Erillinen2" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Erillinen3" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Erillinen4" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Sama1" :hallintayksikko 1 :suunniteltu 4 :toteuma 2}
-                 {:nimi "Sama1" :hallintayksikko 1 :suunniteltu 4 :toteuma 2}
-                 {:nimi "Erillinen5" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Erillinen6" :hallintayksikko 1 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Sama1" :hallintayksikko 2 :suunniteltu 1 :toteuma 1}
-                 {:nimi "Sama2" :hallintayksikko 1 :suunniteltu 6 :toteuma 3}
-                 {:nimi "Sama2" :hallintayksikko 1 :suunniteltu 6 :toteuma 3}]
+    (let [rivit [{:nimi "Erillinen1" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Erillinen2" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Erillinen3" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Erillinen4" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Sama1" :elinvoimakeskus_id 1 :suunniteltu 4 :toteuma 2}
+                 {:nimi "Sama1" :elinvoimakeskus_id 1 :suunniteltu 4 :toteuma 2}
+                 {:nimi "Erillinen5" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Erillinen6" :elinvoimakeskus_id 1 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Sama1" :elinvoimakeskus_id 2 :suunniteltu 1 :toteuma 1}
+                 {:nimi "Sama2" :elinvoimakeskus_id 1 :suunniteltu 6 :toteuma 3}
+                 {:nimi "Sama2" :elinvoimakeskus_id 1 :suunniteltu 6 :toteuma 3}]
           kombotetut (tm-r/kombota-samat-tehtavat rivit)
           taulukko (tm-r/muodosta-taulukko (:db jarjestelma)
                                            +kayttaja-jvh+
@@ -196,10 +196,10 @@
           "Yhdistetään samalla nimellä ja h.yksiköllä olevat rivit")
       (is (and
             (= 8 (:suunniteltu (some #(when (and
-                                              (= (:hallintayksikko %) 1)
+                                              (= (:elinvoimakeskus_id %) 1)
                                               (= (:nimi %) "Sama1")) %) kombotetut)))
             (= 4 (:toteuma (some #(when (and
-                                          (= (:hallintayksikko %) 1)
+                                          (= (:elinvoimakeskus_id %) 1)
                                           (= (:nimi %) "Sama1")) %) kombotetut)))
             (= 12 (:suunniteltu (some #(when (= (:nimi %) "Sama2") %) kombotetut)))
             (= 6 (:toteuma (some #(when (= (:nimi %) "Sama2") %) kombotetut))))
@@ -242,8 +242,8 @@
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi               :tehtavamaarat
-                           :konteksti          "hallintayksikko"
-                           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                           :konteksti          "elinvoimakeskus"
+                           :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                            :parametrit         {:alkupvm  (c/to-date (t/local-date 2020 10 1))
                                                 :loppupvm (c/to-date (t/local-date 2021 10 1))}})]
       (testing "Urakka"

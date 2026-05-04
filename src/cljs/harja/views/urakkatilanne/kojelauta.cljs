@@ -23,7 +23,7 @@
   (range (- (pvm/vuosi pvm-nyt) hoitokausia-taaksepain)
     (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt))))
 
-(defn suodattimet [e! {:keys [valinnat elyhaku urakkahaku haku-kaynnissa?] :as app}]
+(defn suodattimet [e! {:keys [valinnat evkhaku urakkahaku haku-kaynnissa?] :as app}]
   [:div
    [yleiset/pudotusvalikko
     "Urakkatyyppi"
@@ -39,11 +39,11 @@
       nav/+urakkatyypit+)]
    [:div
     [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko {:for "elyhaku"} "Hallintayksikkö"]
+     [:label.alasvedon-otsikko {:for "evkhaku"} "Elinvoimakeskus"]
      [kentat/tee-kentta
-      {:elementin-id "elyhaku" :tyyppi :haku
-       :nayta #(hal/elynumero-ja-nimi %)
-       :lahde elyhaku
+      {:elementin-id "evkhaku" :tyyppi :haku
+       :nayta #(hal/evknumero-ja-nimi %)
+       :lahde evkhaku
        :hakuikoni? true
        :hae-kun-yli-n-merkkia 0
        :tarkkaile-ulkopuolisia-muutoksia? true
@@ -51,11 +51,11 @@
        :monivalinta? true
        :monivalinta-teksti #(case (count %)
                               0 "Kaikki"
-                              1 (hal/elynumero-ja-nimi (first %))
-                              (str (count %) " hallintayksikköä valittu"))
+                              1 (hal/evknumero-ja-nimi (first %))
+                              (str (count %) " elinvoimakeskusta valittu"))
        :disabled? haku-kaynnissa?}
-      (r/wrap (:elyt valinnat) #(do
-                                  (e! (tiedot/->AsetaSuodatin :elyt %))
+      (r/wrap (:evkt valinnat) #(do
+                                  (e! (tiedot/->AsetaSuodatin :evkt %))
                                   (e! (tiedot/->HaeUrakat))))]]
     [yleiset/pudotusvalikko
      (if (= :paallystys (get-in valinnat [:urakkatyyppi :arvo]))
@@ -93,8 +93,8 @@
     [:span.avoimet-poikkeamat
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry laatupoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href (str "/#urakat/laadunseuranta/laatupoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
-                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/laadunseuranta/laatupoikkeamat?&hy=" (:evk_id rivi) "&u=" (:id rivi))
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:evk_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :laadunseuranta
                                                                                                                :taso3 :laatupoikkeamat})}
        (if (> avoimet_laatupoikkeamat 0)
@@ -102,8 +102,8 @@
          (yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Ei avoimia laatupoikkeamia")}))]]
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Siirry turvallisuuspoikkeamiin"]
-      [:a.klikattava.alleviivaa {:href (str "/#urakat/turvallisuuspoikkeamat?&hy=" (:ely_id rivi) "&u=" (:id rivi))
-                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+      [:a.klikattava.alleviivaa {:href (str "/#urakat/turvallisuuspoikkeamat?&hy=" (:evk_id rivi) "&u=" (:id rivi))
+                                 :on-click #(siirtymat/siirry-annettuun-valilehteen (:evk_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                                :taso2 :turvallisuuspoikkeamat
                                                                                                                :taso3 nil})}
        (if (> avoimet_turvallisuuspoikkeamat 0)
@@ -115,8 +115,8 @@
   (let [{:keys [luvatut_pisteet toteutuneet_pisteet hoitokauden_alkuvuosi]} rivi]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry lupausnäkymään"]
-     [:a.klikattava.alleviivaa {:href (str "/#urakat/valitavoitteet/lupaukset?&hy=" (:ely_id rivi) "&u=" (:id rivi))
-                                :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:ely_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valitavoitteet/lupaukset?&hy=" (:evk_id rivi) "&u=" (:id rivi))
+                                :on-click #(siirtymat/avaa-lupaukset-valitussa-urakassa (:evk_id rivi) (:id rivi) hoitokauden_alkuvuosi)}
       [:div.lupauspisteet
        (if (or (nil? luvatut_pisteet) (nil? toteutuneet_pisteet))
          (yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Ei tavoitepistemäärää")})
@@ -136,8 +136,8 @@
                                              (kustannusten-seuranta-tiedot/valikatselmuksen-takarajapvm (+ hoitokauden_alkuvuosi 1)))))]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry välikatselmukseen"]
-     [:a.klikattava.alleviivaa {:href (str "/#urakat/valikatselmus?&hy=" (:ely_id rivi) "&u=" (:id rivi))
-                                :on-click #(siirtymat/avaa-valikatselmus (:ely_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/valikatselmus?&hy=" (:evk_id rivi) "&u=" (:id rivi))
+                                :on-click #(siirtymat/avaa-valikatselmus (:evk_id rivi) (:id rivi) [(pvm/hoitokauden-alkupvm (:hoitokauden_alkuvuosi rivi)) (pvm/hoitokauden-loppupvm (inc (:hoitokauden_alkuvuosi rivi)))])}
       [:div.tavoitehintapaatos
        (if (and (nil? tavoitehinnan_muutospaatos) (nil? tavoitehinnan_muutospaatos))
          (yleiset/tila-indikaattori (if valikatselmuksen-takaraja-ohi? "hylatty" "kesken")
@@ -173,8 +173,8 @@
         {:keys [aloittamattomia vahvistamattomia vahvistettuja suunnitelman_tila]} (:ks_tila rivi)]
     [yleiset/wrap-if true
      [yleiset/tooltip {} :% "Siirry kustannussuunnitelmaan"]
-     [:a.klikattava.alleviivaa {:href (str "/#urakat/suunnittelu/kustannussuunnitelma?&hy=" (:ely_id rivi) "&u=" (:id rivi))
-                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:ely_id rivi) (:id rivi) {:taso1 :urakat
+     [:a.klikattava.alleviivaa {:href (str "/#urakat/suunnittelu/kustannussuunnitelma?&hy=" (:evk_id rivi) "&u=" (:id rivi))
+                                :on-click #(siirtymat/siirry-annettuun-valilehteen (:evk_id rivi) (:id rivi) {:taso1 :urakat
                                                                                                               :taso2 :suunnittelu
                                                                                                               :taso3 :kustannussuunnitelma})}
       (cond
@@ -333,15 +333,15 @@
    urakat])
 
 (defn listaus
-  "Listauskomponentti, joka toimii pohjana eri urakkatyypeille, ja hoitaa urakkatyypeille yhteisen suodattamisen elyn, vuoden sekä valitun urakan perusteella."
+  "Listauskomponentti, joka toimii pohjana eri urakkatyypeille, ja hoitaa urakkatyypeille yhteisen suodattamisen elinvoimakeskuksen, vuoden sekä valitun urakan perusteella."
   [e! {:keys [valinnat urakat haku-kaynnissa?] :as app}]
   (let [valitut-urakat (:urakat valinnat)
-        valittu-ely (get-in valinnat [:ely :id])
+        valittu-evk (get-in valinnat [:evk :id])
         valittu-hk-alkuvuosi (:urakkavuosi valinnat)
-        ;; ely-suodatus
-        urakat (if (nil? valittu-ely)
+        ;; evk-suodatus
+        urakat (if (nil? valittu-evk)
                  urakat
-                 (filter #(= valittu-ely (:ely_id %)) urakat))
+                 (filter #(= valittu-evk (:evk_id %)) urakat))
         ;; hoitokausisuodatus valittu-hk-alkuvuosi
         urakat (if (nil? valittu-hk-alkuvuosi)
                  urakat
@@ -362,7 +362,7 @@
 ;; Näytetään uuden ominaisuuden vihjetekstiä jonkin aikaa, että käyttäjät oppivat mistä asiassa on kyse
 (def vihjeteksti-uudesta-ominaisuudesta
   [:p "Tämä on uusi osio, jonka tarkoituksena on parantaa tiedon läpinäkyvyyttä Harjan sisällä.
-       Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä ELY:jen pääkäyttäjille ja urakanvalvojille.
+       Tässä vaiheessa osio näkyy vain pääkäyttäjille sekä Elinvoimakeskusten pääkäyttäjille ja urakanvalvojille.
        Myöhemmin laajennamme mahdollisesti tiedon näkyvyyttä myös urakoitsijoille heidän omien urakoidensa osalta. Jos löydät tiedoista virheitä tai sinulla
        on muita toiveita tämän osion kehittämiseksi, voit "
    [:a.klikattava.alleviivaa {:href (palaute-tiedot/mailto-kehitystiimi)} "laittaa meille viestiä osoitteeseen harjapalaute@solita.fi"]])
@@ -371,7 +371,7 @@
   (komp/luo
     (komp/sisaan #(do
                     (e! (tiedot/->AlustaHallintayksikkoHaku (into []
-                                                              (map (fn [ely] (select-keys ely [:id :nimi :elynumero]))
+                                                              (map (fn [evk] (select-keys evk [:id :nimi :evknumero]))
                                                                 @hal/vaylamuodon-hallintayksikot))))
                     (e! (tiedot/->HaeUrakat))))
     (fn [e! app]
