@@ -7,14 +7,6 @@ WHERE NOT EXISTS (
      WHERE ytunnus = '1010547-1'
 );
 
-TRUNCATE TABLE rahavaraus_tehtava,
-               rahavaraus,
-               tehtava,
-               materiaalikoodi,
-               tehtavaryhma,
-               tehtavaryhmaotsikko
-RESTART IDENTITY CASCADE;
-
 -- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
 \i testidata/__Toimenpide_Kopio_01.sql
