@@ -50,7 +50,7 @@
                                  "Muutostyöt (erillisrahoitetut)"
 
                                  (= toimenpide-nimi "jjh-muutos")
-                                 (if (= "mhu+" urakan-sopimustyyppi)
+                                 (if (= :mhu+ urakan-sopimustyyppi)
                                    "Kumppanuusmaksun muutos"
                                    "Johto- ja hallintokorvauksen muutokset")
 
