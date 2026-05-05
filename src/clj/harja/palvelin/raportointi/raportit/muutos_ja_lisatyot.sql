@@ -32,7 +32,7 @@ SELECT
   u.nimi                                                 AS urakka_nimi,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero,
+  lpad(cast(hy.elinvoimakeskusnumero as varchar), 2, '0')            AS hallintayksikko_elynumero,
   tpi.id                                                 AS tpi_id,
   tpi.nimi                                               AS tpi_nimi,
   t.sopimus                                              AS sopimus_id,
@@ -52,7 +52,7 @@ FROM toteuma_tehtava tt
         mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+  JOIN organisaatio hy ON hy.id = u.elinvoimakeskus_id
 WHERE
   tt.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
@@ -60,10 +60,10 @@ WHERE
                                    (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                     u.tyyppi =
                                     :urakkatyyppi :: urakkatyyppi)))
-  AND (:hallintayksikko_annettu IS FALSE OR
+  AND (:elinvoimakeskus_annettu IS FALSE OR
        u.id IN (SELECT id
                 FROM urakka
-                WHERE hallintayksikko = :hallintayksikko))
+                WHERE elinvoimakeskus_id = :elinvoimakeskus))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
@@ -92,7 +92,7 @@ SELECT
        false)))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
+  lpad(cast(hy.elinvoimakeskusnumero as varchar), 2, '0')            AS hallintayksikko_elynumero
 FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi::TEXT  IN (:tyotyypit) AND
@@ -106,7 +106,7 @@ FROM toteuma_tehtava tt
         mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+  JOIN organisaatio hy ON hy.id = u.elinvoimakeskus_id
 WHERE
   tt.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
@@ -118,10 +118,10 @@ WHERE
                                        END
                                        )
                                     )))
-  AND (:hallintayksikko_annettu IS FALSE OR
+  AND (:elinvoimakeskus_annettu IS FALSE OR
        u.id IN (SELECT id
                 FROM urakka
-                WHERE hallintayksikko = :hallintayksikko))
+                WHERE elinvoimakeskus_id = :elinvoimakeskus))
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))
@@ -162,7 +162,7 @@ FROM toteuma_tehtava tt
         mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+  JOIN organisaatio hy ON hy.id = u.elinvoimakeskus_id
 WHERE
   tt.poistettu IS NOT TRUE
   AND (:urakkatyyppi :: urakkatyyppi IS NULL OR (
@@ -171,7 +171,7 @@ WHERE
     ELSE
         u.tyyppi = :urakkatyyppi :: urakkatyyppi
     END))
-  AND u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
+  AND u.id IN (SELECT id FROM urakka WHERE elinvoimakeskus_id = :elinvoimakeskus)
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                     FROM tehtava tpk
                                                     WHERE tpk.emo = :tpi))

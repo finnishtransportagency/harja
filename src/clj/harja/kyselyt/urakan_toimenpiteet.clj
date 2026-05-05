@@ -5,7 +5,8 @@
   {:positional? true})
 
 (declare hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet-ja-tehtavat)
+  hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat hae-urakan-toimenpiteet-ja-tehtavat
+  hae-mh-urakoiden-toimenpiteet)
 
 (defn hae-urakan-toimenpiteet-ja-tehtavat-tasot
   "Palauttaa hae-urakan-toimenpiteet-ja-tehtavat kyselyn tulokset tasoittain. Jokainen rivi on
