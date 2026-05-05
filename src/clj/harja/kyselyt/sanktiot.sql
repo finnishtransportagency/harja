@@ -2,9 +2,9 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
+(perintapvm, maarattypvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
  luotu)
-VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
+VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
             (SELECT t.id -- suoraan annettu tpi
              FROM toimenpideinstanssi t
@@ -95,6 +95,7 @@ SELECT s.id,
        -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
        -- sanktion laatupoikkeamassa.
        lp.kasittelyaika                             AS kasittelyaika,
+       s.maarattypvm,
        s.maara                                      AS summa,
        s.sakkoryhma::text                           AS laji,
        s.indeksi,

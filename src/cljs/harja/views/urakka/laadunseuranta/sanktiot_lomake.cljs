@@ -307,21 +307,32 @@
             :fmt pvm/pvm-opt :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-           {:otsikko "Käsitelty" :nimi :kasittelyaika
-            :pakollinen? true
-            ::lomake/col-luokka "col-xs-3"
-            :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-            :aseta (fn [rivi arvo] (cond-> rivi
-                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                     ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
-                                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                     (assoc-in [:perintapvm] arvo)
+           (if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+             {:otsikko "Määrätty" :nimi :maarattypvm
+              :pakollinen? true
+              ::lomake/col-luokka "col-xs-3"
+              :fmt pvm/pvm-opt :tyyppi :pvm
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+             {:otsikko "Käsitelty" :nimi :kasittelyaika
+              :pakollinen? true
+              ::lomake/col-luokka "col-xs-3"
+              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
+              :aseta (fn [rivi arvo] (cond-> rivi
+                                       ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
+                                       ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
+                                       (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                                       (assoc-in [:perintapvm] arvo)
 
-                                     ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
-                                     true
-                                     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
-            :fmt pvm/pvm-opt :tyyppi :pvm
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+                                       ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
+                                       true
+                                       (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)
+
+                                       ;; Cond hyväksyy useita ehto/muunnos -pareja, joten lisätään samaan tapaan myös maarattypvm.
+                                       true
+                                       (assoc-in [:maarattypvm] arvo)))
+              :fmt pvm/pvm-opt :tyyppi :pvm
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
            (if (and voi-muokata? (not lukutila?))
              {:otsikko "Laskutuskuukausi"

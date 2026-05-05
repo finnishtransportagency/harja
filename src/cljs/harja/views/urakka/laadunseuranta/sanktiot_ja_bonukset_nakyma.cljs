@@ -267,6 +267,12 @@
          [:button {:type "submit"
                    :class #{"nappi-toissijainen"}}
           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]]]]
+
+     ;; Näytetään vain mhu25 -> ja eteenpäin
+     (when (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+       [yleiset/info-laatikko :neutraali "Vuodesta 2025 lähtien sanktiot ja arvonvähennykset määrätään työmaakokouksissa, mutta käsitellään vasta välikatselmuksissa ja vastaanottotarkastuksessa. Kaikki bonukset käsitellään välikatselmuksissa ja vastaanottotarkastuksessa."])
+
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
@@ -281,7 +287,10 @@
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
+      [(if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+         {:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
+         {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
        {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt #(fmt-laskutuskuukausi % urakan-alkupaiva) :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
