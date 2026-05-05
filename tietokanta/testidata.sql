@@ -91,9 +91,6 @@ SELECT setval(
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
 
--- Luodaan sanktiotyypit
-\i testidata/sanktiotyypit.sql
-
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
 
