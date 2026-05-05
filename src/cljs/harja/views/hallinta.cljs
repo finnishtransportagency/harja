@@ -143,7 +143,7 @@
 
     "Sanktio- ja bonusprofiilit"
     :sanktio-profiilit
-    (when (oikeudet/hallinta-urakkahenkilot)
+    (when (oikeudet/hallinta-laadunseuranta-profiilit)
       ^{:key "sanktio-profiilit"}
       [sanktio-profiilit/sanktio-profiilit])]
 

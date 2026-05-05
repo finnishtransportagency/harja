@@ -11,7 +11,7 @@
   #{:urakka :laatupoikkeama})
 
 (def ^:private hallinta-oikeus
-  (delay @(requiring-resolve 'harja.domain.oikeudet/hallinta-urakkahenkilot)))
+  (delay @(requiring-resolve 'harja.domain.oikeudet/hallinta-laadunseuranta-profiilit)))
 
 (defn- laji->rivin-tyyppi
   [laji]
