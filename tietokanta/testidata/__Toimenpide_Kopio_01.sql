@@ -1,11 +1,14 @@
+-- Pudotetaan FK hetkeksi, jotta toimenpide-dump voidaan ladata uudelleen ilman että migraatioiden omistama sanktiotyyppi-data estää truncatea.
+ALTER TABLE sanktiotyyppi DROP CONSTRAINT IF EXISTS sanktiotyyppi_toimenpide_fkey;
+
 TRUNCATE TABLE public.tehtavaryhmaotsikko ;
 DELETE FROM rahavaraus_tehtava ;
 
 -- Kävin yksitelleen taulut läpi, kaikki muut taulut tässä kohti ovat jo tyhjiä, paitsi: 
---   sanktiotyyppi, rahavaraus, sekä rahavaraus_tehtava. 
+--   rahavaraus, sekä rahavaraus_tehtava. 
 -- 
--- Nuo yllä olevat on populoitu flyway migraatioissa, ja cleanataan uudelleen tässä.    
--- Päivitin nämä testidataan ->   sanktiotyypit.sql,   __Rahavaraus_Kopio_01.sql
+-- Nuo yllä olevat cleanataan uudelleen tässä testidatassa.    
+-- Rahavaraus tulee edelleen dumpista, mutta sanktio-masterdata jää migraatioiden omistukseen.
 -- 
 -- Nämä taulut halutaan clenata:
 -- TRUNCATE TABLE public.tehtavaryhmaotsikko CASCADE;
@@ -22,8 +25,7 @@ TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava,
     mhu_muutos_tehtava_ja_maaraluettelo, mhu_muutos_tehtava_tiedot, vv_materiaali, kan_hinta,
     kan_tyo, kan_toimenpide_kommentti, suunnittelu_kustannussuunnitelman_muutos, mhu_muutos,
     mhu_muutos_kustannusvaikutus, mhu_muutos_liite, mhu_muutos_kulu, toimenpide, toimenpideinstanssi,
-    sanktio_profiili_rivi_lukittu_summa, sanktio_profiili_rivi, sanktio_profiili_laji_esitystiedot,
-    sanktio_profiili, sanktio_laji, sanktiotyyppi, tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
+    tehtavaryhma, kokonaishintainen_tyo, maksuera, erilliskustannus, sanktio,
     toimenpideinstanssi_vesivaylat, kustannussuunnitelma, erilliskustannus_liite, paatos_lupaus, rahavaraus,
     rahavaraus_urakka, mhu_muutos_rahavarausmuutoksen_syy;
 
@@ -403,3 +405,7 @@ INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja
 INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja, muokkaaja, poistettu, tuotenumero, piilota, jarjestys) VALUES (13720, 'PÄÄLLYSTEIDEN PAIKKAUS', '20107', 47, 3, '2025-11-20 11:13:56.705982 +00:00', null, null, null, false, 205, null, 40);
 INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja, muokkaaja, poistettu, tuotenumero, piilota, jarjestys) VALUES (16401, 'MHU Korvausinvestointi', '14300', 31, 2, '2025-11-20 11:13:56.705982 +00:00', null, null, null, false, 205, null, null);
 INSERT INTO public.toimenpide(id, nimi, koodi, emo, taso, luotu, muokattu, luoja, muokkaaja, poistettu, tuotenumero, piilota, jarjestys) VALUES (16402, 'KORVAUSINVESTOINTI', '14301', 16401, 3, '2025-11-20 11:13:56.705982 +00:00', null, null, null, false, 205, null, 60);
+
+ALTER TABLE sanktiotyyppi
+    ADD CONSTRAINT sanktiotyyppi_toimenpide_fkey
+    FOREIGN KEY (toimenpidekoodi) REFERENCES toimenpide (id);
