@@ -757,7 +757,7 @@
     (= :yllapidon_bonus laji) :bonukset
     :else :sanktiot))
 
-(defn- legacy-sanktio-konfiguraatio-oraakkeli [db urakka soveltuvuuskonteksti]
+(defn- legacy-sanktio-konfiguraatio-odotus [db urakka soveltuvuuskonteksti]
   (let [kaikki-sanktiotyypit (sanktiot-q/hae-sanktiotyypit db)
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
@@ -783,7 +783,7 @@
                             sanktiotyypit)})
     (:sanktio-lajit vastaus)))
 
-(deftest hae-urakan-sanktio-konfiguraatio-vastaa-legacy-oraakkelia
+(deftest hae-urakan-sanktio-konfiguraatio-vastaa-legacy-odotusta
   (let [tapaukset [{:nimi "Oulun alueurakka 2014-2019"
                     :urakka-id (hae-oulun-alueurakan-2014-2019-id)
                     :soveltuvuuskontekstit [:urakka :laatupoikkeama]}
@@ -796,7 +796,7 @@
     (doseq [{:keys [nimi urakka-id soveltuvuuskontekstit]} tapaukset
             soveltuvuuskonteksti soveltuvuuskontekstit]
       (let [urakka (first (q-map (format "SELECT id, tyyppi, alkupvm FROM urakka WHERE id = %s" urakka-id)))
-            odotettu (legacy-sanktio-konfiguraatio-oraakkeli (:db jarjestelma) urakka soveltuvuuskonteksti)
+            odotettu (legacy-sanktio-konfiguraatio-odotus (:db jarjestelma) urakka soveltuvuuskonteksti)
             toteutunut (ls/hae-urakan-sanktio-konfiguraatio
                          (:db jarjestelma)
                          +kayttaja-jvh+
@@ -804,7 +804,7 @@
                           :hoitovuosi 1
                           :soveltuvuuskonteksti soveltuvuuskonteksti})]
         (is (= odotettu (supista-sanktio-konfiguraatio toteutunut))
-          (str "Uuden resolverin pitää vastata legacy-oraakkelia tapauksessa " nimi
+          (str "Uuden resolverin pitää vastata legacy-odotusta tapauksessa " nimi
             " / " soveltuvuuskonteksti))))))
 
 (deftest hae-urakan-sanktio-konfiguraatio-rajapinta-palauttaa-seedatun-profiilin
@@ -908,7 +908,7 @@
     (is (contains? profiili :aktiivinen) "Listassa pitää näkyä aktiivisuustieto")
     (is (contains? profiili :yhteenveto) "Listassa pitää näkyä käyttöä tukeva yhteenveto")
     (is (contains? profiili :soveltuvuuskontekstit) "Listassa pitää näkyä profiilin kontekstit")
-    (is (not (contains? profiili :profiilirivi-id)) "Lista ei saa vuotaa raakaa rivitasoista SQL-dataa frontendille")
+    (is (not (contains? profiili :profiilirivi-id)) "Lista ei saa vuotaa sisäistä rivitason tietoa frontendille")
     (is (string? (:yhteenveto profiili)) "Yhteenvedon pitää olla frontendille valmis teksti")))
 
 (deftest hae-bonus-profiilit-admin-palauttaa-profiilikeskeisen-listan
@@ -920,10 +920,10 @@
     (is (seq vastaus) "Admin-listan pitää palauttaa ainakin seedattu bonusprofiili")
     (is (contains? profiili :aktiivinen) "Listassa pitää näkyä aktiivisuustieto")
     (is (contains? profiili :yhteenveto) "Listassa pitää näkyä käyttöä tukeva yhteenveto")
-    (is (not (contains? profiili :profiilirivi-id)) "Lista ei saa vuotaa raakaa rivitasoista SQL-dataa frontendille")
+    (is (not (contains? profiili :profiilirivi-id)) "Lista ei saa vuotaa sisäistä rivitason tietoa frontendille")
     (is (string? (:yhteenveto profiili)) "Yhteenvedon pitää olla frontendille valmis teksti")))
 
-(deftest hae-bonus-profiilin-detalji-admin-palauttaa-hierarkkisen-dton
+(deftest hae-bonus-profiilin-tiedot-admin-palauttaa-hierarkkisen-rakenteen
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-2021-2024'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-bonus-profiilin-detalji-admin
@@ -933,16 +933,16 @@
         laji (first lajit)
         ensimmainen-rivi (first (:rivit laji))]
     (is (= profiili-id (get-in vastaus [:profiili :id])))
-    (is (string? (get-in vastaus [:profiili :yhteenveto])) "Profiilin summaryn pitää tulla backendista valmiina")
-    (is (= :asiakastyytyvaisyysbonus (:laji laji)) "Seedatun bonuslajin pitää löytyä detaljista")
+    (is (string? (get-in vastaus [:profiili :yhteenveto])) "Profiilin yhteenvedon pitää tulla backendista valmiina")
+    (is (= :asiakastyytyvaisyysbonus (:laji laji)) "Seedatun bonuslajin pitää löytyä palautuksesta")
     (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji))
       "MHU21-24 profiilissa asiakastyytyväisyysbonus pitää näyttää uudella nimellä")
     (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus} (into #{} (map :laji lajit)))
       "MHU21-24 profiilissa pitää olla vain specin mukaiset bonuslajit")
-    (is (contains? ensimmainen-rivi :toimenpideinstanssi-t2-koodi) "Detailin alin taso pitää näyttää bonusprofiilirivin t2-koodi")
+    (is (contains? ensimmainen-rivi :toimenpideinstanssi-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
     (is (= "23150" (:toimenpideinstanssi-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
 
-(deftest hae-bonus-profiilin-detalji-admin-palauttaa-mhu2025-profiilin-mukaiset-bonuslajit
+(deftest hae-bonus-profiilin-tiedot-admin-palauttaa-mhu2025-profiilin-mukaiset-bonuslajit
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-mhu2025'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-bonus-profiilin-detalji-admin
@@ -962,7 +962,7 @@
     (is (nil? (:uudelleennimeaminen laji))
       "MHU25 profiilin ei pidä näyttää uudelleennimeämisen kuvausta, kun nimi tulee masterdatasta")))
 
-(deftest hae-bonus-profiilin-detalji-admin-palauttaa-mhu2026-profiilin-uudet-bonuslajit
+(deftest hae-bonus-profiilin-tiedot-admin-palauttaa-mhu2026-profiilin-uudet-bonuslajit
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-mhu2026'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-bonus-profiilin-detalji-admin
@@ -984,7 +984,7 @@
     (is (contains? (first (:rivit liikennevahinko-laji)) :urakkarajausten-maara)
       "Urakkakohtaisen bonusrivin pitää palauttaa urakkarajausten määrä adminiin")
     (is (contains? (first (:rivit liikennevahinko-laji)) :urakat)
-      "Admin-detaljin pitää palauttaa myös urakkarajausten nimet visualisointia varten")))
+      "Admin-rajapinnan palautuksen pitää sisältää myös urakkarajausten nimet visualisointia varten")))
 
 (deftest hae-bonus-profiilin-rivit-admin-palauttaa-urakkarajaukset-nimilla
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
@@ -1028,7 +1028,7 @@
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
-(deftest hae-bonus-profiilin-detalji-admin-kayttaa-profiilin-lajin-nayttonimea
+(deftest hae-bonus-profiilin-tiedot-admin-kayttaa-profiilin-lajin-nayttonimea
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'asiakastyytyvaisyysbonus'"))
         nayttonimi "Bonus testiprofiilin poikkeavalla nimella"
@@ -1061,18 +1061,18 @@
                       {:bonus-profiili-id profiili-id})
             laji (first (:lajit vastaus))]
         (is (= :asiakastyytyvaisyysbonus (:laji laji)) "Testiprofiilin pitää palauttaa sama looginen bonuslaji")
-        (is (= nayttonimi (:nimi laji)) "Profiilirivin näyttönimen pitää ohittaa bonuslajin masterdatan nimi admin-detailissa")
-        (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:masterdatan-nimi laji)) "Admin-detailin pitää näyttää myös bonuslajin masterdatan nimi")
-        (is (= true (:uudelleennimetty laji)) "Override-nimi pitää tunnistaa uudelleennimeämiseksi")
+        (is (= nayttonimi (:nimi laji)) "Profiilirivin näyttönimen pitää ohittaa bonuslajin masterdatan nimi admin-palautuksessa")
+        (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:masterdatan-nimi laji)) "Admin-palautuksen pitää näyttää myös bonuslajin masterdatan nimi")
+        (is (= true (:uudelleennimetty laji)) "Erillinen otsikko pitää tunnistaa uudelleennimeämiseksi")
         (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta -> Bonus testiprofiilin poikkeavalla nimella"
                (:uudelleennimeaminen laji))
-          "Admin-detailin pitää kertoa mistä nimestä bonus on nimetty uudelleen"))
+          "Admin-palautuksen pitää kertoa mistä nimestä bonus on nimetty uudelleen"))
       (finally
         (u (str "DELETE FROM bonus_profiili_laji_esitystiedot WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
-(deftest hae-bonus-profiilin-detalji-admin-fallbackaa-masterdatan-nimeen-jos-esitystiedot-puuttuvat
+(deftest hae-bonus-profiilin-tiedot-admin-kayttaa-masterdatan-nimea-jos-esitystiedot-puuttuvat
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'asiakastyytyvaisyysbonus'"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :bonus_profiili
@@ -1101,7 +1101,7 @@
         (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji)) "Puuttuvat esitystiedot eivät saa ohittaa masterdatan nimeä")
         (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:masterdatan-nimi laji)) "Masterdatan nimi pitää säilyttää näkyvissä")
         (is (= false (:uudelleennimetty laji)) "Puuttuvat esitystiedot eivät saa näkyä uudelleennimeämisenä")
-        (is (nil? (:uudelleennimeaminen laji)) "Uudelleennimeämisen kuvausta ei pidä muodostaa fallback-tapauksessa"))
+        (is (nil? (:uudelleennimeaminen laji)) "Uudelleennimeämisen kuvausta ei pidä muodostaa, jos esitystiedot puuttuvat"))
       (finally
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
@@ -1144,7 +1144,7 @@
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-hierarkkisen-dton
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-hierarkkisen-rakenteen
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-sanktio-profiilin-detalji-admin
@@ -1154,15 +1154,15 @@
         muistutuslaji (first (filter #(= :muistutus (:laji %)) (:lajit urakka-konteksti)))
         ensimmainen-rivi (first (:rivit muistutuslaji))]
     (is (= profiili-id (get-in vastaus [:profiili :id])))
-    (is (string? (get-in vastaus [:profiili :yhteenveto])) "Profiilin summaryn pitää tulla backendista valmiina")
+    (is (string? (get-in vastaus [:profiili :yhteenveto])) "Profiilin yhteenvedon pitää tulla backendista valmiina")
     (is (= #{:urakka :laatupoikkeama}
            (into #{} (map :soveltuvuuskonteksti (:sisalto vastaus))))
-      "Detailin pitää ryhmitellä sisältö vähintään soveltuvuuskontekstin mukaan")
+      "Palautuksen pitää ryhmitellä sisältö vähintään soveltuvuuskontekstin mukaan")
     (is (= :muistutus (:laji muistutuslaji)) "Urakkakontekstin muistutuslajin pitää löytyä ryhmittelystä")
-    (is (contains? ensimmainen-rivi :sanktiotyyppi) "Detailin alin taso pitää olla profiilirivi eikä raaka join-rivi")
-    (is (contains? (:sanktiotyyppi ensimmainen-rivi) :toimenpidekoodi) "Sanktiotyypin tarpeellinen detaili pitää tulla backendin DTO:ssa")))
+    (is (contains? ensimmainen-rivi :sanktiotyyppi) "Palautuksen alimman tason pitää olla profiilirivi eikä sisäinen join-tulos")
+    (is (contains? (:sanktiotyyppi ensimmainen-rivi) :toimenpidekoodi) "Sanktiotyypin tarpeellinen tieto pitää tulla backendin palautuksessa")))
 
-(deftest hae-sanktio-profiilin-detalji-admin-jarjestaa-profiilirivit-jarjestyksen-mukaan
+(deftest hae-sanktio-profiilin-tiedot-admin-jarjestaa-profiilirivit-jarjestyksen-mukaan
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'muistutus'"))
         sanktiotyyppi-13-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13"))
@@ -1204,14 +1204,14 @@
                       {:sanktio-profiili-id profiili-id})
             rivit (-> vastaus :sisalto first :lajit first :rivit)]
         (is (= [1 2] (mapv :jarjestys rivit))
-          "Admin-detaljin pitää käyttää profiilirivin liiketoimintajärjestystä, ei rivi-id:tä")
+          "Admin-palautuksen pitää käyttää profiilirivin liiketoimintajärjestystä, ei rivi-id:tä")
         (is (= [14 13] (mapv #(get-in % [:sanktiotyyppi :koodi]) rivit))
           "Sanktiotyypit pitää palauttaa jarjestys-kentän määräämässä järjestyksessä"))
       (finally
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE sanktio_profiili_id = %s" profiili-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-ei-palauta-tyhjalle-profiilille-nil-kontekstia
+(deftest hae-sanktio-profiilin-tiedot-admin-ei-palauta-tyhjalle-profiilille-nil-kontekstia
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
                           {:nimi "admin-tyhja-profiili-testi"
@@ -1231,7 +1231,7 @@
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})]
         (is (= [] (:sisalto vastaus))
-          "Tyhjän profiilin detail-sisällön pitää olla tyhjä lista, ei nil-kontekstia sisältävä rakenne"))
+          "Tyhjän profiilin palautuksen sisällön pitää olla tyhjä lista, ei nil-kontekstia sisältävä rakenne"))
       (finally
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
@@ -1250,10 +1250,10 @@
             +kayttaja-ulle+
             {:sanktio-profiili-id profiili-id})))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-rivin-metadatan
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-rivin-metadatan
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
-        sentinel-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        profiilirivin-sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
                           {:nimi "admin-rivimetadata-testi"
                            :urakkatyyppi "teiden-hoito"
@@ -1269,7 +1269,7 @@
         profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
                               {:sanktio_profiili_id profiili-id
                                :sanktio_laji_id laji-id
-                               :sanktiotyyppi_id sentinel-tyyppi-id
+                               :sanktiotyyppi_id profiilirivin-sanktiotyyppi-id
                                :soveltuvuuskonteksti "laatupoikkeama"
                                :jarjestys 1
                                :aktiivinen true
@@ -1297,9 +1297,9 @@
                       {:sanktio-profiili-id profiili-id})
             rivi (-> vastaus :sisalto first :lajit first :rivit first)]
         (is (= true (:voi-puolittaa-omailmoituksella rivi))
-          "Admin-detaljin pitää näyttää profiilirivin 50 % -sääntö")
+          "Admin-palautuksen pitää näyttää profiilirivin 50 % -sääntö")
         (is (= [6000M 12000M] (:lukitut-summat rivi))
-          "Admin-detaljin pitää näyttää profiiliriviin kytketyt lukitut summat"))
+          "Admin-palautuksen pitää näyttää profiiliriviin kytketyt lukitut summat"))
       (finally
         (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
@@ -1309,7 +1309,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
-        sentinel-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        profiilirivin-sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
                           {:nimi "konfiguraatio-rivimetadata-testi"
                            :urakkatyyppi "teiden-hoito"
@@ -1325,7 +1325,7 @@
         profiilirivi-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi
                               {:sanktio_profiili_id profiili-id
                                :sanktio_laji_id laji-id
-                               :sanktiotyyppi_id sentinel-tyyppi-id
+                               :sanktiotyyppi_id profiilirivin-sanktiotyyppi-id
                                :soveltuvuuskonteksti "laatupoikkeama"
                                :jarjestys 1
                                :aktiivinen true
@@ -1363,7 +1363,7 @@
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-seedatun-mhu2026-metadatan
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatun-mhu2026-metadatan
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
                   (ls/hae-sanktio-profiilin-detalji-admin
@@ -1378,7 +1378,7 @@
     (is (seq metadataa-sisaltavat-rivit)
       "Seedatusta MHU2026-profiilista pitää löytyä ainakin yksi rivi, jossa uusi metadata näkyy admin-näkymässä")))
 
-(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-seedatut-mhu2026-laji-override-otsikot
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatut-mhu2026-lajikohtaiset-otsikot
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         odotetut-otsikot (into {}
                            (map (juxt :laji_koodi :nimi))
@@ -1394,25 +1394,25 @@
                     {:sanktio-profiili-id profiili-id}))
         urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto vastaus)))
         abc-lajit (filterv #(contains? #{:A :B :C} (:laji %)) (:lajit urakka-konteksti))]
-    (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa override-testausta varten")
+    (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa lajikohtaisten otsikoiden testausta varten")
     (is (= #{"A" "B" "C"} (set (keys odotetut-otsikot)))
-      "Seedatun MHU2026-profiilin pitää sisältää override-otsikot A/B/C-lajeille")
+      "Seedatun MHU2026-profiilin pitää sisältää lajikohtaiset otsikot A/B/C-lajeille")
     (is (= #{:A :B :C} (set (map :laji abc-lajit)))
-      "Admin-detailin pitää palauttaa A/B/C-lajit MHU2026-profiilista")
+      "Admin-palautuksen pitää sisältää A/B/C-lajit MHU2026-profiilista")
     (doseq [laji abc-lajit]
       (let [laji-koodi (name (:laji laji))
             odotettu-nimi (get odotetut-otsikot laji-koodi)]
         (is (= odotettu-nimi (:nimi laji))
-          (str "MHU2026-profiilin lajin " laji-koodi " pitää käyttää seedattua override-otsikkoa"))
+          (str "MHU2026-profiilin lajin " laji-koodi " pitää käyttää seedattua lajikohtaista otsikkoa"))
         (is (= true (:uudelleennimetty laji))
           (str "MHU2026-profiilin lajin " laji-koodi " pitää näkyä uudelleennimettynä"))
         (is (not= (:masterdatan-nimi laji) (:nimi laji))
-          (str "MHU2026-profiilin lajin " laji-koodi " override ei saa palautua masterdatan nimenä"))
+          (str "MHU2026-profiilin lajin " laji-koodi " erillinen otsikko ei saa palautua masterdatan nimenä"))
         (is (= (str (:masterdatan-nimi laji) " -> " odotettu-nimi)
                (:uudelleennimeaminen laji))
           (str "MHU2026-profiilin lajin " laji-koodi " pitää palauttaa läpinäkyvä uudelleennimeäminen"))))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
+(deftest hae-sanktio-profiilin-tiedot-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
                   (ls/hae-sanktio-profiilin-detalji-admin
@@ -1425,7 +1425,7 @@
     (is (= [:muistutus :A :B :C] lajit)
       "MHU2026-profiilin laatupoikkeama-kontekstin pitää sisältää vain ryhmälajit nykyisen speksitiedon perusteella")))
 
-(deftest hae-sanktio-profiilin-detalji-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
+(deftest hae-sanktio-profiilin-tiedot-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (when profiili-id
                   (ls/hae-sanktio-profiilin-detalji-admin
@@ -1434,9 +1434,9 @@
                     {:sanktio-profiili-id profiili-id}))
         urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto vastaus)))
         abc-lajit (filterv #(contains? #{:A :B :C} (:laji %)) (:lajit urakka-konteksti))]
-    (is profiili-id "Vertailtavan legacy/MHU21-24-profiilin pitää olla olemassa")
+    (is profiili-id "Vertailtavan aiemman MHU21-24-profiilin pitää olla olemassa")
     (is (= #{:A :B :C} (set (map :laji abc-lajit)))
-      "Vanhemman profiilin pitää palauttaa A/B/C-lajit ilman overrideja")
+      "Vanhemman profiilin pitää palauttaa A/B/C-lajit ilman erillisiä otsikoita")
     (doseq [laji abc-lajit]
       (is (= (:masterdatan-nimi laji) (:nimi laji))
         (str "Vanhemman profiilin lajin " (name (:laji laji)) " pitää käyttää masterdatan nimeä"))
@@ -1445,12 +1445,12 @@
       (is (nil? (:uudelleennimeaminen laji))
         (str "Vanhemman profiilin laji " (name (:laji laji)) " ei saa palauttaa uudelleennimeämisen kuvausta")))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-fallbackaa-masterdatan-nimeen-jos-esitystiedot-puuttuvat
+(deftest hae-sanktio-profiilin-tiedot-admin-kayttaa-masterdatan-nimea-jos-esitystiedot-puuttuvat
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         laji-id (ffirst (q "SELECT id FROM sanktio_laji WHERE koodi = 'A'"))
         sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
         profiili-id (-> (jdbc/insert! (:db jarjestelma) :sanktio_profiili
-                          {:nimi "sanktio-admin-fallback-nayttonimi-testi"
+                          {:nimi "sanktio-admin-masterdata-nayttonimi-testi"
                            :urakkatyyppi "teiden-hoito"
                            :hoitovuosi_alku 1
                            :hoitovuosi_loppu 20
@@ -1479,11 +1479,11 @@
         (is (= "A-ryhmä (tehtäväkohtainen sanktio)" (:nimi laji))
           "Puuttuvat esitystiedot eivät saa ohittaa sanktio-lajin masterdatan nimeä")
         (is (= "A-ryhmä (tehtäväkohtainen sanktio)" (:masterdatan-nimi laji))
-          "Fallback-tapauksessa masterdatan nimi pitää näkyä erikseenkin oikein")
+          "Jos esitystiedot puuttuvat, masterdatan nimen pitää näkyä erikseenkin oikein")
         (is (= false (:uudelleennimetty laji))
           "Puuttuvat esitystiedot eivät saa näkyä uudelleennimeämisenä")
         (is (nil? (:uudelleennimeaminen laji))
-          "Fallback-tapauksessa uudelleennimeämisen kuvausta ei pidä muodostaa"))
+          "Uudelleennimeämisen kuvausta ei pidä muodostaa, jos esitystiedot puuttuvat"))
       (finally
         (u (str "DELETE FROM sanktio_profiili_rivi WHERE sanktio_profiili_id = " profiili-id))
         (u (str "DELETE FROM sanktio_profiili WHERE id = " profiili-id))))))
@@ -1520,7 +1520,7 @@
         (u (str "DELETE FROM sanktio_profiili_laji_esitystiedot WHERE sanktio_profiili_id = " profiili-id))
         (u (str "DELETE FROM sanktio_profiili WHERE id = " profiili-id))))))
 
-(deftest hae-sanktio-profiilin-detalji-admin-palauttaa-seedatun-mhu2025-profiilin-ja-jarjestyksen
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatun-mhu2025-profiilin-ja-jarjestyksen
   (letfn [(lajit->yhteenveto [lajit]
             (mapv (fn [{:keys [laji rivit]}]
                     {:laji laji
@@ -1555,9 +1555,9 @@
       (is mhu21-24-profiili-id "Vertailun pohjana käytettävän MHU21-24-profiilin pitää olla olemassa")
       (is mhu25-profiili-id "Seedatyn MHU2025-profiilin pitää olla olemassa admin-testausta varten")
       (is (= odotettu-mhu25-yhteenveto mhu25-yhteenveto)
-        "MHU25-profiilin koko admin-detailin pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
+        "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
-        "MHU25-profiilin laskutusrajalajin pitää käyttää sentinel-tyyppiä")
+        "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
