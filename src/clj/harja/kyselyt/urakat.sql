@@ -371,11 +371,10 @@ FROM urakka u
          LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskusid) -- Pohjanmaan elinvoimakeskuksen urakat on palautettava, kun haetaan Etelä-Pohjanmaan elinvoimakeskuksen urakoita
   AND u.poistettu = false
-  AND (:sallitut_urakat::INT[] IS NOT NULL AND u.id IN (:sallitut_urakat)
-    OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+  AND (u.id IN (:sallitut_urakat)
+    OR ('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
          'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-        OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-            :kayttajan_org_id = org.id)))
+    OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND :kayttajan_org_id = org.id))
 ORDER BY u.id DESC;
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon

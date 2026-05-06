@@ -247,7 +247,8 @@
           {:elinvoimakeskusid elinvoimakeskusidt
            :kayttajan_org_id (:id organisaatio)
            :kayttajan_org_tyyppi organisaatiotyyppi
-           :sallitut_urakat (if (empty? urakat) nil urakat)})))))
+           :urakat_annettu (boolean (seq urakat))
+           :sallitut_urakat (if (empty? urakat) [-1] urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
