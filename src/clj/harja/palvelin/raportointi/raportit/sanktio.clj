@@ -8,12 +8,14 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
+(declare hae-sanktiot hae-bonukset)
+
 (defn- jasenna-raportin-nimi [db parametrit]
   (let [urakan-tiedot (if (not (nil? (:urakka-id parametrit)))
                         (first (urakat-kyselyt/hae-urakka db (:urakka-id parametrit)))
                         nil)
-        hallintayksikon-tiedot (if (not (nil? (:hallintayksikko-id parametrit)))
-                                 (first (organisaatiot-kyselyt/hae-organisaatio db (:hallintayksikko-id parametrit)))
+        hallintayksikon-tiedot (if (not (nil? (:elinvoimakeskus-id parametrit)))
+                                 (first (organisaatiot-kyselyt/hae-organisaatio db (:elinvoimakeskus-id parametrit)))
                                  nil)
         raportin-tyyppi (if (nil? (:kasittelija parametrit))
                           :html
@@ -24,15 +26,15 @@
                         (and (= :html raportin-tyyppi) (nil? hallintayksikon-tiedot) (nil? urakan-tiedot)) "Koko maa"
                         :else "Sanktiot, bonukset ja arvonvähennykset")]
     raportin-nimi))
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id urakkatyyppi alkupvm loppupvm] :as parametrit}]
   (let [sanktiot (hae-sanktiot db
                    {:urakka urakka-id
-                    :hallintayksikko hallintayksikko-id
+                    :elinvoimakeskus elinvoimakeskus-id
                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                     :alku alkupvm
                     :loppu loppupvm})
         bonukset (hae-bonukset db {:urakka urakka-id
-                                   :hallintayksikko hallintayksikko-id
+                                   :elinvoimakeskus elinvoimakeskus-id
                                    :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                    :alku alkupvm
                                    :loppu loppupvm})

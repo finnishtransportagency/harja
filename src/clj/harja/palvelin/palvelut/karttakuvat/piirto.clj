@@ -193,7 +193,8 @@ minimi-etaisyys 40)
        (.setColor g Color/BLACK)
        (.drawString g teksti x y)))))
 
-(def piirron-aikakatkaisu-ms 20000)
+;; Etäyhteydellä tietokantahaku voi kestää kauan — asetetaan riittävän pitkä timeout
+(def piirron-aikakatkaisu-ms 60000)
 
 (defn- debug-piirra-tile-rajat
   "Lisää kutsu tähän piirra-karttakuvaan, jos haluat nähdä tilerajat."
@@ -208,9 +209,24 @@ minimi-etaisyys 40)
             *extent* extent]
     (let [ruudukko (ruudukko/ruudukko extent px-scale 128)
           ch (if (coll? asiat)
-               (async/to-chan asiat)
-               asiat)]
+               (async/to-chan! asiat)
+               asiat)
+          piirretty (atom 0)
+          timed-out? (atom false)
+          piirto-ms (atom 0)
+          alku-piirto (System/currentTimeMillis)]
       (go-loop-timeout
-        {:timeout piirron-aikakatkaisu-ms}
+        {:timeout piirron-aikakatkaisu-ms
+         :on-timed-out (do (reset! timed-out? true)
+                           (log/warn "piirra-karttakuvaan: TIMEOUT! Piirrettiin" @piirretty "asiaa ennen timeoutia."))}
         [{alue :alue :as asia} ch]
-        (piirra g asia alue ruudukko)))))
+        (swap! piirretty inc)
+        (let [t0 (System/currentTimeMillis)]
+          (piirra g asia alue ruudukko)
+          (swap! piirto-ms + (- (System/currentTimeMillis) t0))))
+      (let [kokonais-ms (- (System/currentTimeMillis) alku-piirto)]
+        (if (zero? @piirretty)
+          (log/info (format "TILE-PIIRTO: TYHJÄ tile, 0 asiaa piirretty (%d ms)" kokonais-ms))
+          (log/info (format "TILE-PIIRTO: %d asiaa piirretty, piirtoaika %d ms, kokonaisaika %d ms%s"
+                            @piirretty @piirto-ms kokonais-ms
+                            (if @timed-out? " TIMEOUT!" ""))))))))
