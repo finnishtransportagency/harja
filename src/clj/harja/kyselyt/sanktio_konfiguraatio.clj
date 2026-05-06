@@ -101,6 +101,12 @@
           (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi]))
         (update-in [:profiilirivi :toimenpideinstanssi] dissoc :t2))
 
+      (get-in rivi [:profiilirivi :toimenpideinstanssi :rajauksen :tyyppi])
+      (->
+        (assoc-in [:profiilirivi :toimenpideinstanssi-rajauksen-tyyppi]
+          (keyword (get-in rivi [:profiilirivi :toimenpideinstanssi :rajauksen :tyyppi])))
+        (update-in [:profiilirivi :toimenpideinstanssi] dissoc :rajauksen))
+
       (get-in rivi [:profiili :urakkatyyppi])
       (muunna-urakkatyyppi [:profiili :urakkatyyppi])
 

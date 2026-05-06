@@ -939,8 +939,24 @@
       "MHU21-24 profiilissa asiakastyytyväisyysbonus pitää näyttää uudella nimellä")
     (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus} (into #{} (map :laji lajit)))
       "MHU21-24 profiilissa pitää olla vain specin mukaiset bonuslajit")
+    (is (= :t2-koodi (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+      "Teiden-hoidon seedatun bonusrivin pitää näkyä eksplisiittisesti t2-koodiin rajattuna")
     (is (contains? ensimmainen-rivi :toimenpideinstanssi-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
     (is (= "23150" (:toimenpideinstanssi-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
+
+(deftest hae-bonus-profiilin-tiedot-admin-palauttaa-kaikki-rajauksen-ilman-sentinelia
+  (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'hoito-bonus-2021-ja-uudemmat'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-bonus-profiilin-detalji-admin
+                  +kayttaja-jvh+
+                  {:bonus-profiili-id profiili-id})
+        ensimmainen-rivi (-> vastaus :lajit first :rivit first)]
+    (is (= :kaikki (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+      "Hoitoprofiilin seedatun bonusrivin pitää näkyä eksplisiittisesti kaikki-rajauksena")
+    (is (nil? (:toimenpideinstanssi-t2-koodi ensimmainen-rivi))
+      "Kaikki-rajauksessa t2-koodin pitää olla aidosti puuttuva, ei sentinel-merkkijono")
+    (is (= "Kaikki" (:toimenpideinstanssi-teksti ensimmainen-rivi))
+      "Backendin pitää muodostaa admin-näkymälle valmiiksi tulkittu teksti kaikki-rajauksesta")))
 
 (deftest hae-bonus-profiilin-tiedot-admin-palauttaa-mhu2025-profiilin-mukaiset-bonuslajit
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-mhu2025'"))
@@ -1008,8 +1024,8 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
-           profiili-id ", " bonus-laji-id ", '23150', 1, TRUE, "
+       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+         profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))]
         (doseq [urakka-id urakka-idt]
@@ -1045,9 +1061,9 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-           bonus-laji-id ", '23150', 1, TRUE, "
+         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("
@@ -1088,9 +1104,9 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-           bonus-laji-id ", '23150', 1, TRUE, "
+         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1122,9 +1138,9 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-           bonus-laji-id ", '23150', 1, TRUE, "
+         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("

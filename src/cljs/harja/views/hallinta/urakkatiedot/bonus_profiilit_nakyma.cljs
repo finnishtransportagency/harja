@@ -18,9 +18,6 @@
     " - "
     (tiedot/vaikutusajan-loppu-teksti {:loppupvm loppupvm})))
 
-(defn- t2-koodi-teksti [arvo]
-  (if (= "__kaikki__" arvo) "Kaikki" arvo))
-
 (defn- uudelleennimeaminen-solu [{:keys [uudelleennimetty uudelleennimeaminen]}]
   (if uudelleennimetty
     [:div
@@ -47,8 +44,7 @@
     :reunaviiva? true
     :tunniste :id}
    [{:nimi :jarjestys :otsikko "Järjestys" :leveys 0.6 :muokattava? (constantly false)}
-    {:nimi :toimenpideinstanssi-t2-koodi :otsikko "T2-koodi" :leveys 1.1 :muokattava? (constantly false)
-     :fmt t2-koodi-teksti}
+    {:nimi :toimenpideinstanssi-teksti :otsikko "T2-koodi" :leveys 1.1 :muokattava? (constantly false)}
     {:nimi :urakkarajausten-maara :otsikko "Urakkarajauksia" :leveys 1 :muokattava? (constantly false)
      :fmt #(or % 0)}
     {:nimi :urakat :otsikko "Rajatut urakat" :leveys 2.2 :muokattava? (constantly false)

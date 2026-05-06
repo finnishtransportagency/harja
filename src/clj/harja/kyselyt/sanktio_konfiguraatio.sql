@@ -168,6 +168,7 @@ SELECT bp.id                    AS profiili_id,
        bl.automaattinen         AS laji_automaattinen,
        bpr.id                   AS profiilirivi_id,
        bpr.jarjestys            AS profiilirivi_jarjestys,
+       bpr.toimenpideinstanssi_rajauksen_tyyppi AS profiilirivi_toimenpideinstanssi_rajauksen_tyyppi,
        bpr.toimenpideinstanssi_t2_koodi AS profiilirivi_toimenpideinstanssi_t2_koodi,
        COUNT(DISTINCT bpru.urakka_id)  AS profiilirivi_urakkarajausten_maara,
        ARRAY_REMOVE(ARRAY_AGG(DISTINCT COALESCE(u.lyhyt_nimi, u.nimi)), NULL) AS profiilirivi_urakat
@@ -204,9 +205,11 @@ SELECT bp.id                    AS profiili_id,
           bl.automaattinen,
           bpr.id,
           bpr.jarjestys,
+          bpr.toimenpideinstanssi_rajauksen_tyyppi,
           bpr.toimenpideinstanssi_t2_koodi
  ORDER BY bl.jarjestys,
           bpr.jarjestys,
+          bpr.toimenpideinstanssi_rajauksen_tyyppi,
           bpr.toimenpideinstanssi_t2_koodi;
 
 -- name: hae-sanktio-profiilin-rivit
