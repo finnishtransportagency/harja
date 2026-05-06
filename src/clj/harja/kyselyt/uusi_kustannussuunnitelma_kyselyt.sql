@@ -387,24 +387,23 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
     tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.tavoitehinta_indeksikorjattu END,
     kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END,
     laskutusraja = CASE
-                        WHEN :vahvista?::BOOLEAN = TRUE
-                         AND EXISTS (
-                          SELECT 1
-                            FROM urakka_parametrit up
-                           WHERE up.urakkaid = ut.urakka
-                             AND up.laskutusraja_kaytossa = TRUE)
-                        THEN ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
-                        ELSE ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
-                    END,
+                       WHEN EXISTS (
+                             SELECT 1
+                               FROM urakka_parametrit up
+                              WHERE up.urakkaid = ut.urakka
+                                AND up.laskutusraja_kaytossa = TRUE)
+                       THEN ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
+                       ELSE ut.laskutusraja
+                   END,
     laskutusraja_alkuperainen = CASE
                                     WHEN :vahvista?::BOOLEAN = TRUE
                                      AND EXISTS (
-                                      SELECT 1
-                                        FROM urakka_parametrit up
-                                       WHERE up.urakkaid = ut.urakka
-                                         AND up.laskutusraja_kaytossa = TRUE)
+                                          SELECT 1
+                                            FROM urakka_parametrit up
+                                           WHERE up.urakkaid = ut.urakka
+                                             AND up.laskutusraja_kaytossa = TRUE)
                                     THEN ut.tavoitehinta_indeksikorjattu
-                                    ELSE ut.tavoitehinta_indeksikorjattu
+                                    ELSE ut.laskutusraja_alkuperainen
                                 END
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1

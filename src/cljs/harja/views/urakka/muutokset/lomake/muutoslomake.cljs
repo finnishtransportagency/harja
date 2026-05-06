@@ -162,8 +162,7 @@
 
                                 "johto-ja-hallintokorvaus"
                                 [:p "Tämä muutostyö ei vaikuta hoitovuoden laskutusrajan laskentaan."])
-                              [:hr]]
-                             )}]))))))
+                              [:hr]])}]))))))
 
 
 (defn muutoslomake [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as _app}]
