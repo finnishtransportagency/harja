@@ -7,7 +7,7 @@ WHERE NOT EXISTS (
      WHERE ytunnus = '1010547-1'
 );
 
--- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
 \i testidata/__Toimenpide_Kopio_01.sql
 \i testidata/__Materiaaliluokka_Kopio_01.sql
@@ -128,7 +128,7 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/hoitoluokat.sql
 
--- Tehtävämigraatiot testidataan 
+-- Tehtävämigraatiot testidataan
 \i testidata/tehtavamuutokset.sql
 
 -- Materiaalin käytöt
@@ -157,16 +157,16 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/paallystysmassat.sql
 \i testidata/yllapito/pot2.sql
 
--- Reikäpaikkaukset 
+-- Reikäpaikkaukset
 \i testidata/yllapito/reikapaikkaukset.sql
 
--- MPU kustannukset 
+-- MPU kustannukset
 \i testidata/yllapito/paikkauskustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 
--- Tiemerkinnät 
+-- Tiemerkinnät
 \i testidata/yllapito/tiemerkinta.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
