@@ -318,11 +318,11 @@
         [:div
          [:div.text-label "Talvisuolan käyttöraja / vuosi (kuivatonnia)"]
          [:div.text-value (if (:talvisuolan-kayttoraja lomake)
-                                                (:talvisuolan-kayttoraja lomake)
-                                                "Käyttörajaa ei ole vielä asetettu.")]]]
+                            (:talvisuolan-kayttoraja lomake)
+                            "Käyttörajaa ei ole vielä asetettu.")]]]
        [:br]
-       [:div {:style {:max-width "775px"}} "Sanktion määrä lasketaan automaattisesti talvisuolan kokonaiskäyttörajan ylittyessä MHU25-urakoissa."]
-       [:div {:style {:max-width "775px"}} "Mikäli urakoitsija käyttää urakan aikana suolaa koko urakka-ajalle sallittua määrää 5 % enemmän,
+       [:div.body-text {:style {:max-width "775px"}} "Sanktion määrä lasketaan automaattisesti talvisuolan kokonaiskäyttörajan ylittyessä MHU25-urakoissa."]
+       [:div.body-text {:style {:max-width "775px"}} "Mikäli urakoitsija käyttää urakan aikana suolaa koko urakka-ajalle sallittua määrää 5 % enemmän,
        peritään 5 %:n ylittävältä osalta sanktiota, joka on suuruudeltaan urakka-aikana toteutunut suolan keskihinta x 1,1. "]]
       [:div
        [lomake/lomake {:ei-borderia? true
