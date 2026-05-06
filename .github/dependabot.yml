@@ -27,6 +27,9 @@ updates:
       junit-report-action:
         patterns:
           - "mikepenz/action-junit-report*"
+      aws-actions:
+        patterns:
+          - "aws-actions/*"
     ignore:
       # Älä päivitä näihin versioihin
       - dependency-name: "aquasecurity/trivy-action*"
