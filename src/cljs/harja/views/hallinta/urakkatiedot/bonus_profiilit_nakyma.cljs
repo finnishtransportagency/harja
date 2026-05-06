@@ -117,7 +117,7 @@
    [:h4 (:nimi profiili)]
    [:div.sanktio-profiilit-yhteenveto-laatikko.margin-bottom-16
     [yleiset/info-laatikko :neutraali (:yhteenveto profiili)]]
-  [vaikutusaika-visualisointi profiili]
+   [vaikutusaika-visualisointi profiili]
    [:div.row
     [:div.col-md-6
      [:p [:strong "Urakkatyyppi: "] (tiedot/urakkatyyppi-teksti (:urakkatyyppi profiili))]
