@@ -896,6 +896,7 @@
 
 (defn- merkkaa-kaynnistyminen! []
   (log/info "Yritetään seuraavaksi käynnistää HARJA")
+  (log/info "[AWS Test-Env] HOST: " (System/getenv "HARJA_TIETOKANTA_HOST"))
   (event-apurit/julkaise-tapahtuma :harja-tila
     {:viesti "Harja käynnistyy"
      :kaikki-ok? false}))
