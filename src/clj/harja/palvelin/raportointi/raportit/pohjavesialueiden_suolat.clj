@@ -70,7 +70,7 @@
                                    urakan-pohjavesialueiden-summat)]
     pva-summat-alueittain))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm elinvoimakeskus-id] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
   (let [tulos (laske db urakka-id alkupvm loppupvm)
         raportin-nimi "Suolatoteumat (kaikki pohjavesialueet)"

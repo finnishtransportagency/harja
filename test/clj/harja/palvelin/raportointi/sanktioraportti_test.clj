@@ -63,8 +63,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :sanktioraportti
-                                 :konteksti          "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti          "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 10 1))
                                                       :urakkatyyppi :hoito}})
@@ -73,7 +73,7 @@
     (is (=marginaalissa? sanktiosumma 71977.05))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
+      (is (= "Pohjois-Suomi" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Kajaanin alueurakka 2014-2019"}
@@ -87,8 +87,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :sanktioraportti
-                                 :konteksti          "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti          "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                                       :urakkatyyppi :hoito}})
@@ -99,7 +99,7 @@
     (is (=marginaalissa? bonussumma 2000M))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
+      (is (= "Pohjois-Suomi" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Kajaanin alueurakka 2014-2019"}
@@ -131,15 +131,16 @@
       (is (= "Koko maa" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
-                                          {:otsikko "01 Uusimaa"}
-                                          {:otsikko "02 Varsinais-Suomi"}
-                                          {:otsikko "03 Kaakkois-Suomi"}
-                                          {:otsikko "04 Pirkanmaa"}
-                                          {:otsikko "08 Pohjois-Savo"}
-                                          {:otsikko "09 Keski-Suomi"}
-                                          {:otsikko "10 Etelä-Pohjanmaa"}
-                                          {:otsikko "12 Pohjois-Pohjanmaa"}
-                                          {:otsikko "14 Lappi"}
+                                          {:otsikko "40 Uusimaa"}
+                                          {:otsikko "41 Lounais-Suomi"}
+                                          {:otsikko "42 Kaakkois-Suomi"}
+                                          {:otsikko "43 Sisä-Suomi"}
+                                          {:otsikko "44 Keski-Suomi"}
+                                          {:otsikko "45 Itä-Suomi"}
+                                          {:otsikko "46 Etelä-Pohjanmaa"}
+                                          {:otsikko "47 Pohjanmaa"}
+                                          {:otsikko "48 Pohjois-Suomi"}
+                                          {:otsikko "49 Lappi"}
                                           {:otsikko "Yh\u00ADteen\u00ADsä"}))))
 
 (defn suorita-sanktioraportti
@@ -156,8 +157,8 @@
         (= konteksti "urakka")
         {:urakka-id  (hae-oulun-alueurakan-2014-2019-id)}
 
-        (= konteksti "hallintayksikko")
-        {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)}))))
+        (= konteksti "elinvoimakeskus")
+        {:elinvoimakeskus-id (hae-pohjois-suomen-evk-id)}))))
 
 (defn tarkista-rivi-summalle
   [summa]
@@ -214,24 +215,24 @@
 
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii-elylle
   (let [elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
-        (suorita-sanktioraportti "hallintayksikko" [2018 10 1] [2019 9 30])
+        (suorita-sanktioraportti "elinvoimakeskus" [2018 10 1] [2019 9 30])
         taulukko (apurit/taulukko-otsikolla
                    elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
                    "Sanktiot")
         tarkista-fn (tarkista-ely-rivit sanktio-loytyy-elyriveissa)]
-    (is (= "Pohjois-Pohjanmaa" (:nimi (second elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi))))
+    (is (= "Pohjois-Suomi" (:nimi (second elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkista-fn)))
 
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii
   (let [elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
-        (suorita-sanktioraportti "hallintayksikko" [2019 10 1] [2020 9 30])
+        (suorita-sanktioraportti "elinvoimakeskus" [2019 10 1] [2020 9 30])
         taulukko (apurit/taulukko-otsikolla
                    elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
                    "Sanktiot")
         tarkista-fn (tarkista-ely-rivit ei-sanktiota-elyriveissa)]
-    (is (= "Pohjois-Pohjanmaa" (:nimi (second elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi))))
+    (is (= "Pohjois-Suomi" (:nimi (second elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkista-fn)))

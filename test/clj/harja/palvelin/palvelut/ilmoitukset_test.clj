@@ -74,10 +74,8 @@
 
 (deftest hae-ilmoituksia
   (let [parametrit hae-ilmoitukset-parametrit
-        ilmoitusten-maara-suoraan-kannasta (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitus;")))
-        kuittausten-maara-suoraan-kannasta (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitustoimenpide;")))
+        ilmoitusten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(i.*) FROM ilmoitus i WHERE i.urakka IS NOT NULL;")))
+        kuittausten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide;")))
         ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta
         (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitusid = 12347;")))
         ilmoitukset-palvelusta (hae parametrit)
@@ -98,6 +96,44 @@
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
+(deftest hae-ilmoituksia-elinvoimakeskukselle
+  (let [psu-evk-id (hae-pohjois-suomen-evk-id)
+        parametrit (merge hae-ilmoitukset-parametrit {:hallintayksikko psu-evk-id})
+        ilmoitusten-maara-suoraan-kannasta (ffirst (q (format "SELECT count(*) FROM ilmoitus i WHERE i.urakka in (SELECT id FROM urakka WHERE elinvoimakeskus_id = %s);" psu-evk-id)))
+        kuittausten-maara-suoraan-kannasta (ffirst (q (format "SELECT count(it.*) FROM ilmoitustoimenpide it JOIN ilmoitus i ON i.id = it.ilmoitus JOIN urakka u ON u.id = i.urakka and u.elinvoimakeskus_id = %s;" psu-evk-id)))
+        ilmoitukset-palvelusta (hae parametrit)
+        ilmoitukset-palvelusta2 (hae hae-ilmoitukset-parametrit)
+        kuittaukset-palvelusta (mapv :kuittaukset ilmoitukset-palvelusta)
+        kuittaukset-palvelusta-lkm (apply + (map count kuittaukset-palvelusta))]
+    (doseq [i ilmoitukset-palvelusta]
+      (is (#{:toimenpidepyynto :tiedoitus :kysely}
+           (:ilmoitustyyppi i)) "ilmoitustyyppi"))
+
+    (is (= ilmoitusten-maara-suoraan-kannasta (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä")
+    (is (= kuittausten-maara-suoraan-kannasta kuittaukset-palvelusta-lkm) "Kuittausten lukumäärä")))
+
+(deftest hae-ilmoituksia-uudenmaan-elinvoimakeskukselle
+  (let [uud-evk-id (ffirst (q "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa' AND tyyppi = 'elinvoimakeskus'"))
+        parametrit (merge hae-ilmoitukset-parametrit {:hallintayksikko uud-evk-id})
+        ilmoitusten-maara-suoraan-kannasta (ffirst (q (format "SELECT count(*)
+                                                                FROM ilmoitus i
+                                                               WHERE i.urakka IN (SELECT id
+                                                                                    FROM urakka
+                                                                                   WHERE elinvoimakeskus_id = %s);"
+                                                              uud-evk-id)))
+        ilmoitukset-palvelusta (hae parametrit)]
+
+    (testing "Uusimaa löytyy organisaatiotaulusta"
+      (is (some? uud-evk-id) "Uudenmaan elinvoimakeskuksen id löytyy"))
+
+    (testing "Kannasta löytyy oikea määrä ilmoituksia Uudenmaan elinvoimakeskukselle"
+      (is (= 2 ilmoitusten-maara-suoraan-kannasta)
+          "Uudenmaan elinvoimakeskuksella kaksi ilmoitusta kannassa"))
+
+    (testing "Palvelu palauttaa tyhjän tulosjoukon elinvoimakeskukselle, jolla ei ole ilmoituksia"
+      (is (= 2 (count ilmoitukset-palvelusta))
+        "Uudenmaan elinvoimakeskuksella kaksi ilmoitusta palveluhaun kautta"))))
+
 (deftest hae-ilmoitukset-tyypin-mukaan
   (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
                                  :urakkatyyppi :hoito)) ;; Teiden hoidon ilmoitukset palautuvat hoito-ilmoitusten mukana
@@ -109,7 +145,7 @@
         idt #(into #{} (map :id) %)]
 
     ;; urakkatyypitön ilmoitus tulee aina, joten näitä on 2
-    (is (= 3 (count paallystys-ilmoitukset)))
+    (is (= 2 (count paallystys-ilmoitukset)))
 
     (is (< (count paallystys-ilmoitukset)
            (count hoito-ilmoitukset)
@@ -659,6 +695,36 @@
       (is (thrown-with-msg?
             Exception #"EiOikeutta"
             (hae-ilmoitus-kayttajana +kayttaja-ulle+))))))
+
+(deftest hae-ilmoitus-palauttaa-elinvoimakeskustiedot
+  (let [ilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-ilmoitus +kayttaja-jvh+ 1)
+        evk-id-kannasta (ffirst (q "SELECT o.id
+                                      FROM organisaatio o
+                                      JOIN urakka u ON u.elinvoimakeskus_id = o.id
+                                      JOIN ilmoitus i ON i.urakka = u.id
+                                     WHERE i.id = 1
+                                       AND o.tyyppi = 'elinvoimakeskus'"))
+        evk-nimi-kannasta (ffirst (q "SELECT o.nimi
+                                       FROM organisaatio o
+                                      WHERE o.id = (SELECT elinvoimakeskus_id
+                                                      FROM urakka
+                                                     WHERE id = (SELECT urakka FROM ilmoitus WHERE id = 1))"))]
+
+    (testing "Ilmoituksen elinvoimakeskus-id palautuu ja on oikein"
+      (is (some? (get-in ilmoitus [:elinvoimakeskus :id]))
+          "Elinvoimakeskuksen id puuttuu ilmoituksesta")
+      (is (= evk-id-kannasta (get-in ilmoitus [:elinvoimakeskus :id]))
+          "Elinvoimakeskuksen id ei täsmää kantaan"))
+
+    (testing "Ilmoituksen elinvoimakeskus-nimi palautuu ja on oikein"
+      (is (some? (get-in ilmoitus [:elinvoimakeskus :nimi]))
+          "Elinvoimakeskuksen nimi puuttuu ilmoituksesta")
+      (is (= evk-nimi-kannasta (get-in ilmoitus [:elinvoimakeskus :nimi]))
+          "Elinvoimakeskuksen nimi ei täsmää kantaan"))
+
+    (testing "Elinvoimakeskus on Pohjois-Suomen elinvoimakeskus (Oulun alueurakan perusteella)"
+      (is (= "Pohjois-Suomi" (get-in ilmoitus [:elinvoimakeskus :nimi]))))))
 
 (def ilmoituksien-lkm-perffitestissa 10000)
 

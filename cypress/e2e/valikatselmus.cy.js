@@ -24,7 +24,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain' ).as('hae-kustannukset')
         cy.viewport(1400, 1400)
         cy.visit('/')
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
@@ -47,7 +47,7 @@ describe('Välikatselmus aukeaa', () => {
 
         cy.viewport(1400, 1400)
         cy.visit('/')
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa', {timeout}).click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
