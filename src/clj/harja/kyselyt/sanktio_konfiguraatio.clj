@@ -2,6 +2,10 @@
   (:require [harja.kyselyt.konversio :as konv]
             [jeesql.core :refer [defqueries]]))
 
+(declare hae-urakan-sanktio-profiilit hae-sanktio-profiilit-admin hae-sanktio-profiili-admin
+  hae-sanktio-profiilin-rivit hae-sanktio-profiilin-rivit-admin hae-bonus-profiilit-admin
+  hae-bonus-profiili-admin hae-bonus-profiilin-rivit-admin)
+
 (defn- muunna-urakkatyyppi
   [rivi avainpolku]
   (if (get-in rivi avainpolku)
@@ -16,6 +20,15 @@
       (konv/array->vec :soveltuvuuskontekstit)
       (update :soveltuvuuskontekstit #(mapv keyword %)))))
 
+(defn- normalisoi-vektoriksi
+  [arvo]
+  (cond
+    (nil? arvo) []
+    (vector? arvo) arvo
+    (instance? java.sql.Array arvo) (vec (.getArray ^java.sql.Array arvo))
+    :else [arvo]))
+
+;; Kaytossa jeesql:ssa row-fn-muuntimina.
 (defn muunna-sanktio-profiili
   [{:as rivi}]
   (let [rivi (konv/alaviiva->rakenne rivi)]
@@ -60,12 +73,7 @@
                normalisoi-profiilirivin-metatiedot)]
     (cond-> rivi
       (get-in rivi [:profiilirivi :lukitut-summat])
-      (update-in [:profiilirivi :lukitut-summat]
-        #(cond
-           (nil? %) []
-           (vector? %) %
-           (instance? java.sql.Array %) (vec (.getArray ^java.sql.Array %))
-           :else [%]))
+      (update-in [:profiilirivi :lukitut-summat] normalisoi-vektoriksi)
 
       (get-in rivi [:profiili :urakkatyyppi])
       (muunna-urakkatyyppi [:profiili :urakkatyyppi])
@@ -88,12 +96,7 @@
         (update :profiilirivi dissoc :urakkarajausten))
 
       (get-in rivi [:profiilirivi :urakat])
-      (update-in [:profiilirivi :urakat]
-        #(cond
-           (nil? %) []
-           (vector? %) %
-           (instance? java.sql.Array %) (vec (.getArray ^java.sql.Array %))
-           :else [%]))
+      (update-in [:profiilirivi :urakat] normalisoi-vektoriksi)
 
       (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi])
       (->
@@ -115,11 +118,3 @@
 
 (defqueries "harja/kyselyt/sanktio_konfiguraatio.sql")
 
-(declare hae-urakan-sanktio-profiilit)
-(declare hae-sanktio-profiilit-admin)
-(declare hae-sanktio-profiili-admin)
-(declare hae-sanktio-profiilin-rivit)
-(declare hae-sanktio-profiilin-rivit-admin)
-(declare hae-bonus-profiilit-admin)
-(declare hae-bonus-profiili-admin)
-(declare hae-bonus-profiilin-rivit-admin)

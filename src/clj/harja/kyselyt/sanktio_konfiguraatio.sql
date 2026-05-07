@@ -1,23 +1,17 @@
 -- name: hae-urakan-sanktio-profiilit
 -- row-fn: muunna-sanktio-profiili
-WITH valittu_urakka AS (
-    SELECT u.id,
-           u.tyyppi::TEXT AS urakkatyyppi,
-           u.alkupvm
-      FROM urakka u
-     WHERE u.id = :urakka_id
-)
 SELECT sp.id,
        sp.nimi,
        sp.urakkatyyppi,
        sp.hoitovuosi_alku,
        sp.hoitovuosi_loppu
-FROM sanktio_profiili sp
-       JOIN valittu_urakka vu
-         ON vu.urakkatyyppi = sp.urakkatyyppi
-WHERE sp.aktiivinen IS TRUE
-   AND vu.alkupvm >= sp.alkupvm
-   AND (sp.loppupvm IS NULL OR vu.alkupvm <= sp.loppupvm)
+  FROM sanktio_profiili sp
+       JOIN urakka u
+         ON u.id = :urakka_id
+ WHERE sp.urakkatyyppi = u.tyyppi::TEXT
+   AND sp.aktiivinen IS TRUE
+   AND u.alkupvm >= sp.alkupvm
+   AND (sp.loppupvm IS NULL OR u.alkupvm <= sp.loppupvm)
    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
  ORDER BY sp.alkupvm DESC,
           sp.id DESC;
