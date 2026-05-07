@@ -20,16 +20,13 @@
                                         (budjettisuunnittelu/hae-urakan-indeksikertoimet db kayttaja {:urakka-id id}))))]
     (assoc rivi :indeksikerroin urakan-vuoden-indeksikerroin)))
 
-(defn muunna-paatos [rivi avain]
-  (update rivi avain konv/pgarray->vector))
-
-(defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt ely-idt] :as hakuehdot}]
+(defn hae-urakat-kojelautaan [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt evk-idt] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
   (let [params {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                 :urakat_annettu (boolean (seq urakka-idt))
                 :urakka_idt urakka-idt
-                :elyt_annettu (boolean (seq ely-idt))
-                :ely_idt ely-idt}
+                :evkt_annettu (boolean (seq evk-idt))
+                :evk_idt evk-idt}
         urakat (cond
                  (= urakkatyyppi :hoito)                    ;; tässä kohti hoito = MHU, vanhoja alueurakoita ei tueta
                  (into []

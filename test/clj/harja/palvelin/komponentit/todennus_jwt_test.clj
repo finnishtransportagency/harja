@@ -360,7 +360,7 @@
 
             ;; Injectaa tokeniin eri expiration date
             fn-encode (fn [s]
-                        (-> s cheshire/encode  (.getBytes "UTF-8")
+                        (-> s cheshire/encode (.getBytes "UTF-8")
                           Base64/encodeBase64 (String. "UTF-8")))
             fake-jwt (fn [decoded]
                        (let [{:keys [header payload signature]} decoded]
@@ -558,7 +558,7 @@
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken x-iam-data kehitysmoodi? public-key)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") mock-roolit))))
 
-    
+
     (testing "Todennus estää pääsyn (suora kutsu), accesstoken puuttuu (CRITICAL)"
       (nollaa-todennuksen-cache)
       (let [kehitysmoodi? true
@@ -575,3 +575,18 @@
             vahvistetut-tunnustiedot (jwt-varmistus/vahvista-jwt-signaturet x-iam-accesstoken nil kehitysmoodi? public-key)]
         (is (= (get vahvistetut-tunnustiedot "custom:rooli") "failed"))
         (is (true? (atomi-sisaltaa-stringin? timbre-log-historia "Todennus ei onnistunut: JWT Token puuttui kokonaan")))))))
+
+
+(deftest jwt-vahvistus-epaonnistui-wrapper-test
+  ;; Kyseinen funktio vahtii miam hakua, varmista että toimii oikein
+  (testing "Palauttaa true kun oam_groups on 'failed'"
+    (is (true? (todennus/jwt-vahvistus-epaonnistui? {"oam_groups" "failed"}))))
+
+  (testing "Palauttaa false kun oam_groups on normaali rooli"
+    (is (false? (todennus/jwt-vahvistus-epaonnistui? {"oam_groups" "Jarjestelmavastaava"}))))
+
+  (testing "Palauttaa false kun oam_groups puuttuu headerista"
+    (is (false? (todennus/jwt-vahvistus-epaonnistui? {"oam_remote_user" "kayttaja"}))))
+
+  (testing "Palauttaa false kun headerit on nil"
+    (is (false? (todennus/jwt-vahvistus-epaonnistui? nil)))))

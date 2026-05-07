@@ -86,12 +86,10 @@
           [x1 _ x2 _] extent]
       (aseta-kuvan-koordinaatisto g kuva extent)
       (piirra-karttakuvaan extent [w h] (/ (- x2 x1) w) g asiat)
-
-    ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
-                                        ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
       img)
     (catch Throwable t
-      (log/error t "Karttakuvan luonnissa poikkeus"))))
+      (log/error t (str "Karttakuvan luonnissa poikkeus, parametrit: extent=" extent
+                        " kuva=" (:kuva parametrit))))))
 
 (defn- hae-karttakuvadata
   "Hakee karttakuvadatan oikeasti lähteestä"
@@ -122,14 +120,18 @@
 (defn karttakuva [lahteet user parametrit]
   (let [parametrit (lue-parametrit parametrit)
         karttakuvadata (hae-karttakuvadata lahteet user parametrit)
-        kuva (kirjoita-kuva
-              (luo-kuva parametrit karttakuvadata))]
-    {:status  200
-     :headers {"cache-control"               "private, max-age=300"
-               "Content-Type"                "image/png"
-               "Content-Length"              (count kuva)
-               "Access-Control-Allow-Origin" "*"}
-     :body    (java.io.ByteArrayInputStream. kuva)}))
+        kuva-img (luo-kuva parametrit karttakuvadata)]
+    (if (nil? kuva-img)
+      {:status 500
+       :headers {"Content-Type" "text/plain"}
+       :body "Karttakuvan luonti epäonnistui"}
+      (let [kuva (kirjoita-kuva kuva-img)]
+        {:status  200
+         :headers {"cache-control"               "private, max-age=300"
+                   "Content-Type"                "image/png"
+                   "Content-Length"              (count kuva)
+                   "Access-Control-Allow-Origin" "*"}
+         :body    (java.io.ByteArrayInputStream. kuva)}))))
 
 (defn karttakuva-asiat [lahteet user {:keys [parametrit koordinaatti extent]}]
   (let [lahteen-nimi (keyword (get parametrit "_"))

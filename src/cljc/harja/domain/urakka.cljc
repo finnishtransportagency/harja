@@ -61,7 +61,7 @@
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka
-                    (s/keys :req [::hallintayksikko ::urakoitsija ::sopimukset ::hanke]))))
+                    (s/keys :req [::elinvoimakeskus ::urakoitsija ::sopimukset ::hanke]))))
 
 ;; Urakkakohtainen kysely, joka vaatii vain urakan id:n.
 ;; Tätä speciä on hyvä käyttää esim. palveluiden, jotka hakevat

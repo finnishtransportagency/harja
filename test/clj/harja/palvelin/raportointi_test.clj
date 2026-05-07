@@ -133,8 +133,8 @@
      {:leveys 6, :otsikko "Ind.korotus", :fmt :raha}]
     '(["30.09.2019" "011BG-0062699" "Oulun alueurakka 2014-2019, Talvihoito, TP" "As.tyyt.­bonus" 41835.26M 1508.422749850389647078M] ("Yhteensä" 41835.26M 1508.422749850389647078M))]])
 
-(def suorituskontekstin-kuvaus-parametrit-hy
-  {:nimi :erilliskustannukset, :konteksti "hallintayksikko", :hallintayksikko-id 22, :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :urakkatyyppi :hoito}})
+(defn suorituskontekstin-kuvaus-parametrit-hy []
+  {:nimi :erilliskustannukset, :konteksti "elinvoimakeskus", :elinvoimakeskus-id (hae-pohjois-suomen-evk-id), :parametrit {:alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :urakkatyyppi :hoito}})
 
 (def suorituskontekstin-kuvaus-raportti-hy-tai-koko-maa-dummy
   [:raportti {:nimi "Erilliskustannusten raportti testi"}])
@@ -199,17 +199,14 @@
 ;; testataan hy:n ja kokomaan osalta vain relevantit osat, eli raportin yleiset tieodt ja tietoja avainten sisältö, vähemmän noisea
 (deftest suorituskontekstin-kuvaus-hy
   (let [kuvaus-liitetty (r/liita-suorituskontekstin-kuvaus (:db jarjestelma)
-                                                           suorituskontekstin-kuvaus-parametrit-hy
+                                                           (suorituskontekstin-kuvaus-parametrit-hy)
                                                            suorituskontekstin-kuvaus-raportti-hy-tai-koko-maa-dummy)
         odotettu-liitetty [:raportti {:nimi "Erilliskustannusten raportti testi",
-                                      :raportin-yleiset-tiedot {:urakka "Pohjois-Pohjanmaa",
+                                      :raportin-yleiset-tiedot {:urakka "Pohjois-Suomi",
                                                                 :alkupvm "01.10.2014",
                                                                 :loppupvm "30.09.2015",
                                                                 :raportin-nimi "Erilliskustannusten raportti testi"},
-                                      :tietoja (list ["Kohde" "Hallintayksikkö"] ["Hallintayksikkö" "Pohjois-Pohjanmaa"] ["Tyypin hoito urakoita käynnissä" 2])}]
-        _ (println "** kuvaus-liitetty " kuvaus-liitetty)
-        _ (println "** odotettu-liitetty " odotettu-liitetty)
-        ]
+                                      :tietoja (list ["Kohde" "Elinvoimakeskus"] ["Elinvoimakeskus" "Pohjois-Suomi"] ["Tyypin hoito urakoita käynnissä" 2])}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
 
 (deftest suorituskontekstin-kuvaus-kokomaa

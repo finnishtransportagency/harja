@@ -538,7 +538,7 @@
                (dissoc :geometria))))
        paikkauskohteet))
 
-(defn paikkauskohteet [db user {:keys [elyt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]
+(defn paikkauskohteet [db user {:keys [evkt tilat alkupvm loppupvm tyomenetelmat urakka-id hae-alueen-kohteet?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-paikkauskohteet user (:urakka-id tiedot))
   (let [_ (log/debug "paikkauskohteet :: tiedot" (pr-str tiedot))
         ;; Paikkauskohteiden hakeminen eri urakkatyypeille vaihtelee.
@@ -554,9 +554,9 @@
         menetelmat (when (> (count menetelmat) 0)
                      menetelmat)
         ;; Valitut elykeskukset
-        elyt (disj elyt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
-        elyt (when (> (count elyt) 0)
-               (vec elyt))
+        evkt (disj evkt 0) ;; Poistetaan potentiaalinen "kaikki" valinta
+        evkt (when (> (count evkt) 0)
+               (vec evkt))
         urakan-paikkauskohteet (cond
                                  hae-alueen-kohteet?
                                  (paikkauskohteet-urakan-alueella db urakka-id tilat alkupvm loppupvm menetelmat)
@@ -568,7 +568,7 @@
                                                                :alkupvm alkupvm
                                                                :loppupvm loppupvm
                                                                :tyomenetelmat menetelmat
-                                                               :elyt elyt}))
+                                                               :evkt evkt}))
         urakan-paikkauskohteet (kasittele-paikkauskohteiden-sijainti db urakan-paikkauskohteet)
         ;; Tarkistetaan käyttäjän käyttöoikeudet suhteessa kustannuksiin.
         ;; Mikäli käyttäjälle ei ole nimenomaan annettu oikeuksia nähdä summia, niin poistetaan ne

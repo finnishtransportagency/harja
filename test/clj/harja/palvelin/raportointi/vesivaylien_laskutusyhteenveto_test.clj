@@ -621,8 +621,8 @@
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :vesivaylien-laskutusyhteenveto
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-sisavesivaylien-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-sisavesivaylien-hallintayksikon-id)
                    :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
                                 :loppupvm (c/to-date (t/local-date 2017 7 30))}})
         odotettu-otsikko "Sisävesiväylät, Laskutusyhteenveto ajalta 01.08.2016 - 31.07.2017"

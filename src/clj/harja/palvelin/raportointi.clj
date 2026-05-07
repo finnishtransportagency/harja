@@ -88,17 +88,17 @@
 
 (defn luo-suoritustieto-raportille
   [db user tiedot]
-  (let [{:keys [urakka-id nimi konteksti kasittelija parametrit hallintayksikko-id]} tiedot
+  (let [{:keys [urakka-id nimi konteksti kasittelija parametrit elinvoimakeskus-id]} tiedot
         {:keys [alkupvm loppupvm]} parametrit
         {{kayttajan-organisaatio :id} :organisaatio
          :keys [roolit urakkaroolit organisaatioroolit]} user
         _ (vaadi-urakka-on-olemassa db urakka-id)
-        _ (vaadi-hallintayksikko-on-olemassa db hallintayksikko-id)
+        _ (vaadi-hallintayksikko-on-olemassa db elinvoimakeskus-id)
         tiedot {:urakka_id urakka-id
                 :suorittajan_organisaatio kayttajan-organisaatio
                 :aikavali_alkupvm alkupvm
                 :aikavali_loppupvm loppupvm
-                :hallintayksikko_id hallintayksikko-id
+                :hallintayksikko_id elinvoimakeskus-id
                 :konteksti konteksti
                 :raportti (name nimi)
                 :rooli (parsi-roolit roolit)
@@ -112,12 +112,12 @@
     id))
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
-                                                  hallintayksikko-id parametrit]
+                                                  elinvoimakeskus-id parametrit]
                                            :as kaikki-parametrit} raportti]
   (let [urakka (when urakka-id
                  (first (urakat-q/hae-urakka db urakka-id)))
-        hy-nimi (when hallintayksikko-id
-                  (-> (organisaatiot-q/hae-organisaatio db hallintayksikko-id)
+        evk-nimi (when elinvoimakeskus-id
+                  (-> (organisaatiot-q/hae-organisaatio db elinvoimakeskus-id)
                       first
                       :nimi))]
     (->
@@ -126,11 +126,8 @@
         [1 :raportin-yleiset-tiedot]
         (merge {:urakka (case konteksti
                           "urakka" (:nimi urakka)
-
                           "monta-urakkaa" (str/join ", " urakoiden-nimet)
-
-                          "hallintayksikko" hy-nimi
-
+                          "elinvoimakeskus" evk-nimi
                           "koko maa" "Koko maa")
                 :alkupvm (or
                            (some-> parametrit :alkupvm pvm/pvm)
@@ -148,7 +145,7 @@
                           "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
                                             "Monta urakkaa"
                                             "Urakka")
-                          "hallintayksikko" "Hallintayksikkö"
+                          "elinvoimakeskus" "Elinvoimakeskus"
                           "koko maa" "Koko maa")]] t
               (if (= "urakka" konteksti)
                 (concat t [["Urakka" (:nimi urakka)]
@@ -162,18 +159,18 @@
                             (clojure.string/join ", " urakoiden-nimet)]])
                 t)
 
-              (if (= "hallintayksikko" konteksti)
-                (concat t [["Hallintayksikkö" hy-nimi]
+              (if (= "elinvoimakeskus" konteksti)
+                (concat t [["Elinvoimakeskus" evk-nimi]
                            (if (and (:urakkatyyppi parametrit)
                                     ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
                                     (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
                              [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
-                              (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
-                                       db {:hal hallintayksikko-id
+                              (count (urakat-q/hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat
+                                       db {:elinvoimakeskus-id elinvoimakeskus-id
                                            :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
                              ["Urakoita käynnissä"
                               (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
-                                       db hallintayksikko-id))])])
+                                       db elinvoimakeskus-id))])])
                 t)
 
               (if (= "koko maa" konteksti)
@@ -382,9 +379,9 @@
                                        :urakka-id (:urakka-id suorituksen-tiedot))
                             "monta-urakkaa" (assoc parametrit
                                               :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
-                            "hallintayksikko" (assoc parametrit
-                                                :hallintayksikko-id
-                                                (:hallintayksikko-id suorituksen-tiedot))
+                            "elinvoimakeskus" (assoc parametrit
+                                                :elinvoimakeskus-id
+                                                (:elinvoimakeskus-id suorituksen-tiedot))
                             "koko maa" parametrit))]
             ;; tallennetaan suorituksen lopetusaika
             (paivita-suorituksen-valmistumisaika db suoritus-id)

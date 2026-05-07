@@ -75,7 +75,9 @@
         kaikki-sanktiotyypit @tiedot/sanktiotyypit
         ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
         ;; Ja jos tyyppinä on talvihoito, niin muut kuin talvihoito toimenpiteet poistetaan myös
-        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))]
+        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))
+        laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
+        liitteet-id (str "liiteet-element-id-" (gensym))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
@@ -87,7 +89,7 @@
 
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
-         :otsikko-elementti :h4
+         :otsikko-elementti :h3
          :ei-borderia? true
          :vayla-tyyli? true
          :luokka "padding-16 taustavari-taso3"
@@ -322,7 +324,9 @@
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
            (if (and voi-muokata? (not lukutila?))
-             {:otsikko "Laskutuskuukausi" :nimi :perintapvm
+             {:otsikko "Laskutuskuukausi"
+              :label-for-id laskutuskuukausi-id
+              :nimi :perintapvm
               :pakollinen? true
               :tyyppi :komponentti
               ::lomake/col-luokka "col-xs-6"
@@ -334,6 +338,7 @@
                                  {:data-cy "koontilaskun-kk-dropdown"
                                   :vayla-tyyli? true
                                   :skrollattava? true
+                                  :elementin-id laskutuskuukausi-id
                                   :pakollinen? true
                                   :valinta (or
                                              ;; Näytetään valintana joko valittua laskutuskuukautta, tai
@@ -391,6 +396,7 @@
                  (:suorasanktio @muokattu))
            {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
             :tyyppi :komponentti
+            :label-for-id liitteet-id
             ::lomake/col-luokka "col-xs-12"
             :komponentti (fn [_]
                            [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
@@ -398,6 +404,7 @@
                                                 #(swap! tiedot/valittu-sanktio
                                                    (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
                              :uusi-liite-teksti "Lisää liite"
+                             :elementin-id liitteet-id
                              :nayta-koko? true
                              :salli-poistaa-lisatty-liite? true
                              :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
