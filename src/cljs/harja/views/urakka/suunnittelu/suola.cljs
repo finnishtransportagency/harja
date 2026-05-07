@@ -6,7 +6,6 @@
             [clojure.string :as str]
 
             [harja.domain.oikeudet :as oikeudet]
-            [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
 
@@ -30,8 +29,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
-            [harja.ui.kentat :as kentat]
-            [taoensso.timbre :as log])
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]
@@ -303,7 +301,7 @@
 
 (defn lomake-talvisuolan-kayttoraja-mhu
   "Talvisuolan käyttörajan lomake mhu urakoille ('teiden-hoito'-tyyppi)"
-  [e! app urakka]
+  [e! app urakka urakan-alkuvuosi]
   (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
         valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))
         lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
@@ -311,58 +309,73 @@
         lomake (if (nil? (:kopioi-rajoitukset lomake))
                  (assoc lomake :kopioi-rajoitukset true)
                  lomake)]
-    [:div
-     [lomake/lomake {:ei-borderia? true
-                     :tarkkaile-ulkopuolisia-muutoksia? false
-                     :muokkaa! (fn [data]
-                                 (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomakeMHU data))
-                                 ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
-                                 (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
-                                   (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU))))
-                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU)))}
-      [(lomake/rivi
-         {:nimi :kopioi-rajoitukset
-          :tyyppi :checkbox
-          :palstoja 1
-          :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
-       (lomake/rivi
-         {:nimi :talvisuolan-kayttoraja
-          :tyyppi :positiivinen-numero
-          :palstoja 1
-          :otsikko "Talvisuolan käyttöraja / vuosi (kuivatonnia)"
-          :placeholder "Ei rajoitusta"
-          :yksikko "t"
-          :piilota-yksikko-otsikossa? true
-          :vayla-tyyli? true
-          :disabled? true}
-         {:nimi :talvisuolan-kayttoraja-info
-          :tyhja-otsikko? true
-          :tyyppi :komponentti
-          :komponentti (fn []
-                         [yleiset/tooltip {:suunta :oikea :leveys :levea
-                                           :wrapper-luokka "tooltip-wrapper"}
-                          [ikonit/harja-icon-status-info]
-                          [:div
-                           "Talvisuolan käyttöraja kirjataan Tehtävät ja määrät -välilehdellä kohdassa " [:b "Liukkaudentorjunta suolaamalla (materiaali)."]]])})
+    (if (>= urakan-alkuvuosi 2025)
+      ;; -25 ja sitä myöhemmin alkavilla urakoilla ei ole neää Sanktio / ylittävä tonni tyyppistä sanktiota, vaan Sanktio
+      ;; lasketaan, jos rajoitus ylitetään yli 5% ja tästä yli 5% ylityksestä tulee 1.1 x urakka-aikana toteutunut suolan keskihinta.
+      [:div
+       [:br]
+       [:div.form-group
+        [:div
+         [:div.text-label "Talvisuolan käyttöraja / vuosi (kuivatonnia)"]
+         [:div.text-value (if (:talvisuolan-kayttoraja lomake)
+                            (:talvisuolan-kayttoraja lomake)
+                            "Käyttörajaa ei ole vielä asetettu.")]]]
+       [:br]
+       [:div.body-text {:style {:max-width "775px"}} "Sanktion määrä lasketaan automaattisesti talvisuolan kokonaiskäyttörajan ylittyessä MHU25-urakoissa."]
+       [:div.body-text {:style {:max-width "775px"}} "Mikäli urakoitsija käyttää urakan aikana suolaa koko urakka-ajalle sallittua määrää 5 % enemmän,
+       peritään 5 %:n ylittävältä osalta sanktiota, joka on suuruudeltaan urakka-aikana toteutunut suolan keskihinta x 1,1. "]]
+      [:div
+       [lomake/lomake {:ei-borderia? true
+                       :tarkkaile-ulkopuolisia-muutoksia? false
+                       :muokkaa! (fn [data]
+                                   (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomakeMHU data))
+                                   ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
+                                   (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
+                                     (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU))))
+                       :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU)))}
+        [(lomake/rivi
+           {:nimi :kopioi-rajoitukset
+            :tyyppi :checkbox
+            :palstoja 1
+            :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
+         (lomake/rivi
+           {:nimi :talvisuolan-kayttoraja
+            :tyyppi :positiivinen-numero
+            :palstoja 1
+            :otsikko "Talvisuolan käyttöraja / vuosi (kuivatonnia)"
+            :placeholder "Ei rajoitusta"
+            :yksikko "t"
+            :piilota-yksikko-otsikossa? true
+            :vayla-tyyli? true
+            :disabled? true}
+           {:nimi :talvisuolan-kayttoraja-info
+            :tyhja-otsikko? true
+            :tyyppi :komponentti
+            :komponentti (fn []
+                           [yleiset/tooltip {:suunta :oikea :leveys :levea
+                                             :wrapper-luokka "tooltip-wrapper"}
+                            [ikonit/harja-icon-status-info]
+                            [:div
+                             "Talvisuolan käyttöraja kirjataan Tehtävät ja määrät -välilehdellä kohdassa " [:b "Liukkaudentorjunta suolaamalla (materiaali)."]]])})
 
-       (lomake/rivi
-         {:nimi :sanktio_ylittavalta_tonnilta
-          :tyyppi :positiivinen-numero
-          :palstoja 1
-          :muokattava? (constantly saa-muokata?)
-          :otsikko "Sanktio / ylittävä tonni"
-          :yksikko "€"
-          :piilota-yksikko-otsikossa? true
-          :vayla-tyyli? true}
-         {:otsikko "Indeksi"
-          :nimi :indeksi
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [:div.kentta-indeksi
-                          ;; Talvisuolan kokonaismäärän käyttörajalla ei ole tällä hetkellä indeksiä missään urakassa
-                          [:div "Ei indeksiä"]])
-          :palstoja 1})]
-      lomake]]))
+         (lomake/rivi
+           {:nimi :sanktio_ylittavalta_tonnilta
+            :tyyppi :positiivinen-numero
+            :palstoja 1
+            :muokattava? (constantly saa-muokata?)
+            :otsikko "Sanktio / ylittävä tonni"
+            :yksikko "€"
+            :piilota-yksikko-otsikossa? true
+            :vayla-tyyli? true}
+           {:otsikko "Indeksi"
+            :nimi :indeksi
+            :tyyppi :komponentti
+            :komponentti (fn [_]
+                           [:div.kentta-indeksi
+                            ;; Talvisuolan kokonaismäärän käyttörajalla ei ole tällä hetkellä indeksiä missään urakassa
+                            [:div "Ei indeksiä"]])
+            :palstoja 1})]
+        lomake]])))
 
 (defn lomake-talvisuolan-kayttoraja-alueurakka
   "Talvisuolan käyttörajan lomake alueurakoille ('hoito'-tyyppi)"
@@ -552,9 +565,9 @@
 
          [:div.kontrollit
           [:div.row
-           [:div.:div.col-xs-12.col-md-3
+           [:div {:style {:max-width "300px"}}
             [:label.alasvedon-otsikko {:for "suolarajoitus-hoitovuosi"} "Hoitovuosi"]
-            [yleiset/livi-pudotusvalikko {:element-id "suolarajoitus-hoitovuosi"
+            [yleiset/livi-pudotusvalikko {:elementin-id "suolarajoitus-hoitovuosi"
                                           :valinta valittu-vuosi
                                           :vayla-tyyli? true
                                           :data-cy "hoitokausi-valinta"
@@ -564,12 +577,12 @@
              hoitovuodet]]]]
 
          [:div.kayttoraja-lomakkeet
-          [:h3 "Talvisuolan kokonaismäärän käyttöraja"]
+          [:h2 "Talvisuolan kokonaismäärän käyttöraja"]
           (case (:tyyppi urakka)
             ;; MHU talvisuolan käyttöraja lomake
             :teiden-hoito
             (if (get-in app [:kayttorajat :talvisuolan-sanktiot])
-              [lomake-talvisuolan-kayttoraja-mhu e! app urakka]
+              [lomake-talvisuolan-kayttoraja-mhu e! app urakka urakan-alkuvuosi]
               [yleiset/ajax-loader "Ladataan..."])
 
             ;; Alueurakka talvisuolan käyttöraja lomake
@@ -580,7 +593,8 @@
 
             [yleiset/info-laatikko :varoitus "Tuntematon urakkatyyppi" nil "400px" {:sulje-nappi-id (gensym)}])
 
-          (when (= :teiden-hoito (:tyyppi urakka))
+          ;; Suolasanktio asetetaan vain 2024 ja sitä aiemmin alkaneille urakoille.
+          (when (and (= :teiden-hoito (:tyyppi urakka)) (< urakan-alkuvuosi 2025))
             [:<>
              [:h3 "Pohjavesialueen suolasanktio"]
              (if (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])
