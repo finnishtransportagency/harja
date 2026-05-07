@@ -54,25 +54,27 @@
      :tasaa :oikea}]
    laskutusrajan-tarkistukset])
 
-(defn laskutusrajan-tarkistukset [e! {:keys [laskutusrajan-tarkistukset] :as app}]
-  [yhteiset/kehystetty-avattava-grid e! app
-   {:taulukon-avain :laskutusrajan-tarkistukset
-    :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :laskutusrajan-tarkistukset))
-    :otsikko "Laskutusrajan automaattiset tarkistukset"
-    :summa (some-> laskutusrajan-tarkistukset last :laskutusrajan-tarkistus)
-    :toiminnot (fn [e! app]
-                 (let [tavoitehinta (-> app :budjettitavoitteet :hoitovuoden-alun-indeksikorjattu-tavoitehinta)
-                       kolme-prosenttia (when tavoitehinta (* 0.03 tavoitehinta))]
-                   [:div.laskutusraja-info
-                    [:p "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten
-                    muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään 3 % em. hoitovuoden alun indeksikorjatusta tavoitehinnasta."]
-                    [:p "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut
-                    muutokset -osioon tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset."]
-                    [:p "Hoitovuoden alun indeksikorjattu tavoitehinta: "
-                     (fmt/euro-opt true false tavoitehinta)
-                     ", josta 3% on "
-                     (fmt/euro-opt true false kolme-prosenttia) "."]]))
-    :taulukko
-    (fn [e! app]
-      [:<>
-       [laskutusrajan-automaattiset-tarkistukset-grid e! app]])}])
+(defn laskutusrajan-tarkistukset [e! {:keys [laskutusrajan-tarkistukset budjettitavoitteet] :as app}]
+  (let [laskutusraja_kaytossa? (:laskutusraja_kaytossa? budjettitavoitteet)]
+    (when laskutusraja_kaytossa?
+      [yhteiset/kehystetty-avattava-grid e! app
+       {:taulukon-avain :laskutusrajan-tarkistukset
+        :taulukon-nakyvyys-event #(e! (t-yhteiset/->ToggleTaulukonNakyvyys :laskutusrajan-tarkistukset))
+        :otsikko "Laskutusrajan automaattiset tarkistukset"
+        :summa (some-> laskutusrajan-tarkistukset last :laskutusrajan-tarkistus)
+        :toiminnot (fn [e! app]
+                     (let [tavoitehinta (-> app :budjettitavoitteet :hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+                           kolme-prosenttia (when tavoitehinta (* 0.03 tavoitehinta))]
+                       [:div.laskutusraja-info
+                        [:p "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten
+                        muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään 3 % em. hoitovuoden alun indeksikorjatusta tavoitehinnasta."]
+                        [:p "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut
+                        muutokset -osioon tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset."]
+                        [:p "Hoitovuoden alun indeksikorjattu tavoitehinta: "
+                         (fmt/euro-opt true false tavoitehinta)
+                         ", josta 3% on "
+                         (fmt/euro-opt true false kolme-prosenttia) "."]]))
+        :taulukko
+        (fn [e! app]
+          [:<>
+           [laskutusrajan-automaattiset-tarkistukset-grid e! app]])}])))

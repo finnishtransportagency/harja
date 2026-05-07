@@ -114,6 +114,7 @@ SELECT ut.id,
        ut.laskutusraja                                                                        AS "laskutusraja",
        ut.laskutusraja_alkuperainen                                                           AS "laskutusraja-alkuperainen",
        SUM(hmum.summa)                                                                        AS "muutos-summa",
+       up.laskutusraja_kaytossa                                                               AS "laskutusraja-kaytossa",
        -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
        indeksikorjaa(
            (SELECT SUM(mmk.summa)
@@ -140,8 +141,9 @@ FROM urakka_tavoite ut
          LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND t."hoitokauden-alkuvuosi" = x.hk_alkuvuosi
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  x.hk_alkuvuosi
          LEFT JOIN mhu_muutokset hmum ON hmum.urakka = u.id AND hmum.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN urakka_parametrit up ON up.urakkaid = u.id
 WHERE ut.urakka = :urakka
-GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm
+GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm, up.laskutusraja_kaytossa
 ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta

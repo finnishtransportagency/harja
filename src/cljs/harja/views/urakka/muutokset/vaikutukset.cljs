@@ -110,7 +110,7 @@
 (defn muutosten-vaikutukset-uusi
   "Yhteenveto muutosten vaikutuksista."
   [{:keys [budjettitavoitteet valittu-hoitokausi haku-kaynnissa? laskutusrajan-tarkistukset] :as _app}]
-  (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
+  (let [{:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi laskutusraja_kaytossa?]} budjettitavoitteet
         indeksikorjaus-vahvistettu? (muutos-domain/hoitovuoden-indeksikorjaus-vahvistettu?
                                       tavoitehinta-indeksikorjattu-per-hoitovuosi valittu-hoitokausi)]
     [:div.muutosten-vaikutus
@@ -122,14 +122,15 @@
          (if haku-kaynnissa?
            [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
            (uusi-muutosten-vaikutus-rivit* budjettitavoitteet valittu-hoitokausi indeksikorjaus-vahvistettu?))))
-     (into []
-       (concat
-         [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
-                           :tietorivi-luokka "padding-8"}
-          [:h3 "Muutosten vaikutus laskutusrajaan"] ""]
-         (if haku-kaynnissa?
-           [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
-           (muutosten-vaikutus-laskutusrajaan-rivit* budjettitavoitteet laskutusrajan-tarkistukset indeksikorjaus-vahvistettu?))))]))
+     (when laskutusraja_kaytossa?
+       (into []
+         (concat
+           [yleiset/tietoja {:class "muutosten-vaikutus-container body-text"
+                             :tietorivi-luokka "padding-8"}
+            [:h3 "Muutosten vaikutus laskutusrajaan"] ""]
+           (if haku-kaynnissa?
+             [[yleiset/ajax-loader "Ladataan yhteenvetoa..."] ""]
+             (muutosten-vaikutus-laskutusrajaan-rivit* budjettitavoitteet laskutusrajan-tarkistukset indeksikorjaus-vahvistettu?)))))]))
 
 
 (defn muutosten-vaikutukset-vanha
