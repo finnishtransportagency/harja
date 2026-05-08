@@ -47,6 +47,7 @@
             (into []
               ;; Kaikki tiedon mankelointi ennen lähetystä tähän
               (comp (filter #(not (:poistettu %)))
+                (map #(into {} (filter (fn [[k _]] (keyword? k)) %)))
                 (map #(if-let [nimi (:nimi %)]
                         (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                           (assoc %
@@ -60,6 +61,7 @@
                              (> (:id %) 0))
                        (:id %)))
               uudet-yhteyshenkilot)
+            _ (js/console.log "TALLENNETTAVAT:" (pr-str tallennettavat))
             res (<! (tiedot/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
         (reset! paivystajat/yhteyshenkilot-haettu? false)
