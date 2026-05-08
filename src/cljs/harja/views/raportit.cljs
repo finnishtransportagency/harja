@@ -564,7 +564,7 @@
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
-(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]
+(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi vain-excelraportti? voi-suorittaa? arvot-nyt]
   (let [aseta-parametrit! (fn [id]
                             (let [input (-> js/document
                                             (.getElementById id)
@@ -582,7 +582,7 @@
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))
-        vientimuodot (if toimenpideraportti?
+        vientimuodot (if vain-excelraportti?
                        [(yleiset/tallenna-excel-nappi (k/excel-url :raportointi))]
                        yleiset/+raportin-vientimuodot+)]
     [:div
