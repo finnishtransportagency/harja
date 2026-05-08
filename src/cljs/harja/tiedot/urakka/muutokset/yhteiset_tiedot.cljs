@@ -166,17 +166,19 @@
 (defn- laskutusrajan-tarkistus-modaali
   [app vastaus toast-viesti]
   (let [vanha-laskutusraja (get-in app [:budjettitavoitteet :laskutusraja])
-        uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])]
+        uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])
+        modal-sulje-fn #(do
+                          (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)
+                          (modal/piilota!))]
     (if (and vanha-laskutusraja uusi-laskutusraja
           (not= vanha-laskutusraja uusi-laskutusraja))
-      ;; Laskutusraja muuttui: näytä modaali, toast tulee vasta Sulje-napista
+      ;; Laskutusraja muuttui: näytä modaali ja toast
       (modal/nayta!
         {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
          :luokka "modal-dialog-keskitetty-leveampi"
          :otsikko "Laskutusraja on muuttunut"
-         :footer [napit/yleinen-ensisijainen "Sulje" #(do
-                                                        (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)
-                                                        (modal/piilota!))]}
+         :footer [napit/yleinen-ensisijainen "Sulje" modal-sulje-fn]
+         :sulje-fn modal-sulje-fn}
         [:div
          [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
          [yleiset/info-laatikko :vahva-ilmoitus

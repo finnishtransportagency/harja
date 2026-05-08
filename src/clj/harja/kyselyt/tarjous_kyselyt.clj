@@ -465,7 +465,9 @@
                                tavoitehinta (:tarjous_tavoitehinta rivi)
                                tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                               (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)
-                               laskutusraja-kaytossa? (:laskutusraja-kaytossa (first (hae-laskutusraja-kaytossa db {:urakka-id urakka-id})))
+                               laskutusraja-kaytossa? (-> (hae-laskutusraja-kaytossa db {:urakka-id urakka-id})
+                                                        first
+                                                        :laskutusraja-kaytossa)
                                _ (if urakka-tavoite-db
                                    (paivita-urakan-tavoite-ja-kattohinta! db {:urakka-id urakka-id
                                                                               :hoitokausinumero kuluva-hoitovuosi-nro
