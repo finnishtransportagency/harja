@@ -80,22 +80,22 @@
           rivit)))))
 
 
-(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id
+(defn hae-raportti [db alkupvm loppupvm urakka-id elinvoimakeskus-id
                     urakkatyyppi urakoittain?]
   (hae-raportti* db {:alkupvm alkupvm
                      :loppupvm loppupvm
                      :urakka urakka-id
                      :urakkatyyppi (some-> urakkatyyppi name)
-                     :hallintayksikko hallintayksikko-id
+                     :elinvoimakeskus elinvoimakeskus-id
                      :urakoittain? urakoittain?}))
 
-(defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id
+(defn hae-raportti-urakoittain [db alkupvm loppupvm elinvoimakeskus-id
                                 urakkatyyppi urakoittain?]
   (hae-raportti* db {:alkupvm alkupvm
                      :loppupvm loppupvm
                      :urakka nil
                      :urakkatyyppi (some-> urakkatyyppi name)
-                     :hallintayksikko hallintayksikko-id
+                     :elinvoimakeskus elinvoimakeskus-id
                      :urakoittain? urakoittain?}))
 
 (defn- materiaalin-nimi [nimi]
@@ -487,15 +487,15 @@
             :materiaali tyypin-yhteensa-materiaali}])))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
-                               urakka-id hallintayksikko-id
+                               urakka-id elinvoimakeskus-id
                                urakoittain? urakkatyyppi urakkanumero?] :as parametrit}]
   (let [urakoittain? (if urakka-id false urakoittain?)
         konteksti (cond urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
         materiaalit-kannasta (if urakoittain?
-                               (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi urakoittain?)
-                               (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi urakoittain?))
+                               (hae-raportti-urakoittain db alkupvm loppupvm elinvoimakeskus-id urakkatyyppi urakoittain?)
+                               (hae-raportti db alkupvm loppupvm urakka-id elinvoimakeskus-id urakkatyyppi urakoittain?))
         raportin-nimi "Ympäristöraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -503,8 +503,8 @@
                               (if urakkanro
                                 (format "%s (%s)" nimi urakkanro)
                                 nimi))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
-                                                     db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio
+                                                     db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         talvisuola-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain?

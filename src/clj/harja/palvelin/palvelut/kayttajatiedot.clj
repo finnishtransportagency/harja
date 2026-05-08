@@ -48,12 +48,12 @@
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Vastaus on vector, sen mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Vastaus on vector, sen mäpit ovat muotoa {:tyyppi x :elinvoimakeskus {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeustarkistus-fn]
    (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi elinvoimakeskukset alku loppu]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (konv/sarakkeet-vektoriin
      (into []
@@ -65,10 +65,10 @@
 
            (let [alku (or alku (pvm/nyt))
                  loppu (or loppu (pvm/nyt))
-                 hallintayksikot (cond
-                                   (nil? hallintayksikot) nil
-                                   (vector? hallintayksikot) hallintayksikot
-                                   :else [hallintayksikot])]
+                 elinvoimakeskukset (cond
+                                      (nil? elinvoimakeskukset) nil
+                                      (vector? elinvoimakeskukset) elinvoimakeskukset
+                                      :else [elinvoimakeskukset])]
              (cond
                (not (nil? urakka-id))
                (urakat-q/hae-urakoiden-organisaatiotiedot db urakka-id)
@@ -78,9 +78,9 @@
                  db (konv/sql-date alku) (konv/sql-date loppu)
                  (when urakoitsija urakoitsija)
                  (when urakkatyyppi (name urakkatyyppi))
-                 (not (empty? hallintayksikot)) hallintayksikot))))
+                 (not (empty? elinvoimakeskukset)) elinvoimakeskukset))))
      {:urakka :urakat}
-     (juxt :tyyppi (comp :id :hallintayksikko)))))
+     (juxt :tyyppi (comp :id :elinvoimakeskus)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
   ([db user oikeustarkistus-fn]
@@ -148,16 +148,16 @@
     vastaus))
 
 (defn- hae-kayttajan-urakat
-  "Hakee kaikki urakat tyypin ja hallintayksikön mukaan ryhmiteltynä, joihin
+  "Hakee kaikki urakat tyypin ja elinvoimakeskuksen mukaan ryhmiteltynä, joihin
   käyttäjällä on jokin lukuoikeus."
-  [db user hallintayksikot]
+  [db user elinvoimakeskukset]
   (oikeudet/ei-oikeustarkistusta!)
   (kayttajan-urakat-aikavalilta
    db user
    (partial oikeudet/voi-lukea? oikeudet/urakat)
-   nil nil nil (if (empty? hallintayksikot)
+   nil nil nil (if (empty? elinvoimakeskukset)
                  nil
-                 hallintayksikot)
+                 elinvoimakeskukset)
    (pvm/nyt) (pvm/nyt)))
 
 (defn laheta-sahkoposti-kaikille-kayttajille
@@ -194,8 +194,8 @@
                         (laheta-sahkoposti-kaikille-kayttajille sahkoposti db user yhteydenotto)))
     (julkaise-palvelu http
                       :kayttajan-urakat
-                      (fn [user hallintayksikot]
-                        (#'hae-kayttajan-urakat db user hallintayksikot)))
+                      (fn [user elinvoimakeskukset]
+                        (#'hae-kayttajan-urakat db user elinvoimakeskukset)))
     this)
   (stop [this]
     (poista-palvelut (:http-palvelin this)

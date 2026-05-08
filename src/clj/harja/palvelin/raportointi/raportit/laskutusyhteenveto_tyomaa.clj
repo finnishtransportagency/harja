@@ -158,7 +158,7 @@
      rivit]))
 
 
-(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id aikarajaus] :as parametrit}]
   (log/debug "Työmaakokous PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
@@ -183,17 +183,17 @@
         ;; Konteksti ja urakkatiedot
         konteksti (cond
                     urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :else :urakka)
 
-        {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
-                                     (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
+        {alueen-nimi :nimi} (first (if (= konteksti :elinvoimakeskus)
+                                     (hallintayksikko-q/hae-organisaatio db elinvoimakeskus-id)
                                      (urakat-q/hae-urakka db urakka-id)))
 
         urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
                  db {:alkupvm alkupvm
                      :loppupvm loppupvm
-                     :hallintayksikkoid hallintayksikko-id
+                     :elinvoimakeskus-id elinvoimakeskus-id
                      :urakkaid urakka-id
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
 

@@ -45,13 +45,13 @@
   (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 {} {})) "Oletuksena funktio palauttaa false"))
 
 (deftest aluesuodattimet-nested-mapiksi
-  (let [payload [{:tyyppi :hoito :hallintayksikko {:id 1 :nimi :lappi} :urakat [{:id 1 :nimi "Kuusamo"} {:id 2 :nimi "Rovaniemi"}]}
-                 {:tyyppi :hoito :hallintayksikko {:id 2 :nimi :uusimaa} :urakat [{:id 3 :nimi "Vantaa"} {:id 4 :nimi "Helsinki"}]}
-                 {:tyyppi :hoito :hallintayksikko {:id 3 :nimi :pirkanmaa} :urakat [{:id 5 :nimi "Tampere"} {:id 6 :nimi "Nokia"}]}
+  (let [payload [{:tyyppi :hoito :elinvoimakeskus {:id 1 :nimi "Lappi"} :urakat [{:id 1 :nimi "Kuusamo"} {:id 2 :nimi "Rovaniemi"}]}
+                 {:tyyppi :hoito :elinvoimakeskus {:id 2 :nimi "Uusimaa"} :urakat [{:id 3 :nimi "Vantaa"} {:id 4 :nimi "Helsinki"}]}
+                 {:tyyppi :hoito :elinvoimakeskus {:id 3 :nimi "Sisä-Suomi"} :urakat [{:id 5 :nimi "Tampere"} {:id 6 :nimi "Nokia"}]}
 
-                 {:tyyppi :paallystys :hallintayksikko {:id 1 :nimi :lappi} :urakat [{:id 7 :nimi "Kuusamo"} {:id 8 :nimi "Rovaniemi"}]}
-                 {:tyyppi :paallystys :hallintayksikko {:id 2 :nimi :uusimaa} :urakat [{:id 9 :nimi "Vantaa"} {:id 10 :nimi "Helsinki"}]}
-                 {:tyyppi :paallystys :hallintayksikko {:id 3 :nimi :pirkanmaa} :urakat [{:id 11 :nimi "Tampere"} {:id 12 :nimi "Nokia"}]}]
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 1 :nimi "Lappi"} :urakat [{:id 7 :nimi "Kuusamo"} {:id 8 :nimi "Rovaniemi"}]}
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 2 :nimi "Uusimaa"} :urakat [{:id 9 :nimi "Vantaa"} {:id 10 :nimi "Helsinki"}]}
+                 {:tyyppi :paallystys :elinvoimakeskus {:id 3 :nimi "Sisä-Suomi"} :urakat [{:id 11 :nimi "Tampere"} {:id 12 :nimi "Nokia"}]}]
         tulos (tk/aluesuodattimet-nested-mapiksi payload)]
     (is (every? true? (mapcat (fn [[tyyppi aluekokonaisuudet]]
                                 (concat [(some? (#{:hoito :paallystys} tyyppi))]
@@ -73,7 +73,7 @@
   (is (= false (tk/uusi-tai-vanha-suodattimen-arvo false nil))) "Jos vanha arvo löytyy, käytä sitä")
 
 (deftest yhdista-aluesuodattimet
-  (let [ely-lappi {:nimi :lappi :id 1 :elynumero 666}
+  (let [evk-lappi {:nimi "Lappi" :id 13 :evknumero 10}
         urakka-kuusamo {:nimi :kuusamo :id 1}
         urakka-kajaani {:nimi :kajaani :id 1}
         urakka-rovaniemi {:nimi :rovaniemi :id 2}
@@ -84,27 +84,27 @@
     ;; mutta jos urakalle löytyy boolean arvo vanhasta rakenteesta, valitaan se
     ;; Erikoishuomio on, että uudessa arvossa hallintayksikkö on {:nimi :foo}, mutta vanhassa ja tuloksessa
     ;; vain :foo
-    (is (= {:hoito {666 {urakka-kuusamo false}}}
+    (is (= {:hoito {10 {urakka-kuusamo false}}}
            (tk/yhdista-aluesuodattimet nil
-                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+                                       {:hoito {evk-lappi {urakka-kuusamo false}}}))
         "Tyhjillä vanhoilla arvoilla palautetaan vaan uudet arvot")
-    (is (= {:hoito {666 {urakka-kuusamo false}}}
+    (is (= {:hoito {10 {urakka-kuusamo false}}}
            (tk/yhdista-aluesuodattimet {:hoito {123 {urakka-kajaani false}}}
-                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+                                       {:hoito {evk-lappi {urakka-kuusamo false}}}))
         "Jos vanhat arvot on jotain ihan muuta, ne ei vaikuta lopputulokseen")
-    (is (= {:hoito {666 {urakka-kuusamo true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true}}}
-                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+    (is (= {:hoito {10 {urakka-kuusamo true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {10 {urakka-kuusamo true}}}
+                                       {:hoito {evk-lappi {urakka-kuusamo false}}}))
         "Jos vanhoista arvoista löytyy sama urakka, käytetään sen arvoa")
-    (is (= {:hoito {666 {urakka-kuusamo true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
+    (is (= {:hoito {10 {urakka-kuusamo true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {10 {urakka-kuusamo true
                                                         urakka-rovaniemi false}}}
-                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+                                       {:hoito {evk-lappi {urakka-kuusamo false}}}))
         "Vanhasta joukosta lopputulokseen vaikuttavat VAIN urakat, jotka ovat myös uudessa joukossa")
-    (is (= {:hoito {666 {urakka-kuusamo true
+    (is (= {:hoito {10 {urakka-kuusamo true
                          urakka-sodankyla true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
+           (tk/yhdista-aluesuodattimet {:hoito {10 {urakka-kuusamo true
                                                         urakka-rovaniemi false}}}
-                                       {:hoito {ely-lappi {urakka-kuusamo false
+                                       {:hoito {evk-lappi {urakka-kuusamo false
                                                            urakka-sodankyla true}}}))
         "Uudesta joukosta täytyy palautua myös urakat, joita ei ole vanhassa joukossa")))

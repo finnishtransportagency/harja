@@ -15,7 +15,7 @@
     (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito")
     false))
 
-(defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito?
+(defn- suodata-sakot [rivit {:keys [urakka-id elinvoimakeskus-id sakkoryhma talvihoito?
                                     sanktiotyyppi_koodi sailytettavat-toimenpidekoodit]}]
   (filterv
     (fn [rivi]
@@ -25,7 +25,7 @@
                                 (sakkoryhma (:sakkoryhma rivi))
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
-        (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
+        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id rivi)))
         (or (nil? sanktiotyyppi_koodi)
           (nil? (:sanktiotyyppi_koodi rivi))
           (if (set? sanktiotyyppi_koodi)
@@ -36,20 +36,20 @@
           (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
 
-(defn- suodata-bonukset [bonukset {:keys [laji urakka-id hallintayksikko-id] :as suodattimet}]
+(defn- suodata-bonukset [bonukset {:keys [laji urakka-id elinvoimakeskus-id] :as suodattimet}]
   (filterv (fn [bonus]
              (and
-               (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id bonus)))
+               (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id bonus)))
                (or (nil? laji) (contains? laji (:laji bonus)))
                (or (nil? urakka-id) (= urakka-id (:urakka-id bonus)))))
     bonukset))
-(defn- suodata-muistutukset [rivit {:keys [urakka-id hallintayksikko-id talvihoito?] :as suodattimet}]
+(defn- suodata-muistutukset [rivit {:keys [urakka-id elinvoimakeskus-id talvihoito?] :as suodattimet}]
   (filterv
     (fn [rivi]
       (and
         (not (sanktiot-domain/sakkoryhmasta-sakko? rivi))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
-        (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
+        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id rivi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
@@ -433,13 +433,13 @@
           yllapitoluokittaiset-rivit
           yhteensa-rivit)))))
 
-(defn suorita-runko [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi sanktiot bonukset
+(defn suorita-runko [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id urakkatyyppi sanktiot bonukset
                                      raportin-nimi info-teksti]}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
-                                                                     :hallintayksikko hallintayksikko-id
+                                                                     :elinvoimakeskus elinvoimakeskus-id
                                                                      :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                                                      :alku alkupvm
                                                                      :loppu loppupvm})
@@ -453,7 +453,7 @@
 
         urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi :loppupvm]) sanktiot-kannassa))
         ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
-        naytettavat-alueet (if (= konteksti :hallintayksikko)
+        naytettavat-alueet (if (= konteksti :elinvoimakeskus)
                              (vec (sort-by :nimi (set/union (into #{} naytettavat-alueet)
                                                    urakat-joista-loytyi-sanktioita)))
                              naytettavat-alueet)
@@ -463,7 +463,7 @@
                                     (mapv
                                       (fn [alue]
                                         {:otsikko (if (= konteksti :koko-maa)
-                                                    (str (:elynumero alue) " " (:nimi alue))
+                                                    (str (:elinvoimakeskusnumero alue) " " (:nimi alue))
                                                     (:nimi alue))
                                          :leveys 15
                                          :fmt :raha})

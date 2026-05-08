@@ -130,8 +130,9 @@
     true))
 
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
-  (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
-       (roolit/tilaajan-kayttaja? kayttaja)))
+  (or (roolit/jvh? kayttaja)
+    (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
+        (roolit/tilaajan-kayttaja? kayttaja))))
 
 #?(:clj
 (defn tee-solu [solu arvo tyyli]

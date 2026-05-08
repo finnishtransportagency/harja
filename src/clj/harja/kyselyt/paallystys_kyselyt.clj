@@ -18,7 +18,7 @@
                     db
                     {:yllapitokohde yllapitokohde-id}))))
 
-(defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat elyt]}]
+(defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]
   (let [ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi
@@ -35,12 +35,9 @@
                                   (and (contains? tilat :aloittamatta)
                                     (nil? (:tila %)))
                                   (contains? tilat (:tila %)))))
-                     (when (and (seq elyt)
-                             (not (contains? elyt 0)))
-                       (filter #(do
-                                  (println "-> " (:ely %))
-                                  (or (empty? elyt)
-                                    (contains? elyt (:ely %))))))]
+                     (when (and (seq evkt)
+                             (not (contains? evkt 0)))
+                       (filter #(or (empty? evkt) (contains? evkt (:evk %)))))]
         filtteri-xform (apply comp
                          (vec
                            (keep identity

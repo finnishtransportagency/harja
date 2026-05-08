@@ -42,16 +42,16 @@ SELECT
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
   it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
-  hy.id                                                              AS hallintayksikko_id,
-  hy.nimi                                                            AS hallintayksikko_nimi
+  evk.id                                                             AS elinvoimakeskus_id,
+  evk.nimi                                                           AS elinvoimakeskus_nimi
 FROM ilmoitus ulompi_i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = ulompi_i.id
   LEFT JOIN urakka u ON ulompi_i.urakka = u.id
-  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+  LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'elinvoimakeskus')
 WHERE ulompi_i.id IN
       (SELECT id FROM ilmoitus sisempi_i WHERE
        -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-      (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
+      ((:urakat_annettu IS FALSE AND sisempi_i.urakka IS NULL) OR (:urakat_annettu IS TRUE AND sisempi_i.urakka IN (:urakat))) AND
 
       -- Tarkasta että ilmoituksen valitysajankohta sopii hakuehtoihin. Tarkastellaan ilmoituksen urakkaan välittymistä.
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
@@ -117,6 +117,7 @@ ORDER BY CASE WHEN :lajittelu-suunta = 'nouseva' THEN ulompi_i."valitetty-urakka
          CASE WHEN :lajittelu-suunta = 'laskeva' THEN ulompi_i."valitetty-urakkaan" END DESC,
          it.kuitattu DESC;
 
+
 -- name: hae-ilmoitukset-raportille
 SELECT
   i.urakka,
@@ -124,12 +125,12 @@ SELECT
   i.valitetty,
   i."valitetty-urakkaan",
   i.ilmoitustyyppi,
-  hy.id                                                              AS hallintayksikko_id,
-  hy.nimi                                                            AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero
+  evk.id                                                              AS evk_id,
+  evk.nimi                                                            AS evk_nimi,
+  right(cast(evk.elinvoimakeskusnumero as varchar), 2)                AS evk_evknumero
 FROM ilmoitus i
   LEFT JOIN urakka u ON i.urakka = u.id
-  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+  LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'elinvoimakeskus')
 WHERE i.id IN
       (SELECT x.id
        FROM ilmoitus x
@@ -202,8 +203,8 @@ SELECT
   i.id,
   i.urakka,
   u.nimi as urakkanimi,
-  hy.id                                    AS hallintayksikko_id,
-  hy.nimi                                  AS hallintayksikko_nimi,
+  evk.id                                    AS elinvoimakeskus_id,
+  evk.nimi                                  AS elinvoimakeskus_nimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -271,7 +272,7 @@ SELECT
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
-  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+  LEFT JOIN organisaatio evk ON (u.elinvoimakeskus_id = evk.id AND evk.tyyppi = 'elinvoimakeskus')
 WHERE i.id = :id;
 
 -- name: hae-ilmoitukset-idlla
@@ -714,7 +715,7 @@ FROM asiakaspalauteluokka apl
                      ) AND
                  (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                          FROM urakka
-                                                                         WHERE hallintayksikko = :hallintayksikko_id)) AND
+                                                                         WHERE elinvoimakeskus_id = :hallintayksikko_id)) AND
                  (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
                  (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
 GROUP BY CUBE (apl.nimi, i.ilmoitustyyppi);
@@ -742,7 +743,7 @@ WHERE
   AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
-                                                          WHERE hallintayksikko = :hallintayksikko_id)) AND
+                                                          WHERE elinvoimakeskus_id = :hallintayksikko_id)) AND
   (:alkupvm :: DATE IS NULL OR "valitetty-urakkaan" >= :alkupvm) AND
   (:loppupvm :: DATE IS NULL OR "valitetty-urakkaan" <= :loppupvm);
 

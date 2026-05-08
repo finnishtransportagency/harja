@@ -491,14 +491,14 @@ SELECT
   ST_Simplify(t.reitti, :toleranssi) as reitti,
   tt.toimenpidekoodi          AS tehtava_toimenpidekoodi,
   tpk.nimi                    AS tehtava_toimenpide
-FROM toteuma_tehtava tt
-  JOIN toteuma t ON tt.toteuma = t.id
-                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys seur. SQL
-                    AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
-                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
-                    AND tt.poistettu IS NOT TRUE
-                    AND t.poistettu IS NOT TRUE
-  JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
+FROM toteuma t
+     JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys seur. SQL
+       AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
+       AND t.poistettu IS NOT TRUE
+       AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+       AND tt.poistettu IS NOT TRUE
+  LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
@@ -671,7 +671,7 @@ WHERE st.poistettu IS NULL
 
 -- name: urakoitsijan-urakat
 SELECT
-  u.id, u.hallintayksikko
+  u.id, u.hallintayksikko, u.elinvoimakeskus_id
 FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE urk.id = :organisaatio;
@@ -682,6 +682,12 @@ SELECT
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
 WHERE hal.id IN (:hallintayksikot);
+
+-- name: elinvoimakeskusten-urakat
+SELECT u.id,
+       u.elinvoimakeskus_id AS elinvoimakeskus
+FROM urakka u
+WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
 
 -- name: hae-viimeisin-toteuma
 -- Urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
