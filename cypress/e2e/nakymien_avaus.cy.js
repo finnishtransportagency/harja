@@ -17,7 +17,7 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
@@ -210,14 +210,14 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Siirry Paikkaukset päätabille
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
         cy.get('[data-cy="tabs-taso2-Paallystysurakoiden paikkaukset"]').click()
-        cy.contains('ELY').should('exist')
-        
+        cy.contains('Elinvoimakeskus').should('exist')
+
         // Avaa toteumat
         cy.get('[data-cy="tabs-taso2-Kohteiden toteumat"]').click();
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
         cy.wait(1000);
         cy.contains('Toteuman tieosoite').should('exist')
-        
+
     })
 
     it("Avaa Välikatselmus", function () {

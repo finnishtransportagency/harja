@@ -1,30 +1,30 @@
 -- name: hae-yh-suunnitellut-ja-toteutuneet-aikavalilla
 with urakat as (select id, hallintayksikko
                 from urakka u
-                where (:hallintayksikko::integer is null or u.hallintayksikko = :hallintayksikko::integer)
+                where (:elinvoimakeskus::integer is null or u.elinvoimakeskus_id = :elinvoimakeskus::integer)
                   and u.tyyppi = 'hoito'
                   and u.poistettu = false
                   and (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)),
      toteumat as (select sum(rtm.tehtavamaara) as "maara",
                          rtm.toimenpidekoodi as "toimenpidekoodi",
-                         rtm.hallintayksikko_id as "hallintayksikko",
+                         u.elinvoimakeskus_id as "elinvoimakeskus_id",
                          sum(rtm.materiaalimaara) as "materiaalimaara"
                     from raportti_toteuma_maarat rtm
                     left join urakka u on rtm.urakka_id = u.id
-                   where (:hallintayksikko::integer is null or rtm.hallintayksikko_id = :hallintayksikko::integer)
+                   where rtm.urakka_id IN (SELECT id FROM urakat)
                      and (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
                      and u.tyyppi='hoito'
-                   group by rtm.hallintayksikko_id, rtm.toimenpidekoodi),
+                   group by u.elinvoimakeskus_id, rtm.toimenpidekoodi),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
               where yt.urakka in (select id from urakat)
                 and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
               group by yt.urakka, yt.tehtava)
-select (SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko)           as toteuma,
+select (SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.elinvoimakeskus_id = o.id)           as toteuma,
        SUM(tyot.maara)               as suunniteltu,
-       (SELECT materiaalimaara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko) as "toteutunut-materiaalimaara",
+       (SELECT materiaalimaara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.elinvoimakeskus_id = o.id) as "toteutunut-materiaalimaara",
        o.id                          as hallintayksikko,
-       o.elynumero                   as elynumero,
+       o.elinvoimakeskusnumero       as elynumero,
        tehtava.nimi                  as nimi,
        emo.nimi                      as toimenpide,
        tehtava.suunnitteluyksikko    as suunnitteluyksikko,
@@ -46,8 +46,8 @@ from toimenpideinstanssi tpi
        join toimenpide emo on emo.id = tpi.toimenpide
        join tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%' AND tehtava."raportoi-tehtava?" = TRUE
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
-       join organisaatio o on o.id = u.hallintayksikko
+       join organisaatio o on o.id = u.elinvoimakeskus_id
 where tpi.urakka in (select id from urakat)
-group by o.nimi, o.id, o.elynumero, emo.nimi, tehtava.nimi, tehtava.id, tehtava.suunnitteluyksikko, tehtava.yksikko, tehtava.jarjestys, emo.koodi
-having coalesce((SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko), SUM(tyot.maara)) >= 0
-order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tehtava.jarjestys ASC;
+group by o.nimi, o.id, o.elinvoimakeskusnumero, emo.nimi, tehtava.nimi, tehtava.id, tehtava.suunnitteluyksikko, tehtava.yksikko, tehtava.jarjestys, emo.koodi
+having coalesce((SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.elinvoimakeskus_id = o.id), SUM(tyot.maara)) >= 0
+order by o.elinvoimakeskusnumero ASC, "toimenpide-jarjestys" ASC, tehtava.jarjestys ASC;

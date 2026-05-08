@@ -126,10 +126,27 @@
         :valinta-nayta :nimi
         :pakollinen? true}
        {:nimi :materiaalimaara
-        :otsikko "Materiaalimäärä"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :tierekisteriosoite
+         :otsikko "Materiaalimäärä"
+         :tyyppi :string
+         :pakollinen? true}
+        {:nimi :valittu-tehtava
+         :otsikko "Valitse tehtävä (valinnainen)"
+         :tyyppi :valinta
+         :valinnat (concat [nil] tiedot/+mahdolliset-tehtavat+)
+         :valinta-nayta #(if % (:nimi %) "- Ei tehtävää -")
+         :pakollinen? false}
+        {:nimi :tehtavamaara
+         :otsikko "Tehtävämäärä"
+         :tyyppi :string
+         :pakollinen? false
+         :napiton? (nil? (:valittu-tehtava toteumatiedot))}
+        {:nimi :tehtavayksikko
+         :otsikko "Tehtävän yksikkö"
+         :tyyppi :valinta
+         :valinnat ["tiekm" "jkm" "kaistakm" "km" "kpl" "m2" "m3"]
+         :pakollinen? false
+         :napiton? (nil? (:valittu-tehtava toteumatiedot))}
+        {:nimi :tierekisteriosoite
         :tyyppi :tierekisteriosoite
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}

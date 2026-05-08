@@ -140,9 +140,9 @@
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
-(defn suorita [db _ {:keys [urakka-id hallintayksikko-id] :as parametrit}]
+(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
 
         ;; Haetaan hoitovuodelle keskilämpötilojen keskiarvo tarkastelujaksolla
@@ -209,7 +209,7 @@
                ;; HTML raportille raportin nimi muodostetaan kontekstista
                (case konteksti
                  :urakka (:nimi urakan-tiedot)
-                 :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                 :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                  :koko-maa "KOKO MAA")
                ;; PDF ja Excel raportteihin laitetaan raportille eri nimi, joka tulee tiedoston nimeksi
                (str "Talvisuolan lämpötilaraportti - " (:nimi urakan-tiedot)))

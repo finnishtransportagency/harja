@@ -19,7 +19,7 @@
 
 describe('Aikataulunäkymien avaaminen päällystysurakassa', function () {
     beforeEach(function () {
-        cy.visit("http://localhost:3000/#urakat/yleiset?&hy=22&u=7")
+        cy.visit("http://localhost:3000/#urakat/yleiset?&hy=12&u=7")
     })
 
     it("Aikataulun avaaminen toimii päällystyksessä", function () {

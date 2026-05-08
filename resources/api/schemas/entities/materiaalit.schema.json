@@ -18,6 +18,15 @@
         "required": true,
         "additionalProperties": false,
         "$ref": "file:resources/api/schemas/entities/maara.schema.json"
+      },
+      "laitetoimittajan-materiaali": {
+        "id": "urn:harja/materiaalit/0/laitetoimittajan-materiaali",
+        "type": "object",
+        "required": false,
+        "additionalProperties": false,
+        "description": "Sisältää laitetoimittajalta saadut tiedot materiaalista muokkaamattomana.",
+        "$ref": "file:resources/api/schemas/entities/laitetoimittajan-materiaali.schema.json"
+
       }
     }
   }
