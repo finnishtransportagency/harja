@@ -5,9 +5,7 @@ name: '[Scheduled] Process stale PRs'
 run-name: '[Scheduled] Process stale PRs'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
-  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 on:
   # Manuaalisen käynnistyksen asetukset
@@ -30,17 +28,17 @@ on:
 # Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
 # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-permissions:
-  contents: read
-  # Vaaditaan oikeus PR:ien käsittelyyn, jotta voidaan lisätä kommentteja tai sulkea PR automaattisesti
-  pull-requests: write
-  # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja, tässä sitä tarvitaan cachen luomiseen ja poistamiseen
-  actions: write
+permissions: {}
 
 jobs:
   # Note: https://github.com/actions/stale
   process-stale-prs:
+    name: "Process stale PRs"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Vaaditaan oletusarvoinen lukuoikeus repoon
+      pull-requests: write # Vaaditaan PR:ien kommentointiin ja sulkemiseen
+      actions: write # Vaaditaan cachen luomiseen ja poistamiseen
     steps:
       - name: Find and label stale PRs
         id: label-stale-prs
@@ -65,7 +63,7 @@ jobs:
 
       - name: Get and format stale PRs list
         id: stale-prs-list
-        uses: actions/github-script@v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
@@ -103,7 +101,7 @@ jobs:
             return formattedList;
 
       - name: Send a summary of stale PRs into Slack
-        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
+        uses: slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c # v3.0.2
         # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
         if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
         with:

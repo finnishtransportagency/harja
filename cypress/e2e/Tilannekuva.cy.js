@@ -1,5 +1,9 @@
+let timeout = 60000;
+
 describe('Tilannekuva latautuu oikein', function () {
     it('Mene tilannekuvaan', function() {
+        cy.visit('/');
+        cy.get('.ladataan-harjaa', {timeout: timeout}).should('not.exist')
         cy.visit('/#tilannekuva/nykytilanne?')
         cy.get('[data-cy=Nykytilanne]').parent().should('have.class', 'active')
         cy.get('[type=radio]').first().parent().then(($radioButton) => {

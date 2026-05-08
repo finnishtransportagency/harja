@@ -15,9 +15,9 @@ updates:
       docker-login-action:
         patterns:
           - "docker/login-action*"
-      sarif-upload-action:
+      codeql-action:
         patterns:
-          - "github/codeql-action/upload-sarif*"
+          - "github/codeql-action*"
       cache-action:
         patterns:
           - "actions/cache*"
@@ -32,7 +32,6 @@ updates:
       - dependency-name: "aquasecurity/trivy-action*"
         versions:
           - "0.27.0"
-
     schedule:
       interval: "weekly"
     # Mitigoi supply chain-hyökkäyksen riskiä cooldown-ajalla, joka viivyttää uuden päivityksen tarjoamista x päivää
@@ -46,8 +45,10 @@ updates:
     schedule:
       interval: "weekly"
     # Mitigoi supply chain-hyökkäyksen riskiä cooldown-ajalla, joka viivyttää uuden päivityksen tarjoamista x päivää
-    cooldown:
-      default-days: 3
+    # FIXME: Cooldown estää Docker-imageiden päivityksen
+    #        Bug: https://github.com/dependabot/dependabot-core/issues/14044
+#    cooldown:
+#      default-days: 3
 
   # tietokanta pom.xml maven plugin päivitykset
   - package-ecosystem: "maven"

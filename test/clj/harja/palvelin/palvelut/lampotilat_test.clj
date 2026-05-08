@@ -43,7 +43,7 @@
 (deftest hae-teiden-hoitourakoiden-lampotilat-ilmatieteenlaitokselta
   (let [odotettu-vastaus {43 {:nimi "Raahen MHU 2023-2028" :kohde "Raahe_Ylivieska" :urakkanro "1259" :id 43
                               :keskilampotila-1971-2000 -6.1 :keskilampotila-1991-2020 -6.1 :keskilampotila-1981-2010 -6.1
-                              :ilmastollinen-ylaraja -1.2 :keskilampotilan-ilm-ka-erotus -2.5 :hanke 16 :ilmastollinen-alaraja -12.1
+                              :ilmastollinen-ylaraja -1.2 :keskilampotilan-ilm-ka-erotus -2.5 :hanke 17 :ilmastollinen-alaraja -12.1
                               :keskilampotila -8.6 :pitkakeskilampotila -6.1}}]
     (testing "teiden hoitourakoiden lämpötilat ilmatieteenlaitokselta (alueurakkanumero ilman nollaa)"
       (let [urakka (first (q-map (str "SELECT id, urakkanro, alkupvm, loppupvm, hanke

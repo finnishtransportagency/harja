@@ -196,8 +196,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :erilliskustannukset
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:toimenpide-id nil
                                               :alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
@@ -209,7 +209,7 @@
             [:taulukko
              {:oikealle-tasattavat-kentat #{5
                                             6}
-              :otsikko "Pohjois-Pohjanmaa, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
+              :otsikko "Pohjois-Suomi, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
               :sheet-nimi "Erilliskustannusten raportti"
               :viimeinen-rivi-yhteenveto? true}
              '({:leveys 10

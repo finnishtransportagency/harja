@@ -4,7 +4,6 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
@@ -56,7 +55,7 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "12 Pohjois-Pohjanmaa"}
+                                      {:otsikko "48 Pohjois-Suomi"}
                                       ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -64,13 +63,13 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Pohjois-Suomi, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -114,20 +113,20 @@
                                                       (integer? tur)
                                                       (integer? urk))))))))
 
-(deftest ilmoitusraportti-pop-ely
+(deftest ilmoitusraportti-pos-evk
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "Pohjois-Pohjanmaa, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "Pohjois-Suomi, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -136,7 +135,7 @@
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       (fn [[alue tpp tur urk & _]]
-                                        (and (= alue "Pohjois-Pohjanmaa")
+                                        (and (= alue "Pohjois-Suomi")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
@@ -147,7 +146,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki}})
@@ -162,21 +161,62 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      (fn [{[alue tpp tur urk & _] :rivi}]
-                                        (and (= alue "Uusimaa yhteensä")
-                                             (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 2)
-                                             (= (apurit/raporttisolun-arvo urk) 0)))
-                                      (fn [{[alue tpp tur urk & _] :rivi}]
-                                        (and (= alue "Pohjois-Pohjanmaa yhteensä")
-                                             (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 5)
-                                             (= (apurit/raporttisolun-arvo urk) 0)))
-                                      (fn [[alue tpp tur urk & _]]
-                                        (and (= alue "KOKO MAA")
-                                             (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 7)
-                                             (= (apurit/raporttisolun-arvo urk) 0)))))))
+        (fn [{[alue tpp tur urk & _] :rivi}]
+          (and (= alue "Uusimaa yhteensä")
+            (= (apurit/raporttisolun-arvo tpp) 0)
+            (= (apurit/raporttisolun-arvo tur) 2)
+            (= (apurit/raporttisolun-arvo urk) 0)))
+        (fn [{[alue tpp tur urk & _] :rivi}]
+          (and (= alue "Pohjois-Suomi yhteensä")
+            (= (apurit/raporttisolun-arvo tpp) 0)
+            (= (apurit/raporttisolun-arvo tur) 5)
+            (= (apurit/raporttisolun-arvo urk) 0)))
+        (fn [[alue tpp tur urk & _]]
+          (and (= alue "KOKO MAA")
+            (= (apurit/raporttisolun-arvo tpp) 0)
+            (= (apurit/raporttisolun-arvo tur) 7)
+            (= (apurit/raporttisolun-arvo urk) 0)))))))
+
+(deftest ilmoitusraportti-koko-maa-evk-summat-tasmaa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :ilmoitusraportti
+                   :konteksti "koko maa"
+                   :elinvoimakeskus-id nil
+                   :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
+                                :loppupvm (pvm/->pvm "30.09.2017")
+                                :urakkatyyppi :kaikki}})
+        otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+        taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+        rivit (apurit/taulukon-rivit taulukko)
+        rivi-arvot (fn [rivi]
+                     (let [r (if (map? rivi) (:rivi rivi) rivi)]
+                       r))
+        evk-yhteensa-rivit (filter (fn [rivi]
+                                     (let [r (rivi-arvot rivi)
+                                           alue (first r)]
+                                       (and (string? alue)
+                                         (clojure.string/includes? alue "yhteensä"))))
+                             rivit)
+        koko-maa-rivi (first (filter (fn [rivi]
+                                       (let [r (rivi-arvot rivi)
+                                             alue (first r)]
+                                         (= alue "KOKO MAA")))
+                               rivit))
+        evk-tur-summa (apply + (map (fn [rivi]
+                                      (let [r (rivi-arvot rivi)]
+                                        (apurit/raporttisolun-arvo (nth r 2))))
+                                 evk-yhteensa-rivit))
+        koko-maa-tur (apurit/raporttisolun-arvo (nth (rivi-arvot koko-maa-rivi) 2))]
+
+    (testing "EVK-yhteensärivejä löytyy"
+      (is (pos? (count evk-yhteensa-rivit))
+        "Raportista löytyy EVK-yhteensärivejä"))
+
+    (testing "EVK-summien TUR-summa täsmää koko maan TUR-summaan"
+      (is (= evk-tur-summa koko-maa-tur)
+        (str "EVK-yhteensä TUR " evk-tur-summa " = KOKO MAA TUR " koko-maa-tur)))))
 
 (deftest ilmoitusraportti-koko-maa-urakoittain
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -184,7 +224,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki
@@ -205,7 +245,7 @@
       (apurit/tarkista-taulukko-rivit
         tyyppilajit-taulukko
         (fn [{otsikko :otsikko}]
-          (= otsikko "01 Uusimaa"))
+          (= otsikko "40 Uusimaa"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Espoon alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
@@ -223,7 +263,7 @@
                (= (apurit/raporttisolun-arvo urk) 0)))
 
         (fn [{otsikko :otsikko}]
-          (= otsikko "12 Pohjois-Pohjanmaa"))
+          (= otsikko "48 Pohjois-Suomi"))
         (fn [[alue tpp tur urk & _]]
           (and (= alue "Kajaanin alueurakka 2014-2019")
                (= (apurit/raporttisolun-arvo tpp) 0)
@@ -240,7 +280,7 @@
                (= (apurit/raporttisolun-arvo tur) 3)
                (= (apurit/raporttisolun-arvo urk) 0)))
         (fn [{[alue tpp tur urk & _] :rivi}]
-          (and (= alue "Pohjois-Pohjanmaa yhteensä")
+          (and (= alue "Pohjois-Suomi yhteensä")
                (= (apurit/raporttisolun-arvo tpp) 0)
                (= (apurit/raporttisolun-arvo tur) 5)
                (= (apurit/raporttisolun-arvo urk) 0)))
@@ -266,7 +306,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :ilmoitusraportti
                                  :konteksti "koko maa"
-                                 :hallintayksikko-id nil
+                                 :elinvoimakeskus-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
                                               :urakkatyyppi :kaikki

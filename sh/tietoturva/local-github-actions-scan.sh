@@ -15,10 +15,10 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # Rajoitetaan skannattavat kohteet vain .github-hakemistoon
 # Työkalun ei ole tarpeen päästä käsiksi projektin muihin osiin
-GITHUB_DIR="$PROJECT_DIR/.github"
+GITHUB_DIR="$PROJECT_DIR/.github/"
 ZIZMOR_IMAGE="ghcr.io/zizmorcore/zizmor:latest"
 # .github hakemiston alla olevat kohteet, jotka halutaan skannata.
-ZIZMOR_TARGETS="workflows/ actions/ dependabot.yml"
+ZIZMOR_TARGETS=".github/workflows/ .github/actions/ .github/dependabot.yml"
 
 help() {
     echo "Käyttö: $0 [OPTIONS] [-- ZIZMOR_OPTIONS...]"
@@ -49,19 +49,20 @@ run_zizmor() {
     # Jos ei olla fix-tilassa, mountataan read-only
     # Tämä lisää tietoturvaa, koska skannauksessa ei tarvita kirjoitusoikeuksia.
     if [[ -z "$FIX_MODE" ]]; then
-        mount_opts=":ro"
+        mount_opts=",ro"
     fi
 
     # Disabloidaan SC2086, koska haluamme välittää inputit word-splitattuina
     # Käytetään kuitenkin "--", jotta Zizmor ei tulkitse inputteja optioina.
     # shellcheck disable=SC2086
+    # Zizmorille täytyy luoda ".github"-hakemisto workdiriin, koska se olettaa sen olevan olemassa.
     docker run --rm \
-        -v "$GITHUB_DIR:/workdir${mount_opts}" \
+        --mount "type=bind,src=$GITHUB_DIR,dst=/workdir/.github${mount_opts}" \
         --workdir "/workdir" \
         "$ZIZMOR_IMAGE" \
         "$@" \
         --collect=workflows,actions,dependabot \
-        --config "zizmor.yml" \
+        --config ".github/zizmor.yml" \
         -- \
         $ZIZMOR_TARGETS
 }

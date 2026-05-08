@@ -49,7 +49,7 @@
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "carement" portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (= 1 (count (:urakat encoodattu-body))))
+    (is (= 5 (count (:urakat encoodattu-body))))
     (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi]))))
 
   (let [_ (anna-lukuoikeus "livi")

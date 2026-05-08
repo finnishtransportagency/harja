@@ -32,7 +32,7 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.contains('Määrämitattavat').should('exist')
     });
 
-    it('Avataan Toteumat / Tehtävät listaus', function ()
+    it('Lisää toteuma toimii', function ()
     {
         cy.intercept('POST', '_/maarien-toteutumien-toimenpiteiden-tehtavat').as('hae-tehtavat');
         // Tarkistetaan, että ollaan oikealla sivulla
@@ -41,12 +41,12 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.contains('Lisää toteuma').should('exist')
 
         // Lisätään uusi toteuma - Avataan näkymä
-        cy.contains('Lisää toteuma').click()
+        cy.get('[data-cy="lisaa-toteuma-nappi"]', {timeout: clickTimeout}).click()
         // Varmista, että tehtävähaku on valmistunut
         cy.wait('@hae-tehtavat', {timeout: clickTimeout})
 
         // Valitaan Toimenpide
-        cy.get('label[for=toimenpide] + div').valinnatValitse({valinta: '4 PÄÄLLYSTEIDEN PAIKKAUS'})
+        cy.get('[data-cy="toimenpide-valikko"]').valinnatValitse({valinta: '4 PÄÄLLYSTEIDEN PAIKKAUS'})
         cy.wait(100)
 
         // Valitse tehtävä

@@ -30,16 +30,16 @@
     [:div.row
      [:div.col-md-4
       (if (nil? hallintayksikot)
-        [yleiset/ajax-loader "Hallintayksiköitä haetaan..."]
-        [:span
-         [:h5.haku-otsikko "Valitse hallintayksikkö"]
+        [yleiset/ajax-loader "Elinvoimakeskuksia haetaan..."]
+        [:div
+         [:h5.haku-otsikko "Valitse elinvoimakeskus"]
          [:div
           ^{:key "hy-lista"}
-          [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
+          [suodatettu-lista {:format hal/evknumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko!
-                             :aputeksti "Kirjoita hallintayksikön nimi tähän"
-                             :aria-label "Hallintayksikön nimi"}
+                             :aputeksti "Kirjoita elinvoimakeskuksen nimi tähän"
+                             :aria-label "Elinvoimakeskuksen nimi"}
            hallintayksikot]]])]
      [:div.col-md-8
       [kartta/kartan-paikka hallintayksikot]]]))

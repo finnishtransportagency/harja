@@ -146,7 +146,7 @@ SELECT
                                       AND urakka = u.id
                                       AND st.poistettu = FALSE)) AS "d"
 FROM urakka u
-  WHERE u.hallintayksikko = :hallintayksikko AND u.tyyppi IN ('hoito', 'teiden-hoito')
+  WHERE u.elinvoimakeskus_id = :elinvoimakeskus AND u.tyyppi IN ('hoito', 'teiden-hoito')
   AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
 ORDER BY u.nimi;
 
@@ -162,7 +162,7 @@ SELECT
                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
                                      AND urakka IN (SELECT id
                                                     FROM urakka
-                                                    WHERE hallintayksikko = h.id
+                                                    WHERE elinvoimakeskus_id = h.id
                                                           AND tyyppi IN ('hoito', 'teiden-hoito')
                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                           AND EXTRACT(YEAR FROM loppupvm))
@@ -175,7 +175,7 @@ SELECT
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
                                       AND urakka IN (SELECT id
                                                      FROM urakka
-                                                     WHERE hallintayksikko = h.id
+                                                     WHERE elinvoimakeskus_id = h.id
                                                            AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
@@ -188,7 +188,7 @@ SELECT
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
                                       AND urakka IN (SELECT id
                                                      FROM urakka
-                                                     WHERE hallintayksikko = h.id
+                                                     WHERE elinvoimakeskus_id = h.id
                                                            AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
@@ -201,15 +201,15 @@ SELECT
                                 WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
                                       AND urakka IN (SELECT id
                                                      FROM urakka
-                                                     WHERE hallintayksikko = h.id
+                                                     WHERE elinvoimakeskus_id = h.id
                                                            AND tyyppi IN ('hoito', 'teiden-hoito')
                                                            AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
                                                            AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "d"
 FROM organisaatio h
-  WHERE tyyppi = 'hallintayksikko'
-  AND elynumero IS NOT NULL
-ORDER BY h.elynumero;
+  WHERE tyyppi = 'elinvoimakeskus'
+  AND elinvoimakeskusnumero IS NOT NULL
+ORDER BY h.elinvoimakeskusnumero;
 
 -- name: hae-urakan-tarkastettujen-siltojen-lkm
 SELECT

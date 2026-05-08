@@ -8,7 +8,7 @@
         <kohteet>
             <kohde>
                 <yha-id>99</yha-id>
-                <harja-id>31</harja-id>
+                <harja-id>74</harja-id>
                 <kohdetyyppi>1</kohdetyyppi>
                 <kohdetyotyyppi>paallystys</kohdetyotyyppi>
                 <nimi>Pottilan AB-levityskohde</nimi>
@@ -49,7 +49,7 @@
                 </alustalle-tehdyt-toimet>
                 <kulutuskerrokselle-tehdyt-toimet>
                     <kulutuskerrokselle-tehty-toimenpide>
-                        <harja-id>44</harja-id>
+                        <harja-id>81</harja-id>
                         <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2022-12-13</karttapaivamaara>

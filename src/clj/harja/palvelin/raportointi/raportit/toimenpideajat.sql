@@ -19,7 +19,7 @@ SELECT
    AND u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND u.urakkanro IS NOT NULL
-   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:elinvoimakeskus::integer IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
 GROUP BY u.nimi, tpk.nimi, tunti, hl.hoitoluokka;
 
 -- name: hae-toimenpidepaivien-lukumaarat
@@ -34,7 +34,7 @@ FROM toteuma t
   LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
   LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(rp.talvihoitoluokka::INTEGER, t.alkanut) AS hoitoluokka) hl ON TRUE
   JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio o ON u.hallintayksikko = o.id
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
   JOIN tehtava toimkood ON tt.toimenpidekoodi = toimkood.id
 WHERE ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
@@ -43,5 +43,5 @@ WHERE ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (
       AND u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])
       AND (:urakka::integer IS NULL OR u.id = :urakka)
       AND u.urakkanro IS NOT NULL
-      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:elinvoimakeskus::integer IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
 GROUP BY u.id, o.id, tpk, hl.hoitoluokka;

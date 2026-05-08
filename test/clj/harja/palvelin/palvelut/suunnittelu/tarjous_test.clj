@@ -437,6 +437,9 @@
         urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi vuosi :summa 0.00M}) vuodet)
         tietomallitarjous (assoc apurit/tarjous-tietomalli-2025 :urakka-id urakka-id)

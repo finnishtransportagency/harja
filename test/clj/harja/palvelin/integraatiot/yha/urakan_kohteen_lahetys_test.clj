@@ -243,13 +243,13 @@
    {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id 5731290]
-    [:harja-id 55]
+    [:harja-id 61]
     [:sampotunnus "5731290-TES2"]
     [:tunnus "YHA5731290"]
     [:kohteet
      [:kohde
       [:yha-id 123456]
-      [:harja-id 32]
+      [:harja-id 75]
       [:kohdenumero 1]
       [:kohdetyyppi 1]
       [:kohdetyotyyppi "paallystys"]
@@ -369,7 +369,7 @@
       [:kulutuskerrokselle-tehdyt-toimet
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123457]
-        [:harja-id 45]
+        [:harja-id 82]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
@@ -412,7 +412,7 @@
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123458]
-        [:harja-id 46]
+        [:harja-id 83]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
@@ -427,7 +427,7 @@
         [:pinta-ala 2600M]
         [:paallystetyomenetelma 31]
         [:massamenekki 90.0M]
-        [:rc-prosentti 10.0M]
+        [:rc-prosentti 10M]
         [:kokonaismassamaara 260M]
         [:massa
          [:massatyyppi 12]
