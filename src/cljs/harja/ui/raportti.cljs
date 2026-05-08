@@ -296,6 +296,9 @@
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
   [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
 
+(defmethod muodosta-html :info-laatikko [[_ ensisijainen-teksti toissijainen-teksti leveys]]
+  (yleiset/info-laatikko :vahva-ilmoitus ensisijainen-teksti toissijainen-teksti leveys  {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "pull-right"}))
+
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
   [:h1 {:style {:font-size "12px"}} teksti])
 

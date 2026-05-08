@@ -313,7 +313,9 @@
      ;;    Budjettia jäljellä                                        ;;
      ;; ------------------------------------------------------------ ;;
 
-
+     [:info-laatikko "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
+      "Laskenta tehdään ei vahvistetuilla tiedoilla, jotka saattavat päivittyä, kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan."
+      800]
      (if laskutusraja-kaytossa?
        (taulukot/valitaulukko-laskutusraja {:data rivitiedot
                                             :otsikko "Laskutusraja"
