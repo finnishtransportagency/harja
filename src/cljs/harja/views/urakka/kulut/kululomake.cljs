@@ -497,6 +497,8 @@
         toimenpiteet (:toimenpiteet app)
         lomake (:lomake app)
         erapaiva (:erapaiva lomake)
+        paivia-kulunut-erapaivasta (pvm/paivia-valissa erapaiva (pvm/nyt))
+        erapaivasta-yli-2kk? (if (> paivia-kulunut-erapaivasta 59) true false)
         kohdistukset (:kohdistukset lomake)
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
@@ -512,7 +514,8 @@
                           (some #(and
                                    (= erapaivan-hoitovuosi (:vuosi %))
                                    (:paatos-tehty? %))
-                            (:vuosittaiset-valikatselmukset app))))
+                            (:vuosittaiset-valikatselmukset app)))
+                        erapaivasta-yli-2kk?)
         ;; Vuoden päätöksen kulut voivatkin olla urakoitsijan maksettavia!
         urakoitsija-maksaa? (and (:vuoden-paatos-valittu? lomake)
                               (=
