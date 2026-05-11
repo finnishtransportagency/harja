@@ -61,7 +61,6 @@
                              (> (:id %) 0))
                        (:id %)))
               uudet-yhteyshenkilot)
-            _ (js/console.log "TALLENNETTAVAT:" (pr-str tallennettavat))
             res (<! (tiedot/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
         (reset! paivystajat/yhteyshenkilot-haettu? false)
@@ -673,7 +672,7 @@
            :leveys 17
            :tyyppi :valinta
            :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+           :valinnat [nil (:urakoitsija ur) (:elinvoimakeskus ur)]}
 
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                    nimi
