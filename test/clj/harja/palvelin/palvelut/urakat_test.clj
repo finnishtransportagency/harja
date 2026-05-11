@@ -347,7 +347,7 @@
                   (catch Exception e e))
         projektikansio-linkki-kannassa (ffirst (q (str "SELECT projektikansio_linkki FROM urakka WHERE id = " urakka-id)))]
     (is (= IllegalArgumentException (type vastaus)))
-    (is (= "Projektikansion linkin pitää olla http- tai https-osoite." (.getMessage vastaus)))
+    (is (= "Projektikansion linkki ei ole kelvollinen – anna verkkoosoite, esim. esimerkki.fi tai https://esimerkki.fi." (.getMessage vastaus)))
     (is (nil? projektikansio-linkki-kannassa))))
 
 (deftest urakan-projektikansiolinkin-tyhja-arvo-normalisoituu-niliksi
@@ -372,3 +372,40 @@
        :projektikansio-linkki "https://vayla.sharepoint.example/ei-oikeutta"})
     (catch EiOikeutta e
       (is e))))
+
+(deftest urakan-projektikansiolinkin-skeema-lisataan-automaattisesti
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-projektikansio-linkki urakanvalvoja
+                  {:urakka-id urakka-id
+                   :projektikansio-linkki "vayla.sharepoint.example/projektikansio"})
+        projektikansio-linkki-kannassa (ffirst (q (str "SELECT projektikansio_linkki FROM urakka WHERE id = " urakka-id)))]
+    (is (= {:projektikansio-linkki "https://vayla.sharepoint.example/projektikansio"} vastaus))
+    (is (= "https://vayla.sharepoint.example/projektikansio" projektikansio-linkki-kannassa))
+    (u (str "UPDATE urakka SET projektikansio_linkki = NULL WHERE id = " urakka-id))))
+
+(deftest urakan-projektikansiolinkin-http-korotetaan-httpsiksi
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-urakan-projektikansio-linkki urakanvalvoja
+                  {:urakka-id urakka-id
+                   :projektikansio-linkki "http://vayla.sharepoint.example/projektikansio"})
+        projektikansio-linkki-kannassa (ffirst (q (str "SELECT projektikansio_linkki FROM urakka WHERE id = " urakka-id)))]
+    (is (= {:projektikansio-linkki "https://vayla.sharepoint.example/projektikansio"} vastaus))
+    (is (= "https://vayla.sharepoint.example/projektikansio" projektikansio-linkki-kannassa))
+    (u (str "UPDATE urakka SET projektikansio_linkki = NULL WHERE id = " urakka-id))))
+
+(deftest urakan-projektikansiolinkin-ilman-pistetta-hylataan
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-projektikansio-linkki urakanvalvoja
+                    {:urakka-id urakka-id
+                     :projektikansio-linkki "pelkkateksti"})
+                  (catch Exception e e))
+        projektikansio-linkki-kannassa (ffirst (q (str "SELECT projektikansio_linkki FROM urakka WHERE id = " urakka-id)))]
+    (is (= IllegalArgumentException (type vastaus)))
+    (is (nil? projektikansio-linkki-kannassa))))

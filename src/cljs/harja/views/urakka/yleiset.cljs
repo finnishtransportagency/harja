@@ -623,9 +623,9 @@
                    {:disabled (not voi-muokata?)
                     :virheviesti "Projektikansion tallennus epäonnistui"
                     :nayta-virheviesti? false
-                    :kun-onnistuu (fn [_]
+                    :kun-onnistuu (fn [vastaus]
                                     (viesti/nayta! "Projektikansio tallennettu" :success)
-                                    (nav/paivita-urakan-tiedot! id assoc :projektikansio-linkki (projektikansio-linkki-arvo lomaketiedot))
+                                    (nav/paivita-urakan-tiedot! id assoc :projektikansio-linkki (:projektikansio-linkki vastaus))
                                     (avaa-toggle-fn))
                     :kun-virhe (fn [vastaus]
                                  (viesti/nayta-toast! (or (:virhe (:response vastaus))

@@ -25,7 +25,7 @@
 
 (def ^{:const true} oletus-toleranssi 50)
 
-(def ^:private sallitut-projektikansio-linkin-skeemat #{"http" "https"})
+(def ^:private sallitut-projektikansio-linkin-skeemat #{"https"})
 
 (defn urakan-paivamaarat
   [db id]
@@ -304,16 +304,24 @@
 (defn- normalisoi-projektikansio-linkki [projektikansio-linkki]
   (let [normalisoitu-linkki (not-empty (str/trim (or projektikansio-linkki "")))]
     (when normalisoitu-linkki
-      (let [uri (try
+      (let [;; Lisätään https:// eteen, jos skeema puuttuu; korotetaan http:// → https://
+            normalisoitu-linkki (cond
+                                  (str/starts-with? normalisoitu-linkki "https://") normalisoitu-linkki
+                                  (str/starts-with? normalisoitu-linkki "http://") (str "https://" (subs normalisoitu-linkki (count "http://")))
+                                  :else (str "https://" normalisoitu-linkki))
+            uri (try
                   (java.net.URI. normalisoitu-linkki)
                   (catch Exception _
                     nil))
-            skeema (some-> uri .getScheme str/lower-case)]
+            skeema (some-> uri .getScheme str/lower-case)
+            host (some-> uri .getHost)]
         (when-not (and uri
                     (.isAbsolute uri)
-                    (contains? sallitut-projektikansio-linkin-skeemat skeema))
-          (throw (IllegalArgumentException. "Projektikansion linkin pitää olla http- tai https-osoite.")))))
-    normalisoitu-linkki))
+                    (contains? sallitut-projektikansio-linkin-skeemat skeema)
+                    (some? host)
+                    (str/includes? host "."))
+          (throw (IllegalArgumentException. "Projektikansion linkki ei ole kelvollinen – anna verkkoosoite, esim. esimerkki.fi tai https://esimerkki.fi.")))
+        normalisoitu-linkki))))
 
 (defn tallenna-urakan-projektikansio-linkki [db user {:keys [urakka-id projektikansio-linkki]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)

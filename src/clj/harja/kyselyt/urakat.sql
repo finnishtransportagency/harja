@@ -815,6 +815,7 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
+  u.projektikansio_linkki       AS "projektikansio-linkki",
   u.alue,
   u.alkupvm,
   u.loppupvm,
