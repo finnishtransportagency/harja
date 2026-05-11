@@ -294,7 +294,7 @@ SELECT
     u.nimi,
     u.lyhyt_nimi,
     u.sampoid,
-  u.projektikansio_linkki                 AS "projektikansio-linkki",
+    u.projektikansio_linkki               AS "projektikansio-linkki",
     CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
              THEN ST_SimplifyPreserveTopology(u.alue, 50)
         END as alue,

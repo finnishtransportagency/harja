@@ -595,9 +595,9 @@
         (aseta-takuun-loppupvm db user tiedot)))
 
     (julkaise-palvelu http
-  :tallenna-urakan-projektikansio-linkki
-  (fn [user tiedot]
-    (tallenna-urakan-projektikansio-linkki db user tiedot)))
+      :tallenna-urakan-projektikansio-linkki
+      (fn [user tiedot]
+        (tallenna-urakan-projektikansio-linkki db user tiedot)))
 
     (julkaise-palvelu http
       :poista-indeksi-kaytosta

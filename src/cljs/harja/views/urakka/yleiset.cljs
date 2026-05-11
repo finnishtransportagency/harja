@@ -695,8 +695,8 @@ tietorivit ["Urakan nimi:" (:nimi ur)
                     "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                                   [urakan-indeksi ur])
                     "Urakan kesäaika: " [urakan-kesa-aika ur]
-    "Projektikansio: " [urakan-projektikansio ur]
-    "Analytiikkaportaali: " [yleiset/staattinen-linkki-uuteen-valilehteen analytiikkaportaalin-linkki analytiikkaportaalin-linkki]]
+                    "Projektikansio: " [urakan-projektikansio ur]
+                    "Analytiikkaportaali: " [yleiset/staattinen-linkki-uuteen-valilehteen analytiikkaportaalin-linkki analytiikkaportaalin-linkki]]
    tietorivit (cond-> tietorivit
                 paallystysurakka?
                 (conj "Laatutiedot: "
