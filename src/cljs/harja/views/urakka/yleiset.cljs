@@ -47,7 +47,7 @@
             (into []
               ;; Kaikki tiedon mankelointi ennen lähetystä tähän
               (comp (filter #(not (:poistettu %)))
-                (map #(into {} (filter (fn [[k _]] (keyword? k)) %)))
+                (map #(select-keys % (filter keyword? (keys %))))
                 (map #(if-let [nimi (:nimi %)]
                         (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                           (assoc %
