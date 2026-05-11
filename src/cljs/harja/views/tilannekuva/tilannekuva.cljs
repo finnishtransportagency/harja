@@ -173,7 +173,7 @@
          (when @auki?
            sisalto)]))))
 
-(def tilannekuvan-alueet ely/elynumerot-jarjestyksessa)
+(def tilannekuvan-alueet ely/evknumerot-jarjestyksessa)
 
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
@@ -186,15 +186,15 @@
         :otsikon-luokka "fontti-taso2"}
        [:div.tk-suodatinryhmat
         (doall
-          (for [elynumero tilannekuvan-alueet]
-            ^{:key (str tyyppi "-aluesuodatin-alueelle-" elynumero)}
-            [checkbox-suodatinryhma (ely/elynumero->nimi elynumero) tiedot/suodattimet
-             [:alueet tyyppi elynumero]
+          (for [evknumero tilannekuvan-alueet]
+            ^{:key (str tyyppi "-aluesuodatin-alueelle-" evknumero)}
+            [checkbox-suodatinryhma (ely/evknumero->nimi evknumero) tiedot/suodattimet
+             [:alueet tyyppi evknumero]
              {:luokka "taustavari-taso3 ylaraja"
               :sisallon-luokka "taustavari-taso4"
               :otsikon-luokka "fontti-taso3"
               :nayta-lkm? true
-              :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi elynumero]) false)}]))]])))
+              :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi evknumero]) false)}]))]])))
 
 (defn- aluesuodattimet []
   (komp/luo

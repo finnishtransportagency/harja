@@ -539,7 +539,7 @@
                        (when peruuta (peruuta))
                        nil)}
          "Peruuta"])])
-   (when nayta-otsikko? [:h6.panel-title otsikko])
+   (when (and nayta-otsikko? (not (str/blank? otsikko))) [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- sort-ikoni [suunta]
@@ -558,7 +558,8 @@
         (map-indexed
           (fn [idx {:keys [teksti sarakkeita tasaa luokka]}]
             ^{:key idx}
-            [:th {:colSpan (or sarakkeita 1)
+            [:th {:scope "col"
+                  :colSpan (or sarakkeita 1)
                   :class (y/luokat luokka
                            (y/tasaus-luokka tasaa))}
              [:div teksti]])
@@ -568,7 +569,8 @@
         (map-indexed
           (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
             ^{:key (str i nimi)}
-            [:th {:class (y/luokat otsikkorivi-luokka
+            [:th {:scope "col"
+                  :class (y/luokat otsikkorivi-luokka
                            (y/tasaus-luokka tasaa)
                            (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
                   :width (or leveys "5%")

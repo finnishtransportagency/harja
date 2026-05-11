@@ -1,18 +1,11 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel
   "Excelin luonti kustannus seuranta -datasta."
-  (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [throw+ try+]]
-            [harja.domain.skeema :refer [Toteuma validoi]]
+  (:require [clojure.string :as str]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
             [harja.palvelin.raportointi.excel :as excel]
-            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str]))
+            [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
+            [harja.kyselyt.urakat :as urakat-q]))
 
 
 (defn- laske-prosentti [tot bud]
@@ -43,7 +36,7 @@
                 prosentti (laske-prosentti toteutunut-summa budjetoitu-summa-indeksikorjattu)]
             [{:paaryhma nil
               :toimenpide nil
-              :tehtava_nimi (:tehtava_nimi tehtava)
+              :tehtava_nimi (or (:muutostyo_syy tehtava) (:tehtava_nimi tehtava))
               :toteutunut_summa toteutunut-summa
               :budjetoitu_summa (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa)
               :budjetoitu_summa_indeksikorjattu (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa-indeksikorjattu)
@@ -250,8 +243,8 @@
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm
                                         :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})
-        
-        kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain)
+        urakan-sopimustyyppi (:sopimustyyppi (first (urakat-q/hae-urakan-tiedot db {:id urakka-id})))
+        kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain urakan-sopimustyyppi)
 
         hankintakustannusten-toimenpiteet (rivita-toimenpiteet
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])

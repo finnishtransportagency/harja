@@ -32,13 +32,13 @@
                            (reduce conj toteutuneet-materiaalit suunnitellut-materiaalit-ilman-toteumia))]
     (sort-by :elynumero lopullinen-tulos)))
 
-(defn muodosta-materiaaliraportti-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm]}]
-  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " hallintayksikko-id alkupvm loppupvm)
+(defn muodosta-materiaaliraportti-hallintayksikolle [db {:keys [elinvoimakeskus-id alkupvm loppupvm]}]
+  (log/debug "Haetaan hallintayksikon toteutuneet materiaalit raporttia varten: " elinvoimakeskus-id alkupvm loppupvm)
   (let [toteutuneet-materiaalit (into []
                                   (materiaalit-q/hae-hallintayksikon-toteutuneet-materiaalit-raportille db
                                     {:alku (konv/sql-timestamp alkupvm)
                                      :loppu (konv/sql-timestamp loppupvm)
-                                     :hallintayksikko hallintayksikko-id}))]
+                                     :elinvoimakeskus elinvoimakeskus-id}))]
     toteutuneet-materiaalit))
 
 (defn muodosta-materiaaliraportti-koko-maalle [db {:keys [alkupvm loppupvm]}]
@@ -60,9 +60,9 @@
     "Talvisuola, NaCl (t)"))
 
 (defn suorita [db user {:keys [urakka-id
-                               hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
+                               elinvoimakeskus-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :else :koko-maa)
         toteumat
         (cond
@@ -72,9 +72,9 @@
                                                     :loppupvm loppupvm})
 
 
-          (and hallintayksikko-id alkupvm loppupvm)
+          (and elinvoimakeskus-id alkupvm loppupvm)
           (muodosta-materiaaliraportti-hallintayksikolle db
-            {:hallintayksikko-id hallintayksikko-id
+            {:elinvoimakeskus-id elinvoimakeskus-id
              :alkupvm alkupvm
              :loppupvm loppupvm
              :urakkatyyppi urakkatyyppi})
@@ -87,7 +87,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         ;; Aluksi pitää laittaa materiaalit järjestykseen nimen (string) perusteella, sitten liittää
@@ -104,13 +104,13 @@
                                                                                  toteumat))))
         toteumat-urakan-mukaan (when (not= konteksti :koko-maa)
                                  (group-by :urakka-nimi toteumat))
-        toteumat-elyn-mukaan (when (= konteksti :koko-maa)
+        toteumat-evkn-mukaan (when (= konteksti :koko-maa)
                                (map
-                                 (fn [ely]
-                                   (let [elyn-toteumat (filter #(= ely (:elynumero %)) toteumat)]
-                                     (vector (:hallintayksikko-nimi (first elyn-toteumat))
-                                       elyn-toteumat)))
-                                 (sort (distinct (map :elynumero toteumat)))))]
+                                 (fn [evk]
+                                   (let [evkn-toteumat (filter #(= evk (:elinvoimakeskusnumero %)) toteumat)]
+                                     (vector (:elinvoimakeskus-nimi (first evkn-toteumat))
+                                       evkn-toteumat)))
+                                 (sort (distinct (map :elinvoimakeskusnumero toteumat)))))]
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
@@ -128,7 +128,7 @@
           []
           (concat
             ;; Tehdään rivi jokaiselle alueelle, jossa sen yhteenlasketut toteumat
-            (for [[alue toteumat] (or toteumat-urakan-mukaan toteumat-elyn-mukaan)]
+            (for [[alue toteumat] (or toteumat-urakan-mukaan toteumat-evkn-mukaan)]
               (into []
                 (concat [alue]
                   (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]

@@ -174,9 +174,7 @@
                                                  (konv/sql-timestamp (second toimenpiteet-aloitettu-aikavali)))
          urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                   db user (fn [urakka-id kayttaja]
-                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
-                                                 urakka-id
-                                                 kayttaja))
+                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
                   urakka urakoitsija
                   (case urakkatyyppi
                     :kaikki nil
@@ -220,7 +218,8 @@
              (into []
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
-                     {:urakat urakat
+                     {:urakat_annettu (some? urakat)
+                      :urakat urakat
                       :alku_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-alku)
                       :loppu_annettu (hakuehto-annettu? valitetty-urakkaan-aikavali-loppu)
                       :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
@@ -278,19 +277,19 @@
 
 (defn hae-ilmoitukset-raportille
   "Palauttaa ilmoitukset raporttia varten, minimaalisella tietosisällöllä ja ilman hidastavaa sorttausta."
-  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali]}]
+  [db user {:keys [elinvoimakeskus urakka urakoitsija urakkatyyppi aikavali]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-timestamp (first aikavali)))
         aikavali-loppu (when (second aikavali)
                          (konv/sql-timestamp (second aikavali)))
         urakat (cond urakka
-                     [urakka]
+                 [urakka]
 
-                     hallintayksikko
-                     (map :id (ur-q/hae-hallintayksikon-urakat db hallintayksikko))
+                 elinvoimakeskus
+                 (map :id (ur-q/hae-elinvoimakeskuksen-urakat db {:evk_id elinvoimakeskus}))
 
-                     :default ;; Kaikki urakat
-                     nil)
+                 :default ;; Kaikki urakat
+                 nil)
         debug-viesti (str "Haetaan ilmoituksia raportille: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti urakat "urakoista" "ilman urakoita")

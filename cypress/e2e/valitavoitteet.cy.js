@@ -58,7 +58,7 @@ describe('Välitavoitteet - Perustoiminnallisuus', () => {
 
     beforeEach(() => {
         cy.intercept('POST', '_/hae-urakan-valitavoitteet').as('hae-valitavoitteet');
-        avaaValitavoitteet('Oulun MHU 2019-2024', 'Pohjois-Pohjanmaa');
+        avaaValitavoitteet('Oulun MHU 2019-2024', 'Pohjois-Suomi');
         cy.wait('@hae-valitavoitteet');
     });
 
