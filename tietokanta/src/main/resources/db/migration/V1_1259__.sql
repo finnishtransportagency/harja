@@ -377,7 +377,6 @@ WITH profiilirivit (profiili_nimi, laji_koodi, sanktiotyyppi_koodi, soveltuvuusk
         ('teiden-hoito-mhu2025', 'pohjavesisuolan_ylitys', 7, 'urakka', 1),
         ('teiden-hoito-mhu2025', 'talvisuolan_ylitys', 7, 'urakka', 1),
         ('teiden-hoito-mhu2025', 'tenttikeskiarvo-sanktio', 0, 'urakka', 1),
-        ('teiden-hoito-mhu2025', 'testikeskiarvo-sanktio', 0, 'urakka', 1),
         ('teiden-hoito-mhu2025', 'vaihtosanktio', 0, 'urakka', 1),
         ('teiden-hoito-mhu2025', 'laskutus_yli_laskutusrajan', 0, 'urakka', 1),
         ('teiden-hoito-mhu2025', 'muistutus', 13, 'laatupoikkeama', 1),
