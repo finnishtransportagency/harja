@@ -148,6 +148,22 @@
     ;; MHU ja muut
     :else [:muistutus :A :B :C :arvonvahennyssanktio]))
 
+(defn sanktio-konfiguraation-lajin-tiedot
+  [sanktio-konfiguraatio laji]
+  (some #(when (= laji (:laji %)) %) (:sanktio-lajit sanktio-konfiguraatio)))
+
+(defn sanktio-konfiguraation-lajit
+  [sanktio-konfiguraatio]
+  (mapv :laji (:sanktio-lajit sanktio-konfiguraatio)))
+
+(defn sanktio-konfiguraation-lajin-nimi
+  [sanktio-konfiguraatio laji]
+  (:nimi (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji)))
+
+(defn sanktio-konfiguraation-sanktiotyypit
+  [sanktio-konfiguraatio laji]
+  (vec (:sanktiotyypit (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji))))
+
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])

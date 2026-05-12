@@ -22,10 +22,7 @@
   (let [nyt (pvm/nyt)
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:suorasanktio true
-     :laji (cond
-             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
-             (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-             :else :yllapidon_sakko)
+     :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi @urakka/valitun-urakan-sanktiolajit)
      :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))

@@ -2,6 +2,7 @@
   "Tämä nimiavaruus hallinnoi urakan usealle toiminnolle yhteisiä tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
+            [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -19,7 +20,8 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as urakka-domain])
 
-  (:require-macros [reagent.ratom :refer [reaction]]))
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn urakan-oletussopimus [urakka]
   (let [{:keys [sopimukset paasopimus]} urakka]
@@ -498,20 +500,100 @@
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
 
-(def valitun-urakan-sanktiolajit
-  "Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan."
+(defn- sanktio-konfiguraation-soveltuvuuskonteksti
+  [ls-sivu vv-ls-sivu]
+  (cond
+    (= :laatupoikkeamat ls-sivu) :laatupoikkeama
+    (or (= :sanktiot ls-sivu)
+      (= :vesivayla-sanktiot vv-ls-sivu)) :urakka
+    :else nil))
+
+(defonce valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? (atom false))
+(defonce valitun-urakan-sanktio-konfiguraation-pyynto-id (atom 0))
+
+(defn- hae-urakan-sanktio-konfiguraatio
+  [urakka-id hoitovuosi soveltuvuuskonteksti]
+  (let [pyynto-id (swap! valitun-urakan-sanktio-konfiguraation-pyynto-id inc)
+        vastaus-ch (k/post! :hae-urakan-sanktio-konfiguraatio
+                    {:urakka-id urakka-id
+                     :hoitovuosi hoitovuosi
+                     :soveltuvuuskonteksti soveltuvuuskonteksti})]
+    (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? true)
+    (go
+      (<! vastaus-ch)
+      (when (= pyynto-id @valitun-urakan-sanktio-konfiguraation-pyynto-id)
+        (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? false)))
+    vastaus-ch))
+
+(defn sanktio-konfiguraation-tila
+  [sanktio-konfiguraatio haku-kaynnissa?]
+  (cond
+    haku-kaynnissa?
+    :haku-kaynnissa
+
+    (seq (sanktio-domain/sanktio-konfiguraation-lajit sanktio-konfiguraatio))
+    :valmis
+
+    (and (some? sanktio-konfiguraatio)
+         (k/virhe? sanktio-konfiguraatio))
+    :haku-epaonnistui
+
+    :else
+    :ei-konfiguraatiota))
+
+(defn oletus-uuden-sanktion-laji
+  [urakkatyyppi mahdolliset-sanktiolajit]
+  (cond
+    (urakka-domain/mh-tai-hoitourakka? urakkatyyppi)
+    (first mahdolliset-sanktiolajit)
+
+    (urakka-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+    :vesivayla_sakko
+
+    :else
+    :yllapidon_sakko))
+
+(def valitun-urakan-sanktio-konfiguraatio
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+               ls-sivu (nav/valittu-valilehti :laadunseuranta)
+               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+               valittu-hoitokausi @valittu-hoitokausi]
+              {:nil-kun-haku-kaynnissa? true}
+              (let [soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+                    hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                                 (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+                (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+                  (hae-urakan-sanktio-konfiguraatio urakka-id hoitovuosi soveltuvuuskonteksti)))))
+
+(def valitun-urakan-sanktio-konfiguraation-tila
   (reaction
-    (let [urakka @nav/valittu-urakka
+    (let [urakka-id (:id @nav/valittu-urakka)
+          urakan-alkupvm (:alkupvm @nav/valittu-urakka)
           ls-sivu (nav/valittu-valilehti :laadunseuranta)
-          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
-      (when (and urakka (or (= :laatupoikkeamat ls-sivu)
-                          (= :sanktiot ls-sivu)
-                          (= :vesivayla-sanktiot vv-ls-sivu)))
-        (if (= :laatupoikkeamat ls-sivu)
-          ;; Laatupoikkeamille on omat karsitut sanktiolajien listaukset riippuen urakkatyypistä
-          (sanktio-domain/laatupoikkeaman-sanktiolajit urakka)
-          ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
-          (sanktio-domain/urakan-sanktiolajit urakka))))))
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+          valittu-hoitokausi @valittu-hoitokausi
+          soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+          hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                       (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+      (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+        (sanktio-konfiguraation-tila
+          @valitun-urakan-sanktio-konfiguraatio
+          @valitun-urakan-sanktio-konfiguraation-haku-kaynnissa?)))))
+
+(defn valitun-urakan-sanktiolajin-nimi
+  [laji]
+  (or (sanktio-domain/sanktio-konfiguraation-lajin-nimi @valitun-urakan-sanktio-konfiguraatio laji)
+    (sanktio-domain/sanktiolaji->teksti laji)))
+
+(defn valitun-urakan-sanktiotyypit
+  [laji]
+  (sanktio-domain/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
+
+(def valitun-urakan-sanktiolajit
+  "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
+  (reaction
+    (sanktio-domain/sanktio-konfiguraation-lajit @valitun-urakan-sanktio-konfiguraatio)))
 
 ;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitourakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
 ;;       Jos (def yllapitourakka?..) alempana on OK, niin tämän voi poistaa ja korvata viittaukset yllapitourakka? symbolilla.

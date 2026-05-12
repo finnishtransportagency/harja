@@ -66,3 +66,30 @@
 
     (is (= [0] lupaussanktio)
       "Lupaussanktio")))
+
+(deftest sanktio-konfiguraation-adapteri-palauttaa-lajit-ja-tyypit
+  (let [sanktio-konfiguraatio {:sanktio-lajit [{:laji :muistutus
+                                                :nimi "Muistutus"
+                                                :jarjestys 1
+                                                :sanktiotyypit [{:id 10 :koodi 13 :nimi "Tyyppi A"}
+                                                                {:id 11 :koodi 14 :nimi "Tyyppi B"}]}
+                                               {:laji :A
+                                                :nimi "Sakko"
+                                                :jarjestys 2
+                                                :sanktiotyypit [{:id 12 :koodi 17 :nimi "Tyyppi C"}]}]}]
+    (testing "Lajit tulevat resolverin jarjestyksessa"
+      (is (= [:muistutus :A]
+            (sanktio-domain/sanktio-konfiguraation-lajit sanktio-konfiguraatio))))
+
+    (testing "Lajin nimi luetaan resolverin profiilidatasta"
+      (is (= "Sakko"
+            (sanktio-domain/sanktio-konfiguraation-lajin-nimi sanktio-konfiguraatio :A))))
+
+    (testing "Sanktiotyypit tulevat suoraan resolverin lajirivilta"
+      (is (= [{:id 10 :koodi 13 :nimi "Tyyppi A"}
+              {:id 11 :koodi 14 :nimi "Tyyppi B"}]
+            (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :muistutus))))
+
+    (testing "Tuntematon laji ei palauta tyyppeja"
+      (is (= []
+            (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :tuntematon))))))
