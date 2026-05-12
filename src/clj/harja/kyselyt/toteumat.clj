@@ -23,7 +23,7 @@
   poista-toteumat-ulkoisilla-idlla-ja-luojalla!
   hae-toteumat-ilman-reittipisteita-analytiikalle
   hae-toteuman-perustiedot-ulkoisella-idlla poista-toteuma_tehtava-toteuma-idlla!
-  poista-toteuma-materiaali-toteuma-idlla!)
+  poista-toteuma-materiaali-toteuma-idlla! paivita-toteuman-muokattu!)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
