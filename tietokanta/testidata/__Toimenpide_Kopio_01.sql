@@ -16,7 +16,7 @@ DELETE FROM rahavaraus_tehtava ;
 -- TRUNCATE TABLE public.materiaaliluokka CASCADE;
 -- Alla oleva tekee about saman:
 
-TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava, 
+TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava, toteuma_tehtava_part,
     muutoshintainen_tyo, vv_tyo, kan_toimenpide, kiinteahintainen_tyo, kustannusarvioitu_tyo, urakka_tehtavamaara,
     kulu_kohdistus, toteutuneet_kustannukset, sopimus_tehtavamaara, rahavaraus_tehtava, tarjous_kustannukset,
     mhu_muutos_tehtava_ja_maaraluettelo, mhu_muutos_tehtava_tiedot, vv_materiaali, kan_hinta,
@@ -26,8 +26,8 @@ TRUNCATE yksikkohintainen_tyo, tehtava, toteuma_tehtava,
     toimenpideinstanssi_vesivaylat, kustannussuunnitelma, erilliskustannus_liite, paatos_lupaus, rahavaraus,
     rahavaraus_urakka, mhu_muutos_rahavarausmuutoksen_syy;
 
-TRUNCATE TABLE public.materiaalikoodi, materiaalin_kaytto, toteuma_materiaali, sopimuksen_kaytetty_materiaali,
-    urakan_materiaalin_kaytto_hoitoluokittain;
+TRUNCATE TABLE public.materiaalikoodi, materiaalin_kaytto, toteuma_materiaali, toteuma_materiaali_part,
+    sopimuksen_kaytetty_materiaali, urakan_materiaalin_kaytto_hoitoluokittain;
 TRUNCATE TABLE public.materiaaliluokka ;
     
 
