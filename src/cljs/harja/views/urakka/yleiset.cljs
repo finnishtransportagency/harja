@@ -53,6 +53,7 @@
             (into []
               ;; Kaikki tiedon mankelointi ennen lähetystä tähän
               (comp (filter #(not (:poistettu %)))
+                (map #(select-keys % (filter keyword? (keys %))))
                 (map #(if-let [nimi (:nimi %)]
                         (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                           (assoc %
@@ -741,7 +742,7 @@ tietorivit ["Urakan nimi:" (:nimi ur)
            :leveys 17
            :tyyppi :valinta
            :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+           :valinnat [nil (:urakoitsija ur) (:elinvoimakeskus ur)]}
 
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                    nimi
