@@ -22,6 +22,7 @@
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
             [harja.views.hallinta.tyokalut.raporttityokalu-nakyma :as raporttityokalu-nakyma]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-nakyma :as ui-komponenttien-tarkastelu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -260,5 +261,11 @@
     :viestitestaus
     (when true
       ^{:key "viestitestaus"}
-      [viestinakyma/viestitestaus])]])
+      [viestinakyma/viestitestaus])
+
+    "UI-komponenttien tarkastelu"
+    :ui-komponenttien-tarkastelu
+    (when true
+      ^{:key "ui-komponenttien-tarkastelu"}
+      [ui-komponenttien-tarkastelu-nakyma/ui-komponenttien-tarkastelu])]])
 
