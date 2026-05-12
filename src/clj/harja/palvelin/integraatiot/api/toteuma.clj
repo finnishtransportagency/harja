@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [taoensso.timbre :as log]
+  (:require [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]

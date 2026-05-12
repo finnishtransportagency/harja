@@ -486,18 +486,15 @@ WITH urakan_tehtavat AS (
       FROM toteuma t
             JOIN toteuma_tehtava tt
               ON t.id = tt.toteuma
+             AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
              AND tt.urakka_id = :urakka
              AND tt.poistettu = FALSE
-       LEFT JOIN toteuma_materiaali tm
-              ON t.id = tm.toteuma
-             AND tm.urakka_id = :urakka
-             AND tm.poistettu = FALSE
      WHERE t.urakka = :urakka
        AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
        AND t.poistettu = FALSE
   GROUP BY tt.toimenpidekoodi
 ),
-materiaalimaara AS (
+materiaalimaara AS NOT MATERIALIZED (
     -- Kohdista materiaaleina raportoitavat tehtävät tehtävätoteumina 
     -- Suolauksen alle esim talvisuolamateriaalit, ja niiden toteumat 
     -- Ref:  https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t
@@ -510,7 +507,10 @@ materiaalimaara AS (
     FROM toteuma_materiaali tm
               JOIN toteuma t
                    ON t.id = tm.toteuma AND t.poistettu IS FALSE
-              -- Materiaali linkin 'päätaulu' 
+                   AND t.urakka = :urakka
+                   AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                   AND t.poistettu IS FALSE
+              -- Materiaali linkin 'päätaulu'
               JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
               -- tehtava taulussa on materiaalin luokka, sekä koodi linkkinä 
               JOIN tehtava teh
@@ -519,10 +519,9 @@ materiaalimaara AS (
                        AND (teh.materiaalikoodi_id = tm.materiaalikoodi
                            -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
                            OR teh.materiaalikoodi_id IS NULL)
-    WHERE t.urakka = :urakka
-      AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+    WHERE tm.urakka_id = :urakka
       AND tm.poistettu IS FALSE
-      AND t.poistettu IS FALSE
+      AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
  GROUP BY teh.id, teh.nimi, mk.yksikko
  ORDER BY teh.id
 ),

@@ -419,9 +419,9 @@ WITH osa_toteumat AS
                  MAX(tt.id)          AS toteuma_tehtava_id,
                  MAX(t.tyyppi::TEXT) AS tyyppi      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
           FROM toteuma t
-                   JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
+                   JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
                    LEFT JOIN toteuma_materiaali tm
-                             ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
+                             ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           WHERE t.urakka = :urakka
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
