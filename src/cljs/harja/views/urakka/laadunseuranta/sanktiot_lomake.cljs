@@ -56,7 +56,6 @@
         muokataan-vanhaa? (some? (:id @muokattu))
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
-        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         ;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka? on mukana lisäksi :valaistus-urakkatyypi
         ;;       Jos yllapitourakka? on OK, niin "yllapitokohdeurakka?" voi poistaa ja korvata viittaukset siihen "yllapitourakka?"-symbolilla.
         yllapitourakka? @tiedot-urakka/yllapitourakka?
@@ -70,9 +69,7 @@
                           {:id nil})
         ;; Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan.
         mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
-        ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
-        ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit
+        sanktio-konfiguraation-tila @tiedot-urakka/valitun-urakan-sanktio-konfiguraation-tila
         ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
         ;; Ja jos tyyppinä on talvihoito, niin muut kuin talvihoito toimenpiteet poistetaan myös
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))
@@ -80,7 +77,7 @@
         liitteet-id (str "liiteet-element-id-" (gensym))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
-    (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
+      (if (and (seq mahdolliset-sanktiolajit)
           (or (not yllapitokohdeurakka?)
             (and yllapitokohdeurakka? yllapitokohteet)))
 
@@ -146,8 +143,7 @@
                                   (assoc :laji arvo)
                                   (dissoc :tyyppi)
                                   (assoc :tyyppi nil))
-                           s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
-                                      arvo kaikki-sanktiotyypit urakan-alkupvm)
+                                s-tyypit (tiedot-urakka/valitun-urakan-sanktiotyypit arvo)
                            rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
@@ -170,7 +166,7 @@
                          (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                          rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
+            :valinta-nayta #(or (tiedot-urakka/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
          (when-not (or yllapitourakka? vesivaylaurakka?)
            (if (not lukutila?)
@@ -186,8 +182,7 @@
                            (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
               :valinta-arvo identity
               :aseta-vaikka-sama? true
-              :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                               (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
+              :valinnat (vec (tiedot-urakka/valitun-urakan-sanktiotyypit (:laji @muokattu)))
               :valinta-nayta (fn [arvo]
                                (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
@@ -446,4 +441,12 @@
             ::lomake/col-luokka "col-xs-12"
             :muokattava? (constantly false)})]
         @muokattu]]
-      [ajax-loader "Ladataan..."])))
+      (case sanktio-konfiguraation-tila
+        :haku-kaynnissa [ajax-loader "Ladataan..."]
+        :haku-epaonnistui [:div
+                           [:p "Sanktioita ei voitu ladata juuri nyt."]
+                           [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
+        :ei-konfiguraatiota [:div
+                             [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
+                             [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
+        [ajax-loader "Ladataan..."]))))

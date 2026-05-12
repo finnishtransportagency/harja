@@ -13,7 +13,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.napit :as napit]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
@@ -34,6 +33,13 @@
   "Onko annetussa laatupoikkeamassa päätös?"
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
+
+(defn uuden-sanktion-rivi
+  [rivi urakkatyyppi mahdolliset-sanktiolajit urakan-tpit]
+  (assoc rivi
+    :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi mahdolliset-sanktiolajit)
+    :toimenpideinstanssi (when (= 1 (count urakan-tpit))
+                           (:tpi_id (first urakan-tpit)))))
 
 (declare sanktiotaulukon-rivit)
 
@@ -87,21 +93,19 @@
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [_sanktiot-atom _paatosoikeus? _laatupoikkeama _muokattava? optiot]
-  (let [urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-        yllapito? @urakka/yllapitourakka?
+    (let [urakkatyyppi (:tyyppi @nav/valittu-urakka)
+      yllapito? @urakka/yllapitourakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
         ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
         mahdolliset-sanktiolajit @urakka/valitun-urakan-sanktiolajit
-        ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
-        ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
-        kaikki-sanktiotyypit @sanktiot/sanktiotyypit
+        sanktio-konfiguraation-tila @urakka/valitun-urakan-sanktio-konfiguraation-tila
         mahdolliset-indeksivalinnat (cond-> [nil]
                                       (urakka/indeksi-kaytossa-sakoissa?)
                                       (conj (:indeksi @nav/valittu-urakka)))]
     (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
       (let [voi-muokata? (and paatosoikeus? muokattava?)]
-        (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit))
+        (if (seq mahdolliset-sanktiolajit)
           [:div.sanktiot
            [grid/muokkaus-grid
             {:tyhja "Ei kirjattuja sanktioita."
@@ -109,14 +113,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              :voi-muokata? voi-muokata?
              ;; Piilotetaan toimintosarake kokonaan, kun gridiä ei voi muokata
              :piilota-toiminnot? (not voi-muokata?)
-             :uusi-rivi (fn [rivi]
-                          (assoc rivi :laji (cond
-                                              yllapito? :yllapidon_sakko
-                                              vesivayla? :vesivayla_sakko
-                                              ;; Oletettavasti hoito
-                                              :default :A)
-                                      :toimenpideinstanssi (when (= 1 (count urakan-tpit))
-                                                             (:tpi_id (first urakan-tpit)))))}
+                 :uusi-rivi (fn [rivi]
+                  (uuden-sanktion-rivi rivi urakkatyyppi mahdolliset-sanktiolajit urakan-tpit))}
 
             [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
               :fmt pvm/pvm
@@ -130,7 +128,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :aseta (fn [rivi arvo]
                          (assoc rivi :laji arvo :tyyppi nil :summa nil :toimenpideinstanssi nil :indeksi nil))
                 :valinnat mahdolliset-sanktiolajit
-                :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
+                :valinta-nayta #(or (urakka/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
                 :sarake-disabloitu-arvo-fn #(sanktio-domain/sanktiolaji->teksti (get-in % [:rivi :laji]))
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
@@ -156,8 +154,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                  :toimenpideinstanssi
                                  (when tpk
                                    (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-                      :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                                           (:laji %) kaikki-sanktiotyypit urakan-alkupvm))
+                        :valinnat-fn #(vec (urakka/valitun-urakan-sanktiotyypit (:laji %)))
                       :valinta-nayta :nimi
                       :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
                      ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
@@ -202,7 +199,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :palstoja 1
                 :muokattava? #(and (sanktio-domain/muu-kuin-muistutus? %) (urakka/indeksi-kaytossa-sakoissa?))})]
             sanktiot-atom]]
-          [ajax-loader "Ladataan..."])))))
+          (case sanktio-konfiguraation-tila
+            :haku-kaynnissa [ajax-loader "Ladataan..."]
+            :haku-epaonnistui [:div
+                               [:p "Sanktioita ei voitu ladata juuri nyt."]
+                               [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
+            :ei-konfiguraatiota [:div
+                                 [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
+                                 [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
+            [ajax-loader "Ladataan..."]))))))
 
 (defn avaa-tarkastus [tarkastus-id]
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
