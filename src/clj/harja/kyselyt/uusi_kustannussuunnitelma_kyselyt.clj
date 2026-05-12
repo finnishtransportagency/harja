@@ -1,6 +1,5 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
   (:require [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.palvelin.palvelut.muutos.muutos-apurit :as muutos-apurit]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
@@ -8,7 +7,6 @@
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as kust-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
-            [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-kyselyt]
             [harja.kyselyt.tehtavaryhmat :as tehtavaryhma-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as tehtava-kyselyt]
@@ -48,7 +46,7 @@
   lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
   hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio
   tulevilla-hoitovuosilla-arvoja? aseta-kasin-syotetty-kattohinta<!
-  paivita-kasin-syotetty-kattohinta!)
+  paivita-kasin-syotetty-kattohinta! hae-laskutusrajan-tarkistukset)
 
 (defn laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -1012,16 +1010,12 @@
         vahvistetut-osiot (hae-kustannussuunnitelman-osiot db {:urakkaid urakka-id :hoitovuosinro hoitovuosinro})
         ;; Haetaan budjettitavoite
         budjettitavoitteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitovuoden-alkuvuosi)
-        ;; Haetaan kirjatut muutokset
-        kirjatut-muutokset (-> (muutos-kyselyt/hae-urakan-hoitovuoden-kirjatut-muutokset db
-                                 {:urakka urakka-id
-                                  :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi
-                                  :hae-vain-aiemmat-pysyvat-muutokset? false})
-                             (muutos-apurit/parsi-kirjatut-muutokset-vastaus))
         ;; Haetaan tavoitehinta
         hoitovuoden-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoitteet)
-        laskutusrajan-tarkistukset (muutos-apurit/hae-laskutusrajan-tarkistukset
-                                     db urakka-id hoitovuoden-alkuvuosi kirjatut-muutokset hoitovuoden-indeksikorjattu-tavoitehinta)
+        laskutusrajan-tarkistukset (hae-laskutusrajan-tarkistukset
+                                     db {:urakka urakka-id
+                                         :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi
+                                         :hoitovuoden_indeksikorjattu_tavoitehinta hoitovuoden-indeksikorjattu-tavoitehinta})
         laskutusrajan-tarkistus (or (:laskutusrajan-tarkistus (last laskutusrajan-tarkistukset)) 0)
 
         ;; Vanhassa kustannussuunnitelmassa oli erilliset osiot eri kustannuslajeille. Uudessa ei ole, mutta tehdään näin

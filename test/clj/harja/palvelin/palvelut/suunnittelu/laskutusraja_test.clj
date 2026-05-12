@@ -13,7 +13,8 @@
             [harja.palvelin.palvelut.indeksit :as indeksit]
             [harja.palvelin.palvelut.suunnittelu.apurit :as apurit]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
-            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as kust-kyselyt]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -154,7 +155,7 @@
     (is (nil? (hae-urakan-laskutusraja urakka-id)) "Laskutusrajan pitäisi olla NULL kun laskutusraja_kaytossa = FALSE")))
 
 
-(deftest laskutusraja-nollataan-kun-vahvistus-kumotaan
+(deftest laskutusraja-pysyy-kun-vahvistus-kumotaan
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitovuoden-alkuvuosi 2025]
     ;; Varmista että laskutusraja_kaytossa = TRUE
@@ -640,3 +641,120 @@
             uusi-laskutusraja (ffirst (q (format "SELECT laskutusraja FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s" urakka hoitokausi)))]
         (is (not= alkuperainen-tavoitehinta uusi-tavoitehinta) "tavoitehinta_indeksikorjattu pitäisi päivittyä")
         (is (nil? uusi-laskutusraja) "laskutusraja ei pitäisi päivittyä ennen 2025 alkaneella urakalla")))))
+
+(deftest hae-laskutusrajan-tarkistukset-palauttaa-tyhjan-kun-ei-muutoksia
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2025]
+    ;; Varmistetaan ettei muutoksia ole
+    (u "DELETE FROM mhu_muutos WHERE urakka = " urakka-id
+      " AND voimassa_alkaen BETWEEN '2025-10-01' AND '2026-09-30'")
+
+    (let [tulos (kust-kyselyt/hae-laskutusrajan-tarkistukset
+                  (:db jarjestelma)
+                  {:urakka urakka-id
+                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                   :hoitovuoden_indeksikorjattu_tavoitehinta 100000})]
+      (is (empty? tulos) "Tuloksen pitäisi olla tyhjä kun muutoksia ei ole"))))
+
+
+(deftest hae-laskutusrajan-tarkistukset-alle-3-prosenttia
+  ;; Kun muutosten kumulatiivinen summa on alle 3% tavoitehinnasta,
+  ;; laskutusrajan-tarkistus on 0 eikä tarkistettu-laskutusraja nouse
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    ;; Siivotaan hoitokauden muutokset ennen testiä
+    (u (format "DELETE FROM mhu_muutos_kustannusvaikutus WHERE muutos IN
+                (SELECT id FROM mhu_muutos WHERE urakka = %s
+                 AND voimassa_alkaen BETWEEN '2025-10-01' AND '2026-09-30')" urakka-id))
+    (u (format "DELETE FROM mhu_muutos WHERE urakka = %s
+                AND voimassa_alkaen BETWEEN '2025-10-01' AND '2026-09-30'" urakka-id))
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitokauden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitokauden-alkuvuosi true)
+
+    ;; Haetaan todellinen indeksikorjattu tavoitehinta, jotta 1% pysyy varmasti alle 3%
+    (let [tavoitehinta (first (map :tavoitehinta_indeksikorjattu
+                               (q-map (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite
+                                              WHERE urakka = %s AND hoitokausi = 1" urakka-id))))]
+
+      ;; Tallenna muutostyö jonka summa on < 3% tavoitehinnasta (1%)
+      (tallenna-muutos! urakka-id
+        {:tyyppi "muutostyo"
+         :alityyppi :erillisrahoitus
+         :nimi "Pieni muutostyö"
+         :syy "Testi"
+         :voimassa_alkaen #inst "2025-11-01T00:00:00.000-00:00"
+         :tavoitehinnan-muutos (* tavoitehinta 0.01)} ;; 1% -> alle 3%
+        +hoitokaudet+)
+
+      (let [tulos (kust-kyselyt/hae-laskutusrajan-tarkistukset
+                    (:db jarjestelma)
+                    {:urakka urakka-id
+                     :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                     :hoitovuoden_indeksikorjattu_tavoitehinta tavoitehinta})]
+        (is (seq tulos) "Tuloksessa pitäisi olla rivejä")
+        (is (every? #(zero? (get % (keyword "laskutusrajan-tarkistus"))) tulos)
+          "Laskutusrajan tarkistuksen pitäisi olla 0 kun alle 3%")
+        ;; Tarkistettu laskutusraja = alkuperäinen + 0 = alkuperäinen
+        ;; Ei siis nil, vaan sama kuin alkuperäinen laskutusraja
+        (let [laskutusraja-alkuperainen (first (map :laskutusraja_alkuperainen
+                                               (q-map (format "SELECT laskutusraja_alkuperainen FROM urakka_tavoite
+                                                              WHERE urakka = %s AND hoitokausi = 1" urakka-id))))]
+          (when laskutusraja-alkuperainen
+            (is (every? #(= laskutusraja-alkuperainen (get % (keyword "tarkistettu-laskutusraja"))) tulos)
+              "Tarkistettu laskutusraja pitäisi olla sama kuin alkuperäinen kun tarkistus on 0")))))))
+
+
+(deftest hae-laskutusrajan-tarkistukset-yli-3-prosenttia
+  ;; Kun muutosten kumulatiivinen summa ylittää 3% tavoitehinnasta,
+  ;; laskutusrajan-tarkistus > 0 ja tarkistettu-laskutusraja = alkuperäinen + tarkistus
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2025
+        +hoitokaudet+ (mapv (fn [vuosi]
+                              [(pvm/hoitokauden-alkupvm vuosi)
+                               (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                        (range 2025 2030))]
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+      (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitokauden-alkuvuosi
+      (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitokauden-alkuvuosi true)
+
+    (let [tavoitehinta (first (map :tavoitehinta_indeksikorjattu
+                                (q-map (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite
+                                               WHERE urakka = %s AND hoitokausi = 1" urakka-id))))
+          laskutusraja-alkuperainen (first (map :laskutusraja_alkuperainen
+                                             (q-map (format "SELECT laskutusraja_alkuperainen FROM urakka_tavoite
+                                                            WHERE urakka = %s AND hoitokausi = 1" urakka-id))))
+          suuri-summa (* tavoitehinta 0.05)] ;; 5% -> ylittää 3%
+
+      (tallenna-muutos! urakka-id
+        {:tyyppi "muutostyo"
+         :alityyppi :erillisrahoitus
+         :nimi "Suuri muutostyö"
+         :syy "Testi"
+         :voimassa_alkaen #inst "2025-11-01T00:00:00.000-00:00"
+         :tavoitehinnan-muutos suuri-summa}
+        +hoitokaudet+)
+
+      (let [tulos (kust-kyselyt/hae-laskutusrajan-tarkistukset
+                    (:db jarjestelma)
+                    {:urakka urakka-id
+                     :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                     :hoitovuoden_indeksikorjattu_tavoitehinta tavoitehinta})
+            viimeisin (last tulos)]
+        (is (seq tulos) "Tuloksessa pitäisi olla rivejä")
+        (is (pos? (get viimeisin (keyword "laskutusrajan-tarkistus")))
+          "Laskutusrajan tarkistuksen pitäisi olla positiivinen kun yli 3%")
+        (is (>= (:prosenttiosuus viimeisin) 3.00M)
+          "Prosenttiosuuden pitäisi olla vähintään 3%")
+        (when laskutusraja-alkuperainen
+          (is (= (get viimeisin (keyword "tarkistettu-laskutusraja"))
+                (+ laskutusraja-alkuperainen (get viimeisin (keyword "laskutusrajan-tarkistus"))))
+            "Tarkistettu laskutusraja = alkuperäinen + tarkistus"))))))

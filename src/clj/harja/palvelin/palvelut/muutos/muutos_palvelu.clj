@@ -11,7 +11,6 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tyokalut.yleiset :as yleiset]
             [harja.domain.kulut :as kulut-domain]
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.liitteet :as liite-kyselyt]
@@ -404,7 +403,11 @@
                                                (concat
                                                  [(:tavoitehinnan-muutos (last rahavaraukset))]
                                                  (map :tavoitehinnan_muutos tehtava-ja-maaramuutokset))))
-        laskutusrajan-tarkistukset (muutos-apurit/hae-laskutusrajan-tarkistukset db urakka-id hoitokauden-alkuvuosi kirjatut-muutokset (:tavoitehinta-indeksikorjattu budjettitavoiteet))
+        laskutusrajan-tarkistukset (ks-kyselyt/hae-laskutusrajan-tarkistukset
+                                     db
+                                     {:urakka urakka-id
+                                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                      :hoitovuoden_indeksikorjattu_tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoiteet)})
         muutosten-vaikutus-yht (+
                                  (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
                                  (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
@@ -729,6 +732,78 @@
                                     "Muutostyölle on jo kirjattu kuluja ennen " (pvm/pvm (:voimassa_alkaen muutos)) ". "
                                     "Tarkista kulujen päivämäärät.")}]}))))
 
+(defn- laske-uusi-laskutusraja
+  [paivitetaan? tyyppi-muutostyo? tyyppi-pysyva?
+   muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
+   muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa laskutusrajaa_nostettu?
+   laskutusraja laskutusraja_alkuperainen
+   hoitovuoden-tavoitehinta summa muutokset-yhteensa-kaikki
+   muutokset-yhteensa-ilman-valittua aiempi-muutos]
+  (let [;; Uuden muutoksen vaikutus laskutusrajaan:
+        ;; muutostyö otetaan aina mukaan, pysyvä vain jos summa on positiivinen
+        uuden-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
+        (or tyyppi-muutostyo?
+          (and tyyppi-pysyva? (pos? summa)))
+
+        ;; Muokattavan muutoksen vaikutus laskutusrajaan:
+        ;; olemassa oleva pysyvä/muutostyö voi joko nostaa rajaa tai palauttaa sen alkuperäiseksi
+        muokattavan-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
+        (or tyyppi-muutostyo? tyyppi-pysyva?)
+
+        ;; Laskutusrajaa voidaan päivittää vain, jos nykyinen ja alkuperäinen raja sekä tavoitehinta löytyvät
+        laskutusrajan-paivitys-mahdollinen?
+        (and laskutusraja laskutusraja_alkuperainen hoitovuoden-tavoitehinta)
+
+        ;; Uusi muutos nostaa laskutusrajaa, jos muutosten osuus on vähintään 3 %
+        uusi-muutos-yli-rajan?
+        (and (not paivitetaan?)
+          uuden-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
+          laskutusrajan-paivitys-mahdollinen?
+          muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
+          (>= muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa 3.00))
+
+        ;; Olemassa olevan muutoksen muokkaus nostaa tai korjaa laskutusrajaa, jos osuus on vähintään 3 %
+        muokattu-muutos-yli-rajan?
+        (and paivitetaan?
+          muokattavan-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
+          laskutusrajan-paivitys-mahdollinen?
+          muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
+          (>= muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00))
+
+        ;; Olemassa olevan muutoksen muokkaus palauttaa rajan alkuperäiseksi,
+        ;; jos osuus tippuu alle 3 % ja rajaa oli jo aiemmin nostettu
+        muokattu-muutos-alle-rajan?
+        (and paivitetaan?
+          muokattavan-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
+          laskutusrajan-paivitys-mahdollinen?
+          muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
+          (< muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00)
+          laskutusrajaa_nostettu?)]
+
+    (cond
+      ;; Uutta muutosta luotaessa:
+      ;; jos rajaa on jo nostettu, lisätään vain uusi summa
+      ;; muuten lisätään uusi summa ja aiempi muutosten kertymä
+      uusi-muutos-yli-rajan?
+      (if laskutusrajaa_nostettu?
+        (+ laskutusraja summa)
+        (+ laskutusraja summa muutokset-yhteensa-kaikki))
+
+      ;; Muutosta muokatessa:
+      ;; jos rajaa on jo nostettu, vanha muutos vähennetään ja uusi summa lisätään
+      ;; muuten lisätään uusi summa ja muiden muutosten kertymä
+      muokattu-muutos-yli-rajan?
+      (if laskutusrajaa_nostettu?
+        (+ (- laskutusraja aiempi-muutos) summa)
+        (+ laskutusraja summa muutokset-yhteensa-ilman-valittua))
+
+      ;; Jos muokkauksen jälkeen osuus jää alle 3 %, palautetaan alkuperäinen laskutusraja
+      muokattu-muutos-alle-rajan?
+      laskutusraja_alkuperainen
+
+      :else
+      nil)))
+
 (defn- hae-laskutusrajan-konteksti
   "Hakee laskutusrajan laskennassa tarvittavat tiedot.
    Palauttaa mapin, jossa on hoitokausinro, hoitovuoden-tavoitehinta,
@@ -880,32 +955,16 @@
                                    maaramuutokset)]
               (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
-          ;; Tarkistetaan laskutusrajan päivitystarve, kun luodaan uusi muutos
-          (when (and (not paivitetaan?) (or tyyppi-muutostyo? (and tyyppi-pysyva? (pos? summa))) muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
-                  (> muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa 3.00) laskutusraja laskutusraja_alkuperainen hoitovuoden-tavoitehinta)
+          (when-let [uusi-laskutusraja (laske-uusi-laskutusraja paivitetaan? tyyppi-muutostyo? tyyppi-pysyva?
+                                             muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
+                                             muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa laskutusrajaa_nostettu?
+                                             laskutusraja laskutusraja_alkuperainen
+                                             hoitovuoden-tavoitehinta summa muutokset-yhteensa-kaikki
+                                             muutokset-yhteensa-ilman-valittua aiempi-muutos)]
             (kulu-kyselyt/paivita-urakan-laskutusraja! conn
               {:urakka-id urakka-id
                :hoitokausinro hoitokausinro
-               :laskutusraja (if laskutusrajaa_nostettu? (+ laskutusraja summa) (+ laskutusraja summa muutokset-yhteensa-kaikki))
-               :kayttaja (:id kayttaja)}))
-
-          ;; Tarkistetaan laskutusrajaa, kun päivitetään olemassa olevan muutoksen kustannusvaikutuksia, ja muutosten prosenttiosuus on yli 3
-          (when (and paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?) muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
-                  (> muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00) hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen)
-            (kulu-kyselyt/paivita-urakan-laskutusraja! conn
-              {:urakka-id urakka-id
-               :hoitokausinro hoitokausinro
-               :laskutusraja (if laskutusrajaa_nostettu? (+ (- laskutusraja aiempi-muutos) summa) (+ laskutusraja summa muutokset-yhteensa-ilman-valittua))
-               :kayttaja (:id kayttaja)}))
-
-          ;; Palautetaan laskutusraja alkuperäiseksi, kun päivitetään olemassa olevan muutoksen kustannusvaikutuksia,
-          ;; niin että muutosten prosenttiosuus tippuu alle 3, mutta laskutusrajaa on jo aeimmin nostettu
-          (when (and paivitetaan? (or tyyppi-muutostyo? tyyppi-pysyva?) muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
-                  (< muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa 3.00) laskutusrajaa_nostettu? laskutusraja laskutusraja_alkuperainen hoitovuoden-tavoitehinta)
-            (kulu-kyselyt/paivita-urakan-laskutusraja! conn
-              {:urakka-id urakka-id
-               :hoitokausinro hoitokausinro
-               :laskutusraja laskutusraja_alkuperainen
+               :laskutusraja uusi-laskutusraja
                :kayttaja (:id kayttaja)}))
 
           ;; Tallenna kulut
@@ -1024,7 +1083,9 @@
           tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
           tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
           poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
-          prosenttiosuus (when hoitovuoden-tavoitehinta (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
+          prosenttiosuus (when hoitovuoden-tavoitehinta
+                           (tyokalut/pyorista-kahteen-decimaaliin
+                             (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
 
       (when (not voi-poistaa?)
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
@@ -1036,7 +1097,13 @@
       (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
         (poista-jjh-muutoksen-kulut! conn kayttaja muutos-id (:versio muutos)))
 
-      (when (and laskutusrajaa_nostettu? prosenttiosuus (or tyyppi-muutostyo? (and tyyppi-pysyva? (not (= muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)))))
+      ;; Laskutusrajaa pitää päivittää, jos muutosten yhteissumma on yli 3% tavoitehinnasta, ja laskutusrajaa on aiemmin nostettu
+      (when (and
+              laskutusrajaa_nostettu?
+              prosenttiosuus
+              (or tyyppi-muutostyo?
+                (and tyyppi-pysyva?
+                  (not (= muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)))))
         (kulu-kyselyt/paivita-urakan-laskutusraja! conn
           {:urakka-id urakka-id
            :hoitokausinro hoitokausinro

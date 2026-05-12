@@ -630,3 +630,88 @@ WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AN
   AND toimenpideinstanssi IN (:hankinnan-toimenpideinstanssit)
   AND sopimus = :sopimus-id
 GROUP BY tyyppi;
+
+-- name: hae-laskutusrajan-tarkistukset
+WITH hoitokausi AS (
+    SELECT GREATEST((:hoitokauden_alkuvuosi + 1)
+                        - EXTRACT(YEAR FROM u.alkupvm)::INTEGER, 1) AS hoitokausinro
+      FROM urakka u
+     WHERE u.id = :urakka
+),
+alkuperainen_laskutusraja AS (
+    SELECT ut.laskutusraja_alkuperainen
+      FROM urakka_tavoite ut
+      JOIN hoitokausi hk ON hk.hoitokausinro = ut.hoitokausi
+     WHERE ut.urakka = :urakka
+     LIMIT 1
+),
+muutokset AS (
+    SELECT m.id,
+           m.versio,
+           m.voimassa_alkaen,
+           m.tyyppi,
+           -- Tavoitehinnan muutos lasketaan summana kustannusvaikutuksista
+           -- Laskutusrajaan tarvitaan pelkästään eurot
+           COALESCE((SELECT SUM(kust.summa)
+                       FROM ONLY mhu_muutos_kustannusvaikutus kust
+                      WHERE kust.muutos = m.id
+                        AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                    ), 0) AS tavoitehinnan_muutos
+      -- Laskutusrajaan otetaan mukaan pelkästään pysyvät sekä muutostyöt
+      FROM ONLY mhu_muutos m
+     WHERE m.urakka = :urakka
+       AND m.poistettu IS FALSE
+       AND m.tyyppi IN ('pysyva', 'muutostyo')
+       AND m.voimassa_alkaen BETWEEN TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')
+                                 AND TO_DATE((:hoitokauden_alkuvuosi + 1) || '-09-30', 'YYYY-MM-DD')
+),
+laskettavat AS (
+    SELECT *
+      FROM muutokset
+     WHERE tyyppi = 'muutostyo'
+        OR (tyyppi = 'pysyva' AND tavoitehinnan_muutos > 0)
+),
+kertymat AS (
+    SELECT *,
+           -- Kumulatiivinen summa, lasketaan mukaan kaikki aiemmat rivit ja nykyinen rivi
+           SUM(tavoitehinnan_muutos) OVER (
+               ORDER BY voimassa_alkaen, id, versio
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+           ) AS yhteensa
+      FROM laskettavat
+),
+prosentit AS (
+    SELECT *,
+           -- Prosenttiosuus lasketaan suhteessa indeksikorjattuun tavoitehintaan,
+           -- pyöristettynä kahteen desimaaliin
+           CASE
+               WHEN :hoitovuoden_indeksikorjattu_tavoitehinta > 0
+               THEN ROUND(100.0 * yhteensa / :hoitovuoden_indeksikorjattu_tavoitehinta, 2)
+               ELSE NULL
+           END AS prosenttiosuus
+      FROM kertymat
+),
+tarkistukset AS (
+    SELECT *,
+           -- Laskutusrajan tarkistus jos prosenttiosuus on 3.00 tai enemmän, muuten 0
+           CASE
+               WHEN prosenttiosuus >= 3.00 THEN yhteensa
+               ELSE 0
+           END AS laskutusrajan_tarkistus
+      FROM prosentit
+)
+SELECT t.tavoitehinnan_muutos                                          AS summa,
+       t.yhteensa,
+       t.prosenttiosuus,
+       t.laskutusrajan_tarkistus                                       AS "laskutusrajan-tarkistus",
+       CASE
+           WHEN al.laskutusraja_alkuperainen IS NOT NULL
+           THEN al.laskutusraja_alkuperainen + t.laskutusrajan_tarkistus
+           ELSE NULL
+       END                                                             AS "tarkistettu-laskutusraja",
+       t.id,
+       t.tyyppi,
+       t.voimassa_alkaen
+  FROM tarkistukset t
+  LEFT JOIN alkuperainen_laskutusraja al ON TRUE
+ ORDER BY t.voimassa_alkaen, t.id, t.versio;
