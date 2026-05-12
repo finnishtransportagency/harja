@@ -361,8 +361,8 @@ WHERE urakka = :urakka AND sopimus = :sopimus
 -- Luo uuden materiaalin toteumalle
 INSERT
 INTO toteuma_materiaali
-(toteuma, materiaalikoodi, maara, luotu, luoja, poistettu, urakka_id)
-VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE, :urakka);
+(toteuma, materiaalikoodi, maara, luotu, luoja, poistettu, urakka_id, hoitokauden_alkuvuosi)
+VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE, :urakka, :hoitokauden_alkuvuosi);
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma_materiaalin

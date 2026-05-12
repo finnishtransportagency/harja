@@ -1,35 +1,3 @@
--- name: hae-urakan-toteumat
--- Listaa kaikki urakan toteumat
-SELECT
-  t.id,
-  t.alkanut,
-  t.paattynyt,
-  t.tyyppi,
-  t.suorittajan_nimi,
-  t.suorittajan_ytunnus,
-  t.lisatieto,
-  t.luoja       AS luoja_id,
-  o.nimi        AS organisaatio,
-  k.kayttajanimi,
-  k.jarjestelma AS jarjestelman_lisaama,
-  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
-   FROM toteuma_tehtava tt
-     LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
-   WHERE tt.toteuma = t.id
-         AND tt.poistettu IS NOT TRUE)
-                AS tehtavat
-FROM toteuma t
-  LEFT JOIN kayttaja k ON k.id = t.luoja
-  LEFT JOIN organisaatio o ON o.id = k.organisaatio
-WHERE
-  t.urakka = :urakka
-  AND t.sopimus = :sopimus
-  AND t.alkanut >= :alkupvm
-  AND t.alkanut <= :loppupvm
-  AND t.tyyppi = :tyyppi :: toteumatyyppi
-  AND t.poistettu IS NOT TRUE
-GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
-
 -- name: hae-urakan-toteuma
 -- Listaa urakan toteuman id:llä
 SELECT
@@ -378,12 +346,12 @@ SELECT alkanut,
 -- Luo uuden tehtävän toteumalle
 INSERT
 INTO toteuma_tehtava
-(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi, urakka_id)
+(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi, urakka_id, hoitokauden_alkuvuosi)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
         (CASE WHEN :paivanhinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END), :urakka_id);
+         END), :urakka_id, :hoitokauden_alkuvuosi);
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -626,6 +594,22 @@ SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
                        END)
 WHERE id = :id;
 
+-- name: paivita-koko-toteuman-tehtava!
+-- Päivittää toteuman tehtävän id:llä.
+UPDATE toteuma_tehtava
+SET toimenpidekoodi = :toimenpidekoodi,
+    lisatieto = :lisatieto,
+    maara = :maara,
+    poistettu = :poistettu,
+    paivan_hinta      = :paivanhinta,
+    indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+                                  THEN TRUE
+                              ELSE FALSE
+        END),
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id = :tehtavaid;
+
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
 UPDATE toteuma_tehtava
@@ -690,22 +674,17 @@ SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
-                             lisatieto, indeksi, urakka_id)
+                             lisatieto, indeksi, urakka_id, hoitokauden_alkuvuosi)
 VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
         (CASE WHEN :paivan_hinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END), :urakka_id);
+         END), :urakka_id, :hoitokauden_alkuvuosi);
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
 DELETE FROM toteuma_tehtava
 WHERE toteuma = :id;
-
--- name: luo-toteuma-materiaali<!
--- Luo uuden toteuman materiaalin
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
-VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
 
 -- name: poista-toteuma-materiaali-toteuma-idlla!
 -- Poistaa toteuman materiaalit
@@ -983,18 +962,6 @@ SELECT
   reitti
 FROM toteuma
 WHERE id = :id;
-
--- name: paivita-toteuma-materiaali!
--- Päivittää toteuma materiaalin tiedot
-UPDATE toteuma_materiaali
-SET materiaalikoodi = :materiaali,
-  maara             = :maara,
-  muokkaaja         = :kayttaja,
-  muokattu          = now()
-WHERE id = :tmid
-      AND toteuma IN (SELECT id
-                      FROM toteuma t
-                      WHERE t.urakka = :urakka);
 
 -- name: hae-urakan-varustetoteumat
 SELECT
