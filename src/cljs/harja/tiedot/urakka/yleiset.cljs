@@ -85,6 +85,13 @@
      :sahkoposti sahkoposti
      :organisaatio-id organisaatio-id}))
 
+(defn tallenna-urakan-projektikansio-linkki [urakka-id projektikansio-linkki]
+  (k/post! :tallenna-urakan-projektikansio-linkki
+    {:urakka-id urakka-id
+     :projektikansio-linkki projektikansio-linkki}
+    nil
+    true))
+
 (defn tallenna-urakan-alukset [urakka-id urakoitsija-id alukset tulos-atom]
   (go (let [vastaus (<! (k/post! :tallenna-urakoitsijan-alukset {::urakka/id urakka-id
                                                                  ::alus/urakoitsija-id urakoitsija-id
