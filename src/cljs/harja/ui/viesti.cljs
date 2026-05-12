@@ -1,9 +1,11 @@
 (ns harja.ui.viesti
   "Flash-viestin näyttäminen UI:n päällä, jolla voidaan kertoa käyttäjälle statustietoa operaatioista."
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.primitiivit.viesti :as viesti-primitiivit]
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.saavutettavuus :as saavutettavuus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -27,11 +29,6 @@
                                      :kesto nil}))
 
 
-(def +bootstrap-alert-classes+ {:success "alert-success"
-                                :info "alert-info"
-                                :warning "alert-warning"
-                                :danger "alert-danger"})
-
 (defn +toast-viesti-luokat+ [luokka]
   (case luokka
     :neutraali "toast-viesti neutraali"
@@ -45,17 +42,22 @@
   []
   (let [{:keys [viesti luokka nakyvissa? kesto]} @viesti-sisalto]
     (if nakyvissa?
-      (do (go (<! (timeout kesto))
-              (swap! viesti-sisalto assoc :nakyvissa? false))
-          ^{:key "viesti"}
-          [:div.modal {:style {:display "block"}}
-           ;; PENDING: viestilläkin backdrop, ehkä joku drop shadow olisi riittävä?
-           [:div.modal-backdrop.in {:style {:height @dom/korkeus}
-                                    :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}]
-           [:div.flash-viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
-            [:div.alert {:class (when luokka
-                                  (+bootstrap-alert-classes+ luokka))}
-             viesti]]])
+      (let [{:keys [overlay tausta runko sisalto variantti]}
+            (viesti-primitiivit/flash-viestin-luokat luokka)]
+        (go (<! (timeout kesto))
+          (swap! viesti-sisalto assoc :nakyvissa? false))
+        ^{:key "viesti"}
+        [:div {:class overlay
+               :data-cy "flash-viesti-overlay"}
+         [:div {:class tausta
+                :style {:height @dom/korkeus}
+                :data-cy "flash-viesti-tausta"
+                :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}]
+         [:div {:class runko
+                :data-cy "flash-viesti"
+                :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
+          [:div {:class (str/join " " [sisalto variantti])}
+           viesti]]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 
@@ -63,7 +65,7 @@
   "Tämä komponentti sisältää flash viestin ja laitetaan päätason sivuun
    Mahdolliset luokat ovat :onnistunut, :varoitus, :neutraali, :neutraali-ikoni-keskella ja :neutraali-ikoni"
   []
-  (let [{:keys [viesti luokka nakyvissa? kesto tehty]} @toast-viesti-sisalto
+  (let [{:keys [viesti luokka nakyvissa? kesto]} @toast-viesti-sisalto
         ikoni (case luokka
                 :onnistunut (ikonit/livicon-check)
                 :varoitus (ikonit/livicon-warning-sign)

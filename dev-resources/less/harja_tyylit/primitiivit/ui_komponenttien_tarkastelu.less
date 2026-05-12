@@ -1,0 +1,52 @@
+.ui-komponenttien-tarkastelu-nakyma {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-24;
+  padding: @valistys-24;
+}
+
+.ui-komponenttien-tarkastelu-sivun-otsikko,
+.ui-komponenttien-tarkastelu-osio {
+  background: @white-default;
+  border: 1px solid @harmaa9;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.25rem 1rem fade(@black-default, 8%);
+  padding: @valistys-24;
+}
+
+.ui-komponenttien-tarkastelu-sivun-otsikko,
+.ui-komponenttien-tarkastelu-osion-otsikko,
+.ui-komponenttien-tarkastelu-kortin-tekstit {
+  p {
+    margin-bottom: 0;
+  }
+}
+
+.ui-komponenttien-tarkastelu-ruudukko {
+  display: grid;
+  gap: @valistys-16;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  margin-top: @valistys-16;
+}
+
+.ui-komponenttien-tarkastelu-kortti {
+  border: 1px solid @harmaa9;
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-16;
+  padding: @valistys-16;
+}
+
+.ui-komponenttien-tarkastelu-toiminnot {
+  display: flex;
+  gap: @valistys-8;
+}
+
+.ui-komponenttien-tarkastelu-viesti {
+  min-height: 5rem;
+
+  .harja-viesti {
+    text-align: left;
+  }
+}

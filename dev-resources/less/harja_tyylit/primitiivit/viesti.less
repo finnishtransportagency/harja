@@ -1,0 +1,53 @@
+.harja-viesti-runko {
+  text-align: center;
+  position: absolute;
+  top: 40%;
+  left: 15%;
+  width: 60%;
+  z-index: 1;
+}
+
+.harja-viesti-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+}
+
+.harja-viesti-tausta {
+  position: absolute;
+  inset: 0;
+  background-color: fade(@black-default, 50%);
+}
+
+.harja-viesti {
+  background: @white-default;
+  border: 1px solid @harmaa9;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px fade(@black-default, 16%);
+  color: @harmaa2;
+  padding: @valistys-16 @valistys-24;
+}
+
+.harja-viesti-onnistuminen {
+  background: @green-lighter;
+  border-color: @green-light;
+  color: @green-dark;
+}
+
+.harja-viesti-info {
+  background: @blue-lighter;
+  border-color: @blue-light;
+  color: @blue-darker;
+}
+
+.harja-viesti-varoitus {
+  background: @lemon-light;
+  border-color: @lemon-default;
+  color: @lemon-dark;
+}
+
+.harja-viesti-vaara {
+  background: @red-lighter;
+  border-color: @red-light;
+  color: @red-dark;
+}
