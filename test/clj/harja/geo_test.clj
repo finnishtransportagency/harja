@@ -69,3 +69,23 @@
 
   (testing "Laajenna tasaisesti joka suuntaan"
     (is (= [-5.0 -5.0 15.0 15.0] (geo/laajenna-pinta-alaan [0 0 10 10] 400)))))
+
+(deftest geometrian-ensimmainen-piste-loytyy
+(let [lahtoarvo-viiva {:type :line, :points [[374842.77830479154 7162212.596467628] [374843.1451795721 7162214.560333616]]}
+     lahtoarvo-piste {:type :point, :coordinates [[374842.77830479154 7162212.596467628]]}
+     lahtoarvo-monta-viivaa {:type :multiline, :lines [{:type :line, :points [[357002.03819728625 7142511.219114429] [357009.824 7142524.667] [357010.555 7142525.945] [357021.461 7142545.041]]} {:type :line, :points [[357021.461 7142545.041] [357053.15097933455 7142599.537464753]]}]}
+     lahtoarvo-monta-pistetta {:type :multipoint, :coordinates [{:type :point, :coordinates [357002.03819728625 7142511.219114429]} {:type :point, :coordinates [357053.15097933455 7142599.537464753]}]}]
+  (is (= [374842.77830479154 7162212.596467628](geo/ensimmaisen-pisteen-koordinaatit lahtoarvo-viiva)) "Viivageometria (linestring) toimii, ensimmäinen piste")
+  (is (= [374842.77830479154 7162212.596467628](geo/ensimmaisen-pisteen-koordinaatit lahtoarvo-piste)) "Pistegeometria (point) toimii, ensimmäinen piste")
+  (is (= [357002.03819728625 7142511.219114429](geo/ensimmaisen-pisteen-koordinaatit lahtoarvo-monta-viivaa)) "Moniviivainen geometria (multilinestring) toimii, ensimmäinen piste")
+  (is (= [357002.03819728625 7142511.219114429](geo/ensimmaisen-pisteen-koordinaatit lahtoarvo-monta-pistetta)) "Monipisteinen geometria (point) toimii, ensimmäinen piste")))
+
+(deftest geometrian-viimeinen-piste-loytyy
+  (let [lahtoarvo-viiva {:type :line, :points [[374842.77830479154 7162212.596467628] [374843.1451795721 7162214.560333616]]}
+        lahtoarvo-piste {:type :point, :coordinates [[374842.77830479154 7162212.596467628]]}
+        lahtoarvo-monta-viivaa {:type :multiline, :lines [{:type :line, :points [[357002.03819728625 7142511.219114429] [357009.824 7142524.667] [357010.555 7142525.945] [357021.461 7142545.041]]} {:type :line, :points [[357021.461 7142545.041] [357053.15097933455 7142599.537464753]]}]}
+        lahtoarvo-monta-pistetta {:type :multipoint, :coordinates [{:type :point, :coordinates [357002.03819728625 7142511.219114429]} {:type :point, :coordinates [357053.15097933455 7142599.537464753]}]}]
+    (is (= [374843.1451795721 7162214.560333616](geo/viimeisen-pisteen-koordinaatit lahtoarvo-viiva)) "Viivageometria (linestring) toimii, viimeinen piste")
+    (is (= [374842.77830479154 7162212.596467628](geo/viimeisen-pisteen-koordinaatit lahtoarvo-piste)) "Pistegeometria (point) toimii, viimeinen piste")
+    (is (= [357053.15097933455 7142599.537464753](geo/viimeisen-pisteen-koordinaatit lahtoarvo-monta-viivaa)) "Moniviivainen geometria (multilinestring) toimii, viimeinen piste")
+    (is (= [357053.15097933455 7142599.537464753](geo/viimeisen-pisteen-koordinaatit lahtoarvo-monta-pistetta)) "Monipisteinen geometria (point) toimii, viimeinen piste")))
