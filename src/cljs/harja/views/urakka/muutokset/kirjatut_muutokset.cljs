@@ -64,7 +64,7 @@
     {:otsikko "Muutostyötilaus (€)"
      :nimi :kustannusvaikutukset
      :tyyppi :komponentti
-     :fmt (fn [kv] (fmt/euro-opt false false (reduce + 0 (map :summa kv))))
+     :fmt #(fmt/euro-opt false false (reduce + 0 (map :summa %)))
      :tasaa :oikea
      :leveys 15
      :komponentti (fn [rivi]

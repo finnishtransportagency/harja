@@ -37,7 +37,7 @@
      :tyyppi :numero
      :leveys 15
      :tasaa :oikea
-     :fmt (fn [arvo] (when arvo (str arvo " %")))}
+     :fmt #(when % (str % " %"))}
 
     {:otsikko "Laskutusrajan tarkistus (€)"
      :nimi :laskutusrajan-tarkistus
