@@ -91,7 +91,7 @@
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
         (log/debug "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
-        (if (> id 0)
+        (if (pos-int? id)
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
             (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id
