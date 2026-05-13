@@ -743,7 +743,7 @@
         ;; muutostyö otetaan aina mukaan, pysyvä vain jos summa on positiivinen
         uuden-muutoksen-tyyppi-vaikuttaa-laskutusrajaan?
         (or tyyppi-muutostyo?
-          (and tyyppi-pysyva? (pos? summa)))
+          (and tyyppi-pysyva? (pos? (or summa 0))))
 
         ;; Muokattavan muutoksen vaikutus laskutusrajaan:
         ;; olemassa oleva pysyvä/muutostyö voi joko nostaa rajaa tai palauttaa sen alkuperäiseksi
