@@ -19,14 +19,14 @@
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
-          alueurakan-lajit)
+           alueurakan-lajit)
       "Hoidon sanktiolajit alueurakoille")
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
-          mhu-lajit)
+           mhu-lajit)
       "Hoidon sanktiolajit MH-urakoille")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
-          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
+           paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
       "Ylläpidon sanktiolajit")))
 
 
@@ -39,10 +39,10 @@
         valaistuksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio]
-          alueurakan-lajit mhu-lajit)
+           alueurakan-lajit mhu-lajit)
       "Hoidon sanktiolajit urakoille laatupoikkeamissa")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
-          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
+           paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
       "Ylläpidon sanktiolajit laatupoikkeamissa")))
 
 (deftest sanktiolajien-tyyppien-urakkakohtaiset-poikkeudet
@@ -79,17 +79,17 @@
                                                 :sanktiotyypit [{:id 12 :koodi 17 :nimi "Tyyppi C"}]}]}]
     (testing "Lajit tulevat resolverin jarjestyksessa"
       (is (= [:muistutus :A]
-            (sanktio-domain/sanktio-konfiguraation-lajit sanktio-konfiguraatio))))
+             (sanktio-domain/sanktio-konfiguraation-lajit sanktio-konfiguraatio))))
 
     (testing "Lajin nimi luetaan resolverin profiilidatasta"
       (is (= "Sakko"
-            (sanktio-domain/sanktio-konfiguraation-lajin-nimi sanktio-konfiguraatio :A))))
+             (sanktio-domain/sanktio-konfiguraation-lajin-nimi sanktio-konfiguraatio :A))))
 
     (testing "Sanktiotyypit tulevat suoraan resolverin lajirivilta"
       (is (= [{:id 10 :koodi 13 :nimi "Tyyppi A"}
               {:id 11 :koodi 14 :nimi "Tyyppi B"}]
-            (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :muistutus))))
+             (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :muistutus))))
 
     (testing "Tuntematon laji ei palauta tyyppeja"
       (is (= []
-            (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :tuntematon))))))
+             (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :tuntematon))))))

@@ -76,11 +76,11 @@
                hoitokausi @urakka/valittu-hoitokausi
                _ @nakymassa?
                _ @paivita-sanktiot-ja-bonukset-atom]
-              {:nil-kun-haku-kaynnissa? true}
-              (when @nakymassa?
-                (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (first hoitokausi)
-                                                  :loppu (second hoitokausi)}))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when @nakymassa?
+      (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
+                                        :alku (first hoitokausi)
+                                        :loppu (second hoitokausi)}))))
 
 (defn paivita-sanktiot-ja-bonukset!
   "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
@@ -91,7 +91,7 @@
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
   perusteella."
   [urakka-id laatupoikkeama-id sanktio-atom]
-  (log "hae-sanktion-liitteet!  " (pr-str urakka-id ) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
+  (log "hae-sanktion-liitteet!  " (pr-str urakka-id) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
   (go (let [vastaus (<! (k/post! :hae-sanktion-liitteet {:urakka-id urakka-id
                                                          :laatupoikkeama-id laatupoikkeama-id}))]
         (if (k/virhe? vastaus)
@@ -132,7 +132,7 @@
   [s urakka-id]
   {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
    :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                                              :yllapitokohde (:id (:yllapitokohde s)))
+                     :yllapitokohde (:id (:yllapitokohde s)))
    :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
@@ -176,16 +176,16 @@
             (second @urakka/valittu-hoitokausi)))
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot-ja-bonukset)
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
+        (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
 
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
+        (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
 
 
 (defonce sanktiotyypit
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
-              (when laadunseurannassa?
-                (k/get! :hae-sanktiotyypit))))
+    (when laadunseurannassa?
+      (k/get! :hae-sanktiotyypit))))
 
 (defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
   (let [kaikki @urakan-lajisuodattimet

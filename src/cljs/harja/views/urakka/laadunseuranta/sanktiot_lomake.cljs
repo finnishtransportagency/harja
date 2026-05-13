@@ -46,8 +46,8 @@
                                         (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
                                      toimenpideinstanssit)
     "Liikenneympäristön hoito" (filter
-                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
-                                     toimenpideinstanssit)
+                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                 toimenpideinstanssit)
     toimenpideinstanssit))
 
 (defn sanktio-lomake
@@ -77,7 +77,7 @@
         liitteet-id (str "liiteet-element-id-" (gensym))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
-      (if (and (seq mahdolliset-sanktiolajit)
+    (if (and (seq mahdolliset-sanktiolajit)
           (or (not yllapitokohdeurakka?)
             (and yllapitokohdeurakka? yllapitokohteet)))
 
@@ -143,7 +143,7 @@
                                   (assoc :laji arvo)
                                   (dissoc :tyyppi)
                                   (assoc :tyyppi nil))
-                                s-tyypit (tiedot-urakka/valitun-urakan-sanktiotyypit arvo)
+                           s-tyypit (tiedot-urakka/valitun-urakan-sanktiotyypit arvo)
                            rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
@@ -159,7 +159,7 @@
                                   (and (> (count s-tyypit) 1)
                                     (some #(= vanha-tyyppi %) s-tyypit))
                                   (assoc rivi :tyyppi vanha-tyyppi
-                                              :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
                                   :else rivi)]
                        (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
@@ -342,9 +342,9 @@
                                              (when perintapvm
                                                (some #(when (and
                                                               (= (pvm/vuosi perintapvm)
-                                                                (:vuosi %))
+                                                                 (:vuosi %))
                                                               (= (pvm/kuukausi perintapvm)
-                                                                (:kuukausi %))) %)
+                                                                 (:kuukausi %))) %)
                                                  laskutuskuukaudet)))
                                   :valitse-fn #(muokkaa-lomaketta
                                                  (assoc data
@@ -425,7 +425,7 @@
             :komponentti (fn [_]
                            [:div
                             (if (and (get-in @muokattu [:laatupoikkeama :liitteet])
-                                  (not (empty? (get-in @muokattu [:laatupoikkeama :liitteet]))) )
+                                  (not (empty? (get-in @muokattu [:laatupoikkeama :liitteet]))))
                               (doall
                                 (for [l (get-in @muokattu [:laatupoikkeama :liitteet])]
                                   ^{:key l}
