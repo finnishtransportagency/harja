@@ -176,7 +176,6 @@
                 c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id)))
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
-            (log/info "hoitokausi" hoitokausi)
             (q/luo-toteuma-materiaali<! c {:toteuma (:toteuma tm),
                                            :materiaalikoodi (:materiaalikoodi tm),
                                            :maara (:maara tm),

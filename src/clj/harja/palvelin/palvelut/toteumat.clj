@@ -708,7 +708,7 @@
                          "lisatyo" "lisatyo"
                          "muu")
         {:keys [toimenpidekoodi maara paivanhinta]} (:tehtava toteuma)]
-    (log/info (str "Luodaan uudelle toteumalle id " id " tehtävä" (:tehtava toteuma) " ja toimenpidekoodi " toimenpidekoodi " ja määrä " maara " ja päiväkohtainen hinta " paivanhinta))
+    (log/debug (str "Luodaan uudelle toteumalle id " id " tehtävä" (:tehtava toteuma) " ja toimenpidekoodi " toimenpidekoodi " ja määrä " maara " ja päiväkohtainen hinta " paivanhinta))
     (toteumat-q/luo-tehtava<! c {:toteuma id,
                                  :toimenpidekoodi toimenpidekoodi,
                                  :maara maara,
