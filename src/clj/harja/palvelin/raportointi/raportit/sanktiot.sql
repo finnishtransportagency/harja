@@ -15,7 +15,7 @@ SELECT
   u.id                    AS "urakka-id",
   u.nimi                  AS nimi,
   u.loppupvm              AS loppupvm,
-  o.id                    AS elinvoimakeskus_id,
+  o.id                    AS hallintayksikko_id,
   o.nimi                  AS elinvoimakeskus_nimi,
   o.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
   tpk2.nimi      AS toimenpidekoodi_taso2,
