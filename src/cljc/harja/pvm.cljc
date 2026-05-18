@@ -1290,6 +1290,14 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
          nil))))
 
 #?(:clj
+   (defn aika->sql
+     "Luo java.sql.Timestamp-olion Joda-ajasta.
+     Palauttaa nil, jos annettu aika on nil."
+     [dt]
+     (when dt
+       (tc/to-sql-time dt))))
+
+#?(:clj
    (defn psql-timestamp->aika
      "Parsii annetun postgresql timestamp (yyyy-MM-dd'T'HH:mm:ss.SSS) formaatissa olevan merkkijonon päivämääräksi."
      [teksti]
