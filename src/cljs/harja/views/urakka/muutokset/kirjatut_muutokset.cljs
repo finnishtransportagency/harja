@@ -67,12 +67,16 @@
      :fmt #(fmt/euro-opt false false (reduce + 0 (map :summa %)))
      :tasaa :oikea
      :leveys 15
-     :komponentti (fn [rivi]
-                    (let [summa (reduce + 0 (map :summa (:kustannusvaikutukset rivi)))]
-                      (if (or (= (:tyyppi rivi) "muutostyo")
-                            (and (= (:tyyppi rivi) "pysyva") (pos? summa)))
-                        [:span (fmt/euro-opt false false summa)]
-                        [:span "-"])))}
+     :komponentti (fn [{:keys [tyyppi kustannusvaikutukset] :as _rivi}]
+                    (let [summa (reduce + 0 (map :summa kustannusvaikutukset))
+                          ;; Summa näytetään jos tyyppi on muutostyo, tai ei-negatiivinen pysyvä muutos
+                          nayta-summa? (or
+                                         (= tyyppi "muutostyo")
+                                         (and (= tyyppi "pysyva") (pos? summa)))]
+                      [:span
+                       (if nayta-summa?
+                         (fmt/euro-opt false false summa)
+                         "-")]))}
 
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
