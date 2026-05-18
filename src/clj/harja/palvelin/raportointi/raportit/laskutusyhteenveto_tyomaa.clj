@@ -225,9 +225,6 @@
                                    [alkupvm loppupvm])
         rivitiedot (first (first laskutusyhteenvedot))
 
-
-        _ (println "rivitiedot: \n " )
-        _ (pprint/pprint rivitiedot)
         laskutusraja-kaytossa? (:onko_laskutusraja_kaytossa rivitiedot)
         hk-laskutusraja (:hk_laskutusraja rivitiedot)
         laskutusrajaan-jaljella (:laskutusrajaan_jaljella rivitiedot)
@@ -235,16 +232,6 @@
         kk-ylittava-laskutusosuus (:kk_ylittava_laskutusosuus rivitiedot)
         kk-sallittu-laskutusosuus (:kk_sallittu_laskutusosuus rivitiedot)
         aikavali (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
-        _ (println "laskutusraja: " hk-laskutusraja)
-        _ (println "laskutusrajaan jaljella: " laskutusrajaan-jaljella)
-        _ (println "laskutusraja ylittynyt: " laskutusraja-ylittynyt?)
-        _ (println "sallittu laskutusosuus: " kk-sallittu-laskutusosuus)
-        _ (println "laskutusraja ylittynyt osuus: " kk-ylittava-laskutusosuus)
-        _ (println "laskutusraja käytössä: " laskutusraja-kaytossa?)
-        _ (println "aikavali: " aikavali)
-        _ (println "valittu aikavali?" valittu-aikavali?)
-        _ (println "kyseessa kk vali?" kyseessa-kk-vali?)
-        _ (println "aikarajaus: " aikarajaus)
 
         otsikot ["Hankinnat" "Hoidonjohto"]
         sheet-nimi "Työmaakokous"]

@@ -189,7 +189,6 @@
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
 
-        _ (println "loppupvm" loppupvm)
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
         ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
         ;; Halutaanko näyttää tietyn vuoden data
@@ -288,15 +287,9 @@
         yhteenveto (assoc yhteenveto
                     :laskutusraja-erotus laskutusraja-erotus)
 
-
         _ (println "laskutusraja erotus: " laskutusraja-erotus)
-
-
-
-        _ (println "laskutusraja kaytossa ads:" laskutusraja-kaytossa?)
-        _ (println "laskutusraja ylittynyt asd?" laskutusraja-ylittynyt?)
-
-
+        _ (println "laskutusraja kaytossa:" laskutusraja-kaytossa?)
+        _ (println "laskutusraja ylittynyt?" laskutusraja-ylittynyt?)
 
         sheet-nimi "Tuotekohtainen"
         otsikot [["Talvihoito" "alvi"]
@@ -351,7 +344,6 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-
      (if laskutusraja-kaytossa?
        (taulukot/yhteenveto-laskutusraja-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
                                             :otsikko "Laskutusraja"
@@ -368,12 +360,4 @@
                                                           :laskutettu-teksti laskutettu-teksti
                                                           :laskutetaan-teksti laskutetaan-teksti
                                                           :kyseessa-kk-vali? kyseessa-kk-vali?
-                                                          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
-       )
-
-
-
-
-
-
-     ]))
+                                                          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))

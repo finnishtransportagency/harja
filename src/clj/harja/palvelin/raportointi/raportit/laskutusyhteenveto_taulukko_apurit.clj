@@ -66,7 +66,6 @@
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
         kirjallisesti-sovitut-muutokset (+ (or (:pysyvat_muutokset_hoitokausi_yht data) 0) (or (:muutostyo_hoitokausi_yht data) 0))
         data (assoc data :pysyvat_muutokset_hoitokausi_yht kirjallisesti-sovitut-muutokset)
-        ;;_ (println "kyseessa-valittu-aikavali?" kyseessa-valittu-aikavali?)
         _ (println "kyseessa-kk-vali?" kyseessa-kk-vali?)
         _ (println "kyseessa-hoitokausi-vali?" kyseessa-hoitokausi-vali?)
         rivit (into []
@@ -130,6 +129,7 @@
 ;; NOTE: Tätä käytetään pääasiassa tuotekohtaisessa laskutusyteenvedossa
 (defn toteutuneet-valitaulukko-tuotekohtainen [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                                                        kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
+  (println "toteutuneet-valitaulukko-tuotekohtainen")
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
         rivit (into []
                 (remove nil?
@@ -168,7 +168,6 @@
 (defn yhteenveto-laskutusraja-tuotekohtainen
   "Työmaakokous välitaulukko laskutusrajalla"
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-valittu-aikavali? laskutusraja laskutusraja-ylittynyt? laskutusraha-erotus]}]
-  (println "data: " data)
   (let [rivit (into []
                 (remove nil?
                   (cond
