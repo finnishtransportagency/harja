@@ -15,7 +15,7 @@ SELECT
   u.id                    AS "urakka-id",
   u.nimi                  AS nimi,
   u.loppupvm              AS loppupvm,
-  o.id                    AS hallintayksikko_id,
+  o.id                    AS elinvoimakeskus_id,
   o.nimi                  AS elinvoimakeskus_nimi,
   o.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
   tpk2.nimi      AS toimenpidekoodi_taso2,
@@ -68,9 +68,9 @@ SELECT
   u.id           AS "urakka-id",
   u.nimi         AS nimi,
   u.loppupvm     AS loppupvm,
-  o.id           AS hallintayksikko_id,
-  o.nimi         AS hallintayksikko_nimi,
-  o.elinvoimakeskusnumero    AS hallintayksikko_elynumero,
+  o.id           AS elinvoimakeskus_id,
+  o.nimi         AS elinvoimakeskus_nimi,
+  o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero,
   (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
@@ -120,9 +120,9 @@ SELECT ek.id,
                                                      WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
                                                      ELSE FALSE
                                                      END)) AS indeksikorotus,
-       o.id           AS hallintayksikko_id,
-       o.nimi         AS hallintayksikko_nimi,
-       o.elinvoimakeskusnumero    AS hallintayksikko_elynumero
+       o.id           AS elinvoimakeskus_id,
+       o.nimi         AS elinvoimakeskus_nimi,
+       o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
          JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
