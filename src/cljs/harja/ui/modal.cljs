@@ -1,6 +1,7 @@
 (ns harja.ui.modal
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.ui.dom :as dom]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.ikonit :as ikonit]))
@@ -39,6 +40,10 @@
   (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
   (swap! modal-sisalto assoc :nakyvissa? false))
 
+(defn- erottele-otsikon-muotoilut [otsikko-muotoilut]
+  {:otsikon-tyylit (not-empty (dissoc otsikko-muotoilut :margin-bottom))
+   :otsakerivin-tyylit (not-empty (select-keys otsikko-muotoilut [:margin-bottom]))})
+
 (defn- modal-container* [{:keys [modaalin-fokus-elementti]}]
   (let [modal-ref (r/atom nil)
         siirra-fokus (fn [modal-nakyma fokus-elementti]
@@ -74,31 +79,39 @@
                                                 (.focus @edellinen-fokusoitu-elementti))
                                               (when sulje-ruksista-fn
                                                 (sulje-ruksista-fn))) 
-               sulje-ruksista! (or (when sulje-ruksista-fn sulje-ruksista-fn-fokuksella) sulje!)]
+               sulje-ruksista! (or (when sulje-ruksista-fn sulje-ruksista-fn-fokuksella) sulje!)
+               {:keys [otsikon-tyylit otsakerivin-tyylit]} (erottele-otsikon-muotoilut otsikko-muotoilut)]
            (if nakyvissa?
              ^{:key "modaali"}
-             [:div.modal.fade.in.harja-modal {:class modal-luokka
-                                              :on-click sulje!}
-              [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
-              [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
-                      (when leveys
-                        {:style {:max-width leveys}}))
-               [:div.modal-content {:on-click #(.stopPropagation %)
-                                    :style content-tyyli
-                                    :tab-index "0"
-                                    :ref #(reset! modal-ref %)}
+             [:div {:class (str/join " " (remove nil? ["harja-modal" modal-luokka]))
+                    :data-cy "harja-modal"
+                    :on-click sulje!}
+              [:div.harja-modal-tausta {:style {:height @dom/korkeus}}]
+              [:div (merge {:class (str/join " " (remove nil? ["harja-modal-dialogi" luokka]))}
+                           (when leveys
+                             {:style {:max-width leveys}}))
+               [:div.harja-modal-sisalto {:on-click #(.stopPropagation %)
+                                           :style content-tyyli
+                                           :tab-index "0"
+                                           :role "dialog"
+                                           :aria-modal "true"
+                                           :aria-labelledby (when otsikko "modal-otsikko")
+                                           :ref #(reset! modal-ref %)}
                 (when otsikko
-                  [:div.modal-header
-                   [ikonit/sulje-ruksi sulje-ruksista! {:style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]
-                   [:h2.modal-title {:id "modal-otsikko"
-                                     :class (when (= otsikko-tyyli :virhe)
-                                              "modal-otsikko-virhe")
-                                     :style otsikko-muotoilut}
-                    otsikko]
+                  [:div.harja-modal-otsake
+                   [:div.harja-modal-otsakerivi {:style otsakerivin-tyylit}
+                    [:h2.harja-modal-otsikko {:id "modal-otsikko"
+                                               :class (when (= otsikko-tyyli :virhe)
+                                                        "harja-modal-otsikko-virhe")
+                                               :style otsikon-tyylit}
+                     otsikko]
+                    [ikonit/sulje-ruksi sulje-ruksista! {:luokka "harja-modal-sulje"
+                                                        :nayta-bootstrap-luokka? false
+                                                        :style (if ruksi-tyyli (merge {:margin 0} ruksi-tyyli) {:margin 0})}]]
                    (when otsikon-alle-komp
                      [otsikon-alle-komp])])
-                [:div.modal-body {:style body-tyyli} sisalto]
-                (when footer [:div.modal-footer {:style footer-tyyli} footer])]]]
+                [:div.harja-modal-runko {:style body-tyyli} sisalto]
+                (when footer [:div.harja-modal-alatunniste {:style footer-tyyli} footer])]]]
              ^{:key "ei-modaalia"}
              [:span.modaali-ei-nakyvissa])))})))
 
