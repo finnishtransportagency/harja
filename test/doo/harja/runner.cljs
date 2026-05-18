@@ -11,6 +11,8 @@
             [harja.views.urakka.yleiset-test]
             [harja.views.urakka.kulut-test]
             [harja.ui.historia-test]
+            [harja.ui.bootstrap-test]
+            [harja.ui.modal-test]
             [harja.ui.kentat-test]
             [harja.ui.grid-test]
             [harja.ui.edistymispalkki-test]
@@ -45,6 +47,7 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
             [harja.tiedot.kanavat.urakka.liikenne-test]
             [harja.views.urakka.jarjestelma-asetukset-test]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-test]
             [harja.tiedot.kanavat.kohteet-kartalla-test]
             [harja.tiedot.tieluvat.tieluvat-test]
             [harja.tyokalut.predikaatti-test]))
@@ -60,6 +63,8 @@
            'harja.views.urakka.yleiset-test
            'harja.views.urakka.kulut-test
            'harja.ui.historia-test
+           'harja.ui.bootstrap-test
+           'harja.ui.modal-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
            'harja.ui.edistymispalkki-test
@@ -94,8 +99,8 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
            'harja.views.urakka.jarjestelma-asetukset-test
+           'harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-test
            'harja.tiedot.kanavat.kohteet-kartalla-test
            'harja.tiedot.tieluvat.tieluvat-test
            'harja.tyokalut.predikaatti-test
-           ;; uusi testi tähän
            )

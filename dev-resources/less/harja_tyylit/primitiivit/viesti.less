@@ -20,11 +20,11 @@
 }
 
 .harja-viesti {
-  background: @white-default;
-  border: 1px solid @harmaa9;
-  border-radius: 4px;
+  background: var(--harja-teema-pinta, @white-default);
+  border: 1px solid var(--harja-teema-reuna, @harmaa9);
+  border-radius: var(--harja-teema-radius, 0.25rem);
   box-shadow: 0 8px 24px fade(@black-default, 16%);
-  color: @harmaa2;
+  color: var(--harja-teema-teksti, @harmaa2);
   padding: @valistys-16 @valistys-24;
 }
 

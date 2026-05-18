@@ -7,6 +7,8 @@
 	  :nimi "Perusmodaali"
 	  :kuvaus "Avaa yksinkertainen modaali, jolla voi tarkistaa otsikon, rungon, sulkemisen ja footerin peruskäyttäytymistä."
 	  :data-cy "ui-komponenttien-tarkastelu-modaali-kortti"
+	  :bootstrap-tila :portattu
+	  :bootstrap-kuvaus "Tämä käyttää nyt Harjan omaa modal-primitiveä eikä renderöi enää Bootstrapin modal-rakennetta tai modal-luokkia."
 	  :tyyppi :modaali
 	  :ryhma :modaalit
 	  :luonne :interaktiivinen
@@ -26,7 +28,7 @@
 
 (defn modaalit-osio [modaalin-tila]
 	[kehys/tarkastelu-osio {:otsikko "Modaalit"
-							 :kuvaus "Modaaleja voi avata tältä sivulta manuaalista tarkastelua varten. Tarkoitus on näyttää perusrakenne, ei tarjota tuotantokäyttöistä demojärjestelmää."
+							 :kuvaus "Modaaleja voi avata tältä sivulta manuaalista tarkastelua varten. Tarkoitus on näyttää perusrakenne, ei tarjota tuotantokäyttöistä demojärjestelmää. Jokaisessa kortissa näytetään myös Bootstrap-porttauksen tila."
 							 :data-cy "ui-komponenttien-tarkastelu-modaalit-osio"
 							 :sisalto [:div {:class "ui-komponenttien-tarkastelu-ruudukko"}
 									   (renderointi/renderoi-komponentit {:modaalin-tila modaalin-tila} (modaali-komponentit))]}])
