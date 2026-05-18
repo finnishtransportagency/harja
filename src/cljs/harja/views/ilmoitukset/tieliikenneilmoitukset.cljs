@@ -225,6 +225,7 @@
        :placeholder "Rajaa ilmoittajan puhelinnumerolla"
        :tyyppi :puhelin}
       {:nimi :selite
+       :label-for-id "hakuehto"
        :palstoja 2
        :otsikko "Selite"
        :placeholder "Hae ja valitse selite"

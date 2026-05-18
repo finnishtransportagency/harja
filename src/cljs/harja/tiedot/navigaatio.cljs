@@ -267,7 +267,7 @@
     (when yks
       (go
         (reset! urakka-haku-kaynnissa? true)
-        (let [vastaus (<! (ur/hae-hallintayksikon-urakat yks))]
+        (let [vastaus (<! (ur/hae-elinvoimakeskuksen-urakat yks))]
           ;; Raportit näkymässä omanlainen loaderi joka tarvitsee jonkin lipun onko haku käynnissä
           (reset! urakka-haku-kaynnissa? false)
           vastaus)))))
@@ -313,7 +313,7 @@
             (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
               :tie
               (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                kayttajan-oletus-tyyppi
+                (or kayttajan-oletus-tyyppi :hoito)
                 :hoito)
 
               :vesi

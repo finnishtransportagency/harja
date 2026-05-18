@@ -2,7 +2,7 @@
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.18_8-jre-noble
+FROM eclipse-temurin:17.0.19_10-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"

@@ -118,13 +118,13 @@
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :laskutusyhteenveto
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:urakkatyyppi :hoito
                                 :alkupvm (c/to-date (t/local-date 2014 10 1))
                                 :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (is (vector? vastaus))
-    (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2014-30.09.2015"
+    (let [odotettu-otsikko "Pohjois-Suomi, 01.10.2014-30.09.2015"
           saatu-otsikko (second (nth vastaus 2))
           varoitus-indeksiarvojen-puuttumisesta (nth vastaus 3)
 
@@ -149,13 +149,13 @@
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :laskutusyhteenveto
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:urakkatyyppi :hoito
                                 :alkupvm (c/to-date (t/local-date 2016 10 1))
                                 :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
     (is (vector? vastaus))
-    (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2016-30.09.2017"
+    (let [odotettu-otsikko "Pohjois-Suomi, 01.10.2016-30.09.2017"
           saatu-otsikko (second (nth vastaus 2))
           vastaus (butlast (butlast vastaus))
 

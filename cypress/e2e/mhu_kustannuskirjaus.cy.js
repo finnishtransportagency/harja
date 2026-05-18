@@ -1,9 +1,10 @@
 let timeout = 60000;
+let pageloadTimeout = 20000;
 let clicktimeout = 2000;
 let avaaKulujenKohdistus = (urakanNimi) => {
     cy.visit('/');
     cy.get('.ladataan-harjaa', {timeout: timeout}).should('not.exist')
-    let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]', {timeout: 30000})
+    let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]', {timeout: pageloadTimeout})
     hakupalkki.type(urakanNimi);
     hakupalkki.siblings().contains(urakanNimi).click();
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();

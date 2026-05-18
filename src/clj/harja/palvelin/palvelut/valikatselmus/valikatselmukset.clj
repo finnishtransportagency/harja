@@ -199,8 +199,9 @@
                            :hoitokauden-alkuvuosi hoitovuosi
                            :alkupvm hoitokauden-alkupvm
                            :loppupvm hoitokauden-loppupvm})
+        urakan-sopimustyyppi (:sopimustyyppi (first (q-urakat/hae-urakan-tiedot db urakkaid)))
         ;; Formatoidaan kustannukset ui:ta varten
-        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)]
+        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset urakan-sopimustyyppi)]
     kustannukset-jarjestettyna))
 
 (defn hae-valikatselmuksen-tiedot-hoitovuodelle [db kayttaja {:keys [urakkaid hoitovuosi]}]

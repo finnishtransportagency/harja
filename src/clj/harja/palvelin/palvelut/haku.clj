@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.haku
   (:require [com.stuartsierra.component :as component]
+            [harja.domain.roolit :as roolit]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.urakat :as ur-q]
             [harja.kyselyt.hallintayksikot :as org-q]
@@ -12,7 +13,10 @@
   (oikeudet/ei-oikeustarkistusta!) ;urakoitsijan osalta oikeustarkistus tehdään organisaation kautta SQL-kyselyssä
   (let [termi (str "%" hakutermi "%")
         kayttajan-org (:organisaatio user)
-        loytyneet-urakat (when kayttajan-org                ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
+        kayttajan-org (if (roolit/jvh? user)                ;; jvh:lla ei ole aina organisaatiota. Aseta se liikennevirastoksi
+                        (assoc kayttajan-org :tyyppi :liikennevirasto)
+                        kayttajan-org)
+        loytyneet-urakat (when (or kayttajan-org (roolit/jvh? user))                ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus) tai jvh
                            (into []
                                 (filter #(if (= "urakoitsija" (:tyyppi kayttajan-org))
                                            (oikeudet/voi-lukea? oikeudet/urakat (:id %) user)
@@ -30,7 +34,7 @@
                                         :kayttajan_org_id (:id kayttajan-org)
                                         :numero (when (re-matches (re-pattern "\\d+") hakutermi)
                                                   (Integer/parseInt hakutermi))}))))
-        loytyneet-organisaatiot (when kayttajan-org         ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
+        loytyneet-organisaatiot (when (or kayttajan-org (roolit/jvh? user))         ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus) tai jvh
                                   (into []
                                         (map #(assoc % :tyyppi :organisaatio
                                                        :hakusanat (str (when (:lyhenne %) (str (:lyhenne %) " "))

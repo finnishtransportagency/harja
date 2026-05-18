@@ -10,6 +10,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
+(declare pkluokkien-yotyot-hallintayksikoittain)
+
 (defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi urakka-tai-hallintayksikko?]
   (let [nimi (case taulukkotyyppi
                :yha "YHA-kohteet"
@@ -413,32 +415,32 @@
       {:otsikko "Summa" :leveys 2 :fmt :raha}]
      rivit]))
 
-(defn suorita [db user {:keys [urakka-id vuosi hallintayksikko-id] :as tiedot}]
+(defn suorita [db user {:keys [urakka-id vuosi elinvoimakeskus-id] :as tiedot}]
   (let [urakka-tai-hallintayksikko? (or
                                       (some? urakka-id)
-                                      (and (some? hallintayksikko-id) (not urakka-id)))
+                                      (and (some? elinvoimakeskus-id) (not urakka-id)))
 
         raportin-nimi (if urakka-id
                         "Vastaanottotarkastus"
                         "Päällystysurakoiden yhteenveto")
         konteksti (cond
                     urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :else :koko-maa)
         raportin-nimi (case konteksti
                         :urakka (str
                                   (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                                   ", " raportin-nimi " " vuosi)
-                        :hallintayksikko (str
+                        :elinvoimakeskus (str
                                            raportin-nimi ", "
-                                           (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                                           (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                                            " " vuosi)
                         :koko-maa (str raportin-nimi ", KOKO MAA " vuosi))
 
         yllapitokohteet+kustannukset (->> (into []
                                             (hae-yllapitokohteet db {:urakka urakka-id
                                                                      :vuosi vuosi
-                                                                     :hallintayksikko hallintayksikko-id}))
+                                                                     :elinvoimakeskus elinvoimakeskus-id}))
 
                                        (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
 
@@ -446,19 +448,19 @@
 
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
                                                      :vuosi vuosi
-                                                     :hallintayksikko hallintayksikko-id})
+                                                     :elinvoimakeskus elinvoimakeskus-id})
         urakan-sanktiot (->>
                           (map konv/alaviiva->rakenne
                             (hae-yllapitourakan-sanktiot db {:urakka urakka-id
                                                              :vuosi vuosi
-                                                             :hallintayksikko hallintayksikko-id}))
+                                                             :elinvoimakeskus elinvoimakeskus-id}))
                           (map #(assoc % :maara (- (:maara %)))))
         ;; Yhteenvetoraportilla on lisäksi Eurot / PK-luokka osio
         pkluokkien-kustannukset (when-not urakka-id
                                   (sort-by
                                     #(Integer/parseInt (str (:elynumero %)))
                                     (pkluokkien-kustannukset-urakoittain db {:vuosi vuosi
-                                                                             :hallintayksikko hallintayksikko-id})))
+                                                                             :elinvoimakeskus elinvoimakeskus-id})))
         pkluokkien-kustannukset (when-not urakka-id
                                   (apurit/formatoi-pkluokkarivit-taulukolle pkluokkien-kustannukset muut-kustannukset
                                     urakan-sanktiot yllapitokohteet+kustannukset vuosi))
@@ -470,7 +472,7 @@
                             (sort-by
                               #(Integer/parseInt (str (:elynumero %)))
                               (pkluokkien-yotyot-hallintayksikoittain db {:vuosi vuosi
-                                                                          :hallintayksikko hallintayksikko-id})))
+                                                                          :elinvoimakeskus elinvoimakeskus-id})))
         pkluokkien-yotyot-elyittain-jaoteltuna (apurit/formatoi-yotyorivit-taulukolle pkluokkien-yotyot yllapitokohteet+kustannukset)]
 
     [:raportti {:orientaatio :landscape

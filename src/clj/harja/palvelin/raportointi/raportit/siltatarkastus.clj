@@ -139,8 +139,8 @@
                       :osuus (Math/round (math/osuus-prosentteina
                                            d-yhteensa kaikki-yhteensa))}]]))
 
-(defn- muodosta-hallintayksikon-datarivit [db hallintayksikko-id vuosi]
-  (let [urakkarivit (hae-hallintayksikon-siltatarkastukset db {:hallintayksikko hallintayksikko-id
+(defn- muodosta-hallintayksikon-datarivit [db elinvoimakeskus-id vuosi]
+  (let [urakkarivit (hae-hallintayksikon-siltatarkastukset db {:elinvoimakeskus elinvoimakeskus-id
                                                                :vuosi vuosi})
         taulukkorivit (mapv
                         (fn [rivi]
@@ -201,7 +201,7 @@
                {:leveys 2 :otsikko "Tulos"}
                {:leveys 10 :otsikko "Lisätieto"}
                {:leveys 5 :otsikko "Liitteet"}])
-    :hallintayksikko [{:leveys 10 :otsikko "Urakka"}
+    :elinvoimakeskus [{:leveys 10 :otsikko "Urakka"}
                       {:leveys 5 :otsikko "A"}
                       {:leveys 5 :otsikko "B"}
                       {:leveys 5 :otsikko "C"}
@@ -212,15 +212,15 @@
                {:leveys 5 :otsikko "C"}
                {:leveys 5 :otsikko "D"}]))
 
-(defn- muodosta-raportin-datarivit [db urakka-id hallintayksikko-id konteksti silta-id vuosi]
+(defn- muodosta-raportin-datarivit [db urakka-id elinvoimakeskus-id konteksti silta-id vuosi]
   (case konteksti
     :urakka (muodosta-urakan-datarivit db urakka-id silta-id vuosi)
-    :hallintayksikko (muodosta-hallintayksikon-datarivit db hallintayksikko-id vuosi)
+    :elinvoimakeskus (muodosta-hallintayksikon-datarivit db elinvoimakeskus-id vuosi)
     :koko-maa (muodosta-koko-maan-datarivit db vuosi)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id silta-id vuosi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id silta-id vuosi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         otsikkorivit (muodosta-raportin-otsikkorivit db konteksti silta-id)
         yksittaisen-sillan-perustiedot (when (and (= konteksti :urakka)
@@ -228,7 +228,7 @@
                                          (first (hae-sillan-tarkastus db {:urakka urakka-id
                                                                           :vuosi vuosi
                                                                           :silta silta-id})))
-        datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
+        datarivit (muodosta-raportin-datarivit db urakka-id elinvoimakeskus-id konteksti silta-id vuosi)
         urakan-vuoden-tarkastusmaarat (when (= konteksti :urakka)
                                         (first (hae-urakan-tarkastettujen-siltojen-lkm db {:urakka urakka-id
                                                                                            :vuosi vuosi})))
@@ -244,7 +244,7 @@
                        (and (= konteksti :urakka) (not= silta-id :kaikki))
                        (= (kentta-indeksilla rivi 2) "D")
 
-                       (= konteksti :hallintayksikko)
+                       (= konteksti :elinvoimakeskus)
                        (let [d-osuus (:osuus (second (kentta-indeksilla rivi 4)))]
                          (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
 
@@ -286,7 +286,7 @@
                               (and (= konteksti :urakka) (= silta-id :kaikki))
                               (indeksi 0)
 
-                              (and (= konteksti :hallintayksikko))
+                              (and (= konteksti :elinvoimakeskus))
                               (indeksi 0)
 
                               (and (= konteksti :koko-maa))
@@ -309,8 +309,8 @@
                     (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
                          (str (:siltanimi yksittaisen-sillan-perustiedot)
                               " (" (:siltatunnus yksittaisen-sillan-perustiedot)) "), " vuosi))
-                  :hallintayksikko
-                  (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
+                  :elinvoimakeskus
+                  (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id))) " " vuosi)
                   :koko-maa
                   (str raportin-nimi ", KOKO MAA " vuosi))]
 
@@ -321,7 +321,7 @@
                           "Sillalle ei ole tehty tarkastusta valittuna vuonna."
                           "Ei raportoitavia siltatarkastuksia.")
                  :viimeinen-rivi-yhteenveto? (or (and (= konteksti :urakka) (= silta-id :kaikki))
-                                                 (= konteksti :hallintayksikko)
+                                                 (= konteksti :elinvoimakeskus)
                                                  (= konteksti :koko-maa))
                  :sheet-nimi raportin-nimi}
       otsikkorivit
@@ -344,7 +344,7 @@
         (vec (->> datarivit
                   (map virhe?)
                   (map korosta)))
-        (and (= konteksti :hallintayksikko))
+        (and (= konteksti :elinvoimakeskus))
         (conj (vec (->> datarivit
                         butlast
                         (map virhe?)

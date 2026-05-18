@@ -36,7 +36,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         cy.visit("/");
 
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click();
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click();
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');
@@ -150,13 +150,15 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         cy.contains('Selite', {timeout: clickTimeout});
 
         // Selite -> Oma cypress selite
-        cy.get('label[for="kustannus-selite"]').parent().find('input').type('Oma cypress selite').blur();
+        cy.get('label[for*="kustannus-selite"]').should('be.visible')
+        cy.get('label[for*="kustannus-selite"] + div input').type('Oma cypress selite').blur();
 
         // Tallenna napin ei pitäisi olla vielä näkyvissä
         cy.get('[data-cy="tallena-yllapito-kustannus"]').should('be.disabled');
 
         // Kustannus -> 123456,12 e
-        cy.get('label[for="kustannus"]').parent().find('input').type('123456.12').blur();
+        cy.get('label[for*="kustannus-G"]').should('be.visible')
+        cy.get('label[for*="kustannus-G"] + span input').type('123456.12').blur();
 
         // Kaikki syötetty, tallenna napin pitäisi näkyä
         cy.get('[data-cy="tallena-yllapito-kustannus"]', {timeout: clickTimeout})
