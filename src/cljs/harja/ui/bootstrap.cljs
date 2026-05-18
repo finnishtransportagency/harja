@@ -7,6 +7,32 @@
             [clojure.string :as clj-str]))
 
 
+(defn- tabin-otsikko-teksti [title]
+  (if (map? title)
+    (:teksti title)
+    title))
+
+(defn- tabin-otsikko-sisalto [title]
+  (if (map? title)
+    (or (:sisalto title) (:teksti title))
+    title))
+
+(defn- tabin-data-cy [title classes]
+  (or (when (map? title) (:data-cy title))
+      (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
+            cy-title (-> (tabin-otsikko-teksti title)
+                       str
+                       (clj-str/replace #"ä" "a")
+                       (clj-str/replace #"ö" "o"))]
+        (if tabs-taso
+          (str tabs-taso "-" cy-title)
+          cy-title))))
+
+(defn- tabs-tyyliluokka [style]
+  (case (or style :tabs)
+    :pills "harja-tabs-tyyli-pills"
+    :tabs "harja-tabs-tyyli-tabs"))
+
 
 (defn tabs
   "A tabbed panel. Takes a map of configuration parameters and alternating tab titles and tab components.
@@ -33,9 +59,7 @@ The following keys are supported in the configuration:
       (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
                           (tarkista-aktiivinen-tabi active alternating-title-and-component)))
       (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
-        (let [style-class (case (or style :tabs)
-                            :pills "nav-pills"
-                            :tabs (str "nav-tabs " classes))
+        (let [style-class (tabs-tyyliluokka style)
               tabs (filter #(not (nil? (nth % 2)))
                      (partition 3 alternating-title-and-component))
               [active-tab-title active-tab-keyword active-component]
@@ -49,26 +73,24 @@ The following keys are supported in the configuration:
           (if (empty? tabs)
             [:span "Ei käyttöoikeutta."]
             [:span
-             [:ul.nav {:class style-class}
+             [:ul {:class (clj-str/join " " (remove nil? ["harja-tabs" style-class classes]))
+                   :role "tablist"}
               (for [[title keyword] tabs]
-                ^{:key title}
-                [:li {:class (when (= keyword active-tab-keyword)
-                               "active")}
-                 [:a.klikattava (merge
-                                  {:tabIndex "0"
-                                   :on-click #(vaihda-aktiivinen-tabi keyword %)
-                                   :on-key-down #(when (dom/enter-nappain? %)
-                                                   (vaihda-aktiivinen-tabi keyword %))}
-                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
-                                        cy-title (-> title
-                                                   str
-                                                   (clj-str/replace #"ä" "a")
-                                                   (clj-str/replace #"ö" "o"))]
-                                    (if tabs-taso
-                                      {:data-cy (str tabs-taso "-" cy-title)}
-                                      {:data-cy cy-title})))
-                  title]])]
-             [:div.valilehti active-component]]))))))
+                ^{:key (str (tabin-otsikko-teksti title) "-" keyword)}
+                [:li {:class (clj-str/join " " (remove nil? ["harja-tabs-valilehti"
+                                                              (when (= keyword active-tab-keyword)
+                                                                "harja-tabs-valittu")]))}
+                 [:a.harja-tabs-linkki.klikattava (merge
+                                                   {:tabIndex "0"
+                                                    :role "tab"
+                                                    :aria-selected (str (= keyword active-tab-keyword))
+                                                    :on-click #(vaihda-aktiivinen-tabi keyword %)
+                                                    :on-key-down #(when (dom/enter-nappain? %)
+                                                                    (vaihda-aktiivinen-tabi keyword %))}
+                                                   {:data-cy (tabin-data-cy title classes)})
+                  (tabin-otsikko-sisalto title)]])]
+             [:div.valilehti.harja-tabs-sisalto {:role "tabpanel"}
+              active-component]]))))))
 
 (defn navbar
   "A Bootstrap navbar component"
