@@ -385,7 +385,7 @@ describe('Johto- ja hallintokorvaus osio', function () {
 
                 // Modalin pitäisi aueta ja se pyytää vahvistamaan halutaanko aiemmin asetetut tiedot poistaa riviltä.
                 // Painetaan "Poista tiedot"-nappulaa.
-                cy.get('.modal')
+                cy.get('[data-cy="harja-modal"]')
                     .contains('button', 'Poista')
                     .click();
 

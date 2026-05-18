@@ -1,73 +1,181 @@
 /* Tässä tiedostossa on navigointiin liittyvien komponenttien tyylejä.
    Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
 
+@tabs-reunan-leveys: 0.0625rem;
+@tabs-linkin-kulman-sade: @valistys-4;
+@tabs-linkin-rako: 0.125rem;
+@tabs-linkin-padding-pysty: 0.625rem;
+@tabs-linkin-padding-vaaka: 0.9375rem;
+@tabs-taso2-valilehden-ylamarginaali: 0.1875rem;
+@tabs-taso2-sisallon-reunan-ylivienti: -0.625rem;
+@tabs-valitun-rivin-alareunan-ylivienti: -@tabs-reunan-leveys;
+@tabs-reunan-vari: var(--harja-tabs-border-color, var(--harja-teema-reuna, @harmaa7));
+@tabs-linkin-sade-runtime: var(--harja-tabs-radius, var(--harja-teema-radius, @tabs-linkin-kulman-sade));
+@tabs-linkin-rako-runtime: var(--harja-tabs-gap, @tabs-linkin-rako);
+@tabs-linkin-padding-pysty-runtime: var(--harja-tabs-padding-pysty, @tabs-linkin-padding-pysty);
+@tabs-linkin-padding-vaaka-runtime: var(--harja-tabs-padding-vaaka, @tabs-linkin-padding-vaaka);
+@tabs-taso1-passiivinen-tausta-runtime: var(--harja-tabs-taso1-passiivinen-tausta, var(--harja-teema-korostus, @sininen4));
+@tabs-taso1-passiivinen-teksti-runtime: var(--harja-tabs-taso1-passiivinen-teksti, var(--harja-teema-pinta, @white-default));
+@tabs-taso1-passiivinen-hover-tausta-runtime: var(--harja-tabs-taso1-passiivinen-hover-tausta, var(--harja-teema-korostus-hover, @sininen5));
+@tabs-taso1-aktiivinen-tausta-runtime: var(--harja-tabs-taso1-aktiivinen-tausta, var(--harja-teema-pinta, @harjan-taustavari));
+@tabs-taso1-aktiivinen-teksti-runtime: var(--harja-tabs-taso1-aktiivinen-teksti, var(--harja-teema-teksti, @black-default));
+@tabs-pills-passiivinen-tausta-runtime: var(--harja-tabs-pills-passiivinen-tausta, var(--harja-teema-pinta, @harmaa15));
+@tabs-pills-passiivinen-teksti-runtime: var(--harja-tabs-pills-passiivinen-teksti, var(--harja-teema-korostus, @sininen4));
+@tabs-pills-passiivinen-hover-tausta-runtime: var(--harja-tabs-pills-passiivinen-hover-tausta, var(--harja-teema-pinta-hover, @harmaa12));
+@tabs-pills-passiivinen-hover-teksti-runtime: var(--harja-tabs-pills-passiivinen-hover-teksti, var(--harja-teema-korostus-hover, @sininen5));
+@tabs-pills-aktiivinen-tausta-runtime: var(--harja-tabs-pills-aktiivinen-tausta, var(--harja-teema-korostus, @sininen4));
+@tabs-pills-aktiivinen-teksti-runtime: var(--harja-tabs-pills-aktiivinen-teksti, var(--harja-teema-pinta, @white-default));
+@tabs-pills-aktiivinen-hover-tausta-runtime: var(--harja-tabs-pills-aktiivinen-hover-tausta, var(--harja-teema-korostus-hover, @sininen5));
+
+.harja-tabs-linkin-reunat(@ylareuna, @oikea-reuna, @alareuna, @vasen-reuna) {
+  border-top: @tabs-reunan-leveys solid @ylareuna;
+  border-right: @tabs-reunan-leveys solid @oikea-reuna;
+  border-bottom: @tabs-reunan-leveys solid @alareuna;
+  border-left: @tabs-reunan-leveys solid @vasen-reuna;
+}
+
+.harja-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+
+  > .harja-tabs-valilehti {
+    display: block;
+    position: relative;
+
+    > .harja-tabs-linkki {
+      display: block;
+      position: relative;
+      text-decoration: none;
+      padding: @tabs-linkin-padding-pysty-runtime @tabs-linkin-padding-vaaka-runtime;
+    }
+  }
+}
+
+.harja-tabs-tyyli-tabs {
+  border-bottom: @tabs-reunan-leveys solid @tabs-reunan-vari;
+
+  > .harja-tabs-valilehti {
+    margin-bottom: @tabs-valitun-rivin-alareunan-ylivienti;
+
+    > .harja-tabs-linkki {
+      margin-right: @tabs-linkin-rako-runtime;
+      .harja-tabs-linkin-reunat(transparent, transparent, @tabs-reunan-vari, transparent);
+      border-radius: @tabs-linkin-sade-runtime @tabs-linkin-sade-runtime 0 0;
+    }
+
+    &.harja-tabs-valittu > .harja-tabs-linkki {
+      .harja-tabs-linkin-reunat(@tabs-reunan-vari, @tabs-reunan-vari, transparent, @tabs-reunan-vari);
+    }
+  }
+}
+
+.harja-tabs-tyyli-pills {
+  > .harja-tabs-valilehti {
+    + .harja-tabs-valilehti {
+      margin-left: @tabs-linkin-rako-runtime;
+    }
+
+    > .harja-tabs-linkki {
+      background-color: @tabs-pills-passiivinen-tausta-runtime;
+      color: @tabs-pills-passiivinen-teksti-runtime;
+      border-radius: @tabs-linkin-sade-runtime;
+      font-weight: bold;
+    }
+
+    &:not(.harja-tabs-valittu) > .harja-tabs-linkki:hover,
+    &:not(.harja-tabs-valittu) > .harja-tabs-linkki:focus {
+      background-color: @tabs-pills-passiivinen-hover-tausta-runtime;
+      color: @tabs-pills-passiivinen-hover-teksti-runtime;
+    }
+
+    &.harja-tabs-valittu > .harja-tabs-linkki {
+      background-color: @tabs-pills-aktiivinen-tausta-runtime;
+      color: @tabs-pills-aktiivinen-teksti-runtime;
+    }
+
+    &.harja-tabs-valittu > .harja-tabs-linkki:hover,
+    &.harja-tabs-valittu > .harja-tabs-linkki:focus {
+      background-color: @tabs-pills-aktiivinen-hover-tausta-runtime;
+      color: @tabs-pills-aktiivinen-teksti-runtime;
+    }
+  }
+}
+
 
 .tabs-taso1 {
-  + .valilehti {
-    border-right: 1px solid @harmaa7;
-    border-left: 1px solid @harmaa7;
-    border-bottom: 1px solid @harmaa7;
+  + .harja-tabs-sisalto {
+    border-right: @tabs-reunan-leveys solid @tabs-reunan-vari;
+    border-left: @tabs-reunan-leveys solid @tabs-reunan-vari;
+    border-bottom: @tabs-reunan-leveys solid @tabs-reunan-vari;
   }
 
-  > li:not(.active) > a {
-    background-color: @sininen4;
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki {
+    background-color: @tabs-taso1-passiivinen-tausta-runtime;
     text-transform: uppercase;
-    color: @white-default;
+    color: @tabs-taso1-passiivinen-teksti-runtime;
     font-weight: normal;
   }
 
-  > li.active > a {
-    background-color: @harjan-taustavari;
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki {
+    .harja-tabs-linkin-reunat(@tabs-reunan-vari, @tabs-reunan-vari, transparent, @tabs-reunan-vari);
+    background-color: @tabs-taso1-aktiivinen-tausta-runtime;
     text-transform: uppercase;
-    color: @black-default;
+    color: @tabs-taso1-aktiivinen-teksti-runtime;
     font-weight: normal;
   }
 
-  > li:not(.active) > a:hover {
-    background-color: @sininen5;
-    color: @white-default;
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki:hover,
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki:focus {
+    background-color: @tabs-taso1-passiivinen-hover-tausta-runtime;
+    color: @tabs-taso1-passiivinen-teksti-runtime;
   }
 
-  > li.active > a:hover {
-    background-color: @harjan-taustavari;
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki:hover,
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki:focus {
+    background-color: @tabs-taso1-aktiivinen-tausta-runtime;
   }
 
 }
 
 .tabs-taso2 {
-  > li {
-    margin-top: 3px;
+  > .harja-tabs-valilehti {
+    margin-top: @tabs-taso2-valilehden-ylamarginaali;
   }
   
   /* Normaalisti 1. tason välilehden sisällöllä on padding. Tabit ovat kuitenkin poikkeustapaus,
      ja siksi pakotetaan ne kiinni reunoihin. */
-  margin-left: -10px;
-  margin-right: -10px;
+  margin-left: @tabs-taso2-sisallon-reunan-ylivienti;
+  margin-right: @tabs-taso2-sisallon-reunan-ylivienti;
 
-  > li:not(.active) > a {
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki {
     font-weight: bold;
-    border-left: 1px solid @sininen4;
-    border-top: 1px solid @sininen4;
-    border-right: 1px solid @sininen4;
-    border-bottom: 1px solid @harmaa7;
+    .harja-tabs-linkin-reunat(@sininen4, @sininen4, @harmaa7, @sininen4);
     background-color: @harmaa13;
     color: @sininen4;
   }
 
-  > li.active > a {
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki {
+    .harja-tabs-linkin-reunat(@sininen4, @sininen4, transparent, @sininen4);
     background-color: @harjan-taustavari;
+    color: @black-default;
   }
 
-  > li:not(.active) > a:hover {
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki:hover,
+  > .harja-tabs-valilehti:not(.harja-tabs-valittu) > .harja-tabs-linkki:focus {
     color: @sininen5;
     background-color: @harmaa15;
   }
 
-  > li.active > a:hover {
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki:hover,
+  > .harja-tabs-valilehti.harja-tabs-valittu > .harja-tabs-linkki:focus {
     background-color: @harjan-taustavari;
   }
 
-  > li:first-child > a {
+  > .harja-tabs-valilehti:first-child > .harja-tabs-linkki {
     border-left: none !important;
   }
 }

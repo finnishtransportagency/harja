@@ -1071,14 +1071,16 @@
 (defn sulje-ruksi
   ([sulje!]
    [sulje-ruksi sulje! {}])
-  ([sulje! {:keys [style]}]
-   [:button.close {:on-click sulje!
-                   :alt "sulje"
-                   :aria-label "sulje"
-                   :style (merge
-                            {:color "black"
-                             :margin "15px"
-                             :opacity 1}
-                            style)
-                   :type "button"}
+  ([sulje! {:keys [luokka nayta-bootstrap-luokka? style]
+            :or {nayta-bootstrap-luokka? true}}]
+   [:button {:class (str/join " " (remove nil? [(when nayta-bootstrap-luokka? "close") luokka]))
+             :on-click sulje!
+             :alt "sulje"
+             :aria-label "sulje"
+             :style (merge
+                      {:color "black"
+                       :margin "15px"
+                       :opacity 1}
+                      style)
+             :type "button"}
     [harja-icon-navigation-close]]))

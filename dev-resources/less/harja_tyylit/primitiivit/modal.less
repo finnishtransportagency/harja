@@ -1,0 +1,130 @@
+.harja-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: @valistys-32 @valistys-16;
+  overflow-y: auto;
+}
+
+.harja-modal-keskitetty {
+  align-items: center;
+}
+
+.harja-modal-tausta {
+  position: fixed;
+  inset: 0;
+  background-color: fade(@black-default, 50%);
+}
+
+.harja-modal-dialogi {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 800px;
+}
+
+.harja-modal-dialogi.harja-modal-dialogi-keskitetty {
+  display: flex;
+  align-items: center;
+  margin: auto;
+  width: 400px;
+}
+
+.harja-modal-dialogi.materiaalikirjasto-modal {
+  width: 90%;
+  max-width: 90%;
+}
+
+.harja-modal-dialogi.yhteystieto {
+  max-width: 500px;
+}
+
+.harja-modal-dialogi.yha-tuonti {
+  max-width: 800px;
+}
+
+.harja-modal-dialogi.merkitse-valmiiksi-tiemerkintaan > .harja-modal-sisalto {
+  min-height: 380px;
+}
+
+.harja-modal-dialogi.palaute-dialog > .harja-modal-sisalto {
+  min-height: 320px;
+}
+
+.harja-modal-dialogi.palaute-dialog .palauteohje {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.harja-modal-dialogi.kuva-modal .harja-modal-runko {
+  height: 100%;
+  max-height: 80%;
+}
+
+.harja-modal-sisalto {
+  position: relative;
+  width: 100%;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding: @valistys-32;
+  background-color: @white-default;
+  border: 1px solid fade(@black-default, 10%);
+  border-radius: 4px;
+  box-shadow: 0 16px 40px fade(@black-default, 24%);
+}
+
+.harja-modal-otsake {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-8;
+  margin-bottom: @valistys-16;
+  padding: 0;
+}
+
+.harja-modal-otsakerivi {
+  display: flex;
+  align-items: flex-start;
+  gap: @valistys-16;
+  justify-content: space-between;
+}
+
+.harja-modal-otsikko {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.harja-modal-otsikko-virhe {
+  color: @vaara;
+}
+
+.harja-modal-sulje {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.harja-modal-runko {
+  margin-bottom: 40px;
+  padding: 0;
+
+  .kuvaus {
+    margin-bottom: 30px;
+  }
+}
+
+.harja-modal-alatunniste {
+  display: flex;
+  gap: @valistys-8;
+  justify-content: flex-end;
+  border: 0;
+  padding: 0;
+}

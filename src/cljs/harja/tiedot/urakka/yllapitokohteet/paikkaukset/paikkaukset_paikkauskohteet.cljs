@@ -932,7 +932,7 @@
 (defn nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
   (fn [] (modal/nayta!
            {:modal-luokka "harja-modal-keskitetty"
-            :luokka "modal-dialog-keskitetty"}
+            :luokka "harja-modal-dialogi-keskitetty"}
            [:div
             {:style
              {:display :flex

@@ -38,7 +38,7 @@ describe('Osion vahvistaminen', function () {
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
+        cy.get('[data-cy="harja-modal"]')
             .find('.alert-success')
             .click();
 
@@ -65,7 +65,7 @@ describe('Osion vahvistaminen', function () {
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
+        cy.get('[data-cy="harja-modal"]')
             .find('.alert-success')
             .click();
 
@@ -92,7 +92,7 @@ describe('Osion vahvistaminen', function () {
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
+        cy.get('[data-cy="harja-modal"]')
             .find('.alert-success')
             .click();
 

@@ -20,7 +20,7 @@ let avaaPaallystysIlmoitus = function (vuosi, urakka, kohteenNimi, kohteenTila, 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakka, {timeout: odotaElementtia}).click()
     cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
     cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
-    cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
+    cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').should('have.attr', 'aria-selected', 'true')
     cy.get('[data-cy=paallystysilmoitukset-grid] img[src="images/ajax-loader.gif"]', {timeout: ajaxLoaderTimeout}).should('not.exist')
     valitseVuosi(vuosi)
     cy.get('[data-cy=paallystysilmoitukset-grid]')
@@ -68,7 +68,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: odotaElementtia}).click()
         cy.get('[data-cy=tabs-taso1-Paallystykset]').click()
         cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').click()
-        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').parent().should('have.class', 'active')
+        cy.get('[data-cy=tabs-taso2-Paallystysilmoitukset]').should('have.attr', 'aria-selected', 'true')
         cy.get('img[src="images/ajax-loader.gif"]').should('not.exist')
         cy.get('[data-cy=piilota-kartta]').click()
         valitseVuosi(2017);
