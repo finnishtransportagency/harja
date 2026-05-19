@@ -9,10 +9,6 @@ $$
 DECLARE
     hk_alkuvuosi INTEGER;
 BEGIN
-    IF NEW.hoitokauden_alkuvuosi IS NOT NULL THEN
-        RETURN NEW;
-    END IF;
-
     SELECT CASE
                WHEN EXTRACT(MONTH FROM t.alkanut) >= 10
                    THEN EXTRACT(YEAR FROM t.alkanut)::INTEGER
@@ -38,10 +34,6 @@ $$
 DECLARE
     hk_alkuvuosi INTEGER;
 BEGIN
-    IF NEW.hoitokauden_alkuvuosi IS NOT NULL THEN
-        RETURN NEW;
-    END IF;
-
     SELECT CASE
                WHEN EXTRACT(MONTH FROM t.alkanut) >= 10
                    THEN EXTRACT(YEAR FROM t.alkanut)::INTEGER
