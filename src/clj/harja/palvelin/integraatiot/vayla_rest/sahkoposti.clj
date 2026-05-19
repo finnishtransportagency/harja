@@ -143,7 +143,8 @@
         kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
 
     ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
-    (when-not (nil? virheet)
+    ;; FIXME: Poistetaan väliaikaisesti käytöstä HARJA-2422
+    #_(when-not (nil? virheet)
       (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
         vastaus-virheelliseen-viestiin {"X-Correlation-ID" ilmoitus-id} false)
       kuittaus-xml)
