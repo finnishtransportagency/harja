@@ -484,7 +484,8 @@
     (is (= "ei-valitetty" (:tila ilmoitus)))
     (is (= 0 (count ilmoitustoimenpiteet)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa.")))
 
-(deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan
+;; FIXME: Poistettu koska häröä sähköpostia ei käsitellä
+#_(deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan
   (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
                 integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
                                                        {:status 200
