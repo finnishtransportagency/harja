@@ -66,7 +66,7 @@ EXECUTE FUNCTION paivita_hoitokauden_alkuvuosi_materiaalille();
 -- Triggeri toteuma-tauluun: kun alkanut muuttuu, päivitetään toteuma_tehtava ja toteuma_materiaali taulujen hoitokauden_alkuvuosi.
 -- Päivitys tehdään vain, jos uusi hoitokausi eroaa vanhasta.
 
-CREATE OR REPLACE FUNCTION paivita_lasten_hoitokauden_alkuvuosi_toteumalta()
+CREATE OR REPLACE FUNCTION paivita_hoitokauden_alkuvuosi_tehtava_ja_materiaalitauluista()
     RETURNS TRIGGER
     LANGUAGE plpgsql
 AS
@@ -94,9 +94,9 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER tg_toteuma_alkanut_paivittaa_lasten_hoitokausi
+CREATE TRIGGER tg_toteuma_alkanut_paivitta_tehtavamateriaali_hoitokausi
     AFTER UPDATE OF alkanut
     ON toteuma
     FOR EACH ROW
     WHEN (OLD.alkanut IS DISTINCT FROM NEW.alkanut)
-EXECUTE FUNCTION paivita_lasten_hoitokauden_alkuvuosi_toteumalta();
+EXECUTE FUNCTION paivita_hoitokauden_alkuvuosi_tehtava_ja_materiaalitauluista();
