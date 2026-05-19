@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
-        uses: slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c # v3.0.2
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success ja sitä ei ole manuaalisesti canceloitu
         if: ${{ (job.status != 'success' || needs.tests.result != 'success') && needs.tests.result != 'cancelled' }}
         with:
@@ -99,7 +99,7 @@ jobs:
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send cancel message to Slack
-        uses: slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c # v3.0.2
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         if: ${{ needs.tests.result == 'cancelled' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -168,7 +168,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c # v3.0.2
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
