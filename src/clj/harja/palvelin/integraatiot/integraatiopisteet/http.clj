@@ -27,7 +27,7 @@
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
                       parametrit kayttajatunnus salasana kutsudata
-                      lomakedatana? httpkit-asetukset]
+                      lomakedatana? httpkit-asetukset & [timeout]]
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -37,7 +37,7 @@
                                      :kutsudata kutsudata
                                      :lomakedatana? lomakedatana?
                                      :httpkit-asetukset httpkit-asetukset
-                                     :timeout timeout-aika-ms})]
+                                     :timeout (or timeout timeout-aika-ms)})]
       (case metodi
         :post @(http/post url kutsu)
         :get @(http/get url kutsu)
@@ -88,17 +88,21 @@
 
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
-   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} lomakedatana? kutsudata]
+   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset timeout]} lomakedatana? kutsudata]
   (log/info (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
-               metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
+              metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
 
   (let [sisaltotyyppi (get otsikot " Content-Type ")]
     (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
     (let [{:keys [status body error headers]}
-          (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
-            parametrit kayttajatunnus salasana kutsudata
-            lomakedatana? httpkit-asetukset)
+          (if (some? timeout)
+            (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+              parametrit kayttajatunnus salasana kutsudata
+              lomakedatana? httpkit-asetukset timeout)
+            (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+              parametrit kayttajatunnus salasana kutsudata
+              lomakedatana? httpkit-asetukset))
           lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
       (if (or error
