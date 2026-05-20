@@ -70,7 +70,7 @@
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
-  [db asetukset integraatioloki sahkoposti-xml http-otsikot liite? & [timeout]]
+  [db asetukset integraatioloki sahkoposti-xml http-otsikot liite?]
   (try+
     (let [_ (log/info "Lähetä rest-api sähköposti.")
           vastaus (integraatiotapahtuma/suorita-integraatio
@@ -84,8 +84,7 @@
                                                        {"Content-Type" "application/xml"}
                                                        http-otsikot)
                                             :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
-                                            :salasana (get-in asetukset [:api-sahkoposti :salasana])
-                                            :timeout timeout}
+                                            :salasana (get-in asetukset [:api-sahkoposti :salasana])}
                             {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
                         (if liite?
                           (kasittele-sahkoposti-ja-liite-vastaus status body db)
@@ -186,7 +185,7 @@
           ;; Validoidaan viesti
           virhe (validoi-sahkoposti viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti headers false 1000)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti headers false)
         (throw+ virhe))))
   (laheta-ulkoisella-jarjestelmalla-viesti! [this lahettaja vastaanottaja otsikko sisalto headers username password port]
     ;; Ei tee tarkoituksellisesti mitään, mutta toteuttaa Protokollan

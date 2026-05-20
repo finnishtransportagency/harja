@@ -96,13 +96,9 @@
     (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
     (let [{:keys [status body error headers]}
-          (if (some? timeout)
-            (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
-              parametrit kayttajatunnus salasana kutsudata
-              lomakedatana? httpkit-asetukset timeout)
-            (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
-              parametrit kayttajatunnus salasana kutsudata
-              lomakedatana? httpkit-asetukset))
+          (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+            parametrit kayttajatunnus salasana kutsudata
+            lomakedatana? httpkit-asetukset timeout)
           lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
       (if (or error
