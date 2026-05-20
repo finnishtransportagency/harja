@@ -52,21 +52,21 @@
     {:otsikko "Tyyppi"
      :nimi :tyyppi
      :tyyppi :string
-     :leveys 23
+     :leveys 20
      :fmt (fn [arvo]
             (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
 
     {:otsikko "Muutoksen syy"
      :nimi :syy
      :tyyppi :string
-     :leveys 35}
+     :leveys 30}
 
     {:otsikko "Muutostyötilaus (€)"
      :nimi :kustannusvaikutukset
      :tyyppi :komponentti
      :fmt #(fmt/euro-opt false false (reduce + 0 (map :summa %)))
      :tasaa :oikea
-     :leveys 15
+     :leveys 13
      :komponentti (fn [{:keys [tyyppi kustannusvaikutukset] :as _rivi}]
                     (let [summa (reduce + 0 (map :summa kustannusvaikutukset))
                           ;; Summa näytetään jos tyyppi on muutostyo, tai ei-negatiivinen pysyvä muutos
@@ -83,12 +83,12 @@
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko ""
      :nimi :toiminnot
      :tyyppi :komponentti
-     :leveys 10
+     :leveys 12
      :tasaa :oikea
      :komponentti (fn [rivi]
                     (let [poikkeama? (= (:alityyppi rivi) :poikkeama)
@@ -133,26 +133,26 @@
     {:otsikko "Muutoksen syy"
      :nimi :syy
      :tyyppi :string
-     :leveys 60}
+     :leveys 50}
 
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko "Indeksikorjattu"
      :nimi :tavoitehinnan-muutos-indeksikorjattu
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko ""
      :nimi :toiminnot
      :tyyppi :komponentti
-     :leveys 10
+     :leveys 12
      :tasaa :oikea
      :komponentti (fn [rivi]
                     [napit/muokkaa "Muokkaa"
