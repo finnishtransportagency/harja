@@ -11,17 +11,21 @@
   Tämä moottori luo selaimessa näytettävän raportin. Alla käytetään Harjan gridiä.
   Kuten muissakin raporteissa, tärkein metodi on :taulukko, jonne mm.
   voi lisätä tuen eri tavoilla formatoitaville sarakkeille."
-  (:require [harja.ui.grid :as grid]
+  (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
+            [harja.ui.grid :as grid]
+            [harja.loki :refer [log]]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
+            [harja.visualisointi :as vis]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
-            [harja.visualisointi :as vis]
-            [harja.domain.raportointi :as raportti-domain]
-            [harja.loki :refer [log]]
-            [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -116,13 +120,25 @@
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
   [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari
               fmt lihavoi? kustomi-tyyli teksti-alle]}]]
-  (let [lihavoi (when lihavoi? {:font-weight "bold"})]
+
+  (let [hy (-> @tila/yleiset :urakka :elinvoimakeskus :id)
+        urakka-id (-> @tila/yleiset :urakka :id)
+        valittu-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)
+
+        lihavoi (when lihavoi? {:font-weight "bold"})]
     [:span.varillinen-teksti
      [:span.arvo {:class kustomi-tyyli
                   :style (merge lihavoi
                            {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
       (if fmt (fmt arvo) arvo)
-      (when teksti-alle [:<> [:br] [:span teksti-alle]])]]))
+      (when teksti-alle [:<> [:br]
+                         ;; TODO 
+                         [:a.klikattava.alleviivaa
+                          {:href (str "/#urakat/valikatselmus?&hy=" hy "&u=" urakka-id)
+                           :on-click #(siirtymat/avaa-valikatselmus hy urakka-id
+                                        [(pvm/hoitokauden-alkupvm valittu-alkuvuosi) (pvm/hoitokauden-loppupvm (inc valittu-alkuvuosi))])}
+                          "Siirry välikatselmukseen."]
+                         [:span teksti-alle]])]]))
 
 (defmethod muodosta-html :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
@@ -305,7 +321,7 @@
   [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
 
 (defmethod muodosta-html :info-laatikko [[_ ensisijainen-teksti toissijainen-teksti leveys]]
-  (yleiset/info-laatikko :vahva-ilmoitus ensisijainen-teksti toissijainen-teksti leveys  {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "pull-right"}))
+  (yleiset/info-laatikko :vahva-ilmoitus ensisijainen-teksti toissijainen-teksti leveys {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "pull-right"}))
 
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
   [:h1 {:style {:font-size "12px"}} teksti])

@@ -1,6 +1,11 @@
 .laskutusyhteenveto {
+  // Tehdään gridistä 100% ja siirretään content oikealle
   .laskutusraja-grid {
-    width: 75%;
-    float: right;
+    display: flex;
+    justify-content: flex-end;
+    // Itse content 75%, jotenka se asettuu nätisti oikealle design mukaisesti
+    .panel-body {
+      width: 75%;
+    }
   }
 }

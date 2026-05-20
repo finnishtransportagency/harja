@@ -43,7 +43,7 @@
         kaikki-tavoitehintaiset-laskutetaan (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutetaan %)))
                                                              (:tavoitehintaiset_laskutetaan %)
                                                              0) tiedot))]
-    { :hk_valikatselmus_siirrot_ed_vuodelta valikatselmus-siirrot-ed-vuodelta
+    {:hk_valikatselmus_siirrot_ed_vuodelta valikatselmus-siirrot-ed-vuodelta
      ;; Lisätään välikatselmuksen kulujen siirrot laskutettuihin kuluihin (Lisätään hoitokauden alusta lähtien kokonaissuummaan)
      ;; Hoitokauden alusta
      :kaikki-tavoitehintaiset-laskutettu (+ kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
@@ -99,7 +99,7 @@
                            :lihavoi? lihavoi?}])))
 
 
-(defn- mhu-hju-rivit 
+(defn- mhu-hju-rivit
   "MHU ja HJU hoidon johto- taulukko, jossa näytetään hieman muista instansseista poikkeavia lukuja"
   [data kyseessa-kk-vali?]
   [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
@@ -168,7 +168,7 @@
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
-        
+
         rivit (into []
                 (remove nil?
                   (koosta-tuotekohtainen-taulukko data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)))]
@@ -218,7 +218,7 @@
                                                       (pvm/nyt)
                                                       loppupvm))
         ;; Konteksti ja urakkatiedot
-        konteksti (cond 
+        konteksti (cond
                     urakka-id :urakka
                     elinvoimakeskus-id :elinvoimakeskus
                     :else :urakka)
@@ -269,8 +269,8 @@
         tavoite (koosta-tavoite tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
-       _ (println "yhteenveto: \n " yhteenveto)
-       _ (println "kooostettu-yhteenveto: \n" koostettu-yhteenveto "\n")
+        _ (println "yhteenveto: \n " yhteenveto)
+        _ (println "kooostettu-yhteenveto: \n" koostettu-yhteenveto "\n")
 
 
         ;;hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro alkupvm (pvm/vuosi loppupvm))
@@ -285,7 +285,7 @@
                               (- (:kaikki-tavoitehintaiset-laskutettu yhteenveto) hk-laskutusraja)
                               (- hk-laskutusraja (:kaikki-tavoitehintaiset-laskutettu yhteenveto)))
         yhteenveto (assoc yhteenveto
-                    :laskutusraja-erotus laskutusraja-erotus)
+                     :laskutusraja-erotus laskutusraja-erotus)
 
         _ (println "laskutusraja erotus: " laskutusraja-erotus)
         _ (println "laskutusraja kaytossa:" laskutusraja-kaytossa?)
@@ -344,20 +344,20 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     (if laskutusraja-kaytossa?
-       (taulukot/yhteenveto-laskutusraja-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
-                                            :otsikko "Laskutusraja"
-                                            :laskutettu-teksti (if valittu-aikavali? aikavali-teksti laskutettu-teksti)
-                                            :laskutetaan-teksti laskutetaan-teksti
-                                            :kyseessa-kk-vali? kyseessa-kk-vali?
-                                            :kyseessa-valittu-aikavali? valittu-aikavali?
-                                            :laskutusraja hk-laskutusraja
-                                            :laskutusraja-ylittynyt? laskutusraja-ylittynyt?
-                                            :laskutusraja-erotus laskutusraja-erotus})
+     #_(if laskutusraja-kaytossa?
+         (taulukot/yhteenveto-laskutusraja-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
+                                                           :otsikko "Laskutusraja"
+                                                           :laskutettu-teksti (if valittu-aikavali? aikavali-teksti laskutettu-teksti)
+                                                           :laskutetaan-teksti laskutetaan-teksti
+                                                           :kyseessa-kk-vali? kyseessa-kk-vali?
+                                                           :kyseessa-valittu-aikavali? valittu-aikavali?
+                                                           :laskutusraja hk-laskutusraja
+                                                           :laskutusraja-ylittynyt? laskutusraja-ylittynyt?
+                                                           :laskutusraja-erotus laskutusraja-erotus})
 
-       (taulukot/toteutuneet-valitaulukko-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
-                                                          :otsikko "Toteutuneet"
-                                                          :laskutettu-teksti laskutettu-teksti
-                                                          :laskutetaan-teksti laskutetaan-teksti
-                                                          :kyseessa-kk-vali? kyseessa-kk-vali?
-                                                          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))
+         (taulukot/toteutuneet-valitaulukko-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
+                                                            :otsikko "Toteutuneet"
+                                                            :laskutettu-teksti laskutettu-teksti
+                                                            :laskutetaan-teksti laskutetaan-teksti
+                                                            :kyseessa-kk-vali? kyseessa-kk-vali?
+                                                            :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))
