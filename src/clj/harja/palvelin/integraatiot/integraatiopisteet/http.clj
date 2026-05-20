@@ -28,6 +28,8 @@
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
                       parametrit kayttajatunnus salasana kutsudata
                       lomakedatana? httpkit-asetukset & [timeout]]
+  ;;timeout parametrilla voi korvata kovakoodatun 60000ms timeoutin. Harjan katkaisu näkyy integraatioväylällä virheenä, mutta käsittelyyn otetut viestit jatkavat prosessissa ilman paluuputkea.
+  ;;HUOM!! lyhyempi timeout Harjassa mahdollistaa tiheämmät kutsut rajapintaan ja voi kuormittaa integraatioväylää, älä lyhennä timeoutia harkitsematta vaikutusta integraation toiseen osapuoleen.
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -54,7 +56,7 @@
         {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
          :virheet [{:koodi :poikkeus :viesti (str "HTTP-kutsukäsittelyssä tapahtui odottamaton virhe.")}]}))))
 
-(defn kasittele-virhe [lokittaja lokiviesti tapahtuma-id url error status]
+(defn kasittele-virhe [lokittaja lokiviesti tapahtuma-id url error status & [timeout]]
   (let [[jarjestelma integraation-nimi] (clj-str/split (lokittaja :avain) #"-" 2)
         integraatio-log-params {:tapahtuma-id tapahtuma-id
                                 :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
@@ -74,7 +76,8 @@
             (instance? TimeoutException error))
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen
-                            :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
+                            :viesti (str "Ulkoiseen järjestelmään ei saada yhteyttä."
+                                         (when timeout (format " Timeout: %sms." timeout)))}]})
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
@@ -103,7 +106,7 @@
 
       (if (or error
             (not (= 200 status)))
-        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
+        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status timeout)
         (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))
 
 (defprotocol HttpIntegraatiopiste
