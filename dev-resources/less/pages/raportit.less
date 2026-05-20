@@ -240,33 +240,55 @@
     }
 }
 
+
 .tyomaakokous-footer {
-    margin-top: 30px;
+  margin-top: 30px;
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+  gap: 24px;
+  .sisalto {
     display: grid;
-    justify-content: right;
-
-    .sisalto {
-        display: grid;
-        align-items: start;
-        grid-template-columns: repeat(2, 3.3fr);
-        column-gap: 60px;
+    align-items: start;
+    grid-template-columns: repeat(2, 3.3fr);
+    column-gap: 60px;
+    width: 568px;
+    background-color: @blue-lighter;
+    padding-left: 10px;
+    border: 1px solid @blue-default;
+    border-radius: 4px;
+    height: 200px;
     }
-
-    .sisalto-ei-kk-vali {
-        display: grid;
-        align-items: start;
-        grid-template-columns: repeat(1, 3.3fr);
-        margin-left: auto;
-        column-gap: 60px;
-    }
+  .sisalto-ei-kk-vali {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: repeat(1, 3.3fr);
+    width: 568px;
+    height: 146px;
+    background-color: @blue-lighter;
+    padding-left: 10px;
+    padding-bottom: 120px;
+    border: 1px solid @blue-default;
+    border-radius: 4px;
+  }
+  .sisalto-valittu-aikavali {
+     display: grid;
+     align-items: start;
+     grid-template-columns: repeat(1, 3.3fr);
+     width: 568px;
+     height: 136px;
+     padding-left: 10px;
+     padding-bottom: 150px;
+     background-color: @blue-lighter;
+     border: 1px solid @blue-default;
+     border-radius: 4px;
+   }
 }
 
 .laskutus-yhteensa {
     color: @black-light;
     font-weight: bold;
     font-weight: normal;
-    margin-top: @valistys-16;
-
     .kentta {
         margin-right: 60px;
         margin-bottom: 40px;

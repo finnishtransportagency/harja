@@ -106,6 +106,14 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     muut_kulut_ei_tavoite_hoitokausi_yht             NUMERIC,
     muut_kulut_ei_tavoite_val_aika_yht               NUMERIC,
 
+    -- Laskutusraja
+    onko_laskutusraja_kaytossa                       BOOLEAN,
+    hk_laskutusraja                                  NUMERIC,
+    laskutusrajaan_jaljella                          NUMERIC,
+    laskutusraja_ylittynyt                           BOOLEAN,
+    laskutusrajan_ylittynyt_osuus                    NUMERIC,
+    kk_sallittu_laskutusosuus                        NUMERIC,
+
     -- Pysyvät muutokset (mhu_muutos-taulusta)
     pysyvat_muutokset_hoitokausi_yht                 NUMERIC,
     pysyvat_muutokset_val_aika_yht                   NUMERIC,
@@ -303,7 +311,16 @@ DECLARE
     pysyvat_muutokset_val_aika_yht        NUMERIC := 0.0;
     pysyvat_muutokset_ed_hoitokausi       NUMERIC := 0.0;
 
-    -- Tulos 
+    -- Laskutusraja
+    valittu_hoitokausi                    NUMERIC;
+    onko_laskutusraja_kaytossa            BOOLEAN := TRUE;
+    hk_laskutusraja                       NUMERIC;
+    laskutusrajaan_jaljella               NUMERIC;
+    laskutusraja_ylittynyt                BOOLEAN;
+    laskutusrajan_ylittynyt_osuus         NUMERIC;
+    kk_sallittu_laskutusosuus             NUMERIC;
+
+    -- Tulos
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
 BEGIN
@@ -333,6 +350,22 @@ BEGIN
     hoitovuoden_alun_indkorj_tavoitehinta := 0;
     tavoitehinta_oikaisu_summa := 0;
     urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
+    valittu_hoitokausi :=  hk_alkuvuosi - urakan_alkuvuosi  + 1;
+
+        -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
+     IF urakan_alkuvuosi >= 2025 THEN
+        RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', urakan_alkuvuosi;
+        SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
+    ELSE
+        onko_laskutusraja_kaytossa := FALSE;
+    END IF;
+
+    IF onko_laskutusraja_kaytossa IS TRUE THEN
+        SELECT laskutusraja FROM urakka_tavoite WHERE urakka = ur AND hoitokausi = valittu_hoitokausi INTO hk_laskutusraja;
+        RAISE NOTICE 'Laskutusraja käytössä, laskutusraja: %', hk_laskutusraja;
+    ELSE
+        RAISE NOTICE 'Laskutusraja ei käytössä';
+    END IF;
 
     -- Laske valittujen hoitokausien tavoitehinnat yhteen
     FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
@@ -1287,6 +1320,24 @@ BEGIN
     RAISE NOTICE 'budjettia_jaljella: %', budjettia_jaljella;
 
     ---------------------------------------------
+    --------- Laskutusrajaan jäljellä  ----------
+    ---------------------------------------------
+
+    IF onko_laskutusraja_kaytossa THEN
+        laskutusrajaan_jaljella := hk_laskutusraja - tavhin_hoitokausi_yht;
+        IF laskutusrajaan_jaljella < 0 THEN
+            laskutusraja_ylittynyt := TRUE;
+            laskutusrajan_ylittynyt_osuus := tavhin_hoitokausi_yht - hk_laskutusraja;
+            kk_sallittu_laskutusosuus := tavhin_val_aika_yht - laskutusrajan_ylittynyt_osuus;
+            IF kk_sallittu_laskutusosuus < 0 THEN
+                kk_sallittu_laskutusosuus := 0.0;
+            END IF;
+
+        ELSE laskutusraja_ylittynyt := FALSE;
+        END IF;
+    END IF;
+
+    ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
     ---------------------------------------------
 
@@ -1612,10 +1663,14 @@ BEGIN
               -- Ei tavoitehintaiset 
               muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
               muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht,
+        -- Laskutusraja
+              onko_laskutusraja_kaytossa, hk_laskutusraja, laskutusrajaan_jaljella, laskutusraja_ylittynyt,
+              laskutusrajan_ylittynyt_osuus, kk_sallittu_laskutusosuus,
         -- Pysyvät muutokset
               pysyvat_muutokset_hoitokausi_yht,
               pysyvat_muutokset_val_aika_yht,
               pysyvat_muutokset_ed_hoitokausi
+
         );
     return next tulos;
 END;

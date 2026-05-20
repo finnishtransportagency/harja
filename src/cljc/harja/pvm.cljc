@@ -838,6 +838,7 @@
   "Palauttaa MHU hoitovuoden järjestysnumeron annetulle päivämäärälle.
   Esimerkiksi: Jos urakan alkupäivämäärä on 1.10.2021 ja pvm on 30.11.2023, palautetaan 3."
   [urakan-alkupvm pvm]
+  (println "urakan-alkupvm: " urakan-alkupvm "pvm: " pvm)
   (let [urakan-alkuvuosi (vuosi urakan-alkupvm)
         [kauden-alkupvm _] (paivamaaran-hoitokausi pvm)
         kauden-alkuvuosi (vuosi kauden-alkupvm)]
