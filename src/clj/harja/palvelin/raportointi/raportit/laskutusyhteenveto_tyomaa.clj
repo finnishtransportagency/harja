@@ -1,16 +1,17 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa
   "Työmaakokous laskutusyhteenveto MHU-urakoissa"
-  (:require [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.konversio :as konversio]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
-            [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+  (:require [taoensso.timbre :as log]
+
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]))
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]))
 
 
 (defn- taulukko-rivi
@@ -160,11 +161,6 @@
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
-
-        ;; Käytetäänkö omaa aikaväliä
-        valittu-aikavali? (= aikarajaus :valittu-aikakvali)
-        ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
-        kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
@@ -289,12 +285,12 @@
      ;;    Budjettia jäljellä                                        ;;
      ;; ------------------------------------------------------------ ;;
      (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                             :otsikko "Toteutuneet"
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
-                             :kyseessa-kk-vali? kyseessa-kk-vali?
-                             :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
+                                    :otsikko "Toteutuneet"
+                                    :laskutettu-teksti laskutettu-teksti
+                                    :laskutetaan-teksti laskutetaan-teksti
+                                    :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+                                    :kyseessa-kk-vali? kyseessa-kk-vali?
+                                    :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
 
      ;; Ei tavoitehintaiset
      (if
@@ -318,9 +314,9 @@
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
+                                    :laskutettu-teksti laskutettu-teksti
+                                    :laskutetaan-teksti laskutetaan-teksti
+                                    :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      ;; --------------------------------- ;;
      ;;    Footer (Laskutus yhteensä)     ;;

@@ -114,11 +114,15 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? kustomi-tyyli]}]]
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari
+              fmt lihavoi? kustomi-tyyli teksti-alle]}]]
   (let [lihavoi (when lihavoi? {:font-weight "bold"})]
     [:span.varillinen-teksti
-     [:span.arvo {:class kustomi-tyyli :style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
-      (if fmt (fmt arvo) arvo)]]))
+     [:span.arvo {:class kustomi-tyyli
+                  :style (merge lihavoi
+                           {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
+      (if fmt (fmt arvo) arvo)
+      (when teksti-alle [:<> [:br] [:span teksti-alle]])]]))
 
 (defmethod muodosta-html :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
@@ -145,12 +149,13 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn grid [otsikko viimeinen-rivi-yhteenveto?
+(defn grid [otsikko gridin-luokka
+            viimeinen-rivi-yhteenveto?
             rivi-ennen piilota-border?
             raportin-tunniste tyhja
             korosta-rivit korostustyyli
-            oikealle-tasattavat-kentat vetolaatikot 
-            esta-tiivis-grid? avattavat-rivit 
+            oikealle-tasattavat-kentat vetolaatikot
+            esta-tiivis-grid? avattavat-rivit
             sivuttain-rullattava? ensimmainen-sarake-sticky?
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
@@ -166,7 +171,8 @@
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
                 :esta-tiivis-grid? esta-tiivis-grid?
                 :piilota-border? piilota-border?
-                :raportin-tunniste raportin-tunniste}
+                :raportin-tunniste raportin-tunniste
+                :gridin-luokka gridin-luokka}
      (into []
        (map-indexed
          (fn [i sarake]
@@ -184,8 +190,8 @@
                                         :oikea " grid-header-oikea"
                                         ""))
                 :solun-luokka (fn [arvo _rivi]
-                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
-                                   ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
+                                ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
+                                ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
                                 (str
                                   (when (:huomio? (and (vector? arvo) (second arvo)))
                                     " solu-huomio ")
@@ -198,7 +204,7 @@
                 :luokka (:sarakkeen-luokka sarake)
                 :nimi (str "sarake" i)
                 :fmt format-fn
-                   ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                 :tyyppi (cond
                           (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
                           (= (:tyyppi sarake) :avattava-rivi) :avattava-rivi
@@ -271,7 +277,9 @@
                                 (assoc :isanta-rivin-id isanta-rivin-id))))))
            data)))]))
 
-(defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
+(defmethod muodosta-html :taulukko [[_ {:keys [otsikko
+                                               gridin-luokka
+                                               viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                piilota-border?
                                                raportin-tunniste
@@ -279,14 +287,14 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
                                                avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
-
                                      sarakkeet data]]
-  [grid otsikko viimeinen-rivi-yhteenveto?
+  [grid otsikko gridin-luokka
+   viimeinen-rivi-yhteenveto?
    rivi-ennen piilota-border?
    raportin-tunniste tyhja
    korosta-rivit korostustyyli
-   oikealle-tasattavat-kentat vetolaatikot 
-   esta-tiivis-grid? avattavat-rivit 
+   oikealle-tasattavat-kentat vetolaatikot
+   esta-tiivis-grid? avattavat-rivit
    sivuttain-rullattava? ensimmainen-sarake-sticky?
    sarakkeet data])
 
@@ -313,14 +321,14 @@
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
   [:div {:style (merge
-                {:color (when vari vari)}
-                (when rivita? {:white-space "pre-line"}))}
+                  {:color (when vari vari)}
+                  (when rivita? {:white-space "pre-line"}))}
    teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
   [:div {:style {:font-weight 700
-               :color (when vari vari)}} teksti
+                 :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
@@ -339,10 +347,10 @@
         h (int (/ w 2.9))]
     [:div.pylvaat
      [:h3 otsikko]
-     [vis/bars {:width         w
-                :height        h
+     [vis/bars {:width w
+                :height h
                 :format-amount (or fmt str)
-                :hide-value?   piilota-arvo?
+                :hide-value? piilota-arvo?
                 :legend legend}
       pylvaat]]))
 
@@ -355,18 +363,18 @@
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}
-         (mapcat identity otsikot-ja-arvot)))
+    (mapcat identity otsikot-ja-arvot)))
 
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
-   
+
    ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
      (cond
        (and
-        (= (:otsikon-koko raportin-tunnistetiedot) :iso)
-        (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
+         (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+         (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
        [:h1 (:nimi raportin-tunnistetiedot)]
 
        (= (:piilota-otsikko? raportin-tunnistetiedot) true)
@@ -377,16 +385,16 @@
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
-   
+
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
                      [muodosta-html elementti]))
-                 (mapcat (fn [sisalto]
-                           (if (list? sisalto)
-                             sisalto
-                             [sisalto]))
-                         sisalto))])
+     (mapcat (fn [sisalto]
+               (if (list? sisalto)
+                 sisalto
+                 [sisalto]))
+       sisalto))])
 
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
