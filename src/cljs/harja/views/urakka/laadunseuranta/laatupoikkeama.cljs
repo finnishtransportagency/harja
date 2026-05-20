@@ -21,6 +21,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -37,7 +38,7 @@
 (defn uuden-sanktion-rivi
   [rivi urakkatyyppi mahdolliset-sanktiolajit urakan-tpit]
   (assoc rivi
-    :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi mahdolliset-sanktiolajit)
+    :laji (sanktiot/oletus-uuden-sanktion-laji urakkatyyppi mahdolliset-sanktiolajit)
     :toimenpideinstanssi (when (= 1 (count urakan-tpit))
                            (:tpi_id (first urakan-tpit)))))
 
@@ -98,8 +99,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
         ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
-        mahdolliset-sanktiolajit @urakka/valitun-urakan-sanktiolajit
-        sanktio-konfiguraation-tila @urakka/valitun-urakan-sanktio-konfiguraation-tila
+        mahdolliset-sanktiolajit @sanktiot/valitun-urakan-sanktiolajit
+        sanktio-konfiguraation-tila @sanktiot/valitun-urakan-sanktio-konfiguraation-tila
         mahdolliset-indeksivalinnat (cond-> [nil]
                                       (urakka/indeksi-kaytossa-sakoissa?)
                                       (conj (:indeksi @nav/valittu-urakka)))]
@@ -128,7 +129,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :aseta (fn [rivi arvo]
                          (assoc rivi :laji arvo :tyyppi nil :summa nil :toimenpideinstanssi nil :indeksi nil))
                 :valinnat mahdolliset-sanktiolajit
-                :valinta-nayta #(or (urakka/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
+                :valinta-nayta #(or (sanktiot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
                 :sarake-disabloitu-arvo-fn #(sanktio-domain/sanktiolaji->teksti (get-in % [:rivi :laji]))
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
@@ -154,7 +155,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              :toimenpideinstanssi
                              (when tpk
                                (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-                  :valinnat-fn #(vec (urakka/valitun-urakan-sanktiotyypit (:laji %)))
+                  :valinnat-fn #(vec (sanktiot/valitun-urakan-sanktiotyypit (:laji %)))
                   :valinta-nayta :nimi
                   :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
                      ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.

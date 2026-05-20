@@ -68,8 +68,8 @@
                           @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
                           {:id nil})
         ;; Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan.
-        mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
-        sanktio-konfiguraation-tila @tiedot-urakka/valitun-urakan-sanktio-konfiguraation-tila
+        mahdolliset-sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+        sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
         ;; Ja jos tyyppinä on talvihoito, niin muut kuin talvihoito toimenpiteet poistetaan myös
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))
@@ -143,7 +143,7 @@
                                   (assoc :laji arvo)
                                   (dissoc :tyyppi)
                                   (assoc :tyyppi nil))
-                           s-tyypit (tiedot-urakka/valitun-urakan-sanktiotyypit arvo)
+                           s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
                            rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
@@ -166,7 +166,7 @@
                          (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                          rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (tiedot-urakka/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
+            :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
          (when-not (or yllapitourakka? vesivaylaurakka?)
            (if (not lukutila?)
@@ -182,7 +182,7 @@
                            (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
               :valinta-arvo identity
               :aseta-vaikka-sama? true
-              :valinnat (vec (tiedot-urakka/valitun-urakan-sanktiotyypit (:laji @muokattu)))
+              :valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
               :valinta-nayta (fn [arvo]
                                (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}

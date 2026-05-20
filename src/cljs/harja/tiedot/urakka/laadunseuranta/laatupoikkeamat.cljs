@@ -26,12 +26,12 @@
 
 (defonce voi-kirjata?
   (reaction
-   (let [kayttaja @istunto/kayttaja
-         urakka @nav/valittu-urakka]
-     (and kayttaja
-          urakka
-          (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-laatupoikkeamat
-                                    (:id urakka))))))
+    (let [kayttaja @istunto/kayttaja
+          urakka @nav/valittu-urakka]
+      (and kayttaja
+        urakka
+        (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-laatupoikkeamat
+          (:id urakka))))))
 
 (defn hae-laatupoikkeaman-tiedot
   "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n
@@ -39,10 +39,10 @@
   tarvitaan."
   [urakka-id laatupoikkeama-id]
   (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id urakka-id
-                                  :laatupoikkeama-id laatupoikkeama-id}))
+                                        :laatupoikkeama-id laatupoikkeama-id}))
 
 (defn tallenna-laatupoikkeama [laatupoikkeama]
-  (k/post! :tallenna-laatupoikkeama laatupoikkeama))
+  (k/post! :tallenna-laatupoikkeama laatupoikkeama nil true))
 
 (defonce listaus (atom :kaikki))
 (defonce laatupoikkeamat-kartalla (atom []))
@@ -58,24 +58,24 @@
 (defn- taydenna-kohteen-kuvaus [laatupoikkeama]
   (let [tr-osoite-teksti (tierekisteri/tierekisteriosoite-tekstina (:yllapitokohde laatupoikkeama) {:teksti-tie? false})
         tr-osoite-teksti (when-not (empty? tr-osoite-teksti)
-                            (str "(" tr-osoite-teksti ")"))]
+                           (str "(" tr-osoite-teksti ")"))]
     (update laatupoikkeama :kohde
       #(str "Laatupoikkeama: " % " " tr-osoite-teksti))))
 
 (defonce valittu-laatupoikkeama
-         (reaction<! [id @valittu-laatupoikkeama-id]
-                     {:nil-kun-haku-kaynnissa? true}
-                     (when id
-                       (go (let [laatupoikkeama (if (= :uusi id)
-                                                  (uusi-laatupoikkeama)
-                                                  (<! (hae-laatupoikkeaman-tiedot (:id @nav/valittu-urakka) id)))]
-                             (-> laatupoikkeama
+  (reaction<! [id @valittu-laatupoikkeama-id]
+    {:nil-kun-haku-kaynnissa? true}
+    (when id
+      (go (let [laatupoikkeama (if (= :uusi id)
+                                 (uusi-laatupoikkeama)
+                                 (<! (hae-laatupoikkeaman-tiedot (:id @nav/valittu-urakka) id)))]
+            (-> laatupoikkeama
 
                                  ;; Tarvitsemme urakan liitteen linkitystä varten
 
-                                 (assoc :urakka (:id @nav/valittu-urakka))
-                                 (assoc :sanktiot (into {}
-                                                        (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))
+              (assoc :urakka (:id @nav/valittu-urakka))
+              (assoc :sanktiot (into {}
+                                 (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))
 
 (defn paivita-yllapitokohteen-tr-tiedot
   [tiedot yllapitokohteet]
@@ -84,7 +84,7 @@
                    (:yllapitokohde tiedot)
                    (get-in tiedot [:yllapitokohde :id]))
           k (first (filter #(= (:id %) ypk-id)
-                           yllapitokohteet))
+                     yllapitokohteet))
           [tie aosa aet losa let] [(:tr-numero k)
                                    (:tr-alkuosa k)
                                    (:tr-alkuetaisyys k)
@@ -198,9 +198,10 @@
         laatupoikkeama
         {:onnistui ->TallennaLaatuPoikkeamaOnnistui
          :onnistui-parametrit [laatupoikkeama]
+         :paasta-virhe-lapi? true
          :epaonnistui ->TallennaLaatuPoikkeamaEpaonnistui})
       (assoc app :tallennus-kaynnissa? true)))
-  
+
   TallennaLaatuPoikkeamaOnnistui
   (process-event [_ {:keys [listaus-tyyppi valittu-aikavali] :as app}]
       ;; Kun poikkeama tallennetaan, päivitetään kaikki tiedot jotta karttaan tulee uusikin reitti näkyviin
@@ -212,5 +213,7 @@
   TallennaLaatuPoikkeamaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log/error "Laatupoikkeaman tallennuksessa virhe!" vastaus)
-    (viesti/nayta-toast! "Oikaisun tallennuksessa tapahtui virhe" :varoitus)
+    (viesti/nayta-toast! (or (k/virheviesti vastaus)
+                           "Laatupoikkeaman tallennuksessa tapahtui virhe")
+      :varoitus)
     (assoc app :tallennus-kaynnissa? false)))
