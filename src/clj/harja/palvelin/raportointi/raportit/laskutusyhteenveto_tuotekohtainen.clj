@@ -1,18 +1,18 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen
   "Tuotekohtainen laskutusyhteenveto MHU-urakoissa"
   (:require [clojure.string :as str]
-            [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
-            [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [harja.kyselyt.kulut :as kulut-q]
+
+            [harja.pvm :as pvm]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]))
 
 
 (defn- laskettavat-kentat [konteksti]
@@ -188,7 +188,6 @@
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
-
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
         ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
         ;; Halutaanko näyttää tietyn vuoden data
@@ -208,7 +207,6 @@
         laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
         ;; Hoitokausi valittuna?
         hoitokausi? (= aikarajaus :hoitokausi)
-        aikavali-teksti (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
 
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
@@ -234,7 +232,6 @@
 
         hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
         urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
-        hoitokausinro hoitokausi
         hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)
         valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm (first hoitokausi)})
 
@@ -242,6 +239,7 @@
                                       :urakka-nimi (:nimi %)
                                       :indeksi (:indeksi %)
                                       :urakkatyyppi (:tyyppi %)) urakat)
+
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
@@ -250,13 +248,11 @@
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
                                       (yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                               urakoiden-parametrit)
-
-        _ (println "laskutusyhteenvedot: " laskutusyhteenvedot)
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
         kaikki-tuotteittain (apply merge-with concat tiedot-tuotteittain)
-        _ (println "tiedot tuottittain: " kaikki-tuotteittain)
+
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)
                                                   (map (fn [rivi]
@@ -269,28 +265,6 @@
         tavoite (koosta-tavoite tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
-        _ (println "yhteenveto: \n " yhteenveto)
-        _ (println "kooostettu-yhteenveto: \n" koostettu-yhteenveto "\n")
-
-
-        ;;hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro alkupvm (pvm/vuosi loppupvm))
-        laskutusraja-rivi (first (kulut-q/hae-urakan-laskutusraja db {:urakka-id urakka-id :hoitokausinro hoitokausinro}))
-
-        laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
-        hk-laskutusraja (:laskutusraja laskutusraja-rivi)
-
-        laskutusraja-ylittynyt? (when laskutusraja-kaytossa?
-                                  (> (:kaikki-tavoitehintaiset-laskutettu yhteenveto) hk-laskutusraja))
-        laskutusraja-erotus (if laskutusraja-ylittynyt?
-                              (- (:kaikki-tavoitehintaiset-laskutettu yhteenveto) hk-laskutusraja)
-                              (- hk-laskutusraja (:kaikki-tavoitehintaiset-laskutettu yhteenveto)))
-        yhteenveto (assoc yhteenveto
-                     :laskutusraja-erotus laskutusraja-erotus)
-
-        _ (println "laskutusraja erotus: " laskutusraja-erotus)
-        _ (println "laskutusraja kaytossa:" laskutusraja-kaytossa?)
-        _ (println "laskutusraja ylittynyt?" laskutusraja-ylittynyt?)
-
         sheet-nimi "Tuotekohtainen"
         otsikot [["Talvihoito" "alvi"]
                  ["Liikenneympäristön hoito" "ympä"]
@@ -299,14 +273,6 @@
                  ["MHU Ylläpito" "yllä"]
                  ["MHU hoidon johto" "johto"]
                  ["MHU Korvausinvestointi" "korv"]]
-
-        [hk-alkupvm hk-loppupvm] (if (or
-                                       (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                       (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
-                                   ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
-                                   ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
-                                   (pvm/paivamaaran-hoitokausi alkupvm)
-                                   [alkupvm loppupvm])
 
         ;; Etsitään otsikon indeksi Toimenpideinstanssin nimen osan peruteella
         etsi-indeksi (fn [otsikon-osa rivit]
@@ -320,7 +286,6 @@
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :keskikoko}
-
      [:otsikko-heading-small (str alueen-nimi)]
 
      (when perusluku
@@ -328,13 +293,14 @@
      (when (or kyseessa-hoitokausi-vali? kyseessa-kk-vali?)
        (yleinen/urakan-hoitokauden-indeksikerroin {:indeksikertoimet indeksikertoimet
                                                    :hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)}))
-     ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
+
+     ;; Data on vectorina järjestyksessä
      (concat (for [otsikko otsikot]
                (let [tiedot-indeksi (etsi-indeksi (second otsikko) (first laskutusyhteenvedot))
                      data (try
                             (nth (first laskutusyhteenvedot) tiedot-indeksi)
                             (catch Throwable t
-                              (log/error "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
+                              (log/debug "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
                               nil))]
                  (taulukko {:data data
                             :otsikko (first otsikko)
@@ -344,20 +310,10 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     #_(if laskutusraja-kaytossa?
-         (taulukot/yhteenveto-laskutusraja-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
-                                                           :otsikko "Laskutusraja"
-                                                           :laskutettu-teksti (if valittu-aikavali? aikavali-teksti laskutettu-teksti)
-                                                           :laskutetaan-teksti laskutetaan-teksti
-                                                           :kyseessa-kk-vali? kyseessa-kk-vali?
-                                                           :kyseessa-valittu-aikavali? valittu-aikavali?
-                                                           :laskutusraja hk-laskutusraja
-                                                           :laskutusraja-ylittynyt? laskutusraja-ylittynyt?
-                                                           :laskutusraja-erotus laskutusraja-erotus})
-
-         (taulukot/toteutuneet-valitaulukko-tuotekohtainen {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
-                                                            :otsikko "Toteutuneet"
-                                                            :laskutettu-teksti laskutettu-teksti
-                                                            :laskutetaan-teksti laskutetaan-teksti
-                                                            :kyseessa-kk-vali? kyseessa-kk-vali?
-                                                            :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))
+     (taulukot/toteutuneet-valitaulukko-tuotekohtainen
+       {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
+        :otsikko "Toteutuneet"
+        :laskutettu-teksti laskutettu-teksti
+        :laskutetaan-teksti laskutetaan-teksti
+        :kyseessa-kk-vali? kyseessa-kk-vali?
+        :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})]))

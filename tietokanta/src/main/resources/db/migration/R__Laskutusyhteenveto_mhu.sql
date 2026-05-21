@@ -565,11 +565,23 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     indeksi_puuttuu                                             BOOLEAN,
 
     -- Rahavaraukset
-    rahavaraus_nimet                      TEXT[],
-    hoitokausi_yht_array                  NUMERIC[],
-    val_aika_yht_array                    NUMERIC[],
-    kaikki_rahavaraukset_val_yht          NUMERIC,
-    kaikki_rahavaraukset_hoitokausi_yht   NUMERIC
+    rahavaraus_nimet                                 TEXT[],
+    hoitokausi_yht_array                             NUMERIC[],
+    val_aika_yht_array                               NUMERIC[],
+    kaikki_rahavaraukset_val_yht                     NUMERIC,
+    kaikki_rahavaraukset_hoitokausi_yht              NUMERIC,
+
+    -- Laskutusraja
+    laskutusraja_yht                                 NUMERIC,
+    laskutusrajaan_jaljella                          NUMERIC,
+    onko_laskutusraja_kaytossa                       BOOLEAN,
+    onko_laskutusraja_ylittynyt                      BOOLEAN,
+    laskutusraja_laskutettavaa_yht                   NUMERIC,
+    laskutusraja_laskutettavaa_val_aika              NUMERIC,
+    laskutusrajan_ylittynyt_yht                      NUMERIC,
+    laskutusrajan_ylittynyt_val_aika                 NUMERIC,
+    laskutettavaa_kaikki_yht                         NUMERIC,
+    laskutettavaa_kaikki_val_aika                    NUMERIC
 );
 
 -- Palauttaa MHU laskutusyhteenvedossa tarvittavat summat
@@ -683,6 +695,21 @@ DECLARE
     muu_kulu_ei_tavoitehintainen_hoitokausi  NUMERIC := 0;
     muu_kulu_ei_tavoitehintainen_val_aika    NUMERIC := 0;
 
+    -- Laskutusraja
+    laskutusraja_yht                      NUMERIC;
+    laskutusrajaan_jaljella               NUMERIC;
+    onko_laskutusraja_kaytossa            BOOLEAN;
+    onko_laskutusraja_ylittynyt           BOOLEAN;
+    -- josta laskutettavaa (sisältyy laskutusrajaan)
+    laskutusraja_laskutettavaa_yht        NUMERIC;
+    laskutusraja_laskutettavaa_val_aika   NUMERIC;
+    -- josta laskutusrajan ylittäviä kustannuksia
+    laskutusrajan_ylittynyt_yht           NUMERIC;
+    laskutusrajan_ylittynyt_val_aika      NUMERIC;
+    -- yhteenveto 
+    laskutettavaa_kaikki_yht              NUMERIC;
+    laskutettavaa_kaikki_val_aika         NUMERIC;
+
 BEGIN
 
     -- Hoitokauden alkukuukauteen perustuvaa indeksi käytetään kuluissa, joita urakoitsija ei itse ole syöttänyt, kuten bonuksissa, sanktioissa ja kustannusarvioiduissa_töissä.
@@ -726,14 +753,16 @@ BEGIN
           tpk2.nimi AS nimi, 
           tpk2.koodi AS tuotekoodi, 
           tpi.id AS tpi, 
-          tpk3.id AS tpk3_id, 
-          m.numero AS maksuera_numero
+          tpk3.id AS tpk3_id,
+          NULL AS maksuera_numero 
+          -- TODO .. testidatalla ei näy mitään mhu+ urakoilla
+          -- m.numero AS maksuera_numero
           FROM toimenpideinstanssi tpi
               JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
-              maksuera m
-          WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
-          ORDER BY m.numero ASC
+              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id-- ,
+              -- maksuera m
+          WHERE tpi.urakka = ur -- AND m.toimenpideinstanssi = tpi.id
+          -- ORDER BY m.numero ASC
     LOOP
         RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
@@ -1293,6 +1322,66 @@ BEGIN
                     -- Rahavaraukset, muut kulut
                     kaikki_rahavaraukset_val_yht 
                     - muu_kulu_ei_tavoitehintainen_val_aika; -- Miinusta, koska ei kuulu tavoitehintaan
+        
+        ---------------------------------
+        --------- Laskutusraja ----------
+        ---------------------------------
+        
+        laskutusraja_yht := 0.0;
+        laskutusrajan_ylittynyt_yht := 0.0;
+        laskutusraja_laskutettavaa_yht := 0.0;
+        laskutusraja_laskutettavaa_val_aika := 0.0;
+    
+        laskutettavaa_kaikki_yht := 0.0;
+        laskutettavaa_kaikki_val_aika := 0.0;
+    
+        -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
+        IF hk_alkuvuosi >= 2025 THEN
+            RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', hk_alkuvuosi;
+            SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
+        ELSE
+            onko_laskutusraja_kaytossa := FALSE;
+        END IF;
+        
+        SELECT laskutusraja 
+          FROM urakka_tavoite 
+         WHERE urakka = ur 
+           AND hoitokausi = (hk_alkuvuosi - hk_alkuvuosi  + 1) 
+          INTO laskutusraja_yht;
+    
+        IF onko_laskutusraja_kaytossa THEN
+            ------------------------------------------------------
+            -- "josta laskutettavaa" valittu kk 
+            IF kaikki_laskutettu >= laskutusraja_yht THEN
+                laskutusraja_laskutettavaa_val_aika := laskutusraja_yht;
+                
+                -- Ylityksen määrä valittu kk
+                laskutusrajan_ylittynyt_val_aika := kaikki_laskutettu - laskutusraja_yht;
+            ELSE
+                laskutusraja_laskutettavaa_val_aika := kaikki_laskutettu;
+                -- Hoitokausi yht on tähän kuuhun asti olevat kulut
+                laskutusrajan_ylittynyt_val_aika := greatest(kaikki_laskutetaan - laskutusraja_yht, 0);
+            END IF;
+    
+            ------------------------------------------------------
+            -- "josta laskutettavaa" hoitokausi yht 
+            IF kaikki_laskutetaan >= laskutusraja_yht THEN
+                laskutusraja_laskutettavaa_yht := laskutusraja_yht;
+                
+                -- Ylityksen määrä yhteensä
+                laskutusrajan_ylittynyt_yht := kaikki_laskutetaan - laskutusraja_yht;
+            ELSE
+                laskutusraja_laskutettavaa_yht := kaikki_laskutetaan;
+            END IF;
+    
+            laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+            laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutetaan); 
+            onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
+    
+            -- + muut kulut jotka kuuluvat tavoitehintaan
+            laskutettavaa_kaikki_yht := laskutusraja_laskutettavaa_yht + muu_kulu_tavoitehintainen_hoitokausi;
+            laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muu_kulu_tavoitehintainen_val_aika;
+        END IF;
 
         RAISE NOTICE '
 Yhteenveto:';
@@ -1354,12 +1443,19 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                   indeksi_puuttuu,
                   -- Urakan rahavaraukset ja arvot
                   rahavaraus_nimet, hoitokausi_yht_array, val_aika_yht_array,
-                  kaikki_rahavaraukset_val_yht, kaikki_rahavaraukset_hoitokausi_yht
+                  kaikki_rahavaraukset_val_yht, kaikki_rahavaraukset_hoitokausi_yht,
+                  -- Laskutusraja
+                  laskutusraja_yht, laskutusrajaan_jaljella,
+                  onko_laskutusraja_kaytossa, onko_laskutusraja_ylittynyt,
+                  laskutusraja_laskutettavaa_yht, laskutusraja_laskutettavaa_val_aika,
+                  laskutusrajan_ylittynyt_yht, laskutusrajan_ylittynyt_val_aika,
+                  laskutettavaa_kaikki_yht, laskutettavaa_kaikki_val_aika
             );
 
         RETURN NEXT rivi;
 
     -- Toimenpideinstanssi
     END LOOP;
+    RAISE NOTICE 'Done.';
 END;
 $$;

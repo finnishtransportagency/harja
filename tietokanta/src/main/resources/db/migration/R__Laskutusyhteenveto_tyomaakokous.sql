@@ -360,14 +360,6 @@ BEGIN
     tavoitehinta_oikaisu_summa := 0;
     urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
 
-    -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
-    IF urakan_alkuvuosi >= 2025 THEN
-        RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', urakan_alkuvuosi;
-        SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
-    ELSE
-        onko_laskutusraja_kaytossa := FALSE;
-    END IF;
-
     -- Laske valittujen hoitokausien tavoitehinnat yhteen
     FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
     LOOP
@@ -1560,7 +1552,7 @@ BEGIN
     ---------------------------------
     --------- Laskutusraja ----------
     ---------------------------------
-
+    
     laskutusraja_yht := 0.0;
     laskutusrajan_ylittynyt_yht := 0.0;
     laskutusraja_laskutettavaa_yht := 0.0;
@@ -1569,6 +1561,14 @@ BEGIN
     laskutettavaa_kaikki_yht := 0.0;
     laskutettavaa_kaikki_val_aika := 0.0;
 
+    -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
+    IF urakan_alkuvuosi >= 2025 THEN
+        RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', urakan_alkuvuosi;
+        SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
+    ELSE
+        onko_laskutusraja_kaytossa := FALSE;
+    END IF;
+    
     SELECT laskutusraja 
       FROM urakka_tavoite 
      WHERE urakka = ur 

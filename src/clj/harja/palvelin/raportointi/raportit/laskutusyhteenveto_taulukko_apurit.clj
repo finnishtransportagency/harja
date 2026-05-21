@@ -168,6 +168,7 @@
         [:varillinen-teksti {:kustomi-tyyli tyyli :arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
 
 
+
 (defn toteutuneet-valitaulukko-tuotekohtainen [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                                                        kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
@@ -202,4 +203,5 @@
        {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
          {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
+
      rivit]))
