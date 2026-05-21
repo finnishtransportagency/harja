@@ -57,95 +57,95 @@
 
 (defn pura-tyomaaraportti-mapiksi [raportti]
   (let [tulos
-        {:talvihoito_hoitokausi_yht       (:talvihoito_hoitokausi_yht raportti)
-         :talvihoito_val_aika_yht         (:talvihoito_val_aika_yht raportti)
-         :lyh_hoitokausi_yht              (:lyh_hoitokausi_yht raportti)
-         :lyh_val_aika_yht                (:lyh_val_aika_yht raportti)
-         :sora_hoitokausi_yht             (:sora_hoitokausi_yht raportti)
-         :sora_val_aika_yht               (:sora_val_aika_yht raportti)
-         :paallyste_hoitokausi_yht        (:paallyste_hoitokausi_yht raportti)
-         :paallyste_val_aika_yht          (:paallyste_val_aika_yht raportti)
-         :yllapito_hoitokausi_yht         (:yllapito_hoitokausi_yht raportti)
-         :yllapito_val_aika_yht           (:yllapito_val_aika_yht raportti)
-         :korvausinv_hoitokausi_yht       (:korvausinv_hoitokausi_yht raportti)
-         :korvausinv_val_aika_yht         (:korvausinv_val_aika_yht raportti)
-         :hankinnat_hoitokausi_yht        (:hankinnat_hoitokausi_yht raportti)
-         :hankinnat_val_aika_yht          (:hankinnat_val_aika_yht raportti)
-         :johtojahallinto_hoitokausi_yht  (:johtojahallinto_hoitokausi_yht raportti)
-         :johtojahallinto_val_aika_yht    (:johtojahallinto_val_aika_yht raportti)
+        {:talvihoito_hoitokausi_yht (:talvihoito_hoitokausi_yht raportti)
+         :talvihoito_val_aika_yht (:talvihoito_val_aika_yht raportti)
+         :lyh_hoitokausi_yht (:lyh_hoitokausi_yht raportti)
+         :lyh_val_aika_yht (:lyh_val_aika_yht raportti)
+         :sora_hoitokausi_yht (:sora_hoitokausi_yht raportti)
+         :sora_val_aika_yht (:sora_val_aika_yht raportti)
+         :paallyste_hoitokausi_yht (:paallyste_hoitokausi_yht raportti)
+         :paallyste_val_aika_yht (:paallyste_val_aika_yht raportti)
+         :yllapito_hoitokausi_yht (:yllapito_hoitokausi_yht raportti)
+         :yllapito_val_aika_yht (:yllapito_val_aika_yht raportti)
+         :korvausinv_hoitokausi_yht (:korvausinv_hoitokausi_yht raportti)
+         :korvausinv_val_aika_yht (:korvausinv_val_aika_yht raportti)
+         :hankinnat_hoitokausi_yht (:hankinnat_hoitokausi_yht raportti)
+         :hankinnat_val_aika_yht (:hankinnat_val_aika_yht raportti)
+         :johtojahallinto_hoitokausi_yht (:johtojahallinto_hoitokausi_yht raportti)
+         :johtojahallinto_val_aika_yht (:johtojahallinto_val_aika_yht raportti)
          :erillishankinnat_hoitokausi_yht (:erillishankinnat_hoitokausi_yht raportti)
-         :erillishankinnat_val_aika_yht   (:erillishankinnat_val_aika_yht raportti)
-         :hjpalkkio_hoitokausi_yht        (:hjpalkkio_hoitokausi_yht raportti)
-         :hjpalkkio_val_aika_yht          (:hjpalkkio_val_aika_yht raportti)
-         :hoidonjohto_hoitokausi_yht      (:hoidonjohto_hoitokausi_yht raportti)
-         :hoidonjohto_val_aika_yht        (:hoidonjohto_val_aika_yht raportti)
+         :erillishankinnat_val_aika_yht (:erillishankinnat_val_aika_yht raportti)
+         :hjpalkkio_hoitokausi_yht (:hjpalkkio_hoitokausi_yht raportti)
+         :hjpalkkio_val_aika_yht (:hjpalkkio_val_aika_yht raportti)
+         :hoidonjohto_hoitokausi_yht (:hoidonjohto_hoitokausi_yht raportti)
+         :hoidonjohto_val_aika_yht (:hoidonjohto_val_aika_yht raportti)
 
-         :muutostyo_hoitokausi_yht      (:muutostyo_hoitokausi_yht raportti)
-         :muutostyo_val_aika_yht        (:muutostyo_val_aika_yht raportti)
+         :muutostyo_hoitokausi_yht (:muutostyo_hoitokausi_yht raportti)
+         :muutostyo_val_aika_yht (:muutostyo_val_aika_yht raportti)
          :muutos_erillis_hoitokausi_yht (:muutos_erillis_hoitokausi_yht raportti)
-         :muutos_erillis_val_aika_yht   (:muutos_erillis_val_aika_yht raportti)
-         :jjh_muutos_hoitokausi_yht     (:jjh_muutos_hoitokausi_yht raportti)
-         :jjh_muutos_val_aika_yht       (:jjh_muutos_val_aika_yht raportti)
+         :muutos_erillis_val_aika_yht (:muutos_erillis_val_aika_yht raportti)
+         :jjh_muutos_hoitokausi_yht (:jjh_muutos_hoitokausi_yht raportti)
+         :jjh_muutos_val_aika_yht (:jjh_muutos_val_aika_yht raportti)
 
-         :hankinnat_ja_hoidon_hk_yht    (:hankinnat_ja_hoidon_hk_yht raportti)
-         :hankinnat_ja_hoidon_val_yht   (:hankinnat_ja_hoidon_val_yht raportti)
-         :tavhin_hoitokausi_yht         (:tavhin_hoitokausi_yht raportti)
-         :tavhin_val_aika_yht           (:tavhin_val_aika_yht raportti)
+         :hankinnat_ja_hoidon_hk_yht (:hankinnat_ja_hoidon_hk_yht raportti)
+         :hankinnat_ja_hoidon_val_yht (:hankinnat_ja_hoidon_val_yht raportti)
+         :tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht raportti)
+         :tavhin_val_aika_yht (:tavhin_val_aika_yht raportti)
          :hoitovuoden_alun_indkorj_tavoitehinta (:hoitovuoden_alun_indkorj_tavoitehinta raportti)
-         :hoitokauden_tavoitehinta      (:hoitokauden_tavoitehinta raportti)
-         :tavoitehinta_on_oikaistu      (:tavoitehinta_on_oikaistu raportti)
-         :tavoitehinta_oikaisu_summa    (:tavoitehinta_oikaisu_summa raportti)
+         :hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta raportti)
+         :tavoitehinta_on_oikaistu (:tavoitehinta_on_oikaistu raportti)
+         :tavoitehinta_oikaisu_summa (:tavoitehinta_oikaisu_summa raportti)
          :hk_valikatselmus_siirrot_ed_vuodelta (:hk_valikatselmus_siirrot_ed_vuodelta raportti)
-         :budjettia_jaljella            (:budjettia_jaljella raportti)
+         :budjettia_jaljella (:budjettia_jaljella raportti)
          :lisatyo_talvihoito_hoitokausi_yht (:lisatyo_talvihoito_hoitokausi_yht raportti)
-         :lisatyo_talvihoito_val_aika_yht   (:lisatyo_talvihoito_val_aika_yht raportti)
-         :lisatyo_lyh_hoitokausi_yht        (:lisatyo_lyh_hoitokausi_yht raportti)
-         :lisatyo_lyh_val_aika_yht          (:lisatyo_lyh_val_aika_yht raportti)
-         :lisatyo_sora_hoitokausi_yht       (:lisatyo_sora_hoitokausi_yht raportti)
-         :lisatyo_sora_val_aika_yht         (:lisatyo_sora_val_aika_yht raportti)
-         :lisatyo_paallyste_hoitokausi_yht  (:lisatyo_paallyste_hoitokausi_yht raportti)
-         :lisatyo_paallyste_val_aika_yht    (:lisatyo_paallyste_val_aika_yht raportti)
-         :lisatyo_yllapito_hoitokausi_yht   (:lisatyo_yllapito_hoitokausi_yht raportti)
-         :lisatyo_yllapito_val_aika_yht     (:lisatyo_yllapito_val_aika_yht raportti)
+         :lisatyo_talvihoito_val_aika_yht (:lisatyo_talvihoito_val_aika_yht raportti)
+         :lisatyo_lyh_hoitokausi_yht (:lisatyo_lyh_hoitokausi_yht raportti)
+         :lisatyo_lyh_val_aika_yht (:lisatyo_lyh_val_aika_yht raportti)
+         :lisatyo_sora_hoitokausi_yht (:lisatyo_sora_hoitokausi_yht raportti)
+         :lisatyo_sora_val_aika_yht (:lisatyo_sora_val_aika_yht raportti)
+         :lisatyo_paallyste_hoitokausi_yht (:lisatyo_paallyste_hoitokausi_yht raportti)
+         :lisatyo_paallyste_val_aika_yht (:lisatyo_paallyste_val_aika_yht raportti)
+         :lisatyo_yllapito_hoitokausi_yht (:lisatyo_yllapito_hoitokausi_yht raportti)
+         :lisatyo_yllapito_val_aika_yht (:lisatyo_yllapito_val_aika_yht raportti)
          :lisatyo_korvausinv_hoitokausi_yht (:lisatyo_korvausinv_hoitokausi_yht raportti)
-         :lisatyo_korvausinv_val_aika_yht   (:lisatyo_korvausinv_val_aika_yht raportti)
+         :lisatyo_korvausinv_val_aika_yht (:lisatyo_korvausinv_val_aika_yht raportti)
          :lisatyo_hoidonjohto_hoitokausi_yht (:lisatyo_hoidonjohto_hoitokausi_yht raportti)
-         :lisatyo_hoidonjohto_val_aika_yht   (:lisatyo_hoidonjohto_val_aika_yht raportti)
-         :lisatyot_hoitokausi_yht           (:lisatyot_hoitokausi_yht raportti)
-         :lisatyot_val_aika_yht             (:lisatyot_val_aika_yht raportti)
-         :bonukset_hoitokausi_yht           (:bonukset_hoitokausi_yht raportti)
-         :bonukset_val_aika_yht             (:bonukset_val_aika_yht raportti)
-         :sanktiot_hoitokausi_yht           (:sanktiot_hoitokausi_yht raportti)
-         :sanktiot_val_aika_yht             (:sanktiot_val_aika_yht raportti)
+         :lisatyo_hoidonjohto_val_aika_yht (:lisatyo_hoidonjohto_val_aika_yht raportti)
+         :lisatyot_hoitokausi_yht (:lisatyot_hoitokausi_yht raportti)
+         :lisatyot_val_aika_yht (:lisatyot_val_aika_yht raportti)
+         :bonukset_hoitokausi_yht (:bonukset_hoitokausi_yht raportti)
+         :bonukset_val_aika_yht (:bonukset_val_aika_yht raportti)
+         :sanktiot_hoitokausi_yht (:sanktiot_hoitokausi_yht raportti)
+         :sanktiot_val_aika_yht (:sanktiot_val_aika_yht raportti)
          :paatos_tavoitepalkkio_hoitokausi_yht (:paatos_tavoitepalkkio_hoitokausi_yht raportti)
-         :paatos_tavoitepalkkio_val_aika_yht   (:paatos_tavoitepalkkio_val_aika_yht raportti)
+         :paatos_tavoitepalkkio_val_aika_yht (:paatos_tavoitepalkkio_val_aika_yht raportti)
          :paatos_tavoiteh_ylitys_hoitokausi_yht (:paatos_tavoiteh_ylitys_hoitokausi_yht raportti)
-         :paatos_tavoiteh_ylitys_val_aika_yht   (:paatos_tavoiteh_ylitys_val_aika_yht raportti)
-         :paatos_kattoh_ylitys_hoitokausi_yht   (:paatos_kattoh_ylitys_hoitokausi_yht raportti)
-         :paatos_kattoh_ylitys_val_aika_yht     (:paatos_kattoh_ylitys_val_aika_yht raportti)
+         :paatos_tavoiteh_ylitys_val_aika_yht (:paatos_tavoiteh_ylitys_val_aika_yht raportti)
+         :paatos_kattoh_ylitys_hoitokausi_yht (:paatos_kattoh_ylitys_hoitokausi_yht raportti)
+         :paatos_kattoh_ylitys_val_aika_yht (:paatos_kattoh_ylitys_val_aika_yht raportti)
          :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht (:paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht raportti)
-         :paatos_hoidonjohtopalkkion_muutos_val_aika_yht   (:paatos_hoidonjohtopalkkion_muutos_val_aika_yht raportti)
+         :paatos_hoidonjohtopalkkion_muutos_val_aika_yht (:paatos_hoidonjohtopalkkion_muutos_val_aika_yht raportti)
          :muut_kustannukset_hoitokausi_yht (:muut_kustannukset_hoitokausi_yht raportti)
-         :muut_kustannukset_val_aika_yht   (:muut_kustannukset_val_aika_yht raportti)
-         :yhteensa_kaikki_hoitokausi_yht   (:yhteensa_kaikki_hoitokausi_yht raportti)
-         :yhteensa_kaikki_val_aika_yht     (:yhteensa_kaikki_val_aika_yht raportti)
-         :perusluku                       (:perusluku raportti)
-         :rahavaraus_nimet                (:rahavaraus_nimet raportti)
-         :hoitokausi_yht_array            (:hoitokausi_yht_array raportti)
-         :val_aika_yht_array              (:val_aika_yht_array raportti)
+         :muut_kustannukset_val_aika_yht (:muut_kustannukset_val_aika_yht raportti)
+         :yhteensa_kaikki_hoitokausi_yht (:yhteensa_kaikki_hoitokausi_yht raportti)
+         :yhteensa_kaikki_val_aika_yht (:yhteensa_kaikki_val_aika_yht raportti)
+         :perusluku (:perusluku raportti)
+         :rahavaraus_nimet (:rahavaraus_nimet raportti)
+         :hoitokausi_yht_array (:hoitokausi_yht_array raportti)
+         :val_aika_yht_array (:val_aika_yht_array raportti)
          :kaikki_rahavaraukset_hoitokausi_yht (:kaikki_rahavaraukset_hoitokausi_yht raportti)
-         :kaikki_rahavaraukset_val_yht        (:kaikki_rahavaraukset_val_yht raportti)
-         :muut_kulut_hoitokausi           (:muut_kulut_hoitokausi raportti)
-         :muut_kulut_val_aika             (:muut_kulut_val_aika raportti)
-         :muut_kulut_hoitokausi_yht       (:muut_kulut_hoitokausi_yht raportti)
-         :muut_kulut_val_aika_yht         (:muut_kulut_val_aika_yht raportti)
-         :muut_kulut_ei_tavoite_hoitokausi     (:muut_kulut_ei_tavoite_hoitokausi raportti)
-         :muut_kulut_ei_tavoite_val_aika       (:muut_kulut_ei_tavoite_val_aika raportti)
+         :kaikki_rahavaraukset_val_yht (:kaikki_rahavaraukset_val_yht raportti)
+         :muut_kulut_hoitokausi (:muut_kulut_hoitokausi raportti)
+         :muut_kulut_val_aika (:muut_kulut_val_aika raportti)
+         :muut_kulut_hoitokausi_yht (:muut_kulut_hoitokausi_yht raportti)
+         :muut_kulut_val_aika_yht (:muut_kulut_val_aika_yht raportti)
+         :muut_kulut_ei_tavoite_hoitokausi (:muut_kulut_ei_tavoite_hoitokausi raportti)
+         :muut_kulut_ei_tavoite_val_aika (:muut_kulut_ei_tavoite_val_aika raportti)
          :muut_kulut_ei_tavoite_hoitokausi_yht (:muut_kulut_ei_tavoite_hoitokausi_yht raportti)
-         :muut_kulut_ei_tavoite_val_aika_yht   (:muut_kulut_ei_tavoite_val_aika_yht raportti)
-         :pysyvat_muutokset_hoitokausi_yht   (:pysyvat_muutokset_hoitokausi_yht raportti)
-         :pysyvat_muutokset_val_aika_yht   (:pysyvat_muutokset_val_aika_yht raportti)
-         :pysyvat_muutokset_ed_hoitokausi   (:pysyvat_muutokset_ed_hoitokausi raportti)}]
+         :muut_kulut_ei_tavoite_val_aika_yht (:muut_kulut_ei_tavoite_val_aika_yht raportti)
+         :pysyvat_muutokset_hoitokausi_yht (:pysyvat_muutokset_hoitokausi_yht raportti)
+         :pysyvat_muutokset_val_aika_yht (:pysyvat_muutokset_val_aika_yht raportti)
+         :pysyvat_muutokset_ed_hoitokausi (:pysyvat_muutokset_ed_hoitokausi raportti)}]
 
     tulos))
 
@@ -178,9 +178,9 @@
         aikavali_loppupvm "2020-09-30"
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vastaus (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                     hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
+                         hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 87) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 93) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
@@ -207,7 +207,7 @@
             {:urakka-id urakka-id
              :kulu-kohdistuksineen talvihoitokulu})
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
     (is (= talvihoitosumma (:talvihoito_hoitokausi_yht purettu)))
     (is (= talvihoitosumma (:talvihoito_val_aika_yht purettu)))))
@@ -239,7 +239,7 @@
 
 
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
     (is (= lyhsumma (:lyh_hoitokausi_yht purettu)))
@@ -264,7 +264,7 @@
         ;; Sora
         sora-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
         sora-tehtavaryhma-id (hae-tehtavaryhman-id "C - Sorateiden hoito") ;; Sorateiden hoito, vaatii myös tehtävid:n kululle
-        tehtava-id -1                                       ;; Valitaa "Muu tehtävä"
+        tehtava-id -1 ;; Valitaa "Muu tehtävä"
         sorakulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa
                    sora-toimenpideinstanssi-id sora-tehtavaryhma-id tehtava-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -274,7 +274,7 @@
         ;; Päällyste
         paal-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "20107")
         paal-tehtavaryhma-id (hae-tehtavaryhman-id "Y1 - Kuumapäällyste")
-        tehtava-id -1                                       ;; Valitaa "Muu tehtävä"
+        tehtava-id -1 ;; Valitaa "Muu tehtävä"
         paalkulu (luo-kulu urakka-id "laskutettava" erapaiva "hankintakulu" koontilaskun-kuukausi summa
                    paal-toimenpideinstanssi-id paal-tehtavaryhma-id tehtava-id nil)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -302,7 +302,7 @@
              :kulu-kohdistuksineen korvauskulu})
 
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
     (is (= summa (:sora_hoitokausi_yht purettu)))
@@ -326,7 +326,7 @@
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2018                          ;; Päätös pitää olla edellisenä vuotena, jotta se näkyy siirroissa.
+        hoitokauden-alkuvuosi 2018 ;; Päätös pitää olla edellisenä vuotena, jotta se näkyy siirroissa.
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -338,7 +338,7 @@
         ylityksen-maara 10M
         urakoitsija-maksaa 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         viimeinen_hoitokausi false
         kulu-id 1
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
@@ -351,13 +351,13 @@
                                     where ut.hoitokausi = %s
                                     and ut.urakka = %s" 1 urakka-id)))
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
         purettu (pura-tyomaaraportti-mapiksi (first raportti))
 
         rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array purettu))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
-        
+
         ;; Pura rahavaraukset mukaan
         purettu-hoitokausi (reduce (fn [acc [nimi arvo]]
                                      (assoc acc (generoi-avaimet nimi "hk") arvo))
@@ -370,11 +370,11 @@
                   (map vector rahavaraukset-nimet rahavaraukset-val-aika))
         ;; Tavoitehintaan kuuluvat kustannukset yhteensä
         tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
-                                 (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
-                                 (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
-                                 (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
-                                 (:hjpalkkio_hoitokausi_yht purettu) (:kaikki_rahavaraukset_hoitokausi_yht  purettu)
-                                 (:muut_kulut_hoitokausi_yht purettu))
+                                (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
+                                (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
+                                (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
+                                (:hjpalkkio_hoitokausi_yht purettu) (:kaikki_rahavaraukset_hoitokausi_yht purettu)
+                                (:muut_kulut_hoitokausi_yht purettu))
         budjettia_jaljella (- (:hoitokauden_tavoitehinta purettu) (:tavhin_hoitokausi_yht purettu))]
 
     (is (= siirto-ed-vuodelta (:hk_valikatselmus_siirrot_ed_vuodelta purettu)))
@@ -416,7 +416,7 @@
                sanktio_summa pvm tpi-hallinnolliset-toimenpiteet 2 true "A"))
 
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
     (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)))
@@ -448,7 +448,7 @@
                sopimus-id tpi pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
         raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
