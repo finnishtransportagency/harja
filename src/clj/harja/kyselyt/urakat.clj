@@ -16,7 +16,7 @@
   hae-lahin-hoidon-alueurakka listaa-urakat-hallintayksikolle listaa-urakat-elinvoimakeskukselle
   hae-urakoita hae-organisaation-urakat
   hae-urakan-organisaatio hae-urakan-sopimustyyppi tallenna-urakan-sopimustyyppi! tallenna-urakan-tyyppi!
-  aseta-takuun-loppupvm! aseta-urakan-kesa-aika! hae-urakan-kesa-aika aseta-urakan-indeksi!
+  aseta-takuun-loppupvm! tallenna-urakan-projektikansio-linkki! aseta-urakan-kesa-aika! hae-urakan-kesa-aika aseta-urakan-indeksi!
   tallenna-vv-urakkanro<! hae-loytyvat-reimari-turvalaiteryhmat hae-vv-turvalaiteryhmien-nykyiset-urakat
   luo-tai-paivita-vesivaylaurakan-alue<! paivita-harjassa-luotu-urakka<! luo-vesivaylaurakan-toimenpideinstanssi<!
   luo-vesivaylaurakan-toimenpideinstanssin_vaylatyyppi<! luo-harjassa-luotu-urakka<! hae-harjassa-luodut-urakat
