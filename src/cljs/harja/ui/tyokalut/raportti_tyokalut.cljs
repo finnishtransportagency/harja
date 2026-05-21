@@ -3,52 +3,101 @@
   (:require [harja.ui.raportti :as raportointi]
             [harja.fmt :as fmt]))
 
+
+
 (defmethod raportointi/muodosta-html
-  :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? kyseessa-valittu-aikavali? hoitokausi laskutettu
-                                        laskutetaan laskutettu-str laskutetaan-str kk-sallittu-laskutusosuus laskutusraja laskutusraja-ylittynyt?]]
+  :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali?
+                                        laskutusraja_ylittynyt?
+                                        laskutettu laskutetaan
+                                        laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
+                                        laskutettu-str laskutetaan-str]]
+
+  [raportointi/muodosta-html
+   [:display-flex
+    [:sininen-laatikko {:otsikko "Toteutuneet kustannukset yhteensä"
+                        :layout :sarakkeet}
+     [{:fmt :raha
+       :arvo laskutettu
+       :avain laskutettu-str}
+
+      (when kyseessa-kk-vali?
+        {:fmt :raha
+         :arvo laskutetaan
+         :avain laskutetaan-str})]]
+
+    (when laskutusraja_ylittynyt?
+      [:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"
+                          :layout :sarakkeet}
+       [{:fmt :raha
+         :avain "Hoitovuoden alusta"
+         :arvo laskutettavaa_kaikki_yht}
+        
+        (when kyseessa-kk-vali?
+          {:fmt :raha
+           :avain "Helmikuu"
+           :arvo laskutettavaa_kaikki_val_aika})]])
+
+    #_[:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"}
+       [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
+         :arvo 123M
+         :fmt :raha}
+        {:avain "Kirjallisesti sovitut muutokset"
+         :arvo 123M
+         :fmt :raha}
+        {:avain "Toteumiin perustuvat muutokset"
+         :arvo 123M
+         :fmt :raha}
+        {:avain "Yhteensä"
+         :arvo 123M
+         :fmt :raha :lihavoi? true}]]
+
+    ]
+
+   ]
+
   ;; Työmaakokouksen laskutusyhteenvedon footer
-  (if kyseessa-valittu-aikavali?
-    [:div
-     [:div.tyomaakokous-footer
-      [:div.sisalto-valittu-aikavali
-       [:h3 (str "Toteutuneet kustannukset yhteensä")]
-       [:span.laskutus-yhteensa laskutettu-str]
-       [:h1 [:span (str (fmt/euro laskutetaan))]]]]]
-    [:div
-     [:div.tyomaakokous-footer
-      (if kyseessa-kk-vali?
-        (when laskutusraja-ylittynyt?
-          [:div.sisalto
+  #_(if kyseessa-valittu-aikavali?
+      [:div
+       [:div.tyomaakokous-footer
+        [:div.sisalto-valittu-aikavali
+         [:h3 (str "Toteutuneet kustannukset yhteensä")]
+         [:span.laskutus-yhteensa laskutettu-str]
+         [:h1 [:span (str (fmt/euro laskutetaan))]]]]]
+      [:div
+       [:div.tyomaakokous-footer
+        (if kyseessa-kk-vali?
+          (when laskutusraja-ylittynyt?
+            [:div.sisalto
+             [:h3 (str "Toteutuneet kustannukset yhteensä")]
+             [:h1 ""]
+             [:span.laskutus-yhteensa laskutettu-str]
+             [:span.laskutus-yhteensa laskutetaan-str]
+             [:h1 (str (fmt/euro laskutettu))]
+             [:h1 [:span (str (fmt/euro laskutetaan))]]])
+
+          [:div.sisalto-ei-kk-vali
            [:h3 (str "Toteutuneet kustannukset yhteensä")]
+           [:span.laskutus-yhteensa laskutettu-str]
+           [:h1 (str (fmt/euro laskutettu))]])
+        (if kyseessa-kk-vali?
+          [:div.sisalto
+           [:h3 (str "Laskutettavaa yhteensä ")]
            [:h1 ""]
            [:span.laskutus-yhteensa laskutettu-str]
            [:span.laskutus-yhteensa laskutetaan-str]
-           [:h1 (str (fmt/euro laskutettu))]
-           [:h1 [:span (str (fmt/euro laskutetaan))]]])
+           (if laskutusraja-ylittynyt?
+             [:h1 (str (fmt/euro laskutusraja))]
+             [:h1 (str (fmt/euro laskutettu))])
+           (if laskutusraja-ylittynyt?
+             [:h1 [:span.vahvistamaton (str (fmt/euro kk-sallittu-laskutusosuus))]]
+             [:h1 [:span.vahvistamaton (str (fmt/euro laskutetaan))]])]
 
-        [:div.sisalto-ei-kk-vali
-         [:h3 (str "Toteutuneet kustannukset yhteensä")]
-         [:span.laskutus-yhteensa laskutettu-str]
-         [:h1 (str (fmt/euro laskutettu))]])
-      (if kyseessa-kk-vali?
-        [:div.sisalto
-         [:h3 (str "Laskutettavaa yhteensä ")]
-         [:h1 ""]
-         [:span.laskutus-yhteensa laskutettu-str]
-         [:span.laskutus-yhteensa laskutetaan-str]
-         (if laskutusraja-ylittynyt?
-           [:h1 (str (fmt/euro laskutusraja))]
-           [:h1 (str (fmt/euro laskutettu))])
-         (if laskutusraja-ylittynyt?
-           [:h1 [:span.vahvistamaton (str (fmt/euro kk-sallittu-laskutusosuus))]]
-           [:h1 [:span.vahvistamaton (str (fmt/euro laskutetaan))]])]
-
-        [:div.sisalto-ei-kk-vali
-         [:h3 (str "Laskutettavaa yhteensä")]
-         [:span.laskutus-yhteensa laskutettu-str]
-         (if laskutusraja-ylittynyt?
-           [:h1 (str (fmt/euro laskutusraja))]
-           [:h1 (str (fmt/euro laskutettu))])])]]))
+          [:div.sisalto-ei-kk-vali
+           [:h3 (str "Laskutettavaa yhteensä")]
+           [:span.laskutus-yhteensa laskutettu-str]
+           (if laskutusraja-ylittynyt?
+             [:h1 (str (fmt/euro laskutusraja))]
+             [:h1 (str (fmt/euro laskutettu))])])]]))
 
 (defmethod raportointi/muodosta-html :tyomaa-toteutuneet-kustannukset-yhteenveto [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
   ;; Työmaakokouksen laskutusyhteenvedon footer

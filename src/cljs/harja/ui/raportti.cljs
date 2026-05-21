@@ -373,6 +373,54 @@
     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
     data]])
 
+(defmethod muodosta-html :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?] :or {nayta-hr? true}} data]]
+  (case layout
+    ;; Data sarakkeina otsikoineen, esimerkiksi laskutusyhteenvedossa 
+    :sarakkeet
+    (into
+      [:div.sininen-laatikko
+       [:h3 otsikko]]
+      [(into
+         [:div.sininen-laatikko-sarakkeet]
+         (map-indexed
+           (fn [i rivi]
+             ^{:key (str "sininen-laatikko-sarake-" i)}
+             [:div.sininen-laatikko-sarake
+              [:div.sininen-laatikko-label.caption (:avain rivi)]
+              [:h1
+               (if (= :raha (:fmt rivi))
+                 (fmt/euro-opt (:arvo rivi))
+                 (:arvo rivi))]])
+           data))])
+
+    ;; Data riveinä, viimeinen rivi yhteenveto
+    (let [viimeinen-idx (dec (count data))]
+      (into
+        [:div.sininen-laatikko [:h3 otsikko]]
+        (map-indexed
+          (fn [i rivi]
+            ^{:key (str "sininen-laatikko-rivi-" i)}
+            [:div
+             ;; Viimeiselle riville jakaja
+             (when (and nayta-hr? (= i viimeinen-idx)) [:hr])
+
+             ;; Kontentti
+             [:div.flex-row
+              (cond-> {} (:lihavoi? rivi) (assoc :style {:font-weight "bold"}))
+              [:div (:avain rivi)]
+              [:div.tasaa-oikealle
+               (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
+          data)))))
+
+(defmethod muodosta-html :display-flex [[_ & data]]
+  (into
+    [:div.display-flex.display-container]
+    (map-indexed
+      (fn [i d]
+        ^{:key (str "display-flex-" i)}
+        [muodosta-html d])
+      data)))
+
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}
     (mapcat identity otsikot-ja-arvot)))

@@ -330,7 +330,10 @@
      ;; --------------------------------- ;;
      ;;    Footer (Laskutus yhteensä)     ;;
      ;; --------------------------------- ;;
-     #_[:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
-        (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))
-        (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
-        laskutettu-teksti laskutetaan-teksti]]))
+     [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali?
+      (:onko_laskutusraja_ylittynyt rivitiedot)
+      (:yhteensa_kaikki_hoitokausi_yht rivitiedot)
+      (:yhteensa_kaikki_val_aika_yht rivitiedot)
+      (:laskutettavaa_kaikki_yht rivitiedot)
+      (:laskutettavaa_kaikki_val_aika rivitiedot)
+      laskutettu-teksti laskutetaan-teksti]]))

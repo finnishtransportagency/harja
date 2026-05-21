@@ -71,12 +71,12 @@
                      ;; -----------------------------
                      (valitaulukko-rivi data kyseessa-kk-vali?
                        "• josta laskutettavaa (sisältyy laskutusrajaan)"
-                       :laskutusraja_laskutettavaa_yht :laskutusraja_laskutettavaa_val_aika false nil nil)
+                       :laskutusraja_laskutettavaa_yht :laskutusraja_laskutettavaa_val_aika false nil "vahvistamaton")
 
                      (valitaulukko-rivi data kyseessa-kk-vali?
                        "• josta laskutusrajan ylittäviä kustannuksia"
                        :laskutusrajan_ylittynyt_yht :laskutusrajan_ylittynyt_val_aika false nil
-                       "vahvistamaton" "(ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" false)]
+                       nil "(ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" false)]
 
                     ;; -----------------------------
                     ;; Toteutuneet kustannukset 
@@ -105,7 +105,9 @@
                     ;; -----------------------------
                     ;; Tavoitehinnan ulkopuoliset viimeisenä 
                     :else
-                    [(valitaulukko-rivi data kyseessa-kk-vali? "Tavoitehinnan ulkopuoliset kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton")
+                    [(valitaulukko-rivi data kyseessa-kk-vali?
+                       "Tavoitehinnan ulkopuoliset kustannukset yhteensä"
+                       :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton" nil true)
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)])))]
 
