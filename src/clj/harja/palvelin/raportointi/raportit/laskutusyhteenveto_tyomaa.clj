@@ -281,25 +281,36 @@
      ;; ----------------- ;;
      ;;   Laskutusraja    ;;
      ;; ----------------- ;;
-     (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                                    :otsikko "Laskutusraja"
-                                    :laskutettu-teksti laskutettu-teksti
-                                    :laskutetaan-teksti laskutetaan-teksti
-                                    :kyseessa-kk-vali? kyseessa-kk-vali?})
+     (when
+       (and
+         (<= (:laskutusraja_yht rivitiedot) 0.0M)
+         (:onko_laskutusraja_kaytossa rivitiedot))
+       [:info-laatikko "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
+        (str
+          "Laskenta tehdään ei vahvistetuilla tiedoilla, jotka saattavat päivittyä, "
+          "kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan.")
+        800])
 
-     ;; ------------------------------------------------------------ ;;
-     ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
-     ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
-     ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
-     ;;    Budjettia jäljellä                                        ;;
-     ;; ------------------------------------------------------------ ;;
-     #_(taulukot/valitaulukko-tyomaa {:data rivitiedot
+     (if (:onko_laskutusraja_kaytossa rivitiedot)
+       (taulukot/valitaulukko-tyomaa {:data rivitiedot
+                                      :otsikko "Laskutusraja"
+                                      :laskutettu-teksti laskutettu-teksti
+                                      :laskutetaan-teksti laskutetaan-teksti
+                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
+
+       ;; ------------------------------------------------------------ ;;
+       ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
+       ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
+       ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
+       ;;    Budjettia jäljellä                                        ;;
+       ;; ------------------------------------------------------------ ;;
+       (taulukot/valitaulukko-tyomaa {:data rivitiedot
                                       :otsikko "Toteutuneet"
                                       :laskutettu-teksti laskutettu-teksti
                                       :laskutetaan-teksti laskutetaan-teksti
                                       :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
                                       :kyseessa-kk-vali? kyseessa-kk-vali?
-                                      :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
+                                      :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
 
      ;; Ei tavoitehintaiset
      (if
@@ -331,6 +342,7 @@
      ;;    Footer (Laskutus yhteensä)     ;;
      ;; --------------------------------- ;;
      [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali?
+      (:onko_laskutusraja_kaytossa rivitiedot)
       (:onko_laskutusraja_ylittynyt rivitiedot)
       (:yhteensa_kaikki_hoitokausi_yht rivitiedot)
       (:yhteensa_kaikki_val_aika_yht rivitiedot)

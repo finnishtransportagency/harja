@@ -1600,7 +1600,8 @@ BEGIN
             laskutusraja_laskutettavaa_yht := tavhin_hoitokausi_yht;
         END IF;
 
-        laskutusrajaan_jaljella := laskutusraja_yht - tavhin_hoitokausi_yht; 
+        laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+        laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - tavhin_hoitokausi_yht); 
         onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
 
         laskutettavaa_kaikki_yht := laskutusraja_laskutettavaa_yht + muut_kustannukset_hoitokausi_yht;

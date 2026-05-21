@@ -4,17 +4,20 @@
             [harja.fmt :as fmt]))
 
 
-
 (defmethod raportointi/muodosta-html
   :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali?
-                                        laskutusraja_ylittynyt?
+                                        laskutusraja-kaytossa?
+                                        laskutusraja-ylittynyt?
                                         laskutettu laskutetaan
                                         laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
                                         laskutettu-str laskutetaan-str]]
 
   [raportointi/muodosta-html
    [:display-flex
-    [:sininen-laatikko {:otsikko "Toteutuneet kustannukset yhteensä"
+    [:sininen-laatikko {:otsikko (if laskutusraja-kaytossa?
+                                   "Toteutuneet kustannukset yhteensä"
+                                   ;; Vanhat urakat joilla ei ole laskutusrajaa
+                                   "Laskutettavaa yhteensä")
                         :layout :sarakkeet}
      [{:fmt :raha
        :arvo laskutettu
@@ -25,13 +28,14 @@
          :arvo laskutetaan
          :avain laskutetaan-str})]]
 
-    (when laskutusraja_ylittynyt?
+    (when
+      (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
       [:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"
                           :layout :sarakkeet}
        [{:fmt :raha
          :avain "Hoitovuoden alusta"
          :arvo laskutettavaa_kaikki_yht}
-        
+
         (when kyseessa-kk-vali?
           {:fmt :raha
            :avain "Helmikuu"
