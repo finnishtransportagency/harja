@@ -1,0 +1,31 @@
+@harja-panel-marginaali-ala: 1.25rem;
+@harja-panel-sisalto-padding-pysty: 0.1875rem;
+@harja-panel-sisalto-padding-vaaka: 0.9375rem;
+@harja-panel-pinta-runtime: var(--harja-panel-pinta, var(--harja-teema-pinta, @harjan-taustavari));
+@harja-panel-radius-runtime: var(--harja-panel-radius, var(--harja-teema-radius, 0));
+@harja-panel-varjo-runtime: var(--harja-panel-varjo, var(--harja-teema-varjo, none));
+@harja-panel-marginaali-ala-runtime: var(--harja-panel-marginaali-ala, var(--harja-teema-lohko-marginaali-ala, @harja-panel-marginaali-ala));
+@harja-panel-padding-pysty-runtime: var(--harja-panel-padding-pysty, var(--harja-teema-sisalto-padding-pysty, @harja-panel-sisalto-padding-pysty));
+@harja-panel-padding-vaaka-runtime: var(--harja-panel-padding-vaaka, var(--harja-teema-sisalto-padding-vaaka, @harja-panel-sisalto-padding-vaaka));
+@harja-panel-padding-ala-runtime: var(--harja-panel-padding-ala, var(--harja-teema-sisalto-padding-ala, @harja-panel-sisalto-padding-vaaka));
+
+.harja-panel {
+  background-color: @harja-panel-pinta-runtime;
+  border: none;
+  border-radius: @harja-panel-radius-runtime;
+  box-shadow: @harja-panel-varjo-runtime;
+  margin-block-end: @harja-panel-marginaali-ala-runtime;
+}
+
+.harja-panel-otsake {
+  background-color: @harja-panel-pinta-runtime;
+  border: none;
+  padding-block: @harja-panel-padding-pysty-runtime;
+  padding-inline: @harja-panel-padding-vaaka-runtime;
+}
+
+.harja-panel-runko {
+  padding-block-start: @harja-panel-padding-pysty-runtime;
+  padding-inline: @harja-panel-padding-vaaka-runtime;
+  padding-block-end: @harja-panel-padding-ala-runtime;
+}

@@ -178,10 +178,10 @@ Opts can have the following keys:
 (defn panel
   ([options content] (panel options nil content))
   ([options title content]
-   [:div.panel {:class (str
-                         (:class options) " panel-default")}
+  [:div.harja-panel {:class (:class options)
+               :data-cy (:data-cy options)}
     (when title
-      [:div.panel-heading
-       [:h1.musta title]])
-    [:div.panel-body
+    [:div.harja-panel-otsake
+     [:h1.musta title]])
+   [:div.harja-panel-runko
      content]]))

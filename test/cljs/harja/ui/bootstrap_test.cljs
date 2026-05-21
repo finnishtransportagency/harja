@@ -25,7 +25,6 @@
       (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-tabs-perustiedot\"]") "aria-selected")))
 
       (u/click "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia\"]")
-      --
       (is (= :historia @aktiivinen))
       (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia\"]") "aria-selected")))
       (is (= "Historia sisältö" (u/text :.valilehti))))))
@@ -52,7 +51,6 @@
       (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"Aktiivinen\"]") "aria-selected")))
 
       (u/click "[data-cy=\"Vaihtoehto\"]")
-      --
       (is (= :vaihtoehto @aktiivinen))
       (is (= 1 (count (u/sel ".harja-tabs-valilehti.harja-tabs-valittu"))))
       (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"Vaihtoehto\"]") "aria-selected"))))))
@@ -69,3 +67,30 @@
 
       (is (= 1 (count (u/sel "[data-cy=\"tabs-otsikko-perustiedot\"]"))))
       (is (= "Mukautettu otsikko" (u/text "[data-cy=\"tabs-otsikko-perustiedot\"]"))))))
+
+(deftest panel-kunnioittaa-eksplisiittista-data-cy-arvoa
+  (komponenttitesti
+    [bootstrap/panel {:data-cy "testi-paneli"
+                      :class "oma-paneliluokka"}
+     "Paneelin otsikko"
+     [:div "Paneelin sisältö"]]
+
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli\"].harja-panel.oma-paneliluokka"))))
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli\"] .harja-panel-otsake"))))
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli\"] .harja-panel-runko"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli\"] .panel"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli\"] .panel-heading"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli\"] .panel-body"))))
+    (is (= "Paneelin sisältö" (u/text "[data-cy=\"testi-paneli\"] .harja-panel-runko")))))
+
+(deftest panel-ilman-otsikkoa-jattaa-headingin-pois
+  (komponenttitesti
+    [bootstrap/panel {:data-cy "testi-paneli-ilman-otsikkoa"} [:div "Paneelin sisältö"]]
+
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"].harja-panel"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"] .harja-panel-otsake"))))
+    (is (= 1 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"] .harja-panel-runko"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"] .panel-heading"))))
+    (is (= 0 (count (u/sel "[data-cy=\"testi-paneli-ilman-otsikkoa\"] .panel-body"))))))

@@ -1,6 +1,8 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-test
   (:require [cljs.test :as t :refer-macros [deftest is]]
+            [clojure.string]
             [reagent.core :as r]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.panelit :as panelit]
             [harja.testutils.shared-testutils :as u]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.modaalit :as modaalit]
             [harja.views.hallinta.tyokalut.ui-komponenttien_tarkastelu-nakyma :as nakyma]
@@ -39,27 +41,23 @@
 
       (u/change radius-syote "0")
       (u/blur radius-syote)
-      --
       (is (= "{:harja-tabs-radius \"0\"}" (.-value (u/sel1 override-tekstialue))))
       (is (= "0" (css-muuttujan-arvo esikatselu "--harja-tabs-radius")))
 
       (u/change radius-syote "-1rem")
       (u/blur radius-syote)
-      --
       (is (= "-1rem" (.-value (u/sel1 radius-syote))))
       (is (= "{:harja-tabs-radius \"0\"}" (.-value (u/sel1 override-tekstialue))))
       (is (= "0" (css-muuttujan-arvo esikatselu "--harja-tabs-radius")))
 
       (u/change radius-syote "")
       (u/blur radius-syote)
-      --
       (is (= "{}" (.-value (u/sel1 override-tekstialue))))
       (is (= "" (css-muuttujan-arvo esikatselu "--harja-tabs-radius")))
 
       (u/change radius-syote "0")
       (u/blur radius-syote)
       (u/click palauta-nappi)
-      --
       (is (= "{}" (.-value (u/sel1 override-tekstialue))))
       (is (= "0.25rem" (.-value (u/sel1 radius-syote))))
       (is (= "" (css-muuttujan-arvo esikatselu "--harja-tabs-radius"))))))
@@ -74,7 +72,6 @@
 
       (u/change radius-syote "0")
       (u/blur radius-syote)
-      --
       (is (= "0" (css-muuttujan-arvo perus-esikatselu "--harja-tabs-radius")))
       (is (= "" (css-muuttujan-arvo pillerit-esikatselu "--harja-tabs-radius"))))))
 
@@ -100,6 +97,30 @@
 
       (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-modaali-kortti\"]"))))
       (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-avaa-modaali\"]")))))))
+
+(deftest panelit-osio-lukitsee-nykyisen-bootstrap-rakenteen
+  (komponenttitesti
+    [panelit/panelit-osio]
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-sisalto\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa-sisalto\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"].harja-panel"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa\"].harja-panel"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .harja-panel-otsake"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa\"] .harja-panel-otsake"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .harja-panel-runko"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa\"] .harja-panel-runko"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .panel"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .panel-heading"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .panel-body"))))
+    (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-paneli-sisalto\"]")
+             "Paneeli käyttää nyt Harjan omaa panel-rakennetta Bootstrap-markupin sijaan."))
+    (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa-sisalto\"]")
+             "Portattu wrapper säilyttää tämän optionaalisen otsikkosopimuksen ilman Bootstrapin panel-heading-rakennetta."))))
 
 (deftest tabs-renderoityvat-ilman-valilehtien-tilat-kontekstia
   (komponenttitesti
@@ -127,9 +148,21 @@
     (is (= "Ensimmäinen sisältö" (u/text "[data-cy=\"testi-tabs-perustiedot-sisalto\"]")))
 
     (u/click "[data-cy=\"testi-tabs-historia\"]")
-    --
     (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"testi-tabs-historia\"]") "aria-selected")))
     (is (= "Toinen sisältö" (u/text "[data-cy=\"testi-tabs-historia-sisalto\"]")))))
+
+(deftest tabs-kirjoittaa-valinnan-ulkoiseen-tilaan
+  (let [konteksti (uusi-konteksti)]
+    (komponenttitesti
+      [valilehdet/valilehdet-osio konteksti]
+
+      (is (= "Tämä sisältö näyttää aktiivisen välilehden perusrakenteen."
+             (u/text "[data-cy=\"ui-komponenttien-tarkastelu-tabs-perustiedot-sisalto\"]")))
+      (u/click "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia\"]")
+      (is (= :historia (get @(:valilehtien-tilat konteksti) "ui-komponenttien-tarkastelu-tabs")))
+      (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia\"]") "aria-selected")))
+      (is (= "Toinen välilehti varmistaa valinnan vaihtumisen ja sisällön renderöinnin."
+             (u/text "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia-sisalto\"]"))))))
 
 (deftest yhteinen-teemapaneeli-hallinnoi-jaettua-mapia
   (let [konteksti (uusi-konteksti)
@@ -153,16 +186,13 @@
       (is (= "{}" (.-value (u/sel1 kopioitava-map))))
 
       (u/change korostus-syote "#112233")
-      --
       (is (= "{:harja-teema-korostus \"#112233\"}" (.-value (u/sel1 kopioitava-map))))
 
       (u/change radius-syote "0")
       (u/blur radius-syote)
-      --
       (is (= "{:harja-teema-korostus \"#112233\", :harja-teema-radius \"0\"}" (.-value (u/sel1 kopioitava-map))))
 
       (u/click palauta-nappi)
-      --
       (is (= "{}" (.-value (u/sel1 kopioitava-map))))
       (is (= "#0066cc" (.-value (u/sel1 korostus-syote))))
       (is (= "0.25rem" (.-value (u/sel1 radius-syote)))))))
@@ -181,7 +211,6 @@
       (u/change pinta-hover-syote "#ddeeff")
       (u/change radius-syote "0")
       (u/blur radius-syote)
-      --
       (is (= "#112233" (css-muuttujan-arvo juuri "--harja-teema-korostus")))
       (is (= "#223344" (css-muuttujan-arvo juuri "--harja-teema-korostus-hover")))
       (is (= "#ddeeff" (css-muuttujan-arvo juuri "--harja-teema-pinta-hover")))

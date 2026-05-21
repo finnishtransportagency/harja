@@ -47,7 +47,6 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
             [harja.tiedot.kanavat.urakka.liikenne-test]
             [harja.views.urakka.jarjestelma-asetukset-test]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-test]
             [harja.tiedot.kanavat.kohteet-kartalla-test]
             [harja.tiedot.tieluvat.tieluvat-test]
             [harja.tyokalut.predikaatti-test]))
@@ -99,7 +98,6 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
            'harja.views.urakka.jarjestelma-asetukset-test
-           'harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-test
            'harja.tiedot.kanavat.kohteet-kartalla-test
            'harja.tiedot.tieluvat.tieluvat-test
            'harja.tyokalut.predikaatti-test
