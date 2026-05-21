@@ -253,6 +253,20 @@
   .johto-ja-hallintokorvaus-muutokset-grid {
     padding-top: @valistys-16;
   }
+
+  .kirjatut-muutokset-grid {
+    @media (max-width: 1370px) {
+      td:last-child,
+      th:last-child {
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+      td:last-child button {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+      }
+    }
+  }
 }
 
 .laskutusraja-muutos-modal {

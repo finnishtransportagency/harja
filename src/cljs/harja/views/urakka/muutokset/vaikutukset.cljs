@@ -11,27 +11,34 @@
 (defn muutosten-vaikutus-laskutusrajaan-rivit* [budjettitavoitteet laskutusrajan-tarkistukset indeksikorjaus-vahvistettu?]
   (let [{:keys [laskutusraja laskutusraja_alkuperainen]} budjettitavoitteet
         muutoksia_tehty (and laskutusraja laskutusraja_alkuperainen (> laskutusraja laskutusraja_alkuperainen))]
-    [(when (and indeksikorjaus-vahvistettu? muutoksia_tehty) [:div "Laskutusraja hoitovuoden alussa"])
-     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty) (fmt/euro-opt true false laskutusraja_alkuperainen))
-
-     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty)
-       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Laskutusrajan automaattiset tarkistukset"])
-     (when (and indeksikorjaus-vahvistettu? muutoksia_tehty)
-       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} (fmt/euro-opt true true (some-> laskutusrajan-tarkistukset last :laskutusrajan-tarkistus)))
-
-     (when (and laskutusraja indeksikorjaus-vahvistettu? (= laskutusraja laskutusraja_alkuperainen))
-       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Ei vaikutusta laskutusrajaan"])
-     (when (and laskutusraja indeksikorjaus-vahvistettu? (= laskutusraja laskutusraja_alkuperainen))
-       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div ""])
-
-     ^{:koko-rivin-leveys? true :viiva-rivin-alle? true :tietorivi-luokka (str "keskita-rivin-sisalto notifikaatio-viivan-ylla"
+    [^{:koko-rivin-leveys? true :tietorivi-luokka (str "keskita-rivin-sisalto"
                                                     (when indeksikorjaus-vahvistettu?
                                                       " piilota-rivin-sisalto"))}
+
      [yleiset/info-laatikko :vahva-ilmoitus
       "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
       "Laskenta tehdään ei-vahvistetuilla tiedoilla, jotka saattavat päivittyä, kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan."
       nil
       {:ikoni-fn #(ikonit/harja-icon-status-alert)}] [:div ""]
+
+     (when muutoksia_tehty
+       ^{:tietorivi-luokka "viivan-alla"} [:div "Laskutusraja hoitovuoden alussa"])
+     (when muutoksia_tehty
+       ^{:tietorivi-luokka "viivan-alla"} (fmt/euro-opt true false laskutusraja_alkuperainen))
+
+     (when muutoksia_tehty
+       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Laskutusrajan automaattiset tarkistukset"])
+     (when muutoksia_tehty
+       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} (fmt/euro-opt true true (some-> laskutusrajan-tarkistukset last :laskutusrajan-tarkistus)))
+
+     (when (and laskutusraja (= laskutusraja laskutusraja_alkuperainen))
+       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div "Ei vaikutusta laskutusrajaan"])
+     (when (and laskutusraja (= laskutusraja laskutusraja_alkuperainen))
+       ^{:viiva-rivin-alle? true :tietorivi-luokka "viivan-ylla"} [:div ""])
+
+     ^{:koko-rivin-leveys? true :viiva-rivin-alle? true :tietorivi-luokka (str "keskita-rivin-sisalto notifikaatio-viivan-ylla"
+                                                    (when indeksikorjaus-vahvistettu?
+                                                      " piilota-rivin-sisalto"))}
 
      (if muutoksia_tehty
        ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Tarkistettu laskutusraja"] ^{:tietorivi-luokka "viivan-alla"} [:span.semibold "Laskutusraja"])
