@@ -4,7 +4,8 @@
 
 (declare hae-urakan-sanktio-profiilit hae-sanktio-profiilit-admin hae-sanktio-profiili-admin
   hae-sanktio-profiilin-rivit hae-sanktio-profiilin-rivit-admin hae-bonus-profiilit-admin
-  hae-bonus-profiili-admin hae-bonus-profiilin-rivit-admin)
+  hae-urakan-bonus-profiilit hae-bonus-profiili-admin hae-bonus-profiilin-rivit
+  hae-bonus-profiilin-rivit-admin)
 
 (defn- muunna-urakkatyyppi
   [rivi avainpolku]

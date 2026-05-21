@@ -1403,6 +1403,62 @@
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
+(deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
+                                           "  FROM toimenpideinstanssi tpi\n"
+                                           "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+                                           "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+                                           " WHERE tpi.urakka = " urakka-id "\n"
+                                           "   AND t2.koodi = '23150'\n"
+                                           " ORDER BY tpi.id\n"
+                                           " LIMIT 1")))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-bonus-konfiguraatio
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuosi 1
+                   :toimenpideinstanssi-id toimenpideinstanssi-id})]
+    (is (= :teiden-hoito (:urakkatyyppi (:profiili vastaus))))
+    (is (= [:asiakastyytyvaisyysbonus :alihankintabonus]
+           (mapv :laji (:bonus-lajit vastaus))))
+    (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+            "Alihankintasopimusten maksuehtobonus"]
+           (mapv :nimi (:bonus-lajit vastaus))))))
+
+(deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
+                              (:db jarjestelma)
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :hoitovuosi 1
+                               :toimenpideinstanssi-id nil})
+                      [:profiili :id])
+        profiili (first (q-map (format "SELECT urakkatyyppi, hoitovuosi_alku, hoitovuosi_loppu, alkupvm, loppupvm FROM bonus_profiili WHERE id = %s" profiili-id)))]
+    (try
+      (jdbc/insert! (:db jarjestelma) :bonus_profiili
+        {:nimi "iin-mhu-bonus-duplikaatti"
+         :urakkatyyppi (:urakkatyyppi profiili)
+         :hoitovuosi_alku (:hoitovuosi_alku profiili)
+         :hoitovuosi_loppu (:hoitovuosi_loppu profiili)
+         :alkupvm (:alkupvm profiili)
+         :loppupvm (:loppupvm profiili)
+         :aktiivinen true
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Useita aktiivisia bonus-profiileja"
+            (ls/hae-urakan-bonus-konfiguraatio
+              (:db jarjestelma)
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :hoitovuosi 1
+               :toimenpideinstanssi-id nil})))
+      (finally
+        (u "DELETE FROM bonus_profiili WHERE nimi = 'iin-mhu-bonus-duplikaatti'")))))
+
 (deftest bonus-profiilin-lajin-esitystiedot-eivat-salli-kahta-rivia-samalle-lajille
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'asiakastyytyvaisyysbonus'"))

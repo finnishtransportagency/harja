@@ -389,6 +389,10 @@
   [db user tiedot]
   (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
 
+(defn hae-urakan-bonus-konfiguraatio
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
+
 (defn hae-sanktio-profiilit-admin
   [db user]
   (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
@@ -501,6 +505,10 @@
       (fn [user tiedot]
         (hae-urakan-sanktio-konfiguraatio db user tiedot))
 
+      :hae-urakan-bonus-konfiguraatio
+      (fn [user tiedot]
+        (hae-urakan-bonus-konfiguraatio db user tiedot))
+
       :hae-sanktio-profiilit-admin
       (fn [user _]
         (hae-sanktio-profiilit-admin db user))
@@ -542,6 +550,7 @@
       :hae-urakan-sanktiot-ja-bonukset
       :hae-sanktiotyypit
       :hae-urakan-sanktio-konfiguraatio
+      :hae-urakan-bonus-konfiguraatio
       :hae-sanktio-profiilit-admin
       :hae-sanktio-profiilin-detalji-admin
       :hae-bonus-profiilit-admin

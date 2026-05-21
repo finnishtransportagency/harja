@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.bonukset
   (:require [tuck.core :as tuck]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
@@ -11,6 +12,22 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
+
+(defn hae-urakan-bonus-konfiguraatio
+  [urakka-id hoitovuosi toimenpideinstanssi-id]
+  (k/post! :hae-urakan-bonus-konfiguraatio
+    {:urakka-id urakka-id
+     :hoitovuosi hoitovuosi
+     :toimenpideinstanssi-id toimenpideinstanssi-id}))
+
+(defn bonus-konfiguraation-lajit
+  [bonus-konfiguraatio]
+  (or (:bonus-lajit bonus-konfiguraatio) []))
+
+(defn bonus-konfiguraation-lajin-nimi
+  [bonus-konfiguraatio laji]
+  (some->> (bonus-konfiguraation-lajit bonus-konfiguraatio)
+    (some #(when (= laji (:laji %)) (:nimi %)))))
 
 (defn uusi-bonus []
   (let [nyt (pvm/nyt)

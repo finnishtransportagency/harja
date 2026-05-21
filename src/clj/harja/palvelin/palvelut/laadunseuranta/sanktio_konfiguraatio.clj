@@ -16,6 +16,8 @@
 
 (def ^:private sanktio-kirjausvirhe-tyyppi :sanktio-kirjausvirhe)
 
+(declare bonus-lajin-tehokas-nimi)
+
 (defn- heita-sanktio-kirjausvirhe!
   [koodi viesti lisatiedot]
   (throw+ {:type sanktio-kirjausvirhe-tyyppi
@@ -296,6 +298,73 @@
         rivit (q/hae-sanktio-profiilin-rivit-admin db {:sanktio_profiili_id sanktio-profiili-id})]
     {:profiili profiili
      :sisalto (muodosta-sisalto-admin rivit)}))
+
+(defn- vaadi-yksiselitteinen-bonus-profiili
+  [profiilit {:keys [urakka-id hoitovuosi]}]
+  (let [osumien-maara (count profiilit)]
+    (cond
+      (zero? osumien-maara)
+      (throw (IllegalArgumentException.
+               (str "Bonus-profiilia ei loytynyt urakalle " urakka-id
+                 " ja hoitovuodelle " hoitovuosi ".")))
+
+      (= 1 osumien-maara)
+      (first profiilit)
+
+      :else
+      (throw (IllegalArgumentException.
+               (str "Useita aktiivisia bonus-profiileja loytyi urakalle " urakka-id
+                 " ja hoitovuodelle " hoitovuosi "."))))))
+
+(defn- muodosta-bonus-laji
+  [rivit]
+  (let [eka-rivi (first rivit)]
+    {:id (get-in eka-rivi [:laji :id])
+     :laji (get-in eka-rivi [:laji :koodi])
+     :nimi (bonus-lajin-tehokas-nimi rivit)
+     :jarjestys (get-in eka-rivi [:laji :jarjestys])
+     :rivin-tyyppi (laji->rivin-tyyppi (get-in eka-rivi [:laji :koodi]))
+     :kirjaustapa (get-in eka-rivi [:laji :kirjaustapa])
+     :automaattinen (boolean (get-in eka-rivi [:laji :automaattinen]))}))
+
+(defn- muodosta-bonus-lajit
+  [rivit]
+  (->> rivit
+    (group-by #(get-in % [:laji :koodi]))
+    vals
+    (map muodosta-bonus-laji)
+    (sort-by :jarjestys)
+    vec))
+
+(defn- hae-bonus-profiilin-rivit-kontekstissa
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
+  (let [profiili (vaadi-yksiselitteinen-bonus-profiili
+                   (q/hae-urakan-bonus-profiilit
+                     db
+                     {:urakka_id urakka-id
+                      :hoitovuosi hoitovuosi})
+                   {:urakka-id urakka-id
+                    :hoitovuosi hoitovuosi})
+        rivit (q/hae-bonus-profiilin-rivit
+                db
+                {:bonus_profiili_id (:id profiili)
+                 :urakka_id urakka-id
+                 :toimenpideinstanssi_id toimenpideinstanssi-id})]
+    {:profiili profiili
+     :toimenpideinstanssi-id toimenpideinstanssi-id
+     :rivit rivit}))
+
+(defn hae-urakan-bonus-konfiguraatio
+  [db user {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
+  (oikeudet/vaadi-lukuoikeus @urakat-laadunseuranta-sanktiot-oikeus user urakka-id)
+  (let [{:keys [profiili rivit]} (hae-bonus-profiilin-rivit-kontekstissa
+                                   db
+                                   {:urakka-id urakka-id
+                                    :hoitovuosi hoitovuosi
+                                    :toimenpideinstanssi-id toimenpideinstanssi-id})]
+    {:profiili profiili
+     :toimenpideinstanssi-id toimenpideinstanssi-id
+     :bonus-lajit (muodosta-bonus-lajit rivit)}))
 
 (defn- muodosta-bonus-profiilirivit
   [rivit]

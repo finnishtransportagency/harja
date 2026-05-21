@@ -2,8 +2,10 @@
   "Bonuksien käsittely ja luonti"
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
+            [cljs.core.async :refer [<!]]
 
             [harja.pvm :as pvm]
+            [harja.asiakas.kommunikaatio :as k]
 
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -19,7 +21,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-tpi-idlla
   [tpi-id]
@@ -28,11 +31,24 @@
        %)
     @tiedot-urakka/urakan-toimenpideinstanssit))
 
+(defn- bonus-lajivalinnat
+  [bonus-konfiguraatio urakkatyyppi kayttaja-id tpi]
+  (let [bonus-lajit (mapv :laji (tiedot/bonus-konfiguraation-lajit bonus-konfiguraatio))]
+    (if (seq bonus-lajit)
+      bonus-lajit
+      (sanktio-domain/luo-kustannustyypit urakkatyyppi kayttaja-id tpi))))
+
+(defn- bonus-lajin-nimi
+  [bonus-konfiguraatio laji]
+  (or (tiedot/bonus-konfiguraation-lajin-nimi bonus-konfiguraatio laji)
+    (sanktio-domain/bonuslaji->teksti laji)
+    "- Valitse tyyppi -"))
+
 (defn bonus-lomake*
   "MH-urakoidan ja ylläpitourakoiden yhteinen bonuslomake.
   Huomioitavaa on, että ylläpidon urakoiden bonukset tallennetaankin oikeasti sanktioina, eikä bonuksina.
   Ylläpidon urakoiden bonuslomakkeessa on myös muita pieniä poikkeuksia."
-  [sulje-fn lukutila? voi-muokata? e! app]
+  [sulje-fn lukutila? voi-muokata? bonus-konfiguraatio e! app]
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
@@ -97,8 +113,8 @@
                     (-> rivi
                       (assoc :toimenpideinstanssi (:tpi_id asetettava-tpi))
                       (assoc :laji arvo))))
-         :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
-         :valinta-nayta #(or (sanktio-domain/bonuslaji->teksti %) "- Valitse tyyppi -")
+         :valinnat (bonus-lajivalinnat bonus-konfiguraatio (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
+         :valinta-nayta #(bonus-lajin-nimi bonus-konfiguraatio %)
          ::lomake/col-luokka "col-xs-12"
          :validoi [[:ei-tyhja "Valitse laji"]]})
 
@@ -294,6 +310,8 @@
                    (when tallennus-onnistui?
                      (tallennus-onnistui-fn))
                    (reset! sivupaneeli-auki?-atom false))
+        bonus-konfiguraatio (r/atom nil)
+        bonus-konfiguraation-haku-avain (r/atom nil)
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
                                          ;; Muokataan vanhaa bonusta
@@ -302,8 +320,22 @@
                                          ;; tai alustetaan bonuslomakkeen tila
                                          (tiedot/uusi-bonus))})]
     (fn [_ _ _ lukutila? voi-muokata?]
+      (let [urakka @nav/valittu-urakka
+            urakka-id (:id urakka)
+            urakan-alkupvm (:alkupvm urakka)
+            valittu-hoitokausi @tiedot-urakka/valittu-hoitokausi
+            toimenpideinstanssi-id (get-in @bonukset-tila [:lomake :toimenpideinstanssi])
+            hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                         (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))
+            haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]]
+        (when (and urakka-id hoitovuosi
+                (not= haku-avain @bonus-konfiguraation-haku-avain))
+          (reset! bonus-konfiguraation-haku-avain haku-avain)
+          (go
+            (let [vastaus (<! (tiedot/hae-urakan-bonus-konfiguraatio urakka-id hoitovuosi toimenpideinstanssi-id))]
+              (reset! bonus-konfiguraatio (when-not (k/virhe? vastaus) vastaus)))))
       [:<>
        #_[harja.ui.debug/debug @bonukset-tila]
 
        [tuck/tuck bonukset-tila
-        (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata?)]])))
+        (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]))))
