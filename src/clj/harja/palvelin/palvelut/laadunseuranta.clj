@@ -25,6 +25,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as sanktio-konfiguraatio]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
@@ -391,7 +392,7 @@
 
 (defn hae-urakan-bonus-konfiguraatio
   [db user tiedot]
-  (sanktio-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
+  (bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
 
 (defn hae-sanktio-profiilit-admin
   [db user]
@@ -403,11 +404,11 @@
 
 (defn hae-bonus-profiilit-admin
   [db user]
-  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
+  (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
 
 (defn hae-bonus-profiilin-detalji-admin
   [db user tiedot]
-  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
+  (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,

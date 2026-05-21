@@ -26,7 +26,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.sanktio-konfiguraatio :as sanktio-konfig-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1312,7 +1312,7 @@
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (sanktio-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1406,13 +1406,13 @@
 (deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
-                                           "  FROM toimenpideinstanssi tpi\n"
-                                           "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                                           "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                                           " WHERE tpi.urakka = " urakka-id "\n"
-                                           "   AND t2.koodi = '23150'\n"
-                                           " ORDER BY tpi.id\n"
-                                           " LIMIT 1")))
+                                            "  FROM toimenpideinstanssi tpi\n"
+                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+                                            " WHERE tpi.urakka = " urakka-id "\n"
+                                            "   AND t2.koodi = '23150'\n"
+                                            " ORDER BY tpi.id\n"
+                                            " LIMIT 1")))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakan-bonus-konfiguraatio
                   +kayttaja-jvh+
