@@ -25,7 +25,7 @@
                                 (sakkoryhma (:sakkoryhma rivi))
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
-        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id rivi)))
+        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:elinvoimakeskus_id rivi)))
         (or (nil? sanktiotyyppi_koodi)
           (nil? (:sanktiotyyppi_koodi rivi))
           (if (set? sanktiotyyppi_koodi)
@@ -39,7 +39,7 @@
 (defn- suodata-bonukset [bonukset {:keys [laji urakka-id elinvoimakeskus-id] :as suodattimet}]
   (filterv (fn [bonus]
              (and
-               (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id bonus)))
+               (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:elinvoimakeskus_id bonus)))
                (or (nil? laji) (contains? laji (:laji bonus)))
                (or (nil? urakka-id) (= urakka-id (:urakka-id bonus)))))
     bonukset))
@@ -49,7 +49,7 @@
       (and
         (not (sanktiot-domain/sakkoryhmasta-sakko? rivi))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
-        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:hallintayksikko_id rivi)))
+        (or (nil? elinvoimakeskus-id) (= elinvoimakeskus-id (:elinvoimakeskus_id rivi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
