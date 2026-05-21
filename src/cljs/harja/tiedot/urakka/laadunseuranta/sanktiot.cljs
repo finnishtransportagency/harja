@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [reagent.ratom :refer [reaction]]
             [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -199,3 +200,37 @@
       (filter
         #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))
+
+(defn valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                              toimenpideinstanssit)
+    "Talvihoito, päätiet" (filter
+                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                            toimenpideinstanssit)
+    "Talvihoito, muut tiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
+    "Sorateiden hoito ja ylläpito" (filter
+                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
+                                     toimenpideinstanssit)
+    "Liikenneympäristön hoito" (filter
+                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                 toimenpideinstanssit)
+    toimenpideinstanssit))
+
+(defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
+  (cond
+    ;; Suorasanktio MHU24 tai vanhempi: suodatetaan tyypin mukaan
+    (and suorasanktio? (<= urakan-alkuvuosi 2024))
+    (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))
+
+    ;; Suorasanktio MHU25+: näytetään vain Hoidonjohtopalkkio
+    suorasanktio?
+    (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
+
+    ;; Laatupoikkeaman sanktio: suodatetaan tyypin mukaan
+    :else
+    (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))

@@ -93,21 +93,21 @@
    Tallentaa sanktion laatupoikkeaman sanktiot-atomiin eikä suoraan kantaan."
   [sivupaneeli-auki?-atom laatupoikkeama paatosoikeus? muokattava? sanktiot-atom]
   (let [muokattu (atom @sanktiot/valittu-sanktio)
-        _ (js/console.log "laatupoikkeaman-sanktio-sivupaneeli :: laatupoikkeama:" (pr-str laatupoikkeama))
         lukutila? false
         oikeus-muokata? (and paatosoikeus? muokattava?)
         tallenna-fn (fn [sanktio]
                       ;; Lisää tai päivitä sanktio laatupoikkeaman sanktiot-atomiin
-                      ;; Taulukko grid käyttää mapia jossa avaimena on id tai generoitu avain
-                      (let [avain (or (:id sanktio) (gensym "sanktio"))]
-                        (swap! sanktiot-atom assoc avain sanktio)))]
+                      ;; Käytetään ::paikallinen-avain tunnistamaan sanktioita joilla ei ole :id:tä
+                      (let [avain (or (:id sanktio)
+                                    (:paikallinen-avain sanktio)
+                                    (gensym "sanktio"))
+                            sanktio-avaimella (assoc sanktio :paikallinen-avain avain)]
+                        (swap! sanktiot-atom assoc avain sanktio-avaimella)))]
     [:div.padding-16.ei-sulje-sivupaneelia
-     [:h2 (if oikeus-muokata?
-            "Muokkaa sanktiota"
-            "Lisää sanktio")]
+     (when-not (:id @muokattu) [:h2 (if oikeus-muokata? "Muokkaa sanktiota" "Lisää sanktio")])
      (when (and oikeus-muokata? (:lukutila? @muokattu))
        [:div.flex-row.alkuun.valistys16
-        [napit/yleinen-reunaton "Muokkaa" #(swap! sanktiot-atom update :lukutila not)]])
+        [napit/yleinen-reunaton "Muokkaa" #(swap! sanktiot/valittu-sanktio update :lukutila? not)]])
      ;; Käytetään sanktio-lomaketta ilman laji-valintaa (sanktio/bonus/arvonvähennys).
      ;; Lomakkeella voi syöttää vain sanktion.
      [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?
@@ -149,13 +149,16 @@
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
                   (let [uusi (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
                         siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
-                        _ (println "siivottu-laatupoikkeama:" (pr-str siivottu-laatupoikkeama))]
+                        mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset true? (pvm/vuosi (:alkupvm @nav/valittu-urakka)) sanktiot/valittu-sanktio)
+                        tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
+                              (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
                     (reset! sanktiot/valittu-sanktio
                       (-> uusi
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
                         (assoc :maarattypvm (get-in siivottu-laatupoikkeama [:paatos :kasittelyaika]))
-                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama)))))
+                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama))
+                        (assoc :toimenpideinstanssi tpi))))
                   (reset! sivupaneeli-auki? true))
                 {:ikoni (ikonit/livicon-plus)
                  :disabled (boolean disabled?)}]]
@@ -172,7 +175,7 @@
          ;; Sanktioiden listaus
          [grid/grid
           {:otsikko ""
-           :tunniste #(or (:id %) (hash %))
+           :tunniste #(or (:id %) (:paikallinen-avain %) (hash %))
            :tyhja "Ei kirjattuja sanktioita."
            :rivi-klikattu (fn [sanktio]
                             (reset! sanktiot/valittu-sanktio

@@ -135,29 +135,38 @@
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
-  [:div.flex-row
-   [:div
-    [valinnat/urakkavalinnat {:urakka valittu-urakka}
-       ^{:key "urakkavalinnat"}
-     [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi tiedot/valittu-sanktio)
+        tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
+              (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
+    [:div.flex-row
+        [:div
+         [valinnat/urakkavalinnat {:urakka valittu-urakka}
+          ^{:key "urakkavalinnat"}
+          [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
 
-   [:div {:style {:flex-grow 2}}
-    [lajisuodatin-valinnat lajisuodattimet]]
-   [:div {:style {:flex-grow 1}}
-    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                    (:id valittu-urakka))]
-      (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-           oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää uusi"}
-        [:div.lisaa-nappi {:style {:float "right"}}
-         [napit/uusi "Lisää uusi"
-          #(do
-             (reset! sivupaneeli-auki?-atom true)
-             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
-          {:disabled (not oikeus?)}]]))]])
+        [:div {:style {:flex-grow 2}}
+         [lajisuodatin-valinnat lajisuodattimet]]
+        [:div {:style {:flex-grow 1}}
+         (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                         (:id valittu-urakka))
+               uusi-sanktio (merge
+                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
+                              {:toimenpideinstanssi tpi})
+               uusi-sanktio (when (>= urakan-alkuvuosi 2025)
+                              (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus))]
+           (yleiset/wrap-if
+             (not oikeus?)
+             [yleiset/tooltip {} :%
+              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                oikeudet/urakat-laadunseuranta-sanktiot)]
+             ^{:key "Lisää uusi"}
+             [:div.lisaa-nappi {:style {:float "right"}}
+              [napit/uusi "Lisää uusi"
+               #(do
+                  (reset! sivupaneeli-auki?-atom true)
+                  (reset! tiedot/valittu-sanktio uusi-sanktio))
+               {:disabled (not oikeus?)}]]))]]))
 
 
 (defn valitse-sanktio-tai-bonus! [rivi sanktio-atom]

@@ -374,7 +374,7 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo) "nimi:" (pr-str nimi))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
