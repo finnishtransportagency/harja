@@ -224,7 +224,7 @@
             ::lomake/col-luokka "col-xs-12"
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
             :pakollinen? true
-            :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
+            :muokattava? (if suorasanktio? (constantly voi-muokata?) (constantly false) )
             :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
 
 

@@ -153,8 +153,9 @@
                uusi-sanktio (merge
                               (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
                               {:toimenpideinstanssi tpi})
-               uusi-sanktio (when (>= urakan-alkuvuosi 2025)
-                              (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus))]
+               uusi-sanktio (if (>= urakan-alkuvuosi 2025)
+                              (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus)
+                              uusi-sanktio)]
            (yleiset/wrap-if
              (not oikeus?)
              [yleiset/tooltip {} :%
