@@ -6,21 +6,28 @@
 
 (defn- valitaulukko-rivi
   ([data otsikko]
-   (valitaulukko-rivi data false otsikko nil nil false nil nil nil false))
+   (valitaulukko-rivi data false otsikko nil nil false nil nil nil false false))
   ([data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli]
-   (valitaulukko-rivi data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli nil false))
-  ([data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli teksti-alle hk-alku-vahvistamaton?]
+   (valitaulukko-rivi data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari tyyli nil false false))
+  ([data kyseessa-kk-vali? valiotsikko avain_hoitokausi
+    avain_yht lihavoi? vari tyyli teksti-alle hk-alku-vahvistamaton? aikavali?]
    (rivi
+     ;; Vasen sarake (otsikko)
      [:varillinen-teksti {:lihavoi? lihavoi?
-                          :arvo (str valiotsikko)
+                          :arvo (when-not aikavali? (str valiotsikko))
                           :teksti-alle teksti-alle}]
-     [:varillinen-teksti {:arvo (or
-                                  (and avain_hoitokausi (avain_hoitokausi data))
-                                  (yhteiset/summa-fmt nil))
-                          :fmt :raha
+     ;; Oikea sarake (eur)
+     [:varillinen-teksti {:arvo (if aikavali?
+                                  ;; Näytä oikealla aikaväli jos valittu oma aikaväli
+                                  (str valiotsikko)
+                                  (or
+                                    (and avain_hoitokausi (avain_hoitokausi data))
+                                    (yhteiset/summa-fmt nil)))
+                          :fmt (if aikavali? :string :raha)
                           :lihavoi? lihavoi?
                           :kustomi-tyyli (when (and hk-alku-vahvistamaton? (not kyseessa-kk-vali?)) tyyli)
                           :itsepaisesti-maaritelty-oma-vari (or vari nil)}]
+     ;; Valittu kk sarake (eur)
      (when kyseessa-kk-vali?
        (let [arvo (or
                     (and avain_yht (avain_yht data))
@@ -32,7 +39,7 @@
 
 (defn valitaulukko-tyomaa
   "Läpinäkyvä välitaulukko"
-  [{:keys [data otsikko laskutettu-teksti
+  [{:keys [data otsikko laskutettu-teksti valittu-aikavali? aikavali
            laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti]}]
   (let [laskutusraja-ylittynyt? (boolean (:onko_laskutusraja_ylittynyt data))
         kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
@@ -43,40 +50,57 @@
         rivit (into []
                 (remove nil?
                   (cond
-
                     ;; -----------------------------
                     ;; Laskutusraja ei ylittynyt
                     (and
                       (not laskutusraja-ylittynyt?)
                       (= otsikko "Laskutusraja"))
-                    [(valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data))))
-                     (valitaulukko-rivi data kyseessa-kk-vali?
-                       "Tavoitehintaan vaikuttavat kustannukset yhteensä"
-                       :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton" nil true)
+                    [;; Näytä oikealla valittu aikaväli
+                     (when valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali? aikavali nil nil true nil nil nil nil true))
+
+                     ;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
+                     (when-not valittu-aikavali?
+                       (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
 
                      (valitaulukko-rivi data kyseessa-kk-vali?
-                       "Laskutusrajaan jäljellä"
-                       :laskutusrajaan_jaljella nil true nil nil)]
+                       "Tavoitehintaan vaikuttavat kustannukset yhteensä"
+                       :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton" nil true false)
+
+                     ;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
+                     (when-not valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali?
+                         "Laskutusrajaan jäljellä"
+                         :laskutusrajaan_jaljella nil true nil nil))]
 
                     ;; -----------------------------
                     ;; Laskutusraja ylittynyt
                     (and
                       laskutusraja-ylittynyt?
                       (= otsikko "Laskutusraja"))
-                    [(valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data))))
+                    [;; Näytä oikealla valittu aikaväli
+                     (when valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali? aikavali nil nil true nil nil nil nil true))
+
+                     ;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
+                     (when-not valittu-aikavali?
+                       (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
+
                      (valitaulukko-rivi data kyseessa-kk-vali?
                        "Tavoitehintaan vaikuttavat kustannukset yhteensä"
                        :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil nil)
 
                      ;; -----------------------------
-                     (valitaulukko-rivi data kyseessa-kk-vali?
-                       "• josta laskutettavaa (sisältyy laskutusrajaan)"
-                       :laskutusraja_laskutettavaa_yht :laskutusraja_laskutettavaa_val_aika false nil "vahvistamaton")
+                     (when-not valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali?
+                         "• josta laskutettavaa (sisältyy laskutusrajaan)"
+                         :laskutusraja_laskutettavaa_yht :laskutusraja_laskutettavaa_val_aika false nil "vahvistamaton"))
 
-                     (valitaulukko-rivi data kyseessa-kk-vali?
-                       "• josta laskutusrajan ylittäviä kustannuksia"
-                       :laskutusrajan_ylittynyt_yht :laskutusrajan_ylittynyt_val_aika false nil
-                       nil "(ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" false)]
+                     (when-not valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali?
+                         "• josta laskutusrajan ylittäviä kustannuksia"
+                         :laskutusrajan_ylittynyt_yht :laskutusrajan_ylittynyt_val_aika false nil
+                         nil "(ei laskutusoikeutta ennen välikatselmuksen päätöksiä)" false false))]
 
                     ;; -----------------------------
                     ;; Toteutuneet kustannukset 
@@ -105,9 +129,13 @@
                     ;; -----------------------------
                     ;; Tavoitehinnan ulkopuoliset viimeisenä 
                     :else
-                    [(valitaulukko-rivi data kyseessa-kk-vali?
+                    [;; Näytä oikealla valittu aikaväli
+                     (when valittu-aikavali?
+                       (valitaulukko-rivi data kyseessa-kk-vali? aikavali nil nil true nil nil nil nil true))
+
+                     (valitaulukko-rivi data kyseessa-kk-vali?
                        "Tavoitehinnan ulkopuoliset kustannukset yhteensä"
-                       :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton" nil true)
+                       :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton" nil true false)
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)
                      (valitaulukko-rivi data false "" :nil :nil false nil nil)])))]
 

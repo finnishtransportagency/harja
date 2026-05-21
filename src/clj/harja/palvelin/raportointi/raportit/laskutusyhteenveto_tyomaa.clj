@@ -170,9 +170,6 @@
                                                       (pvm/nyt)
                                                       loppupvm))
 
-        ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
-        laskutettu-teksti (if (= aikarajaus :valittu-aikakvali) "Määrä" laskutettu-teksti)
-
         ;; Konteksti ja urakkatiedot
         konteksti (cond
                     urakka-id :urakka
@@ -216,6 +213,12 @@
                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])
+
+        valittu-aikavali? (= aikarajaus :valittu-aikakvali)
+        aikavali-str (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+
+        ;; Formatoi valittu aikaväli otsikko
+        laskutettu-teksti (if valittu-aikavali? aikavali-str laskutettu-teksti)
 
         rivitiedot (first (first laskutusyhteenvedot))
         otsikot ["Hankinnat" "Hoidonjohto"]
@@ -283,7 +286,7 @@
      ;; ----------------- ;;
      (when
        (and
-         (<= (:laskutusraja_yht rivitiedot) 0.0M)
+         (<= (or (:laskutusraja_yht rivitiedot) 0.0M) 0.0M)
          (:onko_laskutusraja_kaytossa rivitiedot))
        [:info-laatikko "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
         (str
@@ -294,6 +297,8 @@
      (if (:onko_laskutusraja_kaytossa rivitiedot)
        (taulukot/valitaulukko-tyomaa {:data rivitiedot
                                       :otsikko "Laskutusraja"
+                                      :aikavali aikavali-str
+                                      :valittu-aikavali? valittu-aikavali?
                                       :laskutettu-teksti laskutettu-teksti
                                       :laskutetaan-teksti laskutetaan-teksti
                                       :kyseessa-kk-vali? kyseessa-kk-vali?})
@@ -306,9 +311,10 @@
        ;; ------------------------------------------------------------ ;;
        (taulukot/valitaulukko-tyomaa {:data rivitiedot
                                       :otsikko "Toteutuneet"
+                                      :valittu-aikavali? valittu-aikavali?
+                                      :vapaa-aikavali-teksti aikavali-str
                                       :laskutettu-teksti laskutettu-teksti
                                       :laskutetaan-teksti laskutetaan-teksti
-                                      :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
                                       :kyseessa-kk-vali? kyseessa-kk-vali?
                                       :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
 
@@ -334,6 +340,8 @@
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/valitaulukko-tyomaa {:data rivitiedot
+                                    :aikavali aikavali-str
+                                    :valittu-aikavali? valittu-aikavali?
                                     :laskutettu-teksti laskutettu-teksti
                                     :laskutetaan-teksti laskutetaan-teksti
                                     :kyseessa-kk-vali? kyseessa-kk-vali?})
