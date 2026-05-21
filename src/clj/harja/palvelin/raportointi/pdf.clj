@@ -28,6 +28,7 @@
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
 (def otsikon-fonttikoko "10pt")
+(def taulukon-otsikon-fonttikoko "10pt")
 (def tekstin-fonttikoko "9pt")
 
 (def raportin-tehostevari "#f0f0f0")
@@ -472,6 +473,89 @@
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
   nil)
+
+(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout]} data]]
+  (let [data (vec (keep identity data))]
+    [:fo:block {:background-color "#E0EDF9"
+                :border (str "solid 0.3mm " korostettu-vari)
+                :padding "2mm"
+                :margin-bottom "1mm"}
+
+     [:fo:block {:font-weight "bold"
+                 :font-size taulukon-otsikon-fonttikoko
+                 :margin-bottom "1mm"}
+      otsikko]
+
+     (if (= layout :sarakkeet)
+       (into
+         [:fo:table {:font-size tekstin-fonttikoko
+                     :table-layout "fixed"
+                     :width "100%"}]
+         (concat
+           (repeat (count data)
+             [:fo:table-column {:column-width "proportional-column-width(1)"}])
+           [[:fo:table-body
+             (into
+               [:fo:table-row]
+               (map
+                 (fn [rivi]
+                   [:fo:table-cell {:padding "0.5mm"}
+                    [:fo:block {:font-size "7pt"} (:avain rivi)]
+
+                    [:fo:block {:font-size "12pt"
+                                :font-weight "bold"}
+                     (if (= :raha (:fmt rivi))
+                       (fmt/euro-opt (:arvo rivi))
+                       (str (:arvo rivi)))]]))
+               data)]]))
+
+       ;; Row tyyliset laatikot
+       (let [viimeinen-idx (dec (count data))]
+         [:fo:table {:font-size tekstin-fonttikoko
+                     :table-layout "fixed"
+                     :width "100%"}
+          [:fo:table-column {:column-width "65%"}]
+          [:fo:table-column {:column-width "35%"}]
+          [:fo:table-body
+           (map-indexed
+             (fn [i rivi]
+               (let [arvo-teksti (if (= :raha (:fmt rivi))
+                                   (fmt/euro-opt (:arvo rivi))
+                                   (str (:arvo rivi)))]
+                 (list
+                   (when (= i viimeinen-idx)
+                     [:fo:table-row
+                      [:fo:table-cell {:number-columns-spanned 2
+                                       :padding-top "1mm"
+                                       :padding-bottom "1mm"}
+                       [:fo:block {:border-bottom "solid 0.3mm gray"}]]])
+
+                   [:fo:table-row
+                    (when (:lihavoi? rivi) {:font-weight "bold"})
+
+                    [:fo:table-cell {:padding "0.5mm"} [:fo:block (:avain rivi)]]
+                    [:fo:table-cell {:padding "0.5mm"
+                                     :text-align "right"}
+                     [:fo:block arvo-teksti]]])))
+             data)]]))]))
+
+(defmethod muodosta-pdf :display-flex [[_ & data]]
+  (let [data (vec (keep identity data))
+        sarake-leveys (str (float (/ 100 (count data))) "%")]
+    [:fo:table {:margin-top "1mm"
+                :table-layout "fixed"
+                :width "100%"}
+     (for [_ data]
+       [:fo:table-column {:column-width sarake-leveys}])
+
+     [:fo:table-body
+      [:fo:table-row
+       (map-indexed
+         (fn [i d]
+           [:fo:table-cell {:padding-right (when-not (= i (dec (count data)))
+                                             "3mm")}
+            (muodosta-pdf d)])
+         data)]]]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
