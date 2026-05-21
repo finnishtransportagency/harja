@@ -5,14 +5,8 @@
             [harja.kyselyt.sanktio-konfiguraatio :as q]
             [slingshot.slingshot :refer [throw+]]))
 
-(def ^:private urakat-laadunseuranta-sanktiot-oikeus
-  (delay @(requiring-resolve 'harja.domain.oikeudet/urakat-laadunseuranta-sanktiot)))
-
 (def ^:private sallitut-soveltuvuuskontekstit
   #{:urakka :laatupoikkeama})
-
-(def ^:private hallinta-oikeus
-  (delay @(requiring-resolve 'harja.domain.oikeudet/hallinta-laadunseuranta-profiilit)))
 
 (def ^:private sanktio-kirjausvirhe-tyyppi :sanktio-kirjausvirhe)
 
@@ -254,7 +248,7 @@
 
 (defn hae-urakan-sanktio-konfiguraatio
   [db user {:keys [urakka-id hoitovuosi soveltuvuuskonteksti]}]
-  (oikeudet/vaadi-lukuoikeus @urakat-laadunseuranta-sanktiot-oikeus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (let [{:keys [profiili rivit soveltuvuuskonteksti]} (hae-sanktio-profiilin-rivit-kontekstissa
                                                         db
                                                         {:urakka-id urakka-id
@@ -266,13 +260,13 @@
 
 (defn hae-sanktio-profiilit-admin
   [db user]
-  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
   (->> (q/hae-sanktio-profiilit-admin db)
     (mapv taydenna-profiilin-yhteenveto)))
 
 (defn hae-sanktio-profiilin-detalji-admin
   [db user {:keys [sanktio-profiili-id]}]
-  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
   (let [profiili (-> (hae-sanktio-profiili-admin-tiedot db sanktio-profiili-id)
                    taydenna-profiilin-yhteenveto)
         rivit (q/hae-sanktio-profiilin-rivit-admin db {:sanktio_profiili_id sanktio-profiili-id})]

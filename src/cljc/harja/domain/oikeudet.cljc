@@ -22,6 +22,7 @@
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
   hallinta-lupaukset
+  urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset

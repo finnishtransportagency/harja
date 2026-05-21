@@ -4,12 +4,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.bonus-konfiguraatio :as q]))
 
-(def ^:private urakat-laadunseuranta-sanktiot-oikeus
-  (delay @(requiring-resolve 'harja.domain.oikeudet/urakat-laadunseuranta-sanktiot)))
-
-(def ^:private hallinta-oikeus
-  (delay @(requiring-resolve 'harja.domain.oikeudet/hallinta-laadunseuranta-profiilit)))
-
 (declare bonus-lajin-tehokas-nimi)
 
 (defn- laji->rivin-tyyppi
@@ -133,7 +127,7 @@
 
 (defn hae-urakan-bonus-konfiguraatio
   [db user {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
-  (oikeudet/vaadi-lukuoikeus @urakat-laadunseuranta-sanktiot-oikeus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (let [{:keys [profiili rivit]} (hae-bonus-profiilin-rivit-kontekstissa
                                    db
                                    {:urakka-id urakka-id
@@ -192,13 +186,13 @@
 
 (defn hae-bonus-profiilit-admin
   [db user]
-  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
   (->> (q/hae-bonus-profiilit-admin db)
     (mapv taydenna-bonus-profiilin-yhteenveto)))
 
 (defn hae-bonus-profiilin-detalji-admin
   [db user {:keys [bonus-profiili-id]}]
-  (oikeudet/vaadi-lukuoikeus @hallinta-oikeus user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
   (let [profiili (-> (hae-bonus-profiili-admin-tiedot db bonus-profiili-id)
                    taydenna-bonus-profiilin-yhteenveto)
         rivit (q/hae-bonus-profiilin-rivit-admin db {:bonus_profiili_id bonus-profiili-id})]
