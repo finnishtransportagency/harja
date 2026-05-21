@@ -17,7 +17,17 @@
 
 (defn- laskettavat-kentat [konteksti]
   (let [kustannusten-kentat (into []
-                              (apply concat [(yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
+                              (apply concat [[:laskutusraja_yht
+                                              :laskutusrajaan_jaljella
+                                              :onko_laskutusraja_kaytossa
+                                              :onko_laskutusraja_ylittynyt
+                                              :laskutusraja_laskutettavaa_yht
+                                              :laskutusraja_laskutettavaa_val_aika
+                                              :laskutusrajan_ylittynyt_yht
+                                              :laskutusrajan_ylittynyt_val_aika
+                                              :laskutettavaa_kaikki_yht
+                                              :laskutettavaa_kaikki_val_aika]
+                                             (yhteiset/kustannuslajin-kaikki-kentat "lisatyot")
                                              (yhteiset/kustannuslajin-kaikki-kentat "hankinnat")
                                              (yhteiset/kustannuslajin-kaikki-kentat "sakot")
                                              (yhteiset/kustannuslajin-kaikki-kentat "johto_ja_hallinto")
@@ -35,7 +45,47 @@
 
 
 (defn- koosta-yhteenveto [tiedot valikatselmus-siirrot-ed-vuodelta]
-  (let [kaikki-yhteensa-laskutettu (apply + (keep #(:kaikki_laskutettu %) tiedot))
+  (let [laskutusraja-yht (or (some :laskutusraja_yht tiedot) 0M)
+        tiedot (mapv
+                 (fn [rivi kaytetty-yht]
+                   (assoc rivi
+                     :laskutusraja_yht laskutusraja-yht
+                     :laskutusrajaan_jaljella
+                     (max 0M (- laskutusraja-yht kaytetty-yht))))
+                 tiedot
+                 (rest
+                   (reductions
+                     + 0M
+                     (map #(or (:kaikki_laskutettu %) 0M) tiedot))))
+
+        onko_laskutusraja_kaytossa (:onko_laskutusraja_kaytossa (last tiedot))
+        laskutusraja_yht (:laskutusraja_yht (last tiedot))
+        laskutusrajaan_jaljella (:laskutusrajaan_jaljella (last tiedot))
+        onko_laskutusraja_ylittynyt (<= laskutusrajaan_jaljella 0.0M)
+        laskutusraja-yht (or (:laskutusraja_yht (last tiedot)) 0M)
+
+        summaa (fn [k]
+                 (apply + (map #(or (k %) 0M) tiedot)))
+
+        laskutettavaa-yht-raw
+        (summaa :laskutusraja_laskutettavaa_yht)
+
+        laskutettavaa-val-aika-raw
+        (summaa :laskutusraja_laskutettavaa_val_aika)
+
+        laskutusraja_laskutettavaa_yht
+        (min laskutusraja-yht laskutettavaa-yht-raw)
+
+        laskutusraja_laskutettavaa_val_aika
+        (min laskutusraja-yht laskutettavaa-val-aika-raw)
+
+        laskutusrajan_ylittynyt_yht
+        (max 0M (- laskutettavaa-yht-raw laskutusraja-yht))
+
+        laskutusrajan_ylittynyt_val_aika
+        (max 0M (- laskutettavaa-val-aika-raw laskutusraja-yht))
+
+        kaikki-yhteensa-laskutettu (apply + (keep #(:kaikki_laskutettu %) tiedot))
         kaikki-yhteensa-laskutetaan (apply + (keep #(:kaikki_laskutetaan %) tiedot))
         kaikki-tavoitehintaiset-laskutettu (apply + (map #(if (not (nil? (:tavoitehintaiset_laskutettu %)))
                                                             (:tavoitehintaiset_laskutettu %)
@@ -54,7 +104,16 @@
      :kaikki-yhteensa-laskutettu (+ kaikki-yhteensa-laskutettu valikatselmus-siirrot-ed-vuodelta)
      ;; KK-välin laskutus
      :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
-     :nimi "Kaikki toteutuneet kustannukset"}))
+     :nimi "Kaikki toteutuneet kustannukset"
+     ;; Laskutusraja 
+     :laskutusraja_yht laskutusraja_yht
+     :laskutusrajaan_jaljella laskutusrajaan_jaljella
+     :onko_laskutusraja_kaytossa onko_laskutusraja_kaytossa
+     :onko_laskutusraja_ylittynyt onko_laskutusraja_ylittynyt
+     :laskutusraja_laskutettavaa_yht laskutusraja_laskutettavaa_yht
+     :laskutusraja_laskutettavaa_val_aika laskutusraja_laskutettavaa_val_aika
+     :laskutusrajan_ylittynyt_yht laskutusrajan_ylittynyt_yht
+     :laskutusrajan_ylittynyt_val_aika laskutusrajan_ylittynyt_val_aika}))
 
 
 (defn- koosta-tavoite [tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta]
@@ -205,9 +264,6 @@
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
         laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
-        ;; Hoitokausi valittuna?
-        hoitokausi? (= aikarajaus :hoitokausi)
-
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
         parametrit (assoc parametrit :haun-loppupvm (if (and
@@ -235,14 +291,16 @@
         hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)
         valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm (first hoitokausi)})
 
-        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
+        urakoiden-parametrit (mapv #(assoc parametrit
+                                      :urakka-id (:id %)
                                       :urakka-nimi (:nimi %)
                                       :indeksi (:indeksi %)
                                       :urakkatyyppi (:tyyppi %)) urakat)
 
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
-                                    (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
+                                    (mapv #(assoc %
+                                             :urakka-id (:urakka-id urakan-parametrit)
                                              :urakka-nimi (:urakka-nimi urakan-parametrit)
                                              :indeksi (:indeksi urakan-parametrit)
                                              :urakkatyyppi (:urakkatyyppi urakan-parametrit))
@@ -264,6 +322,14 @@
         yhteenveto (koosta-yhteenveto tiedot valikatselmus-siirrot-ed-vuodelta)
         tavoite (koosta-tavoite tiedot urakka-tavoite valikatselmus-siirrot-ed-vuodelta)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
+        rivitiedot (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
+
+        rivitiedot (assoc rivitiedot
+                     :tavhin_hoitokausi_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutettu)
+                     :tavhin_val_aika_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutetaan)
+                     :onko_laskutusraja_ylittynyt (-> koostettu-yhteenveto first :onko_laskutusraja_ylittynyt)
+                     :laskutusrajan_ylittynyt_yht (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_yht)
+                     :laskutusrajan_ylittynyt_val_aika (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_val_aika))
 
         sheet-nimi "Tuotekohtainen"
         otsikot [["Talvihoito" "alvi"]
@@ -310,10 +376,20 @@
                             :kyseessa-kk-vali? kyseessa-kk-vali?
                             :alkupvm alkupvm}))))
 
-     (taulukot/toteutuneet-valitaulukko-tuotekohtainen
-       {:data (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
-        :otsikko "Toteutuneet"
-        :laskutettu-teksti laskutettu-teksti
-        :laskutetaan-teksti laskutetaan-teksti
-        :kyseessa-kk-vali? kyseessa-kk-vali?
-        :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})]))
+     (if (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
+       (taulukot/lapinakyva-taulukko true
+         {:data rivitiedot
+          :otsikko "Laskutusraja"
+          :aikavali "Hoitovuoden alusta"
+          :valittu-aikavali? valittu-aikavali?
+          :laskutettu-teksti laskutettu-teksti
+          :laskutetaan-teksti laskutetaan-teksti
+          :kyseessa-kk-vali? kyseessa-kk-vali?})
+
+       (taulukot/tuotekohtainen-toteutuneet-taulukko
+         {:data rivitiedot
+          :otsikko "Toteutuneet"
+          :laskutettu-teksti laskutettu-teksti
+          :laskutetaan-teksti laskutetaan-teksti
+          :kyseessa-kk-vali? kyseessa-kk-vali?
+          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))

@@ -664,6 +664,7 @@ DECLARE
     aikavali_vuosi                        NUMERIC;
     hk_alkuvuosi                          NUMERIC;
     hk_alkukuukausi                       NUMERIC;
+    urakan_alkuvuosi                      NUMERIC;
     indeksi_vuosi                         INTEGER;
     indeksi_kuukausi                      INTEGER;
     sopimus_id                            INTEGER;
@@ -1334,10 +1335,16 @@ BEGIN
     
         laskutettavaa_kaikki_yht := 0.0;
         laskutettavaa_kaikki_val_aika := 0.0;
-    
+
+        urakan_alkuvuosi := (
+            SELECT EXTRACT(YEAR FROM u.alkupvm)::INTEGER
+              FROM urakka u
+             WHERE u.id = ur
+        );
+
         -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
-        IF hk_alkuvuosi >= 2025 THEN
-            RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', hk_alkuvuosi;
+        IF urakan_alkuvuosi >= 2025 THEN
+            RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', urakan_alkuvuosi;
             SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
         ELSE
             onko_laskutusraja_kaytossa := FALSE;
@@ -1353,29 +1360,27 @@ BEGIN
             ------------------------------------------------------
             -- "josta laskutettavaa" valittu kk 
             IF kaikki_laskutettu >= laskutusraja_yht THEN
-                laskutusraja_laskutettavaa_val_aika := laskutusraja_yht;
-                
                 -- Ylityksen määrä valittu kk
                 laskutusrajan_ylittynyt_val_aika := kaikki_laskutettu - laskutusraja_yht;
             ELSE
-                laskutusraja_laskutettavaa_val_aika := kaikki_laskutettu;
                 -- Hoitokausi yht on tähän kuuhun asti olevat kulut
                 laskutusrajan_ylittynyt_val_aika := greatest(kaikki_laskutetaan - laskutusraja_yht, 0);
             END IF;
     
             ------------------------------------------------------
             -- "josta laskutettavaa" hoitokausi yht 
-            IF kaikki_laskutetaan >= laskutusraja_yht THEN
+            IF kaikki_laskutettu >= laskutusraja_yht THEN
                 laskutusraja_laskutettavaa_yht := laskutusraja_yht;
                 
                 -- Ylityksen määrä yhteensä
-                laskutusrajan_ylittynyt_yht := kaikki_laskutetaan - laskutusraja_yht;
-            ELSE
-                laskutusraja_laskutettavaa_yht := kaikki_laskutetaan;
+                laskutusrajan_ylittynyt_yht := kaikki_laskutettu - laskutusraja_yht;
             END IF;
+
+            laskutusraja_laskutettavaa_yht := kaikki_laskutettu;
+            laskutusraja_laskutettavaa_val_aika := kaikki_laskutetaan;
     
             laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
-            laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutetaan); 
+            laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutettu); 
             onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
     
             -- + muut kulut jotka kuuluvat tavoitehintaan

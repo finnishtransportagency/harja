@@ -1572,7 +1572,7 @@ BEGIN
     SELECT laskutusraja 
       FROM urakka_tavoite 
      WHERE urakka = ur 
-       AND hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi  + 1) 
+       AND hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1) 
       INTO laskutusraja_yht;
 
     IF onko_laskutusraja_kaytossa THEN

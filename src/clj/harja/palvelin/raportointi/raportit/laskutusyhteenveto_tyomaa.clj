@@ -295,13 +295,14 @@
         800])
 
      (if (:onko_laskutusraja_kaytossa rivitiedot)
-       (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                                      :otsikko "Laskutusraja"
-                                      :aikavali aikavali-str
-                                      :valittu-aikavali? valittu-aikavali?
-                                      :laskutettu-teksti laskutettu-teksti
-                                      :laskutetaan-teksti laskutetaan-teksti
-                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
+       (taulukot/lapinakyva-taulukko false
+         {:data rivitiedot
+          :otsikko "Laskutusraja"
+          :aikavali aikavali-str
+          :valittu-aikavali? valittu-aikavali?
+          :laskutettu-teksti laskutettu-teksti
+          :laskutetaan-teksti laskutetaan-teksti
+          :kyseessa-kk-vali? kyseessa-kk-vali?})
 
        ;; ------------------------------------------------------------ ;;
        ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
@@ -309,14 +310,15 @@
        ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
        ;;    Budjettia jäljellä                                        ;;
        ;; ------------------------------------------------------------ ;;
-       (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                                      :otsikko "Toteutuneet"
-                                      :valittu-aikavali? valittu-aikavali?
-                                      :vapaa-aikavali-teksti aikavali-str
-                                      :laskutettu-teksti laskutettu-teksti
-                                      :laskutetaan-teksti laskutetaan-teksti
-                                      :kyseessa-kk-vali? kyseessa-kk-vali?
-                                      :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
+       (taulukot/lapinakyva-taulukko false
+         {:data rivitiedot
+          :otsikko "Toteutuneet"
+          :valittu-aikavali? valittu-aikavali?
+          :vapaa-aikavali-teksti aikavali-str
+          :laskutettu-teksti laskutettu-teksti
+          :laskutetaan-teksti laskutetaan-teksti
+          :kyseessa-kk-vali? kyseessa-kk-vali?
+          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))
 
      ;; Ei tavoitehintaiset
      (if
@@ -339,12 +341,13 @@
                             :tavoitehintainen? false}))))
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
-     (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                                    :aikavali aikavali-str
-                                    :valittu-aikavali? valittu-aikavali?
-                                    :laskutettu-teksti laskutettu-teksti
-                                    :laskutetaan-teksti laskutetaan-teksti
-                                    :kyseessa-kk-vali? kyseessa-kk-vali?})
+     (taulukot/lapinakyva-taulukko false
+       {:data rivitiedot
+        :aikavali aikavali-str
+        :valittu-aikavali? valittu-aikavali?
+        :laskutettu-teksti laskutettu-teksti
+        :laskutetaan-teksti laskutetaan-teksti
+        :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      ;; --------------------------------- ;;
      ;;    Footer (Laskutus yhteensä)     ;;

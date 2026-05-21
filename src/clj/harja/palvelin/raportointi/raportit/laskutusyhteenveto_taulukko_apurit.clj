@@ -37,9 +37,10 @@
                               :kustomi-tyyli tyyli
                               :lihavoi? lihavoi?}])))))
 
-(defn valitaulukko-tyomaa
+(defn lapinakyva-taulukko
   "Läpinäkyvä välitaulukko"
-  [{:keys [data otsikko laskutettu-teksti valittu-aikavali? aikavali
+  [tuotekohtainen?
+   {:keys [data otsikko laskutettu-teksti valittu-aikavali? aikavali
            laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti]}]
   (let [laskutusraja-ylittynyt? (boolean (:onko_laskutusraja_ylittynyt data))
         kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
@@ -63,6 +64,12 @@
                      (when-not valittu-aikavali?
                        (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
 
+                     ;; Tuotekohtaiseen tulee tällainen 
+                     (when tuotekohtainen?
+                       (valitaulukko-rivi data kyseessa-kk-vali?
+                         "Toteutuneet kustannukset yhteensä"
+                         :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton" nil true false))
+
                      (valitaulukko-rivi data kyseessa-kk-vali?
                        "Tavoitehintaan vaikuttavat kustannukset yhteensä"
                        :tavhin_hoitokausi_yht :tavhin_val_aika_yht true nil "vahvistamaton" nil true false)
@@ -85,6 +92,12 @@
                      ;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
                      (when-not valittu-aikavali?
                        (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
+
+                     ;; Tuotekohtaiseen tulee tällainen 
+                     (when tuotekohtainen?
+                       (valitaulukko-rivi data kyseessa-kk-vali?
+                         "Toteutuneet kustannukset yhteensä"
+                         :kaikki-yhteensa-laskutettu :kaikki-yhteensa-laskutetaan true nil "vahvistamaton" nil true false))
 
                      (valitaulukko-rivi data kyseessa-kk-vali?
                        "Tavoitehintaan vaikuttavat kustannukset yhteensä"
@@ -169,8 +182,8 @@
 
 
 
-(defn toteutuneet-valitaulukko-tuotekohtainen [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                                                       kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
+(defn tuotekohtainen-toteutuneet-taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
+                                                   kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
         rivit (into []
                 (remove nil?
