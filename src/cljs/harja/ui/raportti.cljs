@@ -118,27 +118,20 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari
-              fmt lihavoi? kustomi-tyyli teksti-alle]}]]
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? kustomi-tyyli teksti-alle]}]]
 
-  (let [hy (-> @tila/yleiset :urakka :elinvoimakeskus :id)
-        urakka-id (-> @tila/yleiset :urakka :id)
-        valittu-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)
+  (let [urakka-id (-> @tila/yleiset :urakka :id)
+        lihavoi (when lihavoi? {:font-weight "bold"})
+        hy (-> @tila/yleiset :urakka :elinvoimakeskus :id)
+        valittu-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)]
 
-        lihavoi (when lihavoi? {:font-weight "bold"})]
     [:span.varillinen-teksti
      [:span.arvo {:class kustomi-tyyli
                   :style (merge lihavoi
                            {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
       (if fmt (fmt arvo) arvo)
       (when teksti-alle [:<> [:br]
-                         ;; TODO 
-                         [:a.klikattava.alleviivaa
-                          {:href (str "/#urakat/valikatselmus?&hy=" hy "&u=" urakka-id)
-                           :on-click #(siirtymat/avaa-valikatselmus hy urakka-id
-                                        [(pvm/hoitokauden-alkupvm valittu-alkuvuosi) (pvm/hoitokauden-loppupvm (inc valittu-alkuvuosi))])}
-                          "Siirry välikatselmukseen."]
-                         [:span teksti-alle]])]]))
+                         (siirtymat/tee-siirrin-valikatselmukseen teksti-alle urakka-id hy valittu-alkuvuosi)])]]))
 
 (defmethod muodosta-html :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.

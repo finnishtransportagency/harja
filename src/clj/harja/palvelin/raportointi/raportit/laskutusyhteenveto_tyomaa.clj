@@ -278,19 +278,28 @@
                 :kyseessa-kk-vali? kyseessa-kk-vali?
                 :tavoitehintainen? true})
 
+     ;; ----------------- ;;
+     ;;   Laskutusraja    ;;
+     ;; ----------------- ;;
+     (taulukot/valitaulukko-tyomaa {:data rivitiedot
+                                    :otsikko "Laskutusraja"
+                                    :laskutettu-teksti laskutettu-teksti
+                                    :laskutetaan-teksti laskutetaan-teksti
+                                    :kyseessa-kk-vali? kyseessa-kk-vali?})
+
      ;; ------------------------------------------------------------ ;;
      ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
      ;;    Tavoitehinnan muutokset / Kirjallisesti sovitut muutokset ;;
      ;;    Tavoitehintaan vaikuttavat kustannukset yhteensä          ;;
      ;;    Budjettia jäljellä                                        ;;
      ;; ------------------------------------------------------------ ;;
-     (taulukot/valitaulukko-tyomaa {:data rivitiedot
-                                    :otsikko "Toteutuneet"
-                                    :laskutettu-teksti laskutettu-teksti
-                                    :laskutetaan-teksti laskutetaan-teksti
-                                    :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
-                                    :kyseessa-kk-vali? kyseessa-kk-vali?
-                                    :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
+     #_(taulukot/valitaulukko-tyomaa {:data rivitiedot
+                                      :otsikko "Toteutuneet"
+                                      :laskutettu-teksti laskutettu-teksti
+                                      :laskutetaan-teksti laskutetaan-teksti
+                                      :vapaa-aikavali-teksti (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+                                      :kyseessa-kk-vali? kyseessa-kk-vali?
+                                      :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?})
 
      ;; Ei tavoitehintaiset
      (if
