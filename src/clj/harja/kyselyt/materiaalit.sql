@@ -114,6 +114,11 @@ SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla(
     :urakka::INTEGER,
     :muutospvm::DATE);
 
+--name: paivita-sopimuksen-kaytetty-materiaali-muutospaivalla
+SELECT paivita_sopimuksen_kaytetty_materiaali_muutospaivalla(
+    :urakka::INTEGER,
+    :muutospvm::DATE);
+
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
   urakka.nimi             AS "urakka-nimi",

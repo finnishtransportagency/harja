@@ -211,18 +211,12 @@
              "Sivu latautuu automaattisesti uudelleen hetken kuluttua."]]])})
 
 (defn- paivita-urakan-materiaalin-kayton-cachet-eiliselta [db urakka-id]
-  (let [urakan-sopimus-idt (map :id
-                                (sopimukset-q/hae-urakan-sopimus-idt db
-                                                                     {:urakka_id urakka-id}))]
-    (doseq [sopimus-id urakan-sopimus-idt]
-      ;; Päivitetään sopimuksen_kaytetty_materiaali (sisältää saman datan kuin myöhemmin luotu materialized view raportti_toteutuneet_materiaalit, jos aika sallii, voidaan refaktoroida ja hankkiutua toisesta eroon)
-      ;; (Ympäristöraporttia varten)
-      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                             :alkupvm (pvm/eilinen)
-                                                             :urakkaid urakka-id}))
-    ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
-    (materiaalit/paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla db {:urakka urakka-id
-                                                                                    :muutospvm (pvm/eilinen)})))
+  ;; Päivitetään sopimuksen_kaytetty_materiaali välimuistitaulu Muut materiaalit näkymää varten 
+  (materiaalit/paivita-sopimuksen-kaytetty-materiaali-muutospaivalla db {:urakka urakka-id
+                                                                         :muutospvm (pvm/eilinen)                                                                         })
+  ;; Päivitetään urakan_materiaalin_kaytto_hoitoluokittain välimuistitaulu (Ympäristöraporttia varten)
+  (materiaalit/paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla db {:urakka urakka-id
+                                                                                  :muutospvm (pvm/eilinen)}))
 
 (defn- paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta [db]
   (let [urakka-idt (mapv :id

@@ -92,3 +92,24 @@ BEGIN
     RETURN;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Käytetään ajastetussa tehtävässä, joka päivittää sopimuksen_kaytetty_materiaali välimuistitaulun joka yö.
+CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_muutospaivalla (
+  urakka_id INTEGER, muutospvm DATE
+) RETURNS void AS $$
+DECLARE
+  rivi RECORD;
+BEGIN
+  FOR rivi IN
+    SELECT DISTINCT
+        t.sopimus AS sopimus_id,
+        t.alkanut::date AS pvm
+    FROM toteuma t
+    WHERE t.urakka = urakka_id
+      AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+       OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+  LOOP
+    PERFORM paivita_sopimuksen_materiaalin_kaytto(rivi.sopimus_id, rivi.pvm, urakka_id);
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
