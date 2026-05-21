@@ -62,6 +62,15 @@
                (str "Useita aktiivisia bonus-profiileja loytyi urakalle " urakka-id
                  " ja hoitovuodelle " hoitovuosi "."))))))
 
+(defn- vaadi-profiililla-rivit
+  [profiili toimenpideinstanssi-id rivit]
+  (when-not (seq rivit)
+    (throw (IllegalArgumentException.
+             (str "Bonus-profiililta " (:nimi profiili)
+               " puuttuu rivit toimenpideinstanssiin " toimenpideinstanssi-id "."))))
+
+  rivit)
+
 (defn- bonus-lajin-nayttonimi
   [rivit]
   (let [nimi (get-in (first rivit) [:laji :esitystiedot :nimi])]
@@ -112,11 +121,12 @@
                       :hoitovuosi hoitovuosi})
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi})
-        rivit (q/hae-bonus-profiilin-rivit
-                db
-                {:bonus_profiili_id (:id profiili)
-                 :urakka_id urakka-id
-                 :toimenpideinstanssi_id toimenpideinstanssi-id})]
+        rivit (->> (q/hae-bonus-profiilin-rivit
+                     db
+                     {:bonus_profiili_id (:id profiili)
+                      :urakka_id urakka-id
+                      :toimenpideinstanssi_id toimenpideinstanssi-id})
+                (vaadi-profiililla-rivit profiili toimenpideinstanssi-id))]
     {:profiili profiili
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :rivit rivit}))

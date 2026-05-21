@@ -8,6 +8,7 @@
             [harja.asiakas.kommunikaatio :as k]
 
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.urakka :as u-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.tiedot.navigaatio :as nav]
@@ -17,7 +18,7 @@
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
 
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
@@ -36,7 +37,24 @@
   (let [bonus-lajit (mapv :laji (tiedot/bonus-konfiguraation-lajit bonus-konfiguraatio))]
     (if (seq bonus-lajit)
       bonus-lajit
-      (sanktio-domain/luo-kustannustyypit urakkatyyppi kayttaja-id tpi))))
+      (when (u-domain/yllapitourakka? urakkatyyppi)
+        (sanktio-domain/luo-kustannustyypit urakkatyyppi kayttaja-id tpi)))))
+
+(defn- bonus-konfiguraation-tila
+  [bonus-konfiguraatio haku-kaynnissa?]
+  (cond
+    haku-kaynnissa?
+    :haku-kaynnissa
+
+    (seq (tiedot/bonus-konfiguraation-lajit bonus-konfiguraatio))
+    :valmis
+
+    (and (some? bonus-konfiguraatio)
+      (k/virhe? bonus-konfiguraatio))
+    :haku-epaonnistui
+
+    :else
+    :ei-konfiguraatiota))
 
 (defn- bonus-lajin-nimi
   [bonus-konfiguraatio laji]
@@ -237,9 +255,9 @@
                                           (when perintapvm
                                             (some #(when (and
                                                            (= (pvm/vuosi perintapvm)
-                                                             (:vuosi %))
+                                                              (:vuosi %))
                                                            (= (pvm/kuukausi perintapvm)
-                                                             (:kuukausi %))) %)
+                                                              (:kuukausi %))) %)
                                               laskutuskuukaudet)))
                                :valitse-fn #(muokkaa-lomaketta
                                               (assoc data
@@ -311,6 +329,7 @@
                      (tallennus-onnistui-fn))
                    (reset! sivupaneeli-auki?-atom false))
         bonus-konfiguraatio (r/atom nil)
+        bonus-konfiguraation-haku-kaynnissa? (r/atom false)
         bonus-konfiguraation-haku-avain (r/atom nil)
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
@@ -327,15 +346,43 @@
             toimenpideinstanssi-id (get-in @bonukset-tila [:lomake :toimenpideinstanssi])
             hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
                          (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))
-            haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]]
-        (when (and urakka-id hoitovuosi
-                (not= haku-avain @bonus-konfiguraation-haku-avain))
-          (reset! bonus-konfiguraation-haku-avain haku-avain)
-          (go
-            (let [vastaus (<! (tiedot/hae-urakan-bonus-konfiguraatio urakka-id hoitovuosi toimenpideinstanssi-id))]
-              (reset! bonus-konfiguraatio (when-not (k/virhe? vastaus) vastaus)))))
-      [:<>
-       #_[harja.ui.debug/debug @bonukset-tila]
+            haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]
+            yllapitourakka? @tiedot-urakka/yllapitourakka?
+            bonus-konfiguraation-tila (bonus-konfiguraation-tila @bonus-konfiguraatio @bonus-konfiguraation-haku-kaynnissa?)]
+        (when (and urakka-id hoitovuosi)
+          (when (not= haku-avain @bonus-konfiguraation-haku-avain)
+            (reset! bonus-konfiguraation-haku-avain haku-avain)
+            (reset! bonus-konfiguraation-haku-kaynnissa? true)
+            (go
+              (let [vastaus (<! (tiedot/hae-urakan-bonus-konfiguraatio urakka-id hoitovuosi toimenpideinstanssi-id))]
+                (reset! bonus-konfiguraatio vastaus)
+                (reset! bonus-konfiguraation-haku-kaynnissa? false)))))
+        (case bonus-konfiguraation-tila
+          :haku-kaynnissa
+          (if yllapitourakka?
+            [:<>
+             [tuck/tuck bonukset-tila
+              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+            [ajax-loader "Ladataan..."])
 
-       [tuck/tuck bonukset-tila
-        (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]))))
+          :haku-epaonnistui
+          (if yllapitourakka?
+            [:<>
+             [tuck/tuck bonukset-tila
+              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+            [:div
+             [:p "Bonuksia ei voitu ladata juuri nyt."]
+             [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]])
+
+          :ei-konfiguraatiota
+          (if yllapitourakka?
+            [:<>
+             [tuck/tuck bonukset-tila
+              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+            [:div
+             [:p "Bonuksia ei ole määritelty tälle urakalle valitulla hoitokaudella ja toimenpideinstanssilla."]
+             [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]])
+
+          [:<>
+           [tuck/tuck bonukset-tila
+            (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]])))))

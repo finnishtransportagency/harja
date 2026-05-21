@@ -1428,13 +1428,21 @@
 
 (deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
+                                            "  FROM toimenpideinstanssi tpi\n"
+                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+                                            " WHERE tpi.urakka = " urakka-id "\n"
+                                            "   AND t2.koodi = '23150'\n"
+                                            " ORDER BY tpi.id\n"
+                                            " LIMIT 1")))
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
                                :hoitovuosi 1
-                               :toimenpideinstanssi-id nil})
+                               :toimenpideinstanssi-id toimenpideinstanssi-id})
                       [:profiili :id])
         profiili (first (q-map (format "SELECT urakkatyyppi, hoitovuosi_alku, hoitovuosi_loppu, alkupvm, loppupvm FROM bonus_profiili WHERE id = %s" profiili-id)))]
     (try
@@ -1455,9 +1463,20 @@
               +kayttaja-jvh+
               {:urakka-id urakka-id
                :hoitovuosi 1
-               :toimenpideinstanssi-id nil})))
+               :toimenpideinstanssi-id toimenpideinstanssi-id})))
       (finally
         (u "DELETE FROM bonus_profiili WHERE nimi = 'iin-mhu-bonus-duplikaatti'")))))
+
+(deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-kontekstissa-ei-ole-riveja
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
+    (is (thrown-with-msg? IllegalArgumentException
+          #"puuttuu rivit toimenpideinstanssiin"
+          (ls/hae-urakan-bonus-konfiguraatio
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :hoitovuosi 1
+             :toimenpideinstanssi-id 999999999})))))
 
 (deftest bonus-profiilin-lajin-esitystiedot-eivat-salli-kahta-rivia-samalle-lajille
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
