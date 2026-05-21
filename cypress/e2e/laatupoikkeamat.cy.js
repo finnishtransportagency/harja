@@ -107,6 +107,8 @@ describe('Laatupoikkeamat latautuu oikein', function () {
 
         // Lisää uusi sanktio
         cy.get('button').contains("Lisää uusi").click();
+        // Varmistetaan, että Indeksi-kenttä ei näy
+        cy.contains('label', 'Indeksi').should('not.exist')
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
@@ -176,6 +178,8 @@ describe('Laatupoikkeamat latautuu oikein', function () {
 
         // Lisää uusi sanktio
         cy.get('button').contains("Lisää uusi").click();
+        // Varmistetaan, että Indeksi-kenttä ei näy
+        cy.contains('label', 'Indeksi').should('not.exist')
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
