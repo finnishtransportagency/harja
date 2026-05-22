@@ -33,7 +33,8 @@
   hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina tehtavan-toteuma
   merkitse-toteumatehtavien-maksuerat-likaisiksi! listaa-urakan-hoitokauden-erilliskustannukset
   paivita-erilliskustannus! tallenna-erilliskustannukselle-liitteet<! merkitse-toimenpideinstanssin-maksuera-likaiseksi!
-  poista-erilliskustannus<! listaa-tehtavan-toteumat toteuman-tyyppi hae-urakan-toteuma hae-toteumien-tehtavien-summat)
+  poista-erilliskustannus<! listaa-tehtavan-toteumat toteuman-tyyppi hae-urakan-toteuma hae-toteumien-tehtavien-summat
+  paivita-toteuman-muokattu! luo-toteuma-materiaali<! paivita-toteuma-materiaali!)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)

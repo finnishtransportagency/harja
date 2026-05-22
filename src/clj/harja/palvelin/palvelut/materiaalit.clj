@@ -10,11 +10,10 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]
+            [harja.id :as id]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
-            [harja.pvm :as pvm]
-            [harja.id :as id]))
+            [harja.pvm :as pvm]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -193,7 +192,8 @@
         ;; 100, eli 'hoitoluokka ei tiedossa'.
         (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
                                                                 :alkupvm toteuman-pvm
-                                                                :loppupvm toteuman-pvm}))))
+                                                                :loppupvm toteuman-pvm})
+        (toteumat-q/paivita-toteuman-muokattu! c {:id (:toteuma tm) :kayttaja (:id user)}))))
 
   (when hoitokausi
     (hae-urakassa-kaytetyt-materiaalit db user urakka-id (first hoitokausi) (second hoitokausi)
@@ -305,7 +305,7 @@
               :let [toteuma-id (:tid toteuma)]]
         (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
         (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
-        (if-not (id-olemassa? (:tid toteuma))
+        (if-not (id/id-olemassa? (:tid toteuma))
           ;; INSERT
           (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
           (let [tmid (:tmid toteuma)
