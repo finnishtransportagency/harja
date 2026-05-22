@@ -331,10 +331,11 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali]}]]
   [:div {:style (merge
                   {:color (when vari vari)}
-                  (when rivita? {:white-space "pre-line"}))}
+                  (when rivita? {:white-space "pre-line"})
+                  (when alamarginaali {:margin-bottom alamarginaali}))}
    teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
