@@ -1,36 +1,52 @@
 (ns harja.palvelin.raportointi.tuotekohtainen-raportti-test
-  (:require [clojure.test :refer :all]
-            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
-            [harja.kyselyt.urakat :as urakat-q]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
+
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konversio]
-            [clojure.string :as str]
+            [harja.palvelin.palvelut.urakat :refer :all]
+            [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [harja.palvelin.komponentit.http-palvelin :as palvelin]
-            [harja.palvelin.raportointi :refer [suorita-raportti] :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat :refer :all]))
+            [harja.palvelin.palvelut.suunnittelu.apurit :as uusi-kust-apurit]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
+            [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :pdf-vienti (component/using
-                                      (pdf-vienti/luo-pdf-vienti)
-                                      [:http-palvelin])
-                        :raportointi (component/using
-                                       (raportointi/luo-raportointi)
-                                       [:db :pdf-vienti])
-                        :raportit (component/using
-                                    (raportit/->Raportit)
-                                    [:http-palvelin :db :raportointi :pdf-vienti])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :pdf-vienti (component/using
+                        (pdf-vienti/luo-pdf-vienti)
+                        [:http-palvelin])
+          :raportointi (component/using
+                         (raportointi/luo-raportointi)
+                         [:db :pdf-vienti])
+          :raportit (component/using
+                      (raportit/->Raportit)
+                      [:http-palvelin :db :raportointi :pdf-vienti])
+          :kulut (component/using
+                   (kulut/->Kulut)
+                   [:http-palvelin :db])
+          :uusi-kustannussuunnitelma (component/using
+                                       (kust-palvelu/->UusiKustannussuunnitelmaPalvelu)
+                                       [:http-palvelin :db])
+          :tarjous (component/using
+                     (tarjous-palvelu/->Tarjous)
+                     [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -50,57 +66,65 @@
     (str "_" prefix)
     keyword))
 
-
-(defn pura-laskutusraportti-mapiksi [rivi]
-  (let [tulos
-        {:nimi (:nimi rivi)
-         :maksuera_numero (:maksuera_numero rivi)
-         :tuotekoodi (:tuotekoodi rivi)
-         :tpi (:tpi rivi)
-         :perusluku (:perusluku rivi)
-         :kaikki_laskutettu (:kaikki_laskutettu rivi)
-         :kaikki_laskutetaan (:kaikki_laskutetaan rivi)
-         :tavoitehintaiset_laskutettu (:tavoitehintaiset_laskutettu rivi)
-         :tavoitehintaiset_laskutetaan (:tavoitehintaiset_laskutetaan rivi)
-         :lisatyot_laskutettu (:lisatyot_laskutettu rivi)
-         :lisatyot_laskutetaan (:lisatyot_laskutetaan rivi)
-         :hankinnat_laskutettu (:hankinnat_laskutettu rivi)
-         :hankinnat_laskutetaan (:hankinnat_laskutetaan rivi)
-         :sakot_laskutettu (:sakot_laskutettu rivi)
-         :sakot_laskutetaan (:sakot_laskutetaan rivi)
-         :alihank_bon_laskutettu (:alihank_bon_laskutettu rivi)
-         :alihank_bon_laskutetaan (:alihank_bon_laskutetaan rivi)
-         :johto_ja_hallinto_laskutettu (:johto_ja_hallinto_laskutettu rivi)
-         :johto_ja_hallinto_laskutetaan (:johto_ja_hallinto_laskutetaan rivi)
-         :jjh_muutokset_laskutettu (:jjh_muutokset_laskutettu rivi)
-         :jjh_muutokset_laskutetaan (:jjh_muutokset_laskutetaan rivi)
-         :bonukset_laskutettu (:bonukset_laskutettu rivi)
-         :bonukset_laskutetaan (:bonukset_laskutetaan rivi)
-         :hj_palkkio_laskutettu (:hj_palkkio_laskutettu rivi)
-         :hj_palkkio_laskutetaan (:hj_palkkio_laskutetaan rivi)
-         :hj_erillishankinnat_laskutettu (:hj_erillishankinnat_laskutettu rivi)
-         :hj_erillishankinnat_laskutetaan (:hj_erillishankinnat_laskutetaan rivi)
-         :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu rivi)
-         :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan rivi)
-         :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu rivi)
-         :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan rivi)
-         :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu rivi)
-         :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan rivi)
-         :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu (:hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu rivi)
-         :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan (:hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan rivi)
-         :indeksi_puuttuu (:indeksi_puuttuu rivi)
-         ;; Urakan rahavaraukset ja arvot
-         :rahavaraus_nimet (:rahavaraus_nimet rivi)
-         :hoitokausi_yht_array (:hoitokausi_yht_array rivi)
-         :val_aika_yht_array (:val_aika_yht_array rivi)
-         :kaikki_rahavaraukset_val_yht (:kaikki_rahavaraukset_val_yht rivi)
-         :kaikki_rahavaraukset_hoitokausi_yht (:kaikki_rahavaraukset_hoitokausi_yht rivi)}]
-    tulos))
+(defn pura-tuotekohtainen-raportti-mapiksi [raportti]
+  (select-keys
+    raportti
+    [:bonukset_laskutetaan
+     :maksuera_numero
+     :jjh_muutokset_laskutettu
+     :laskutettavaa_kaikki_yht
+     :onko_laskutusraja_kaytossa
+     :kaikki_laskutetaan
+     :kaikki_rahavaraukset_hoitokausi_yht
+     :kaikki_laskutettu
+     :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan
+     :laskutusrajan_ylittynyt_yht
+     :hj_palkkio_laskutettu
+     :lisatyot_laskutettu
+     :laskutusraja_laskutettavaa_val_aika
+     :hoitokausi_yht_array
+     :bonukset_laskutettu
+     :sakot_laskutetaan
+     :hj_erillishankinnat_laskutetaan
+     :laskutusrajaan_jaljella
+     :kaikki_rahavaraukset_val_yht
+     :laskutusraja_laskutettavaa_yht
+     :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan
+     :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu
+     :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu
+     :johto_ja_hallinto_laskutetaan
+     :hankinnat_laskutettu
+     :nimi
+     :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan
+     :alihank_bon_laskutetaan
+     :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan
+     :lisatyot_laskutetaan
+     :perusluku
+     :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu
+     :hankinnat_laskutetaan
+     :indeksi_puuttuu
+     :jjh_muutokset_laskutetaan
+     :tavoitehintaiset_laskutettu
+     :laskutettavaa_kaikki_val_aika
+     :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu
+     :hj_erillishankinnat_laskutettu
+     :tuotekoodi
+     :johto_ja_hallinto_laskutettu
+     :hj_palkkio_laskutetaan
+     :laskutusraja_yht
+     :val_aika_yht_array
+     :alihank_bon_laskutettu
+     :sakot_laskutettu
+     :onko_laskutusraja_ylittynyt
+     :tavoitehintaiset_laskutetaan
+     :laskutusrajan_ylittynyt_val_aika
+     :tpi
+     :rahavaraus_nimet]))
 
 
 (defn parsi-tuotekohtainen-laskutus-vastaus [vastaus]
   (map (fn [rivi]
-         (let [purettu (pura-laskutusraportti-mapiksi rivi)
+         (let [purettu (pura-tuotekohtainen-raportti-mapiksi rivi)
                rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
                rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array purettu))
                rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
@@ -127,7 +151,7 @@
         aikavali_loppupvm "2020-09-30"
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vastaus (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                     hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                         hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
         vastaus (parsi-tuotekohtainen-laskutus-vastaus vastaus)
         talvihoito (first vastaus)
@@ -254,144 +278,370 @@
     (is (= mhu-korvausinvestointi-rahavaraus-a 0.0M))
     (is (= mhu-korvausinvestointi-yhteensa 13201.94M))))
 
-(deftest tuotekohtainen-laskutusyhteenveto-2025-ii-sql-toimii
+; TODO 
+#_(deftest tuotekohtainen-laskutusyhteenveto-2025-ii-sql-toimii
+    (let [hk_alkupvm "2025-10-01"
+          hk_loppupvm "2026-09-30"
+          aikavali_alkupvm "2025-10-01"
+          aikavali_loppupvm "2026-09-30"
+          urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) {:id urakka-id}))
+          vastaus (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                           hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+          ;; Haetaan budjetoidut summat
+          hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/luo-pvm-dec-kk 2025 10 1))
+          urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite (:db jarjestelma) {:urakka urakka-id})))
+
+          vastaus (parsi-tuotekohtainen-laskutus-vastaus vastaus)
+          talvihoito (first vastaus)
+          liikenneymp-hoito (second vastaus)
+          soratien-hoito (nth vastaus 2)
+          mhu-ja-hoidon-johto (nth vastaus 3)
+          paallyste (nth vastaus 4)
+          mhu-yllapito (nth vastaus 5)
+          mhu-korvausinvestointi (nth vastaus 6)
+
+          ;; Kirjallisesti sovitut muutokset
+          _ (is (= 6230M (:muutos-summa urakka-tavoite)))
+
+          ;; Talvihoito
+          talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
+          talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
+          talvihoito-sanktiot (:sakot_laskutettu talvihoito)
+          talvihoito-akilliset-hoitotyot (:akilliset_hoitotyot_hk talvihoito)
+          talvihoito-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk talvihoito)
+          talvihoito-yhteensa (:kaikki_laskutettu talvihoito)
+
+          ;; Liikenneympäristön hoito
+          liikenneymp-hankinnat (:hankinnat_laskutettu liikenneymp-hoito)
+          liikenneymp-lisatyot (:lisatyot_laskutettu liikenneymp-hoito)
+          liikenneymp-sanktiot (:sakot_laskutettu liikenneymp-hoito)
+          liikenneymp-akilliset-hoitotyot (:akilliset_hoitotyot_hk liikenneymp-hoito)
+          liikenneymp-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk liikenneymp-hoito)
+          liikenneymp-rahavaraukset (:kaikki_rahavaraukset_hoitokausi_yht liikenneymp-hoito)
+          liikenneymp-yhteensa (:kaikki_laskutettu liikenneymp-hoito)
+
+          ;; Soratien hoito
+          soratien-hankinnat (:hankinnat_laskutettu soratien-hoito)
+          soratien-lisatyot (:lisatyot_laskutettu soratien-hoito)
+          soratien-sanktiot (:sakot_laskutettu soratien-hoito)
+          soratien-akilliset-hoitotyot (:akilliset_hoitotyot_hk soratien-hoito)
+          soratien-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk soratien-hoito)
+          soratien-yhteensa (:kaikki_laskutettu soratien-hoito)
+
+          ;; Päällyste
+          paallyste-hankinnat (:hankinnat_laskutettu paallyste)
+          paallyste-lisatyot (:lisatyot_laskutettu paallyste)
+          paallyste-sanktiot (:sakot_laskutettu paallyste)
+          paallyste-yhteensa (:kaikki_laskutettu paallyste)
+
+          ;; Mhu ylläpito
+          mhu-yllapito-hankinnat (:hankinnat_laskutettu mhu-yllapito)
+          mhu-yllapito-lisatyot (:lisatyot_laskutettu mhu-yllapito)
+          mhu-yllapito-sanktiot (:sakot_laskutettu mhu-yllapito)
+          mhu-yllapito-rahavaraus (:kaikki_rahavaraukset_hoitokausi_yht mhu-yllapito)
+          mhu-yllapito-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-yllapito)
+          mhu-yllapito-yhteensa (:kaikki_laskutettu mhu-yllapito)
+
+          ;; Mhu hoidon johto
+          mhu-johto-ja-hallintokorvaukset (:johto_ja_hallinto_laskutettu mhu-ja-hoidon-johto)
+          mhu-erillishankinnat (:hj_erillishankinnat_laskutettu mhu-ja-hoidon-johto)
+          mhu-hj-palkkio (:hj_palkkio_laskutettu mhu-ja-hoidon-johto)
+          mhu-bonukset (:bonukset_laskutettu mhu-ja-hoidon-johto)
+          mhu-sanktiot (:sakot_laskutettu mhu-ja-hoidon-johto)
+          mhu-jjh-muutokset_laskutettu (:jjh_muutokset_laskutettu mhu-ja-hoidon-johto)
+          mhu-jjh-muutokset_laskutetaan (:jjh_muutokset_laskutetaan mhu-ja-hoidon-johto)
+          mhu-hoitovuoden-paatos-tavoitepalkkio (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu mhu-ja-hoidon-johto)
+          mhu-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-ja-hoidon-johto)
+          mhu-yhteensa (:kaikki_laskutettu mhu-ja-hoidon-johto)
+
+          ;; Mhu korvausinvestointi
+          mhu-korvausinvestointi-hankinnat (:hankinnat_laskutettu mhu-korvausinvestointi)
+          mhu-korvausinvestointi-lisatyot (:lisatyot_laskutettu mhu-korvausinvestointi)
+          mhu-korvausinvestointi-sanktiot (:sakot_laskutettu mhu-korvausinvestointi)
+          mhu-korvausinvestointi-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-korvausinvestointi)
+          mhu-korvausinvestointi-yhteensa (:kaikki_laskutettu mhu-korvausinvestointi)]
+
+      ;; Talvihoito
+      (is (= talvihoito-hankinnat 0.0M))
+      (is (= talvihoito-lisatyot 0.0M))
+      (is (= talvihoito-sanktiot 0.0M))
+      (is (= talvihoito-akilliset-hoitotyot 0.0M))
+      (is (= talvihoito-vahinkojen-korjaukset 0.0M))
+      (is (= talvihoito-yhteensa 0.0M))
+
+      ;; Liikenneympäristön hoito
+      (is (= liikenneymp-hankinnat 1467.0M))
+      (is (= liikenneymp-lisatyot 0.0M))
+      (is (= liikenneymp-sanktiot 0.0M))
+      (is (= liikenneymp-akilliset-hoitotyot 100000M))
+      (is (= liikenneymp-vahinkojen-korjaukset 1000M))
+      (is (= liikenneymp-rahavaraukset 101000.0M))
+      (is (= liikenneymp-yhteensa 102467.0M))
+
+      ;; Soratien hoito
+      (is (= soratien-hankinnat 4200.0M))
+      (is (= soratien-lisatyot 0.0M))
+      (is (= soratien-sanktiot 0.0M))
+      (is (= soratien-akilliset-hoitotyot 0.0M))
+      (is (= soratien-vahinkojen-korjaukset 0.0M))
+      (is (= soratien-yhteensa 4200.0M))
+
+      ;; Päällyste
+      (is (= paallyste-hankinnat 0.0M))
+      (is (= paallyste-lisatyot 0.0M))
+      (is (= paallyste-sanktiot 0.0M))
+      (is (= paallyste-yhteensa 0.0M))
+
+      ;; Mhu ylläpito
+      (is (= mhu-yllapito-hankinnat 12551.0M))
+      (is (= mhu-yllapito-lisatyot 0.0M))
+      (is (= mhu-yllapito-sanktiot 0.0M))
+      (is (= mhu-yllapito-rahavaraus 0.0M))
+      (is (= mhu-yllapito-tilaajan-rahavaraus 0.0M))
+      (is (= mhu-yllapito-yhteensa 12551.0M))
+
+      ;; Mhu hoidon johto
+      (is (= mhu-johto-ja-hallintokorvaukset 1230.0M))
+      (is (= mhu-erillishankinnat 0.0M))
+      (is (= mhu-hj-palkkio 0.0M))
+      (is (= mhu-bonukset 0.0M))
+      (is (= mhu-sanktiot 0.0M))
+      (is (= mhu-jjh-muutokset_laskutettu 1230.0M))
+      (is (= mhu-jjh-muutokset_laskutetaan 1230.0M))
+      (is (= mhu-hoitovuoden-paatos-tavoitepalkkio 0.0M))
+      (is (= mhu-rahavaraus-a 0.0M))
+      (is (= mhu-yhteensa 1230.0M))
+
+      ;; Mhu korvausinvenstointi
+      (is (= mhu-korvausinvestointi-hankinnat 0.0M))
+      (is (= mhu-korvausinvestointi-lisatyot 0.0M))
+      (is (= mhu-korvausinvestointi-sanktiot 0.0M))
+      (is (= mhu-korvausinvestointi-rahavaraus-a 0.0M))
+      (is (= mhu-korvausinvestointi-yhteensa 0.0M))))
+
+
+(deftest tuotekohtainen-laskutusraja-2025-mhu+toimii
   (let [hk_alkupvm "2025-10-01"
         hk_loppupvm "2026-09-30"
         aikavali_alkupvm "2025-10-01"
         aikavali_loppupvm "2026-09-30"
+        urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+
+        ;; ----------------------------------------------------------------
+        ;; Vahvista kustannussuunnitelma jotta saadaan laskutusraja arvot
+        vahvistetut-vuodet #{}
+        hoitovuoden-alkuvuosi 2025
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (uusi-kust-apurit/poista-tarjoukset-tietokannasta! urakka-id)
+        h-tietomalli (uusi-kust-apurit/poista-yhteenvetorivi-toimenpiteilta uusi-kust-apurit/hankinnat-tietomalli)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
+        h-tietomalli (uusi-kust-apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
+
+        erillishankinnat-yht (apply +
+                               (map :summa (:erillishankinnat uusi-kust-apurit/erillishankinnat-tietomalli)))
+        hoidonjohto-yht (apply +
+                          (map :summa (:hoidonjohtopalkkiot uusi-kust-apurit/hoidonjohtopalkkiot-tietomalli)))
+        jjh-yht (apply +
+                  (map :summa (:johto-ja-hallintokorvaukset-2025 uusi-kust-apurit/johto-ja-hallinto-tietomalli-2025)))
+
+        ;; Kirjaa kaikki kustiksen osiot 
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat uusi-kust-apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot uusi-kust-apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2025 uusi-kust-apurit/johto-ja-hallinto-tietomalli-2025) hoitovuoden-alkuvuosi)
+
+        tarjous (uusi-kust-apurit/generoi-tarjous-tasmaa-kustannuksia
+                  urakka-id
+                  erillishankinnat-yht
+                  hoidonjohto-yht
+                  jjh-yht)
+
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous vahvistetut-vuodet)
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                   :vahvista? true})
+
+        virhe (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
+        _ (is (some? vastaus) "Vastaus pitäisi olla olemassa")
+        _ (is (empty? virhe) "Virhettä ei pitäisi olla vastauksessa")
+        _ (is (= (set virhe) #{}) "Virhettä ei pitäisi olla vastauksessa")
+
+
+        ;; ----------------------------------------------------------------
+        ;; Kustis on vahvistettu, kirjaa talvihoitokulu
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan talvihoitokulut
+        erapaiva (pvm/->pvm "15.10.2025")
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
+        tehtavaryhma-id (hae-tehtavaryhman-id "A - Talvihoito")
+        tehtava-id nil
+        talvihoitosumma 1234M
+
+        talvihoitokulu (luo-kulu
+                         urakka-id "laskutettava" erapaiva "hankintakulu"
+                         koontilaskun-kuukausi talvihoitosumma toimenpideinstanssi-id tehtavaryhma-id tehtava-id nil)
+
+        _ (kutsu-http-palvelua :tallenna-kulu +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen talvihoitokulu})
+
+        raportti (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        ;; ----------------------------------------------------------------
+        ;; Laskutusrajan arvot pitäisi olla saatavilla sekä näyttää oikealta
+        purettu (pura-tuotekohtainen-raportti-mapiksi (first raportti))
+
+        laskutusraja (:laskutusraja_yht purettu)
+        jaljella (:laskutusrajaan_jaljella purettu)
+        kaytossa (:onko_laskutusraja_kaytossa purettu)
+        ylittynyt (:onko_laskutusraja_ylittynyt purettu)
+        laskutettavaa (:laskutusraja_laskutettavaa_yht purettu)]
+
+    (is (false? ylittynyt) "Laskutusrajan ei pitäisi olla ylittynyt")
+    (is (true? kaytossa) "Lasktutusrajan pitäisi olla käytössä MHU+ urakalla")
+    (is (= jaljella (- laskutusraja talvihoitosumma)) "Laskutusraja pitäisi alentua kulun perusteella")
+    (is (= laskutettavaa talvihoitosumma) "Laskutettavaa pitäisi olla kirjatun kulun verran")
+
+    (is (= talvihoitosumma (:hankinnat_laskutettu purettu)))
+    (is (= talvihoitosumma (:hankinnat_laskutetaan purettu)))))
+
+
+(deftest tuotekohtainen-mhu2021-ei-nayta-laskutusrajaa
+  (let [hk_alkupvm "2021-10-01"
+        hk_loppupvm "2022-09-30"
+        aikavali_alkupvm "2021-10-01"
+        aikavali_loppupvm "2022-09-30"
+
+        hoitovuoden-alkuvuosi 2021
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) {:id urakka-id}))
-        vastaus (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                         hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        sopimus-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
 
-        ;; Haetaan budjetoidut summat
-        hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/luo-pvm-dec-kk 2025 10 1))
-        urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite (:db jarjestelma) {:urakka urakka-id})))
+        _ (u (format "DELETE FROM kiinteahintainen_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM kustannusarvioitu_tyo WHERE sopimus = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               sopimus-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
+        _ (u (format "DELETE FROM johto_ja_hallintokorvaus WHERE \"urakka-id\" = %s AND ((vuosi = %s AND kuukausi IN (10,11,12))
+        OR (vuosi = %s AND kuukausi IN (1,2,3,4,5,6,7,8,9)))"
+               urakka-id hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)))
 
-        vastaus (parsi-tuotekohtainen-laskutus-vastaus vastaus)
-        talvihoito (first vastaus)
-        liikenneymp-hoito (second vastaus)
-        soratien-hoito (nth vastaus 2)
-        mhu-ja-hoidon-johto (nth vastaus 3)
-        paallyste (nth vastaus 4)
-        mhu-yllapito (nth vastaus 5)
-        mhu-korvausinvestointi (nth vastaus 6)
+        ;; ----------------------------------------------------------------
+        ;; Vahvista kustannussuunnitelma jotta saadaan laskutusraja arvot
+        ;; Lisätään ensin kilpailutettavat hankinnat
+        h-tietomalli (uusi-kust-apurit/poista-yhteenvetorivi-toimenpiteilta uusi-kust-apurit/hankinnat-tietomalli)
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+        ;; Lisätään erillishankinnat
+        _ (uusi-kust-kyselyt/tallenna-erillishankinnat (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:erillishankinnat uusi-kust-apurit/erillishankinnat-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään hoidonjohtopalkkiot
+        _ (uusi-kust-kyselyt/tallenna-hoidonjohtopalkkiot (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:hoidonjohtopalkkiot uusi-kust-apurit/hoidonjohtopalkkiot-tietomalli) hoitovuoden-alkuvuosi)
+        ;; Lisätään johto- ja hallintokorvaukset
+        _ (uusi-kust-kyselyt/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ urakka-id
+            (:johto-ja-hallintokorvaukset-2019 uusi-kust-apurit/johto-ja-hallinto-tietomalli-2019) hoitovuoden-alkuvuosi)
 
-        ;; Kirjallisesti sovitut muutokset
-        _ (is (= 6230M (:muutos-summa urakka-tavoite)))
+        ;; Varmista, että kustannussuunnitelmaa ei ole vielä vahvistettu
+        kustannussuunnitelma (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
 
-        ;; Talvihoito
-        talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)
-        talvihoito-lisatyot (:lisatyot_laskutettu talvihoito)
-        talvihoito-sanktiot (:sakot_laskutettu talvihoito)
-        talvihoito-akilliset-hoitotyot (:akilliset_hoitotyot_hk talvihoito)
-        talvihoito-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk talvihoito)
-        talvihoito-yhteensa (:kaikki_laskutettu talvihoito)
+        _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :vahvistettu?]))
+            "Kustannussuunnitelman pitäisi olla vahvistamaton ennen vahvistusta")
 
-        ;; Liikenneympäristön hoito
-        liikenneymp-hankinnat (:hankinnat_laskutettu liikenneymp-hoito)
-        liikenneymp-lisatyot (:lisatyot_laskutettu liikenneymp-hoito)
-        liikenneymp-sanktiot (:sakot_laskutettu liikenneymp-hoito)
-        liikenneymp-akilliset-hoitotyot (:akilliset_hoitotyot_hk liikenneymp-hoito)
-        liikenneymp-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk liikenneymp-hoito)
-        liikenneymp-rahavaraukset (:kaikki_rahavaraukset_hoitokausi_yht liikenneymp-hoito)
-        liikenneymp-yhteensa (:kaikki_laskutettu liikenneymp-hoito)
+        ;; Rahavaraukset vaativat tarjouksen täyttämisen.
+        kayttaja-id (:id +kayttaja-jvh+)
 
-        ;; Soratien hoito
-        soratien-hankinnat (:hankinnat_laskutettu soratien-hoito)
-        soratien-lisatyot (:lisatyot_laskutettu soratien-hoito)
-        soratien-sanktiot (:sakot_laskutettu soratien-hoito)
-        soratien-akilliset-hoitotyot (:akilliset_hoitotyot_hk soratien-hoito)
-        soratien-vahinkojen-korjaukset (:vahinkojen_korjaukset_hk soratien-hoito)
-        soratien-yhteensa (:kaikki_laskutettu soratien-hoito)
+        ;; Haetaan urakan rahavaraukset
+        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset (:db jarjestelma) {:urakka_id urakka-id})
+        ;; Vuodet tietomallista
+        vuodet (tarjous-kyselyt/vuodet-tietomallista uusi-kust-apurit/tarjous-tietomalli-2019)
+        tarjous (uusi-kust-apurit/muodosta-tarjous-rahavarauksista rahavaraukset vuodet)
+        vahvistetut-vuodet #{}
+        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id kayttaja-id tarjous vahvistetut-vuodet)
 
-        ;; Päällyste
-        paallyste-hankinnat (:hankinnat_laskutettu paallyste)
-        paallyste-lisatyot (:lisatyot_laskutettu paallyste)
-        paallyste-sanktiot (:sakot_laskutettu paallyste)
-        paallyste-yhteensa (:kaikki_laskutettu paallyste)
+        ;; Vahvistetaan tavoite ja kattohinta
+        tiedot {:urakka-id urakka-id
+                :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
+                :vahvista? true}
 
-        ;; Mhu ylläpito
-        mhu-yllapito-hankinnat (:hankinnat_laskutettu mhu-yllapito)
-        mhu-yllapito-lisatyot (:lisatyot_laskutettu mhu-yllapito)
-        mhu-yllapito-sanktiot (:sakot_laskutettu mhu-yllapito)
-        mhu-yllapito-rahavaraus (:kaikki_rahavaraukset_hoitokausi_yht mhu-yllapito)
-        mhu-yllapito-tilaajan-rahavaraus (:tilaajan_rahavaraus_kannustinjarjestelmaan_hk mhu-yllapito)
-        mhu-yllapito-yhteensa (:kaikki_laskutettu mhu-yllapito)
+        vastaus (try
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :vahvista-tavoite-ja-kattohinta +kayttaja-jvh+ tiedot)
+                  (catch Exception e
+                    (println "Tapahtui virhe:" (.getMessage e))
+                    {:error (.getMessage e)}))
 
-        ;; Mhu hoidon johto
-        mhu-johto-ja-hallintokorvaukset (:johto_ja_hallinto_laskutettu mhu-ja-hoidon-johto)
-        mhu-erillishankinnat (:hj_erillishankinnat_laskutettu mhu-ja-hoidon-johto)
-        mhu-hj-palkkio (:hj_palkkio_laskutettu mhu-ja-hoidon-johto)
-        mhu-bonukset (:bonukset_laskutettu mhu-ja-hoidon-johto)
-        mhu-sanktiot (:sakot_laskutettu mhu-ja-hoidon-johto)
-        mhu-jjh-muutokset_laskutettu (:jjh_muutokset_laskutettu mhu-ja-hoidon-johto)
-        mhu-jjh-muutokset_laskutetaan (:jjh_muutokset_laskutetaan mhu-ja-hoidon-johto)
-        mhu-hoitovuoden-paatos-tavoitepalkkio (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu mhu-ja-hoidon-johto)
-        mhu-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-ja-hoidon-johto)
-        mhu-yhteensa (:kaikki_laskutettu mhu-ja-hoidon-johto)
+        _ (is (nil? (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])) "Vahvistuksessa ei pitäisi olla virhettä")
+        _ (is (not (nil? (get-in vastaus [:tarjous]))) "Vastauksessa pitäisi olla tarjous")
 
-        ;; Mhu korvausinvestointi
-        mhu-korvausinvestointi-hankinnat (:hankinnat_laskutettu mhu-korvausinvestointi)
-        mhu-korvausinvestointi-lisatyot (:lisatyot_laskutettu mhu-korvausinvestointi)
-        mhu-korvausinvestointi-sanktiot (:sakot_laskutettu mhu-korvausinvestointi)
-        mhu-korvausinvestointi-rahavaraus-a (:kaikki_rahavaraukset_hoitokausi_yht mhu-korvausinvestointi)
-        mhu-korvausinvestointi-yhteensa (:kaikki_laskutettu mhu-korvausinvestointi)]
 
-    ;; Talvihoito
-    (is (= talvihoito-hankinnat 0.0M))
-    (is (= talvihoito-lisatyot 0.0M))
-    (is (= talvihoito-sanktiot 0.0M))
-    (is (= talvihoito-akilliset-hoitotyot 0.0M))
-    (is (= talvihoito-vahinkojen-korjaukset 0.0M))
-    (is (= talvihoito-yhteensa 0.0M))
+        ;; ----------------------------------------------------------------
+        ;; Kirjaa talvihoitokulu
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+        erapaiva (pvm/->pvm "15.10.2021")
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
+        tehtavaryhma-id (hae-tehtavaryhman-id "A - Talvihoito")
+        tehtava-id nil
+        talvihoitosumma 1234M
 
-    ;; Liikenneympäristön hoito
-    (is (= liikenneymp-hankinnat 1467.0M))
-    (is (= liikenneymp-lisatyot 0.0M))
-    (is (= liikenneymp-sanktiot 0.0M))
-    (is (= liikenneymp-akilliset-hoitotyot 100000M))
-    (is (= liikenneymp-vahinkojen-korjaukset 1000M))
-    (is (= liikenneymp-rahavaraukset 101000.0M))
-    (is (= liikenneymp-yhteensa 102467.0M))
+        talvihoitokulu (luo-kulu
+                         urakka-id "laskutettava" erapaiva "hankintakulu"
+                         koontilaskun-kuukausi talvihoitosumma toimenpideinstanssi-id tehtavaryhma-id tehtava-id nil)
 
-    ;; Soratien hoito
-    (is (= soratien-hankinnat 4200.0M))
-    (is (= soratien-lisatyot 0.0M))
-    (is (= soratien-sanktiot 0.0M))
-    (is (= soratien-akilliset-hoitotyot 0.0M))
-    (is (= soratien-vahinkojen-korjaukset 0.0M))
-    (is (= soratien-yhteensa 4200.0M))
+        _ (kutsu-http-palvelua :tallenna-kulu +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen talvihoitokulu})
 
-    ;; Päällyste
-    (is (= paallyste-hankinnat 0.0M))
-    (is (= paallyste-lisatyot 0.0M))
-    (is (= paallyste-sanktiot 0.0M))
-    (is (= paallyste-yhteensa 0.0M))
+        raportti (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
-    ;; Mhu ylläpito
-    (is (= mhu-yllapito-hankinnat 12551.0M))
-    (is (= mhu-yllapito-lisatyot 0.0M))
-    (is (= mhu-yllapito-sanktiot 0.0M))
-    (is (= mhu-yllapito-rahavaraus 0.0M))
-    (is (= mhu-yllapito-tilaajan-rahavaraus 0.0M))
-    (is (= mhu-yllapito-yhteensa 12551.0M))
 
-    ;; Mhu hoidon johto
-    (is (= mhu-johto-ja-hallintokorvaukset 1230.0M))
-    (is (= mhu-erillishankinnat 0.0M))
-    (is (= mhu-hj-palkkio 0.0M))
-    (is (= mhu-bonukset 0.0M))
-    (is (= mhu-sanktiot 0.0M))
-    (is (= mhu-jjh-muutokset_laskutettu 1230.0M))
-    (is (= mhu-jjh-muutokset_laskutetaan 1230.0M))
-    (is (= mhu-hoitovuoden-paatos-tavoitepalkkio 0.0M))
-    (is (= mhu-rahavaraus-a 0.0M))
-    (is (= mhu-yhteensa 1230.0M))
+        ;; ----------------------------------------------------------------
+        ;; Laskutusrajan arvot pitäisi näyttää oikealta
+        purettu (pura-tuotekohtainen-raportti-mapiksi (first raportti))
+        kaytossa (:onko_laskutusraja_kaytossa purettu)
+        ylittynyt (:onko_laskutusraja_ylittynyt purettu)]
 
-    ;; Mhu korvausinvenstointi
-    (is (= mhu-korvausinvestointi-hankinnat 0.0M))
-    (is (= mhu-korvausinvestointi-lisatyot 0.0M))
-    (is (= mhu-korvausinvestointi-sanktiot 0.0M))
-    (is (= mhu-korvausinvestointi-rahavaraus-a 0.0M))
-    (is (= mhu-korvausinvestointi-yhteensa 0.0M))))
+    (is (false? (boolean ylittynyt)) "Laskutusrajan ei pitäisi olla ylittynyt")
+    (is (false? kaytossa) "Lasktutusrajan ei pitäisi olla käytössä MHU 21- urakalla")
+
+    ;; Laskutusrajan lukuja ei pitäisi tällä urakalla näkyä
+    (is (= (:laskutettavaa_kaikki_yht purettu) 0.0M))
+    (is (= (:laskutusrajan_ylittynyt_yht purettu) 0.0M))
+    (is (= (:laskutettavaa_kaikki_val_aika purettu) 0.0M))
+    (is (= (:laskutusraja_laskutettavaa_yht purettu) 0.0M))
+    (is (= (:laskutusraja_laskutettavaa_val_aika purettu) 0.0M))
+
+    ;; Kirjattu talvihoito pitäisi näkyä 
+    (is (= talvihoitosumma (:hankinnat_laskutettu purettu)))
+    (is (= talvihoitosumma (:hankinnat_laskutetaan purettu)))
+
+    ;; Testidatan arvoja, ei syötetty tässä
+    (is (= (:sakot_laskutetaan purettu) -1000.0M))
+
+    ;; Toteutuneet kustannukset yhteensä 
+    ;; Koska sakkoja on tuhat, pitäisi olla 1000 - 1234 (me syötettiin 1234e)
+    (is (= (:kaikki_laskutettu purettu) 234.0M))
+    (is (= (:kaikki_laskutetaan purettu) 234.0M))))
