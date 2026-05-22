@@ -1,31 +1,34 @@
 @harja-panel-marginaali-ala: 1.25rem;
 @harja-panel-sisalto-padding-pysty: 0.1875rem;
 @harja-panel-sisalto-padding-vaaka: 0.9375rem;
-@harja-panel-pinta-runtime: var(--harja-panel-pinta, var(--harja-teema-pinta, @harjan-taustavari));
-@harja-panel-radius-runtime: var(--harja-panel-radius, var(--harja-teema-radius, 0));
-@harja-panel-varjo-runtime: var(--harja-panel-varjo, var(--harja-teema-varjo, none));
-@harja-panel-marginaali-ala-runtime: var(--harja-panel-marginaali-ala, var(--harja-teema-lohko-marginaali-ala, @harja-panel-marginaali-ala));
-@harja-panel-padding-pysty-runtime: var(--harja-panel-padding-pysty, var(--harja-teema-sisalto-padding-pysty, @harja-panel-sisalto-padding-pysty));
-@harja-panel-padding-vaaka-runtime: var(--harja-panel-padding-vaaka, var(--harja-teema-sisalto-padding-vaaka, @harja-panel-sisalto-padding-vaaka));
-@harja-panel-padding-ala-runtime: var(--harja-panel-padding-ala, var(--harja-teema-sisalto-padding-ala, @harja-panel-sisalto-padding-vaaka));
+@harja-panel-sisalto-padding-ala: 0.9375rem;
+/* Lopulliset teema-arvot:
+  komponenttikohtainen CSS-muuttuja -> mahdollinen yhteinen teematoken -> LESS-oletus */
+@harja-panel-pinta-teema-arvo: var(--harja-panel-pinta, var(--harja-teema-pinta, @harjan-taustavari));
+@harja-panel-radius-teema-arvo: var(--harja-panel-radius, var(--harja-teema-radius, 0));
+@harja-panel-varjo-teema-arvo: var(--harja-panel-varjo, var(--harja-teema-varjo, 0 0.25rem 1rem fade(@black-default, 8%)));
+@harja-panel-marginaali-ala-teema-arvo: var(--harja-panel-marginaali-ala, var(--harja-teema-lohko-marginaali-ala, @harja-panel-marginaali-ala));
+@harja-panel-padding-pysty-teema-arvo: var(--harja-panel-padding-pysty, var(--harja-teema-sisalto-padding-pysty, @harja-panel-sisalto-padding-pysty));
+@harja-panel-padding-vaaka-teema-arvo: var(--harja-panel-padding-vaaka, var(--harja-teema-sisalto-padding-vaaka, @harja-panel-sisalto-padding-vaaka));
+@harja-panel-padding-ala-teema-arvo: var(--harja-panel-padding-ala, var(--harja-teema-sisalto-padding-ala, @harja-panel-sisalto-padding-ala));
 
 .harja-panel {
-  background-color: @harja-panel-pinta-runtime;
+  background-color: @harja-panel-pinta-teema-arvo;
   border: none;
-  border-radius: @harja-panel-radius-runtime;
-  box-shadow: @harja-panel-varjo-runtime;
-  margin-block-end: @harja-panel-marginaali-ala-runtime;
+  border-radius: @harja-panel-radius-teema-arvo;
+  box-shadow: @harja-panel-varjo-teema-arvo;
+  margin-block-end: @harja-panel-marginaali-ala-teema-arvo;
 }
 
 .harja-panel-otsake {
-  background-color: @harja-panel-pinta-runtime;
+  background-color: @harja-panel-pinta-teema-arvo;
   border: none;
-  padding-block: @harja-panel-padding-pysty-runtime;
-  padding-inline: @harja-panel-padding-vaaka-runtime;
+  padding-block: @harja-panel-padding-pysty-teema-arvo;
+  padding-inline: @harja-panel-padding-vaaka-teema-arvo;
 }
 
 .harja-panel-runko {
-  padding-block-start: @harja-panel-padding-pysty-runtime;
-  padding-inline: @harja-panel-padding-vaaka-runtime;
-  padding-block-end: @harja-panel-padding-ala-runtime;
+  padding-block-start: @harja-panel-padding-pysty-teema-arvo;
+  padding-inline: @harja-panel-padding-vaaka-teema-arvo;
+  padding-block-end: @harja-panel-padding-ala-teema-arvo;
 }

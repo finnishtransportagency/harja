@@ -7,6 +7,12 @@
 
 (t/use-fixtures :each u/komponentti-fixture)
 
+(defn- laskettu-tyyliarvo [selector ominaisuus]
+  (some-> (u/sel1 selector)
+          js/getComputedStyle
+          (.getPropertyValue ominaisuus)
+          str/trim))
+
 (deftest modaali-renderoi-harjan-omat-primitiiviluokat
   (komponenttitesti
     [modal/modal {:otsikko "Modaalin otsikko"
@@ -44,3 +50,25 @@
                       "margin-bottom: 24px"))
     (is (not (str/includes? (or (.getAttribute (u/sel1 [:.harja-modal-otsikko]) "style") "")
                            "margin-bottom")))))
+
+(deftest modaali-komponenttikohtainen-token-voittaa-yhteisen-teematokenin
+  (komponenttitesti
+    [:div {:style {"--harja-teema-pinta" "#ddeeff"
+                   "--harja-teema-reuna" "#112233"
+                   "--harja-teema-teksti" "rgb(17, 18, 19)"
+                   "--harja-teema-radius" "0"
+                   "--harja-teema-varjo" "0 0 0 3px rgb(1, 2, 3)"
+                   "--harja-modal-pinta" "rgb(255, 238, 170)"
+                   "--harja-modal-reuna" "rgb(10, 20, 30)"
+                   "--harja-modal-teksti" "rgb(33, 34, 35)"
+                   "--harja-modal-radius" "12px"
+                   "--harja-modal-varjo" "none"}}
+     [modal/modal {:otsikko "Tokenitesti"
+                   :nakyvissa? true}
+      [:div "Modaalin sisältö"]]]
+
+    (is (= "rgb(255, 238, 170)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "background-color")))
+    (is (= "rgb(10, 20, 30)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "border-top-color")))
+    (is (= "rgb(33, 34, 35)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "color")))
+    (is (= "12px" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "border-top-left-radius")))
+    (is (= "none" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "box-shadow")))))

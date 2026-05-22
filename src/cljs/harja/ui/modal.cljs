@@ -91,6 +91,7 @@
                            (when leveys
                              {:style {:max-width leveys}}))
                [:div.harja-modal-sisalto {:on-click #(.stopPropagation %)
+                                           :data-cy "harja-modal-sisalto"
                                            :style content-tyyli
                                            :tab-index "0"
                                            :role "dialog"

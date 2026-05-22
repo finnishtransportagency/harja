@@ -32,11 +32,36 @@
 	  :nimi "Korostuksen hover-vari"
 	  :tyyppi :color
 	  :oletus "#0088cc"}
+	 {:avain :harja-teema-varjo
+	  :nimi "Varjo"
+	  :tyyppi :shadow
+	  :esimerkki "0 0.25rem 1rem rgba(0, 0, 0, 0.08)"
+	  :oletus "0 0.25rem 1rem rgba(0, 0, 0, 0.08)"}
 	 {:avain :harja-teema-radius
 	  :nimi "Kulman sade"
 	  :tyyppi :text
 	  :esimerkki "0.25rem"
-	  :oletus "0.25rem"}])
+	  :oletus "0.25rem"}
+	 {:avain :harja-teema-lohko-marginaali-ala
+	  :nimi "Lohkon alamarginaali"
+	  :tyyppi :text
+	  :esimerkki "1.25rem"
+	  :oletus "1.25rem"}
+	 {:avain :harja-teema-sisalto-padding-pysty
+	  :nimi "Sisallon pysty-padding"
+	  :tyyppi :text
+	  :esimerkki "0.1875rem"
+	  :oletus "0.1875rem"}
+	 {:avain :harja-teema-sisalto-padding-vaaka
+	  :nimi "Sisallon vaaka-padding"
+	  :tyyppi :text
+	  :esimerkki "0.9375rem"
+	  :oletus "0.9375rem"}
+	 {:avain :harja-teema-sisalto-padding-ala
+	  :nimi "Sisallon alapadding"
+	  :tyyppi :text
+	  :esimerkki "0.9375rem"
+	  :oletus "0.9375rem"}])
 
 (defn ui-komponenttien-tarkastelu []
 	(let [modaalin-tila (r/atom {:nakyvissa? false})

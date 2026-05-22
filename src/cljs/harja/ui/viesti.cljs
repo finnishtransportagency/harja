@@ -56,7 +56,8 @@
          [:div {:class runko
                 :data-cy "flash-viesti"
                 :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
-          [:div {:class (str/join " " [sisalto variantti])}
+           [:div {:class (str/join " " [sisalto variantti])
+             :data-cy "flash-viesti-sisalto"}
            viesti]]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))

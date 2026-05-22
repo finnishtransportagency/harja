@@ -13,7 +13,11 @@
 
 	(testing "tuntematon luokka putoaa info-varianttiin"
 		(is (= "harja-viesti-info"
-					(:variantti (viesti/flash-viestin-luokat :tuntematon))))))
+					(:variantti (viesti/flash-viestin-luokat :tuntematon)))))
+
+	(testing "vaaravariantti palauttaa oman luokkamappauksen"
+		(is (= "harja-viesti-vaara"
+					(:variantti (viesti/flash-viestin-luokat :danger))))))
 
 (deftest kehityssivun-viesti-esimerkit-ovat-vakaat
 	(let [ryhma viesti/kehityssivun-viesti-esimerkit
@@ -22,7 +26,8 @@
 		(is (= "primitive-viesti-ryhma" (:data-cy ryhma)))
 		(is (= ["primitive-viesti-onnistuminen"
 						"primitive-viesti-info"
-						"primitive-viesti-varoitus"]
+						"primitive-viesti-varoitus"
+						"primitive-viesti-vaara"]
 					(mapv :data-cy esimerkit)))
-		(is (= [:success :info :warning]
+		(is (= [:success :info :warning :danger]
 					(mapv :luokka esimerkit)))))

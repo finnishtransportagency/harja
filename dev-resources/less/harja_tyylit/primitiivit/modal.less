@@ -1,3 +1,11 @@
+/* Lopulliset teema-arvot:
+  komponenttikohtainen CSS-muuttuja -> mahdollinen yhteinen teematoken -> LESS-oletus */
+@harja-modal-pinta-teema-arvo: var(--harja-modal-pinta, var(--harja-teema-pinta, @white-default));
+@harja-modal-reuna-teema-arvo: var(--harja-modal-reuna, var(--harja-teema-reuna, fade(@black-default, 10%)));
+@harja-modal-radius-teema-arvo: var(--harja-modal-radius, var(--harja-teema-radius, 4px));
+@harja-modal-varjo-teema-arvo: var(--harja-modal-varjo, var(--harja-teema-varjo, 0 16px 40px fade(@black-default, 24%)));
+@harja-modal-teksti-teema-arvo: var(--harja-modal-teksti, var(--harja-teema-teksti, @harmaa2));
+
 .harja-modal {
   position: fixed;
   inset: 0;
@@ -70,10 +78,11 @@
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   padding: @valistys-32;
-  background-color: @white-default;
-  border: 1px solid fade(@black-default, 10%);
-  border-radius: 4px;
-  box-shadow: 0 16px 40px fade(@black-default, 24%);
+  background-color: @harja-modal-pinta-teema-arvo;
+  border: 1px solid @harja-modal-reuna-teema-arvo;
+  border-radius: @harja-modal-radius-teema-arvo;
+  box-shadow: @harja-modal-varjo-teema-arvo;
+  color: @harja-modal-teksti-teema-arvo;
 }
 
 .harja-modal-otsake {

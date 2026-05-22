@@ -2,10 +2,11 @@
   (:require [cljs.test :as t :refer-macros [deftest is]]
             [clojure.string]
             [reagent.core :as r]
+            [harja.ui.bootstrap :as bootstrap]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.panelit :as panelit]
             [harja.testutils.shared-testutils :as u]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.modaalit :as modaalit]
-            [harja.views.hallinta.tyokalut.ui-komponenttien_tarkastelu-nakyma :as nakyma]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-nakyma :as nakyma]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.renderointi :as renderointi]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.viestit :as viestit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.valilehdet :as valilehdet])
@@ -25,6 +26,12 @@
   (some-> (u/sel1 selector)
           .-style
           (.getPropertyValue muuttuja)
+          clojure.string/trim))
+
+(defn- laskettu-tyyliarvo [selector ominaisuus]
+  (some-> (u/sel1 selector)
+          js/getComputedStyle
+          (.getPropertyValue ominaisuus)
           clojure.string/trim))
 
 (deftest tabs-override-hyvaksyy-vain-kelvolliset-pituusarvot
@@ -122,6 +129,31 @@
     (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa-sisalto\"]")
              "Portattu wrapper säilyttää tämän optionaalisen otsikkosopimuksen ilman Bootstrapin panel-heading-rakennetta."))))
 
+(deftest panelin-komponenttikohtainen-token-voittaa-yhteisen-teematokenin
+  (komponenttitesti
+    [:div {:style (renderointi/muunna-tyylioverridet-inline-tyyliksi
+                    {:harja-teema-lohko-marginaali-ala "2rem"
+                     :harja-teema-varjo "0 0 1rem rgba(0, 0, 0, 0.4)"
+                     :harja-teema-sisalto-padding-pysty "0.5rem"
+                     :harja-teema-sisalto-padding-vaaka "1.5rem"
+                     :harja-teema-sisalto-padding-ala "2rem"
+                     :harja-panel-marginaali-ala "3rem"
+                     :harja-panel-varjo "none"
+                     :harja-panel-padding-pysty "0.75rem"
+                     :harja-panel-padding-vaaka "2rem"
+                     :harja-panel-padding-ala "2.5rem"})}
+     [bootstrap/panel {:data-cy "testi-paneli-precedence"}
+      "Precedence"
+      [:div "Sisalto"]]]
+
+    (is (= "none" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"]" "box-shadow")))
+    (is (= "48px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"]" "margin-bottom")))
+    (is (= "12px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"] .harja-panel-otsake" "padding-top")))
+    (is (= "32px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"] .harja-panel-otsake" "padding-right")))
+    (is (= "12px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"] .harja-panel-runko" "padding-top")))
+    (is (= "32px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"] .harja-panel-runko" "padding-right")))
+    (is (= "40px" (laskettu-tyyliarvo "[data-cy=\"testi-paneli-precedence\"] .harja-panel-runko" "padding-bottom")))))
+
 (deftest tabs-renderoityvat-ilman-valilehtien-tilat-kontekstia
   (komponenttitesti
     [renderointi/renderoi-komponentit
@@ -201,18 +233,94 @@
   (let [korostus-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-korostus\"]"
         korostus-hover-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-korostus-hover\"]"
         pinta-hover-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-pinta-hover\"]"
+        varjo-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-varjo\"]"
         radius-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-radius\"]"
-        juuri "[data-cy=\"ui-komponenttien-tarkastelu-sivu\"]"]
+        lohko-marginaali-ala-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-lohko-marginaali-ala\"]"
+        sisalto-padding-pysty-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-sisalto-padding-pysty\"]"
+        sisalto-padding-vaaka-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-sisalto-padding-vaaka\"]"
+        sisalto-padding-ala-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-sisalto-padding-ala\"]"
+        juuri "[data-cy=\"ui-komponenttien-tarkastelu-sivu\"]"
+        paneli "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"]"
+        panelin-otsake "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .harja-panel-otsake"
+        panelin-runko "[data-cy=\"ui-komponenttien-tarkastelu-paneli\"] .harja-panel-runko"]
     (komponenttitesti
       [nakyma/ui-komponenttien-tarkastelu]
 
       (u/change korostus-syote "#112233")
       (u/change korostus-hover-syote "#223344")
       (u/change pinta-hover-syote "#ddeeff")
+      (u/change varjo-syote "none")
       (u/change radius-syote "0")
+      (u/change lohko-marginaali-ala-syote "2rem")
+      (u/change sisalto-padding-pysty-syote "0.5rem")
+      (u/change sisalto-padding-vaaka-syote "1.5rem")
+      (u/change sisalto-padding-ala-syote "2rem")
+      (u/blur varjo-syote)
       (u/blur radius-syote)
+      (u/blur lohko-marginaali-ala-syote)
+      (u/blur sisalto-padding-pysty-syote)
+      (u/blur sisalto-padding-vaaka-syote)
+      (u/blur sisalto-padding-ala-syote)
       (is (= "#112233" (css-muuttujan-arvo juuri "--harja-teema-korostus")))
       (is (= "#223344" (css-muuttujan-arvo juuri "--harja-teema-korostus-hover")))
       (is (= "#ddeeff" (css-muuttujan-arvo juuri "--harja-teema-pinta-hover")))
+      (is (= "none" (css-muuttujan-arvo juuri "--harja-teema-varjo")))
       (is (= "0" (css-muuttujan-arvo juuri "--harja-teema-radius")))
-      (is (= 1 (count (u/sel "[data-cy=\"primitive-viesti-teema\"]")))))))
+      (is (= "2rem" (css-muuttujan-arvo juuri "--harja-teema-lohko-marginaali-ala")))
+      (is (= "0.5rem" (css-muuttujan-arvo juuri "--harja-teema-sisalto-padding-pysty")))
+      (is (= "1.5rem" (css-muuttujan-arvo juuri "--harja-teema-sisalto-padding-vaaka")))
+      (is (= "2rem" (css-muuttujan-arvo juuri "--harja-teema-sisalto-padding-ala")))
+      (is (= "none" (laskettu-tyyliarvo paneli "box-shadow")))
+      (is (= "32px" (laskettu-tyyliarvo paneli "margin-bottom")))
+      (is (= "8px" (laskettu-tyyliarvo panelin-otsake "padding-top")))
+      (is (= "24px" (laskettu-tyyliarvo panelin-otsake "padding-right")))
+      (is (= "8px" (laskettu-tyyliarvo panelin-runko "padding-top")))
+      (is (= "24px" (laskettu-tyyliarvo panelin-runko "padding-right")))
+      (is (= "32px" (laskettu-tyyliarvo panelin-runko "padding-bottom")))
+      (is (= 1 (count (u/sel "[data-cy=\"primitive-viesti-info-teema\"]")))))))
+
+(deftest yhteinen-teemapaneeli-vaikuttaa-modaaliin
+  (let [pinta-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-pinta\"]"
+        reuna-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-reuna\"]"
+        teksti-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-teksti\"]"
+        radius-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-radius\"]"
+        varjo-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-varjo\"]"]
+    (komponenttitesti
+      [nakyma/ui-komponenttien-tarkastelu]
+
+      (u/change pinta-syote "#ddeeff")
+      (u/change reuna-syote "#112233")
+      (u/change teksti-syote "#123456")
+      (u/change radius-syote "0")
+      (u/change varjo-syote "none")
+      (u/blur radius-syote)
+      (u/blur varjo-syote)
+      (u/click "[data-cy=\"ui-komponenttien-tarkastelu-avaa-modaali\"]")
+      (is (= "rgb(221, 238, 255)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "background-color")))
+      (is (= "rgb(17, 34, 51)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "border-top-color")))
+      (is (= "rgb(18, 52, 86)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "color")))
+      (is (= "0px" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "border-top-left-radius")))
+      (is (= "none" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "box-shadow"))))))
+
+(deftest yhteinen-teemapaneeli-vaikuttaa-viestiin
+  (let [pinta-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-pinta\"]"
+        reuna-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-reuna\"]"
+        teksti-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-teksti\"]"
+        radius-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-radius\"]"
+        varjo-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-varjo\"]"
+        viesti "[data-cy=\"primitive-viesti-info-teema\"]"]
+    (komponenttitesti
+      [nakyma/ui-komponenttien-tarkastelu]
+
+      (u/change pinta-syote "#ddeeff")
+      (u/change reuna-syote "#112233")
+      (u/change teksti-syote "#123456")
+      (u/change radius-syote "0")
+      (u/change varjo-syote "none")
+      (u/blur radius-syote)
+      (u/blur varjo-syote)
+      (is (= "rgb(221, 238, 255)" (laskettu-tyyliarvo viesti "background-color")))
+      (is (= "rgb(17, 34, 51)" (laskettu-tyyliarvo viesti "border-top-color")))
+      (is (= "rgb(18, 52, 86)" (laskettu-tyyliarvo viesti "color")))
+      (is (= "0px" (laskettu-tyyliarvo viesti "border-top-left-radius")))
+      (is (= "none" (laskettu-tyyliarvo viesti "box-shadow"))))))

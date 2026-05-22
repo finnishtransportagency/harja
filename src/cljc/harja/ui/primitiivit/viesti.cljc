@@ -38,4 +38,10 @@
 								:kuvaus "Käytetään tilanteissa, joissa käyttäjän kannattaa tarkistaa syöte tai tila."
 								:luokka :warning
 								:viesti "Kaikkia tietoja ei voitu tallentaa."
-								:data-cy "primitive-viesti-varoitus"}]})
+								 :data-cy "primitive-viesti-varoitus"}
+								 {:id :vaara
+								 :otsikko "Virhe"
+								 :kuvaus "Käytetään selkeän virhetilan tai epäonnistuneen operaation korostamiseen."
+								 :luokka :danger
+								 :viesti "Tallennus epäonnistui ja vaatii toimenpiteitä."
+								 :data-cy "primitive-viesti-vaara"}]})

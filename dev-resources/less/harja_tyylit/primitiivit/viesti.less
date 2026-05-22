@@ -1,3 +1,13 @@
+/* Lopulliset teema-arvot:
+  komponenttikohtainen CSS-muuttuja -> mahdollinen yhteinen teematoken -> LESS-oletus */
+@harja-viesti-pinta-teema-arvo: var(--harja-viesti-pinta, var(--harja-teema-pinta, @white-default));
+@harja-viesti-reuna-teema-arvo: var(--harja-viesti-reuna, var(--harja-teema-reuna, @harmaa9));
+@harja-viesti-radius-teema-arvo: var(--harja-viesti-radius, var(--harja-teema-radius, 0.25rem));
+@harja-viesti-varjo-teema-arvo: var(--harja-viesti-varjo, var(--harja-teema-varjo, 0 8px 24px fade(@black-default, 16%)));
+@harja-viesti-teksti-teema-arvo: var(--harja-viesti-teksti, var(--harja-teema-teksti, @harmaa2));
+@harja-viesti-padding-pysty-teema-arvo: var(--harja-viesti-padding-pysty, var(--harja-teema-sisalto-padding-pysty, @valistys-16));
+@harja-viesti-padding-vaaka-teema-arvo: var(--harja-viesti-padding-vaaka, var(--harja-teema-sisalto-padding-vaaka, @valistys-24));
+
 .harja-viesti-runko {
   text-align: center;
   position: absolute;
@@ -20,34 +30,34 @@
 }
 
 .harja-viesti {
-  background: var(--harja-teema-pinta, @white-default);
-  border: 1px solid var(--harja-teema-reuna, @harmaa9);
-  border-radius: var(--harja-teema-radius, 0.25rem);
-  box-shadow: 0 8px 24px fade(@black-default, 16%);
-  color: var(--harja-teema-teksti, @harmaa2);
-  padding: @valistys-16 @valistys-24;
+  background: @harja-viesti-pinta-teema-arvo;
+  border: 1px solid @harja-viesti-reuna-teema-arvo;
+  border-radius: @harja-viesti-radius-teema-arvo;
+  box-shadow: @harja-viesti-varjo-teema-arvo;
+  color: @harja-viesti-teksti-teema-arvo;
+  padding: @harja-viesti-padding-pysty-teema-arvo @harja-viesti-padding-vaaka-teema-arvo;
 }
 
 .harja-viesti-onnistuminen {
-  background: @green-lighter;
-  border-color: @green-light;
-  color: @green-dark;
+  background: var(--harja-viesti-pinta, var(--harja-teema-pinta, @green-lighter));
+  border-color: var(--harja-viesti-reuna, var(--harja-teema-reuna, @green-light));
+  color: var(--harja-viesti-teksti, var(--harja-teema-teksti, @green-dark));
 }
 
 .harja-viesti-info {
-  background: @blue-lighter;
-  border-color: @blue-light;
-  color: @blue-darker;
+  background: var(--harja-viesti-pinta, var(--harja-teema-pinta, @blue-lighter));
+  border-color: var(--harja-viesti-reuna, var(--harja-teema-reuna, @blue-light));
+  color: var(--harja-viesti-teksti, var(--harja-teema-teksti, @blue-darker));
 }
 
 .harja-viesti-varoitus {
-  background: @lemon-light;
-  border-color: @lemon-default;
-  color: @lemon-dark;
+  background: var(--harja-viesti-pinta, var(--harja-teema-pinta, @lemon-light));
+  border-color: var(--harja-viesti-reuna, var(--harja-teema-reuna, @lemon-default));
+  color: var(--harja-viesti-teksti, var(--harja-teema-teksti, @lemon-dark));
 }
 
 .harja-viesti-vaara {
-  background: @red-lighter;
-  border-color: @red-light;
-  color: @red-dark;
+  background: var(--harja-viesti-pinta, var(--harja-teema-pinta, @red-lighter));
+  border-color: var(--harja-viesti-reuna, var(--harja-teema-reuna, @red-light));
+  color: var(--harja-viesti-teksti, var(--harja-teema-teksti, @red-dark));
 }

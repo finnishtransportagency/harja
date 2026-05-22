@@ -123,9 +123,9 @@
 							(paivita-teemaoverride-syote! (:teemaoverride-syotteet-tilat konteksti)
 								avain
 								(.. % -target -value)))
-					:on-blur #(when (= tyyppi :text)
+					:on-blur #(when (not= tyyppi :color)
 							(vahvista-teemaoverride! konteksti teematokeni))
-					:on-key-down #(when (and (= tyyppi :text)
+					:on-key-down #(when (and (not= tyyppi :color)
 									 (= "Enter" (.-key %)))
 							(vahvista-teemaoverride! konteksti teematokeni))}]
 			   [:span {:class "ui-komponenttien-tarkastelu-tyylioverride-oletus"}
@@ -164,6 +164,8 @@
 		:color (boolean (re-matches #"#[0-9a-fA-F]{6}" arvo))
 		:text (boolean (or (= "0" arvo)
 					  (re-matches #"\d+(?:\.\d+)?(?:rem|px|em|%)" arvo)))
+		:shadow (boolean (or (= "none" arvo)
+							(re-matches #"(?i)(?:inset\s+)?(?:0|\d+(?:\.\d+)?(?:rem|px|em|%))(?:\s+(?:0|\d+(?:\.\d+)?(?:rem|px|em|%))){1,3}(?:\s+(?:rgba?\([^)]*\)|#[0-9a-fA-F]{6}))?" arvo)))
 		true))
 
 (defn- tyylioverride-syoteavain [komponentti avain]
@@ -291,14 +293,17 @@
 					:readOnly true
 					:value override-teksti}]]]])))
 
-(defn renderoi-viesti-parametreista [{:keys [variantti sisalto]}]
+(defn renderoi-viesti-parametreista [{:keys [data-cy parametrit]}]
+	(let [{:keys [variantti sisalto]} parametrit
+		  viestin-data-cy (when data-cy (str data-cy "-teema"))
 	(let [{viestin-luokka :sisalto
 		   variantin-luokka :variantti}
 			(if variantti
 			  (viesti/flash-viestin-luokat variantti)
 			  (assoc viesti/flash-viestin-perusluokat :variantti nil))]
 		[:div {:class "ui-komponenttien-tarkastelu-viesti"}
-		 [:div {:class (str viestin-luokka " " variantin-luokka)}
+		 [:div {:class (str viestin-luokka " " variantin-luokka)
+				:data-cy viestin-data-cy}
 		  sisalto]]))
 
 (defn renderoi-modaalin-parametreista [{:keys [modaalin-tila]}
@@ -356,7 +361,7 @@
 (defn- renderoi-komponentin-sisalto [konteksti {:keys [tyyppi parametrit renderoi-esikatselu] :as komponentti}]
 	(cond
 		renderoi-esikatselu (renderoi-esikatselu konteksti komponentti)
-		(= tyyppi :viesti) (renderoi-viesti-parametreista parametrit)
+		(= tyyppi :viesti) (renderoi-viesti-parametreista komponentti)
 		(= tyyppi :modaali) (renderoi-modaalin-parametreista konteksti parametrit)
 		(= tyyppi :valilehdet) (renderoi-valilehdet-parametreista konteksti parametrit)
 		(= tyyppi :paneli) (renderoi-panelin-parametreista konteksti parametrit)
