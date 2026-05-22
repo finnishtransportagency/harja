@@ -93,23 +93,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Käytetään ajastetussa tehtävässä, joka päivittää sopimuksen_kaytetty_materiaali välimuistitaulun joka yö.
-CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_muutospaivalla (
-  urakka_id INTEGER, muutospvm DATE
+CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_muutospaivalla(
+    urakka_id INTEGER, muutospvm DATE
 ) RETURNS void AS $$
-DECLARE
-  rivi RECORD;
 BEGIN
-  FOR rivi IN
-    SELECT DISTINCT
-        t.sopimus AS sopimus_id,
-        t.alkanut::date AS pvm
+    CREATE TEMP TABLE IF NOT EXISTS muuttuneet_pvmt (
+      sopimus INTEGER,
+      pvm DATE
+    ) ON COMMIT DELETE ROWS;
+
+    TRUNCATE muuttuneet_pvmt;
+
+    INSERT INTO muuttuneet_pvmt (sopimus, pvm)
+    SELECT DISTINCT t.sopimus, t.alkanut::date
     FROM toteuma t
     WHERE t.urakka = urakka_id
       AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
-       OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
-  LOOP
-    PERFORM paivita_sopimuksen_materiaalin_kaytto(rivi.sopimus_id, rivi.pvm, urakka_id);
-  END LOOP;
+       OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'));
+
+    -- Poistetaan kaikki päivitettävät rivit kerralla    
+    DELETE FROM sopimuksen_kaytetty_materiaali skm
+    USING muuttuneet_pvmt m
+    WHERE skm.sopimus = m.sopimus
+      AND skm.alkupvm = m.pvm;
+
+    -- Lisätään uudet aggregoidut rivit kerralla
+    INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
+    SELECT t.sopimus,
+           DATE_TRUNC('day', t.alkanut)::date,
+           tm.materiaalikoodi,
+           SUM(CASE WHEN t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE
+                    THEN tm.maara ELSE 0 END),
+           CURRENT_TIMESTAMP
+    FROM toteuma t
+         JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+         JOIN muuttuneet_pvmt m ON m.sopimus = t.sopimus
+                               AND m.pvm = t.alkanut::date
+    WHERE t.urakka = urakka_id
+    GROUP BY t.sopimus, DATE_TRUNC('day', t.alkanut), tm.materiaalikoodi;
 END;
 $$ LANGUAGE plpgsql;
+
