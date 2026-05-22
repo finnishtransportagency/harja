@@ -1915,6 +1915,27 @@
     [(inc (first edellinen))]
     (map vector edellinen (next edellinen) loput-seq)))
 
+(defn luo-kulu
+  "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
+  [urakka-id tyyppi erapaiva kohdistustyyppi koontilaskun-kuukausi
+   summa toimenpideinstanssi-id tehtavaryhma-id tehtava-id rahavaraus]
+  {:id nil
+   :urakka urakka-id
+   :viite "123456781"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi tyyppi
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava tehtava-id
+                   :tyyppi kohdistustyyppi
+                   :rahavaraus rahavaraus
+                   :tavoitehintainen :true}]
+   :koontilaskun-kuukausi koontilaskun-kuukausi})
+
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
         _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut))))

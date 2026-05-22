@@ -173,27 +173,6 @@
     tulos))
 
 
-(defn luo-kulu
-  "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
-  [urakka-id tyyppi erapaiva kohdistustyyppi koontilaskun-kuukausi summa toimenpideinstanssi-id tehtavaryhma-id tehtava-id rahavaraus]
-  {:id nil
-   :urakka urakka-id
-   :viite "123456781"
-   :erapaiva erapaiva
-   :kokonaissumma summa
-   :tyyppi tyyppi
-   :kohdistukset [{:kohdistus-id nil
-                   :rivi 1
-                   :summa summa
-                   :toimenpideinstanssi toimenpideinstanssi-id
-                   :tehtavaryhma tehtavaryhma-id
-                   :tehtava tehtava-id
-                   :tyyppi kohdistustyyppi
-                   :rahavaraus rahavaraus
-                   :tavoitehintainen :true}]
-   :koontilaskun-kuukausi koontilaskun-kuukausi})
-
-
 (deftest raportin-suoritus-urakalle-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
