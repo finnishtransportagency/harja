@@ -182,7 +182,7 @@
         vastaus (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 93) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 97) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
