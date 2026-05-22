@@ -10,22 +10,16 @@
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-
-
-            [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut]
-            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.apurit :as uusi-kust-apurit]
-            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
-            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
-            ))
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
