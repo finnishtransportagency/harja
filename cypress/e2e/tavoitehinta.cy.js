@@ -54,6 +54,10 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
 
         // Tallenna jotain kipailutettaviin hankintoihin
         muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 10);
+        muokkaaTarjousRiviaArvo('tarjous-erillishankinnat-grid', 'Erillishankinnat', 0, 20);
+        muokkaaTarjousRiviaArvo('tarjous-toimenkuvat-grid', 'Valmistelukausi ennen urakka-ajan alkua', 0, 30);
+        muokkaaTarjousRiviaArvo('tarjous-hoidonjohtopalkkio-grid', 'Hoidonjohtopalkkio', 0, 40);
+
         // Tallenna muutokset
         cy.contains('button', 'Tallenna muutokset').click();
 
@@ -222,25 +226,27 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
     });
 
     // Tavoitehinta Laskutusyhteenvedossa
-    it('Tavoitehinta Laskutusyhteenvedossa', () => {  
-        cy.get('[data-cy=tabs-taso1-Kulut]').click();
-        cy.get('[data-cy="tabs-taso2-Laskutusyhteenveto"]').click();
-        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
-
-        // Valitse koko hoitokausi
-        // Valitse ensimmäinen hoitovuosi
-        cy.get('div.label-ja-alasveto.kuukausi div.dropdown').eq(0).within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('Koko hoitokausi').click();
-        });
-
-        // varmista
-        cy.get('span.varillinen-teksti').contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().parent().parent().next()
-            .get('span.arvo')
-            .then(function (text1) {
-                const trimmattuTodellinen = trimmaaArvo(text1);
-                const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
-                expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-            });
-    });
+    // TODO .. Ei ole olemassa nykyisessä speksissä.
+    //         Älä vie tuootantoon, ennenkuin tämä varmistettu, halutaanko näin.
+    // it('Tavoitehinta Laskutusyhteenvedossa', () => {  
+    //     cy.get('[data-cy=tabs-taso1-Kulut]').click();
+    //     cy.get('[data-cy="tabs-taso2-Laskutusyhteenveto"]').click();
+    //     cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
+    //
+    //     // Valitse koko hoitokausi
+    //     // Valitse ensimmäinen hoitovuosi
+    //     cy.get('div.label-ja-alasveto.kuukausi div.dropdown').eq(0).within(() => {
+    //         cy.get('button').click({force: true});
+    //         cy.contains('Koko hoitovuosi').click();
+    //     });
+    //
+    //     // varmista
+    //     cy.get('span.varillinen-teksti').contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().parent().parent().next()
+    //         .get('span.arvo')
+    //         .then(function (text1) {
+    //             const trimmattuTodellinen = trimmaaArvo(text1);
+    //             const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
+    //             expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
+    //         });
+    // });
 });
