@@ -1,4 +1,9 @@
 .ui-komponenttien-tarkastelu-nakyma {
+  --ui-tarkastelu-teema-pinta: var(--harja-teema-pinta, @white-default);
+  --ui-tarkastelu-teema-reuna: var(--harja-teema-reuna, @harmaa9);
+  --ui-tarkastelu-teema-teksti: var(--harja-teema-teksti, @harmaa2);
+  --ui-tarkastelu-teema-radius: var(--harja-teema-radius, 0.25rem);
+  --ui-tarkastelu-teema-varjo: var(--harja-teema-varjo, 0 0.25rem 1rem fade(@black-default, 8%));
   display: flex;
   flex-direction: column;
   gap: @valistys-24;
@@ -7,10 +12,11 @@
 
 .ui-komponenttien-tarkastelu-sivun-otsikko,
 .ui-komponenttien-tarkastelu-osio {
-  background: @white-default;
-  border: 1px solid @harmaa9;
-  border-radius: 0.25rem;
-  box-shadow: 0 0.25rem 1rem fade(@black-default, 8%);
+  background: var(--ui-tarkastelu-teema-pinta);
+  border: 1px solid var(--ui-tarkastelu-teema-reuna);
+  border-radius: var(--ui-tarkastelu-teema-radius);
+  box-shadow: var(--ui-tarkastelu-teema-varjo);
+  color: var(--ui-tarkastelu-teema-teksti);
   padding: @valistys-24;
 }
 
@@ -30,8 +36,11 @@
 }
 
 .ui-komponenttien-tarkastelu-kortti {
-  border: 1px solid @harmaa9;
-  border-radius: 0.25rem;
+  background: var(--ui-tarkastelu-teema-pinta);
+  border: 1px solid var(--ui-tarkastelu-teema-reuna);
+  border-radius: var(--ui-tarkastelu-teema-radius);
+  box-shadow: var(--ui-tarkastelu-teema-varjo);
+  color: var(--ui-tarkastelu-teema-teksti);
   display: flex;
   flex-direction: column;
   gap: @valistys-16;
@@ -74,7 +83,7 @@
 }
 
 .ui-komponenttien-tarkastelu-porttaustiedon-kuvaus {
-  color: @harmaa2;
+  color: var(--ui-tarkastelu-teema-teksti);
   font-size: 0.875rem;
 }
 
@@ -83,10 +92,124 @@
   gap: @valistys-8;
 }
 
+.ui-komponenttien-tarkastelu-teemapaneeli {
+  background: var(--ui-tarkastelu-teema-pinta);
+  border: 1px solid var(--ui-tarkastelu-teema-reuna);
+  border-radius: var(--ui-tarkastelu-teema-radius);
+  box-shadow: var(--ui-tarkastelu-teema-varjo);
+  color: var(--ui-tarkastelu-teema-teksti);
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-12;
+  padding: @valistys-16;
+}
+
+.ui-komponenttien-tarkastelu-nakyma {
+  .nappi-toissijainen {
+    background: var(--ui-tarkastelu-teema-pinta);
+    border-color: var(--ui-tarkastelu-teema-reuna);
+    border-radius: var(--ui-tarkastelu-teema-radius);
+    color: var(--harja-teema-korostus, @sininen4);
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active {
+      background: var(--harja-teema-pinta-hover, @blue-lighter);
+      border-color: var(--harja-teema-korostus-hover, @sininen5);
+      color: var(--harja-teema-korostus-hover, @sininen5);
+    }
+  }
+}
+
 .ui-komponenttien-tarkastelu-viesti {
   min-height: 5rem;
 
   .harja-viesti {
     text-align: left;
   }
+}
+
+.ui-komponenttien-tarkastelu-esikatselu {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-12;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverridet {
+  border-top: 1px solid @harmaa10;
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-12;
+  padding-top: @valistys-12;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverridet-otsikko {
+  align-items: flex-start;
+  display: flex;
+  gap: @valistys-12;
+  justify-content: space-between;
+
+  h4,
+  p {
+    margin: 0;
+  }
+}
+
+.ui-komponenttien-tarkastelu-tyylioverridet-toiminnot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: @valistys-8;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverridet-ruudukko {
+  display: grid;
+  gap: @valistys-12;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-kentta {
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-4;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-kentan-nimi {
+  .caption-small-strong();
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-input {
+  border: 1px solid var(--ui-tarkastelu-teema-reuna);
+  border-radius: var(--ui-tarkastelu-teema-radius);
+  min-height: 2.5rem;
+  padding: @valistys-6 @valistys-8;
+
+  &[type="color"] {
+    background: @white-default;
+    padding: @valistys-4;
+  }
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-oletus {
+  color: var(--ui-tarkastelu-teema-teksti);
+  font-size: 0.75rem;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-virhe {
+  color: @red-dark;
+  font-size: 0.75rem;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-teksti {
+  display: flex;
+}
+
+.ui-komponenttien-tarkastelu-tyylioverride-tekstialue {
+  border: 1px solid var(--ui-tarkastelu-teema-reuna);
+  border-radius: var(--ui-tarkastelu-teema-radius);
+  font-family: monospace;
+  min-height: 8rem;
+  padding: @valistys-8;
+  resize: vertical;
+  width: 100%;
 }
