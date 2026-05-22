@@ -41,7 +41,7 @@
                  [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.25.3"]
+                 [org.apache.logging.log4j/log4j-core "2.26.0"]
 
                  ;; --
 
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.3" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.6" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -178,7 +178,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.21.0"]]
+                         [commons-codec "1.22.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}

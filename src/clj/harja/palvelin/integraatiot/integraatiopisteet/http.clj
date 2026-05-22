@@ -27,7 +27,9 @@
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
                       parametrit kayttajatunnus salasana kutsudata
-                      lomakedatana? httpkit-asetukset]
+                      lomakedatana? httpkit-asetukset & [timeout]]
+  ;;timeout parametrilla voi korvata kovakoodatun 60000ms timeoutin. Harjan katkaisu näkyy integraatioväylällä virheenä, mutta käsittelyyn otetut viestit jatkavat prosessissa ilman paluuputkea.
+  ;;HUOM!! lyhyempi timeout Harjassa mahdollistaa tiheämmät kutsut rajapintaan ja voi kuormittaa integraatioväylää, älä lyhennä timeoutia harkitsematta vaikutusta integraation toiseen osapuoleen.
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -37,7 +39,7 @@
                                      :kutsudata kutsudata
                                      :lomakedatana? lomakedatana?
                                      :httpkit-asetukset httpkit-asetukset
-                                     :timeout timeout-aika-ms})]
+                                     :timeout (or timeout timeout-aika-ms)})]
       (case metodi
         :post @(http/post url kutsu)
         :get @(http/get url kutsu)
@@ -54,7 +56,7 @@
         {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
          :virheet [{:koodi :poikkeus :viesti (str "HTTP-kutsukäsittelyssä tapahtui odottamaton virhe.")}]}))))
 
-(defn kasittele-virhe [lokittaja lokiviesti tapahtuma-id url error status]
+(defn kasittele-virhe [lokittaja lokiviesti tapahtuma-id url error status & [timeout]]
   (let [[jarjestelma integraation-nimi] (clj-str/split (lokittaja :avain) #"-" 2)
         integraatio-log-params {:tapahtuma-id tapahtuma-id
                                 :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
@@ -74,7 +76,8 @@
             (instance? TimeoutException error))
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen
-                            :viesti "Ulkoiseen järjestelmään ei saada yhteyttä."}]})
+                            :viesti (str "Ulkoiseen järjestelmään ei saada yhteyttä."
+                                         (when timeout (format " Timeout: %sms." timeout)))}]})
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
@@ -88,9 +91,9 @@
 
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
-   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} lomakedatana? kutsudata]
+   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset timeout]} lomakedatana? kutsudata]
   (log/info (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
-               metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
+              metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
 
   (let [sisaltotyyppi (get otsikot " Content-Type ")]
     (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
@@ -98,12 +101,12 @@
     (let [{:keys [status body error headers]}
           (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
             parametrit kayttajatunnus salasana kutsudata
-            lomakedatana? httpkit-asetukset)
+            lomakedatana? httpkit-asetukset timeout)
           lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
       (if (or error
             (not (= 200 status)))
-        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
+        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status timeout)
         (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))
 
 (defprotocol HttpIntegraatiopiste
