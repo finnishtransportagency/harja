@@ -876,7 +876,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
          (when toissijainen-viesti
-           [:div {:style {:padding-left "8px" :font-weight 400}}
+           [:div {:style {:font-weight 400}}
             toissijainen-viesti])]
         (when sulje-nappi-id
           ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
