@@ -368,7 +368,7 @@
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
             bonuslaji (keyword tyyppi)
-        mhu-bonus? (bonus-write-path-validoitava? tyyppi)
+            mhu-bonus? (bonus-write-path-validoitava? tyyppi)
             ;; Koska laskutuskuukausi voi olla antamatta, niin asetetaan se samaksi kuin pvm
             laskutuskuukausi (if (nil? laskutuskuukausi)
                                pvm
