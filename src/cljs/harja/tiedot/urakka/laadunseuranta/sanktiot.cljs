@@ -234,3 +234,16 @@
     ;; Laatupoikkeaman sanktio: suodatetaan tyypin mukaan
     :else
     (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))
+
+(defn sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
+  ;; Bonuksilla ei tällä hetkellä ole kuvausta.
+  ;; Näytetään sanktion kohde, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
+  ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
+  (let [kohde (:kohde laatupoikkeama)]
+    (if suorasanktio
+      (or kohde "–")
+      [:span
+       (str "Laatupoikkeama: " kohde)
+       [:br]
+       (str (when (get-in laatupoikkeama [:tr :numero])
+              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))

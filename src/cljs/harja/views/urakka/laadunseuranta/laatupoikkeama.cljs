@@ -183,10 +183,13 @@
                               (merge sanktio
                                 {:lukutila? true}))
                             (reset! sivupaneeli-auki? true))}
-          [{:otsikko "Perintäpvm" :nimi :perintapvm :fmt pvm/pvm-opt :leveys 2}
+          [{:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
            {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
            {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 3}
-           {:otsikko "Summa (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :leveys 2}]
+           {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
+            :tyyppi :komponentti :komponentti sanktiot/sanktion-tai-bonuksen-kuvaus :leveys 3}
+           {:otsikko "Perustelu" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 3}
+           {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
           (or sanktiot-lista [])]]))))
 
 (defn avaa-tarkastus [tarkastus-id]

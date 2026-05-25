@@ -45,6 +45,7 @@ WHERE id = :id;
 -- Palauttaa kaikki annetun laatupoikkeaman sanktiot
 SELECT s.id,
        s.perintapvm,
+       s.maarattypvm,
        s.maara           AS summa,
        s.sakkoryhma      AS laji,
        s.toimenpideinstanssi,

@@ -182,19 +182,6 @@
     (viesti/nayta-toast! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
 
-(defn- sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
-  ;; Bonuksilla ei tällä hetkellä ole kuvausta.
-  ;; Näytetään sanktion kohde, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
-  ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
-  (let [kohde (:kohde laatupoikkeama)]
-    (if suorasanktio
-      (or kohde "–")
-      [:span
-       (str "Laatupoikkeama: " kohde)
-       [:br]
-       (str (when (get-in laatupoikkeama [:tr :numero])
-              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
-
 (defn- sanktion-tai-bonuksen-perustelu [{:keys [bonus] :as sanktio-tai-bonus}]
   ;; Bonuksille näytetään pelkästään lisätieto
   (if bonus
@@ -301,7 +288,6 @@
              (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
          {:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
          {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
-       {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt #(fmt-laskutuskuukausi % urakan-alkupaiva) :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
@@ -320,13 +306,12 @@
                               :else "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
-          :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
+          :tyyppi :komponentti :komponentti tiedot/sanktion-tai-bonuksen-kuvaus :leveys 3})
        {:otsikko "Perustelu" :nimi :perustelu :leveys 3
         :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.2 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
-                "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :fmt #(fmt/euro-opt false %) :tasaa :oikea :tyyppi :numero :leveys 1.2}]
+                "Muistutus")}]
       sanktiot]
      (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
