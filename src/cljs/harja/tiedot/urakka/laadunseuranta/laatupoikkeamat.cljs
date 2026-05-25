@@ -49,10 +49,8 @@
 (defonce valittu-laatupoikkeama-id (atom nil))
 
 (defn uusi-laatupoikkeama []
-  (merge {:tekija (roolit/osapuoli @istunto/kayttaja)
-          :aika (pvm/nyt)}
-    (when (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025)
-      {:paatos {:kasittelytapa :valikatselmus}})))
+  {:tekija (roolit/osapuoli @istunto/kayttaja)
+   :aika (pvm/nyt)})
 
 (defn- sanktiotaulukon-rivit [laatupoikkeama]
   (vals (:sanktiot laatupoikkeama)))

@@ -564,7 +564,7 @@
                       "Anna päätös")
 
                     (when (:paatos (:paatos @laatupoikkeama))
-                      {:otsikko "Perustelu"
+                      {:otsikko (if (>= urakan-alkuvuosi 2025) "Perustelu" "Päätöksen selitys")
                        :nimi :paatoksen-selitys
                        :pakollinen? true
                        :tyyppi :text
