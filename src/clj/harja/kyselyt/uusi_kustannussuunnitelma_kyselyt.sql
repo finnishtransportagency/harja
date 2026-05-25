@@ -392,7 +392,7 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
                                FROM urakka_parametrit up
                               WHERE up.urakkaid = ut.urakka
                                 AND up.laskutusraja_kaytossa = TRUE)
-                       THEN ut.tavoitehinta_indeksikorjattu + :laskutusrajan-tarkistus-summa::NUMERIC
+                       THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) + :laskutusrajan-tarkistus-summa::NUMERIC
                        ELSE ut.laskutusraja
                    END,
     laskutusraja_alkuperainen = CASE
@@ -402,7 +402,7 @@ SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahv
                                             FROM urakka_parametrit up
                                            WHERE up.urakkaid = ut.urakka
                                              AND up.laskutusraja_kaytossa = TRUE)
-                                    THEN ut.tavoitehinta_indeksikorjattu
+                                    THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER)
                                     ELSE ut.laskutusraja_alkuperainen
                                 END
 WHERE ut.urakka = :urakka-id
