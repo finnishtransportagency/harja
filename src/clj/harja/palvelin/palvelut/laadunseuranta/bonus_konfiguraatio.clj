@@ -2,9 +2,23 @@
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.bonus-konfiguraatio :as q]))
+            [harja.kyselyt.bonus-konfiguraatio :as q]
+            [slingshot.slingshot :refer [throw+]]))
 
 (declare bonus-lajin-tehokas-nimi)
+
+(def ^:private bonus-kirjausvirhe-tyyppi :bonus-kirjausvirhe)
+
+(defn- heita-bonus-kirjausvirhe!
+  [koodi viesti lisatiedot]
+  (throw+ {:type bonus-kirjausvirhe-tyyppi
+           :virheet [{:koodi koodi
+                      :viesti viesti}]
+           :bonus-kirjausvirhe (merge {:koodi koodi} lisatiedot)}))
+
+(defn- heita-illegal-argument!
+  [_koodi viesti _lisatiedot]
+  (throw (IllegalArgumentException. viesti)))
 
 (defn- laji->rivin-tyyppi
   [laji]
@@ -39,31 +53,46 @@
     (throw (IllegalArgumentException.
              (str "Bonus-profiilia id:llä " bonus-profiili-id " ei löytynyt.")))))
 
-(defn- vaadi-yksiselitteinen-bonus-profiili
-  [profiilit {:keys [urakka-id hoitovuosi]}]
+(defn- vaadi-yksiselitteinen-bonus-profiili*
+  [profiilit {:keys [urakka-id hoitovuosi] :as konteksti} virhe-heittaja!]
   (let [osumien-maara (count profiilit)]
     (cond
       (zero? osumien-maara)
-      (throw (IllegalArgumentException.
-               (str "Bonus-profiilia ei loytynyt urakalle " urakka-id
-                 " ja hoitovuodelle " hoitovuosi ".")))
+      (virhe-heittaja!
+        :bonus-kirjausvirhe/ei-profiilia
+        (str "Bonus-profiilia ei loytynyt urakalle " urakka-id
+          " ja hoitovuodelle " hoitovuosi ".")
+        konteksti)
 
       (= 1 osumien-maara)
       (first profiilit)
 
       :else
-      (throw (IllegalArgumentException.
-               (str "Useita aktiivisia bonus-profiileja loytyi urakalle " urakka-id
-                 " ja hoitovuodelle " hoitovuosi "."))))))
+      (virhe-heittaja!
+        :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+        (str "Useita aktiivisia bonus-profiileja loytyi urakalle " urakka-id
+          " ja hoitovuodelle " hoitovuosi ".")
+        konteksti))))
+
+(defn- vaadi-yksiselitteinen-bonus-profiili
+  [profiilit konteksti]
+  (vaadi-yksiselitteinen-bonus-profiili* profiilit konteksti heita-illegal-argument!))
+
+(defn- vaadi-profiililla-rivit*
+  [profiili toimenpideinstanssi-id rivit virhe-heittaja!]
+  (when-not (seq rivit)
+    (virhe-heittaja!
+      :bonus-kirjausvirhe/ei-riveja
+      (str "Bonus-profiililta " (:nimi profiili)
+        " puuttuu rivit toimenpideinstanssiin " toimenpideinstanssi-id ".")
+      {:bonusprofiili-id (:id profiili)
+       :toimenpideinstanssi-id toimenpideinstanssi-id}))
+
+  rivit)
 
 (defn- vaadi-profiililla-rivit
   [profiili toimenpideinstanssi-id rivit]
-  (when-not (seq rivit)
-    (throw (IllegalArgumentException.
-             (str "Bonus-profiililta " (:nimi profiili)
-               " puuttuu rivit toimenpideinstanssiin " toimenpideinstanssi-id "."))))
-
-  rivit)
+  (vaadi-profiililla-rivit* profiili toimenpideinstanssi-id rivit heita-illegal-argument!))
 
 (defn- bonus-lajin-nayttonimi
   [rivit]
@@ -125,6 +154,29 @@
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :rivit rivit}))
 
+(defn- hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
+  (let [profiili (vaadi-yksiselitteinen-bonus-profiili*
+                   (q/hae-urakan-bonus-profiilit
+                     db
+                     {:urakka_id urakka-id
+                      :hoitovuosi hoitovuosi})
+                   {:urakka-id urakka-id
+                    :hoitovuosi hoitovuosi}
+                   heita-bonus-kirjausvirhe!)
+                rivit (vaadi-profiililla-rivit*
+                  profiili
+                  toimenpideinstanssi-id
+                  (q/hae-bonus-profiilin-rivit
+                    db
+                    {:bonus_profiili_id (:id profiili)
+                     :urakka_id urakka-id
+                     :toimenpideinstanssi_id toimenpideinstanssi-id})
+                  heita-bonus-kirjausvirhe!)]
+    {:profiili profiili
+     :toimenpideinstanssi-id toimenpideinstanssi-id
+     :rivit rivit}))
+
 (defn hae-urakan-bonus-konfiguraatio
   [db user {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
@@ -136,6 +188,25 @@
     {:profiili profiili
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :bonus-lajit (muodosta-bonus-lajit rivit)}))
+
+(defn vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id bonuslaji]}]
+  (let [{:keys [profiili rivit]} (hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                                   db
+                                   {:urakka-id urakka-id
+                                    :hoitovuosi hoitovuosi
+                                    :toimenpideinstanssi-id toimenpideinstanssi-id})
+        lajin-rivit (filterv #(= bonuslaji (get-in % [:laji :koodi])) rivit)]
+    (when (empty? lajin-rivit)
+      (heita-bonus-kirjausvirhe!
+        :bonus-kirjausvirhe/laji-ei-sallittu
+        (str "Bonuslaji " (name bonuslaji) " ei ole sallittu urakan bonuskonfiguraatiossa.")
+        {:urakka-id urakka-id
+         :hoitovuosi hoitovuosi
+         :toimenpideinstanssi-id toimenpideinstanssi-id
+         :bonuslaji bonuslaji
+         :bonusprofiili-id (:id profiili)}))
+    (first lajin-rivit)))
 
 (defn- muodosta-bonus-profiilirivit
   [rivit]

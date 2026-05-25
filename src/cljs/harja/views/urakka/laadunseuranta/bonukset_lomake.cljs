@@ -32,6 +32,13 @@
        %)
     @tiedot-urakka/urakan-toimenpideinstanssit))
 
+(defn bonus-konfiguraation-hoitovuosi
+  [urakan-alkupvm valittu-hoitokausi kasittelyaika]
+  (let [hoitovuoden-paiva (or kasittelyaika
+                            (first valittu-hoitokausi))]
+    (when (and urakan-alkupvm hoitovuoden-paiva)
+      (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm hoitovuoden-paiva))))
+
 (defn- bonus-lajivalinnat
   [bonus-konfiguraatio urakkatyyppi kayttaja-id tpi]
   (let [bonus-lajit (mapv :laji (tiedot/bonus-konfiguraation-lajit bonus-konfiguraatio))]
@@ -343,9 +350,9 @@
             urakka-id (:id urakka)
             urakan-alkupvm (:alkupvm urakka)
             valittu-hoitokausi @tiedot-urakka/valittu-hoitokausi
+        kasittelyaika (get-in @bonukset-tila [:lomake :kasittelyaika])
             toimenpideinstanssi-id (get-in @bonukset-tila [:lomake :toimenpideinstanssi])
-            hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
-                         (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))
+        hoitovuosi (bonus-konfiguraation-hoitovuosi urakan-alkupvm valittu-hoitokausi kasittelyaika)
             haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]
             yllapitourakka? @tiedot-urakka/yllapitourakka?
             bonus-konfiguraation-tila (bonus-konfiguraation-tila @bonus-konfiguraatio @bonus-konfiguraation-haku-kaynnissa?)]

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [slingshot.slingshot :refer [try+]]
+            [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -27,6 +27,7 @@
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1477,6 +1478,65 @@
             {:urakka-id urakka-id
              :hoitovuosi 1
              :toimenpideinstanssi-id 999999999})))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-riveja
+                                        :viesti "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-riveja}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisessa profiilissa ei ole rivejä"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi bonus-kirjausvirhe)))
+      (is (= "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."
+             (:viesti (first virheet)))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-profiilia
+                                        :viesti "Bonukselle ei löytynyt aktiivista bonusprofiilia annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-profiilia}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivista profiilia ei löydy"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi bonus-kirjausvirhe))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-yksiselitteinen-profiili-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+                                        :viesti "Bonukselle löytyi useita aktiivisia bonusprofiileja annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisia profiileja löytyy useita"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi bonus-kirjausvirhe))))))
 
 (deftest bonus-profiilin-lajin-esitystiedot-eivat-salli-kahta-rivia-samalle-lajille
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))

@@ -13,7 +13,8 @@
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [slingshot.slingshot :refer [try+]]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -137,6 +138,60 @@
     (u
       (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))
+
+(deftest tallenna-erilliskustannus-hylkaa-bonusprofiilin-vastaisen-mhu-bonuksen-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Bonusprofiilin vastainen write-path testi"
+        bonus {:urakka-id urakka-id
+               :sopimus sopimus-id
+               :toimenpideinstanssi toimenpideinstanssi-id
+               :pvm (pvm/->pvm "15.10.2021")
+               :laskutuskuukausi (pvm/->pvm "15.10.2021")
+               :rahasumma 1234.0
+               :indeksin_nimi "MAKU 2020"
+               :tyyppi "muu-bonus"
+               :lisatieto lisatieto
+               :palauta-tallennettu? true}
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+    (try+
+      (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
+      (is false "Tallennuksen pitäisi hylätä bonusprofiilin vastainen bonus domain-virheellä")
+      (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+      (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
+
+(deftest tallenna-erilliskustannus-sallii-bonusprofiilin-mukaisen-mhu-bonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Bonusprofiilin mukainen write-path testi"
+        bonus {:urakka-id urakka-id
+               :sopimus sopimus-id
+               :toimenpideinstanssi toimenpideinstanssi-id
+               :pvm (pvm/->pvm "15.10.2021")
+               :laskutuskuukausi (pvm/->pvm "15.10.2021")
+               :rahasumma 4321.0
+               :indeksin_nimi "MAKU 2020"
+               :tyyppi "asiakastyytyvaisyysbonus"
+               :lisatieto lisatieto
+               :palauta-tallennettu? true}
+        tallennettu (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)]
+    (is (= urakka-id (:urakka tallennettu)) "Sallittu bonus tallentuu edelleen oikealle urakalle")
+    (is (= toimenpideinstanssi-id (:toimenpideinstanssi tallennettu)) "Sallittu bonus tallentuu oikeaan toimenpideinstanssiin")
+    (is (= lisatieto (:lisatieto tallennettu)) "Sallittu bonus palautuu write-pathilta ennallaan")
+    (u (format "DELETE FROM erilliskustannus WHERE id = %s" (:id tallennettu)))))
+
+(deftest bonus-write-path-validoitava-rajautuu-vain-mhu-bonuslajeihin
+  (is (= true (#'toteumat/bonus-write-path-validoitava? "asiakastyytyvaisyysbonus"))
+    "MHU-bonuslajin pitää mennä write-path-validoinnin läpi")
+  (is (= false (#'toteumat/bonus-write-path-validoitava? "yllapidon_bonus"))
+    "Ylläpidon bonus ei saa ajautua MHU-bonusten write-path-validointiin")
+  (is (= false (#'toteumat/bonus-write-path-validoitava? "akillinen-hoitotyo"))
+    "Muiden erilliskustannustyyppien ei pidä ajautua bonusvalidointiin"))
 
 
 (deftest tallenna-muut-tyot-toteuma-testi

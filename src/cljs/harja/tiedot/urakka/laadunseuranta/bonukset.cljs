@@ -58,6 +58,29 @@
 (defrecord LiitteidenHakuEpaonnistui [vastaus])
 (defrecord HaeLiitteet [])
 
+(defn- bonus-kirjausvirheen-koodi
+  [vastaus]
+  (or (get-in vastaus [:response :bonus-kirjausvirhe :koodi])
+    (get-in vastaus [:bonus-kirjausvirhe :koodi])))
+
+(defn- bonus-kirjausvirheen-viesti
+  [vastaus]
+  (case (bonus-kirjausvirheen-koodi vastaus)
+    :bonus-kirjausvirhe/laji-ei-sallittu
+    "Valittu bonuslaji ei ole sallittu tässä kontekstissa. Tarkista valinta ja yritä uudelleen."
+
+    :bonus-kirjausvirhe/ei-riveja
+    "Valitulle toimenpideinstanssille ei ole bonuskonfiguraatiota. Tarkista valinta tai ota yhteys Harja-tukeen."
+
+    :bonus-kirjausvirhe/ei-profiilia
+    "Bonukselle ei löytynyt aktiivista bonusprofiilia. Ota yhteys Harja-tukeen, jos valinta näyttää oikealta."
+
+    :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+    "Bonukselle löytyi ristiriitainen bonuskonfiguraatio. Ota yhteys Harja-tukeen."
+
+    (or (get-in vastaus [:response :virheet 0 :viesti])
+      (get-in vastaus [:virheet 0 :viesti]))))
+
 
 
 (defn- tallenna-bonus-mhu
@@ -82,7 +105,8 @@
     (tuck-apurit/post! app :tallenna-erilliskustannus
       payload
       {:onnistui ->TallennusOnnistui
-       :epaonnistui ->TallennusEpaonnistui})))
+       :epaonnistui ->TallennusEpaonnistui
+       :paasta-virhe-lapi? true})))
 
 
 (defn- tallenna-bonus-yllapito
@@ -253,7 +277,9 @@
     [{vastaus :vastaus} app]
     (log/debug "TallennusEpaonnistui")
 
-    (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
+    (viesti/nayta-toast! (or (bonus-kirjausvirheen-viesti vastaus)
+                          "Tallennus epäonnistui")
+      :varoitus)
     (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? false))
 
   PoistaBonus
