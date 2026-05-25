@@ -350,9 +350,9 @@
             urakka-id (:id urakka)
             urakan-alkupvm (:alkupvm urakka)
             valittu-hoitokausi @tiedot-urakka/valittu-hoitokausi
-        kasittelyaika (get-in @bonukset-tila [:lomake :kasittelyaika])
+            kasittelyaika (get-in @bonukset-tila [:lomake :kasittelyaika])
             toimenpideinstanssi-id (get-in @bonukset-tila [:lomake :toimenpideinstanssi])
-        hoitovuosi (bonus-konfiguraation-hoitovuosi urakan-alkupvm valittu-hoitokausi kasittelyaika)
+            hoitovuosi (bonus-konfiguraation-hoitovuosi urakan-alkupvm valittu-hoitokausi kasittelyaika)
             haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]
             yllapitourakka? @tiedot-urakka/yllapitourakka?
             bonus-konfiguraation-tila (bonus-konfiguraation-tila @bonus-konfiguraatio @bonus-konfiguraation-haku-kaynnissa?)]

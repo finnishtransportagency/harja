@@ -260,7 +260,7 @@
       (assoc app :lomake lomake)))
 
   TallennusOnnistui
-  (process-event    
+  (process-event
     [{vastaus :vastaus optiot :optiot} app]
     (log/debug "TallennusOnnistui")
 
@@ -278,7 +278,7 @@
     (log/debug "TallennusEpaonnistui")
 
     (viesti/nayta-toast! (or (bonus-kirjausvirheen-viesti vastaus)
-                          "Tallennus epäonnistui")
+                           "Tallennus epäonnistui")
       :varoitus)
     (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? false))
 
@@ -291,9 +291,9 @@
           poista-fn (fn [app]
                         ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
                         ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
-                        (if (= :yllapidon_bonus bonuksen-laji)
-                          (poista-bonus-yllapito app)
-                          (poista-bonus-mhu app)))]
+                      (if (= :yllapidon_bonus bonuksen-laji)
+                        (poista-bonus-yllapito app)
+                        (poista-bonus-mhu app)))]
       (-> app
         poista-fn
         (assoc :tallennus-kaynnissa? true))))

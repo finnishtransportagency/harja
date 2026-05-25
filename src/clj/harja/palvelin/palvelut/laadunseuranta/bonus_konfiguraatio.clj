@@ -164,15 +164,15 @@
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi}
                    heita-bonus-kirjausvirhe!)
-                rivit (vaadi-profiililla-rivit*
-                  profiili
-                  toimenpideinstanssi-id
-                  (q/hae-bonus-profiilin-rivit
-                    db
-                    {:bonus_profiili_id (:id profiili)
-                     :urakka_id urakka-id
-                     :toimenpideinstanssi_id toimenpideinstanssi-id})
-                  heita-bonus-kirjausvirhe!)]
+        rivit (vaadi-profiililla-rivit*
+                profiili
+                toimenpideinstanssi-id
+                (q/hae-bonus-profiilin-rivit
+                  db
+                  {:bonus_profiili_id (:id profiili)
+                   :urakka_id urakka-id
+                   :toimenpideinstanssi_id toimenpideinstanssi-id})
+                heita-bonus-kirjausvirhe!)]
     {:profiili profiili
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :rivit rivit}))

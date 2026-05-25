@@ -106,7 +106,7 @@
                       :id ek-id
                       :indeksin_nimi "MAKU 2010"))
           paivitetty (first (filter #(= (:id %)
-                                       ek-id)
+                                        ek-id)
                               vastaus))]
       (is (= (:indeksin_nimi paivitetty) "MAKU 2010") "Tallennetun erilliskustannuksen indeksin nimi"))
 
@@ -236,7 +236,7 @@
                       :toteuma {:id toteuma-id}
                       :lisatieto "Testikeissi"))
           paivitetty (first (filter #(= (get-in % [:toteuma :id])
-                                       toteuma-id)
+                                        toteuma-id)
                               vastaus))]
 
       (is (= (:lisatieto paivitetty) "Testikeissi") "Päivitetyn erilliskustannuksen lisätieto"))
@@ -537,8 +537,7 @@
 
       (let [toteuman-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma) :hae-toteuman-materiaalitiedot +kayttaja-jvh+
                                    {:urakka-id urakka
-                                    :toteuma-id tid}
-                                   )
+                                    :toteuma-id tid})
             haettu-osoite (:tierekisteriosoite toteuman-materiaalit)]
         (is (not (nil? (:tierekisteriosoite toteuman-materiaalit))))
         (is (not (nil? (:sijainti toteuman-materiaalit))))
