@@ -174,7 +174,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         // Varmista, että errorilaatikko on näkyvissä
         cy.get('.info-laatikko.varoitus').contains("Sanktiota ei voida lisätä, sillä osa laatupoikkeaman pakollisista tiedoista puuttuu").should('be.visible');
         // Perustelu
-        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(perustelu);
+        cy.get('label').contains('Päätöksen selitys').parent().parent().parent().find('textarea').first().clear().type(perustelu);
 
         // Lisää uusi sanktio
         cy.get('button').contains("Lisää uusi").click();
