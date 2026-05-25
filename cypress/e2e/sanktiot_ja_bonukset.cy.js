@@ -91,6 +91,19 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         // Siirretään fokus pois päivämääräkentästä, jotta mahdollinen kalenteri sulkeutuu
         cy.get('label').contains('Perustelu').click()
 
+        // Varmistetaan, että "Määrätty välikatselmuksessa" checkbox on oletuksena valittuna
+        cy.contains('label', 'Määrätty välikatselmuksessa').parent().find('input[type=checkbox]').should('be.checked')
+        // Ja käsittelytapa on Välikatselmus
+        cy.contains('Välikatselmus').should('be.visible')
+
+        // Otetaan checkbox pois päältä -> käsittelytapa vaihtuu Työmakokoukseksi
+        cy.contains('label', 'Määrätty välikatselmuksessa').click()
+        cy.contains('Työmaakokous').should('be.visible')
+
+        // Laitetaan checkbox takaisin päälle -> käsittelytapa vaihtuu Välikatselmukseksi
+        cy.contains('label', 'Määrätty välikatselmuksessa').click()
+        cy.contains('Välikatselmus').should('be.visible')
+
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
         cy.wait('@tallenna', {timeout: clickTimeout})

@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.laatupoikkeama
   "Yksittäisen laatupoikkeaman näkymä"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.ui.debug :as debug]
+            [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -180,9 +181,7 @@
            :rivi-klikattu (fn [sanktio]
                             (reset! sanktiot/valittu-sanktio
                               (merge sanktio
-                                {:suorasanktio false
-                                 :lukutila? true
-                                 :laatupoikkeama @laatupoikkeama}))
+                                {:lukutila? true}))
                             (reset! sivupaneeli-auki? true))}
           [{:otsikko "Perintäpvm" :nimi :perintapvm :fmt pvm/pvm-opt :leveys 2}
            {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
@@ -311,7 +310,8 @@
                nakyma (:nakyma optiot)
                tallennus-kaynnissa? (:tallennus-kaynnissa? optiot)
                vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
-               yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]
+               yllapitokohdeurakka? @urakka/yllapitokohdeurakka?
+               urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))]
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
              [:div.laatupoikkeama
@@ -600,4 +600,5 @@
                                          (tallenna-laatupoikkeama @laatupoikkeama nakyma)
                                          (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
                                        {:ikoni (ikonit/livicon-arrow-left)}])})))]
-               @laatupoikkeama]])))))))
+               @laatupoikkeama]
+              [debug/debug @laatupoikkeama]])))))))
