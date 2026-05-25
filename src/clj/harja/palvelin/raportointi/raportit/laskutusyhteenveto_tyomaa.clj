@@ -18,6 +18,7 @@
   [data kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
     [:varillinen-teksti {:arvo (str valiotsikko)
+                         ;; :korosta-hennosti? true
                          :lihavoi? lihavoi?}]
     [:varillinen-teksti {:arvo (or (get data avain_hoitokausi) (yhteiset/summa-fmt nil))
                          :fmt :raha
@@ -146,9 +147,9 @@
 
                      (taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :muut_kulut_ei_tavoite_hoitokausi_yht :muut_kulut_ei_tavoite_val_aika_yht true)])))]
 
-    [:taulukko {:oikealle-tasattavat-kentat #{1 2}
+    [:taulukko {:sheet-nimi sheet-nimi
                 :viimeinen-rivi-yhteenveto? false
-                :sheet-nimi sheet-nimi}
+                :oikealle-tasattavat-kentat #{1 2}}
      (rivi
        {:otsikko otsikko :leveys 36}
        {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}

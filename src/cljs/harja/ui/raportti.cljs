@@ -260,8 +260,9 @@
                                               rivi)
                                             ::rivin-indeksi index)]
                               (cond-> mappina
-                                (and viimeinen-rivi-yhteenveto?
-                                  (= viimeinen-rivi rivi))
+                                (and
+                                  (= viimeinen-rivi rivi)
+                                  viimeinen-rivi-yhteenveto?)
                                 (assoc :yhteenveto true)
 
                                 korosta-hennosti?
