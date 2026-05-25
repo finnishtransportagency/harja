@@ -6,13 +6,13 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-apurit :as taulukot]))
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :as taulukot]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tuotekohtainen :as apurit]))
 
 
 (defn- laskettavat-kentat [konteksti]
@@ -144,105 +144,6 @@
        :oikaistu? oikaistu?})))
 
 
-(defn- taulukko-rivi
-  [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
-  (rivi
-    [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
-    [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (yhteiset/summa-fmt 0.00M))
-                         :fmt :raha
-                         :lihavoi? lihavoi?}]
-
-    (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (yhteiset/summa-fmt 0.00M))
-                           :fmt :raha
-                           :lihavoi? lihavoi?}])))
-
-
-(defn- mhu-hju-rivit
-  "MHU ja HJU hoidon johto- taulukko, jossa näytetään hieman muista instansseista poikkeavia lukuja"
-  [data kyseessa-kk-vali?]
-  [(taulukko-rivi data kyseessa-kk-vali? "Johto- ja hallintokorvaukset" :johto_ja_hallinto_laskutettu :johto_ja_hallinto_laskutetaan false)
-   (taulukko-rivi data kyseessa-kk-vali? "Erillishankinnat" :hj_erillishankinnat_laskutettu :hj_erillishankinnat_laskutetaan false)
-   (taulukko-rivi data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
-   (taulukko-rivi data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
-   (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-
-   ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
-   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
-     (taulukko-rivi data kyseessa-kk-vali?
-       "Hoitovuoden päättäminen / Tavoitepalkkio"
-       :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
-
-   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu data))
-     (taulukko-rivi data kyseessa-kk-vali?
-       "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-       :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
-
-   (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu data))
-     (taulukko-rivi data kyseessa-kk-vali?
-       "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
-       :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
-
-   (when (yhteiset/raha-arvo-olemassa? (:hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu data))
-     (taulukko-rivi data kyseessa-kk-vali?
-       "Hoitovuoden päättäminen / Hoidonjohtopalkkion muutos"
-       :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu :hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan false))])
-
-
-(defn- koosta-tuotekohtainen-taulukko
-  [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
-  (let [;; Taulukon rivit mitkä näytetään kaikkiin paitsi "MHU ja HJU hoidon johto"
-        taulukko-rivit [(taulukko-rivi data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
-                        (taulukko-rivi data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
-                        (taulukko-rivi data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-                        (when (yhteiset/raha-arvo-olemassa? (:jjh_muutokset_laskutettu data))
-                          (taulukko-rivi data kyseessa-kk-vali? "Johto-ja hallintokorvauksen muutokset" :jjh_muutokset_laskutettu :jjh_muutokset_laskutetaan false))]
-
-        rahavaraus-rivit (map (fn [nimi hoitokausi val-aika]
-                                (rivi
-                                  [:varillinen-teksti {:arvo (str nimi)
-                                                       :lihavoi? false}]
-                                  [:varillinen-teksti {:arvo (or hoitokausi (yhteiset/summa-fmt nil))
-                                                       :fmt :raha
-                                                       :lihavoi? false}]
-                                  (when kyseessa-kk-vali?
-                                    [:varillinen-teksti {:arvo (or val-aika (yhteiset/summa-fmt nil))
-                                                         :fmt :raha
-                                                         :lihavoi? false}])))
-                           rahavaraukset-nimet
-                           rahavaraukset-hoitokausi
-                           rahavaraukset-val-aika)
-
-        ;; Yhteensä rivi näytetään myös kaikille taulukoille
-        yhteensa-rivi [(taulukko-rivi data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]]
-
-    ;; Mergetä ja palauta rivit
-    (if (= "MHU ja HJU hoidon johto" otsikko)
-      (vec (concat (mhu-hju-rivit data kyseessa-kk-vali?) rahavaraus-rivit yhteensa-rivi))
-      (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi)))))
-
-
-(defn- taulukko
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]}]
-  (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
-        rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
-        rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
-
-        rivit (into []
-                (remove nil?
-                  (koosta-tuotekohtainen-taulukko data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)))]
-
-    [:taulukko {:oikealle-tasattavat-kentat #{1 2}
-                :viimeinen-rivi-yhteenveto? false
-                :sheet-nimi sheet-nimi}
-
-     (rivi
-       {:otsikko otsikko :leveys 36}
-       {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
-       (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
-     rivit]))
-
-
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id aikarajaus valittu-kk] :as parametrit}]
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -365,16 +266,17 @@
                (let [tiedot-indeksi (etsi-indeksi (second otsikko) (first laskutusyhteenvedot))
                      data (try
                             (nth (first laskutusyhteenvedot) tiedot-indeksi)
-                            (catch Throwable t
+                            (catch Throwable _t
                               (log/debug "Tuotekohtaisen laskutusyhteenvedon tietoja ei löytynyt.")
                               nil))]
-                 (taulukko {:data data
-                            :otsikko (first otsikko)
-                            :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
-                            :laskutettu-teksti laskutettu-teksti
-                            :laskutetaan-teksti laskutetaan-teksti
-                            :kyseessa-kk-vali? kyseessa-kk-vali?
-                            :alkupvm alkupvm}))))
+
+                 (apurit/taulukko-tuotekohtainen {:data data
+                                                  :otsikko (first otsikko)
+                                                  :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
+                                                  :laskutettu-teksti laskutettu-teksti
+                                                  :laskutetaan-teksti laskutetaan-teksti
+                                                  :kyseessa-kk-vali? kyseessa-kk-vali?
+                                                  :alkupvm alkupvm}))))
 
      (if (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
        (taulukot/lapinakyva-taulukko true
@@ -386,7 +288,7 @@
           :laskutetaan-teksti laskutetaan-teksti
           :kyseessa-kk-vali? kyseessa-kk-vali?})
 
-       (taulukot/tuotekohtainen-toteutuneet-taulukko
+       (apurit/toteutuneet-taulukko
          {:data rivitiedot
           :otsikko "Toteutuneet"
           :laskutettu-teksti laskutettu-teksti
