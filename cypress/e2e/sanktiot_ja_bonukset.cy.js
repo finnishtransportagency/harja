@@ -33,7 +33,8 @@ let avaaSanktiotJaBonukset = function (urakkaNimi, urakkaEvk) {
     cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
     cy.contains('Näytä päättyneet').click();
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: clickTimeout}).click()
+    cy.wait(250); // Toimii varmemmin, kun ei ole niin kiire
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
     cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
@@ -91,18 +92,19 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         // Siirretään fokus pois päivämääräkentästä, jotta mahdollinen kalenteri sulkeutuu
         cy.get('label').contains('Perustelu').click()
 
+        // Checkbox tulee vasta seuraavaan versioon
         // Varmistetaan, että "Määrätty välikatselmuksessa" checkbox on oletuksena valittuna
-        cy.contains('label', 'Määrätty välikatselmuksessa').parent().find('input[type=checkbox]').should('be.checked')
+        // cy.contains('label', 'Määrätty välikatselmuksessa').parent().find('input[type=checkbox]').should('be.checked')
         // Ja käsittelytapa on Välikatselmus
-        cy.contains('Välikatselmus').should('be.visible')
+        // cy.contains('Välikatselmus').should('be.visible')
 
         // Otetaan checkbox pois päältä -> käsittelytapa vaihtuu Työmakokoukseksi
-        cy.contains('label', 'Määrätty välikatselmuksessa').click()
-        cy.contains('Työmaakokous').should('be.visible')
+        // cy.contains('label', 'Määrätty välikatselmuksessa').click()
+        // cy.contains('Työmaakokous').should('be.visible')
 
         // Laitetaan checkbox takaisin päälle -> käsittelytapa vaihtuu Välikatselmukseksi
-        cy.contains('label', 'Määrätty välikatselmuksessa').click()
-        cy.contains('Välikatselmus').should('be.visible')
+        // cy.contains('label', 'Määrätty välikatselmuksessa').click()
+        // cy.contains('Välikatselmus').should('be.visible')
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});

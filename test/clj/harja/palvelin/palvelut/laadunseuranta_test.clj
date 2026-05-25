@@ -521,9 +521,12 @@
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
-                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
+                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 9, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :maarattypvm nil,
+    :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
+    :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot
