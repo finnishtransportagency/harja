@@ -178,14 +178,10 @@
                         :hallintayksikko-id hallintayksikko-id}
             raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
 
-        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
         (let [z-raportti (raportti-zip raportti)
               siirto-rivi [[:varillinen-teksti {:arvo ""}]
                            [:varillinen-teksti
-                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}
-                            ;; Jätän kommentteihin, koska tämä voidaan ottaa pikaisesti takaisin - se sama siirrettävä arvo näkyy tavoitehintaa vaikuttavissa kustannuksissa
-                            #_{:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}
-                            ]
+                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}]
                            [:varillinen-teksti
                             {:itsepaisesti-maaritelty-oma-vari nil,
                              :arvo (* -1 siirto-ed-vuodelta) ;; Käännetään negatiiviseksi, koska siirto pienentää toteumia, mutta on kannassa positiivisena
@@ -200,18 +196,7 @@
       (let [kattohinta 100000M
             toteutuneet-kustannukset (+ kattohinta 10000M)
             ylityksen-maara (- toteutuneet-kustannukset kattohinta)
-            urakoitsija-maksaa ylityksen-maara
             siirrettava-maara ylityksen-maara
-            maksimi-siirrettava-maara ylityksen-maara
-            siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-            tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
-            kulu-id 1
-            viimeinen_hoitokausi false
-            ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
-            paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                     ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
-                     maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
-            paatosvastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
             hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
             parametrit {:urakkatyyppi "teiden-hoito"
                         :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
@@ -220,14 +205,10 @@
                         :hallintayksikko-id hallintayksikko-id}
             raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
 
-        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
         (let [z-raportti (raportti-zip raportti)
               siirto-rivi [[:varillinen-teksti {:arvo ""}]
                            [:varillinen-teksti
-                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}
-                            ;; Jätän kommentteihin, koska tämä voidaan ottaa pikaisesti takaisin - se sama siirrettävä arvo näkyy tavoitehintaa vaikuttavissa kustannuksissa
-                            #_{:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}
-                            ]
+                            {:arvo "Tavoitehintaan vaikuttavat kustannukset yhteensä", :lihavoi? true}]
                            [:varillinen-teksti
                             {:itsepaisesti-maaritelty-oma-vari nil,
                              :arvo siirrettava-maara,

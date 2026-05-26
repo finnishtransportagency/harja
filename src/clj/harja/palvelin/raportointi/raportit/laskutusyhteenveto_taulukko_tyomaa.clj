@@ -6,6 +6,7 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :refer [taulukko-rivi]]))
 
+
 (def ^:private hankinnat-rivit
   [{:lihavoi? false
     :otsikko "Talvihoito"
@@ -42,6 +43,7 @@
     :avain_yht :hankinnat_val_aika_yht
     :avain_hoitokausi :hankinnat_hoitokausi_yht}])
 
+
 (def ^:private hoidonjohto-rivit
   [{:lihavoi? false
     :otsikko "Johto- ja hallintokorvaukset"
@@ -63,6 +65,7 @@
     :avain_yht :hoidonjohto_val_aika_yht
     :avain_hoitokausi :hoidonjohto_hoitokausi_yht}])
 
+
 (def ^:private muutokset-rivit
   [{:lihavoi? false
     :otsikko "Muutostyöt (erillisrahoitetut)"
@@ -78,6 +81,7 @@
     :otsikko "Yhteensä"
     :avain_yht :muutostyo_val_aika_yht
     :avain_hoitokausi :muutostyo_hoitokausi_yht}])
+
 
 (def ^:private lisatyot-rivit
   [{:lihavoi? false
@@ -120,23 +124,18 @@
     :avain_yht :lisatyot_val_aika_yht
     :avain_hoitokausi :lisatyot_hoitokausi_yht}])
 
+
 (def ^:private tavoitehintaan-vaikuttavat-rivit
   [{:lihavoi? false
     :otsikko "Muut tavoitehintaan vaikuttavat kulut"
     :avain_yht :muut_kulut_val_aika
     :avain_hoitokausi :muut_kulut_hoitokausi}
 
-   ;; Välikatselmuksesta siirretyt kulut edelliseltä hoitovuodelta. 
-   ;; Otetaan mukaan osana tavoitehintaisia kuluja.
-   {:lihavoi? false
-    :otsikko "Siirto edelliseltä vuodelta"
-    :avain_yht nil
-    :avain_hoitokausi :hk_valikatselmus_siirrot_ed_vuodelta}
-
    {:lihavoi? true
     :otsikko "Yhteensä"
     :avain_yht :muut_kulut_val_aika_yht
     :avain_hoitokausi :muut_kulut_hoitokausi_yht}])
+
 
 (defn- ei-tavoitehintaiset-rivit [data]
   [{:lihavoi? false

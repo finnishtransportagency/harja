@@ -5,6 +5,7 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :refer [taulukko-rivi]]))
 
+
 (defn- tuotekohtainen-rivit [data]
   [{:lihavoi? false
     :otsikko "Hankinnat"
@@ -26,6 +27,7 @@
       :otsikko "Johto-ja hallintokorvauksen muutokset"
       :avain_yht :jjh_muutokset_laskutetaan
       :avain_hoitokausi :jjh_muutokset_laskutettu})])
+
 
 (defn- toteutuneet-rivit
   [data kyseessa-vapaa-aikavali?]
@@ -67,6 +69,7 @@
       :avain_yht nil
       :avain_hoitokausi :jaljella})])
 
+
 (def ^:private tavoitehinta-rivit
   [{:lihavoi? true
     :otsikko "Tavoite / jäljellä"
@@ -82,6 +85,7 @@
     :otsikko ""
     :avain_yht :nil
     :avain_hoitokausi :nil}])
+
 
 (defn- mhu-hju-maaritykset [data]
   [{:lihavoi? false

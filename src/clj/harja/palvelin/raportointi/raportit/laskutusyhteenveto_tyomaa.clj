@@ -138,19 +138,17 @@
                              :kyseessa-kk-vali? kyseessa-kk-vali?
                              :tavoitehintainen? true})
 
-     ;; ----------------- ;;
-     ;;   Laskutusraja    ;;
-     ;; ----------------- ;;
-     (when
-       (and
-         (<= (or (:laskutusraja_yht rivitiedot) 0.0M) 0.0M)
-         (:onko_laskutusraja_kaytossa rivitiedot))
+     (when-not
+       (boolean (:kustannussuunnitelma_vahvistettu rivitiedot))
        [:info-laatikko "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
         (str
           "Laskenta tehdään ei vahvistetuilla tiedoilla, jotka saattavat päivittyä, "
           "kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan.")
         800])
 
+     ;; ----------------- ;;
+     ;;   Laskutusraja    ;;
+     ;; ----------------- ;;
      (if (:onko_laskutusraja_kaytossa rivitiedot)
        (taulukot/lapinakyva-taulukko false
          {:data rivitiedot

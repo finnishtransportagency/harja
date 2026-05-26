@@ -1353,33 +1353,26 @@ BEGIN
         SELECT laskutusraja 
           FROM urakka_tavoite 
          WHERE urakka = ur 
-           AND hoitokausi = (hk_alkuvuosi - hk_alkuvuosi  + 1) 
+           AND hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1)
           INTO laskutusraja_yht;
-    
+
+        laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+        
         IF onko_laskutusraja_kaytossa THEN
             ------------------------------------------------------
             -- "josta laskutettavaa" valittu kk 
             IF kaikki_laskutettu >= laskutusraja_yht THEN
-                -- Ylityksen määrä valittu kk
+                -- Ylityksen määrät 
+                laskutusrajan_ylittynyt_yht := kaikki_laskutettu - laskutusraja_yht;
                 laskutusrajan_ylittynyt_val_aika := kaikki_laskutettu - laskutusraja_yht;
             ELSE
                 -- Hoitokausi yht on tähän kuuhun asti olevat kulut
                 laskutusrajan_ylittynyt_val_aika := greatest(kaikki_laskutetaan - laskutusraja_yht, 0);
             END IF;
-    
-            ------------------------------------------------------
-            -- "josta laskutettavaa" hoitokausi yht 
-            IF kaikki_laskutettu >= laskutusraja_yht THEN
-                laskutusraja_laskutettavaa_yht := laskutusraja_yht;
-                
-                -- Ylityksen määrä yhteensä
-                laskutusrajan_ylittynyt_yht := kaikki_laskutettu - laskutusraja_yht;
-            END IF;
 
             laskutusraja_laskutettavaa_yht := kaikki_laskutettu;
             laskutusraja_laskutettavaa_val_aika := kaikki_laskutetaan;
     
-            laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
             laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutettu); 
             onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
     
@@ -1388,8 +1381,7 @@ BEGIN
             laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muu_kulu_tavoitehintainen_val_aika;
         END IF;
 
-        RAISE NOTICE '
-Yhteenveto:';
+        RAISE NOTICE 'Yhteenveto:';
         RAISE NOTICE 'LASKUTETTU ENNEN AIKAVÄLIÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
         RAISE NOTICE 'Lisatyot laskutettu: %', lisatyot_laskutettu;
         RAISE NOTICE 'Hankinnat laskutettu: %', hankinnat_laskutettu;
@@ -1405,8 +1397,7 @@ Yhteenveto:';
         RAISE NOTICE 'Hoitovuoden päättäminen (hoidonjohtopalkkion muutos) laskutettu: %', hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu;
 
 
-        RAISE NOTICE '
-LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
+        RAISE NOTICE 'LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
         RAISE NOTICE 'Lisatyot laskutetaan: %', lisatyot_laskutetaan;
         RAISE NOTICE 'Hankinnat laskutetaan: %', hankinnat_laskutetaan;
         RAISE NOTICE 'Sakot laskutetaan: %', sakot_laskutetaan;

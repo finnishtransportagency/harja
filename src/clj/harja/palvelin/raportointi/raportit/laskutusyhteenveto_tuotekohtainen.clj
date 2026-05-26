@@ -10,6 +10,7 @@
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :as taulukot]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tuotekohtainen :as apurit]))
@@ -48,6 +49,7 @@
   (let [laskutusraja-yht (or (some :laskutusraja_yht tiedot) 0M)
         tiedot (mapv
                  (fn [rivi kaytetty-yht]
+                   ;; Lasketaan "laskutusraja jäljellä" kumulatiivisesti
                    (assoc rivi
                      :laskutusraja_yht laskutusraja-yht
                      :laskutusrajaan_jaljella
@@ -61,7 +63,9 @@
         onko_laskutusraja_kaytossa (:onko_laskutusraja_kaytossa (last tiedot))
         laskutusraja_yht (:laskutusraja_yht (last tiedot))
         laskutusrajaan_jaljella (:laskutusrajaan_jaljella (last tiedot))
-        onko_laskutusraja_ylittynyt (<= laskutusrajaan_jaljella 0.0M)
+        onko_laskutusraja_ylittynyt (and
+                                      (> laskutusraja_yht 0.0M)
+                                      (<= laskutusrajaan_jaljella 0.0M))
         laskutusraja-yht (or (:laskutusraja_yht (last tiedot)) 0M)
 
         summaa (fn [k]
@@ -187,10 +191,13 @@
                      :elinvoimakeskus-id elinvoimakeskus-id :urakkaid urakka-id
                      :urakkatyyppi (name (:urakkatyyppi parametrit))})
 
-        hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
-        urakka-tavoite (first (filter #(= (:hoitokausi %) hoitokausi) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
+        hoitokausi-nro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
+        urakka-tavoite (first
+                         (filter #(= (:hoitokausi %) hoitokausi-nro) (budjetti-q/hae-budjettitavoite db {:urakka urakka-id})))
         hoitokausi (pvm/paivamaaran-hoitokausi alkupvm)
+        hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
         valikatselmus-siirrot-ed-vuodelta (budjetti-q/hae-valikatselmus-siirrot-ed-vuodelta db {:urakka urakka-id :alkupvm (first hoitokausi)})
+        kustannussuunnitelma-vahvistettu? (suunnitelma-q/kustannussuunnitelma-vahvistettu? db urakka-id hoitokauden-alkuvuosi)
 
         urakoiden-parametrit (mapv #(assoc parametrit
                                       :urakka-id (:id %)
@@ -278,6 +285,17 @@
                                                   :kyseessa-kk-vali? kyseessa-kk-vali?
                                                   :alkupvm alkupvm}))))
 
+     (when-not
+       (boolean kustannussuunnitelma-vahvistettu?)
+       [:info-laatikko "Hoitovuoden alun indeksikorjattua tavoitehintaa ei ole vahvistettu"
+        (str
+          "Laskenta tehdään ei vahvistetuilla tiedoilla, jotka saattavat päivittyä, "
+          "kun hoitovuoden alun indeksikorjattu tavoitehinta vahvistetaan.")
+        800])
+
+     ;; ----------------- ;;
+     ;;   Laskutusraja    ;;
+     ;; ----------------- ;;
      (if (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
        (taulukot/lapinakyva-taulukko true
          {:data rivitiedot

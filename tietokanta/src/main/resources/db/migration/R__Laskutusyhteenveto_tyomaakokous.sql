@@ -117,6 +117,7 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     laskutusrajan_ylittynyt_val_aika                 NUMERIC,
     laskutettavaa_kaikki_yht                         NUMERIC,
     laskutettavaa_kaikki_val_aika                    NUMERIC,
+    kustannussuunnitelma_vahvistettu                 BOOLEAN,
 
     -- Pysyvät muutokset (mhu_muutos-taulusta)
     pysyvat_muutokset_hoitokausi_yht                 NUMERIC,
@@ -329,6 +330,7 @@ DECLARE
     -- yhteenveto 
     laskutettavaa_kaikki_yht              NUMERIC;
     laskutettavaa_kaikki_val_aika         NUMERIC;
+    kustannussuunnitelma_vahvistettu      BOOLEAN;
 
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
@@ -1560,6 +1562,15 @@ BEGIN
 
     laskutettavaa_kaikki_yht := 0.0;
     laskutettavaa_kaikki_val_aika := 0.0;
+    kustannussuunnitelma_vahvistettu := FALSE;
+
+    SELECT COUNT(*) > 0 AS "vahvistettu?"
+      FROM kiinteahintainen_tyo kt
+             JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+     WHERE tpi.urakka = ur
+       AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN hk_alkupvm::DATE AND hk_loppupvm::DATE)
+       AND kt.indeksikorjaus_vahvistettu IS NOT NULL 
+      INTO kustannussuunnitelma_vahvistettu;
 
     -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
     IF urakan_alkuvuosi >= 2025 THEN
@@ -1575,6 +1586,9 @@ BEGIN
        AND hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1) 
       INTO laskutusraja_yht;
 
+    laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+
+    
     IF onko_laskutusraja_kaytossa THEN
         ------------------------------------------------------
         -- "josta laskutettavaa" valittu kk 
@@ -1600,7 +1614,7 @@ BEGIN
             laskutusraja_laskutettavaa_yht := tavhin_hoitokausi_yht;
         END IF;
 
-        laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+        
         laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - tavhin_hoitokausi_yht); 
         onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
 
@@ -1705,7 +1719,7 @@ BEGIN
               onko_laskutusraja_kaytossa, onko_laskutusraja_ylittynyt,
               laskutusraja_laskutettavaa_yht, laskutusraja_laskutettavaa_val_aika,
               laskutusrajan_ylittynyt_yht, laskutusrajan_ylittynyt_val_aika,
-              laskutettavaa_kaikki_yht, laskutettavaa_kaikki_val_aika,
+              laskutettavaa_kaikki_yht, laskutettavaa_kaikki_val_aika, kustannussuunnitelma_vahvistettu,
         -- Pysyvät muutokset
               pysyvat_muutokset_hoitokausi_yht,
               pysyvat_muutokset_val_aika_yht,
