@@ -591,29 +591,31 @@ RETURNING *;
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
-  paivan_hinta      = :paivanhinta,
-  indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
-    THEN TRUE
-                       ELSE FALSE
-                       END)
-WHERE id = :id;
+   SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
+       paivan_hinta      = :paivanhinta,
+       indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+                             THEN TRUE
+                             ELSE FALSE
+                             END),
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+ WHERE id = :id;
 
 -- name: paivita-koko-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-SET toimenpidekoodi = :toimenpidekoodi,
-    lisatieto = :lisatieto,
-    maara = :maara,
-    poistettu = :poistettu,
-    paivan_hinta      = :paivanhinta,
-    indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+   SET toimenpidekoodi = :toimenpidekoodi,
+       lisatieto = :lisatieto,
+       maara = :maara,
+       poistettu = :poistettu,
+       paivan_hinta      = :paivanhinta,
+       indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
                                   THEN TRUE
                               ELSE FALSE
-        END),
-    muokkaaja = :muokkaaja,
-    muokattu = NOW()
-WHERE id = :tehtavaid;
+                            END),
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi,
+       muokkaaja = :muokkaaja,
+       muokattu = NOW()
+ WHERE id = :tehtavaid;
 
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän

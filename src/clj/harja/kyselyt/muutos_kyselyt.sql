@@ -495,7 +495,7 @@ WITH urakan_tehtavat AS (
   GROUP BY tt.toimenpidekoodi
 ),
  materiaalimaara AS NOT MATERIALIZED (
-     -- 1. Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
+     -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
      WITH mat_summat AS (
          SELECT tm.materiaalikoodi,
                 tm.toteuma,
@@ -506,7 +506,7 @@ WITH urakan_tehtavat AS (
            AND tm.poistettu IS FALSE
          GROUP BY tm.materiaalikoodi, tm.toteuma
      )
-     -- 2. Vasta aggregoinnin jälkeen JOIN toteumaan (paljon vähemmän rivejä)
+     -- Vasta aggregoinnin jälkeen JOINataan toteumaan (paljon vähemmän rivejä)
      SELECT teh.id        AS tehtava_id,
             teh.nimi      AS tehtava,
             SUM(ms.maara) AS maara,

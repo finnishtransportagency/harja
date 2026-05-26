@@ -171,8 +171,13 @@
             (do
               (log/debug "Päivitä materiaalitoteuma "
                 tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
-              (q/paivita-toteuma-materiaali!
-                c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id)))
+              (q/paivita-toteuma-materiaali! c
+                {:materiaalikoodi (:materiaalikoodi tm)
+                 :maara (:maara tm)
+                 :kayttaja (:id user)
+                 :toteuma (:toteuma tm)
+                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))
+                 :id tm-id})))
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
             (q/luo-toteuma-materiaali<! c {:toteuma (:toteuma tm),
@@ -340,6 +345,7 @@
                                                    :maara (:maara toteuma)
                                                    :kayttaja (:id user)
                                                    :toteuma toteuma-id
+                                                   :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:pvm toteuma)))
                                                    :id (:tmid toteuma)})
 
 

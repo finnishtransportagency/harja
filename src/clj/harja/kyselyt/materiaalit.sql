@@ -367,8 +367,10 @@ VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE, :urakka, :h
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma_materiaalin
 UPDATE toteuma_materiaali
-SET materiaalikoodi = :materiaalikoodi, maara = :maara, muokattu = NOW(), muokkaaja = :kayttaja
-WHERE toteuma = :toteuma AND id = :id;
+   SET materiaalikoodi = :materiaalikoodi, maara = :maara, muokattu = NOW(), muokkaaja = :kayttaja,
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+ WHERE toteuma = :toteuma
+   AND id = :id;
 
 -- name: poista-toteuma-materiaali!
 UPDATE toteuma_materiaali

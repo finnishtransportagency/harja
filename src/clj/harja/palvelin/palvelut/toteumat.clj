@@ -148,9 +148,16 @@
         (do (log/debug "Poistetaan tehtävä: " (pr-str tehtava))
             (toteumat-q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
         (do (log/debug "Pävitetään tehtävä: " (pr-str tehtava))
-            (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false)
-                                                  (or (:paivanhinta tehtava) nil)
-                                                  (:tehtava-id tehtava)))))
+            (toteumat-q/paivita-toteuman-tehtava! c
+              {:toimenpidekoodi (:toimenpidekoodi tehtava)
+               :maara (:maara tehtava)
+               :poistettu (or (:poistettu tehtava) false)
+               :paivanhinta (or (:paivanhinta tehtava) nil)
+               :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))
+               :id (:tehtava-id tehtava)}
+
+
+                                                  ))))
     (do
       (when (not (:poistettu tehtava))
         (log/debug "Luodaan uusi tehtävä.")
@@ -296,9 +303,13 @@
                                   (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
                                   (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
                                   (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-                                  (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (or (:maara tehtava) 0) (boolean (:poistettu tehtava))
-                                                                        (:paivanhinta tehtava) (:tehtava_id tehtava)))
-
+                                  (toteumat-q/paivita-toteuman-tehtava! c
+                                    {:toimenpidekoodi (:toimenpidekoodi tehtava)
+                                     :maara (or (:maara tehtava) 0)
+                                     :poistettu (boolean (:poistettu tehtava))
+                                     :paivanhinta (:paivanhinta tehtava)
+                                     :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))
+                                     :id (:tehtava_id tehtava)}))
                                 (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                                 (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt))))
 
@@ -590,6 +601,7 @@
                                                                           :toimenpidekoodi (:id tehtava)
                                                                           :maara tehtava-maara
                                                                           :lisatieto lisatieto
+                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                                                                           :muokkaaja (:id user)
                                                                           :poistettu false
                                                                           :paivanhinta nil})
@@ -833,8 +845,13 @@
                                       (log/debug "Päivitä materiaalitoteuma "
                                                  (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm)
                                                  ", " (:poistettu tm) "), toteumassa " (:id toteuma))
-                                      (materiaalit-q/paivita-toteuma-materiaali!
-                                        c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
+                                      (materiaalit-q/paivita-toteuma-materiaali! c
+                                        {:materiaalikoodi (:materiaalikoodi tm)
+                                         :maara (:maara tm)
+                                         :kayttaja (:id user)
+                                         :toteuma (:id toteuma)
+                                         :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut t)))
+                                         :id (:id tm)})))
                                   (do
                                     (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm)
                                       ", " (:maara tm) ") toteumalle " (:id toteuma))
