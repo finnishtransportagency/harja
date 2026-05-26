@@ -281,8 +281,7 @@
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
-                            {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
-                            ])}
+                            {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}])}
 
       [(if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
              (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
