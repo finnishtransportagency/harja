@@ -1,32 +1,37 @@
 {
-  "$schema": "http://json-schema.org/draft-03/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "required": true,
   "properties": {
     "tunniste": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tunniste",
-      "required": true,
       "additionalProperties": false,
+      "description": "Reikäpaikkauksen tunniste urakoitsijajärjestelmässä. Tunniste tallennetaan Harjaan ongelmanselvitystilanteiden varalle.",
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
-    "pvm": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/pvm",
+    "ajankohta": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajankohta",
+      "description": "Reikäpaikkauksen toteutumisajankohta. Esim. 2026-05-30T12:12:00Z Jos täsmällinen kellonaika ei ole tiedossa, välitä tässä mahdollisimman tarkka, muu aikaleima.",
       "type": [
         "string"
       ],
-      "format": "date-time",
-      "required": true,
-      "description": "Reikäpaikkauksen ajankohta. Jos täsmällinen paikkausajankohta ei ole tiedossa, anna muu mahdollisimman tarkka ajankohta."
+      "format": "date-time"
+    },
+    "luokittelut": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/luokittelut",
+      "type": "array",
+      "description": "Välitä tässä tiedot, jos järjestelmäsi luokittelee paikkauksen jotenkin. Voit lähettää useita eri luokituksia. Esimerkkejä: Liittyi toimenpidepyyntöön, Liikennettä vaarantava, Kiireellinen.",
+      "items": {
+        "type": "string"
+      }
     },
     "sijainti": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/sijainti",
       "type": "object",
       "additionalProperties": false,
-      "required": true,
-      "description": "Reikäpaikkauskohteen sijainti. Anna joko tieosoite, pistegeometria tai viivageometria.",
+      "description": "Reikäpaikkauskohteen sijainti. Anna vähintään joko tieosoite, pistegeometria tai viivageometria. Useammankin paikannustiedon voi lähettää.",
       "properties": {
         "tieosoite": {
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
@@ -47,11 +52,27 @@
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "tieosoite"
+          ]
+        },
+        {
+          "required": [
+            "pistegeometria"
+          ]
+        },
+        {
+          "required": [
+            "viivageometria"
+          ]
+        }
+      ]
     },
     "tyomenetelma": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
-      "required": true,
       "enum": [
         "REPA",
         "KTVA",
@@ -67,20 +88,27 @@
     "maara": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/maara",
       "type": "number",
-      "required": false,
-      "description": "Yksikön mukainen määrä. Esim tonnia: 1.23"
+      "description": "Sanomassa raportoituun paikkaukseen käytetty materiaalimäärä. Yksikön mukainen määrä. Yksikkö on pakollinen tieto, jos materiaalimäärä on ilmoitettu. Esim. 0.23 tonnia."
     },
     "yksikko": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/yksikko",
       "type": "string",
-      "required": false,
-      "description": "Yksikön nimi. Esim tonnia: t"
+      "description": "Yksikkö jossa materiaalimäärä on raportoitu. Esim. t. Yksikkö on pakollinen, jos materiaalimäärä on annettu."
     },
     "kustannus": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus",
       "type": "number",
-      "required": false,
-      "description": "Kustannus euroina. Esim 45534.23"
+      "description": "Sanomassa raportoidun paikkauksen kustannus euroina. Esim. 45534.24."
     }
+  },
+  "required": [
+    "tunniste",
+    "ajankohta",
+    "sijainti",
+    "tyomenetelma"
+  ],
+  "dependentRequired": {
+    "maara": ["yksikko"]
   }
 }
+
