@@ -232,6 +232,7 @@
                         {:kyseessa-kk-vali? kyseessa-kk-vali?
                          :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
                         [{:lihavoi? true
+                          :yhteensa? true
                           :otsikko "Yhteensä"
                           :avain_yht :kaikki_laskutetaan
                           :avain_hoitokausi :kaikki_laskutettu}])]

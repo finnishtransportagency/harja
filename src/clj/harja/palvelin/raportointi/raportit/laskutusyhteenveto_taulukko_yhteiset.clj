@@ -25,10 +25,11 @@
    :hk-alku-vahvistamaton? false})
 
 
-(defn- raha-sarake [data avain {:keys [lihavoi? vari tyyli tyhja-arvo]}]
+(defn- raha-sarake [data avain {:keys [lihavoi? vari tyyli tyhja-arvo yhteensa?]}]
   [:varillinen-teksti
    (cond-> {:fmt :raha
             :lihavoi? lihavoi?
+            :korosta-hennosti? yhteensa?
             :arvo (or (and avain (avain data)) tyhja-arvo)}
      vari (assoc :itsepaisesti-maaritelty-oma-vari vari)
      tyyli (assoc :kustomi-tyyli tyyli))])
@@ -36,13 +37,15 @@
 
 (defn taulukko-rivi
   [data valiotsikko opts]
-  (let [{:keys [kyseessa-kk-vali? avain_hoitokausi avain_yht lihavoi? tyhja-alku?]
+  (let [{:keys [kyseessa-kk-vali? avain_hoitokausi avain_yht lihavoi? tyhja-alku? yhteensa?]
          :as opts} (merge taulukko-rivi-oletukset opts)]
     (rivi
       ;; Yhteenvetoon tulee tyhjä sarake
       (when tyhja-alku? [:varillinen-teksti {:arvo ""}])
       ;; Otsikko
-      [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
+      [:varillinen-teksti {:arvo (str valiotsikko)
+                           :lihavoi? lihavoi?
+                           :korosta-hennosti? yhteensa?}]
       ;; Eurot 
       (raha-sarake data avain_hoitokausi opts)
       ;; Valitun kuukauden eurot 

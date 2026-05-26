@@ -39,6 +39,7 @@
     :avain_hoitokausi :korvausinv_hoitokausi_yht}
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :hankinnat_val_aika_yht
     :avain_hoitokausi :hankinnat_hoitokausi_yht}])
@@ -61,6 +62,7 @@
     :avain_hoitokausi :hjpalkkio_hoitokausi_yht}
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :hoidonjohto_val_aika_yht
     :avain_hoitokausi :hoidonjohto_hoitokausi_yht}])
@@ -78,6 +80,7 @@
     :avain_hoitokausi :jjh_muutos_hoitokausi_yht}
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :muutostyo_val_aika_yht
     :avain_hoitokausi :muutostyo_hoitokausi_yht}])
@@ -120,6 +123,7 @@
     :avain_hoitokausi :lisatyo_hoidonjohto_hoitokausi_yht}
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :lisatyot_val_aika_yht
     :avain_hoitokausi :lisatyot_hoitokausi_yht}])
@@ -132,6 +136,7 @@
     :avain_hoitokausi :muut_kulut_hoitokausi}
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :muut_kulut_val_aika_yht
     :avain_hoitokausi :muut_kulut_hoitokausi_yht}])
@@ -179,16 +184,18 @@
       :avain_hoitokausi :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht})
 
    {:lihavoi? true
+    :yhteensa? true
     :otsikko "Yhteensä"
     :avain_yht :muut_kulut_ei_tavoite_val_aika_yht
     :avain_hoitokausi :muut_kulut_ei_tavoite_hoitokausi_yht}])
 
 
 (defn- tee-taulukko-rivi
-  [data kyseessa-kk-vali? {:keys [otsikko avain_hoitokausi avain_yht lihavoi?]}]
+  [data kyseessa-kk-vali? {:keys [otsikko avain_hoitokausi avain_yht lihavoi? yhteensa?]}]
   (taulukko-rivi data otsikko
     {:lihavoi? (boolean lihavoi?)
      :avain_yht avain_yht
+     :yhteensa? yhteensa?
      :avain_hoitokausi avain_hoitokausi
      :kyseessa-kk-vali? kyseessa-kk-vali?}))
 
