@@ -36,6 +36,7 @@
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        urakan-tyyppi (:tyyppi @nav/valittu-urakka)
         laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)
 
         ;; Lista ylläpitokohteista ylläpitourakoiden kohteenvalintaa varten
@@ -164,17 +165,19 @@
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}
-        (let [valinnat (when (and
-                               (<= urakan-alkuvuosi 2020)
-                               (= :asiakastyytyvaisyysbonus (:laji lomakkeen-tiedot)))
-                         [(:indeksi @nav/valittu-urakka) nil])]
-          {:otsikko "Indeksi"
-           :nimi :indeksi
-           :tyyppi :valinta
-           :disabled? (nil? valinnat)
-           ::lomake/col-luokka "col-xs-4"
-           :valinnat (or valinnat [nil])
-           :valinta-nayta #(or % "Ei indeksiä")}))
+        ;; Indeksi näytetään vain 19/20 alkaneille urakoille
+        (when (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi))
+          (let [valinnat (when (and
+                                 (<= urakan-alkuvuosi 2020)
+                                 (= :asiakastyytyvaisyysbonus (:laji lomakkeen-tiedot)))
+                           [(:indeksi @nav/valittu-urakka) nil])]
+            {:otsikko "Indeksi"
+             :nimi :indeksi
+             :tyyppi :valinta
+             :disabled? (nil? valinnat)
+             ::lomake/col-luokka "col-xs-4"
+             :valinnat (or valinnat [nil])
+             :valinta-nayta #(or % "Ei indeksiä")})))
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Käsitelty"
@@ -186,15 +189,35 @@
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
-                  (cond-> rivi
-                    ;; Jos laskutuskuukautta  ei ole vielä valittu ja bonusta ei ole tallennettu (id nil), niin asetetaan
-                    ;; esivalintana perintapvm valittu kasittelyn pvm
-                    (and (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
-                    (assoc :perintapvm arvo)
+                  (let [mhu25? (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025))
+                        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+                        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+                        ;; Jos käsittelyaika on loka-joulukuussa -> 15.9.(vuosi+1), muuten 15.9.(sama vuosi)
+                        mhu25-perintapvm (when (and mhu25? arvo)
+                                          (let [v (pvm/vuosi arvo)
+                                                kk (pvm/kuukausi arvo)
+                                                kohde-vuosi (if (>= kk 10) (inc v) v)]
+                                            (pvm/->pvm (str "15.9." kohde-vuosi))))
+                        mhu25-laskutuskuukausi-komp (when mhu25-perintapvm
+                                                     (some #(when (and
+                                                                    (= (pvm/vuosi mhu25-perintapvm) (:vuosi %))
+                                                                    (= 9 (:kuukausi %)))
+                                                              %)
+                                                       laskutuskuukaudet))]
+                    (cond-> rivi
+                      ;; MHU25: asetetaan laskutuskuukausi automaattisesti hoitokauden syyskuulle
+                      mhu25?
+                      (-> (assoc :perintapvm mhu25-perintapvm)
+                          (assoc :laskutuskuukausi-komp-tiedot mhu25-laskutuskuukausi-komp))
 
-                    ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
-                    true
-                    (assoc :kasittelyaika arvo)))}
+                      ;; Muille: Jos laskutuskuukautta ei ole vielä valittu ja bonusta ei ole tallennettu (id nil),
+                      ;; niin asetetaan esivalintana perintapvm valittu kasittelyn pvm
+                      (and (not mhu25?) (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
+                      (assoc :perintapvm arvo)
+
+                      ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
+                      true
+                      (assoc :kasittelyaika arvo))))}
         (if (and voi-muokata? (not lukutila?))
           {:otsikko "Laskutuskuukausi"
            ;; HOX: Sanktion tapauksessa laskutuskuukausi tallennetaan sanktion 'perintapvm'-sarakkeeseen.
@@ -207,13 +230,16 @@
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          (let [perintapvm (get-in data [:perintapvm])]
+                          (let [perintapvm (get-in data [:perintapvm])
+                                mhu25? (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025))]
                             [:<>
                              [yleiset/livi-pudotusvalikko
                               {:data-cy "koontilaskun-kk-dropdown"
                                :vayla-tyyli? true
                                :skrollattava? true
                                :pakollinen? true
+                               ;; MHU25-urakoille laskutuskuukausi määräytyy käsittelyajan perusteella, ei käyttäjän valinnasta
+                               :disabled mhu25?
                                :valinta (or
                                           ;; Näytetään valintana joko valittua laskutuskuukautta, tai
                                           (-> data :laskutuskuukausi-komp-tiedot)
@@ -252,8 +278,10 @@
       {:otsikko "Käsittelytapa"
        :nimi :kasittelytapa :tyyppi :valinta
        :pakollinen? true
+       :muokattava? (if (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025)) (constantly false) (constantly (and voi-muokata? (not lukutila?))))
        ::lomake/col-luokka "col-xs-12"
-       :valinnat sanktio-domain/kasittelytavat
+       ;; MHU25 urakoille näytetään vain Välikatselmus käsittelytapana
+       :valinnat (if (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025)) [:valikatselmus] sanktio-domain/kasittelytavat)
        :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
