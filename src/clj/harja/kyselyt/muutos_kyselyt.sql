@@ -506,7 +506,6 @@ WITH urakan_tehtavat AS (
            AND tm.poistettu IS FALSE
          GROUP BY tm.materiaalikoodi, tm.toteuma
      )
-     -- 2. Vasta aggregoinnin jälkeen JOIN toteumaan (paljon vähemmän rivejä)
      SELECT teh.id        AS tehtava_id,
             teh.nimi      AS tehtava,
             SUM(ms.maara) AS maara,
