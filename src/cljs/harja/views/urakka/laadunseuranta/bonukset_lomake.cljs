@@ -355,15 +355,20 @@
             hoitovuosi (bonus-konfiguraation-hoitovuosi urakan-alkupvm valittu-hoitokausi kasittelyaika)
             haku-avain [urakka-id hoitovuosi toimenpideinstanssi-id]
             yllapitourakka? @tiedot-urakka/yllapitourakka?
-            bonus-konfiguraation-tila (bonus-konfiguraation-tila @bonus-konfiguraatio @bonus-konfiguraation-haku-kaynnissa?)]
-        (when (and urakka-id hoitovuosi)
-          (when (not= haku-avain @bonus-konfiguraation-haku-avain)
-            (reset! bonus-konfiguraation-haku-avain haku-avain)
-            (reset! bonus-konfiguraation-haku-kaynnissa? true)
-            (go
-              (let [vastaus (<! (tiedot/hae-urakan-bonus-konfiguraatio urakka-id hoitovuosi toimenpideinstanssi-id))]
-                (reset! bonus-konfiguraatio vastaus)
-                (reset! bonus-konfiguraation-haku-kaynnissa? false)))))
+            uusi-haku-kaynnistyy? (and urakka-id
+                                   hoitovuosi
+                                   (not= haku-avain @bonus-konfiguraation-haku-avain))
+            bonus-konfiguraation-tila (bonus-konfiguraation-tila
+                                        @bonus-konfiguraatio
+                                        (or @bonus-konfiguraation-haku-kaynnissa?
+                                          uusi-haku-kaynnistyy?))]
+        (when uusi-haku-kaynnistyy?
+          (reset! bonus-konfiguraation-haku-avain haku-avain)
+          (reset! bonus-konfiguraation-haku-kaynnissa? true)
+          (go
+            (let [vastaus (<! (tiedot/hae-urakan-bonus-konfiguraatio urakka-id hoitovuosi toimenpideinstanssi-id))]
+              (reset! bonus-konfiguraatio vastaus)
+              (reset! bonus-konfiguraation-haku-kaynnissa? false))))
         (case bonus-konfiguraation-tila
           :haku-kaynnissa
           (if yllapitourakka?
