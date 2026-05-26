@@ -170,6 +170,7 @@
            (if (not lukutila?)
              {:otsikko "Tyyppi" :tyyppi :valinta
               :pakollinen? true
+              :uusi-rivi? true
               ::lomake/col-luokka "col-xs-12"
               :nimi :tyyppi
               :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
@@ -206,6 +207,7 @@
          (when yllapitokohdeurakka?
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
             :pakollinen? false :muokattava? (constantly voi-muokata?)
+            :uusi-rivi? true
             ::lomake/col-luokka "col-xs-12"
             :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
             :valinta-nayta (fn [arvo voi-muokata?]
@@ -225,6 +227,7 @@
 
          (when (and (not yllapitokohdeurakka?) (not vesivaylaurakka?))
            {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
+            :uusi-rivi? true
             :hae (comp :kohde :laatupoikkeama)
             ::lomake/col-luokka "col-xs-12"
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -235,6 +238,7 @@
 
          (when yllapitourakka?
            {:otsikko "Puute tai laiminlyönti"
+            :uusi-rivi? true
             :nimi :vakiofraasi
             :tyyppi :valinta
             :pitka-teksti? true
@@ -244,6 +248,7 @@
             :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})
 
          {:otsikko "Perustelu"
+          :uusi-rivi? true
           :nimi :perustelu
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
@@ -456,9 +461,10 @@
          (when lukutila?
            {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
             :tyyppi :komponentti
+            :uusi-rivi? true
             ::lomake/col-luokka "col-xs-12"
             :komponentti (fn [_]
-                           [:div
+                           [:div.form-control-static.lomake-arvo
                             (if (and (get-in @muokattu [:laatupoikkeama :liitteet])
                                   (not (empty? (get-in @muokattu [:laatupoikkeama :liitteet]))))
                               (doall
@@ -470,6 +476,7 @@
 
          (when lukutila?
            {:otsikko "Kirjaaja" :nimi :tekijanimi
+            :uusi-rivi? true
             :hae (comp :tekijanimi :laatupoikkeama)
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
             :tyyppi :string
