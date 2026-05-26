@@ -275,6 +275,9 @@
 
                                     :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
                                   user (:urakka-id toteuma))
+  ;; Toteuman alkanut päivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not (:alkanut toteuma)
+    (throw (IllegalArgumentException. "Toteuman alkanut arvo on pakollinen tieto.")))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction
     [db db]
@@ -294,6 +297,9 @@
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat toimenpide-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user urakka-id)
+  ;; Tehtävän alkupvm päivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not alkupvm
+    (throw (IllegalArgumentException. "Tehtävän alkupäivämäärä on pakollinen tieto.")))
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
 
   (let [tehtavatidt (into #{} (map #(:tehtava_id %) tehtavat))]
@@ -518,6 +524,9 @@
 
 (defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  ;; Toteuman loppupäivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not loppupvm
+    (throw (IllegalArgumentException. "Toteuman loppupäivämäärä arvo on pakollinen tieto.")))
   (let [loppupvm (konv/sql-date loppupvm)
         sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
         ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
