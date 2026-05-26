@@ -17,8 +17,9 @@
       "type": [
         "string"
       ],
-      "format": "date",
-      "required": true
+      "format": "date-time",
+      "required": true,
+      "description": "Reikäpaikkauksen ajankohta. Jos täsmällinen paikkausajankohta ei ole tiedossa, anna muu mahdollisimman tarkka ajankohta."
     },
     "sijainti": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/sijainti",
@@ -66,19 +67,19 @@
     "maara": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/maara",
       "type": "number",
-      "required": true,
+      "required": false,
       "description": "Yksikön mukainen määrä. Esim tonnia: 1.23"
     },
     "yksikko": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/yksikko",
       "type": "string",
-      "required": true,
+      "required": false,
       "description": "Yksikön nimi. Esim tonnia: t"
     },
     "kustannus": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus",
       "type": "number",
-      "required": true,
+      "required": false,
       "description": "Kustannus euroina. Esim 45534.23"
     }
   }
