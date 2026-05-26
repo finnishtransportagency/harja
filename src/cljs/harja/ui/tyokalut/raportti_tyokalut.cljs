@@ -13,10 +13,11 @@
                                         laskutettu-str laskutetaan-str]]
   [raportointi/muodosta-html
    [:display-flex
-    [:sininen-laatikko {:otsikko (if laskutusraja-kaytossa?
-                                   "Toteutuneet kustannukset yhteensä"
+    [:sininen-laatikko {:otsikko (if (and
+                                       (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
+                                   "Laskutettavaa yhteensä"
                                    ;; Vanhat urakat joilla ei ole laskutusrajaa
-                                   "Laskutettavaa yhteensä")
+                                   "Toteutuneet kustannukset yhteensä")
                         :layout :sarakkeet}
      [{:fmt :raha
        :arvo laskutettu
@@ -25,19 +26,23 @@
       (when kyseessa-kk-vali?
         {:fmt :raha
          :arvo laskutetaan
-         :avain laskutetaan-str})]]
+         :avain laskutetaan-str
+         :korosta? (and
+                     (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)})]]
 
     (when
       (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
       [:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"
                           :layout :sarakkeet}
        [{:fmt :raha
+         :korosta? (not kyseessa-kk-vali?)
          :avain "Hoitovuoden alusta"
          :arvo laskutettavaa_kaikki_yht}
 
         (when kyseessa-kk-vali?
           {:fmt :raha
-           :avain "Helmikuu"
+           :korosta? true
+           :avain laskutetaan-str
            :arvo laskutettavaa_kaikki_val_aika})]])]])
 
 

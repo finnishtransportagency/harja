@@ -375,7 +375,8 @@
     {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
     data]])
 
-(defmethod muodosta-html :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?] :or {nayta-hr? true}} data]]
+(defmethod muodosta-html :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?]
+                                                :or {nayta-hr? true}} data]]
   (case layout
     ;; Data sarakkeina otsikoineen, esimerkiksi laskutusyhteenvedossa 
     :sarakkeet
@@ -389,7 +390,7 @@
              ^{:key (str "sininen-laatikko-sarake-" i)}
              [:div.sininen-laatikko-sarake
               [:div.sininen-laatikko-label.caption (:avain rivi)]
-              [:h1
+              [:h1 {:class (when (:korosta? rivi) "vahvistamaton")}
                (if (= :raha (:fmt rivi))
                  (fmt/euro-opt (:arvo rivi))
                  (:arvo rivi))]])

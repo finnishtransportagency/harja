@@ -167,8 +167,10 @@
         ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
         kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-        ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
-        laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
+        aikavali-str (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+        laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?)
+                            aikavali-str
+                            laskutettu-teksti)
         ;; Kun koko hoitokausi on valittu ja loppupvm on myöhemmin kuin kuluva päivä, käytetään kuluvaa päivää
         ;; Muuten laskutusyhteenveto alkaa "ennustamaan" kustannuksia tulevaisuudesta.
         parametrit (assoc parametrit :haun-loppupvm (if (and
@@ -300,7 +302,7 @@
        (taulukot/lapinakyva-taulukko true
          {:data rivitiedot
           :otsikko "Laskutusraja"
-          :aikavali "Hoitovuoden alusta"
+          :aikavali aikavali-str
           :valittu-aikavali? valittu-aikavali?
           :laskutettu-teksti laskutettu-teksti
           :laskutetaan-teksti laskutetaan-teksti

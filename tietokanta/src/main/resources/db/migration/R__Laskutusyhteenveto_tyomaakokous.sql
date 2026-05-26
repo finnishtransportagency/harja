@@ -1542,14 +1542,29 @@ BEGIN
             paatos_kattoh_ylitys_hoitokausi_yht + paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_hoitokausi;
-            
+    
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_val_aika;
-    
+
+    -- MHU+ urakoille ei tule sanktioita & bonuksia tähän
+    -- FIXME epäselvä speksi. Pyydetty lisätietoja.
+--     IF NOT onko_laskutusraja_kaytossa THEN
+--         muut_kustannukset_hoitokausi_yht :=
+--             muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
+-- 
+--         muut_kustannukset_val_aika_yht :=
+--             muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+-- 
+--         muut_kulut_ei_tavoite_hoitokausi_yht :=
+--             muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht +  sanktiot_hoitokausi_yht;
+-- 
+--         muut_kulut_ei_tavoite_val_aika_yht :=
+--             muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+--     END IF;
     
     ---------------------------------
     --------- Laskutusraja ----------
@@ -1590,6 +1605,9 @@ BEGIN
 
     
     IF onko_laskutusraja_kaytossa THEN
+        
+        
+        
         ------------------------------------------------------
         -- "josta laskutettavaa" valittu kk 
         IF tavhin_val_aika_yht >= laskutusraja_yht THEN

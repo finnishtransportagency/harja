@@ -258,7 +258,7 @@
                 :raportin-tunniste :tyomaa-yhteenveto}
      (rivi
        {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}
-       {:otsikko (if kyseessa-vapaa-aikavali? vapaa-aikavali-teksti laskutettu-teksti)
+       {:otsikko (if valittu-aikavali? vapaa-aikavali-teksti laskutettu-teksti)
         :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
          {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))

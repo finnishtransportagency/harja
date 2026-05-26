@@ -183,17 +183,16 @@
        [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
 
-     ;; ----------------------------------------------------- ;;
-     ;;    Lisätyöt, bonukset, sanktiot, muut                 ;;
-     ;; ----------------------------------------------------- ;;
-     (let [otsikot ["Lisätyöt" ""]]
-       (concat (for [x otsikot]
-                 (taulukko-tyomaakokous {:data rivitiedot
-                                         :otsikko x
-                                         :laskutettu-teksti laskutettu-teksti
-                                         :laskutetaan-teksti laskutetaan-teksti
-                                         :kyseessa-kk-vali? kyseessa-kk-vali?
-                                         :tavoitehintainen? false}))))
+     ;; ------------------------ ;;
+     ;;    Lisätyöt & muut       ;;
+     ;; ------------------------ ;;
+     (taulukko-tyomaakokous {:data rivitiedot
+                             ;; Tämä on design mukainen otsikko
+                             :otsikko "Kustannus"
+                             :laskutettu-teksti laskutettu-teksti
+                             :laskutetaan-teksti laskutetaan-teksti
+                             :kyseessa-kk-vali? kyseessa-kk-vali?
+                             :tavoitehintainen? false})
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/lapinakyva-taulukko false
@@ -204,10 +203,11 @@
         :laskutetaan-teksti laskutetaan-teksti
         :kyseessa-kk-vali? kyseessa-kk-vali?})
 
-     ;; --------------------------------- ;;
-     ;;    Footer (Laskutus yhteensä)     ;;
-     ;; --------------------------------- ;;
-     [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali?
+     ;; ------------------------ ;;
+     ;;    Laskutus yhteensä     ;;
+     ;; ------------------------ ;;
+     [:tyomaa-laskutusyhteenveto-yhteensa
+      kyseessa-kk-vali?
       (:onko_laskutusraja_kaytossa rivitiedot)
       (:onko_laskutusraja_ylittynyt rivitiedot)
       (:yhteensa_kaikki_hoitokausi_yht rivitiedot)

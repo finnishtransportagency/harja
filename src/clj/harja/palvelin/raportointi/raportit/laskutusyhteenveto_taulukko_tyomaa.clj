@@ -86,7 +86,9 @@
     :avain_hoitokausi :muutostyo_hoitokausi_yht}])
 
 
-(def ^:private lisatyot-rivit
+(def
+  ^{:doc "Poistunut speksistä, näytetään nykyään könttänä ei-tavoitehintaiset-rivit alla."}
+  ^:private _lisatyot-rivit
   [{:lihavoi? false
     :otsikko "Lisätyöt (talvihoito)"
     :avain_yht :lisatyo_talvihoito_val_aika_yht
@@ -144,14 +146,24 @@
 
 (defn- ei-tavoitehintaiset-rivit [data]
   [{:lihavoi? false
+    :otsikko "Lisätyöt"
+    :avain_yht :lisatyot_val_aika_yht
+    :avain_hoitokausi :lisatyot_hoitokausi_yht}
+
+   ;; FIXME epäselvä speksi. Pyydetty lisätietoja.
+   ;(when-not (:onko_laskutusraja_kaytossa data)
+   {:lihavoi? false
     :otsikko "Bonukset"
     :avain_yht :bonukset_val_aika_yht
     :avain_hoitokausi :bonukset_hoitokausi_yht}
+   ; )
 
+   ;(when-not (:onko_laskutusraja_kaytossa data)
    {:lihavoi? false
     :otsikko "Sanktiot"
     :avain_yht :sanktiot_val_aika_yht
     :avain_hoitokausi :sanktiot_hoitokausi_yht}
+   ; )
 
    {:lihavoi? false
     :otsikko "Muut tavoitehinnan ulkopuoliset kulut"
@@ -276,20 +288,15 @@
                     rahavaraukset-hoitokausi
                     rahavaraukset-val-aika))
 
-                (= "Lisätyöt" otsikko)
-                (tee-taulukko-rivit data kyseessa-kk-vali? lisatyot-rivit)
+                ;; Lisätyöt, muut
+                (= "Kustannus" otsikko)
+                (tee-taulukko-rivit data kyseessa-kk-vali? (ei-tavoitehintaiset-rivit data))
 
                 ;; Tavoitehintaan vaikuttavat
                 (and
                   tavoitehintainen?
                   (= "Muut tavoitehintaan vaikuttavat kulut" otsikko))
-                (tee-taulukko-rivit data kyseessa-kk-vali? tavoitehintaan-vaikuttavat-rivit)
-
-                ;; Ei- tavoitehintaiset
-                (and
-                  (not tavoitehintainen?)
-                  (= "" otsikko))
-                (tee-taulukko-rivit data kyseessa-kk-vali? (ei-tavoitehintaiset-rivit data)))]
+                (tee-taulukko-rivit data kyseessa-kk-vali? tavoitehintaan-vaikuttavat-rivit))]
 
     [:taulukko {:sheet-nimi sheet-nimi
                 :viimeinen-rivi-yhteenveto? false
