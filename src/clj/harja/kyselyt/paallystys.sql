@@ -1010,6 +1010,12 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paallystysilmoitukset-analytiikalle
 SELECT paallystyskohde,
        pi.id,
+       CASE
+           WHEN pi.tila = 'aloitettu' THEN 'Kesken'
+           WHEN (pi.tila = 'valmis' AND pi.paatos_tekninen_osa IS NULL) THEN 'Valmis'
+           WHEN (pi.tila = 'lukittu' AND pi.paatos_tekninen_osa = 'hyvaksytty') THEN 'Hyväksytty'
+           WHEN (pi.tila = 'lukittu' AND pi.paatos_tekninen_osa = 'hylatty') THEN 'Hylätty'
+       END AS "paallystysilmoituksen-tila",
        ypk.lahetetty,
        ypk.lahetys_onnistunut AS "lahetys-onnistunut",
        takuupvm               AS takuupaivamaara,
