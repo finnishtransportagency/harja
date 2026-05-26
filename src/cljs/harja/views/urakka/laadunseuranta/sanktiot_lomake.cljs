@@ -265,7 +265,8 @@
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
               :pakollinen? true
               :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
-                           (<= (count mahdolliset-kulun-kohdistukset) 1))
+                           (and (> urakan-alkuvuosi 2024)
+                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
               ::lomake/col-luokka "col-xs-12"
               :nimi :toimenpideinstanssi
               :tyyppi :valinta

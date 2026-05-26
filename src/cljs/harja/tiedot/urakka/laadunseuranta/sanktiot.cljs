@@ -223,15 +223,11 @@
 
 (defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
   (cond
-    ;; Suorasanktio MHU24 tai vanhempi: suodatetaan tyypin mukaan
-    (and suorasanktio? (<= urakan-alkuvuosi 2024))
-    (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))
-
-    ;; Suorasanktio MHU25+: näytetään vain Hoidonjohtopalkkio
-    suorasanktio?
+    ;; MHU25+: näytetään vain Hoidonjohtopalkkio sekä suorasanktiolle että laatupoikkeaman sanktiolle
+    (> urakan-alkuvuosi 2024)
     (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
 
-    ;; Laatupoikkeaman sanktio: suodatetaan tyypin mukaan
+    ;; MHU24 tai vanhempi: suodatetaan tyypin mukaan
     :else
     (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))
 

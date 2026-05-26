@@ -22,6 +22,7 @@ VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
 -- Päivittää olemassaolevan sanktion
 UPDATE sanktio
 SET perintapvm          = :perintapvm,
+    maarattypvm         = :maarattypvm,
     sakkoryhma          = :ryhma :: sanktiolaji,
     tyyppi              = :tyyppi,
     toimenpideinstanssi = COALESCE(

@@ -148,11 +148,12 @@
                [napit/yleinen-toissijainen "Lisää uusi"
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
-                  (let [uusi (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
-                        siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
-                        mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset true? (pvm/vuosi (:alkupvm @nav/valittu-urakka)) sanktiot/valittu-sanktio)
-                        tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
-                              (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
+                   (let [uusi (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
+                         siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
+                         uusi-sanktio-atom (atom uusi)
+                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)
+                         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
+                               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
                     (reset! sanktiot/valittu-sanktio
                       (-> uusi
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
