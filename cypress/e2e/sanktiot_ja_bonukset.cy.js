@@ -7,6 +7,7 @@ let testiSanktioKuvaus3 = "CY-sanktio-testi3";
 let testiSanktioPerustelu = "CY-perustelu";
 let testiSanktioPerustelu2 = "CY-perustelu2";
 let testiSanktioPerustelu3 = "CY-perustelu3";
+let testiBonusPerustelu = "CY-bonus-perustelu";
 let testiurakka = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
 let testiurakka2 = "POP MHU Suomussalmi 2024-2029";
 let testiurakka3 = "Oulun MHU 2019-2024";
@@ -20,6 +21,14 @@ function siivoaKanta(kohde) {
             "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE lp.kohde = '" + kohde + "');\"");
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM laatupoikkeama WHERE kohde = '" + kohde + "';\"");
+    });
+}
+
+// Helper: siivoa testidatan bonukset kannasta (erilliskustannus-taulusta)
+function siivoaBonusKanta(lisatieto) {
+    cy.terminaaliKomento().then((terminaaliKomento) => {
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM erilliskustannus WHERE lisatieto = '" + lisatieto + "';\"");
     });
 }
 
@@ -290,14 +299,72 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
     })
 })
 
-// TODO: Bonusten testit ja olisi hyvä lisätä myöhemmin myös Arvonvähennykselle testit
-describe.skip('Bonukset toimii', function () {
-    it('Lisää uusi bonus', function () {
-        // Implementoidaan myöhemmin
+// TODO: Olisi hyvä lisätä myöhemmin myös Arvonvähennykselle testit
+describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
+    before(function () {
+        siivoaBonusKanta(testiBonusPerustelu);
+    });
+
+    it('Lisää uusi bonus MHU25', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka, evk)
+
+        cy.intercept('POST', '_/tallenna-erilliskustannus').as('tallennaBonus')
+
+        // Klikkaa "Lisää uusi" -nappia
+        cy.contains('Lisää uusi').click()
+
+        // Sivupaneeli aukeaa
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+
+        // Valitse "Bonus" radio
+        cy.contains('label', 'Bonus').click()
+
+        // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
+        cy.contains('label', 'Indeksi').should('not.exist')
+
+        // Perustelu
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu)
+
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko').should('exist')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko').should('have.class', 'disabled')
+        // Varmistetaan, että jokin toimenpideinstanssi on valittuna (ei "- Valitse -" tms. tyhjää)
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko .valittu').invoke('text').should('not.be.empty')
+
+        // Summa
+        cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('300')
+
+        // Käsitelty pvm
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+
+        // Siirretään fokus pois päivämääräkentästä
+        cy.get('label').contains('Perustelu').click()
+
+        // Varmistetaan, että "Laskutuskuukausi" -kenttä on read only (disabled) MHU25 urakalla
+        cy.get('[data-cy=koontilaskun-kk-dropdown]').should('have.class', 'disabled')
+
+        // Varmistetaan, että "Käsittelytapa" -kenttä on read only (disabled) MHU25 urakalla
+        cy.get('label').contains('Käsittelytapa').parent().parent().parent().find('.livi-pudotusvalikko').should('have.class', 'disabled')
+
+        // Tallenna
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.wait('@tallennaBonus', {timeout: clickTimeout})
+
+        // Varmistetaan onnistuminen
+        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
     })
 
-    it('Avaa bonus listasta', function () {
-        // Implementoidaan myöhemmin
+    it('Avaa bonus listasta MHU25', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka, evk)
+
+        // Klikataan luotua bonusta gridissä
+        cy.contains('td', testiBonusPerustelu).click()
+
+        // Sivupaneeli aukeaa ja näyttää bonuksen tiedot
+        cy.contains(testiBonusPerustelu).should('be.visible')
+        cy.contains('300').should('exist')
     })
 })
 
@@ -306,12 +373,14 @@ describe('Siivotaan lopuksi', function () {
         siivoaKanta(testiSanktioKuvaus);
         siivoaKanta(testiSanktioKuvaus2);
         siivoaKanta(testiSanktioKuvaus3);
+        siivoaBonusKanta(testiBonusPerustelu);
     });
 
     it('Tarkista, että kanta on siivottu', function () {
         cy.viewport(1100, 1200)
         avaaSanktiotJaBonukset(testiurakka, evk)
         cy.contains(testiSanktioKuvaus).should('not.exist')
+        cy.contains(testiBonusPerustelu).should('not.exist')
 
         avaaSanktiotJaBonukset(testiurakka2, evk2)
         cy.contains(testiSanktioKuvaus2).should('not.exist')
