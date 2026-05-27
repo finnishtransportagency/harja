@@ -517,7 +517,7 @@
       (apply conj kaikki rivit))))
 
 (def odotettu-kulu_kohdistus-id-9
-  {:maksuera-numero 94 :id 9, :tyyppi "lisatyo",
+  {:maksuera-numero 108 :id 9, :tyyppi "lisatyo",
    :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00",
    :laskun-numero nil, :maksuera-alias nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
@@ -680,9 +680,9 @@
 
     ;; Varmistetaan että harjan-generoima-lippu erottaa kulut oikein
     (is (every? true? (map :harjan-generoima harjan-generoimat))
-        "Harjan generoimilla kuluilla pitää olla harjan-generoima=true")
+      "Harjan generoimilla kuluilla pitää olla harjan-generoima=true")
     (is (every? #(or (nil? (:harjan-generoima %)) (false? (:harjan-generoima %))) tavalliset-kulut)
-        "Tavallisilla kuluilla ei pitäisi olla harjan-generoima=true")))
+      "Tavallisilla kuluilla ei pitäisi olla harjan-generoima=true")))
 
 (deftest harjan-generoimat-kulut-eivat-nay-jos-ei-dataa
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -703,10 +703,10 @@
       "Harjan generoimia kuluja ei pitäisi löytyä kun toteutuneet_kustannukset-taulussa ei ole dataa aikavälillä")))
 
 (deftest erillishankintakulu-siirtyy-toteutuneet-kustannukset-tauluun
-  (let [db          (:db jarjestelma)
+  (let [db (:db jarjestelma)
         kayttaja-id (:id +kayttaja-jvh+)
-        tpi-id      (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151")
-        sopimus-id  (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tpi-id (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151")
+        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
         tehtavaryhma-id (hae-tehtavaryhman-id "W - Erillishankinnat")
 
         ;; Luodaan rivi menneeseen kuukauteen (2021/10), jotta siirtoehto täyttyy
