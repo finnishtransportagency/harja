@@ -128,8 +128,9 @@
     (komp/klikattu-ulkopuolelle #(do (reset! hakutulokset nil)
                                      (reset! hakutermi nil)))
     (fn []
-      [:form.navbar-form.navbar-left {:role "search"}
-       [:div.form-group.haku
+      [:form.harja-ylin-header-haku {:role "search"
+                                     :data-cy "harja-ylanavigaatio-haku"}
+       [:div.haku
         [suodatettu-lista {:format (fn [tulos]
                                      [:div {:class (when (and
                                                            (= :urakka (:tyyppi tulos))

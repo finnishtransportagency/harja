@@ -84,53 +84,62 @@
   (some #(re-matches % (str/lower-case js/window.navigator.userAgent))
     [#".*android.*" #".*ipad.*"]))
 
+(defn muodosta-header-sivulista [s linkit]
+  [:ul#sivut.harja-ylin-header-sivut {:data-cy "harja-ylanavigaatio-sivut"}
+   (for [{:keys [id teksti toiminto]} linkit]
+     ^{:key id}
+     [:li {:class (when (= s id) "harja-ylin-header-linkki-aktiivinen")}
+      [linkki teksti toiminto]])])
+
 (defn header [s]
-  [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])}
-   [:span
-    [:img#harja-brand-icon {:alt "HARJA"
-                            :src "images/harja_logo_soft.svg"
-                            :on-click #(do
-                                         (.preventDefault %)
-                                         (nav/siirry-sivulle-ja-nollaa-parametrit! :urakat :yleiset))}]
-    (when (k/kehitysymparistossa?)
-      [:span#testiharja "TESTI"])]
-   [haku/haku]
+  (let [linkit (concat
+                 (when (oikeudet/urakat)
+                   [{:id :urakat
+                     :teksti "Urakat"
+                     :toiminto #(nav/vaihda-sivu! :urakat)}])
+                 (when (oikeudet/raportit)
+                   [{:id :raportit
+                     :teksti "Raportit"
+                     :toiminto #(nav/vaihda-sivu! :raportit)}])
+                 (when (oikeudet/tilannekuva)
+                   [{:id :tilannekuva
+                     :teksti "Tilannekuva"
+                     :toiminto #(nav/vaihda-sivu! :tilannekuva)}])
+                 (when (oikeudet/ilmoitukset)
+                   [{:id :ilmoitukset
+                     :teksti "Ilmoitukset"
+                     :toiminto #(nav/vaihda-sivu! :ilmoitukset)}])
+                 (when (and (oikeudet/tieluvat)
+                         (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
+                   [{:id :tienpidon-luvat
+                     :teksti "Tienpidon luvat"
+                     :toiminto #(nav/vaihda-sivu! :tienpidon-luvat)}])
+                 (when (oikeudet/urakkatilanne)
+                   [{:id :urakoiden-tilanne
+                     :teksti "Urakoiden tilanne"
+                     :toiminto #(nav/vaihda-sivu! :urakoiden-tilanne)}])
+                 (when (oikeudet/hallinta)
+                   [{:id :hallinta
+                     :teksti "Hallinta"
+                     :toiminto #(nav/vaihda-sivu! :hallinta)}]))]
+    [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])
+                :data-cy "harja-ylanavigaatio"}
+     [:span
+      [:img#harja-brand-icon {:alt "HARJA"
+                              :src "images/harja_logo_soft.svg"
+                              :on-click #(do
+                                           (.preventDefault %)
+                                           (nav/siirry-sivulle-ja-nollaa-parametrit! :urakat :yleiset))}]
+      (when (k/kehitysymparistossa?)
+        [:span#testiharja "TESTI"])]
+    [:div.harja-navbar-item-haku
+     [haku/haku]]
+     [muodosta-header-sivulista s linkit]
 
-   [:ul#sivut.nav.nav-pills
-
-    (when (oikeudet/urakat)
-      [:li {:class (when (= s :urakat) "active")}
-       [linkki "Urakat" #(nav/vaihda-sivu! :urakat)]])
-
-    (when (oikeudet/raportit)
-      [:li {:class (when (= s :raportit) "active")}
-       [linkki "Raportit" #(nav/vaihda-sivu! :raportit)]])
-
-    (when (oikeudet/tilannekuva)
-      [:li {:class (when (= s :tilannekuva) "active")}
-       [linkki "Tilannekuva" #(nav/vaihda-sivu! :tilannekuva)]])
-
-    (when (oikeudet/ilmoitukset)
-      [:li {:class (when (= s :ilmoitukset) "active")}
-       [linkki "Ilmoitukset" #(nav/vaihda-sivu! :ilmoitukset)]])
-
-    (when (and (oikeudet/tieluvat)
-            (istunto/ominaisuus-kaytossa? :tienpidon-luvat))
-      [:li {:class (when (= s :tienpidon-luvat) "active")}
-       [linkki "Tienpidon luvat" #(nav/vaihda-sivu! :tienpidon-luvat)]])
-
-    (when (oikeudet/urakkatilanne)
-      [:li {:class (when (= s :urakoiden-tilanne) "active")}
-       [linkki "Urakoiden tilanne" #(nav/vaihda-sivu! :urakoiden-tilanne)]])
-
-    (when (oikeudet/hallinta)
-      [:li {:class (when (= s :hallinta) "active")}
-       [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])]
-
-   :right
-   [harja-info s]
-   [palaute/palaute-linkki]
-   [kayttajatiedot istunto/kayttaja]])
+     :right
+     [harja-info s]
+     [palaute/palaute-linkki]
+     [kayttajatiedot istunto/kayttaja]]))
 
 (defn ladataan []
   [:div {:style {:position "absolute" :top "50%" :left "50%"}}
