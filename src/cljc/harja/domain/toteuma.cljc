@@ -26,6 +26,4 @@
     "tr_alkuosa" ::tr-alkuosa
     "tr_alkuetaisyys" ::tr-alkuetaisyys
     "tr_loppuosa" ::tr-loppuosa
-    "tr_loppuetaisyys" ::tr-loppuetaisyys}]
-  ["toteuma_tehtava" ::toteuma-tehtava {"toteuma" ::toteuma-id
-                                        "lisatieto" ::tehtava-lisatieto}])
+    "tr_loppuetaisyys" ::tr-loppuetaisyys}])

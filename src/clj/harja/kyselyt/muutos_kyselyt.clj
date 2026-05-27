@@ -4,4 +4,5 @@
 
 (defqueries "harja/kyselyt/muutos_kyselyt.sql")
 
-(declare hae-urakan-hoitovuoden-kirjatut-muutokset rahavarausten-toteumat rahavarausmuutosten-syyt)
+(declare hae-urakan-hoitovuoden-kirjatut-muutokset rahavarausten-toteumat rahavarausmuutosten-syyt
+  hae-tehtava-maaramuutokset paivita-tehtava-tiedot<! paivita-muutostyo-kulukohdistus!)
