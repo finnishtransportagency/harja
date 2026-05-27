@@ -73,6 +73,7 @@
       ],
       "toteutunutHinta": 0,
       "poistettu": false,
+      "paallystysIlmoituksenTila": "Hyväksytty",
       "yhaLahetyksenTila": "Lähetetty onnistuneesti"
     }
   ]
