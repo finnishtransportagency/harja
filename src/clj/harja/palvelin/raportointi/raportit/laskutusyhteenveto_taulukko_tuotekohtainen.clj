@@ -17,10 +17,12 @@
     :avain_yht :lisatyot_laskutetaan
     :avain_hoitokausi :lisatyot_laskutettu}
 
-   {:lihavoi? false
-    :otsikko "Sanktiot"
-    :avain_yht :sakot_laskutetaan
-    :avain_hoitokausi :sakot_laskutettu}
+   ;; MHU25 urakoille ei näytetä bonuksia & sanktioita 
+   (when-not (:onko_laskutusraja_kaytossa data)
+     {:lihavoi? false
+      :otsikko "Sanktiot"
+      :avain_yht :sakot_laskutetaan
+      :avain_hoitokausi :sakot_laskutettu})
 
    (when (yhteiset/raha-arvo-olemassa? (:jjh_muutokset_laskutettu data))
      {:lihavoi? false
@@ -103,15 +105,18 @@
     :avain_yht :hj_palkkio_laskutetaan
     :avain_hoitokausi :hj_palkkio_laskutettu}
 
-   {:lihavoi? false
-    :otsikko "Bonukset"
-    :avain_yht :bonukset_laskutetaan
-    :avain_hoitokausi :bonukset_laskutettu}
+   ;; MHU25 urakoille ei näytetä bonuksia & sanktioita 
+   (when-not (:onko_laskutusraja_kaytossa data)
+     {:lihavoi? false
+      :otsikko "Bonukset"
+      :avain_yht :bonukset_laskutetaan
+      :avain_hoitokausi :bonukset_laskutettu})
 
-   {:lihavoi? false
-    :otsikko "Sanktiot"
-    :avain_yht :sakot_laskutetaan
-    :avain_hoitokausi :sakot_laskutettu}
+   (when-not (:onko_laskutusraja_kaytossa data)
+     {:lihavoi? false
+      :otsikko "Sanktiot"
+      :avain_yht :sakot_laskutetaan
+      :avain_hoitokausi :sakot_laskutettu})
 
    ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
    (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))

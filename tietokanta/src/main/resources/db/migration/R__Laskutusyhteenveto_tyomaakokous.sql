@@ -1516,17 +1516,13 @@ BEGIN
         end loop;
 
     -- Muut kulut yhteensä, ei tavoitehintaiset
-    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + 
-                                            sanktiot_hoitokausi_yht + 
-                                            muut_kulut_ei_tavoite_hoitokausi + 
+    muut_kulut_ei_tavoite_hoitokausi_yht := muut_kulut_ei_tavoite_hoitokausi + 
                                             paatos_tavoitepalkkio_hoitokausi_yht + 
                                             paatos_tavoiteh_ylitys_hoitokausi_yht + 
                                             paatos_kattoh_ylitys_hoitokausi_yht +
                                             paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht;
 
-    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + 
-                                          sanktiot_val_aika_yht + 
-                                          muut_kulut_ei_tavoite_val_aika +
+    muut_kulut_ei_tavoite_val_aika_yht := muut_kulut_ei_tavoite_val_aika +
                                           paatos_tavoitepalkkio_val_aika_yht + 
                                           paatos_tavoiteh_ylitys_val_aika_yht +
                                           paatos_kattoh_ylitys_val_aika_yht +
@@ -1537,34 +1533,34 @@ BEGIN
     muut_kustannukset_val_aika_yht := 0.0;
 
     muut_kustannukset_hoitokausi_yht :=
-            muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
+            muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + 
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
             paatos_kattoh_ylitys_hoitokausi_yht + paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_hoitokausi;
     
     muut_kustannukset_val_aika_yht :=
-            muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
+            muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + 
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_val_aika;
 
-    -- MHU+ urakoille ei tule sanktioita & bonuksia tähän
-    -- FIXME epäselvä speksi. Pyydetty lisätietoja.
---     IF NOT onko_laskutusraja_kaytossa THEN
---         muut_kustannukset_hoitokausi_yht :=
---             muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
--- 
---         muut_kustannukset_val_aika_yht :=
---             muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
--- 
---         muut_kulut_ei_tavoite_hoitokausi_yht :=
---             muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht +  sanktiot_hoitokausi_yht;
--- 
---         muut_kulut_ei_tavoite_val_aika_yht :=
---             muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
---     END IF;
+    -- MHU25 urakoille ei lasketa sanktioita & bonuksia
+    -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+    IF NOT onko_laskutusraja_kaytossa THEN
+        muut_kustannukset_hoitokausi_yht :=
+            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
+
+        muut_kustannukset_val_aika_yht :=
+            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+
+        muut_kulut_ei_tavoite_hoitokausi_yht :=
+            muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht +  sanktiot_hoitokausi_yht;
+
+        muut_kulut_ei_tavoite_val_aika_yht :=
+            muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+    END IF;
     
     ---------------------------------
     --------- Laskutusraja ----------
@@ -1589,8 +1585,8 @@ BEGIN
 
     -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
     IF urakan_alkuvuosi >= 2025 THEN
-        RAISE NOTICE 'Haetaan laskutusraja urakan alkamisvuoden perusteella: %', urakan_alkuvuosi;
         SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
+        RAISE NOTICE 'Laskutusraja käytössä: % (%)', onko_laskutusraja_kaytossa, urakan_alkuvuosi;
     ELSE
         onko_laskutusraja_kaytossa := FALSE;
     END IF;

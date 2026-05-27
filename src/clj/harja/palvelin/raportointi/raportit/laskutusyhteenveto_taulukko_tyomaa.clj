@@ -150,20 +150,18 @@
     :avain_yht :lisatyot_val_aika_yht
     :avain_hoitokausi :lisatyot_hoitokausi_yht}
 
-   ;; FIXME epäselvä speksi. Pyydetty lisätietoja.
-   ;(when-not (:onko_laskutusraja_kaytossa data)
-   {:lihavoi? false
-    :otsikko "Bonukset"
-    :avain_yht :bonukset_val_aika_yht
-    :avain_hoitokausi :bonukset_hoitokausi_yht}
-   ; )
+   ;; MHU25 urakoille ei näytetä bonuksia & sanktioita 
+   (when-not (:onko_laskutusraja_kaytossa data)
+     {:lihavoi? false
+      :otsikko "Bonukset"
+      :avain_yht :bonukset_val_aika_yht
+      :avain_hoitokausi :bonukset_hoitokausi_yht})
 
-   ;(when-not (:onko_laskutusraja_kaytossa data)
-   {:lihavoi? false
-    :otsikko "Sanktiot"
-    :avain_yht :sanktiot_val_aika_yht
-    :avain_hoitokausi :sanktiot_hoitokausi_yht}
-   ; )
+   (when-not (:onko_laskutusraja_kaytossa data)
+     {:lihavoi? false
+      :otsikko "Sanktiot"
+      :avain_yht :sanktiot_val_aika_yht
+      :avain_hoitokausi :sanktiot_hoitokausi_yht})
 
    {:lihavoi? false
     :otsikko "Muut tavoitehinnan ulkopuoliset kulut"

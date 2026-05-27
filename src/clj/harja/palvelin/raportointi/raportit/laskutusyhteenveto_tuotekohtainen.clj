@@ -61,7 +61,7 @@
                      (map #(or (:kaikki_laskutettu %) 0M) tiedot))))
 
         onko_laskutusraja_kaytossa (:onko_laskutusraja_kaytossa (last tiedot))
-        laskutusraja_yht (:laskutusraja_yht (last tiedot))
+        laskutusraja_yht (or (:laskutusraja_yht (last tiedot)) 0.0M)
         laskutusrajaan_jaljella (:laskutusrajaan_jaljella (last tiedot))
         onko_laskutusraja_ylittynyt (and
                                       (> laskutusraja_yht 0.0M)
@@ -235,8 +235,9 @@
         rivitiedot (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
 
         rivitiedot (assoc rivitiedot
-                     :tavhin_hoitokausi_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutettu)
                      :tavhin_val_aika_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutetaan)
+                     :tavhin_hoitokausi_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutettu)
+                     :onko_laskutusraja_kaytossa (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
                      :onko_laskutusraja_ylittynyt (-> koostettu-yhteenveto first :onko_laskutusraja_ylittynyt)
                      :laskutusrajan_ylittynyt_yht (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_yht)
                      :laskutusrajan_ylittynyt_val_aika (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_val_aika))

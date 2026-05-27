@@ -754,16 +754,14 @@ BEGIN
           tpk2.nimi AS nimi, 
           tpk2.koodi AS tuotekoodi, 
           tpi.id AS tpi, 
-          tpk3.id AS tpk3_id,
-          NULL AS maksuera_numero 
-          -- TODO .. testidatalla ei näy mitään mhu+ urakoilla
-          -- m.numero AS maksuera_numero
+          tpk3.id AS tpk3_id, 
+          m.numero AS maksuera_numero
           FROM toimenpideinstanssi tpi
               JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
-              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id-- ,
-              -- maksuera m
-          WHERE tpi.urakka = ur -- AND m.toimenpideinstanssi = tpi.id
-          -- ORDER BY m.numero ASC
+              JOIN toimenpide tpk2 ON tpk3.emo = tpk2.id,
+              maksuera m
+          WHERE tpi.urakka = ur AND m.toimenpideinstanssi = tpi.id
+          ORDER BY m.numero
     LOOP
         RAISE NOTICE '*************************************** Laskutusyhteenvedon laskenta alkaa toimenpiteelle: % , ID % *****************************************', t.nimi, t.tpi;
 
@@ -1292,18 +1290,26 @@ BEGIN
         kaikki_laskutettu := 0.0;
         kaikki_laskutetaan := 0.0;
 
-        kaikki_laskutettu :=  sakot_laskutettu + bonukset_laskutettu +
-                              hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
+        kaikki_laskutettu :=  hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu +
                               hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu + kaikki_rahavaraukset_hoitokausi_yht;
 
-        kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan +
-                              hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
+        kaikki_laskutetaan := hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan +
                               hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan + kaikki_rahavaraukset_val_yht;
 
+        -- MHU25 urakoille ei lasketa sanktioita & bonuksia
+        -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+        IF NOT onko_laskutusraja_kaytossa THEN
+            kaikki_laskutettu :=
+                kaikki_laskutettu + sakot_laskutettu + bonukset_laskutettu;
+
+            kaikki_laskutetaan :=
+                sakot_laskutetaan + bonukset_laskutetaan;
+        END IF;
+        
         -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
         -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
         --- Laskutettu == Hoitokauden alusta
