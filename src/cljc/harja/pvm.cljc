@@ -166,7 +166,10 @@
        (tc/from-sql-date dt)
 
        (instance? java.sql.Timestamp dt)
-       (tc/from-sql-time dt))))
+       (tc/from-sql-time dt)
+
+       (string? dt)
+       (df/parse dt))))
 
 #?(:clj
    (defn joda-date-timeksi [dt]
@@ -858,6 +861,16 @@
       (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
 
 #?(:clj
+  (defn hoitokauden-alkuvuosi
+    ([^org.joda.time.DateTime pvm]
+     (let [fi-pvm (.withZone pvm (org.joda.time.DateTimeZone/forID "Europe/Helsinki"))
+           vuosi (.getYear fi-pvm)
+           kuukausi (.getMonthOfYear fi-pvm)]
+       (hoitokauden-alkuvuosi vuosi kuukausi)))
+    ([vuosi kuukausi]
+     (if (<= 10 kuukausi)
+       vuosi
+       (dec vuosi)))))
    (defn hoitokauden-alkuvuosi
      ([^org.joda.time.DateTime pvm]
       (let [vuosi (.getYear pvm)

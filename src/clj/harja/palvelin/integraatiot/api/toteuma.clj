@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [taoensso.timbre :as log]
+  (:require [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
@@ -214,16 +215,16 @@
   (doseq [tehtava (:tehtavat toteuma)]
     (log/debug "Luodaan tehtävä.")
     (let [tehtava-id (q-toimenpidekoodi/hae-tehtava-apitunnisteella db
-                       (get-in tehtava [:tehtava :id]) urakka-id)]
-      (q-toteumat/luo-toteuma_tehtava<!
-        db
-        toteuma-id
-        tehtava-id
-        (get-in tehtava [:tehtava :maara :maara])
-        (:id kirjaaja)
-        nil
-        nil
-        urakka-id))))
+                       (get-in tehtava [:tehtava :id]) urakka-id)
+          hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))]
+      (q-toteumat/luo-toteuma_tehtava<! db {:toteuma toteuma-id,
+                                            :toimenpidekoodi tehtava-id,
+                                            :maara (get-in tehtava [:tehtava :maara :maara]),
+                                            :luoja (:id kirjaaja),
+                                            :paivan_hinta nil,
+                                            :lisatieto nil,
+                                            :urakka_id urakka-id,
+                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))))
 
 ;; Konvertoi apilta tulevan materiaalinimen tietokannassa olevaan materiaaliin
 (def mat-apilta->mat-db
@@ -287,10 +288,9 @@
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi virheet/+tuntematon-materiaali+
                             :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
-      (q-toteumat/luo-toteuma-materiaali<!
-        db
-        toteuma-id
-        materiaalikoodi-id
-        (get-in materiaali [:maara :maara])
-        (:id kirjaaja)
-        urakka-id))))
+      (materiaalit/luo-toteuma-materiaali<! db {:toteuma toteuma-id,
+                                                :materiaalikoodi materiaalikoodi-id,
+                                                :maara (get-in materiaali [:maara :maara]),
+                                                :kayttaja (:id kirjaaja),
+                                                :urakka urakka-id,
+                                                :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))}))))

@@ -332,9 +332,9 @@
   "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
   hoitokauden päätökset (välikatselmointi tehty) ja mikäli niitä löytyy, niin estetään tallennus."
   [db urakka-id erapaiva vanha-erapaiva]
-  (let [joda-local-time-erapaiva (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
+  (let [joda-local-time-erapaiva (pvm/joda-timeksi erapaiva)
         joda-local-time-vanha-erapaiva (when vanha-erapaiva
-                                         (pvm/ajan-muokkaus (pvm/joda-timeksi vanha-erapaiva) true 1 :paiva))
+                                         (pvm/joda-timeksi vanha-erapaiva))
         erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
         vanhan-erapaivan-vuosi (when vanha-erapaiva
                                  (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
