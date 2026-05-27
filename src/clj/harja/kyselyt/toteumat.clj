@@ -16,14 +16,25 @@
 (declare luo-erilliskustannus<! onko-olemassa-ulkoisella-idlla onko-toteumalla-suolausta hae-pisteen-hoitoluokat
   luo-toteuma<! poista-toteuma! luo-toteuma_tehtava<! luodun-toteuman-id hae-toteuman-hash siirra-toteumat-analytiikalle
   hae-reitittomat-mutta-reittipisteelliset-toteumat hae-reitittomat-mutta-osoitteelliset-toteumat
-  hae-reittitoteumat-analytiikalle luo-toteuma-materiaali<! hae-toteuman-alkanut-pvm-idlla paivita-toteuma<!
-  paivita-toteuman-reittigeometria<! paivita-toteuma-materiaali! paivita-palautettu-analytiikalle-aikaleima!
+  hae-reittitoteumat-analytiikalle hae-toteuman-alkanut-pvm-idlla paivita-toteuma<!
+  paivita-toteuman-reittigeometria<! paivita-palautettu-analytiikalle-aikaleima!
   lisaa-toteumalle-jsonhash! hae-toteuman-reittipisteet paivita-toteuma-ulkoisella-idlla<! toteuman-id-ulkoisella-idlla
   hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
   poista-toteumat-ulkoisilla-idlla-ja-luojalla!
   hae-toteumat-ilman-reittipisteita-analytiikalle
   hae-toteuman-perustiedot-ulkoisella-idlla poista-toteuma_tehtava-toteuma-idlla!
-  poista-toteuma-materiaali-toteuma-idlla! paivita-toteuman-muokattu!)
+  poista-toteuma-materiaali-toteuma-idlla! hae-urakan-toteumatehtavat poista-toteuma-tehtava!
+  hae-maarien-toteuma listaa-urakan-hoitokauden-toteumat-muut-tyot poista-toteuman-tehtavat!
+  merkitse-toteuman-maksuera-likaiseksi! luo-tehtava<! tallenna-liite-toteumalle<! hae-urakan-varustetoteumat
+  hae-kokonaishintaisen-toteuman-tiedot hae-toteuman-reitti-ja-tr-osoite hae-kokonaishintaisten-toiden-reitit
+  hae-toteumien-tiedot-pisteessa hae-yksikkohintaisten-toiden-reitit toteuman-urakka siirry-toteuma
+  hae-toteumien-reitit hae-toteuman-liitteet hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
+  hae-urakan-tehtavat poista-toteuman-tehtava! paivita-toteuman-tehtava! paivita-koko-toteuman-tehtava!
+  hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina tehtavan-toteuma
+  merkitse-toteumatehtavien-maksuerat-likaisiksi! listaa-urakan-hoitokauden-erilliskustannukset
+  paivita-erilliskustannus! tallenna-erilliskustannukselle-liitteet<! merkitse-toimenpideinstanssin-maksuera-likaiseksi!
+  poista-erilliskustannus<! listaa-tehtavan-toteumat toteuman-tyyppi hae-urakan-toteuma hae-toteumien-tehtavien-summat
+  paivita-toteuman-muokattu! luo-toteuma-materiaali<!)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
