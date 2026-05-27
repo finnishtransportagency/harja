@@ -11,3 +11,14 @@ DROP FUNCTION IF EXISTS paivita_hoitokauden_alkuvuosi_tehtava_ja_materiaalitaulu
 -- Poistetaan toteumittain-hoitokauden_alkuvuosi-funktio, jolla täytettiin hoitokauden alkuvuosi toteuma_tehtava- ja toteuma_materiaali-tauluihin,
 -- koska tätä tietoa ei enää tarvita erikseen, kun hoitokauden alkuvuosi päivitetään suoraan näihin tauluihin koodin avulla.
 DROP PROCEDURE IF EXISTS paivita_hoitokauden_alkuvuosi_toteumittain(INTEGER, BIGINT, BIGINT);
+
+-- Lisää uusi indeksi - Nopeuttaa Toteuma Tehtävä sivua
+CREATE INDEX idx_toteuma_materiaali_toteuma_urakka_hk
+    ON toteuma_materiaali (toteuma, urakka_id, hoitokauden_alkuvuosi)
+    INCLUDE (maara)
+    WHERE poistettu = FALSE;
+
+-- Ja vielä pienen ajansäästön saavuttamiseksi kulu -taululle indeksi - Nopeutaa muutosten hakemista
+CREATE INDEX idx_kulu_urakka_erapaiva
+    ON kulu (urakka, erapaiva)
+    WHERE poistettu IS NOT TRUE;
