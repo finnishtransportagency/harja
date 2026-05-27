@@ -1977,13 +1977,12 @@
 
         _ (i (format
                "INSERT INTO toteuma_tehtava (
-                luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto
+                luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi
                 ) 
                 VALUES (
                 %s, (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1'), 
-                '2028-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1'
-                );"
-               (:id +kayttaja-jvh+) tehtava_id lisatty-toteuma urakka-id))
+                '2028-11-30 17:00:00.000000', %s, %s, %s, '[Muutokset] Määrämitattava toteuma 1', %s);"
+               (:id +kayttaja-jvh+) tehtava_id lisatty-toteuma urakka-id 2028))
 
         ;; Lisää kulu tehtävälle 
         _ (i (format
