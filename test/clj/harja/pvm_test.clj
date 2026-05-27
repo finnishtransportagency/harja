@@ -519,3 +519,10 @@
               #inst "2022-12-14T22:00:00.000-00:00"
               #inst "2023-01-14T22:00:00.000-00:00"
               #inst "2023-02-14T22:00:00.000-00:00"])))))
+
+
+(deftest hoitokauden-alkuvuosi-test
+  (is (= 2021 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "1.10.2021")))))
+  (is (= 2021 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "30.9.2022")))))
+  (is (= 2020 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "30.9.2021")))))
+  (is (= 2020 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "1.10.2020"))))))
