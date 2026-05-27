@@ -861,20 +861,11 @@
       (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
 
 #?(:clj
-  (defn hoitokauden-alkuvuosi
-    ([^org.joda.time.DateTime pvm]
-     (let [fi-pvm (.withZone pvm (org.joda.time.DateTimeZone/forID "Europe/Helsinki"))
-           vuosi (.getYear fi-pvm)
-           kuukausi (.getMonthOfYear fi-pvm)]
-       (hoitokauden-alkuvuosi vuosi kuukausi)))
-    ([vuosi kuukausi]
-     (if (<= 10 kuukausi)
-       vuosi
-       (dec vuosi)))))
    (defn hoitokauden-alkuvuosi
      ([^org.joda.time.DateTime pvm]
-      (let [vuosi (.getYear pvm)
-            kuukausi (.getMonthOfYear pvm)]
+      (let [fi-pvm (.withZone pvm (org.joda.time.DateTimeZone/forID "Europe/Helsinki"))
+            vuosi (.getYear fi-pvm)
+            kuukausi (.getMonthOfYear fi-pvm)]
         (hoitokauden-alkuvuosi vuosi kuukausi)))
      ([vuosi kuukausi]
       (if (<= 10 kuukausi)
