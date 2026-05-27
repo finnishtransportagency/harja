@@ -3,6 +3,7 @@
             [clojure.string]
             [reagent.core :as r]
             [harja.ui.bootstrap :as bootstrap]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.navigaatio :as navigaatio]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.panelit :as panelit]
             [harja.testutils.shared-testutils :as u]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.modaalit :as modaalit]
@@ -105,6 +106,56 @@
       (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-modaali-kortti\"]"))))
       (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-avaa-modaali\"]")))))))
 
+(deftest navigaatio-osio-nayttaa-dropdownin-ja-navbarin-kaytoksen
+  (komponenttitesti
+    [navigaatio/navigaatio-osio]
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-vaihtaja"))))
+    (is (= "false" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-vaihtaja") "aria-expanded")))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-valikko"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .dropdown-toggle"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .dropdown-menu"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .caret"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-vaihtaja")
+    (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-vaihtaja") "aria-expanded")))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"] .harja-dropdown-valikko"))))
+    (is (= "Raportit" (u/text "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-raportit\"]")))
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"].harja-navbar"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-otsikko\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"] .harja-navbar-brandi"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vaihtaja\"]"))))
+    (is (= "false" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vaihtaja\"]") "aria-expanded")))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-sisalto\"].harja-navbar-sisalto"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vasen\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-oikea\"]"))))
+    (is (= "Harja" (u/text "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"] .harja-navbar-brandi")))
+    (is (= "Urakat" (u/text "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vasen\"]")))
+    (is (= "Kirjaudu ulos" (u/text "[data-cy=\"ui-komponenttien-tarkastelu-navbar-oikea\"]")))
+    (is (= 0 (count (u/sel ".navbar"))))
+    (is (= 0 (count (u/sel ".navbar-default"))))
+    (is (= 0 (count (u/sel ".navbar-toggle"))))
+    (is (= 0 (count (u/sel ".navbar-collapse"))))
+    (is (= 0 (count (u/sel ".navbar-nav"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vaihtaja\"]")
+    (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vaihtaja\"]") "aria-expanded")))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-sisalto\"].harja-navbar-sisalto-avoin"))))))
+
+(deftest tarkastelusivu-sisaltaa-navigaatio-osion-ja-navbar-kortin
+  (komponenttitesti
+    [nakyma/ui-komponenttien-tarkastelu]
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navigaatio-osio\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"]"))))))
+
 (deftest panelit-osio-lukitsee-nykyisen-bootstrap-rakenteen
   (komponenttitesti
     [panelit/panelit-osio]
@@ -128,6 +179,27 @@
              "Paneeli käyttää nyt Harjan omaa panel-rakennetta Bootstrap-markupin sijaan."))
     (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-paneli-ilman-otsikkoa-sisalto\"]")
              "Portattu wrapper säilyttää tämän optionaalisen otsikkosopimuksen ilman Bootstrapin panel-heading-rakennetta."))))
+
+(deftest panelit-osio-nayttaa-dropdown-panelin-ja-sen-vaihtajakaytoksen
+  (komponenttitesti
+    [panelit/panelit-osio]
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"].harja-panel.harja-dropdown-panel.harja-dropdown-panel-tyyli-primary"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-vaihtaja\"]"))))
+    (is (= "false" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-vaihtaja\"]") "aria-expanded")))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-sisalto\"]"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-vaihtaja\"]")
+    (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-vaihtaja\"]") "aria-expanded")))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-sisalto\"]"))))
+    (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel-sisalto\"]")
+             "Dropdown-panel on nyt portattu pois Bootstrapin panel- ja glyphicon-markupista."))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"] .panel"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"] .panel-heading"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"] .panel-body"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"] .glyphicon-plus"))))
+    (is (= 0 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-panel\"] .glyphicon-minus"))))))
 
 (deftest panelin-komponenttikohtainen-token-voittaa-yhteisen-teematokenin
   (komponenttitesti
@@ -301,6 +373,30 @@
       (is (= "rgb(18, 52, 86)" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "color")))
       (is (= "0px" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "border-top-left-radius")))
       (is (= "none" (laskettu-tyyliarvo "[data-cy=\"harja-modal-sisalto\"]" "box-shadow"))))))
+
+(deftest yhteinen-teemapaneeli-vaikuttaa-tabseihin
+  (let [korostus-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-korostus\"]"
+        pinta-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-pinta\"]"
+        teksti-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-teksti\"]"
+        reuna-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-reuna\"]"
+        radius-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-radius\"]"
+        aktiivinen-tabi "[data-cy=\"ui-komponenttien-tarkastelu-tabs-perustiedot\"]"
+        passiivinen-tabi "[data-cy=\"ui-komponenttien-tarkastelu-tabs-historia\"]"]
+    (komponenttitesti
+      [nakyma/ui-komponenttien-tarkastelu]
+
+      (u/change korostus-syote "#112233")
+      (u/change pinta-syote "#ddeeff")
+      (u/change teksti-syote "#123456")
+      (u/change reuna-syote "#223344")
+      (u/change radius-syote "0")
+      (u/blur radius-syote)
+      (is (= "rgb(221, 238, 255)" (laskettu-tyyliarvo aktiivinen-tabi "background-color")))
+      (is (= "rgb(18, 52, 86)" (laskettu-tyyliarvo aktiivinen-tabi "color")))
+      (is (= "rgb(34, 51, 68)" (laskettu-tyyliarvo aktiivinen-tabi "border-top-color")))
+      (is (= "0px" (laskettu-tyyliarvo aktiivinen-tabi "border-top-left-radius")))
+      (is (= "rgb(17, 34, 51)" (laskettu-tyyliarvo passiivinen-tabi "background-color")))
+      (is (= "rgb(221, 238, 255)" (laskettu-tyyliarvo passiivinen-tabi "color"))))))
 
 (deftest yhteinen-teemapaneeli-vaikuttaa-viestiin
   (let [pinta-syote "[data-cy=\"ui-komponenttien-tarkastelu-teema-token-harja-teema-pinta\"]"

@@ -296,11 +296,11 @@
 (defn renderoi-viesti-parametreista [{:keys [data-cy parametrit]}]
 	(let [{:keys [variantti sisalto]} parametrit
 		  viestin-data-cy (when data-cy (str data-cy "-teema"))
-	(let [{viestin-luokka :sisalto
-		   variantin-luokka :variantti}
-			(if variantti
-			  (viesti/flash-viestin-luokat variantti)
-			  (assoc viesti/flash-viestin-perusluokat :variantti nil))]
+		  viestiluokat (if variantti
+					 (viesti/flash-viestin-luokat variantti)
+					 (assoc viesti/flash-viestin-perusluokat :variantti nil))
+		  viestin-luokka (:sisalto viestiluokat)
+		  variantin-luokka (:variantti viestiluokat)]
 		[:div {:class "ui-komponenttien-tarkastelu-viesti"}
 		 [:div {:class (str viestin-luokka " " variantin-luokka)
 				:data-cy viestin-data-cy}

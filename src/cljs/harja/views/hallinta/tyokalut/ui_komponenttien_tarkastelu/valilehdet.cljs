@@ -42,7 +42,7 @@
 	 {:avain :harja-tabs-taso1-aktiivinen-tausta
 	  :nimi "Aktiivisen tabin tausta"
 	  :tyyppi :color
-	  :oletus "#fafafa"}
+	  :oletus "#ffffff"}
 	 {:avain :harja-tabs-taso1-aktiivinen-teksti
 	  :nimi "Aktiivisen tabin teksti"
 	  :tyyppi :color
