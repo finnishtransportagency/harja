@@ -20,7 +20,8 @@
             [harja.palvelin.palvelut.suunnittelu.apurit :as uusi-kust-apurit]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as uusi-kust-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
-            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]))
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as kust-palvelu]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as tuotekohtainen]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -503,26 +504,34 @@
             {:urakka-id urakka-id
              :kulu-kohdistuksineen talvihoitokulu})
 
-        raportti (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        tiedot (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                        hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
         ;; ----------------------------------------------------------------
         ;; Laskutusrajan arvot pitäisi olla saatavilla sekä näyttää oikealta
-        purettu (pura-tuotekohtainen-raportti-mapiksi (first raportti))
+        tiedot (tuotekohtainen/koosta-yhteenveto tiedot 0.0M)
 
-        laskutusraja (:laskutusraja_yht purettu)
-        jaljella (:laskutusrajaan_jaljella purettu)
-        kaytossa (:onko_laskutusraja_kaytossa purettu)
-        ylittynyt (:onko_laskutusraja_ylittynyt purettu)
-        laskutettavaa (:laskutusraja_laskutettavaa_yht purettu)]
+        {:keys [onko_laskutusraja_kaytossa
+                _laskutusrajan_ylittynyt_yht
+                _hk_valikatselmus_siirrot_ed_vuodelta
+                _laskutusraja_laskutettavaa_val_aika
+                laskutusrajaan_jaljella
+                laskutusraja_laskutettavaa_yht
+                _nimi
+                _kaikki-yhteensa-laskutetaan
+                _kaikki-tavoitehintaiset-laskutetaan
+                _kaikki-tavoitehintaiset-laskutettu
+                _kaikki-yhteensa-laskutettu
+                laskutusraja_yht
+                onko_laskutusraja_ylittynyt
+                _laskutusrajan_ylittynyt_val_aika]} tiedot]
 
-    (is (false? ylittynyt) "Laskutusrajan ei pitäisi olla ylittynyt")
-    (is (true? kaytossa) "Lasktutusrajan pitäisi olla käytössä MHU+ urakalla")
-    (is (= jaljella (- laskutusraja talvihoitosumma)) "Laskutusraja pitäisi alentua kulun perusteella")
-    (is (= laskutettavaa talvihoitosumma) "Laskutettavaa pitäisi olla kirjatun kulun verran")
+    (is (false? onko_laskutusraja_ylittynyt) "Laskutusrajan ei pitäisi olla ylittynyt")
+    (is (true? onko_laskutusraja_kaytossa) "Lasktutusrajan pitäisi olla käytössä MHU25 urakalla")
+    (is (= laskutusrajaan_jaljella (- laskutusraja_yht talvihoitosumma)) "Laskutusraja pitäisi alentua kulun perusteella")
+    (is (= laskutusraja_laskutettavaa_yht talvihoitosumma) "Laskutettavaa pitäisi olla kirjatun kulun verran")
 
-    (is (= talvihoitosumma (:hankinnat_laskutettu purettu)))
-    (is (= talvihoitosumma (:hankinnat_laskutetaan purettu)))))
+    (is (= talvihoitosumma laskutusraja_laskutettavaa_yht) "Kirjattu kulu pitäisi olla laskutettavissa")))
 
 
 (deftest tuotekohtainen-mhu2021-ei-nayta-laskutusrajaa
@@ -614,34 +623,49 @@
             {:urakka-id urakka-id
              :kulu-kohdistuksineen talvihoitokulu})
 
-        raportti (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        tiedot (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                        hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
 
 
         ;; ----------------------------------------------------------------
         ;; Laskutusrajan arvot pitäisi näyttää oikealta
-        purettu (pura-tuotekohtainen-raportti-mapiksi (first raportti))
-        kaytossa (:onko_laskutusraja_kaytossa purettu)
-        ylittynyt (:onko_laskutusraja_ylittynyt purettu)]
+        ;; ----------------------------------------------------------------
+        ;; Laskutusrajan arvot pitäisi olla saatavilla sekä näyttää oikealta
+        purettu (pura-tuotekohtainen-raportti-mapiksi (first tiedot))
+        tiedot (tuotekohtainen/koosta-yhteenveto tiedot 0.0M)
 
-    (is (false? (boolean ylittynyt)) "Laskutusrajan ei pitäisi olla ylittynyt")
-    (is (false? kaytossa) "Lasktutusrajan ei pitäisi olla käytössä MHU 21- urakalla")
+        {:keys [onko_laskutusraja_kaytossa
+                laskutusrajan_ylittynyt_yht
+                _hk_valikatselmus_siirrot_ed_vuodelta
+                laskutusraja_laskutettavaa_val_aika
+                _laskutusrajaan_jaljella
+                laskutusraja_laskutettavaa_yht
+                _nimi
+                _kaikki-yhteensa-laskutetaan
+                _kaikki-tavoitehintaiset-laskutetaan
+                _kaikki-tavoitehintaiset-laskutettu
+                _kaikki-yhteensa-laskutettu
+                _laskutusraja_yht
+                onko_laskutusraja_ylittynyt
+                _laskutusrajan_ylittynyt_val_aika]} tiedot]
+
+
+    (is (false? onko_laskutusraja_ylittynyt) "Laskutusrajan ei pitäisi olla ylittynyt")
+    (is (false? onko_laskutusraja_kaytossa) "Lasktutusrajan ei pitäisi olla käytössä MHU 21- urakalla")
 
     ;; Laskutusrajan lukuja ei pitäisi tällä urakalla näkyä
-    (is (= (:laskutettavaa_kaikki_yht purettu) 0.0M))
-    (is (= (:laskutusrajan_ylittynyt_yht purettu) 0.0M))
-    (is (= (:laskutettavaa_kaikki_val_aika purettu) 0.0M))
-    (is (= (:laskutusraja_laskutettavaa_yht purettu) 0.0M))
-    (is (= (:laskutusraja_laskutettavaa_val_aika purettu) 0.0M))
+    (is (= laskutusraja_laskutettavaa_yht 0.0M) "Laskutettavaa ei ole")
+    (is (= laskutusrajan_ylittynyt_yht 0.0M) "Laskutusraja ei ole ylittynyt")
+    (is (= laskutusraja_laskutettavaa_val_aika 0.0M) "Laskutettavaa (valittu aika) ei ole")
 
     ;; Kirjattu talvihoito pitäisi näkyä 
-    (is (= talvihoitosumma (:hankinnat_laskutettu purettu)))
-    (is (= talvihoitosumma (:hankinnat_laskutetaan purettu)))
+    (is (= talvihoitosumma (:hankinnat_laskutettu purettu)) "Kirjattu kulu näkyy")
+    (is (= talvihoitosumma (:hankinnat_laskutetaan purettu)) "Kirjattu kulu näkyy")
 
     ;; Testidatan arvoja, ei syötetty tässä
-    (is (= (:sakot_laskutetaan purettu) -1000.0M))
+    (is (= (:sakot_laskutetaan purettu) -1000.0M) "Sanktiot näkyy mhu21 urakalla")
 
     ;; Toteutuneet kustannukset yhteensä 
     ;; Koska sakkoja on tuhat, pitäisi olla 1000 - 1234 (me syötettiin 1234e)
-    (is (= (:kaikki_laskutettu purettu) 234.0M))
-    (is (= (:kaikki_laskutetaan purettu) 234.0M))))
+    (is (= (:kaikki_laskutettu purettu) 234.0M) "Kaikki pitäisi olla sanktion & bonusten verran")
+    (is (= (:kaikki_laskutetaan purettu) 234.0M))) "Kaikki pitäisi olla sanktion & bonusten verran")

@@ -1299,16 +1299,6 @@ BEGIN
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan +
                               hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan + kaikki_rahavaraukset_val_yht;
-
-        -- MHU25 urakoille ei lasketa sanktioita & bonuksia
-        -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
-        IF NOT onko_laskutusraja_kaytossa THEN
-            kaikki_laskutettu :=
-                kaikki_laskutettu + sakot_laskutettu + bonukset_laskutettu;
-
-            kaikki_laskutetaan :=
-                sakot_laskutetaan + bonukset_laskutetaan;
-        END IF;
         
         -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
         -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
@@ -1385,6 +1375,17 @@ BEGIN
             -- + muut kulut jotka kuuluvat tavoitehintaan
             laskutettavaa_kaikki_yht := laskutusraja_laskutettavaa_yht + muu_kulu_tavoitehintainen_hoitokausi;
             laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muu_kulu_tavoitehintainen_val_aika;
+        END IF;
+
+
+        -- MHU25 urakoille ei lasketa sanktioita & bonuksia
+        -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+        IF NOT onko_laskutusraja_kaytossa THEN
+            kaikki_laskutettu :=
+                kaikki_laskutettu + sakot_laskutettu + bonukset_laskutettu;
+
+            kaikki_laskutetaan :=
+                kaikki_laskutetaan + sakot_laskutetaan + bonukset_laskutetaan;
         END IF;
 
         RAISE NOTICE 'Yhteenveto:';

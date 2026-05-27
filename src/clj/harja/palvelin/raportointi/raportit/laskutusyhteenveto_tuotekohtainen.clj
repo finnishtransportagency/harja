@@ -45,7 +45,7 @@
     kustannusten-kentat))
 
 
-(defn- koosta-yhteenveto [tiedot valikatselmus-siirrot-ed-vuodelta]
+(defn koosta-yhteenveto [tiedot valikatselmus-siirrot-ed-vuodelta]
   (let [laskutusraja-yht (or (some :laskutusraja_yht tiedot) 0M)
         tiedot (mapv
                  (fn [rivi kaytetty-yht]
