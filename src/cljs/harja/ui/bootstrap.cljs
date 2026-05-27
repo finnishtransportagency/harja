@@ -4,6 +4,7 @@
             [harja.loki :refer [log]]
             [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
+            [harja.ui.ikonit :as ikonit]
             [clojure.string :as clj-str]))
 
 
@@ -95,58 +96,77 @@ The following keys are supported in the configuration:
 (defn navbar
   "A Bootstrap navbar component"
   [options header & items]
-  (let [collapse-state (atom "collapse.in")
-        toggle! #(swap! collapse-state
-                   (fn [s]
-                     (if (= s "collapse")
-                       "collapse.in"
-                       "collapse")))]
+  (let [valikko-avattu? (atom false)
+        toggle! #(swap! valikko-avattu? not)]
     (fn [options header & items]
-      [:nav.navbar.navbar-default {:role "navigation"
-                                   :class (:luokka options)}
-       [:div.container-fluid
-
-        ;; Brand and toggle get grouped for better mobile display
-        [:div.navbar-header
-         [:button.navbar-toggle.collapsed {:type "button"
-                                           :on-click toggle!} ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-          [:span.sr-only "Toggle navigation"]
-          [:span.icon-bar]
-          [:span.icon-bar]
-          [:span.icon-bar]]
-         [:a {:href "#"} header]]
-
-        ;; Collect the nav links, forms, and other content for toggling
-        (let [[left-items _ right-items] (partition-by #(= :right %) items)]
-          [:div.navbar-collapse {:class @collapse-state}
+      (let [[left-items _ right-items] (partition-by #(= :right %) items)
+            data-cy (:data-cy options)
+            sisalto-luokka (clj-str/join " " (remove nil? ["harja-navbar-sisalto"
+                                                            (when @valikko-avattu?
+                                                              "harja-navbar-sisalto-avoin")]))]
+        [:nav {:role "navigation"
+               :class (clj-str/join " " (remove nil? ["harja-navbar" (:luokka options)]))
+               :data-cy data-cy}
+         [:div.harja-navbar-runko
+          [:div.harja-navbar-otsake
+           [:button {:type "button"
+                     :class "harja-navbar-vaihtaja"
+                     :data-cy (when data-cy (str data-cy "-vaihtaja"))
+                     :aria-expanded (str @valikko-avattu?)
+                     :on-click toggle!}
+            [:span.sr-only "Vaihda navigaatio"]
+            [:span.harja-navbar-vaihtaja-viiva]
+            [:span.harja-navbar-vaihtaja-viiva]
+            [:span.harja-navbar-vaihtaja-viiva]]
+           [:a.harja-navbar-brandi {:href "#"}
+            header]]
+          [:div {:class sisalto-luokka
+                 :data-cy (when data-cy (str data-cy "-sisalto"))}
            (when left-items
-             [:ul.nav.navbar-nav
+             [:ul.harja-navbar-lista {:data-cy (when data-cy (str data-cy "-vasen"))}
               (for [item left-items]
-                ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
                 ^{:key (hash item)}
-                [:li {:class (str (when false "active")
-                               " "
-                               (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
+                [:li {:class (clj-str/join " " (remove nil? ["harja-navbar-item"
+                                                              (:context (meta (first item)))]))}
                  item])])
            (when right-items
-             [:ul.nav.navbar-nav.navbar-right
+             [:ul.harja-navbar-lista.harja-navbar-lista-oikea {:data-cy (when data-cy (str data-cy "-oikea"))}
               (for [item right-items]
                 ^{:key (hash item)}
-                [:li {:class (str (when false "active")
-                               " "
-                               (:context (meta (first item))))}
-                 item])])])]])))
+                [:li {:class (clj-str/join " " (remove nil? ["harja-navbar-item"
+                                                              (:context (meta (first item)))]))}
+                 item])])]]]))))
 
 (defn ^{:context "dropdown"}
   dropdown
   "A dropdown menu."
   [title items]
-  [:span
-   [:a.dropdown-toggle {:role "button" :aria-expanded "false"}
-    title [:span.caret]]
-   [:ul.dropdown-menu {:role "menu"}
-    (for [item items]
-      [:li item])]])
+  (let [avoin? (atom false)
+        vaihda-aukiolo! (fn [tapahtuma]
+                          (.preventDefault tapahtuma)
+                          (swap! avoin? not))
+        sulje! (fn [_]
+                 (reset! avoin? false))]
+    (fn [title items]
+      [:div {:class (clj-str/join " " (remove nil? ["harja-dropdown"
+                                                     (when @avoin?
+                                                       "harja-dropdown-avoin")]))}
+       [:button {:type "button"
+                 :class "harja-dropdown-vaihtaja"
+                 :aria-expanded (str @avoin?)
+                 :aria-haspopup "menu"
+                 :on-click vaihda-aukiolo!
+                 :on-key-down #(when (dom/esc-nappain? %)
+                                 (sulje! %))}
+        [:span.harja-dropdown-otsikko title]
+        [:span.harja-dropdown-indikaattori {:aria-hidden true}]]
+       (when @avoin?
+         [:ul.harja-dropdown-valikko {:role "menu"}
+          (for [item items]
+            ^{:key (hash item)}
+              [:li.harja-dropdown-kohta {:role "presentation"
+                                         :on-click sulje!}
+              item])])])))
 
 
 
@@ -156,23 +176,26 @@ Opts can have the following keys:
    :open   an optional atom with boolean value for open/closed state, defaults to (atom false)
    :style  a style keyword :default, :primary, :success, :info :warning, :danger
   "
-  [opts title content]
+  [opts _ _]
   (let [open (or (:open opts) (atom false))
-        style (or (:style opts) :default)]
-    (fn [opts title content]
-      [:div.panel {:class (str "panel-" (name style))}
+        style (or (:style opts) :default)
+        data-cy (:data-cy opts)]
+    (fn [_ title content]
+      [:div.harja-panel.harja-dropdown-panel {:class (str "harja-dropdown-panel-tyyli-" (name style))
+                                              :data-cy data-cy}
+       [:button {:type "button"
+                 :class "harja-panel-otsake harja-dropdown-panel-vaihtaja"
+                 :data-cy (when data-cy (str data-cy "-vaihtaja"))
+                 :aria-expanded (str @open)
+                 :on-click #(swap! open not)}
+        [:span.harja-dropdown-panel-otsikko title]
+        [:span.harja-dropdown-panel-indikaattori {:aria-hidden true}
+         (if @open
+           [ikonit/livicon-minus]
+           [ikonit/livicon-plus])]]
 
-       ;; Panel heading with title and clickable open/close toggle
-       [:div.panel-heading {:on-click #(swap! open not)}
-        [:h3.panel-title title]
-        [:span.pull-right.clickable
-         [:i.glyphicon {:class (if @open
-                                 "glyphicon-minus"
-                                 "glyphicon-plus")}]]]
-
-       ;; Panel content
        (when @open
-         [:div.panel-body
+         [:div.harja-panel-runko {:data-cy (when data-cy (str data-cy "-sisalto"))}
           content])])))
 
 (defn panel

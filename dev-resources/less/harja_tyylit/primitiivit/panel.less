@@ -27,6 +27,55 @@
   padding-inline: @harja-panel-padding-vaaka-teema-arvo;
 }
 
+.harja-dropdown-panel-vaihtaja {
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+}
+
+.harja-dropdown-panel-otsikko {
+  flex: 1 1 auto;
+}
+
+.harja-dropdown-panel-indikaattori {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-inline-start: @valistys-16;
+}
+
+.harja-dropdown-panel-tyyli-default > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-default-heading-bg;
+  color: @panel-default-text;
+}
+
+.harja-dropdown-panel-tyyli-primary > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-primary-heading-bg;
+  color: @panel-primary-text;
+}
+
+.harja-dropdown-panel-tyyli-success > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-success-heading-bg;
+  color: @panel-success-text;
+}
+
+.harja-dropdown-panel-tyyli-info > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-info-heading-bg;
+  color: @panel-info-text;
+}
+
+.harja-dropdown-panel-tyyli-warning > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-warning-heading-bg;
+  color: @panel-warning-text;
+}
+
+.harja-dropdown-panel-tyyli-danger > .harja-dropdown-panel-vaihtaja {
+  background-color: @panel-danger-heading-bg;
+  color: @panel-danger-text;
+}
+
 .harja-panel-runko {
   padding-block-start: @harja-panel-padding-pysty-teema-arvo;
   padding-inline: @harja-panel-padding-vaaka-teema-arvo;

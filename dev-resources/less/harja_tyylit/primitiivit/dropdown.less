@@ -1,0 +1,88 @@
+/* Lopulliset teema-arvot:
+  komponenttikohtainen CSS-muuttuja -> mahdollinen yhteinen teematoken -> LESS-oletus */
+@harja-dropdown-pinta-teema-arvo: var(--harja-dropdown-pinta, var(--harja-teema-pinta, @white-default));
+@harja-dropdown-reuna-teema-arvo: var(--harja-dropdown-reuna, var(--harja-teema-reuna, @harmaa9));
+@harja-dropdown-radius-teema-arvo: var(--harja-dropdown-radius, var(--harja-teema-radius, 0.25rem));
+@harja-dropdown-varjo-teema-arvo: var(--harja-dropdown-varjo, var(--harja-teema-varjo, 0 8px 24px fade(@black-default, 16%)));
+@harja-dropdown-teksti-teema-arvo: var(--harja-dropdown-teksti, var(--harja-teema-teksti, @harmaa2));
+@harja-dropdown-korostus-teema-arvo: var(--harja-dropdown-korostus, var(--harja-teema-korostus, @sininen5));
+@harja-dropdown-hover-pinta-teema-arvo: var(--harja-dropdown-hover-pinta, var(--harja-teema-pinta-hover, @blue-lighter));
+@harja-dropdown-padding-pysty-teema-arvo: var(--harja-dropdown-padding-pysty, var(--harja-teema-sisalto-padding-pysty, 0.5rem));
+@harja-dropdown-padding-vaaka-teema-arvo: var(--harja-dropdown-padding-vaaka, var(--harja-teema-sisalto-padding-vaaka, 0.75rem));
+
+.harja-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.harja-dropdown-vaihtaja {
+  display: inline-flex;
+  align-items: center;
+  gap: @valistys-8;
+  background-color: @harja-dropdown-pinta-teema-arvo;
+  border: 1px solid @harja-dropdown-reuna-teema-arvo;
+  border-radius: @harja-dropdown-radius-teema-arvo;
+  color: @harja-dropdown-teksti-teema-arvo;
+  cursor: pointer;
+  padding-block: @harja-dropdown-padding-pysty-teema-arvo;
+  padding-inline: @harja-dropdown-padding-vaaka-teema-arvo;
+}
+
+.harja-dropdown-vaihtaja:focus-visible {
+  outline: 2px solid @harja-dropdown-korostus-teema-arvo;
+  outline-offset: 2px;
+}
+
+.harja-dropdown-otsikko {
+  display: inline-flex;
+  align-items: center;
+}
+
+.harja-dropdown-indikaattori {
+  inline-size: 0;
+  block-size: 0;
+  border-inline-start: 0.3125rem solid transparent;
+  border-inline-end: 0.3125rem solid transparent;
+  border-block-start: 0.375rem solid currentColor;
+  transition: transform 120ms ease-in-out;
+}
+
+.harja-dropdown-avoin .harja-dropdown-indikaattori {
+  transform: rotate(180deg);
+}
+
+.harja-dropdown-valikko {
+  position: absolute;
+  inset-block-start: calc(100% + 0.25rem);
+  inset-inline-start: 0;
+  z-index: 10;
+  min-inline-size: 100%;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background-color: @harja-dropdown-pinta-teema-arvo;
+  border: 1px solid @harja-dropdown-reuna-teema-arvo;
+  border-radius: @harja-dropdown-radius-teema-arvo;
+  box-shadow: @harja-dropdown-varjo-teema-arvo;
+}
+
+.harja-dropdown-kohta {
+  display: block;
+}
+
+.harja-dropdown-kohta > * {
+  display: block;
+  inline-size: 100%;
+  color: @harja-dropdown-teksti-teema-arvo;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.harja-dropdown-kohta > *:focus-visible,
+.harja-dropdown-kohta > *:hover {
+  background-color: @harja-dropdown-hover-pinta-teema-arvo;
+  outline: none;
+}
