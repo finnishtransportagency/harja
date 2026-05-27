@@ -381,8 +381,12 @@ ja kaikki pakolliset kentät on täytetty"
             tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
             aputeksti (get lomakkeen-opts :aputeksti)
             kentta (cond
-                     (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                   :data              data} komponentti-args)]
+                     (= tyyppi :komponentti) (let [sisalto (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data              data} komponentti-args)]
+                                               (if muokattava?
+                                                 [:div.komponentti sisalto]
+                                                 [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
+                                                  sisalto]))
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
                                                                               komponentti-args))]
