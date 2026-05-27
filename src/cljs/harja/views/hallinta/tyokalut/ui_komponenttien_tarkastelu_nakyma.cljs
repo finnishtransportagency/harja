@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-nakyma
 	(:require [reagent.core :as r]
 					[harja.ui.primitiivit.viesti :as viesti]
+					[harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot :as alasvedot]
 					[harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.modaalit :as modaalit]
 					[harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.navigaatio :as navigaatio]
 					[harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.panelit :as panelit]
@@ -81,7 +82,7 @@
 				 [:section {:class "ui-komponenttien-tarkastelu-sivun-otsikko"}
 					[:h1 "UI-komponenttien tarkastelu"]
 					[:p "Tämä sivu kokoaa Harjan omia UI-komponentteja manuaalista tarkastelua varten."]
-					[:p "Primitiivit ovat yksi osa kokonaisuutta, ja tällä sivulla voi nyt tarkastella viestejä, modaaleja, navigaatiota, paneeleja ja välilehtiä."]
+					[:p "Primitiivit ovat yksi osa kokonaisuutta, ja tällä sivulla voi nyt tarkastella viestejä, modaaleja, navigaatiota, alasvetoja, paneeleja ja välilehtiä."]
 					[:p "Kortit näyttävät nyt erikseen myös sen, onko komponentti jo portattu pois Bootstrapista vai nojaako se vielä vanhaan toteutukseen."]
 					[:p "Välilehtien kokeilukortissa voi nyt säätää sallittuja tyylimuuttujia, nähdä preview'n ja kopioida override-mapin yhdestä paikasta."]
 					[:p "Lisäksi tällä sivulla voi nyt kokeilla jaettuja teeman perusasetuksia, jotka vaikuttavat useaan komponenttiin yhtä aikaa ennen tarkempia komponenttikohtaisia overrideja."]]
@@ -91,6 +92,7 @@
 				 [viestit/viestit-osio viesti-ryhman-tiedot]
 				 [modaalit/modaalit-osio modaalin-tila]
 				 [navigaatio/navigaatio-osio]
+				 [alasvedot/alasvedot-osio]
 				 [panelit/panelit-osio]
 				 [valilehdet/valilehdet-osio {:valilehtien-tilat valilehtien-tilat
 										 :tyylioverridet-tilat tyylioverridet-tilat

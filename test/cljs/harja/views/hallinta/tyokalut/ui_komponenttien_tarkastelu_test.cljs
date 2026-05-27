@@ -3,6 +3,7 @@
             [clojure.string]
             [reagent.core :as r]
             [harja.ui.bootstrap :as bootstrap]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot :as alasvedot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.navigaatio :as navigaatio]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.panelit :as panelit]
             [harja.testutils.shared-testutils :as u]
@@ -146,6 +147,28 @@
     (is (= "true" (.getAttribute (u/sel1 "[data-cy=\"ui-komponenttien-tarkastelu-navbar-vaihtaja\"]") "aria-expanded")))
     (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-sisalto\"].harja-navbar-sisalto-avoin"))))))
 
+(deftest alasvedot-osio-nayttaa-tuotantopolun-shared-alasvedot
+  (komponenttitesti
+    [alasvedot/alasvedot-osio]
+
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-alasvedot-osio\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-vayla-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-ryhmitelty-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-alasveto-toiminnolla-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valikko\"].dropdown.livi-alasveto"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valikko\"] .dropdown-menu.livi-alasvetolista"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-vayla-valikko\"].select-default"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valikko\"] button")
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valikko\"].open"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-ryhmitelty-valikko\"] button")
+    (is (= 2 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-ryhmitelty-valikko\"] .haku-lista-ryhman-otsikko"))))
+
+    (u/click "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valikko\"] .harja-alasvetolistaitemi")
+    (is (.includes (u/text "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-valinta\"]") "Valittu:"))))
+
 (deftest tarkastelusivu-sisaltaa-navigaatio-osion-ja-navbar-kortin
   (komponenttitesti
     [nakyma/ui-komponenttien-tarkastelu]
@@ -154,7 +177,11 @@
     (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown-kortti\"]"))))
     (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-dropdown\"]"))))
     (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar-kortti\"]"))))
-    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"]"))))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-navbar\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-alasvedot-osio\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-vayla-kortti\"]"))))
+    (is (= 1 (count (u/sel "[data-cy=\"ui-komponenttien-tarkastelu-livi-pudotusvalikko-ryhmitelty-kortti\"]"))))))
 
 (deftest panelit-osio-lukitsee-nykyisen-bootstrap-rakenteen
   (komponenttitesti
