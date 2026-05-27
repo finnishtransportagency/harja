@@ -526,4 +526,6 @@
     "KT-valuasfalttipaikkaus K"
     "KT-valuasfalttipaikkaus T"
     "KT-reikävaluasfalttipaikkaus"
-    "KT-valuasfalttisaumaus"})
+    "KT-valuasfalttisaumaus"
+    "PAB-paikkaus levittäjällä"
+    "Sirotepuhalluspaikkaus (SIPU)"})
