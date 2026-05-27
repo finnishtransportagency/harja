@@ -281,17 +281,16 @@
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi]))
-              :tyyppi :komponentti
+             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) " (string)")
+              :tyyppi :string
               :nimi :toimenpideinstanssi
               :muokattava? (constantly false)
               ::lomake/col-luokka "col-xs-12"
-              :komponentti (fn [_]
-                             (let [tpi-id (:toimenpideinstanssi @muokattu)]
-                               [:div.form-control-static.lomake-arvo
-                                [:span (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
-                                             @tiedot-urakka/urakan-toimenpideinstanssit)
-                                         "")]]))}))
+              :hae (fn [rivi]
+                     (let [tpi-id (:toimenpideinstanssi rivi)]
+                       (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
+                             @tiedot-urakka/urakan-toimenpideinstanssit)
+                         "")))}))
 
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (sanktio-domain/muu-kuin-muistutus? @muokattu)
@@ -463,16 +462,15 @@
             :tyyppi :komponentti
             :uusi-rivi? true
             ::lomake/col-luokka "col-xs-12"
+            :muokattava? (constantly false)
             :komponentti (fn [_]
-                           [:div.form-control-static.lomake-arvo
-                            (if (and (get-in @muokattu [:laatupoikkeama :liitteet])
-                                  (not (empty? (get-in @muokattu [:laatupoikkeama :liitteet]))))
-                              (doall
-                                (for [l (get-in @muokattu [:laatupoikkeama :liitteet])]
-                                  ^{:key l}
-                                  [liitteet/liitetiedosto l {:salli-poisto? false
-                                                             :nayta-koko? true}]))
-                              (str "Ei liitettä" (when (not suorasanktio?) " (käytä laatupoikkeaman liitteitä)")))])})
+                           (if (seq (get-in @muokattu [:laatupoikkeama :liitteet]))
+                             (doall
+                               (for [l (get-in @muokattu [:laatupoikkeama :liitteet])]
+                                 ^{:key l}
+                                 [liitteet/liitetiedosto l {:salli-poisto? false
+                                                            :nayta-koko? true}]))
+                             (str "Ei liitettä" (when (not suorasanktio?) " (käytä laatupoikkeaman liitteitä)"))))})
 
          (when lukutila?
            {:otsikko "Kirjaaja" :nimi :tekijanimi
