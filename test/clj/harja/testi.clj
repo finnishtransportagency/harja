@@ -899,6 +899,11 @@
                    FROM   urakka
                    WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030')"))))
+
 (defn hae-kajaani-hoitourakan-2025-2030-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka

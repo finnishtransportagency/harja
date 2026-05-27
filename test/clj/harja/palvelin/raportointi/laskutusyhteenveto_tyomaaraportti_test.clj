@@ -387,44 +387,102 @@
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
 
 
-(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-ennen-2022
-  (let [hk_alkupvm "2019-10-01"
-        hk_loppupvm "2020-09-30"
-        aikavali_alkupvm "2019-10-01"
-        aikavali_loppupvm "2020-09-30"
-        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
-        tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
-        ;; Päivämäärä (käsittelypäivä) ja laskutuskuukausi, voi olla samat näissä testeissä, vaikka oikeasti ne voi vaihdella
-        pvm (pvm/->pvm "15.10.2019")
-        bonus_summa 1000M
-        alihankintabonus_summa 7777M
-        sanktio_summa 1500M
+(deftest tyomaaraportti-bonukset-ja-sanktiot-nakyvyys-toimii
+  (testing "Bonukset ja sanktiot näkyy MHU19 laskutusyhteenvedossa"
+    (let [hk_alkupvm "2023-10-01"
+          hk_loppupvm "2024-09-30"
+          aikavali_alkupvm "2023-10-01"
+          aikavali_loppupvm "2024-09-30"
+          urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+          tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+          ;; Päivämäärä (käsittelypäivä) ja laskutuskuukausi, voi olla samat näissä testeissä, vaikka oikeasti ne voi vaihdella
+          pvm (pvm/->pvm "15.10.2023")
+          bonus_summa 1000M
+          sanktio_summa 1500M
+          alihankintabonus_summa 7777M
+          bonukset-yht (+ alihankintabonus_summa bonus_summa)
 
-        ;; Poistetaan kaikki bonukset ja sanktiot urakalta
-        _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+          ;; Poistetaan kaikki bonukset ja sanktiot urakalta
+          _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+          _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
-        ;; Luodaan asiakastyytyvaisyysbonus
-        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                 sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
+          ;; Luodaan asiakastyytyvaisyysbonus
+          _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
-               sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+                 sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
 
-        ;; Luodaan sanktio
-        _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
+          ;; Luodaan sanktio
+          _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
                       VALUES (%s,'%s'::DATE, %s, %s, %s, '%s'::sanktiolaji)"
-               sanktio_summa pvm tpi-hallinnolliset-toimenpiteet 2 true "A"))
+                 sanktio_summa pvm tpi-hallinnolliset-toimenpiteet 2 true "A"))
 
-        raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+          raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                            hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+          purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
-    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)))
-    (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)))
-    (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
-    (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
+      (is (= bonukset-yht (:bonukset_hoitokausi_yht purettu)) "Kirjattu bonus MHU19 täsmää tulosta (hk yht)")
+      (is (= bonukset-yht (:bonukset_val_aika_yht purettu)) "Kirjattu bonus MHU19 täsmää tulosta (val aika)")
+      (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)) "Kirjattu sanktio MHU19 täsmää tulosta (hk yht)")
+      (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)) "Kirjattu sanktio MHU19 täsmää tulosta (val aika)")
+
+      ;; Nämä lasketaan kustannuksiin sekä näytetään laskutusyhteenvedolla
+      (is (=
+            (- bonukset-yht sanktio_summa)
+            (:muut_kustannukset_hoitokausi_yht purettu)) "Sanktiot & bonukset näytetään MHU19 raportilla (val aika)")
+      (is (=
+            (- bonukset-yht sanktio_summa)
+            (:muut_kulut_ei_tavoite_hoitokausi_yht purettu)) "Sanktiot & bonukset näytetään MHU19 raportilla (hk yht)")))
+
+  (testing "Bonuksia & sanktioita ei näytetä MHU25 laskutuksessa"
+    (let [hk_alkupvm "2025-10-01"
+          hk_loppupvm "2026-09-30"
+          aikavali_alkupvm "2025-10-01"
+          aikavali_loppupvm "2026-09-30"
+          urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+          sopimus-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id)
+          tpi-hallinnolliset-toimenpiteet (hae-toimenpideinstanssi-id urakka-id "23151")
+          pvm (pvm/->pvm "15.10.2025")
+          bonus_summa 1000M
+          sanktio_summa 1500M
+          alihankintabonus_summa 7777M
+
+          ;; Poistetaan kaikki bonukset ja sanktiot urakalta
+          _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+          _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+                 sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm alihankintabonus_summa urakka-id "alihankintabonus"))
+          ;; Luodaan asiakastyytyvaisyysbonus
+          _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+                 sopimus-id tpi-hallinnolliset-toimenpiteet pvm pvm bonus_summa urakka-id "asiakastyytyvaisyysbonus"))
+
+          ;; Luodaan sanktio
+          _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
+                      VALUES (%s,'%s'::DATE, %s, %s, %s, '%s'::sanktiolaji)"
+                 sanktio_summa pvm tpi-hallinnolliset-toimenpiteet 2 true "A"))
+
+          raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                            hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+          purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+
+      ;; Arvot tallennetaan
+      (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)) "Kirjattu bonus MHU25 täsmää tulosta (hk yht)")
+      (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)) "Kirjattu bonus MHU25 täsmää tulosta (val aika)")
+      (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)) "Kirjattu sanktio MHU25 täsmää tulosta (hk yht)")
+      (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)) "Kirjattu sanktio MHU25 täsmää tulosta (val aika)")
+
+      ;; Mutta niitä ei lasketa toteutuneisiin, eivätkä näy raportilla 
+      (is (=
+            0.0M
+            (:muut_kustannukset_hoitokausi_yht purettu)) "Sanktioita & bonuksia ei näytetä MHU25 raportilla (val aika)")
+      (is (=
+            0.0M
+            (:muut_kulut_ei_tavoite_hoitokausi_yht purettu)) "Sanktioita & bonuksia ei näytetä MHU25 raportilla (hk yht)"))))
 
 
 (deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022

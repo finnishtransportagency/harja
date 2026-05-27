@@ -1545,22 +1545,6 @@ BEGIN
             paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_val_aika;
-
-    -- MHU25 urakoille ei lasketa sanktioita & bonuksia
-    -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
-    IF NOT onko_laskutusraja_kaytossa THEN
-        muut_kustannukset_hoitokausi_yht :=
-            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
-
-        muut_kustannukset_val_aika_yht :=
-            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
-
-        muut_kulut_ei_tavoite_hoitokausi_yht :=
-            muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht +  sanktiot_hoitokausi_yht;
-
-        muut_kulut_ei_tavoite_val_aika_yht :=
-            muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
-    END IF;
     
     ---------------------------------
     --------- Laskutusraja ----------
@@ -1601,9 +1585,6 @@ BEGIN
 
     
     IF onko_laskutusraja_kaytossa THEN
-        
-        
-        
         ------------------------------------------------------
         -- "josta laskutettavaa" valittu kk 
         IF tavhin_val_aika_yht >= laskutusraja_yht THEN
@@ -1636,6 +1617,23 @@ BEGIN
         laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muut_kustannukset_val_aika_yht;
     END IF;
 
+
+    -- MHU25 urakoille ei lasketa sanktioita & bonuksia
+    -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+    IF NOT onko_laskutusraja_kaytossa THEN
+        muut_kustannukset_hoitokausi_yht :=
+            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
+
+        muut_kustannukset_val_aika_yht :=
+            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+
+        muut_kulut_ei_tavoite_hoitokausi_yht :=
+            muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht +  sanktiot_hoitokausi_yht;
+
+        muut_kulut_ei_tavoite_val_aika_yht :=
+            muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+    END IF;
+    
     
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;

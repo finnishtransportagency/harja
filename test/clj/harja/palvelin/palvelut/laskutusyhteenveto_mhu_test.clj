@@ -9,37 +9,12 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.domain.kulut :as domain-kulut]
-            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.palvelin.palvelut.kulut.kulut :as kulu-palvelu]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-kyselyt]
-            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]))
-
-
-(defn raportti-zip
-  "Palauta zipper raportin raakadatalle"
-  ;; Ei täydellinen. Raportin raakadata ei sisällä aivan säännönmukaista rakennetta, joten branchit eivät välttämättä aina ole sitä mitä halutaan
-  [raportti-root]
-  (zip/zipper
-    vector?
-    ;; Hae lapset
-    #(drop 1 %)
-    ;; Tee uusi noodi
-    #(into [] (concat (take 1 %1) %2))
-    raportti-root))
-
-
-(defn etsi-raportin-rivi
-  [zipped-raportti rivi-data]
-  (loop [curr zipped-raportti]
-    (cond
-      (zip/end? curr) nil
-      (-> curr zip/node (= rivi-data)) (-> curr zip/node)
-      :else (recur (zip/next curr)))))
 
 
 (defn jarjestelma-fixture [testit]
