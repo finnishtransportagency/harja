@@ -10,6 +10,7 @@
             [harja.views.hallinta.urakoiden-lyhytnimet :as lyhytnimet]
             [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
             [harja.views.hallinta.tyokalut.hairiot :as hairiot]
+            [harja.views.hallinta.tyokalut.wizard-demo :as tyokalut-wizard]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
@@ -35,7 +36,8 @@
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
             [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
@@ -267,5 +269,10 @@
     :viestitestaus
     (when true
       ^{:key "viestitestaus"}
-      [viestinakyma/viestitestaus])]])
+      [viestinakyma/viestitestaus])
 
+    "Wizard"
+    :wizard-demo
+    (when (k/kehitysymparistossa?)
+      ^{:key "wizard-demo"}
+      [tyokalut-wizard/wizard-demo])]])

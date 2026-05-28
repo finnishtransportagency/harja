@@ -1,0 +1,90 @@
+
+.wizard {
+  display: flex;
+  align-items: flex-start;
+  gap: @valistys-32;
+}
+
+.sidebar {
+  // Tässä näkyy kortit
+  flex: 0 1 272px;
+  display: flex;
+  min-width: 500px;
+  flex-direction: column;
+}
+
+.step {
+  // Tämän sisällä numero sekä otsikko 
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: @valistys-16;
+  min-height: 52px;
+  padding-bottom: 20px;
+  cursor: pointer;
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 19px;
+  top: 52px;
+  bottom: 0;
+  width: 1px;
+  background: @black-default;
+}
+
+.step-card {
+  position: relative;
+  z-index: 1;
+
+  // Figmasta kopsattu 
+  width: 38px;
+  min-width: 38px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 7px;
+  background: @blue-lighter;
+
+  color: #005aa3; // Tätä ei ole meillä kirjastossa?
+  font-weight: 700;
+  font-size: 20px; // Tarkista voidaanko käyttää typography
+}
+
+.step.active .step-card {
+  // Aktiivinen kortti
+  background: @sininen4;
+  color: white;
+}
+
+.step.done .step-card {
+  // Askel suoritettu
+  background: @green-light;
+  color: @black-default;
+}
+
+.step-title {
+  font-size: 16px; // Tarkista voisko käyttää typography 
+  line-height: 1.35;
+  color: @gray-darker;
+}
+
+.step.active .step-title {
+  font-weight: 700;
+}
+
+.wizard-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: @valistys-16;
+}

@@ -17,15 +17,15 @@
     (pvm/vuosi (pvm/nyt))
     (dec (pvm/vuosi (pvm/nyt)))))
 
-(defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
-                                                                         :maksetaan                      :molemmat
+(defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide :talvihoito
+                                                                         :maksetaan :molemmat
                                                                          :kopioidaan-tuleville-vuosille? false
                                                                          :laskutukseen-perustuen-valinta #{}}}
-                                       :suodattimet          {:hankinnat                      {:toimenpide                     :talvihoito
-                                                                                               :maksetaan                      :molemmat
-                                                                                               :kopioidaan-tuleville-vuosille? false
-                                                                                               :laskutukseen-perustuen-valinta #{}}
-                                                              :kopioidaan-tuleville-vuosille? false}})
+                                       :suodattimet {:hankinnat {:toimenpide :talvihoito
+                                                                 :maksetaan :molemmat
+                                                                 :kopioidaan-tuleville-vuosille? false
+                                                                 :laskutukseen-perustuen-valinta #{}}
+                                                     :kopioidaan-tuleville-vuosille? false}})
 
 (def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
                                :lomake [:kopioidaan-tuleville-vuosille? true]
@@ -93,44 +93,44 @@
 (defn y-tunnus [arvo]
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
-(def validoinnit {:kulut/summa                 [ei-nil numero]
-                  :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
-                  :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
-                  :kulut/tehtavaryhma          [ei-nil ei-tyhja]
-                  :kulut/tehtava               [ei-nil ei-tyhja]
-                  :kulut/rahavaraus            [ei-nil ei-tyhja]
-                  :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
+(def validoinnit {:kulut/summa [ei-nil numero]
+                  :kulut/negatiivinen-summa [ei-nil negatiivinen-numero]
+                  :kulut/laskun-numero [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
+                  :kulut/tehtavaryhma [ei-nil ei-tyhja]
+                  :kulut/tehtava [ei-nil ei-tyhja]
+                  :kulut/rahavaraus [ei-nil ei-tyhja]
+                  :kulut/erapaiva [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
-                  :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
-                  :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
-                  :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]
-                  :kulut/toimenpide            [ei-nil ei-tyhja]})
+                  :kulut/y-tunnus [(ei-pakollinen y-tunnus)]
+                  :kulut/lisatyon-lisatieto [ei-nil ei-tyhja]
+                  :kulut/toimenpideinstanssi [ei-nil ei-tyhja]
+                  :kulut/toimenpide [ei-nil ei-tyhja]})
 
 (defn validoi!
   [{:keys [validius validi?] :as lomake-meta} lomake]
   ;(loki/log "valids" validius)
   (reduce (fn [kaikki [polku {:keys [validointi] :as validius}]]
             (as-> kaikki kaikki
-                  (update kaikki :validius
-                          (fn [vs]
-                            (update vs polku
-                                    (fn [kentta]
-                                      #_(.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi)
-                                              "validi?" (pr-str (validointi (get-in lomake polku)))
-                                              "get-in lomake polku" (pr-str (get-in lomake polku))
-                                              "lomake: " (pr-str lomake))
-                                      (assoc kentta
-                                        :tarkistettu? true
-                                        :validointi validointi
-                                        :validi? (validointi
-                                                   (get-in lomake polku)))))))
-                  (update kaikki :validi?
-                          (fn [v?]
-                            (every? (fn [[_ {validi? :validi?}]]
-                                      (true? validi?))
-                                    (:validius kaikki))))))
-          lomake-meta
-          validius))
+              (update kaikki :validius
+                (fn [vs]
+                  (update vs polku
+                    (fn [kentta]
+                      #_(.log js/console "validoi kenttä " (pr-str kentta) ", polku " (pr-str polku) ", validointi: " (pr-str validointi)
+                          "validi?" (pr-str (validointi (get-in lomake polku)))
+                          "get-in lomake polku" (pr-str (get-in lomake polku))
+                          "lomake: " (pr-str lomake))
+                      (assoc kentta
+                        :tarkistettu? true
+                        :validointi validointi
+                        :validi? (validointi
+                                   (get-in lomake polku)))))))
+              (update kaikki :validi?
+                (fn [v?]
+                  (every? (fn [[_ {validi? :validi?}]]
+                            (true? validi?))
+                    (:validius kaikki))))))
+    lomake-meta
+    validius))
 
 (defn validoi-fn
   "Kutsuu vain lomakkeen kaikki validointifunktiot ja päivittää koko lomakkeen validiuden"
@@ -144,7 +144,7 @@
        validoi!
        lomake))))
 
-(defn- koske! 
+(defn- koske!
   [validius polku]
   (update validius polku assoc :koskettu? true))
 
@@ -169,28 +169,28 @@
   "Ajatus, että lomake tietää itse, miten se validoidaan"
   [& kentat-ja-validaatiot]
   (assoc {} :validius
-            (reduce (fn [k [polku validointi-fns]]
-                      (assoc k polku {:validointi   (luo-validointi-fn validointi-fns)
-                                      :validi?      false
-                                      :koskettu?    false
-                                      :tarkistettu? false}))
-                    {}
-                    (partition 2 kentat-ja-validaatiot))
-            :validi? false
-            :validoi validoi-fn
-            :koske koske!))
+    (reduce (fn [k [polku validointi-fns]]
+              (assoc k polku {:validointi (luo-validointi-fn validointi-fns)
+                              :validi? false
+                              :koskettu? false
+                              :tarkistettu? false}))
+      {}
+      (partition 2 kentat-ja-validaatiot))
+    :validi? false
+    :validoi validoi-fn
+    :koske koske!))
 
 
-(defn- optiot? 
+(defn- optiot?
   [m]
   (or (contains? m :viestit)
-      (contains? m :arvo)
-      (contains? m :tarkista-validointi-avaimella)))
+    (contains? m :arvo)
+    (contains? m :tarkista-validointi-avaimella)))
 
-(defn- testit? 
+(defn- testit?
   [m]
   (and (contains? m :testi)
-       (contains? m :virheviesti)))
+    (contains? m :virheviesti)))
 
 (s/def ::tee-virheviesti-args (s/cat :tila map? :optiot (s/? optiot?) :testit (s/* testit?)))
 
@@ -231,40 +231,40 @@
   :arvo - valinnainen. jos tämän antaa, niin sitten haetaan arvo tilan polusta, joka on annettu
   arvolle vektorina. Voi antaa myös yksittäisen keywordin, se wrapataan vektoriin."
   [& parametrit]
-  (let [{{:keys [viestit tarkista-validointi-avaimella] globaali-arvo :arvo} :optiot 
+  (let [{{:keys [viestit tarkista-validointi-avaimella] globaali-arvo :arvo} :optiot
          :keys [tila testit] :as invalid?} (s/conform ::tee-virheviesti-args parametrit)
-        _ (when (= ::s/invalid invalid?) 
+        _ (when (= ::s/invalid invalid?)
             (loki/error (str "VIRHE: Virhe luotaessa virheilmoitusta. " (s/explain ::tee-virheviesti-args parametrit))))
         virheviestit (merge virheviestit viestit)
-        xform (comp (map (fn [t] 
+        xform (comp (map (fn [t]
                            (let [{:keys [testi arvo virheviesti]} t
                                  testi (if (or (set? testi)
-                                               (vector? testi))
+                                             (vector? testi))
                                          (apply comp testi)
                                          testi)
-                                 arvo (cond 
+                                 arvo (cond
                                         (or (keyword? arvo)
-                                            (string? arvo)) 
+                                          (string? arvo))
                                         (get-in tila [arvo])
-                                        
+
                                         (vector? arvo)
                                         (get-in tila arvo)
-                                        
+
                                         (some? globaali-arvo)
-                                        (get-in tila (if (vector? globaali-arvo) 
+                                        (get-in tila (if (vector? globaali-arvo)
                                                        globaali-arvo
                                                        [globaali-arvo]))
 
-                                        :else tila)] 
-                             (when-not (testi arvo) 
+                                        :else tila)]
+                             (when-not (testi arvo)
                                (virheviesti virheviestit)))))
-                    (keep identity))
-        naytetaan-virhe? (cond 
-                           tarkista-validointi-avaimella 
-                           (validointi/nayta-virhe? tarkista-validointi-avaimella tila) 
-                            
+                (keep identity))
+        naytetaan-virhe? (cond
+                           tarkista-validointi-avaimella
+                           (validointi/nayta-virhe? tarkista-validointi-avaimella tila)
+
                            :else true)
-        virheet (when naytetaan-virhe? 
+        virheet (when naytetaan-virhe?
                   (into [] xform testit))]
     (when-not (empty? virheet) virheet)))
 
@@ -287,7 +287,7 @@
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
                                              [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
-                                            
+
                                             (= :erillisrahoitettu-muutos (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :valittu-muutostyo] (:kulut/valittu-muutostyo validoinnit)
@@ -325,7 +325,7 @@
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
                                             )))
                                 (range (count kohdistukset)))
-         #_ (js/console.log "kulun-validointi-meta :: kohdistusvalidoinnit: " (pr-str kohdistusvalidoinnit))]
+         #_(js/console.log "kulun-validointi-meta :: kohdistusvalidoinnit: " (pr-str kohdistusvalidoinnit))]
 
      (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
 
@@ -342,39 +342,39 @@
                               :rivi 0
                               :lukittu? false})
 
-(def kulut-lomake-default (with-meta {:kohdistukset          [kulut-kohdistus-default]
-                                      :aliurakoitsija        nil
+(def kulut-lomake-default (with-meta {:kohdistukset [kulut-kohdistus-default]
+                                      :aliurakoitsija nil
                                       :koontilaskun-kuukausi nil
-                                      :laskun-numero         nil
-                                      :lisatieto             nil
-                                      :suorittaja-nimi       nil
-                                      :erapaiva              (pvm/nyt)
-                                      :liitteet              []
-                                      :paivita               0}
-                                     (kulun-validointi-meta {:kohdistukset [{}]})))
+                                      :laskun-numero nil
+                                      :lisatieto nil
+                                      :suorittaja-nimi nil
+                                      :erapaiva (pvm/nyt)
+                                      :liitteet []
+                                      :paivita 0}
+                            (kulun-validointi-meta {:kohdistukset [{}]})))
 
 (def toteumat-default-arvot {:maarien-toteumat {:toimenpiteet-lataa true
-                                                :syottomoodi           false
-                                                :toimenpiteet          nil
-                                                :toteutuneet-maarat    nil
-                                                :valittu-toimenpide    {:otsikko "Kaikki" :id 0}
-                                                :hakufiltteri          {:maaramitattavat true
-                                                                        :rahavaraukset   true
-                                                                        :lisatyot        true}
+                                                :syottomoodi false
+                                                :toimenpiteet nil
+                                                :toteutuneet-maarat nil
+                                                :valittu-toimenpide {:otsikko "Kaikki" :id 0}
+                                                :hakufiltteri {:maaramitattavat true
+                                                               :rahavaraukset true
+                                                               :lisatyot true}
                                                 :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                                                                          (pvm/vuosi (pvm/nyt))
                                                                          (dec (pvm/vuosi (pvm/nyt))))
-                                                :aikavali-alkupvm      nil
-                                                :aikavali-loppupvm     nil
-                                                :lomake                {::t/toimenpide nil
-                                                                        ::t/tyyppi     nil
-                                                                        ::t/pvm        (pvm/nyt)
-                                                                        ::t/toteumat   [{::t/tehtava            nil
-                                                                                         ::t/toteuma-id         nil
-                                                                                         ::t/ei-sijaintia       true
-                                                                                         ::t/toteuma-tehtava-id nil
-                                                                                         ::t/lisatieto          nil
-                                                                                         ::t/maara              nil}]}}
+                                                :aikavali-alkupvm nil
+                                                :aikavali-loppupvm nil
+                                                :lomake {::t/toimenpide nil
+                                                         ::t/tyyppi nil
+                                                         ::t/pvm (pvm/nyt)
+                                                         ::t/toteumat [{::t/tehtava nil
+                                                                        ::t/toteuma-id nil
+                                                                        ::t/ei-sijaintia true
+                                                                        ::t/toteuma-tehtava-id nil
+                                                                        ::t/lisatieto nil
+                                                                        ::t/maara nil}]}}
                              :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi kuluva-alkuvuosi
                                                           :hoitovuoden-kuukausi nil
                                                           :kuntoluokat nil
@@ -414,11 +414,11 @@
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
 
-(def kulut-default {:parametrit  {:haetaan 0
-                                  :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
-                    :taulukko    nil
-                    :lomake      kulut-lomake-default
-                    :kulut       []
+(def kulut-default {:parametrit {:haetaan 0
+                                 :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
+                    :taulukko nil
+                    :lomake kulut-lomake-default
+                    :kulut []
                     :syottomoodi false})
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
@@ -454,7 +454,7 @@
 
 (def tarjous-kustannussuunnitelma-default {:haku-kaynnissa? false?
                                            :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
-                                                                   (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
+                                                                (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))]
                                            :tarjous nil
                                            :kustannussuunnitelma nil
                                            :vetolaatikon-muokkaus false
@@ -462,13 +462,14 @@
 
 (defonce tila (atom {:yleiset {:urakka {}}
                      :hallinta-hairiot {}
+                     :hallinta-wizard {}
                      :laatupoikkeamat laatupoikkeamat-default
                      :laskutus laskutus-default
                      :lupaukset lupaukset-default
                      :muutokset muutokset-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
-                     :toteumat    toteumat-default-arvot
+                     :toteumat toteumat-default-arvot
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot
                      :talvihoitoreitit talvihoitoreitit-default
@@ -482,6 +483,7 @@
                      :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
 
 (defonce hallinta-hairiot (cursor tila [:hallinta-hairiot]))
+(defonce hallinta-wizard (cursor tila [:hallinta-wizard]))
 
 (defonce tiemerkinta-korjaukset (cursor tila [:tiemerkinta-korjaukset]))
 (defonce tiemerkinta-yhteenveto (cursor tila [:tiemerkinta-yhteenveto]))
@@ -537,18 +539,18 @@
 ;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
 ;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.
 (add-watch nav/valittu-urakka :urakan-id-watch
-           (fn [_ _ _ uusi-urakka]
-             (doseq [f! @urakan-vaihto-triggerit]
-               (f!))
-             (when-not (= 0 (count @urakan-vaihto-triggerit))
-               (reset! urakan-vaihto-triggerit []))
-             (swap! tila (fn [tila]
-                           (-> tila
-                               (assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))
-                             ;; NOTE: Disabloitu räsähdykseen johtavan bugin takia.
-                             ;; Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
-                             ;;       ja kustannussuunnitelman gridit jäävät täten siivoamatta.
-                               #_(assoc :suunnittelu suunnittelu-default-arvot))))
-             ;dereffataan kursorit, koska ne on laiskoja
-             ;; NOTE: Disabloitu samasta syystä kuin ylempi.
-             #_@suunnittelu-kustannussuunnitelma))
+  (fn [_ _ _ uusi-urakka]
+    (doseq [f! @urakan-vaihto-triggerit]
+      (f!))
+    (when-not (= 0 (count @urakan-vaihto-triggerit))
+      (reset! urakan-vaihto-triggerit []))
+    (swap! tila (fn [tila]
+                  (-> tila
+                    (assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))
+                    ;; NOTE: Disabloitu räsähdykseen johtavan bugin takia.
+                    ;; Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
+                    ;;       ja kustannussuunnitelman gridit jäävät täten siivoamatta.
+                    #_(assoc :suunnittelu suunnittelu-default-arvot))))
+    ;dereffataan kursorit, koska ne on laiskoja
+    ;; NOTE: Disabloitu samasta syystä kuin ylempi.
+    #_@suunnittelu-kustannussuunnitelma))
