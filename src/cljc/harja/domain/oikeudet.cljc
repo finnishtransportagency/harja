@@ -61,6 +61,7 @@
   hallinta-yhteydenpito
   hallinta-palautevayla
   hallinta-integraatiotilanne
+  hallinta-laadunseuranta-profiilit
   hallinta-urakkahenkilot
   hallinta-paallystysilmoitukset
   hallinta-lupaukset

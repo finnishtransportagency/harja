@@ -25,6 +25,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as sanktio-konfiguraatio]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
@@ -358,6 +359,26 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
+(defn hae-urakan-sanktio-konfiguraatio
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
+
+(defn hae-sanktio-profiilit-admin
+  [db user]
+  (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
+
+(defn hae-sanktio-profiilin-detalji-admin
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
+
+(defn hae-bonus-profiilit-admin
+  [db user]
+  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
+
+(defn hae-bonus-profiilin-detalji-admin
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
+
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
@@ -447,6 +468,26 @@
       (fn [user]
         (hae-sanktiotyypit db user))
 
+      :hae-urakan-sanktio-konfiguraatio
+      (fn [user tiedot]
+        (hae-urakan-sanktio-konfiguraatio db user tiedot))
+
+      :hae-sanktio-profiilit-admin
+      (fn [user _]
+        (hae-sanktio-profiilit-admin db user))
+
+      :hae-sanktio-profiilin-detalji-admin
+      (fn [user tiedot]
+        (hae-sanktio-profiilin-detalji-admin db user tiedot))
+
+      :hae-bonus-profiilit-admin
+      (fn [user _]
+        (hae-bonus-profiilit-admin db user))
+
+      :hae-bonus-profiilin-detalji-admin
+      (fn [user tiedot]
+        (hae-bonus-profiilin-detalji-admin db user tiedot))
+
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
         (hae-urakan-laatupoikkeama-liitteet db user urakka-id alkupvm loppupvm))
@@ -471,6 +512,11 @@
       :hae-laatupoikkeaman-tiedot
       :hae-urakan-sanktiot-ja-bonukset
       :hae-sanktiotyypit
+      :hae-urakan-sanktio-konfiguraatio
+      :hae-sanktio-profiilit-admin
+      :hae-sanktio-profiilin-detalji-admin
+      :hae-bonus-profiilit-admin
+      :hae-bonus-profiilin-detalji-admin
       :tallenna-suorasanktio
       :poista-suorasanktio
       :hae-urakan-laatupoikkeama-liitteet

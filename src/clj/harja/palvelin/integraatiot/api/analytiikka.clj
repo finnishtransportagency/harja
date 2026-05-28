@@ -786,7 +786,8 @@
 
 (defn- muodosta-paallystysilmoitus [paallystysilmoitus]
   (-> paallystysilmoitus
-    (set/rename-keys {:toteutunut-hinta :toteutunutHinta})
+    (set/rename-keys {:toteutunut-hinta :toteutunutHinta
+                      :paallystysilmoituksen-tila :paallystysIlmoituksenTila})
     (assoc :yhaLahetyksenTila (cond
                                 (and
                                   (false? (:lahetys-onnistunut paallystysilmoitus))

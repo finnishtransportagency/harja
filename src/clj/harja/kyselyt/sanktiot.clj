@@ -3,8 +3,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
-(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
-  hae-urakan-sanktiot-analytiikalle hae-laatupoikkeaman-sanktiot hae-urakan-bonukset hae-sanktiotyypit
+(declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
+  hae-urakan-sanktiot-analytiikalle hae-laatupoikkeaman-sanktiot hae-urakan-bonukset
   hae-sanktiotyyppi-koodilla hae-sanktion-urakka-id luo-sanktio<! merkitse-maksuera-likaiseksi! paivita-sanktio!
   hae-suorasanktion-tiedot poista-sanktio!)
 
