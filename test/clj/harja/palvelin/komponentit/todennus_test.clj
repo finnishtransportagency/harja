@@ -513,6 +513,56 @@
       ;; Siivoa testi-käyttäjä lopuksi
       (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'"))))
 
+(deftest miam-epaonnistuminen-ei-cacheta-kayttajatietoja
+  (let [db (:db jarjestelma)
+        integraatioloki (:integraatioloki jarjestelma)
+        miam-asetukset {:url "https://testi-miam.example.com/api/v1/users"
+                        :apiavain "test-api-key-12345"}
+        testi-kayttajanimi "miam-cache-testi-kayttaja"
+        testi-headerit {"oam_remote_user" testi-kayttajanimi
+                        "oam_user_first_name" "MIAM"
+                        "oam_user_last_name" "Cachetestaaja"
+                        "oam_user_mail" "miam-cache@example.com"
+                        "oam_user_mobile" "0501234567"
+                        "oam_organization" "Destia Oy"
+                        "oam_groups" "Jarjestelmavastaava"}
+        miam-kutsut (atom 0)
+        miam-vastaus (cheshire/encode
+                       {"Table1" [{"CompanyID" "2163026-3"
+                                   "Company" "Destia Oy"
+                                   "UserName" testi-kayttajanimi
+                                   "Name" "MIAM Cachetestaaja"
+                                   "Role" "2234567-8_Paakayttaja"
+                                   "StartDate" "1.1.2024 0:00:00"
+                                   "EndDate" "31.12.2029 23:59:59"
+                                   "Agreementname" "Testisopimus"
+                                   "Appname" "HARJA"
+                                   "email" "miam-cache@example.com"}]})]
+
+    (testing "Epäonnistunut MIAM-haku ei päädy cacheen vaan seuraava yritys hakee tiedot uudelleen"
+      (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl 60000))
+      (reset! todennus/odottavat-kutsut-atom {})
+      (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")
+
+      (with-redefs [harja.palvelin.asetukset/ominaisuus-kaytossa? (fn [_] false)
+                    todennus/hae-kayttajaroolit-rajapinnasta (fn [_ _ _ _]
+                                                              (case (swap! miam-kutsut inc)
+                                                                1 nil
+                                                                miam-vastaus))]
+        (let [eka-kutsu (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset testi-headerit nil false nil)
+              toka-kutsu (todennus/koka->kayttajatiedot db integraatioloki miam-asetukset testi-headerit nil false nil)]
+          (is (nil? eka-kutsu) "Ensimmäinen epäonnistunut MIAM-haku ei saa palauttaa cachettavaa käyttäjää")
+          (is (= 2 @miam-kutsut) "Toinen kutsu tekee uuden MIAM-haun eikä käytä epäonnistunutta cachea")
+          (is (some? toka-kutsu) "Seuraava onnistunut MIAM-haku palauttaa käyttäjän")
+          (is (= testi-kayttajanimi (:kayttajanimi toka-kutsu)))
+          (is (= "Destia Oy" (get-in toka-kutsu [:organisaatio :nimi])) "Organisaatio palautuu onnistuneella toisella haulla")
+          (is (= #{"Paakayttaja"} (get-in toka-kutsu [:organisaatioroolit 33])) "Organisaatiorooli tulee onnistuneesta MIAM-vastauksesta")
+          (is (contains? (:roolit toka-kutsu) "Jarjestelmavastaava") "Header-rooli säilyy mukana onnistuneessa toisessa haussa"))))
+
+    (reset! todennus/kayttajatiedot-cache-atom (cache/ttl-cache-factory {} :ttl (* 120 60 1000)))
+    (reset! todennus/odottavat-kutsut-atom {})
+    (u "DELETE FROM kayttaja WHERE kayttajanimi = '" testi-kayttajanimi "'")))
+
 (deftest miam-uudelleen-yritys-logiikka-testi
   (testing "MIAM-kutsu uudelleenyritys timeout/virhe-tilanteessa"
     ;; Tämä testi varmistaa että hae-kayttajaroolit-rajapinnasta yrittää uudelleen
