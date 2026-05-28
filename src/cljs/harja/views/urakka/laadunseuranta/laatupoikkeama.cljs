@@ -516,15 +516,17 @@
                     (sanktion-validointi
                       {:otsikko "Käsittelyn pvm"
                        :nimi :paatos-pvm
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :kasittelyaika :paatos)
                        :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
-                       :tyyppi :pvm-aika
+                       :tyyppi :pvm
                        :muokattava? (constantly (and muokattava? paatosoikeus?))}
-                      "Anna käsittelyn päivämäärä ja aika")
+                      "Anna käsittelyn päivämäärä")
 
                     (sanktion-validointi
                       {:otsikko "Käsitelty"
                        :nimi :kasittelytapa
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :kasittelytapa :paatos)
                        :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                        :tyyppi :valinta
@@ -540,6 +542,7 @@
                     (when (= :muu (:kasittelytapa (:paatos @laatupoikkeama)))
                       {:otsikko "Muu käsittelytapa"
                        :nimi :kasittelytapa-selite
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :muukasittelytapa :paatos)
                        :aseta #(assoc-in %1 [:paatos :muukasittelytapa] %2)
                        :tyyppi :string
@@ -551,6 +554,7 @@
                     (sanktion-validointi
                       {:otsikko "Päätös"
                        :nimi :paatos-paatos
+                       ::lomake/col-luokka "col-xs-4"
                        :tyyppi :valinta
                        :valinnat [:sanktio :ei_sanktiota :hylatty]
                        :hae (comp :paatos :paatos)
