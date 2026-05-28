@@ -1547,9 +1547,16 @@
               (map (fn [{:keys [soveltuvuuskonteksti lajit]}]
                      [soveltuvuuskonteksti (lajit->yhteenveto lajit)]))
               (:sisalto vastaus)))
-          (lisaa-urakan-laskutusrajalaji [yhteenveto]
-            (update yhteenveto :urakka conj {:laji :laskutus_yli_laskutusrajan
-                                             :sanktiotyyppi-koodit [0]}))]
+          (muodosta-odotettu-mhu25-yhteenveto [yhteenveto]
+            (update yhteenveto :urakka
+              (fn [lajit]
+                (let [lajit-ilman-testikeskiarvoa
+                      (->> lajit
+                           (remove #(= :testikeskiarvo-sanktio (:laji %)))
+                           vec)]
+                  (conj lajit-ilman-testikeskiarvoa
+                    {:laji :laskutus_yli_laskutusrajan
+                     :sanktiotyyppi-koodit [0]})))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -1564,7 +1571,7 @@
                             {:sanktio-profiili-id mhu25-profiili-id}))
           mhu21-24-yhteenveto (vastaus->yhteenveto mhu21-24-vastaus)
           mhu25-yhteenveto (vastaus->yhteenveto mhu25-vastaus)
-          odotettu-mhu25-yhteenveto (lisaa-urakan-laskutusrajalaji mhu21-24-yhteenveto)
+          odotettu-mhu25-yhteenveto (muodosta-odotettu-mhu25-yhteenveto mhu21-24-yhteenveto)
           mhu25-urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           mhu25-laatupoikkeama-konteksti (first (filter #(= :laatupoikkeama (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           laskutus-laji (first (filter #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-urakka-konteksti)))]
@@ -1574,6 +1581,8 @@
         "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
         "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
+      (is (not-any? #(= :testikeskiarvo-sanktio (:laji %)) (:lajit mhu25-urakka-konteksti))
+        "MHU25-profiilin urakka-kontekstissa ei pidä olla testikeskiarvo-sanktiota")
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
