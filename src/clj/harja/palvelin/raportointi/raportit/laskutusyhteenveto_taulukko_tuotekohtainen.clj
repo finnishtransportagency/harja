@@ -72,23 +72,6 @@
       :avain_hoitokausi :jaljella})])
 
 
-(def ^:private tavoitehinta-rivit
-  [{:lihavoi? true
-    :otsikko "Tavoite / jäljellä"
-    :avain_yht :jaljella
-    :avain_hoitokausi :tavoite-hinta}
-
-   {:lihavoi? false
-    :otsikko ""
-    :avain_yht :nil
-    :avain_hoitokausi :nil}
-
-   {:lihavoi? false
-    :otsikko ""
-    :avain_yht :nil
-    :avain_hoitokausi :nil}])
-
-
 (defn- mhu-hju-maaritykset [data]
   [{:lihavoi? false
     :otsikko "Johto- ja hallintokorvaukset"
@@ -168,7 +151,7 @@
 
         rivimaaritykset (if (= "Toteutuneet" otsikko)
                           (toteutuneet-rivit data kyseessa-vapaa-aikavali?)
-                          tavoitehinta-rivit)
+                          nil)
 
         rivit (tee-taulukko-rivit
                 data
