@@ -149,7 +149,7 @@
                     hallintayksikko (organisaatiot-q/hae-ely-id-sampo-hashilla db
                                                                               (merkkijono/leikkaa 5 tarkistettu-ely-hash))]
                 (or (seq hallintayksikko)
-                    (organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskunumerolla
+                    (organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskusnumerolla
                       db
                       (merkkijono/leikkaa 6 tarkistettu-ely-hash))))))))
 
