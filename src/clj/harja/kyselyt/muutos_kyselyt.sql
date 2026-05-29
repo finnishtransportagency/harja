@@ -481,18 +481,13 @@ WITH urakan_tehtavat AS (
         tt.toimenpidekoodi           AS toimenpidekoodi,
         SUM(tt.maara)                AS maara,
         :urakka                      AS urakka,
-        MAX(t.id)                    AS toteuma_id,
+        MAX(tt.toteuma)              AS toteuma_id,
         MAX(tt.id)                   AS toteuma_tehtava_id
-      FROM toteuma t
-            JOIN toteuma_tehtava tt
-              ON t.id = tt.toteuma
-             AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-             AND tt.urakka_id = :urakka
-             AND tt.poistettu = FALSE
-     WHERE t.urakka = :urakka
-       AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-       AND t.poistettu = FALSE
-  GROUP BY tt.toimenpidekoodi
+      FROM toteuma_tehtava tt
+     WHERE tt.urakka_id = :urakka
+       AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND tt.poistettu = FALSE
+     GROUP BY tt.toimenpidekoodi
 ),
  materiaalimaara AS NOT MATERIALIZED (
      -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)

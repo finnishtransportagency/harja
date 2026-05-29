@@ -1,2 +1,33 @@
-.laskutusyhteenveto {
+.laskutusyhteenveto-tyomaa {
+  // Tehdään gridistä 100% ja siirretään content oikealle
+  .laskutusraja-grid {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    // Itse content 75%, jotenka se asettuu nätisti oikealle design mukaisesti
+    .panel-body {
+      width: 75%;
+    }
+  }
+
+  .sininen-laatikko {
+    min-width: 40%;
+  }
+  
+  .display-flex {
+    justify-content: right;
+  }
+  .sininen-laatikko-sarakkeet {
+    display: flex;
+    justify-content: space-between;
+    gap: @valistys-32;
+  }
+
+  .sininen-laatikko-sarake {
+    flex: 1;
+  }
+
+  .sininen-laatikko-label {
+    margin-bottom: @valistys-6;
+  }
 }
