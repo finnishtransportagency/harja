@@ -35,6 +35,7 @@
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (>= urakan-alkuvuosi 2025))
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
@@ -75,59 +76,54 @@
          :voi-muokata? (and voi-muokata? (not lukutila?))
          :tarkkaile-ulkopuolisia-muutoksia? true
          :footer-fn (fn [sanktio]
-                      [:div
-                       ;; Näytetään MHU25 urakoille erillinen infoteksti
-                       (when (>= urakan-alkuvuosi 2025)
-                         [:div {:style {:margin-bottom "1em"}}
-                          [yleiset/info-laatikko :neutraali "Sanktiot käsitellään välikatselmuksessa ja vähennetään urakoitsijan saatavasta."]])
-                       [:span.nappiwrappi.flex-row
-                        (when-not lukutila?
-                          (if tallenna-fn
-                            ;; Laatupoikkeaman sanktio: tallennetaan paikallisesti atomiin, ei kantaan
-                            [napit/yleinen-ensisijainen
-                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                             (fn []
-                               (tallenna-fn (lomake/ilman-lomaketietoja @muokattu))
-                               (reset! sivupaneeli-auki?-atom false)
-                               (reset! tiedot/valittu-sanktio nil))
-                             {:ikoni (ikonit/tallenna)
-                              :disabled (or (not voi-muokata?)
-                                          (not (lomake/voi-tallentaa? sanktio)))}]
-                            ;; Suorasanktio: tallennetaan suoraan kantaan
-                            [napit/palvelinkutsu-nappi
-                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                             (fn []
-                               (tiedot/tallenna-sanktio
-                                 (lomake/ilman-lomaketietoja @muokattu)
-                                 urakka-id
-                                 #(reset! sivupaneeli-auki?-atom false)))
-                             {:luokka "nappi-ensisijainen"
-                              :ikoni (ikonit/tallenna)
-                              :disabled (or (not voi-muokata?)
-                                          (not (lomake/voi-tallentaa? sanktio)))}]))
-                        (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
-                          [:button.nappi-kielteinen.oikealle
-                           {:class (when @tallennus-kaynnissa "disabled")
-                            :on-click
-                            (fn [e]
-                              (.preventDefault e)
-                              (varmista-kayttajalta/varmista-kayttajalta
-                                {:otsikko "Sanktion poistaminen"
-                                 :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
-                                 :modal-luokka "varmistus-modal"
-                                 :hyvaksy "Poista"
-                                 :toiminto-fn (fn []
-                                                (tiedot/poista-suorasanktio
-                                                  (:id @muokattu)
-                                                  urakka-id
-                                                  #(reset! sivupaneeli-auki?-atom false)))}))}
-                           (ikonit/livicon-trash) " Poista"])
-                        [napit/peruuta (if lukutila?
-                                         "Sulje"
-                                         "Peruuta")
-                         #(do
-                            (reset! sivupaneeli-auki?-atom false)
-                            (reset! tiedot/valittu-sanktio nil))]]])}
+                      [:span.nappiwrappi.flex-row
+                       (when-not lukutila?
+                         (if tallenna-fn
+                           ;; Laatupoikkeaman sanktio: tallennetaan paikallisesti atomiin, ei kantaan
+                           [napit/yleinen-ensisijainen
+                            (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                            (fn []
+                              (tallenna-fn (lomake/ilman-lomaketietoja @muokattu))
+                              (reset! sivupaneeli-auki?-atom false)
+                              (reset! tiedot/valittu-sanktio nil))
+                            {:ikoni (ikonit/tallenna)
+                             :disabled (or (not voi-muokata?)
+                                         (not (lomake/voi-tallentaa? sanktio)))}]
+                           ;; Suorasanktio: tallennetaan suoraan kantaan
+                           [napit/palvelinkutsu-nappi
+                            (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                            (fn []
+                              (tiedot/tallenna-sanktio
+                                (lomake/ilman-lomaketietoja @muokattu)
+                                urakka-id
+                                #(reset! sivupaneeli-auki?-atom false)))
+                            {:luokka "nappi-ensisijainen"
+                             :ikoni (ikonit/tallenna)
+                             :disabled (or (not voi-muokata?)
+                                         (not (lomake/voi-tallentaa? sanktio)))}]))
+                       (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
+                         [:button.nappi-kielteinen.oikealle
+                          {:class (when @tallennus-kaynnissa "disabled")
+                           :on-click
+                           (fn [e]
+                             (.preventDefault e)
+                             (varmista-kayttajalta/varmista-kayttajalta
+                               {:otsikko "Sanktion poistaminen"
+                                :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
+                                :modal-luokka "varmistus-modal"
+                                :hyvaksy "Poista"
+                                :toiminto-fn (fn []
+                                               (tiedot/poista-suorasanktio
+                                                 (:id @muokattu)
+                                                 urakka-id
+                                                 #(reset! sivupaneeli-auki?-atom false)))}))}
+                          (ikonit/livicon-trash) " Poista"])
+                       [napit/peruuta (if lukutila?
+                                        "Sulje"
+                                        "Peruuta")
+                        #(do
+                           (reset! sivupaneeli-auki?-atom false)
+                           (reset! tiedot/valittu-sanktio nil))]])}
         [(when-not vesivaylaurakka? ;; Vesiväylässä lajeina on vain sakko
            {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
             ::lomake/col-luokka "col-xs-12"
