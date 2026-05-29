@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuvat-kyselyt]
@@ -141,3 +142,12 @@
     (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-korjaus" "KAN-002")))
     (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito" "VESI-001")))
     (is (= pop-ely (urakat/hae-hallintayksikko db "KP981" "hoito" "TIE-001")))))
+
+(deftest hallintayksikon-fallback-elinvoimakeskukselta
+  (with-redefs [organisaatiot-q/hae-ely-id-sampo-hashilla (fn [_ ely-hash]
+                                                            (is (= "38004" ely-hash))
+                                                            [])
+                organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskunumerolla (fn [_ elinvoimakeskusnumero]
+                                                                                  (is (= "380041" elinvoimakeskusnumero))
+                                                                                  [{:id 12345}])]
+    (is (= 12345 (urakat/hae-hallintayksikko (:db jarjestelma) "3800411310" "hoito" "TIE-001")))))
