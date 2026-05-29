@@ -158,7 +158,6 @@
                       (-> uusi
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
-                        (assoc :maarattypvm (get-in siivottu-laatupoikkeama [:paatos :kasittelyaika]))
                         (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama))
                         (assoc :toimenpideinstanssi tpi))))
                   (reset! sivupaneeli-auki? true))
@@ -184,7 +183,7 @@
                               (merge sanktio
                                 {:lukutila? true}))
                             (reset! sivupaneeli-auki? true))}
-          [{:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
+          [{:otsikko "Määrätty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.2}
            {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
            {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}

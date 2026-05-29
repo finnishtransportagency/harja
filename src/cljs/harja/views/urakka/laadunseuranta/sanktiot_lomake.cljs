@@ -262,7 +262,7 @@
                                 "Liikenneympäristön hoito"
                                 "Sorateiden hoito ja ylläpito"
                                 "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and suorasanktio? (not lukutila?))
+           (if (and (not mhu25?) (not lukutila?))
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
               :pakollinen? true
               :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
@@ -320,32 +320,27 @@
             :fmt pvm/pvm-opt :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-           (if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-             {:otsikko "Määrätty" :nimi :maarattypvm
-              :pakollinen? true
-              ::lomake/col-luokka "col-xs-3"
-              :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-             {:otsikko "Käsitelty" :nimi :kasittelyaika
-              :pakollinen? true
-              ::lomake/col-luokka "col-xs-3"
-              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-              :aseta (fn [rivi arvo] (cond-> rivi
-                                       ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                       ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
-                                       (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                       (assoc-in [:perintapvm] arvo)
+           {:otsikko (if mhu25? "Määrätty" "Käsitelty") :nimi :kasittelyaika
+            :pakollinen? true
+            ::lomake/col-luokka "col-xs-3"
+            :hae (comp :kasittelyaika :paatos :laatupoikkeama)
+            :aseta (fn [rivi arvo]
+                     (cond-> rivi
+                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu ja kyseessä ei ole mhu25 urakka, niin asetetaan
+                                     ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
+                                     (and (not mhu25?) (nil? (:laskutuskuukausi-komp-tiedot rivi)))
+                                     (assoc-in [:perintapvm] arvo)
 
-                                       ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
-                                       true
-                                       (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)
+                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu ja kysessä on mhu25 urakka, niin asetetaan
+                                     ;; hoitokauden syyskuun 15. päivä
+                                     (and mhu25? (nil? (:laskutuskuukausi-komp-tiedot rivi)))
+                                     (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (+ 1 (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))
 
-                                       ;; Cond hyväksyy useita ehto/muunnos -pareja, joten lisätään samaan tapaan myös maarattypvm.
-                                       true
-                                       (assoc-in [:maarattypvm] arvo)))
-              :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+                                     ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
+                                     true
+                                     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
+            :fmt pvm/pvm-opt :tyyppi :pvm
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
