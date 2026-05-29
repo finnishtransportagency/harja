@@ -35,6 +35,7 @@ let avaaLaatupoikkeamat = function (urakkaNimi, evk) {
     cy.get('[data-cy=tabs-taso2-Laatupoikkeamat]').click()
     cy.wait('@laatupoikkeamat', {timeout: clickTimeout})
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.wait(1000);
 }
 
 describe('Laatupoikkeamat latautuu oikein', function () {
@@ -83,6 +84,10 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka1, evk1)
         let perustelu = "Joku perustelu"
+
+        cy.contains('Havaittu').should('be.visible')
+        cy.contains('Tieosoite').should('be.visible')
+        cy.contains('Kuvaus').should('be.visible')
 
         // Klikataan luotua laatupoikkeamaa gridissä
         cy.contains(testiKohdeNimi).click()
