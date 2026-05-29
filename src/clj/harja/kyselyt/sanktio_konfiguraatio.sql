@@ -99,9 +99,19 @@ SELECT sp.id                    AS profiili_id,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,
        spr.voi_puolittaa_omailmoituksella AS profiilirivi_voi_puolittaa_omailmoituksella,
-       COALESCE((SELECT ARRAY_AGG(sprls.summa_euroina ORDER BY sprls.jarjestys)
-                   FROM sanktio_profiili_rivi_lukittu_summa sprls
-                  WHERE sprls.sanktio_profiili_rivi_id = spr.id),
+       COALESCE((SELECT JSONB_AGG(JSONB_BUILD_OBJECT('maaritystapa', sprsm.maaritystapa,
+                                                     'summa_euroina', sprsm.summa_euroina,
+                                                     'ohjeteksti', sprsm.ohjeteksti,
+                                                     'jarjestys', sprsm.jarjestys)
+                                 ORDER BY sprsm.jarjestys)
+                   FROM sanktio_profiili_rivi_summamaaritys sprsm
+                  WHERE sprsm.sanktio_profiili_rivi_id = spr.id),
+                '[]'::JSONB) AS profiilirivi_summamaaritykset,
+       COALESCE((SELECT ARRAY_AGG(sprsm.summa_euroina ORDER BY sprsm.jarjestys)
+                   FROM sanktio_profiili_rivi_summamaaritys sprsm
+                  WHERE sprsm.sanktio_profiili_rivi_id = spr.id
+                    AND sprsm.maaritystapa = 'kiintea_euromaara'
+                    AND sprsm.summa_euroina IS NOT NULL),
                 ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
        st.koodi                 AS sanktiotyyppi_koodi,
@@ -145,9 +155,19 @@ SELECT sp.id                    AS profiili_id,
        spr.id                   AS profiilirivi_id,
        spr.jarjestys            AS profiilirivi_jarjestys,
        spr.voi_puolittaa_omailmoituksella AS profiilirivi_voi_puolittaa_omailmoituksella,
-       COALESCE((SELECT ARRAY_AGG(sprls.summa_euroina ORDER BY sprls.jarjestys)
-                   FROM sanktio_profiili_rivi_lukittu_summa sprls
-                  WHERE sprls.sanktio_profiili_rivi_id = spr.id),
+       COALESCE((SELECT JSONB_AGG(JSONB_BUILD_OBJECT('maaritystapa', sprsm.maaritystapa,
+                                                     'summa_euroina', sprsm.summa_euroina,
+                                                     'ohjeteksti', sprsm.ohjeteksti,
+                                                     'jarjestys', sprsm.jarjestys)
+                                 ORDER BY sprsm.jarjestys)
+                   FROM sanktio_profiili_rivi_summamaaritys sprsm
+                  WHERE sprsm.sanktio_profiili_rivi_id = spr.id),
+                '[]'::JSONB) AS profiilirivi_summamaaritykset,
+       COALESCE((SELECT ARRAY_AGG(sprsm.summa_euroina ORDER BY sprsm.jarjestys)
+                   FROM sanktio_profiili_rivi_summamaaritys sprsm
+                  WHERE sprsm.sanktio_profiili_rivi_id = spr.id
+                    AND sprsm.maaritystapa = 'kiintea_euromaara'
+                    AND sprsm.summa_euroina IS NOT NULL),
                 ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
        st.koodi                 AS sanktiotyyppi_koodi,
