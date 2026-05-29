@@ -410,12 +410,12 @@
          {:otsikko (if (<= urakan-alkuvuosi 2024) "Käsittelytapa" "Käsittely ja laskutus")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?)) #_ (if (<= urakan-alkuvuosi 2024) (constantly true) (constantly false))
+          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)
           :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
-          :valinnat sanktio-domain/kasittelytavat
+          :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))

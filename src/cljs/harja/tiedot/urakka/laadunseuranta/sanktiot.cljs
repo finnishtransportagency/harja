@@ -27,6 +27,10 @@
              (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
+     :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                      :valikatselmus
+                      nil)
      :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
