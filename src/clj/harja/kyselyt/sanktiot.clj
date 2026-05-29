@@ -3,8 +3,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
-(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
-  hae-urakan-sanktiot-analytiikalle hae-laatupoikkeaman-sanktiot hae-urakan-bonukset hae-sanktiotyypit
+(declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
+  hae-urakan-sanktiot-analytiikalle hae-laatupoikkeaman-sanktiot hae-urakan-bonukset
   hae-sanktiotyyppi-koodilla hae-sanktion-urakka-id luo-sanktio<! merkitse-maksuera-likaiseksi! paivita-sanktio!
   hae-suorasanktion-tiedot poista-sanktio!)
 
@@ -23,7 +23,7 @@
       :vakiofraasi)
     (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:kasittelyaika :maarattypvm :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))
 
 ;; Käytössä jeesql:ssä

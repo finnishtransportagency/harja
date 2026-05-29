@@ -35,6 +35,7 @@
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) (>= urakan-alkuvuosi 2025))
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
@@ -75,59 +76,54 @@
          :voi-muokata? (and voi-muokata? (not lukutila?))
          :tarkkaile-ulkopuolisia-muutoksia? true
          :footer-fn (fn [sanktio]
-                      [:div
-                       ;; Näytetään MHU25 urakoille erillinen infoteksti
-                       (when (>= urakan-alkuvuosi 2025)
-                         [:div {:style {:margin-bottom "1em"}}
-                          [yleiset/info-laatikko :neutraali "Sanktiot käsitellään välikatselmuksessa ja vähennetään urakoitsijan saatavasta."]])
-                       [:span.nappiwrappi.flex-row
-                        (when-not lukutila?
-                          (if tallenna-fn
-                            ;; Laatupoikkeaman sanktio: tallennetaan paikallisesti atomiin, ei kantaan
-                            [napit/yleinen-ensisijainen
-                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                             (fn []
-                               (tallenna-fn (lomake/ilman-lomaketietoja @muokattu))
-                               (reset! sivupaneeli-auki?-atom false)
-                               (reset! tiedot/valittu-sanktio nil))
-                             {:ikoni (ikonit/tallenna)
-                              :disabled (or (not voi-muokata?)
-                                          (not (lomake/voi-tallentaa? sanktio)))}]
-                            ;; Suorasanktio: tallennetaan suoraan kantaan
-                            [napit/palvelinkutsu-nappi
-                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                             (fn []
-                               (tiedot/tallenna-sanktio
-                                 (lomake/ilman-lomaketietoja @muokattu)
-                                 urakka-id
-                                 #(reset! sivupaneeli-auki?-atom false)))
-                             {:luokka "nappi-ensisijainen"
-                              :ikoni (ikonit/tallenna)
-                              :disabled (or (not voi-muokata?)
-                                          (not (lomake/voi-tallentaa? sanktio)))}]))
-                        (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
-                          [:button.nappi-kielteinen.oikealle
-                           {:class (when @tallennus-kaynnissa "disabled")
-                            :on-click
-                            (fn [e]
-                              (.preventDefault e)
-                              (varmista-kayttajalta/varmista-kayttajalta
-                                {:otsikko "Sanktion poistaminen"
-                                 :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
-                                 :modal-luokka "varmistus-modal"
-                                 :hyvaksy "Poista"
-                                 :toiminto-fn (fn []
-                                                (tiedot/poista-suorasanktio
-                                                  (:id @muokattu)
-                                                  urakka-id
-                                                  #(reset! sivupaneeli-auki?-atom false)))}))}
-                           (ikonit/livicon-trash) " Poista"])
-                        [napit/peruuta (if lukutila?
-                                         "Sulje"
-                                         "Peruuta")
-                         #(do
-                            (reset! sivupaneeli-auki?-atom false)
-                            (reset! tiedot/valittu-sanktio nil))]]])}
+                      [:span.nappiwrappi.flex-row
+                       (when-not lukutila?
+                         (if tallenna-fn
+                           ;; Laatupoikkeaman sanktio: tallennetaan paikallisesti atomiin, ei kantaan
+                           [napit/yleinen-ensisijainen
+                            (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                            (fn []
+                              (tallenna-fn (lomake/ilman-lomaketietoja @muokattu))
+                              (reset! sivupaneeli-auki?-atom false)
+                              (reset! tiedot/valittu-sanktio nil))
+                            {:ikoni (ikonit/tallenna)
+                             :disabled (or (not voi-muokata?)
+                                         (not (lomake/voi-tallentaa? sanktio)))}]
+                           ;; Suorasanktio: tallennetaan suoraan kantaan
+                           [napit/palvelinkutsu-nappi
+                            (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                            (fn []
+                              (tiedot/tallenna-sanktio
+                                (lomake/ilman-lomaketietoja @muokattu)
+                                urakka-id
+                                #(reset! sivupaneeli-auki?-atom false)))
+                            {:luokka "nappi-ensisijainen"
+                             :ikoni (ikonit/tallenna)
+                             :disabled (or (not voi-muokata?)
+                                         (not (lomake/voi-tallentaa? sanktio)))}]))
+                       (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
+                         [:button.nappi-kielteinen.oikealle
+                          {:class (when @tallennus-kaynnissa "disabled")
+                           :on-click
+                           (fn [e]
+                             (.preventDefault e)
+                             (varmista-kayttajalta/varmista-kayttajalta
+                               {:otsikko "Sanktion poistaminen"
+                                :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
+                                :modal-luokka "varmistus-modal"
+                                :hyvaksy "Poista"
+                                :toiminto-fn (fn []
+                                               (tiedot/poista-suorasanktio
+                                                 (:id @muokattu)
+                                                 urakka-id
+                                                 #(reset! sivupaneeli-auki?-atom false)))}))}
+                          (ikonit/livicon-trash) " Poista"])
+                       [napit/peruuta (if lukutila?
+                                        "Sulje"
+                                        "Peruuta")
+                        #(do
+                           (reset! sivupaneeli-auki?-atom false)
+                           (reset! tiedot/valittu-sanktio nil))]])}
         [(when-not vesivaylaurakka? ;; Vesiväylässä lajeina on vain sakko
            {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
             ::lomake/col-luokka "col-xs-12"
@@ -266,7 +262,7 @@
                                 "Liikenneympäristön hoito"
                                 "Sorateiden hoito ja ylläpito"
                                 "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and suorasanktio? (not lukutila?))
+           (if (and (not mhu25?) (not lukutila?))
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
               :pakollinen? true
               :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
@@ -324,32 +320,27 @@
             :fmt pvm/pvm-opt :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-           (if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-             {:otsikko "Määrätty" :nimi :maarattypvm
-              :pakollinen? true
-              ::lomake/col-luokka "col-xs-3"
-              :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-             {:otsikko "Käsitelty" :nimi :kasittelyaika
-              :pakollinen? true
-              ::lomake/col-luokka "col-xs-3"
-              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-              :aseta (fn [rivi arvo] (cond-> rivi
-                                       ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                       ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
-                                       (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                       (assoc-in [:perintapvm] arvo)
+           {:otsikko (if mhu25? "Määrätty" "Käsitelty") :nimi :kasittelyaika
+            :pakollinen? true
+            ::lomake/col-luokka "col-xs-3"
+            :hae (comp :kasittelyaika :paatos :laatupoikkeama)
+            :aseta (fn [rivi arvo]
+                     (cond-> rivi
+                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu ja kyseessä ei ole mhu25 urakka, niin asetetaan
+                                     ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
+                                     (and (not mhu25?) (nil? (:laskutuskuukausi-komp-tiedot rivi)))
+                                     (assoc-in [:perintapvm] arvo)
 
-                                       ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
-                                       true
-                                       (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)
+                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu ja kysessä on mhu25 urakka, niin asetetaan
+                                     ;; hoitokauden syyskuun 15. päivä
+                                     (and mhu25? (nil? (:laskutuskuukausi-komp-tiedot rivi)))
+                                     (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (+ 1 (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))
 
-                                       ;; Cond hyväksyy useita ehto/muunnos -pareja, joten lisätään samaan tapaan myös maarattypvm.
-                                       true
-                                       (assoc-in [:maarattypvm] arvo)))
-              :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+                                     ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
+                                     true
+                                     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
+            :fmt pvm/pvm-opt :tyyppi :pvm
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
@@ -410,12 +401,12 @@
          {:otsikko (if (<= urakan-alkuvuosi 2024) "Käsittelytapa" "Käsittely ja laskutus")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?)) #_ (if (<= urakan-alkuvuosi 2024) (constantly true) (constantly false))
+          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)
           :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
-          :valinnat sanktio-domain/kasittelytavat
+          :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))

@@ -158,7 +158,6 @@
                       (-> uusi
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
-                        (assoc :maarattypvm (get-in siivottu-laatupoikkeama [:paatos :kasittelyaika]))
                         (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama))
                         (assoc :toimenpideinstanssi tpi))))
                   (reset! sivupaneeli-auki? true))
@@ -184,12 +183,10 @@
                               (merge sanktio
                                 {:lukutila? true}))
                             (reset! sivupaneeli-auki? true))}
-          [{:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
+          [{:otsikko "Määrätty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.2}
            {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
-           {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 3}
-           {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
-            :tyyppi :komponentti :komponentti sanktiot/sanktion-tai-bonuksen-kuvaus :leveys 3}
-           {:otsikko "Perustelu" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 3}
+           {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
+           {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
            {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
           (or sanktiot-lista [])]]))))
 
@@ -516,15 +513,17 @@
                     (sanktion-validointi
                       {:otsikko "Käsittelyn pvm"
                        :nimi :paatos-pvm
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :kasittelyaika :paatos)
                        :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
-                       :tyyppi :pvm-aika
+                       :tyyppi :pvm
                        :muokattava? (constantly (and muokattava? paatosoikeus?))}
-                      "Anna käsittelyn päivämäärä ja aika")
+                      "Anna käsittelyn päivämäärä")
 
                     (sanktion-validointi
                       {:otsikko "Käsitelty"
                        :nimi :kasittelytapa
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :kasittelytapa :paatos)
                        :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                        :tyyppi :valinta
@@ -540,6 +539,7 @@
                     (when (= :muu (:kasittelytapa (:paatos @laatupoikkeama)))
                       {:otsikko "Muu käsittelytapa"
                        :nimi :kasittelytapa-selite
+                       ::lomake/col-luokka "col-xs-4"
                        :hae (comp :muukasittelytapa :paatos)
                        :aseta #(assoc-in %1 [:paatos :muukasittelytapa] %2)
                        :tyyppi :string
@@ -551,6 +551,7 @@
                     (sanktion-validointi
                       {:otsikko "Päätös"
                        :nimi :paatos-paatos
+                       ::lomake/col-luokka "col-xs-4"
                        :tyyppi :valinta
                        :valinnat [:sanktio :ei_sanktiota :hylatty]
                        :hae (comp :paatos :paatos)

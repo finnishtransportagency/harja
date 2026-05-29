@@ -224,7 +224,9 @@
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
         urakan-alkupaiva (:alkupvm @nav/valittu-urakka)
         urakka-id (when valittu-urakka (:id valittu-urakka))
-        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
+        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))]
 
     [:div.sanktiot
      #_[harja.ui.debug/debug sanktiot]
@@ -265,11 +267,6 @@
                    :class #{"nappi-toissijainen"}}
           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]]]]
 
-     ;; Näytetään vain mhu25 -> ja eteenpäin
-     (when (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-       [yleiset/info-laatikko :neutraali "Vuodesta 2025 lähtien sanktiot ja arvonvähennykset määrätään työmaakokouksissa, mutta käsitellään vasta välikatselmuksissa ja vastaanottotarkastuksessa. Kaikki bonukset käsitellään välikatselmuksissa ja vastaanottotarkastuksessa."])
-
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
@@ -283,10 +280,7 @@
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}])}
 
-      [(if (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-         {:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
-         {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
+      [{:otsikko (if mhu25? "Määrätty" "Käsitelty") :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2

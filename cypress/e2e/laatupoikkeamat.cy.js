@@ -35,6 +35,7 @@ let avaaLaatupoikkeamat = function (urakkaNimi, evk) {
     cy.get('[data-cy=tabs-taso2-Laatupoikkeamat]').click()
     cy.wait('@laatupoikkeamat', {timeout: clickTimeout})
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.wait(1000);
 }
 
 describe('Laatupoikkeamat latautuu oikein', function () {
@@ -84,6 +85,10 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         avaaLaatupoikkeamat(testiurakka1, evk1)
         let perustelu = "Joku perustelu"
 
+        cy.contains('Havaittu').should('be.visible')
+        cy.contains('Tieosoite').should('be.visible')
+        cy.contains('Kuvaus').should('be.visible')
+
         // Klikataan luotua laatupoikkeamaa gridissä
         cy.contains(testiKohdeNimi).click()
 
@@ -93,9 +98,10 @@ describe('Laatupoikkeamat latautuu oikein', function () {
 
         // Lisää sanktio
         // Käsittelyn pvm
-        //cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .pvm-ikoni > .input-default').first().focus().type("01.01.2021" ).clear().type("01.01.2021" );
         cy.get('label').contains('Käsittelyn pvm').parent().parent().parent().find('input').first().clear().type("01.01.2026");
-        cy.get('label').contains('Käsittelyn pvm').parent().parent().parent().find('input').eq(1).clear().type("10.12");
+        // Siirretään fokus pois päivämääräkentästä, jotta mahdollinen kalenteri sulkeutuu
+        cy.get('label').contains('Kuvaus').click()
+
         // Käsitelty
         cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Puhelimitse'});
         // Päätös
@@ -164,9 +170,10 @@ describe('Laatupoikkeamat latautuu oikein', function () {
 
         // Lisää sanktio
         // Käsittelyn pvm
-        //cy.get('label[for=filtteri-aikavali] + div .pvm-kentta > .pvm-ikoni > .input-default').first().focus().type("01.01.2021" ).clear().type("01.01.2021" );
         cy.get('label').contains('Käsittelyn pvm').parent().parent().parent().find('input').first().clear().type("01.01.2026");
-        cy.get('label').contains('Käsittelyn pvm').parent().parent().parent().find('input').eq(1).clear().type("10.12");
+        // Siirretään fokus pois päivämääräkentästä, jotta mahdollinen kalenteri sulkeutuu
+        cy.get('label').contains('Kuvaus').click()
+
         // Käsitelty
         cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Puhelimitse'});
         // Päätös
@@ -190,6 +197,11 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.get('button').contains('Tallenna ja lukitse laatupoikkeama').click();
         cy.contains('Tallenna ja lukitse laatupoikkeama?').should('be.visible');
         cy.get('.modal button').contains('Tallenna ja lukitse').click();
+
+        // Varmistetaan, että tallennus onnistui
+        cy.contains('Laatupoikkeaman tallennuksessa tapahtui virhe').should('not.exist')
+        cy.contains('Laatupoikkeaman tallennus onnistui.').should('be.visible')
+
         cy.contains('h1', 'Laatupoikkeamat').should('be.visible')
     })
 })
