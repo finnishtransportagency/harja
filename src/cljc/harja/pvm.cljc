@@ -166,7 +166,10 @@
        (tc/from-sql-date dt)
 
        (instance? java.sql.Timestamp dt)
-       (tc/from-sql-time dt))))
+       (tc/from-sql-time dt)
+
+       (string? dt)
+       (df/parse dt))))
 
 #?(:clj
    (defn joda-date-timeksi [dt]
@@ -860,8 +863,9 @@
 #?(:clj
   (defn hoitokauden-alkuvuosi
     ([^org.joda.time.DateTime pvm]
-     (let [vuosi (.getYear pvm)
-           kuukausi (.getMonthOfYear pvm)]
+     (let [fi-pvm (.withZone pvm (org.joda.time.DateTimeZone/forID "Europe/Helsinki"))
+           vuosi (.getYear fi-pvm)
+           kuukausi (.getMonthOfYear fi-pvm)]
        (hoitokauden-alkuvuosi vuosi kuukausi)))
     ([vuosi kuukausi]
      (if (<= 10 kuukausi)
@@ -1287,6 +1291,14 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        (catch #?(:cljs js/Error
                  :clj  Exception) e
          nil))))
+
+#?(:clj
+   (defn aika->sql
+     "Luo java.sql.Timestamp-olion Joda-ajasta.
+     Palauttaa nil, jos annettu aika on nil."
+     [dt]
+     (when dt
+       (tc/to-sql-time dt))))
 
 #?(:clj
    (defn psql-timestamp->aika
