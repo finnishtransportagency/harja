@@ -8,9 +8,12 @@ let testiSanktioPerustelu = "CY-perustelu";
 let testiSanktioPerustelu2 = "CY-perustelu2";
 let testiSanktioPerustelu3 = "CY-perustelu3";
 let testiBonusPerustelu = "CY-bonus-perustelu";
+let testiBonusPerustelu2 = "CY-bonus-perustelu2";
+let testiBonusPerustelu3 = "CY-bonus-perustelu3";
 let testiurakka = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
 let testiurakka2 = "POP MHU Suomussalmi 2024-2029";
 let testiurakka3 = "Oulun MHU 2019-2024";
+let testiurakka4 = "Raahen MHU 2023-2028";
 let evk = "Lappi";
 let evk2 = "Pohjois-Suomi";
 
@@ -299,7 +302,6 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
     })
 })
 
-// TODO: Olisi hyvä lisätä myöhemmin myös Arvonvähennykselle testit
 describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
     before(function () {
         siivoaBonusKanta(testiBonusPerustelu);
@@ -323,14 +325,16 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
 
+
+        // Bonus
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu)
 
         // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko').should('exist')
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko').should('have.class', 'disabled')
-        // Varmistetaan, että jokin toimenpideinstanssi on valittuna (ei "- Valitse -" tms. tyhjää)
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('.livi-pudotusvalikko .valittu').invoke('text').should('not.be.empty')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
 
         // Summa
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('300')
@@ -342,10 +346,11 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         cy.get('label').contains('Perustelu').click()
 
         // Varmistetaan, että "Laskutuskuukausi" -kenttä on read only (disabled) MHU25 urakalla
-        cy.get('[data-cy=koontilaskun-kk-dropdown]').should('have.class', 'disabled')
+        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('exist')
+        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('have.class', 'disabled')
 
         // Varmistetaan, että "Käsittelytapa" -kenttä on read only (disabled) MHU25 urakalla
-        cy.get('label').contains('Käsittelytapa').parent().parent().parent().find('.livi-pudotusvalikko').should('have.class', 'disabled')
+        cy.get('label').contains('Käsittelytapa').parent().parent().parent().find('.form-control-static')
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
@@ -368,12 +373,164 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
     })
 })
 
+describe('Bonukset toimii - MHU23 (Raahe)', function () {
+    before(function () {
+        siivoaBonusKanta(testiBonusPerustelu2);
+    });
+
+    it('Lisää uusi bonus MHU23 (Raahe)', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka4, evk2)
+
+        cy.intercept('POST', '_/tallenna-erilliskustannus').as('tallennaBonus')
+
+        // Klikkaa "Lisää uusi" -nappia
+        cy.contains('Lisää uusi').click()
+
+        // Sivupaneeli aukeaa
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+
+        // Valitse "Bonus" radio
+        cy.contains('label', 'Bonus').click();
+
+        // Bonus
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+
+        // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
+        cy.contains('label', 'Indeksi').should('not.exist')
+
+        // Perustelu
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu2)
+
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
+
+
+        // Summa
+        cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('400')
+
+        // Käsitelty pvm
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+
+        // Siirretään fokus pois päivämääräkentästä
+        cy.get('label').contains('Perustelu').click()
+
+        // Varmistetaan, että "Laskutuskuukausi" -kenttä ON käytössä (ei disabled) MHU23 urakalla
+        cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('Helmikuu 2026 (3. hoitovuosi)');
+        });
+
+        // Siirretään focus pois
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').click();
+
+
+        // Käsittelytapa
+        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+
+        // Tallenna
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.wait('@tallennaBonus', {timeout: clickTimeout})
+
+        // Varmistetaan onnistuminen
+        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+    })
+
+    it('Avaa bonus listasta MHU23 (Raahe)', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka4, evk2)
+
+        // Klikataan luotua bonusta gridissä
+        cy.contains('td', testiBonusPerustelu2).click()
+
+        // Sivupaneeli aukeaa ja näyttää bonuksen tiedot
+        cy.contains(testiBonusPerustelu2).should('be.visible')
+        cy.contains('400').should('exist')
+    })
+})
+
+describe('Bonukset toimii - MHU19 (Oulu)', function () {
+    before(function () {
+        siivoaBonusKanta(testiBonusPerustelu3);
+    });
+
+    it('Lisää uusi bonus MHU19 (Oulu)', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka3, evk2)
+
+        cy.intercept('POST', '_/tallenna-erilliskustannus').as('tallennaBonus')
+
+        // Klikkaa "Lisää uusi" -nappia
+        cy.contains('Lisää uusi').click()
+
+        // Sivupaneeli aukeaa
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+
+        // Valitse "Bonus" radio
+        cy.contains('label', 'Bonus').click()
+
+
+        // Bonus
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+
+        // Perustelu
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu3)
+
+        // Varmistetaan, että Indeksi-kenttä on valittavissa
+        cy.contains('label', 'Indeksi').should('be.visible')
+        // Valitaan indeksi
+        cy.get('label[for*=indeksi] + div').valinnatValitse({valinta: 'MAKU 2015'});
+
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
+
+        // Summa
+        cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('500')
+
+        // Käsitelty pvm
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('1.5.2024')
+
+        // Siirretään fokus pois päivämääräkentästä
+        cy.get('label').contains('Perustelu').click()
+
+        // Varmistetaan, että "Laskutuskuukausi" -kenttä ON käytössä ja siinä on oikea kuukausi valittuna
+        cy.get('[data-cy=koontilaskun-kk-dropdown]').should('not.have.class', 'disabled')
+        cy.get('[data-cy=koontilaskun-kk-dropdown] .valittu').should('contain', 'Toukokuu 2024 (5. hoitovuosi)')
+
+        // Käsittelytapa
+        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+
+        // Tallenna
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.wait('@tallennaBonus', {timeout: clickTimeout})
+
+        // Varmistetaan onnistuminen
+        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+    })
+
+    it('Avaa bonus listasta MHU19 (Oulu)', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka3, evk2)
+
+        // Klikataan luotua bonusta gridissä
+        cy.contains('td', testiBonusPerustelu3).click()
+
+        // Sivupaneeli aukeaa ja näyttää bonuksen tiedot
+        cy.contains(testiBonusPerustelu3).should('be.visible')
+        cy.contains('500').should('exist')
+    })
+})
+
 describe('Siivotaan lopuksi', function () {
     before(function () {
         siivoaKanta(testiSanktioKuvaus);
         siivoaKanta(testiSanktioKuvaus2);
         siivoaKanta(testiSanktioKuvaus3);
         siivoaBonusKanta(testiBonusPerustelu);
+        siivoaBonusKanta(testiBonusPerustelu2);
+        siivoaBonusKanta(testiBonusPerustelu3);
     });
 
     it('Tarkista, että kanta on siivottu', function () {
@@ -387,6 +544,10 @@ describe('Siivotaan lopuksi', function () {
 
         avaaSanktiotJaBonukset(testiurakka3, evk2)
         cy.contains(testiSanktioKuvaus3).should('not.exist')
+        cy.contains(testiBonusPerustelu3).should('not.exist')
+
+        avaaSanktiotJaBonukset(testiurakka4, evk2)
+        cy.contains(testiBonusPerustelu2).should('not.exist')
     })
 })
 

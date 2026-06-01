@@ -3,6 +3,7 @@
             [reagent.ratom :refer [reaction]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
