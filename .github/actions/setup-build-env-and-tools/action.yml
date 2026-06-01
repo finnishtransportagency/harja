@@ -102,6 +102,7 @@ runs:
         #restore-keys: ${{ runner.os }}-npm-
 
     - name: Verify NPM security settings
+      if: ${{ inputs.install-node-deps == 'true' }}
       uses: ./.github/actions/verify-npm-security
 
     - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
