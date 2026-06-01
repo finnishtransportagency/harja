@@ -101,6 +101,9 @@ runs:
         # Mikäli package-lock.json muuttuu, käytetään kuitenkin vanhentunutta npm-cachea pohjana uudelle cachelle
         #restore-keys: ${{ runner.os }}-npm-
 
+    - name: Verify NPM security settings
+      uses: ./.github/actions/verify-npm-security
+
     - name: Install node dependencies from package-lock.json (dependencies & devDependencies)
       if: ${{ inputs.install-node-deps == 'true' }}
       # NPM ci:tä pitää kutsua vaikka ~/.npm yleinen cache löytyykin. Komento npm ci asentaa package-lock.jsonissa
