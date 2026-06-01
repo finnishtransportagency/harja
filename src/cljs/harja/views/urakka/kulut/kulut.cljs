@@ -89,8 +89,8 @@
                                     {:e! e! :odd? odd?}
                                     {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide])
                                      :tehtavaryhma-nimi (-> (filter #(= (:tehtavaryhma %) tehtavaryhma) tehtavaryhmien_nimet)
-                                                            first
-                                                            :tehtavaryhma_nimi)
+                                                          first
+                                                          :tehtavaryhma_nimi)
                                      :maksuera maksuera-numero
                                      :maksuera-alias maksuera-alias
                                      :summa summa
@@ -105,8 +105,8 @@
            {:e! e! :odd? false}
            {:toimenpide-nimi (get-in toimenpiteet [toimenpideinstanssi :toimenpide])
             :tehtavaryhma-nimi (-> (filter #(= (:tehtavaryhma %) tehtavaryhma) tehtavaryhmien_nimet)
-                                   first
-                                   :tehtavaryhma_nimi)
+                                 first
+                                 :tehtavaryhma_nimi)
             :maksuera maksuera-numero
             :maksuera-alias maksuera-alias
             :summa summa
@@ -266,7 +266,7 @@
                 (some? laskutusraja)
                 [:div
                  (when (> hoitokauden-kulujen-summa laskutusraja)
-                   [yleiset/info-laatikko :vahva-ilmoitus  "Laskutusraja on täynnä."
+                   [yleiset/info-laatikko :vahva-ilmoitus "Laskutusraja on täynnä."
                     [:span "Kaikki laskutusrajan yli menevät toteutuneet kustannukset kirjataan edelleen normaalisti Harjaan, mutta niitä ei saa laskuttaa. Maksuosuuksista päätetään "
                      [:a.klikattava.alleviivaa {:href "#"
                                                 :on-click #(siirtymat/siirry-annettuun-valilehteen
@@ -280,7 +280,7 @@
                    [:div.lukema-label "Laskutusrajan käyttö " (fmt/hoitokauden-jarjestysluku-ja-vuodet valittu-hoitokausi hoitovuodet "Hoitovuosi")]
                    [:div.lukema (if (and hoitokauden-kulujen-summa (< hoitokauden-kulujen-summa laskutusraja))
                                   (fmt/euro-opt false hoitokauden-kulujen-summa)
-                                  (fmt/euro-opt false laskutusraja))  " / " (fmt/euro-opt laskutusraja)]]
+                                  (fmt/euro-opt false laskutusraja)) " / " (fmt/euro-opt laskutusraja)]]
 
                   (when (and hoitokauden-kulujen-summa (> hoitokauden-kulujen-summa laskutusraja))
                     [:div.leveampi-sarake
@@ -319,7 +319,7 @@
                     [:div.lukema (fmt/euro-opt haetun-aikarajan-kulujen-summa)]])]
 
                 :else
-                [yleiset/info-laatikko :vahva-ilmoitus  "Hoitovuoden alun indeksikorjattu tavoitehinta on vahvistamatta."
+                [yleiset/info-laatikko :vahva-ilmoitus "Hoitovuoden alun indeksikorjattu tavoitehinta on vahvistamatta."
                  [:span "Laskutusraja vaatii tiedon vahvistamisen. "
                   [:a.klikattava.alleviivaa {:href "#"
                                              :on-click #(siirtymat/siirry-annettuun-valilehteen
@@ -513,7 +513,7 @@
                                                                               :alkupvm loppupvm
                                                                               :loppupvm loppupvm})))))))}
                     haun-loppupvm-atom]]])]]
-             [laskutusraja-komponentti  e! app valittu-hoitokausi hoitovuodet haun-kuukausi false]]
+             [laskutusraja-komponentti e! app valittu-hoitokausi hoitovuodet haun-kuukausi false]]
 
             (when kulut
               [:div

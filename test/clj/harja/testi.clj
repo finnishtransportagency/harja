@@ -899,6 +899,11 @@
                    FROM   urakka
                    WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030')"))))
+
 (defn hae-kajaani-hoitourakan-2025-2030-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -1914,6 +1919,27 @@
         (conj rivi paivitettava-arvo)))
     [(inc (first edellinen))]
     (map vector edellinen (next edellinen) loput-seq)))
+
+(defn luo-kulu
+  "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
+  [urakka-id tyyppi erapaiva kohdistustyyppi koontilaskun-kuukausi
+   summa toimenpideinstanssi-id tehtavaryhma-id tehtava-id rahavaraus]
+  {:id nil
+   :urakka urakka-id
+   :viite "123456781"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi tyyppi
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava tehtava-id
+                   :tyyppi kohdistustyyppi
+                   :rahavaraus rahavaraus
+                   :tavoitehintainen :true}]
+   :koontilaskun-kuukausi koontilaskun-kuukausi})
 
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))

@@ -191,8 +191,10 @@
             [:div
              [valinnat/urakan-hoitokausi ur]
              [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
-                                    :nil-valinta "Koko hoitokausi"
-                                    :disabloi-tulevat-kk? true}
+                                    :nil-valinta "Koko hoitovuosi"
+                                    ;; En tiedä, miksi tämä haluttaisiin rajata
+                                    ;; Sallitaan vaan kaikkien kuukausien valinta?
+                                    :disabloi-tulevat-kk? false}
               @kuukaudet u/valittu-hoitokauden-kuukausi]]
 
             ;; Tietty vuosi valittuna
