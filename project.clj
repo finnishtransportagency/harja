@@ -149,7 +149,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.15"]
+                 [org.apache.ant/ant "1.10.17"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
