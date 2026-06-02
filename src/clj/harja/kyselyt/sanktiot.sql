@@ -2,8 +2,9 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
- luotu)
+(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio,
+ maaraystapa, vaikuttaatavoitehintaan, tavoitehinnanalennus, tehtavaryhma, tehtava,
+ luoja, luotu)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
             (SELECT t.id -- suoraan annettu tpi
@@ -16,7 +17,9 @@ VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
              WHERE s.id = :tyyppi
                AND t.urakka = :urakka)),
         :vakiofraasi,
-        :summa, :indeksi, :laatupoikkeama, :suorasanktio, :luoja, NOW());
+        :summa, :indeksi, :laatupoikkeama, :suorasanktio,
+        :maaraystapa, :vaikuttaatavoitehintaan, :tavoitehinnanalennus, :tehtavaryhma, :tehtava,
+        :luoja, NOW());
 
 -- name: paivita-sanktio!
 -- Päivittää olemassaolevan sanktion
@@ -36,6 +39,11 @@ SET perintapvm          = :perintapvm,
     indeksi             = :indeksi,
     laatupoikkeama      = :laatupoikkeama,
     suorasanktio        = :suorasanktio,
+    maaraystapa         = :maaraystapa,
+    vaikuttaatavoitehintaan = :vaikuttaatavoitehintaan,
+    tavoitehinnanalennus = :tavoitehinnanalennus,
+    tehtavaryhma        = :tehtavaryhma,
+    tehtava             = :tehtava,
     muokkaaja           = :muokkaaja,
     poistettu           = :poistettu,
     muokattu            = NOW()
@@ -139,7 +147,15 @@ SELECT s.id,
        t.nimi                                       AS tyyppi_nimi,
        t.id                                         AS tyyppi_id,
        t.toimenpidekoodi                            AS tyyppi_toimenpidekoodi,
-       t.koodi                                      AS tyyppi_koodi
+       t.koodi                                      AS tyyppi_koodi,
+
+       s.maaraystapa,
+       s.vaikuttaatavoitehintaan,
+       s.tavoitehinnanalennus,
+       s.tehtavaryhma                               AS tehtavaryhma_id,
+       tryhma.nimi                                  AS tehtavaryhma_nimi,
+       s.tehtava                                    AS tehtava_id,
+       teh.nimi                                     AS tehtava_nimi
 
 FROM sanktio s
          JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -147,6 +163,8 @@ FROM sanktio s
          JOIN kayttaja k ON lp.luoja = k.id
          LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
          LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+         LEFT JOIN tehtavaryhma tryhma ON s.tehtavaryhma = tryhma.id
+         LEFT JOIN tehtava teh ON s.tehtava = teh.id
 WHERE lp.urakka = :urakka
   -- Ei haeta tässä ylläpidon bonus 'sanktioita', vaan haetaan ne bonuksina eri kyselyssä.
   --   Tämä edistää ylläpidon bonusten käsittelyn refaktorointia myöhemmin siten, että niitäkin käsiteltäisiin samalla

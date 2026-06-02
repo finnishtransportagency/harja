@@ -20,7 +20,8 @@
       ;; Muunnetaan ennen kuin ajetaan konv/alaviiva->rakenne sanktioille ja bonuksille
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
-      :vakiofraasi)
+      :vakiofraasi
+      :maaraystapa)
     (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)

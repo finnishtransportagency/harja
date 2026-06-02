@@ -213,7 +213,9 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
+                   toimenpideinstanssi vakiofraasi poistettu
+                   maaraystapa vaikuttaatavoitehintaan tavoitehinnanalennus
+                   tehtavaryhma tehtava] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [summa (if (decimal? summa)
@@ -255,7 +257,13 @@
                 :id id
                 :poistettu poistettu
                 :muokkaaja (:id user)
-                :luoja (:id user)}]
+                :luoja (:id user)
+                ;; Arvonvähennyksen lisäkentät
+                :maaraystapa (when maaraystapa (name maaraystapa))
+                :vaikuttaatavoitehintaan vaikuttaatavoitehintaan
+                :tavoitehinnanalennus tavoitehinnanalennus
+                :tehtavaryhma (:tehtavaryhma tehtavaryhma)
+                :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)
       (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]
         (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
