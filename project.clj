@@ -57,7 +57,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.3"]
+                 [ring/ring-core "1.15.4"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
