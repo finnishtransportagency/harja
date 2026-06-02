@@ -151,7 +151,7 @@
                 (or (seq hallintayksikko)
                     (organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskusnumerolla
                       db
-                      (merkkijono/leikkaa 6 tarkistettu-ely-hash))))))))
+                      (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-ely-hash)))))))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
                                    ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
