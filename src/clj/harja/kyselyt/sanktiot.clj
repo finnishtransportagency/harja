@@ -4,7 +4,9 @@
             [harja.geo :as geo]))
 
 (declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
-  hae-urakan-sanktiot-analytiikalle)
+  hae-urakan-sanktiot-analytiikalle hae-urakan-bonukset hae-laatupoikkeaman-sanktiot hae-sanktiotyyppi-koodilla
+  hae-sanktion-urakka-id luo-sanktio<! paivita-sanktio! poista-sanktio! merkitse-maksuera-likaiseksi!
+  hae-suorasanktion-tiedot)
 
 ;; Käytössä jeesql:ssä
 (defn muunna-urakan-sanktio

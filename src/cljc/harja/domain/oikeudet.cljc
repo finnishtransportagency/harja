@@ -23,6 +23,8 @@
   hallinta-toteumatyokalu
   hallinta-lupaukset
   urakat-laadunseuranta-talvihoitoreititys
+  urakat-laadunseuranta-sanktiot
+  urakat-laadunseuranta-hairiotilanteet
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
