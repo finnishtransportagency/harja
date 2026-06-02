@@ -129,7 +129,7 @@
   (cond
     ;; MH- tai Alueurakka?
     (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
-    [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
+    [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys
      :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
