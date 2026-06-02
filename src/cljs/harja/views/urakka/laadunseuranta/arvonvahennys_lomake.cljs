@@ -1,12 +1,12 @@
 (ns harja.views.urakka.laadunseuranta.arvonvahennys-lomake
   "Arvonvähennyksen lomake"
   (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
 
             [harja.pvm :as pvm]
 
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.arvonvahennys-tiedot :as arvonvahennys-tiedot]
 
             [harja.ui.lomake :as lomake]
@@ -20,6 +20,13 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn- valittavat-kulun-kohdistukset
+  "Poistetaan listalta hoidon johto"
+  [toimenpideinstanssit]
+  (remove
+    #(= (:t2_koodi %) "23150")
+    toimenpideinstanssit))
+
 (defn arvonvahennys-lomake
   [e! app sivupaneeli-auki?-atom lukutila? voi-muokata?]
   (let [muokattu (atom @tiedot/valittu-sanktio)
@@ -29,6 +36,7 @@
         tehtavaryhmat (:tehtavaryhmat app)
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit)
         tehtavat (:tehtavat app)
         liitteet-id (str "liitteet-element-id-" (gensym))]
 
@@ -100,28 +108,44 @@
         :validoi [[:ei-tyhja "Anna perustelu"]]}
 
        ;; Tavoitehinta? radio-group
-       {:otsikko ""
-        :nimi :tavoitehinta?
-        :tyyppi :radio-group
-        :pakollinen? true
-        :piilota-label? true
-        :nayta-rivina? true
-        :vayla-tyyli? true
-        ::lomake/col-luokka "col-xs-12"
-        :vaihtoehdot [:true :false]
-        :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
-                           :false "Ei vaikuta tavoitehintaan"}}
+
+       (if lukutila?
+         {:otsikko "Vaikuttaa tavoitehintaan"
+          :nimi :vaikuttaatavoitehintaan
+          :nayta-rivina? true
+          ::lomake/col-luokka "col-xs-12"
+          :tyyppi :teksti
+          :hae (fn [rivi]
+                 (if (= :true (:vaikuttaatavoitehintaan rivi))
+                   "Vaikuttaa tavoitehintaan"
+                   "Ei vaikuta tavoitehintaan"))}
+         {:otsikko ""
+          :nimi :vaikuttaatavoitehintaan
+          :tyyppi :radio-group
+          :pakollinen? true
+          :piilota-label? true
+          :nayta-rivina? true
+          :vayla-tyyli? true
+          ::lomake/col-luokka "col-xs-12"
+          :vaihtoehdot [:true :false]
+          :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
+                             :false "Ei vaikuta tavoitehintaan"}
+          :aseta (fn [rivi arvo]
+                   (-> rivi
+                     (assoc :vaikuttaatavoitehintaan arvo)
+                     (assoc :tavoitehinnanalennus nil)))}) ;; Nollataan aina tavoitehinnan alennus
 
        ;; Tavoitehinnan alennus
-       {:otsikko "Tavoitehinnan alennus"
-        :nimi :tavoitehinnanalennus
-        :tyyppi :euro
-        :pakollinen? true
-        :aseta (fn [rivi arvo]
-                 (assoc rivi :tavoitehinnanalennus
-                   (when arvo (- (Math/abs arvo)))))
-        :validoi [[:ei-tyhja "Anna tavoitehinnan alennus"]
-                  [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
+       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+         {:otsikko "Tavoitehinnan alennus"
+          :nimi :tavoitehinnanalennus
+          :tyyppi :euro
+          :pakollinen? true
+          :aseta (fn [rivi arvo]
+                   (assoc rivi :tavoitehinnanalennus
+                     (when arvo (- (Math/abs arvo)))))
+          :validoi [[:ei-tyhja "Anna tavoitehinnan alennus"]
+                    [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]})
 
        ;; Vähennyksen määrä
        {:otsikko "Vähennyksen määrä"
@@ -135,43 +159,55 @@
         :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
                   [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
 
-       ;; Tehtäväryhmä
-       {:otsikko "Tehtäväryhmä"
-        :nimi :tehtavaryhma
-        :tyyppi :valinta
-        :valinnat tehtavaryhmat
-        :valinta-nayta #(if % (:nimi %) " - valitse tehtäväryhmä -")
-        :uusi-rivi? true
-        :aseta (fn [rivi valittu]
-                 (js/console.log "Valittu tehtäväryhmä :: rivi" (pr-str rivi))
-                 (js/console.log "Valittu tehtäväryhmä ::valittu " (pr-str valittu))
-                 ;; Hae valitun tehtäväryhmän tehtävät
-                 (when (:tehtavaryhma valittu)
-                   (e! (arvonvahennys-tiedot/->HaeTehtavaryhmanTehtavat (:tehtavaryhma valittu))))
-                 (-> rivi
-                   (assoc :tehtavaryhma valittu)
-                   (assoc :tehtava nil)))
-        :pakollinen? true
-        ::lomake/col-luokka "col-xs-6"
-        :validoi [[:ei-tyhja "Valitse tehtäväryhmä"]]}
+       ;; Kulun kohdistus - Näytetään vain, jos tavoitehinta? false
+       (when (= (:vaikuttaatavoitehintaan @muokattu) :false)
+         {:otsikko "Kulun kohdistus"
+          :pakollinen? true
+          :uusi-rivi? true
+          :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
+          ::lomake/col-luokka "col-xs-6"
+          :nimi :toimenpideinstanssi
+          :tyyppi :valinta
+          :valinta-arvo :tpi_id
+          :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+          :valinnat mahdolliset-kulun-kohdistukset
+          :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
+
+       ;; Tehtäväryhmä - Näytetään vain, jos tavoitehinta? true
+       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+         {:otsikko "Tehtäväryhmä"
+          :nimi :tehtavaryhma
+          :tyyppi :valinta
+          :valinnat tehtavaryhmat
+          :valinta-nayta #(if % (:nimi %) " - valitse tehtäväryhmä -")
+          :uusi-rivi? true
+          :aseta (fn [rivi valittu]
+                   ;; Hae valitun tehtäväryhmän tehtävät
+                   (when (:tehtavaryhma valittu)
+                     (e! (arvonvahennys-tiedot/->HaeTehtavaryhmanTehtavat (:tehtavaryhma valittu))))
+                   (-> rivi
+                     (assoc :tehtavaryhma valittu)
+                     (assoc :tehtava nil)))
+          :pakollinen? true
+          ::lomake/col-luokka "col-xs-6"
+          :validoi [[:ei-tyhja "Valitse tehtäväryhmä"]]})
 
 
-       ;; Tehtävä
-       {:otsikko "Tehtävä"
-        :nimi :tehtava
-        :tyyppi :valinta
-        :uusi-rivi? true
-        :disabled? (empty? tehtavat)
-        :valinnat (if (empty? tehtavat) [{:id nil :nimi "Tehtäväryhmällä ei ole tehtäviä"}] tehtavat)
-        :valinta-nayta #(do
-                          (js/console.log "Valittu tehtävä :: " (pr-str %) "1" (pr-str (and % (:id %) (:nimi %))) "2" (pr-str (and % (nil? (:id %)) (:nimi %))))
-                          (cond
+       ;; Tehtävä - Näytetään vain, jos tavoitehinta? true
+       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+         {:otsikko "Tehtävä"
+          :nimi :tehtava
+          :tyyppi :valinta
+          :uusi-rivi? true
+          :disabled? (empty? tehtavat)
+          :valinnat (if (empty? tehtavat) [{:id nil :nimi "Tehtäväryhmällä ei ole tehtäviä"}] tehtavat)
+          :valinta-nayta #(cond
                             (and % (:id %) (:nimi %)) (:nimi %) ;; Normaali tilanne, jossa tehtäväryhmällä on tehtäviä ja voidaan valita jokin niistä
                             (and % (nil? (:id %)) (:nimi %)) "Tehtäväryhmällä ei ole tehtäviä" ;; Kun Tehtäväryhmällä ei ole tehtäviä
                             (and % (nil? (:id %)) (nil? (:nimi %))) "-" ;; Kun on tallennettu arvonvähennys, jolla ei ole tehtävää.
-                            :else " - valitse tehtävä -"))  ;; Kehotetaan valitsemaan tehtävä
-        :pakollinen? (seq tehtavat)
-        ::lomake/col-luokka "col-xs-6"}
+                            :else " - valitse tehtävä -") ;; Kehotetaan valitsemaan tehtävä
+          :pakollinen? (seq tehtavat)
+          ::lomake/col-luokka "col-xs-6"})
 
        ;; Havaittu ja Määrätty päivämäärät
        (lomake/ryhma {:rivi? true}
