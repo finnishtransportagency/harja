@@ -10,6 +10,7 @@
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
+            [harja.tiedot.urakka.laadunseuranta.arvonvahennys-tiedot :as arvonvahennys-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
 
@@ -21,6 +22,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
+            [harja.ui.debug :as debug]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
@@ -30,6 +32,7 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
             [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]
+            [harja.views.urakka.laadunseuranta.arvonvahennys-lomake :as arvonvahennys-lomake]
             [harja.ui.ikonit :as ikonit]))
 
 ;; --- Sivupaneeli sanktio- ja bonuslomakkeille ---
@@ -38,20 +41,20 @@
   [tila]
   [:<>
    [kentat/tee-kentta {:tyyppi :radio-group
-                       :vaihtoehdot [:sanktiot :bonukset]
+                       :vaihtoehdot [:sanktiot :arvonvahennys :bonukset]
                        :vayla-tyyli? true
                        :nayta-rivina? true
                        :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                          :arvonvahennys "Arvonvähennys"
                                           :bonukset "Bonus"}
                        :valitse-fn (fn [valinta]
-                                     ;; Alusta sanktio/bonus joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
+                                     ;; Alusta sanktio/bonus/arvonvähennys joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
                                      ;; lomakkeelle ei jää aiemman lomakkeen dataa.
-                                     ;; Note: Tätä ei tarvitse tehdä, kun saadaan myös sanktiolomake ja s&b listaus
-                                     ;;       kunnolla tuck tilanhallinnan piiriin.
-                                     ;;       Tällöin lomaketta avatessa voidaan alustaa helpommin tila halutuksi.
                                      (case valinta
                                        :sanktiot
                                        (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
+                                       :arvonvahennys
+                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys))
                                        :bonukset
                                        (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
                                        nil))}
@@ -60,22 +63,27 @@
 
 
 (defn sivupaneeli
-  [sivupaneeli-auki?-atom]
+  [e! app sivupaneeli-auki?-atom]
   (let [tila (atom {:lukutila true :lomake :sanktiot})]
     (komp/luo
-      (fn [sivupaneeli-auki?-atom]
+      (fn [e! app sivupaneeli-auki?-atom]
         (let [muokattu (atom @tiedot/valittu-sanktio)
               _ (when (and
                         (true? (:bonus @muokattu))
                         (not= :bonukset (:lomake @tila)))
                   (swap! tila assoc :lomake :bonukset))
+              _ (when (and
+                        (= :arvonvahennyssanktio (:laji @muokattu))
+                        (not= :arvonvahennys (:lomake @tila)))
+                  (swap! tila assoc :lomake :arvonvahennys))
               oikeus-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                 (:id @nav/valittu-urakka))
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (:suorasanktio @muokattu)
               lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
-              bonusten-syotto? (= :bonukset (:lomake @tila))]
+              bonusten-syotto? (= :bonukset (:lomake @tila))
+              arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -115,8 +123,12 @@
               #(tiedot/paivita-sanktiot-ja-bonukset!)
               lukutila? oikeus-muokata?]
 
-             ;;Sanktio-lomake
-             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))
+             (if arvonvahennys-syotto?
+               ;; Arvonvähennys-lomake
+               [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata?]
+
+               ;;Sanktio-lomake
+               [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?]))])))))
 
 
 ;; --- Sanktioiden listaus ---
@@ -312,19 +324,22 @@
      (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
 
-(defn sanktiot-ja-bonukset []
+(defn sanktiot-ja-bonukset [e! app]
   (let [sivupaneeli-auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
-      (komp/sisaan-ulos #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
-                                                                   :default nil})
+      (komp/sisaan-ulos #(do
+                           (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
+                           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
+                                                                       :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
-      (fn []
+      (fn [e! app]
         [:div.laadunseuranta
          (when @sivupaneeli-auki?
            [sivupalkki/oikea
             {:leveys "600px" :sulku-fn #(do
                                           (reset! sivupaneeli-auki? false)
                                           (reset! tiedot/valittu-sanktio nil))}
-            [sivupaneeli sivupaneeli-auki?]])
-         [sanktiot-ja-bonukset-listaus sivupaneeli-auki? @nav/valittu-urakka]]))))
+            [sivupaneeli e! app sivupaneeli-auki?]])
+         [sanktiot-ja-bonukset-listaus sivupaneeli-auki? @nav/valittu-urakka]
+         [debug/debug app]]))))
