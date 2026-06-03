@@ -57,7 +57,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.3"]
+                 [ring/ring-core "1.15.4"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.6" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.7" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -149,7 +149,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.15"]
+                 [org.apache.ant/ant "1.10.17"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]

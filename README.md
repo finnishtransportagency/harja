@@ -151,8 +151,13 @@ Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scop
 >For more information, see "Security hardening for GitHub Actions."
 >As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
 
-**Ohjeet:**  
-https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+* **Ohjeet tokenin luomiseen ja kirjautumiseen:**  
+  * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+
+* **Tokenin käyttöönotto (tärkeä)**
+  * Lopuksi, luotu token täytyy vielä auktorisoida Väyläviraston GitHub-organisaatiolle, jotta sitä voi käyttää.
+  * Navigoi: https://github.com/settings/tokens
+    * Paina tokenin kohdalla "Configure SSO" ja luvita tokenin käyttö finnistransportagency-organisaatiolle.
 
 ## GitHub Actions & Docker
 Lue: [.github/docker/README.md](.github/docker/README.md)
