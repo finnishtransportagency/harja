@@ -7,9 +7,9 @@
 ;; https://poi.apache.org/apidocs/4.0/org/apache/poi/ss/usermodel/IndexedColors.html
 
 (def virhetyylit
-  {:virhe    "rgb(221,0,0)"
+  {:virhe "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
-   :info     "rgb(0,136,204)"})
+   :info "rgb(0,136,204)"})
 
 
 ;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
@@ -18,22 +18,22 @@
 ;; excel pitämistä synkassa. Haluamme tietenkin, että huomiovärit ovat kaikissa kolmessa
 ;; formaatissa edes melkein samat.
 
-(def rajat-excel {:border-left   :thin
-                  :border-right  :thin
+(def rajat-excel {:border-left :thin
+                  :border-right :thin
                   :border-bottom :thin
-                  :border-top    :thin})
+                  :border-top :thin})
 
 ;; https://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/IndexedColors.html
 (def virhetyylit-excel
   {:virhe (merge rajat-excel
-                 {:background :dark_red
-                  :font {:color :white}})
+            {:background :dark_red
+             :font {:color :white}})
    :varoitus (merge rajat-excel
-                    {:background :rose
-                     :font {:color :black}})
+               {:background :rose
+                :font {:color :black}})
    :info (merge rajat-excel
-                {:background :light_turquoise
-                 :font {:color :black}})
+           {:background :light_turquoise
+            :font {:color :black}})
    :disabled {:font {:color :grey_80_percent}}})
 
 (def placeholder-ei-tietoja
@@ -56,7 +56,7 @@
                           :font {:color :white :name "Open Sans" :size 12}})
 
       korosta-hennosti?
-      {:background :pale_blue
+      {:background :light_cornflower_blue
        :font {:color :black :name "Open Sans" :size 12}}
 
       korosta-harmaa?
@@ -78,8 +78,8 @@
   muitakin käyttötapauksia voi olla."
   [solu]
   (and (vector? solu)
-       (> (count solu) 1)
-       (keyword? (first solu))))
+    (> (count solu) 1)
+    (keyword? (first solu))))
 
 (defn excel-kaava?
   [solu]
@@ -108,10 +108,10 @@
   (if (raporttielementti? solu)
     (if (map? (second solu))
       (assoc-in solu [1 :fmt]
-                (let [fmt (or (get-in solu [1 :fmt]))]
-                  (if fmt
-                    (fmt->fn fmt)
-                    str)))
+        (let [fmt (or (get-in solu [1 :fmt]))]
+          (if fmt
+            (fmt->fn fmt)
+            str)))
       solu)
 
     ;; Jos annettu solu ei ole raporttielementti, voidaan sen arvo formatoida suoraan.
@@ -132,12 +132,12 @@
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
   (or (roolit/jvh? kayttaja)
     (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
-        (roolit/tilaajan-kayttaja? kayttaja))))
+      (roolit/tilaajan-kayttaja? kayttaja))))
 
 #?(:clj
-(defn tee-solu [solu arvo tyyli]
-  (excel/set-cell! solu arvo)
-  (excel/set-cell-style! solu tyyli)))
+   (defn tee-solu [solu arvo tyyli]
+     (excel/set-cell! solu arvo)
+     (excel/set-cell-style! solu tyyli)))
 
 #?(:cljs
    (defn nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit? []
@@ -172,4 +172,4 @@
 (defn roolin-avain->nimi [avain]
   (second
     (first (filter #(= avain (first %))
-                   +mahdolliset-roolit+))))
+             +mahdolliset-roolit+))))

@@ -7,6 +7,7 @@
             [harja.domain.raportointi :refer [tee-solu]]
             [harja.palvelin.raportointi.excel :as excel-raportointi]))
 
+
 (defmethod excel-raportointi/muodosta-excel
   :tyomaa-laskutusyhteenveto-yhteensa
   [[_ kyseessa-kk-vali?
@@ -16,30 +17,39 @@
     laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
     laskutettu-str laskutetaan-str] workbook]
 
-  (let [otsikko-1 (if laskutusraja-kaytossa?
-                    "Toteutuneet kustannukset yhteensä"
-                    "Laskutettavaa yhteensä")
+  (let [otsikko-1 (if (and (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
+                    "Laskutettavaa yhteensä"
+                    "Toteutuneet kustannukset yhteensä")
         otsikko-2? (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
         sheet (last (excel/sheet-seq workbook))
         start-rivi (+ 2 (.getLastRowNum sheet))
-        tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
+        tyyli-tiedot {:background :light_cornflower_blue
+                      :font {:color :black :size 12 :name "Open Sans" :bold true}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
-        tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
         euro #(if (some? %) (str (fmt/euro %)) "")
 
         kirjoita-yhteenveto! (fn [rivi-nro otsikko arvo-yht arvo-val-aika avain-yht avain-val-aika]
-                               (let [rivi (.createRow sheet rivi-nro)]
-                                 (tee-solu (.createCell rivi 0) otsikko tyyli-otsikko)
-                                 (tee-solu (.createCell rivi 1) avain-yht tyyli-otsikko)
-                                 (when kyseessa-kk-vali?
-                                   (tee-solu (.createCell rivi 2) avain-val-aika tyyli-otsikko)))
+                               (let [otsikko-row (.createRow sheet rivi-nro)
+                                     ;; Tyhjä rivi otsikkoriville 
+                                     sarakkeet (cond-> [{:otsikko "" :lihavoitu? false}
+                                                        {:otsikko avain-yht :lihavoitu? false}]
+                                                 kyseessa-kk-vali? (conj {:otsikko avain-val-aika :lihavoitu? false}))
 
-                               (let [rivi (.createRow sheet (inc rivi-nro))]
-                                 (tee-solu (.createCell rivi 1) (euro arvo-yht) tyyli-normaali)
+                                     arvo-rivi (.createRow sheet (inc rivi-nro))
+                                     solu-yht (.createCell arvo-rivi 1)
+                                     solu-valittu-aika (.createCell arvo-rivi 2)]
+
+                                 (excel-raportointi/taulukko-otsikkorivi otsikko-row sarakkeet workbook false)
+
+                                 (tee-solu (.createCell arvo-rivi 0) otsikko tyyli-normaali)
+                                 (tee-solu (.createCell arvo-rivi 1) (euro arvo-yht) tyyli-normaali)
+                                 (excel-raportointi/tasaa-solu solu-yht :oikea)
+
                                  (when kyseessa-kk-vali?
-                                   (tee-solu (.createCell rivi 2) (euro arvo-val-aika) tyyli-normaali)))
-                               (+ rivi-nro 3))
+                                   (tee-solu solu-valittu-aika (euro arvo-val-aika) tyyli-normaali)
+                                   (excel-raportointi/tasaa-solu solu-valittu-aika :oikea))
+                                 (+ rivi-nro 3)))
 
         seuraava-rivi (kirjoita-yhteenveto!
                         start-rivi
@@ -47,16 +57,19 @@
                         laskutettu laskutetaan
                         laskutettu-str laskutetaan-str)]
 
-    (when otsikko-2? (kirjoita-yhteenveto!
-                       seuraava-rivi
-                       "Laskutettavaa yhteensä"
-                       laskutettavaa_kaikki_yht
-                       laskutettavaa_kaikki_val_aika
-                       "Hoitovuoden alusta"
-                       laskutetaan-str))))
+    (when otsikko-2?
+      (kirjoita-yhteenveto!
+        seuraava-rivi
+        "Laskutettavaa yhteensä"
+        laskutettavaa_kaikki_yht
+        laskutettavaa_kaikki_val_aika
+        "Hoitovuoden alusta"
+        laskutetaan-str))))
+
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))
+
 
 (defmethod excel-raportointi/muodosta-excel :liikenneyhteenveto [[_ sarakkeiden-arvot] workbook]
   ;; Luodaan tehdyn taulukon loppuun yhteenveto liikennetapahtumista
