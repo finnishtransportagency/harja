@@ -21,8 +21,9 @@
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
       :vakiofraasi
-      :maaraystapa)
-    (konv/decimal->double :summa :indeksikorjaus)
+      :maaraystapa
+      :vaikuttaatavoitehintaan)
+    (konv/decimal->double :summa :indeksikorjaus :tavoitehinnanalennus)
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))

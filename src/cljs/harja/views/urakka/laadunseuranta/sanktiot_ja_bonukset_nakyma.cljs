@@ -6,13 +6,15 @@
             [harja.loki :refer [log]]
             [harja.transit :as t]
 
+            [harja.tyokalut.muunnos :as muunnos]
             [harja.asiakas.kommunikaatio :as k]
 
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.hallinta.jarjestelma-asetukset :as jasetukset-tiedot]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.urakka.laadunseuranta.arvonvahennys-tiedot :as arvonvahennys-tiedot]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
@@ -37,11 +39,17 @@
 
 ;; --- Sivupaneeli sanktio- ja bonuslomakkeille ---
 
+(defn- sivupaneelityypit [mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?]
+  (cond-> []
+    true (conj :sanktiot)
+    (or (not arvonvahennys-validointi?) mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) (conj :arvonvahennys)
+    true (conj :bonukset)))
+
 (defn bonus-sanktio-valikko
-  [tila]
+  [tila mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?]
   [:<>
    [kentat/tee-kentta {:tyyppi :radio-group
-                       :vaihtoehdot [:sanktiot :arvonvahennys :bonukset]
+                       :vaihtoehdot (sivupaneelityypit mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?)
                        :vayla-tyyli? true
                        :nayta-rivina? true
                        :vaihtoehto-nayta {:sanktiot "Sanktio"
@@ -83,7 +91,11 @@
               lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))
-              arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))]
+              arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
+              mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                       (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+              arvonvahennys-validointi? (muunnos/keyword->bool (get-in app [:asetukset :arvonvahennys-validointi]))
+              kuluva-alkanut-hoitovuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -99,7 +111,7 @@
                   "Lisää uusi")]
 
            (when-not muokataan-vanhaa?
-             [bonus-sanktio-valikko (r/cursor tila [:lomake])])
+             [bonus-sanktio-valikko (r/cursor tila [:lomake]) mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?])
 
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
@@ -125,7 +137,7 @@
 
              (if arvonvahennys-syotto?
                ;; Arvonvähennys-lomake
-               [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata?]
+               [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
 
                ;;Sanktio-lomake
                [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?]))])))))
@@ -330,6 +342,7 @@
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(do
                            (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
+                           (e! (jasetukset-tiedot/->HaeJarjestelmanAsetukset))
                            (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
                                                                        :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))

@@ -21,14 +21,17 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- valittavat-kulun-kohdistukset
-  "Poistetaan listalta hoidon johto"
-  [toimenpideinstanssit]
-  (remove
-    #(= (:t2_koodi %) "23150")
+  "MHU25 urakoilta poistetaan listalta hoidon johto toimenpideinstanssi. Muut saa nähdä kaikki vaihtoehdot."
+  [toimenpideinstanssit mhu25?]
+  (if mhu25?
+    ;; MHU25 urakoilta poistetaan hoidon johto
+    (remove
+      #(= (:t2_koodi %) "23150")
+      toimenpideinstanssit)
     toimenpideinstanssit))
 
 (defn arvonvahennys-lomake
-  [e! app sivupaneeli-auki?-atom lukutila? voi-muokata?]
+  [e! app sivupaneeli-auki?-atom lukutila? voi-muokata? mhu25?]
   (let [muokattu (atom @tiedot/valittu-sanktio)
         muokataan-vanhaa? (some? (:id @muokattu))
         tallennus-kaynnissa (atom false)
@@ -36,8 +39,11 @@
         tehtavaryhmat (:tehtavaryhmat app)
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
-        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit)
+        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit mhu25?)
         tehtavat (:tehtavat app)
+        yllapitourakka? @tiedot-urakka/yllapitourakka?
+        laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
+        laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liitteet-element-id-" (gensym))]
 
     [:div
@@ -130,10 +136,7 @@
           :vaihtoehdot [:true :false]
           :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
                              :false "Ei vaikuta tavoitehintaan"}
-          :aseta (fn [rivi arvo]
-                   (-> rivi
-                     (assoc :vaikuttaatavoitehintaan arvo)
-                     (assoc :tavoitehinnanalennus nil)))}) ;; Nollataan aina tavoitehinnan alennus
+          :aseta (fn [rivi arvo] (assoc rivi :vaikuttaatavoitehintaan arvo))})
 
        ;; Tavoitehinnan alennus
        (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
@@ -159,13 +162,17 @@
         :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
                   [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
 
-       ;; Kulun kohdistus - Näytetään vain, jos tavoitehinta? false
-       (when (= (:vaikuttaatavoitehintaan @muokattu) :false)
+       ;; Kulun kohdistus
+       ;; MHU25 urakoille näytetään vain, jos tavoitehinta? false
+       ;; Muille kuin mhu25 urakoille näytetään aina
+       (when (or
+               (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :false))
+               (not mhu25?))
          {:otsikko "Kulun kohdistus"
           :pakollinen? true
           :uusi-rivi? true
           :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
-          ::lomake/col-luokka "col-xs-6"
+          ::lomake/col-luokka "col-xs-8"
           :nimi :toimenpideinstanssi
           :tyyppi :valinta
           :valinta-arvo :tpi_id
@@ -173,8 +180,8 @@
           :valinnat mahdolliset-kulun-kohdistukset
           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
-       ;; Tehtäväryhmä - Näytetään vain, jos tavoitehinta? true
-       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+       ;; Tehtäväryhmä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
+       (when (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :true))
          {:otsikko "Tehtäväryhmä"
           :nimi :tehtavaryhma
           :tyyppi :valinta
@@ -193,8 +200,8 @@
           :validoi [[:ei-tyhja "Valitse tehtäväryhmä"]]})
 
 
-       ;; Tehtävä - Näytetään vain, jos tavoitehinta? true
-       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+       ;; Tehtävä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
+       (when (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :true))
          {:otsikko "Tehtävä"
           :nimi :tehtava
           :tyyppi :valinta
@@ -214,16 +221,16 @@
          {:otsikko "Havaittu"
           :nimi :laatupoikkeamaaika
           :pakollinen? true
-          ::lomake/col-luokka "col-xs-4"
+          ::lomake/col-luokka "col-xs-3"
           :hae (comp :aika :laatupoikkeama)
           :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
           :fmt pvm/pvm-opt :tyyppi :pvm
           :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-         {:otsikko "Määrätty"
+         {:otsikko (if mhu25? "Määrätty" "Käsitelty")
           :nimi :kasittelyaika
           :pakollinen? true
-          ::lomake/col-luokka "col-xs-4"
+          ::lomake/col-luokka "col-xs-3"
           :hae (comp :kasittelyaika :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo] (cond-> rivi
                                    ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
@@ -233,27 +240,99 @@
                                    true
                                    (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-       ;; Määräystapa radio-group
-       {:otsikko "Määräystapa"
-        :nimi :maaraystapa
-        :tyyppi :radio-group
-        :pakollinen? true
-        :nayta-rivina? true
-        ::lomake/col-luokka "col-xs-12"
-        :vaihtoehdot [:tyomaakokous :valikatselmus]
-        :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
-                           :valikatselmus "Välikatselmus"}}
+         ;; Laskutuskuukausi näytetään mhu24 urakoille
+         (when (and (not mhu25?) voi-muokata? (not lukutila?))
+           {:otsikko "Laskutuskuukausi"
+            :label-for-id laskutuskuukausi-id
+            :nimi :perintapvm
+            :pakollinen? true
+            :tyyppi :komponentti
+            ::lomake/col-luokka "col-xs-6"
+            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                           (let [perintapvm (get-in data [:perintapvm])]
+                             [:<>
+                              [yleiset/livi-pudotusvalikko
+                               {:data-cy "koontilaskun-kk-dropdown"
+                                :vayla-tyyli? true
+                                :skrollattava? true
+                                :elementin-id laskutuskuukausi-id
+                                :pakollinen? true
+                                :valinta (or
+                                           ;; Näytetään valintana joko valittua laskutuskuukautta, tai
+                                           (-> data :laskutuskuukausi-komp-tiedot)
+                                           ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
+                                           (when perintapvm
+                                             (some #(when (and
+                                                            (= (pvm/vuosi perintapvm)
+                                                              (:vuosi %))
+                                                            (= (pvm/kuukausi perintapvm)
+                                                              (:kuukausi %))) %)
+                                               laskutuskuukaudet)))
+                                :valitse-fn #(muokkaa-lomaketta
+                                               (assoc data
+                                                 ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
+                                                 ;;  sitä voi hyödyntää muualla lomakkeessa.
+                                                 :laskutuskuukausi-komp-tiedot %
+                                                 ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
+                                                 :perintapvm (:pvm %)))
+                                :format-fn :teksti}
+                               laskutuskuukaudet]
+                              ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
+                              (when (not yllapitourakka?)
+                                [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
 
-       ;; Käsittelytapa (aina välikatselmus)
-       {:otsikko "Käsittelytapa" :nimi :kasittelytapa :tyyppi :valinta
-        :pakollinen? true
-        ::lomake/col-luokka "col-xs-12"
-        :hae (comp :kasittelytapa :paatos :laatupoikkeama)
-        :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
-        :valinnat [:valikatselmus]
-        :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
+           (when (and (not mhu25?) lukutila?)
+           {:otsikko "Laskutuskuukausi"
+            :nimi :perintapvm
+            :fmt (fn [pvm]
+                   ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
+                   (when pvm
+                     (some #(when (and
+                                    (= (pvm/vuosi pvm) (pvm/vuosi (:pvm %)))
+                                    (= (pvm/kuukausi pvm) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                       laskutuskuukaudet)))
+            :pakollinen? true
+            :tyyppi :pvm
+            ::lomake/col-luokka "col-xs-6"}))
+
+       ;; Määräystapa radio-group näytetään vain mhu25 urakoille
+       (if mhu25?
+         {:otsikko "Määräystapa"
+          :nimi :maaraystapa
+          :tyyppi :radio-group
+          :pakollinen? true
+          :nayta-rivina? true
+          ::lomake/col-luokka "col-xs-12"
+          :vaihtoehdot [:tyomaakokous :valikatselmus]
+          :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
+                             :valikatselmus "Välikatselmus"}}
+         ;; MHU24 urakoiden määräystapa on alasvetovalikko
+         {:otsikko "Määräystapa" :nimi :maaraystapa :tyyppi :valinta
+          :pakollinen? true
+          ::lomake/col-luokka "col-xs-6"
+          :valinnat sanktio-domain/kasittelytavat
+          :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")})
+       ;; Muu käsittelytapa (eli määräystapa) voi olla vain muilla kuin mhu25 urakoilla.
+       (when (and (not mhu25?) (= :muu (:maaraystapa @muokattu)))
+         {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
+          ::lomake/col-luokka "col-xs-12"
+          :hae (comp :muukasittelytapa :paatos :laatupoikkeama)
+          :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
+          :tyyppi :string
+          :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
+
+       ;; Käsittelytapa (aina välikatselmus) - Tämä näytetään vain mhu25 urakoille
+       (when mhu25?
+         {:otsikko "Käsittelytapa" :nimi :kasittelytapa :tyyppi :valinta
+          :pakollinen? true
+          ::lomake/col-luokka "col-xs-12"
+          :hae (comp :kasittelytapa :paatos :laatupoikkeama)
+          :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
+          :valinnat [:valikatselmus]
+          :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")})
 
        ;; Liitteet
        (when (and (not lukutila?)

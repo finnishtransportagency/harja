@@ -150,7 +150,7 @@ SELECT s.id,
        t.koodi                                      AS tyyppi_koodi,
 
        s.maaraystapa,
-       s.vaikuttaatavoitehintaan,
+       COALESCE(s.vaikuttaatavoitehintaan::text, 'false')   AS vaikuttaatavoitehintaan,
        s.tavoitehinnanalennus,
        s.tehtavaryhma                               AS tehtavaryhma_id,
        tryhma.nimi                                  AS tehtavaryhma_nimi,
