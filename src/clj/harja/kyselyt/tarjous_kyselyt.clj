@@ -465,6 +465,13 @@
                                tavoitehinta (:tarjous_tavoitehinta rivi)
                                tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                               (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)
+                               ;; Haetaan aiempien vuosien pysyvät muutokset ja lisätään ne laskutusrajaan jo ennen tavoite- ja kattohinnan vahvistusta
+                               aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi) true)
+                               pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+                               hoitovuoden-alun-tavoitehinta (+ (or tavoitehinta 0M) (or pysyvat-muutokset-maara 0M))
+                               laskutusraja-ennen-vahvistusta (indeksi-kyselyt/indeksikorjaa
+                                                                (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
+                                                                hoitovuoden-alun-tavoitehinta)
                                laskutusraja-kaytossa? (-> (hae-laskutusraja-kaytossa db {:urakka-id urakka-id})
                                                         first
                                                         :laskutusraja-kaytossa)
@@ -474,8 +481,8 @@
                                                                               :tarjous_tavoitehinta tavoitehinta
                                                                               :tavoitehinta tavoitehinta
                                                                               :tavoitehinta_indeksikorjattu tavoitehinta_indeksikorjattu
-                                                                              :laskutusraja (when laskutusraja-kaytossa? tavoitehinta_indeksikorjattu)
-                                                                              :laskutusraja_alkuperainen (when laskutusraja-kaytossa? tavoitehinta_indeksikorjattu)
+                                                                              :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
+                                                                              :laskutusraja_alkuperainen (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
                                                                               :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
                                                                               :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                             (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
@@ -488,8 +495,8 @@
                                                                                :tarjous_tavoitehinta tavoitehinta
                                                                                :tavoitehinta tavoitehinta
                                                                                :tavoitehinta_indeksikorjattu tavoitehinta_indeksikorjattu
-                                                                               :laskutusraja (when laskutusraja-kaytossa? tavoitehinta_indeksikorjattu)
-                                                                               :laskutusraja_alkuperainen (when laskutusraja-kaytossa? tavoitehinta_indeksikorjattu)
+                                                                               :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
+                                                                               :laskutusraja_alkuperainen (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
                                                                                :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
                                                                                :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                              (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
@@ -502,8 +509,7 @@
                                ;; Rahavaraukset tallennetaan tarjouksen lisäksi myös kustannusarvioitu_tyo tauluun
                                _ (tallanna-rahavaraukset-kustannussuuunnitelmaan db rivi urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id)
                                _ (tallenna-tarjouksen-toimenkuvat db rivi tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id)
-
-                               aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi) true)
+                               
                                _ (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi rivi) aiempien-vuosien-pysyvat-muutokset)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
