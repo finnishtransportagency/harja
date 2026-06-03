@@ -137,18 +137,31 @@
   (let [validoinnit-poissa (r/atom (get-in app [:asetukset :valikatselmus-validointi]))]
     [:div
      [:h2 "Järjestelmään vaikuttavia asetuksia"]
-     [:h4 "Ota välikatselmuksen päätösten validointivaatimukset pois käytöstä"]
-     [:p "Välikatselmuksessa ei voi tehdä päätöksiä, mikäli edellisiä päätöksiä ei ole tehty tai hoitovuosi ei ole loppunut.
-   Tämä hankaloittaa testausta. Ottamalla validoinnit pois päältä, pystyt testaamaan välikatselmusta paremmin tai toisaalta,
-   korjaamaan jonkin ongelmatilanteen. Tuotannossa pitää olla tarkkana, että asetus ei jää pois päältä."]
-     [kentat/tee-kentta {:tyyppi :radio-group
-                         :vaihtoehdot [:true :false]
-                         :vayla-tyyli? true
-                         :nayta-rivina? true
-                         :vaihtoehto-nayta {:true "Validoinnit käytössä"
-                                            :false "Validoinnit poissa"}
-                         :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
-      validoinnit-poissa]]))
+     [:div.row
+      [:div.col-md-6
+       [:h3 "Ota välikatselmuksen päätösten validointivaatimukset pois käytöstä"]
+       [:p "Välikatselmuksessa ei voi tehdä päätöksiä, mikäli edellisiä päätöksiä ei ole tehty tai hoitovuosi ei ole loppunut.
+     Tämä hankaloittaa testausta. Ottamalla validoinnit pois päältä, pystyt testaamaan välikatselmusta paremmin tai toisaalta,
+     korjaamaan jonkin ongelmatilanteen. Tuotannossa pitää olla tarkkana, että asetus ei jää pois päältä."]
+       [kentat/tee-kentta {:tyyppi :radio-group
+                           :vaihtoehdot [:true :false]
+                           :vayla-tyyli? true
+                           :nayta-rivina? true
+                           :vaihtoehto-nayta {:true "Validoinnit käytössä"
+                                              :false "Validoinnit poissa"}
+                           :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
+        validoinnit-poissa]]
+      [:div.col-md-6
+       [:h3 "Ota arvonvähennyslomakkeen mhu24- tarkistus pois käytöstä"]
+       [:p "Arvonvähennyssanktio näytetään defaulttina vain mhu25 urakoille. Ja vuodesta 2026 lähtien myös muille. Tämä poistaa tuon 2026 lähtien vaatimuksen"]
+       [kentat/tee-kentta {:tyyppi :radio-group
+                           :vaihtoehdot [:true :false]
+                           :vayla-tyyli? true
+                           :nayta-rivina? true
+                           :vaihtoehto-nayta {:true "Ei salita mhu24 urakoille"
+                                              :false "Salli mhu24 urakoille"}
+                           :valitse-fn #(e! (tiedot/->ToggleArvonvahennysValidoinnit %))}
+        validoinnit-poissa]]]]))
 
 (defn jarjestelma-asetukset* [e! app]
   (komp/luo
