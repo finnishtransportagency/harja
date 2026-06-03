@@ -34,6 +34,7 @@
             [harja.palvelin.raportointi.excel :as raportointi-excel]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.muunnos :as muunnos]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as domain-urakka]
@@ -260,8 +261,9 @@
                 :luoja (:id user)
                 ;; Arvonvähennyksen lisäkentät
                 :maaraystapa (when maaraystapa (name maaraystapa))
-                :vaikuttaatavoitehintaan vaikuttaatavoitehintaan
-                :tavoitehinnanalennus tavoitehinnanalennus
+                :vaikuttaatavoitehintaan (muunnos/keyword->bool vaikuttaatavoitehintaan)
+                ;; Tavoitehinnanalennus voi olla asetettuna, vaikka sitä ei haluta tallentaa
+                :tavoitehinnanalennus (if (= :true vaikuttaatavoitehintaan) tavoitehinnanalennus nil)
                 :tehtavaryhma (:tehtavaryhma tehtavaryhma)
                 :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)

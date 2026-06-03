@@ -16,3 +16,9 @@
    (defn str->double [s]
      (when (and s (not (str/blank? s)))
        (Double/parseDouble s))))
+
+(defn keyword->bool [x]
+  (case x
+    :true  true
+    :false false
+    x))  ;; palauttaa alkuperäisen arvon jos ei ole :true tai :false

@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.hallinta.urakoiden-lyhytnimet
   (:require [com.stuartsierra.component :as component]
+            [harja.tyokalut.muunnos :as muunnos]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
@@ -43,10 +44,18 @@
     (hae-urakoiden-nimet db kayttaja haku-parametrit)))
 
 (defn toggle-valikatselmus-validoinnit [db kayttaja tiedot]
-  (let [validointi (boolean (Boolean/valueOf (name (:validointi tiedot))))]
+  (let [validointi (muunnos/keyword->bool (:validointi tiedot))]
     ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
     (jarjestelma-kyselyt/toggle-valikatselmus-validoinnit! db {:validoinnit validointi :kayttajaid (:id kayttaja)})
+    (keyword (str validointi))))
+
+(defn toggle-arvonvahennys-validoinnit [db kayttaja tiedot]
+  (let [_ (println "toggle-arvonvahennys-validoinnit: " tiedot)
+        validointi (muunnos/keyword->bool (:validointi tiedot))]
+    ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
+    (jarjestelma-kyselyt/toggle-arvonvahennys-validoinnit! db {:validoinnit validointi :kayttajaid (:id kayttaja)})
     (keyword (str validointi))))
 
 (defn hae-jarjestelma-asetukset [db kayttaja]
@@ -65,6 +74,9 @@
       (julkaise-palvelu http-palvelin :toggle-valikatselmus-validoinnit
         (fn [kayttaja tiedot]
           (toggle-valikatselmus-validoinnit db kayttaja tiedot)))
+      (julkaise-palvelu http-palvelin :toggle-arvonvahennys-validoinnit
+        (fn [kayttaja tiedot]
+          (toggle-arvonvahennys-validoinnit db kayttaja tiedot)))
       (julkaise-palvelu http-palvelin :hae-jarjestelma-asetukset
         (fn [kayttaja]
           (hae-jarjestelma-asetukset db kayttaja)))
@@ -74,5 +86,6 @@
         :hae-urakoiden-nimet
         :tallenna-urakoiden-lyhytnimet
         :toggle-valikatselmus-validoinnit
+        :toggle-arvonvahennys-validoinnit
         :hae-jarjestelma-asetukset)
       this))
