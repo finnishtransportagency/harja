@@ -113,7 +113,7 @@
            (organisaatiot-q/luo-organisaatio<! db nil nimi ytunnus nil nil "urakoitsija")))))
 
 (defn -tarkista-kustannuspaikka
-  "Jos kustannuspaikka (sampon sisääntuontisanomassa financialDepartment) on Väylävirasto (ent. Liikennevirasto), määritetään URAKKA.sampo-ely-hash urakkakohtaisesti.
+  "Jos kustannuspaikka (sampon sisääntuontisanomassa financialDepartment) on Väylävirasto (ent. Liikennevirasto), määritetään URAKKA.elinvoimakeskus_id urakkakohtaisesti tässä funktiossa.
   Harja vaatii, että kustannuspaikka on ely tai elinvoimakeskus. Kustannuspaikka on siis Harjan näkökulmasta hallintoyksikkö eli organisaatio, jonka tyyppi on hallintayksikko tai elinvoimakeskus.
   Samposta siirtyvissä tiedoissa financialDeparment eli kustannuspaikka on E18-urakoissa (elinkaarihankkeissa) kuitenkin Väylävirasto. Siksi tässä mäpätään muutama urakka yksi kerrallaan oikeaan hallintoyksikköön."
   [kustannuspaikka urakan-sampoid]
