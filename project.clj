@@ -193,7 +193,7 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            [lein-ancient "0.7.0"]
+            [lein-ancient "1.0.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]
