@@ -134,3 +134,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION paivita_vanhat_alkanut_muutokset(urakka_id INTEGER)
+RETURNS void AS $$
+DECLARE
+  rivi RECORD;
+BEGIN
+  FOR rivi IN
+    SELECT toteuma_id, vanha_alkanut
+    FROM toteuma_alkanut_muutos
+    WHERE urakka_id = urakka_id
+      AND kasitelty = FALSE
+  LOOP
+
