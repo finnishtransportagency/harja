@@ -122,31 +122,63 @@
       ;; Varmistetaan, että lopputulos on samassa järjestyksessä kuin alkuperäinen lajin-sanktiotyyppien-koodit
       (sort-by #(.indexOf (vec lajin-sanktiotyyppien-koodit) (:koodi %))))))
 
+(defn mhu25-urakka?
+  "Tosi, jos kyseessä on MHU25-urakka tai uudempi, eli teiden-hoito-tyyppinen urakka, jonka alkuvuosi on 2025 tai suurempi."
+  [{:keys [tyyppi alkupvm]}]
+  (and (= :teiden-hoito tyyppi)
+       (some? alkupvm)
+       (>= (pvm/vuosi alkupvm) 2025)))
+
 (defn urakan-sanktiolajit
-  "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti"
-  [{:keys [tyyppi] :as urakka}]
+  "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti.
 
-  (cond
-    ;; MH- tai Alueurakka?
-    (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
-    [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys
-     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+   :arvonvahennyssanktio lisätään teiden-hoito-tyyppisen urakan lajeihin heti :C-sanktion jälkeen, mikäli:
+   - MHU24-urakka -> aina siihen asti, että kuluvan hoitokauden alkuvuosi on 2026 (eli väliaikaisesti)
+     ja järjestelmäasetus arvonvahennys_validoinnit_kaytossa on true (eli validoinnit on käytössä).
 
-    ;; Yllapidon urakka?
-    (urakka-domain/yllapitourakka? tyyppi)
-    [:yllapidon_sakko :yllapidon_muistutus]
+   Parametrit:
+     urakka                              Urakan tiedot (mm. :tyyppi ja :alkupvm)
+     kuluvan-hoitokauden-alkuvuosi       Kuluvan hoitokauden alkuvuosi (int)
+     arvonvahennys-validoinnit-kaytossa? Järjestelmäasetus arvonvahennys_validoinnit_kaytossa (boolean)"
+  [{:keys [tyyppi] :as urakka} kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?]
+  (let [;; Arvonvähennyssanktio näytetään tässä "vanhassa" listassa vain silloin, kun uutta arvonvähennyslomaketta
+        ;; EI näytetä (vrt. sivupaneelityypit). Eli kun validoinnit ovat käytössä, urakka ei ole MHU25 (tai uudempi)
+        ;; eikä kuluvan hoitokauden alkuvuosi ole vielä 2026.
+        nayta-arvonvahennyssanktio? (cond
+                                      (not arvonvahennys-validoinnit-kaytossa?) false ;; Validoinnit pois käytöstä - ei näytetä tässä listassa
+                                      (mhu25-urakka? urakka) false                    ;; MHU25 (tai uudempi) - ei näytetä
+                                      (>= kuluvan-hoitokauden-alkuvuosi 2026) false   ;; Alkanut hoitovuosi 2026 - ei näytetä
+                                      :else true)]                                    ;; Kaikissa muissa tapauksissa näytetään
+    (cond
+      ;; MH- tai Alueurakka?
+      (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
+      (vec (concat
+             [:muistutus :A :B :C]
+             (when nayta-arvonvahennyssanktio?
+               [:arvonvahennyssanktio])
+             [:pohjavesisuolan_ylitys :talvisuolan_ylitys
+              :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]))
 
-    :else []))
+      ;; Yllapidon urakka?
+      (urakka-domain/yllapitourakka? tyyppi)
+      [:yllapidon_sakko :yllapidon_muistutus]
+
+      :else [])))
 
 (defn laatupoikkeaman-sanktiolajit
-  [{:keys [tyyppi alkupvm] :as urakka}]
-  (cond
-    ;; Yllapidon urakka?
-    (urakka-domain/yllapitourakka? tyyppi)
-    [:yllapidon_sakko :yllapidon_muistutus]
+  [{:keys [tyyppi alkupvm] :as urakka} kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?]
+  (let [nayta-arvonvahennyssanktio? (cond (not arvonvahennys-validoinnit-kaytossa?) false ;; Jos validoinnit pois käytöstä - ei näytetä tässä listassa
+                                      (mhu25-urakka? urakka) false ;; Jos mhu25? - ei näytetä
+                                      (>= kuluvan-hoitokauden-alkuvuosi 2026) false ;; Jos alkanut vuosi 2026 - ei näytetetä
+                                      :else true           ;; Kaikissa muissa tapauksissa näytetään
+                                      )]
+   (cond
+     ;; Yllapidon urakka?
+     (urakka-domain/yllapitourakka? tyyppi)
+     [:yllapidon_sakko :yllapidon_muistutus]
 
-    ;; MHU ja muut
-    :else [:muistutus :A :B :C :arvonvahennyssanktio]))
+     ;; MHU ja muut
+     :else [:muistutus :A :B :C :arvonvahennyssanktio])))
 
 
 

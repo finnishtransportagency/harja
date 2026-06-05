@@ -95,7 +95,12 @@
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
               arvonvahennys-validointi? (muunnos/keyword->bool (get-in app [:asetukset :arvonvahennys-validointi]))
-              kuluva-alkanut-hoitovuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))]
+              kuluva-alkanut-hoitovuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
+              uusi-arvonvahennyslomake-kaytossa? (cond
+                                                   (not arvonvahennys-validointi?) true ;; Jos validoinnit pois käytöstä - aina näytetään uusi lomake
+                                                   mhu25? true ;; MHU25 urakoille - aina uusi lomake
+                                                   (>= kuluva-alkanut-hoitovuosi 2026) true ;; Jos kuluva vuosi 2026 - aina uusi lomake
+                                                   :else false)]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)

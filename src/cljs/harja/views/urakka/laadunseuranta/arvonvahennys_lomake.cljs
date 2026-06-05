@@ -44,6 +44,7 @@
         yllapitourakka? @tiedot-urakka/yllapitourakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
+        kuluvan-hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
         liitteet-id (str "liitteet-element-id-" (gensym))]
 
     [:div
@@ -114,29 +115,30 @@
         :validoi [[:ei-tyhja "Anna perustelu"]]}
 
        ;; Tavoitehinta? radio-group
-
-       (if lukutila?
-         {:otsikko "Vaikuttaa tavoitehintaan"
-          :nimi :vaikuttaatavoitehintaan
-          :nayta-rivina? true
-          ::lomake/col-luokka "col-xs-12"
-          :tyyppi :teksti
-          :hae (fn [rivi]
-                 (if (= :true (:vaikuttaatavoitehintaan rivi))
-                   "Vaikuttaa tavoitehintaan"
-                   "Ei vaikuta tavoitehintaan"))}
-         {:otsikko ""
-          :nimi :vaikuttaatavoitehintaan
-          :tyyppi :radio-group
-          :pakollinen? true
-          :piilota-label? true
-          :nayta-rivina? true
-          :vayla-tyyli? true
-          ::lomake/col-luokka "col-xs-12"
-          :vaihtoehdot [:true :false]
-          :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
-                             :false "Ei vaikuta tavoitehintaan"}
-          :aseta (fn [rivi arvo] (assoc rivi :vaikuttaatavoitehintaan arvo))})
+       ;; Komponenttia ei näytetä mhu24 urakoille vielä 2026 vuonna
+       (when (or mhu25? (>= 2026 kuluvan-hoitokauden-alkuvuosi))
+         (if lukutila?
+           {:otsikko "Vaikuttaa tavoitehintaan"
+            :nimi :vaikuttaatavoitehintaan
+            :nayta-rivina? true
+            ::lomake/col-luokka "col-xs-12"
+            :tyyppi :teksti
+            :hae (fn [rivi]
+                   (if (= :true (:vaikuttaatavoitehintaan rivi))
+                     "Vaikuttaa tavoitehintaan"
+                     "Ei vaikuta tavoitehintaan"))}
+           {:otsikko ""
+            :nimi :vaikuttaatavoitehintaan
+            :tyyppi :radio-group
+            :pakollinen? true
+            :piilota-label? true
+            :nayta-rivina? true
+            :vayla-tyyli? true
+            ::lomake/col-luokka "col-xs-12"
+            :vaihtoehdot [:true :false]
+            :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
+                               :false "Ei vaikuta tavoitehintaan"}
+            :aseta (fn [rivi arvo] (assoc rivi :vaikuttaatavoitehintaan arvo))}))
 
        ;; Tavoitehinnan alennus
        (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
@@ -232,7 +234,8 @@
           :pakollinen? true
           ::lomake/col-luokka "col-xs-3"
           :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-          :aseta (fn [rivi arvo] (cond-> rivi
+          :aseta (fn [rivi arvo]
+                   (cond-> rivi
                                    ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
                                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
                                    (assoc-in [:perintapvm] arvo)

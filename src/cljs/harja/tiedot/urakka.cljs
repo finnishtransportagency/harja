@@ -16,6 +16,7 @@
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.hallinta.jarjestelma-asetukset :as jasetukset]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as urakka-domain])
 
@@ -503,15 +504,18 @@
   (reaction
     (let [urakka @nav/valittu-urakka
           ls-sivu (nav/valittu-valilehti :laadunseuranta)
-          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+          kuluvan-hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))]
       (when (and urakka (or (= :laatupoikkeamat ls-sivu)
                           (= :sanktiot ls-sivu)
                           (= :vesivayla-sanktiot vv-ls-sivu)))
         (if (= :laatupoikkeamat ls-sivu)
           ;; Laatupoikkeamille on omat karsitut sanktiolajien listaukset riippuen urakkatyypistä
-          (sanktio-domain/laatupoikkeaman-sanktiolajit urakka)
+          (sanktio-domain/laatupoikkeaman-sanktiolajit urakka kuluvan-hoitokauden-alkuvuosi
+            @jasetukset/arvonvahennys-validoinnit-kaytossa?)
           ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
-          (sanktio-domain/urakan-sanktiolajit urakka))))))
+          (sanktio-domain/urakan-sanktiolajit urakka kuluvan-hoitokauden-alkuvuosi
+            @jasetukset/arvonvahennys-validoinnit-kaytossa?))))))
 
 ;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitourakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
 ;;       Jos (def yllapitourakka?..) alempana on OK, niin tämän voi poistaa ja korvata viittaukset yllapitourakka? symbolilla.

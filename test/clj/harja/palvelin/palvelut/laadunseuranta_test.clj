@@ -522,7 +522,7 @@
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
     :suorasanktio false, :laji :C, :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
-                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
+                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
@@ -759,10 +759,17 @@
 
 (defn- legacy-sanktio-konfiguraatio-odotus [db urakka soveltuvuuskonteksti]
   (let [kaikki-sanktiotyypit (sanktiot-q/hae-sanktiotyypit db)
+        ;; Legacy-odotus vastaa vanhaa toimintaa, jossa arvonvähennyssanktio on aina mukana hoidon urakoilla:
+        ;; validoinnit käytössä (true) ja kuluvan hoitokauden alkuvuosi ennen vuotta 2026.
+        kuluvan-hoitokauden-alkuvuosi 2025
+        arvonvahennys-validoinnit-kaytossa? true
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
-                                                                              :alkupvm (:alkupvm urakka)})
-                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))}))]
+                                                                              :alkupvm (:alkupvm urakka)}
+                                  kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?)
+                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
+                                                     :alkupvm (:alkupvm urakka)}
+                  kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?))]
     (mapv (fn [jarjestys laji]
             {:laji laji
              :rivin-tyyppi (legacy-rivin-tyyppi laji)

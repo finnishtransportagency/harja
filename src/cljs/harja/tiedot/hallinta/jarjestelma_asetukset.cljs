@@ -18,6 +18,11 @@
          :haku-kaynnissa? false
          :tallennus-kaynnissa? false}))
 
+;; Globaali arvonvahennys_validoinnit_kaytossa -järjestelmäasetus boolean-muodossa.
+;; Päivitetään aina kun järjestelmän asetukset haetaan (mm. sanktiot ja bonukset -näkymässä),
+;; jotta asetus on saatavilla myös tuck-näkymien ulkopuolella (esim. urakan sanktiolajit -reaktiossa).
+(defonce arvonvahennys-validoinnit-kaytossa? (atom true))
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
 (defrecord Geometria-aineistotHaettu [geometria-aineistot])
@@ -171,6 +176,8 @@
   (process-event [{vastaus :vastaus} app]
     (let [valikatselmus-validoinnit (:valikatselmus_validoinnit_kaytossa vastaus)
           arvonvahennys-validoinnit (:arvonvahennys_validoinnit_kaytossa vastaus)]
+      ;; Pidä globaali asetus ajan tasalla, jotta se on saatavilla myös tuck-näkymien ulkopuolella.
+      (reset! arvonvahennys-validoinnit-kaytossa? (boolean arvonvahennys-validoinnit))
       (-> app
         (assoc-in [:asetukset :valikatselmus-validointi] (keyword (str valikatselmus-validoinnit)))
         (assoc-in [:asetukset :arvonvahennys-validointi] (keyword (str arvonvahennys-validoinnit))))))
