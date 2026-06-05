@@ -92,6 +92,7 @@ function avaaUusiArvonvahennys() {
 
 // Kirjoita :text-tyyppiseen kenttään (textarea) otsikon perusteella
 function kirjoitaTekstikenttaan(otsikko, teksti) {
+    cy.get(SP).contains('.form-group', otsikko).should('exist');
     cy.get(SP).contains('.form-group', otsikko).find('textarea').first().clear();
     cy.get(SP).contains('.form-group', otsikko).find('textarea').first().type(teksti);
 }
@@ -383,12 +384,9 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
         cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä (tehtäväkohtainen sanktio)'});
 
 
-
         // Kun arvonvähennyslomakkeen MHU24-tarkistus on otettu pois käytöstä,
         // tavoitehinnan valinta näkyy myös MHU24-urakalla.
-        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('exist');
-        cy.get(SP).contains('label', 'Ei vaikuta tavoitehintaan').should('exist');
-        valitseRadio('Vaikuttaa tavoitehintaan');
+        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('not.exist');
 
         // MHU24-urakalla ei silti näytetä tehtäväryhmää eikä tehtävää,
         // vaan Kulun kohdistus ja Laskutuskuukausi ovat näkyvissä.
@@ -396,20 +394,20 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
         cy.get(SP).contains('.form-group', 'Tehtävä').should('not.exist');
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
-        cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
+        cy.get(SP).contains('.form-group', 'Summa').should('exist');
 
         // Täytetään lomake
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        valitseAlasvetoarvo('Sanktion laji', 'Arvonvähennys');
         kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
-        kirjoitaInputkenttaan('Tavoitehinnan alennus', '80');
-        kirjoitaInputkenttaan('Vähennyksen määrä', '110');
+        kirjoitaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        kirjoitaInputkenttaan('Summa', '80');
         valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
 
         valitsePvm('Havaittu', havaittuPvm);
         valitsePvm('Käsitelty', maarattyPvm);
 
         // Määräystapa on MHU24-urakalla alasvetovalikko
-        valitseEnsimmainenAlasvetoarvo('Määräystapa');
+        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
 
         tallennaLomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
@@ -420,16 +418,34 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
 
         siirryMuokkaustilaan();
         // Myös muokkaustilassa tavoitehinta-radio näkyy, kun MHU24-tarkistus on pois käytöstä.
-        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('exist');
+        cy.get(SP).contains('label', 'Summa').should('exist');
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
+        kirjoitaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
         tallennaLomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3 + ' muokattu').should('exist');
     });
 
 
+    describe('Siivotaan lopuksi', function () {
+        before(function () {
+            siivoaKanta(testiArvonvahennysKuvaus1+ ' muokattu');
+            siivoaKanta(testiArvonvahennysKuvaus2+ ' muokattu');
+            siivoaKanta(testiArvonvahennysKuvaus3+ ' muokattu');
+        });
+
+        it('Tarkista, että kanta on siivottu', function () {
+            cy.viewport(1100, 1200);
+
+            avaaSanktiotJaBonukset(testiurakka1, evk);
+            cy.contains(testiArvonvahennysKuvaus1).should('not.exist');
+            cy.contains(testiArvonvahennysKuvaus2).should('not.exist');
+
+            avaaSanktiotJaBonukset(testiurakka2, evk2);
+            cy.contains(testiArvonvahennysKuvaus3).should('not.exist');
+        });
+    });
 });
 
 

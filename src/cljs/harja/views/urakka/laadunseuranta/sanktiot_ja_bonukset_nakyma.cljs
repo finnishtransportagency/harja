@@ -132,21 +132,18 @@
                 lupaus?
                 [yleiset/vihje "Lupaussanktiota tai lupausbonusta ei voi muokata tällä lomakkeella" nil 18])])
 
-
-           (if bonusten-syotto?
-             ;; Bonus-lomake
+           ; Avaa oikea lomake - uusi-arvonvahennyslomake-kaytossa?
+           (cond
+             bonusten-syotto?
              [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
               ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
               #(tiedot/paivita-sanktiot-ja-bonukset!)
               lukutila? oikeus-muokata?]
+             (and uusi-arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
+             [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
 
-             (if arvonvahennys-syotto?
-               ;; Arvonvähennys-lomake
-               [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
-
-               ;;Sanktio-lomake
-               [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?]))])))))
-
+             :else
+             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))
 
 ;; --- Sanktioiden listaus ---
 
