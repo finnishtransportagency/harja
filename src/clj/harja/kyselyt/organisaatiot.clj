@@ -5,6 +5,6 @@
 (defqueries "harja/kyselyt/organisaatiot.sql"
   {:positional? true})
 
-(declare listaa-organisaatiot-analytiikalle hae-ely-id-sampo-hashilla hae-vesivayla-organisaation-id-lyhenteella luo-organisaatio<!
+(declare listaa-organisaatiot-analytiikalle hae-vesivayla-organisaation-id-lyhenteella luo-organisaatio<!
   hae-id-y-tunnuksella paivita-elinvoimakeskus-geometria! hae-organisaatio hae-elinvoimakeskus
-  hae-elinvoimakeskus-nimella listaa-organisaatiot onko-olemassa hae-elinvoimakeskus-id-elinvoimakeskusnumerolla)
+  hae-elinvoimakeskus-nimella listaa-organisaatiot onko-olemassa hae-elinvoimakeskus-id-kustannuspaikalla)

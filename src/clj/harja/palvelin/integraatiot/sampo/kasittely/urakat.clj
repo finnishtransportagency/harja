@@ -39,35 +39,35 @@
         {:tyypit nil :alueurakkanro (tarkista-alueurakkanro alueurakkanro)}))))
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
-                       hallintayksikko urakoitsija-id]
+                       elinvoimakeskus urakoitsija-id]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
-  (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko
+  (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi elinvoimakeskus
                             alueurakkanro urakoitsija-id urakka-id))
 
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
-                   hallintayksikko urakoitsija-id]
+                   elinvoimakeskus urakoitsija-id]
   (log/debug "Luodaan uusi urakka.")
 
-  (let [uusi-id (:id (urakat-q/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko
+  (let [uusi-id (:id (urakat-q/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi elinvoimakeskus
                                             sopimustyyppi alueurakkanro urakoitsija-id))]
     (log/debug "Uusi urakka id on:" uusi-id)
     (urakat-q/paivita-urakka-alueiden-nakyma db)
     uusi-id))
 
 (defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkanro urakkatyyppi sopimustyyppi
-                        ely-id urakoitsija-id]
+                        elinvoimakeskus-id urakoitsija-id]
   (let [ urakka-id (:id (first (urakat-q/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
         (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkanro urakkatyyppi sopimustyyppi
-                        ely-id urakoitsija-id)
+          elinvoimakeskus-id urakoitsija-id)
         ;; Päivitetään urakan parametrit
         (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
         ;; Lisätään urakalle toimenkuvat
         (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
         urakka-id)
       (let [urakka-id (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
-                        ely-id urakoitsija-id)
+                        elinvoimakeskus-id urakoitsija-id)
             ;; Lisätään urakan parametrit
             _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
             ;; Lisätään urakalle toimenkuvat
@@ -112,21 +112,25 @@
            (first (organisaatiot-q/hae-id-y-tunnuksella db ytunnus))
            (organisaatiot-q/luo-organisaatio<! db nil nimi ytunnus nil nil "urakoitsija")))))
 
-(defn -tarkista-ely-hash
-  "Jos kustannuspaikka (ely-hash) on Liikennevirasto, määritetään uusi ely-hash urakkakohtaisesti.
-  Harja vaatii, että kustannuspaikka on Ely. E18-urakoissa se on kuitenkin Liikennevirasto."
-  [ely-hash urakan-sampoid]
-  (if (= ely-hash "KP3310")
+(defn -tarkista-kustannuspaikka
+  "Jos kustannuspaikka (sampon sisääntuontisanomassa financialDepartment) on Väylävirasto (ent. Liikennevirasto), määritetään URAKKA.sampo-ely-hash urakkakohtaisesti.
+  Harja vaatii, että kustannuspaikka on ely tai elinvoimakeskus. Kustannuspaikka on siis Harjan näkökulmasta hallintoyksikkö eli organisaatio, jonka tyyppi on hallintayksikko tai elinvoimakeskus.
+  Samposta siirtyvissä tiedoissa financialDeparment eli kustannuspaikka on E18-urakoissa (elinkaarihankkeissa) kuitenkin Väylävirasto. Siksi tässä mäpätään muutama urakka yksi kerrallaan oikeaan hallintoyksikköön."
+  [kustannuspaikka urakan-sampoid]
+  (if (= kustannuspaikka "KP3310")
     (case urakan-sampoid
-      "PR00020226" "KP911" ;UUD
-      "PR00033318" "KP921" ;VAR
-      "THPP-2-1501" "KP921" ;VAR
-      "PR00033567" "KP941" ;KAS
+      "PR00020226" "3800401310" ;UUD
+      "PR00033318" "3800411310" ;LOU
+      "THPP-2-1501" "3800411310" ;LOU
+      "PR00033567" "3800421310" ;KAS
       )
-    ely-hash))
+    kustannuspaikka))
+
+
+
 
 (defn hae-hallintayksikko
-  [db ely-hash urakkatyyppi urakan-sampoid]
+  [db kustannuspaikka urakkatyyppi urakan-sampoid]
   (:id
     (first
       (cond
@@ -145,16 +149,12 @@
         (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
-        :else (let [tarkistettu-ely-hash (-tarkista-ely-hash ely-hash urakan-sampoid)
-                    hallintayksikko (organisaatiot-q/hae-ely-id-sampo-hashilla db
-                                                                              (merkkijono/leikkaa 5 tarkistettu-ely-hash))]
-                (or (seq hallintayksikko)
-                    (organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskusnumerolla
-                      db
-                      (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-ely-hash)))))))))
+        :else (let [tarkistettu-kustannuspaikka (-tarkista-kustannuspaikka kustannuspaikka urakan-sampoid)
+                    elinvoimakeskus (organisaatiot-q/hae-elinvoimakeskus-id-kustannuspaikalla db
+                                      (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-kustannuspaikka)))])))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
-                                   ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
+                                   kustannuspaikka alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (when (not (urakat-q/perustettu-harjassa? db sampo-id))
@@ -164,9 +164,9 @@
             alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
             urakkatyyppi (urakkatyyppi/urakkatyyppi tyypit)
             sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
-            ely-id (hae-hallintayksikko db ely-hash urakkatyyppi sampo-id)
+            elinvoimakeskus-id (hae-hallintayksikko db kustannuspaikka urakkatyyppi sampo-id)
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
-                                       sopimustyyppi ely-id urakoitsija-id)]
+                                       sopimustyyppi elinvoimakeskus-id urakoitsija-id)]
 
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
                            urakka-id
