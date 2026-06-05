@@ -149,9 +149,10 @@
         (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
-        :else (let [tarkistettu-kustannuspaikka (-tarkista-kustannuspaikka kustannuspaikka urakan-sampoid)
-                    elinvoimakeskus (organisaatiot-q/hae-elinvoimakeskus-id-kustannuspaikalla db
-                                      (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-kustannuspaikka)))])))))
+        ;; Sampon kustannuspaikan tiedossa on mukana osa, joka Harjassa leikataan pois, jotta tunniste on muissa käyttötarpeissa oikean muotoinen.
+        :else (let [tarkistettu-kustannuspaikka (-tarkista-kustannuspaikka kustannuspaikka urakan-sampoid)]
+                (organisaatiot-q/hae-elinvoimakeskus-id-kustannuspaikalla db
+                  (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-kustannuspaikka))))))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
                                    kustannuspaikka alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
