@@ -83,7 +83,7 @@
 
 (deftest hallintayksikon-asettaminen
   (tuo-urakka)
-  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
+  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Suomi") "Urakan elinvoimakeskukseksi on asetettu Pohjois-Suomi")
   (poista-urakka))
 
 (deftest alueurakkanumeron-purku
@@ -135,11 +135,11 @@
 
 (deftest hallintayksikon-asettaminen
   (let [db (:db jarjestelma)
-        pop-ely (ffirst (q "select id from organisaatio where sampo_ely_hash = 'KP981'"))
+        pop-ely (ffirst (q "select id from organisaatio where elinvoimakeskusnumero = '380048'"))
         merivaylat (ffirst (q "select id from organisaatio where lyhenne = 'MV'"))
         kanavat (ffirst (q "select id from organisaatio where lyhenne = 'KAN'"))]
     (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-hoito" "KAN-001")))
     (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-korjaus" "KAN-002")))
     (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito" "VESI-001")))
-    (is (= pop-ely (urakat/hae-hallintayksikko db "KP981" "hoito" "TIE-001")))))
+    (is (= pop-ely (urakat/hae-hallintayksikko db "3800481310" "hoito" "TIE-001")))))
 
