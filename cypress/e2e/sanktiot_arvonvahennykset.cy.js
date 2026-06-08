@@ -420,8 +420,10 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
 
     describe('Siivotaan lopuksi', function () {
         before(function () {
+            siivoaKanta(testiArvonvahennysKuvaus1);
             siivoaKanta(testiArvonvahennysKuvaus1+ ' muokattu');
             siivoaKanta(testiArvonvahennysKuvaus2);
+            siivoaKanta(testiArvonvahennysKuvaus3);
             siivoaKanta(testiArvonvahennysKuvaus3+ ' muokattu');
         });
 
