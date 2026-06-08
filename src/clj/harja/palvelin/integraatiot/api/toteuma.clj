@@ -2,7 +2,7 @@
   "Toteuman kirjaaminen urakalle"
   (:require [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]
