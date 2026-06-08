@@ -9,7 +9,8 @@
             [specql.core :refer [fetch columns]]
             [harja.domain.reittipiste :as rp]
             [clojure.data.json :as json]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire])
+  (:import (java.util Date)))
 
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
@@ -199,6 +200,85 @@
                        (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
         vastaus3 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti toteumajson2)
         toteuma-kannassa3 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+
+    (is (= 200 (:status vastaus1)))
+    (is (= 200 (:status vastaus2)))
+    (is (= 200 (:status vastaus3)))
+
+    ;; Toteumaa ei ole muokattu, joten muokattu aikaleima on null
+    (is (nil? (:muokattu toteuma-kannassa1)))
+    (is (nil? (:muokattu toteuma-kannassa2)))
+    (is (not (nil? (:muokattu toteuma-kannassa3))))
+
+    (is (= hash (:json_hash toteuma-kannassa1)))
+    (is (= hash (:json_hash toteuma-kannassa2)))
+    (is (not= hash (:json_hash toteuma-kannassa3)))))
+
+(deftest tallenna-yksittainen-reittitoteuma-sama-hash-poisto-onnistuu
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
+        toteumajson (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
+                      slurp
+                      (.replace "__LAHDE__" "koneellinen")
+                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                      (.replace "__ID__" (str ulkoinen-id))
+                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))
+        clj-toteuma (cheshire/parse-string toteumajson true)
+        hash (konversio/string->md5 (pr-str (:reittitoteuma clj-toteuma)))
+        ;; Lähetetään reittitoteuma ensimmäisen kerran
+        vastaus1 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti toteumajson)
+        toteuma-kannassa1 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+
+        ;; Lähetetään sama reittitoteuma toisen kerran, pitäisi generoida sama hash ja ilmoittaa vain ok tuloksesta
+        vastaus2 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti toteumajson)
+        ;; Vaikka sama toteuma lähetettiin uudestaan, niin hash tarkistuksen takia
+        ;; toteumaa ei ole muokattu, joten muokattu aikaleima on null
+        toteuma-kannassa2 (first (q-map (str "SELECT id, json_hash, muokattu FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+
+        ;; Varmistetaan, että joku hash löytyy tietokannasta
+        toteuma-kannassa (first (q-map (str "SELECT id, json_hash, poistettu, ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        _ (println "toteuma-kannassa: " (pr-str toteuma-kannassa))
+        _ (is (not (nil? (:json_hash toteuma-kannassa))))
+        _ (is (= false (:poistettu toteuma-kannassa)))
+        _ (is (= ulkoinen-id (:ulkoinen_id toteuma-kannassa)))
+
+        ;; Poistetaan toteuma apin kautta
+        poistettava-toteuma-json (-> "test/resurssit/api/toteuman-poisto.json"
+                                   slurp
+                                   (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                   (.replace "__ID__" (str ulkoinen-id))
+                                   (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
+                                   (.replace "__PVM__" (json-tyokalut/json-pvm (Date.))))
+        vastaus-poisto (tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
+                         poistettava-toteuma-json)
+        _ (println "Poistovastaus: " (pr-str vastaus-poisto))
+
+        ;; Varmistetaan, että toteuma on poistettu ja hash on nollattu.
+        poistettu-toteuma-db (first (q-map (str "SELECT id, json_hash, poistettu, ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        _ (println "poistettu-toteuma-db: " (pr-str poistettu-toteuma-db))
+        _ (is (nil? (:json_hash poistettu-toteuma-db)))
+        _ (is (= true (:poistettu poistettu-toteuma-db)))
+        _ (is (= ulkoinen-id (:ulkoinen_id poistettu-toteuma-db)))
+
+        ;; Tehdään pieni muutos jsoniin ja lähetetään se uudestaan
+        ;; Nyt hash pitäisi muuttua ja muokattu -aikaleima päivittyä
+        toteumajson2 (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
+                       slurp
+                       (.replace "__LAHDE__" "korjaus")
+                       (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                       (.replace "__ID__" (str ulkoinen-id))
+                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy2"))
+        vastaus3 (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti toteumajson2)
+        toteuma-id3 (:id (first (q-map (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id))))
+        _ (odota-reittipisteet toteuma-id3)
+        toteuma-kannassa3 (first (q-map (str "SELECT id, json_hash, muokattu, poistettu, ulkoinen_id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        ;; Varmistetaan, että uusi tallennettu toteuma saa eri hashin kun ekalla kerralla sama toteuma
+        _ (is (not (nil? (:json_hash toteuma-kannassa3))))
+        _ (is (not= (:json_hash toteuma-kannassa) (:json_hash toteuma-kannassa3)))
+        _ (is (= false (:poistettu toteuma-kannassa3)))
+        _ (is (= ulkoinen-id (:ulkoinen_id toteuma-kannassa3)))]
 
     (is (= 200 (:status vastaus1)))
     (is (= 200 (:status vastaus2)))

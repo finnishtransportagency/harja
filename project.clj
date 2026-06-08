@@ -41,7 +41,7 @@
                  [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.25.3"]
+                 [org.apache.logging.log4j/log4j-core "2.26.0"]
 
                  ;; --
 
@@ -57,7 +57,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.3"]
+                 [ring/ring-core "1.15.4"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
@@ -74,20 +74,20 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.10"]
+                 [org.postgresql/postgresql "42.7.11"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.12.0"]
+                 [com.mchange/c3p0 "0.13.0"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.3" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.7" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -149,7 +149,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.15"]
+                 [org.apache.ant/ant "1.10.17"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
@@ -178,7 +178,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.21.0"]]
+                         [commons-codec "1.22.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
@@ -193,7 +193,7 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            [lein-ancient "0.7.0"]
+            [lein-ancient "1.0.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]

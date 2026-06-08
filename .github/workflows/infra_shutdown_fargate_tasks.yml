@@ -27,7 +27,10 @@ jobs:
   shutdown-fargate-tasks:
     name: "Shutdown Fargate tasks"
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment:
+      name: ${{ inputs.environment }}
+      # Käytä ympäristökohtaisia salaisuuksia, mutta estä GitHub deployment-objektin luonti, jotta ei synny turhaa kohinaa.
+      deployment: false
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
@@ -60,7 +63,7 @@ jobs:
         shell: bash
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"
