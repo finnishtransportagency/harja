@@ -57,7 +57,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.3"]
+                 [ring/ring-core "1.15.4"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
@@ -84,10 +84,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "34.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.6" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.7" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -149,7 +149,7 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.15"]
+                 [org.apache.ant/ant "1.10.17"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
@@ -193,7 +193,7 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            [lein-ancient "0.7.0"]
+            [lein-ancient "1.0.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]

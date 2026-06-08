@@ -1,42 +1,59 @@
 (ns harja.palvelin.tyokalut.excel-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-
   (:require [taoensso.timbre :as log]
-            [harja.fmt :as fmt]
             [dk.ative.docjure.spreadsheet :as excel]
+
+            [harja.fmt :as fmt]
             [harja.domain.raportointi :refer [tee-solu]]
-            [harja.palvelin.raportointi.excel :as excel-raportointi])
-  (:import (org.apache.poi.ss.util CellRangeAddress)))
+            [harja.palvelin.raportointi.excel :as excel-raportointi]))
 
-(defmethod excel-raportointi/muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
-  ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
-  ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
+(defmethod excel-raportointi/muodosta-excel
+  :tyomaa-laskutusyhteenveto-yhteensa
+  [[_ kyseessa-kk-vali?
+    laskutusraja-kaytossa?
+    laskutusraja-ylittynyt?
+    laskutettu laskutetaan
+    laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
+    laskutettu-str laskutetaan-str] workbook]
 
-  (let [aiempi-sheet (last (excel/sheet-seq workbook))
-        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
-
+  (let [otsikko-1 (if laskutusraja-kaytossa?
+                    "Toteutuneet kustannukset yhteensä"
+                    "Laskutettavaa yhteensä")
+        otsikko-2? (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+        sheet (last (excel/sheet-seq workbook))
+        start-rivi (+ 2 (.getLastRowNum sheet))
         tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
-        rivi (.createRow sheet rivi-nro)
-        rivin-solu (.createCell rivi 0)
-        solu-laskutettu (.createCell rivi 1)
-        solu-laskutetaan (.createCell rivi 2)]
+        euro #(if (some? %) (str (fmt/euro %)) "")
 
-    (tee-solu rivin-solu (str "Laskutus yhteensä " hoitokausi) tyyli-otsikko)
-    (tee-solu solu-laskutettu laskutettu-str tyyli-otsikko)
-    (when kyseessa-kk-vali?
-      (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko))
+        kirjoita-yhteenveto! (fn [rivi-nro otsikko arvo-yht arvo-val-aika avain-yht avain-val-aika]
+                               (let [rivi (.createRow sheet rivi-nro)]
+                                 (tee-solu (.createCell rivi 0) otsikko tyyli-otsikko)
+                                 (tee-solu (.createCell rivi 1) avain-yht tyyli-otsikko)
+                                 (when kyseessa-kk-vali?
+                                   (tee-solu (.createCell rivi 2) avain-val-aika tyyli-otsikko)))
 
-    (let [rivi-nro (+ 1 rivi-nro)
-          rivi (.createRow sheet rivi-nro)
-          solu-laskutettu (.createCell rivi 1)
-          solu-laskutetaan (.createCell rivi 2)]
-      (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
-      (when kyseessa-kk-vali?
-        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali)))))
+                               (let [rivi (.createRow sheet (inc rivi-nro))]
+                                 (tee-solu (.createCell rivi 1) (euro arvo-yht) tyyli-normaali)
+                                 (when kyseessa-kk-vali?
+                                   (tee-solu (.createCell rivi 2) (euro arvo-val-aika) tyyli-normaali)))
+                               (+ rivi-nro 3))
 
+        seuraava-rivi (kirjoita-yhteenveto!
+                        start-rivi
+                        otsikko-1
+                        laskutettu laskutetaan
+                        laskutettu-str laskutetaan-str)]
+
+    (when otsikko-2? (kirjoita-yhteenveto!
+                       seuraava-rivi
+                       "Laskutettavaa yhteensä"
+                       laskutettavaa_kaikki_yht
+                       laskutettavaa_kaikki_val_aika
+                       "Hoitovuoden alusta"
+                       laskutetaan-str))))
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))

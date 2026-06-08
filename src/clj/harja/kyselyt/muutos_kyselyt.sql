@@ -481,51 +481,44 @@ WITH urakan_tehtavat AS (
         tt.toimenpidekoodi           AS toimenpidekoodi,
         SUM(tt.maara)                AS maara,
         :urakka                      AS urakka,
-        MAX(t.id)                    AS toteuma_id,
+        MAX(tt.toteuma)              AS toteuma_id,
         MAX(tt.id)                   AS toteuma_tehtava_id
-      FROM toteuma t
-            JOIN toteuma_tehtava tt
-              ON t.id = tt.toteuma
-             AND tt.urakka_id = :urakka
-             AND tt.poistettu = FALSE
-       LEFT JOIN toteuma_materiaali tm
-              ON t.id = tm.toteuma
-             AND tm.urakka_id = :urakka
-             AND tm.poistettu = FALSE
-     WHERE t.urakka = :urakka
-       AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-       AND t.poistettu = FALSE
-  GROUP BY tt.toimenpidekoodi
+      FROM toteuma_tehtava tt
+     WHERE tt.urakka_id = :urakka
+       AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND tt.poistettu = FALSE
+     GROUP BY tt.toimenpidekoodi
 ),
-materiaalimaara AS (
-    -- Kohdista materiaaleina raportoitavat tehtävät tehtävätoteumina 
-    -- Suolauksen alle esim talvisuolamateriaalit, ja niiden toteumat 
-    -- Ref:  https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t
-    SELECT
-         teh.id          AS tehtava_id,
-         teh.nimi        AS tehtava,
-         SUM(tm.maara)   AS maara,
-         mk.yksikko
-    -- toteuma_materiaali taulussa on kaikki urakan materiaalitoteumat 
-    FROM toteuma_materiaali tm
-              JOIN toteuma t
-                   ON t.id = tm.toteuma AND t.poistettu IS FALSE
-              -- Materiaali linkin 'päätaulu' 
-              JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
-              -- tehtava taulussa on materiaalin luokka, sekä koodi linkkinä 
+ materiaalimaara AS NOT MATERIALIZED (
+     -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
+     WITH mat_summat AS (
+         SELECT tm.materiaalikoodi,
+                tm.toteuma,
+                SUM(tm.maara) AS maara
+         FROM toteuma_materiaali tm
+         WHERE tm.urakka_id = :urakka
+           AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+           AND tm.poistettu IS FALSE
+         GROUP BY tm.materiaalikoodi, tm.toteuma
+     )
+     -- Vasta aggregoinnin jälkeen JOINataan toteumaan (paljon vähemmän rivejä)
+     SELECT teh.id        AS tehtava_id,
+            teh.nimi      AS tehtava,
+            SUM(ms.maara) AS maara,
+            mk.yksikko
+     FROM mat_summat ms
+              JOIN toteuma t ON t.id = ms.toteuma
+         AND t.urakka = :urakka
+         AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+         AND t.poistettu IS FALSE
+              JOIN materiaalikoodi mk ON ms.materiaalikoodi = mk.id
               JOIN tehtava teh
                    ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
-                       AND teh."maaramitattava?" IS TRUE -- Vain määrämitattavat tehtävät mukaan  
-                       AND (teh.materiaalikoodi_id = tm.materiaalikoodi
-                           -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
+                       AND teh."maaramitattava?" IS TRUE
+                       AND (teh.materiaalikoodi_id = ms.materiaalikoodi
                            OR teh.materiaalikoodi_id IS NULL)
-    WHERE t.urakka = :urakka
-      AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-      AND tm.poistettu IS FALSE
-      AND t.poistettu IS FALSE
- GROUP BY teh.id, teh.nimi, mk.yksikko
- ORDER BY teh.id
-),
+     GROUP BY teh.id, teh.nimi, mk.yksikko
+ ),
 maaramuutokset AS (
     SELECT
         tk.id                                            AS id,
