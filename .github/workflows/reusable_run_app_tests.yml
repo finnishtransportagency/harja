@@ -334,8 +334,8 @@ jobs:
           fail-job-on-severities: 'CRITICAL'
           #fail-job-on-severities: 'CRITICAL,HIGH'
           ignore-unfixed: true
-          # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
-          upload-sarif: false
+          # Disabloi upload-sarif-as-artifact, koska sarif uploadataan develop-branchin testien yhteydessä
+          upload-sarif-as-artifact: false
 
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
