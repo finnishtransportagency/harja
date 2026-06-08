@@ -216,9 +216,9 @@
                                      urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
-  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
+  [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
+                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama-id urakka]
+  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [summa (if (decimal? summa)
                 (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
@@ -242,6 +242,7 @@
                               (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
+                :maarattypvm maarattypvm
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
@@ -254,7 +255,7 @@
                            (- (Math/abs summa))
                            (Math/abs summa)))
                 :indeksi indeksi
-                :laatupoikkeama laatupoikkeama
+                :laatupoikkeama laatupoikkeama-id
                 :suorasanktio (or suorasanktio false)
                 :id id
                 :poistettu poistettu
@@ -317,7 +318,8 @@
         id))
     (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
       (doseq [sanktio (:sanktiot laatupoikkeama)]
-        (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
+        (let [sanktio (assoc sanktio :maarattypvm (konv/sql-date (get-in laatupoikkeama [:paatos :kasittelyaika])))]
+          (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -389,6 +391,7 @@
     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+          sanktio (assoc sanktio :maarattypvm (konv/sql-date (get-in laatupoikkeama [:paatos :kasittelyaika])))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
