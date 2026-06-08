@@ -14,14 +14,14 @@ let pageloadTimeout = 30000;
 
 let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa tavoitehintaan
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
-let testiArvonvahennysKuvaus3 = "CY-mhu24-suomussalmi";     // MHU24, 2026
+let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 
-let testiArvonvahennysPerustelu1 = "CY-perustelu1";
-let testiArvonvahennysPerustelu2 = "CY-perustelu2";
+let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
+let testiArvonvahennysPerustelu2 = "CY-perustelu2-ei-vaikuta-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
 
 let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
-let testiurakka2 = "POP MHU Suomussalmi 2024-2029";              // mhu24 urakka
+let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
 let evk = "Lappi";
 let evk2 = "Pohjois-Suomi";
 
@@ -188,11 +188,6 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         siivoaKanta(testiArvonvahennysKuvaus2);
     });
 
-    after(() => {
-        siivoaKanta(testiArvonvahennysKuvaus1);
-        siivoaKanta(testiArvonvahennysKuvaus2);
-    });
-
     it('Arvonvähennys, joka vaikuttaa tavoitehintaan (tehtäväryhmä + tehtävä)', () => {
         avaaSanktiotJaBonukset(testiurakka1, evk);
         avaaUusiArvonvahennys();
@@ -301,7 +296,6 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
     });
 
     after(() => {
-        siivoaKanta(testiArvonvahennysKuvaus3);
         // Palautetaan asetus testin jälkeen oletustilaan, ettei testi jätä ympäristöä muutettuun tilaan.
         asetaArvonvahennysValidointiKayttoon(true);
     });
@@ -366,10 +360,6 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
         asetaArvonvahennysValidointiKayttoon(true);
     });
 
-    after(() => {
-        siivoaKanta(testiArvonvahennysKuvaus3);
-    });
-
     it('Vanha lomake käytössä - varmistetaan toiminta', () => {
         avaaSanktiotJaBonukset(testiurakka2, evk2);
 
@@ -431,7 +421,7 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
     describe('Siivotaan lopuksi', function () {
         before(function () {
             siivoaKanta(testiArvonvahennysKuvaus1+ ' muokattu');
-            siivoaKanta(testiArvonvahennysKuvaus2+ ' muokattu');
+            siivoaKanta(testiArvonvahennysKuvaus2);
             siivoaKanta(testiArvonvahennysKuvaus3+ ' muokattu');
         });
 
