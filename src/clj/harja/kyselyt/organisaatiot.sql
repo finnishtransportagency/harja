@@ -74,6 +74,12 @@ SELECT id
 FROM organisaatio
 WHERE sampo_ely_hash = :ely_hash;
 
+-- name: hae-elinvoimakeskus-id-elinvoimakeskusnumerolla
+SELECT id
+FROM organisaatio
+WHERE elinvoimakeskusnumero = :elinvoimakeskusnumero
+  AND tyyppi = 'elinvoimakeskus';
+
 -- name: listaa-organisaatiot
 SELECT
   id,
