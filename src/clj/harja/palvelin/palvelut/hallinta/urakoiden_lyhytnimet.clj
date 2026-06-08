@@ -51,8 +51,7 @@
     (keyword (str validointi))))
 
 (defn toggle-arvonvahennys-validoinnit [db kayttaja tiedot]
-  (let [_ (println "toggle-arvonvahennys-validoinnit: " tiedot)
-        validointi (muunnos/keyword->bool (:validointi tiedot))]
+  (let [validointi (muunnos/keyword->bool (:validointi tiedot))]
     ; vaaditaan samoja oikeuksia kuin indeksien hallinnassa, ei tarpeen tehdä omaa roolia
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit kayttaja)
     (jarjestelma-kyselyt/toggle-arvonvahennys-validoinnit! db {:validoinnit validointi :kayttajaid (:id kayttaja)})
