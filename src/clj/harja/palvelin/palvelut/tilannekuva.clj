@@ -134,6 +134,12 @@
         #(oikeudet/voi-lukea? oikeus-nakyma % user)
         urakka-idt))))
 
+(defn- oman-urakan-ely-sallittu-urakka?
+  ;; oman-urakan-ely ei saa antaa oikeutta valaistusurakoihin
+  [oikeus-nakyma urakka user]
+  (and (not= (:tyyppi urakka) "valaistus")
+       (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user)))
+
 (defn rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (let [oikeus-nakyma (if (:nykytilanne? hakuargumentit)
@@ -157,6 +163,7 @@
                                    ;; Jos käyttäjällä on johonkin urakkaan rooli, jolla on oman-urakan-ely oikeus,
                                    ;; filtteröidään kaikista urakoista ne urakat, otetaan niiden urakoiden
                                    ;; hallintayksiköt, ja haetaan näiden hallintayksiköiden kaikki urakat.
+                                   ;; Ei koske valaistusurakoita, joihin oman-urakan-ely oikeus ei saa antaa oikeutta.
                                    (set
                                      (concat
                                        (set (map :id oman-organisaation-urakat))
@@ -171,8 +178,7 @@
                                                                       :hallintayksikko
                                                                       (filter
                                                                        (fn [urakka]
-                                                                         (and (not= (:tyyppi urakka) "valaistus")
-                                                                              (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user)))
+                                                                         (oman-urakan-ely-sallittu-urakka? oikeus-nakyma urakka user))
                                                                        oman-organisaation-urakat))}))))))
 
                                    ;; Jos ei ole oman-urakan-ely oikeutta, otetaan vaan urakat, joihin
@@ -194,9 +200,8 @@
                                      (set
                                        (mapcat
                                          (fn [[hy urakat]]
-                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan ne kaikki
-                                           (if (some #(and (not= (:tyyppi %) "valaistus") 
-                                                           (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id %) user))
+                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan kaikki paitsi valaistusurakat.
+                                           (if (some #(oman-urakan-ely-sallittu-urakka? oikeus-nakyma % user)
                                                      urakat)
                                              (map :id (remove #(= (:tyyppi %) "valaistus") urakat))
 
@@ -606,11 +611,7 @@
                               (group-by :elinvoimakeskus)
                               (filter
                                 (fn [[evk urakat]]
-                                  (some #(and (not= (:tyyppi %) "valaistus")
-                                             (oikeudet/on-muu-oikeus? "oman-urakan-ely"
-                                               oikeus-nakyma
-                                               (:id %)
-                                               user))
+                                  (some #(oman-urakan-ely-sallittu-urakka? oikeus-nakyma % user)
                                     urakat)))
                               (into {})))
         kayttajan-urakat-alueittain (->>
