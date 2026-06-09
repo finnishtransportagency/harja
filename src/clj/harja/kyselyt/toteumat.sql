@@ -317,7 +317,7 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW()
 
 -- name: poista-toteuma!
 UPDATE toteuma
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE, json_hash = NULL
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: paivita-toteuman-muokattu!
@@ -332,7 +332,7 @@ SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
-SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
+SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE, json_hash = NULL
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
 -- name: hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
