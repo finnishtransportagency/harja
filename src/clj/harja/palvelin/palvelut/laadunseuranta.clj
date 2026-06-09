@@ -242,7 +242,7 @@
                               (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
-                :maarattypvm maarattypvm
+                :maarattypvm (konv/sql-date maarattypvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
@@ -318,8 +318,7 @@
         id))
     (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
       (doseq [sanktio (:sanktiot laatupoikkeama)]
-        (let [sanktio (assoc sanktio :maarattypvm (konv/sql-date (get-in laatupoikkeama [:paatos :kasittelyaika])))]
-          (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka))))))
+        (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -391,7 +390,6 @@
     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
-          sanktio (assoc sanktio :maarattypvm (konv/sql-date (get-in laatupoikkeama [:paatos :kasittelyaika])))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)

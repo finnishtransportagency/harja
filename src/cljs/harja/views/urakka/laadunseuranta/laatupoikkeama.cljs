@@ -148,7 +148,10 @@
                [napit/yleinen-toissijainen "Lisää uusi"
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
-                   (let [uusi (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
+                   (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
+                         uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
+                                (assoc :maarattypvm kasittelyaika)
+                                (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)
                          mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)
@@ -183,7 +186,9 @@
                               (merge sanktio
                                 {:lukutila? true}))
                             (reset! sivupaneeli-auki? true))}
-          [{:otsikko "Määrätty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.2}
+          [(if (tila/mhu25-urakka? @nav/valittu-urakka)
+             {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
+             {:otsikko "Käsitelty" :nimi :kasittelyaika :hae #(get-in % [:laatupoikkeama :paatos :kasittelyaika]) :fmt pvm/pvm-opt :leveys 1.2})
            {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
            {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
@@ -527,7 +532,7 @@
                        :hae (comp :kasittelytapa :paatos)
                        :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                        :tyyppi :valinta
-                       :valinnat [:tyomaakokous :puhelin :kommentit :muu]
+                       :valinnat [:valikatselmus :tyomaakokous :puhelin :kommentit :muu]
                        :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %)
                                              (if paatosoikeus?
                                                "- Valitse käsittelytapa -"

@@ -12,6 +12,7 @@
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
@@ -218,15 +219,12 @@
 
         sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
                    tiedot/suodata-sanktiot-ja-bonukset
-                   (sort-by :kasittelyaika)
+                   (sort-by (if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka) :maarattypvm :kasittelyaika))
                    reverse)
         hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
-        urakan-alkupaiva (:alkupvm @nav/valittu-urakka)
         urakka-id (when valittu-urakka (:id valittu-urakka))
-        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))
-        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))]
+        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
 
     [:div.sanktiot
      #_[harja.ui.debug/debug sanktiot]
@@ -280,7 +278,9 @@
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}])}
 
-      [{:otsikko (if mhu25? "Määrätty" "Käsitelty") :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
+      [(if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
+         {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
+         {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
