@@ -145,9 +145,13 @@
         (organisaatiot-q/hae-vesivayla-organisaation-id-lyhenteella db "MV")
 
         ;; Teiden hoidon ja ylläpidon urakat
-        :else (organisaatiot-q/hae-ely-id-sampo-hashilla db
-                                                         (merkkijono/leikkaa 5
-                                                                             (-tarkista-ely-hash ely-hash urakan-sampoid)))))))
+        :else (let [tarkistettu-ely-hash (-tarkista-ely-hash ely-hash urakan-sampoid)
+                    hallintayksikko (organisaatiot-q/hae-ely-id-sampo-hashilla db
+                                                                              (merkkijono/leikkaa 5 tarkistettu-ely-hash))]
+                (or (seq hallintayksikko)
+                    (organisaatiot-q/hae-elinvoimakeskus-id-elinvoimakeskusnumerolla
+                      db
+                      (Integer/parseInt (merkkijono/leikkaa 6 tarkistettu-ely-hash)))))))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
                                    ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
