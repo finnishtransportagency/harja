@@ -277,7 +277,7 @@
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) " (string)")
+             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
               :tyyppi :string
               :nimi :toimenpideinstanssi
               :muokattava? (constantly false)
