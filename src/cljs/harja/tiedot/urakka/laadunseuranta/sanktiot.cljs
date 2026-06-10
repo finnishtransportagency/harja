@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.domain.tierekisteri :as tierekisteri]
+            [reagent.core :refer [atom]]
             [reagent.ratom :refer [reaction]]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
@@ -31,6 +32,7 @@
                              (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
                       :valikatselmus
                       nil)
+     :maaraystapa "valikatselmus"
      :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))

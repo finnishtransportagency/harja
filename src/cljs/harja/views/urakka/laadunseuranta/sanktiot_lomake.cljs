@@ -355,7 +355,7 @@
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
-           ;; MHU25 urakoille ei näytetä laskutuskuukautta
+           ;; MHU25 urakoille ei näytetä laskutuskuukaudta
            (if (<= urakan-alkuvuosi 2024)
              (if (and voi-muokata? (not lukutila?))
                {:otsikko "Laskutuskuukausi"
@@ -409,12 +409,51 @@
                            laskutuskuukaudet)))
                 :pakollinen? true
                 :tyyppi :pvm
-                ::lomake/col-luokka "col-xs-6"})))
+                ::lomake/col-luokka "col-xs-6"})
+             ;; MHU25 urakoille näytetään perintäpäivä hoitokautena
+             {:otsikko "Hoitokausi, jota sanktio koskee"
+              :nimi :perintapvm
+              :pakollinen? true
+              :tyyppi :valinta
+              :valinnat (map second @tiedot-urakka/valitun-urakan-hoitokaudet)
+              :valinta-nayta #(when %
+                                (pvm/hoitokausi-str-alkuvuodesta-vuodet (pvm/vuosi %)))
+              ::lomake/col-luokka "col-xs-6"}))
 
-         {:otsikko (if (<= urakan-alkuvuosi 2024) "Käsittelytapa" "Käsittely ja laskutus")
+          ;; MHU25 urakoille näytetään määräystapa valintana.
+          (when mhu25?
+            (if (not lukutila?)
+              {:otsikko "Määräystapa"
+               :radio-luokka "maaraystapa-ei-marginia"
+               :nimi :maaraystapa
+               :tyyppi :radio-group
+               :pakollinen? true
+               :uusi-rivi? true
+               :nayta-rivina? true
+               ::lomake/col-luokka "col-xs-12"
+               :vaihtoehdot ["tyomaakokous" "valikatselmus"]
+               :vaihtoehto-nayta {"tyomaakokous" "Työmaakokous"
+                                  "valikatselmus" "Välikatselmus"}}
+
+              {:otsikko "Määräystapa"
+               :nimi :maaraystapa
+               :tyyppi :teksti
+               :muokattava? (constantly false)
+               ::lomake/col-luokka "col-xs-12"
+               :fmt (fn [arvo]
+                      (case arvo
+                        "tyomaakokous" "Työmaakokous"
+                        "valikatselmus" "Välikatselmus"
+                        arvo))}))
+
+         {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
+          :muokattava? (cond
+                         ;; Laatupoikkeaman kautta tehdyn kanstion käsittelytapaa ei voi muokata
+                         (not suorasanktio?) (constantly false)
+                         mhu25? (constantly false)          ;; MHU25 urakoilla on aina Välikatselmus, eikä sitä voi muuttaa
+                         :else (constantly voi-muokata?))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)

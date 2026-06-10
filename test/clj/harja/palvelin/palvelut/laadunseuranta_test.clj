@@ -328,6 +328,7 @@
         tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
         sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :maaraystapa "tyomaakokous"
                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;"))),
                           :nimi "Talvihoito, päätiet", :toimenpidekoodi 618}}
         laatupoikkeama {:tekijanimi "Max Power"
@@ -348,8 +349,15 @@
     (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
     (is (= -777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
     (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= "tyomaakokous" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa tallentuu lisäyksessä")
     (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
     (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+    (palvelukutsu-tallenna-suorasanktio
+      +kayttaja-jvh+ (assoc sanktio :id sanktio-id :maaraystapa "valikatselmus") laatupoikkeama hk-alkupvm hk-loppupvm)
+    (is (= "valikatselmus" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa päivittyy updatessa")
 
 
     ;; Siivoa roskat
@@ -520,7 +528,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
