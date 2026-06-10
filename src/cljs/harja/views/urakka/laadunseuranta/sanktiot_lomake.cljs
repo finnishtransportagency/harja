@@ -449,19 +449,13 @@
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (cond
-                         ;; Laatupoikkeaman kautta tehdyn kanstion käsittelytapaa ei voi muokata
-                         (not suorasanktio?) (constantly false)
-                         mhu25? (constantly false)          ;; MHU25 urakoilla on aina Välikatselmus, eikä sitä voi muuttaa
-                         :else (constantly voi-muokata?))
+          :muokattava? (if mhu25? (constantly false) (constantly voi-muokata?))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
-          :hae (comp :kasittelytapa :paatos :laatupoikkeama)
-          :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
           :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
-         (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
+         (when (= :muu (:kasittelytapa @muokattu))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             ::lomake/col-luokka "col-xs-12"
             :hae (comp :muukasittelytapa :paatos :laatupoikkeama)

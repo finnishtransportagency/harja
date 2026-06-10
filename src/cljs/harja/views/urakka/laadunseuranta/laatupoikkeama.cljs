@@ -151,6 +151,9 @@
                    (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
                          uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
+                                 (assoc :kasittelytapa (if (tila/mhu25-urakka? @nav/valittu-urakka)
+                                                         :valikatselmus
+                                                         (get-in @laatupoikkeama [:paatos :kasittelytapa])))
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)

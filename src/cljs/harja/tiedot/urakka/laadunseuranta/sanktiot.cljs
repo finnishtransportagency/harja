@@ -28,14 +28,14 @@
              (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
-     :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                      :valikatselmus
-                      nil)
      :maaraystapa "valikatselmus"
      :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+     :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                      :valikatselmus
+                      nil)
      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                       :paatos {:paatos "sanktio"
                                :kasittelyaika nyt}}}))

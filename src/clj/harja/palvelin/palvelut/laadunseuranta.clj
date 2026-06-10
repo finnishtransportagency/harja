@@ -217,11 +217,11 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama-id urakka]
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu] :as sanktio} laatupoikkeama-id urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [summa (if (decimal? summa)
-                (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
                 summa)
         urakan-tiedot (first (urakat/hae-urakka db urakka))
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
@@ -239,11 +239,12 @@
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
-                              (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
+                              (and poistettu (nil? perintapvm)) ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
                 :maarattypvm (konv/sql-date maarattypvm)
                 :maaraystapa maaraystapa
+                :kasittelytapa (name kasittelytapa)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
@@ -312,11 +313,13 @@
     (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
       (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos!
         db
-        (konv/sql-timestamp kasittelyaika)
-        (name paatos) perustelu
-        (name kasittelytapa) muukasittelytapa
-        (:id user)
-        id))
+        {:kasittelyaika (konv/sql-timestamp kasittelyaika)
+         :paatos (name paatos)
+         :perustelu perustelu
+         :kasittelytapa (if kasittelytapa (name kasittelytapa) "ei-tiedossa")
+         :muukasittelytapa muukasittelytapa
+         :muokkaaja (:id user)
+         :id id}))
     (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
@@ -395,11 +398,13 @@
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
           _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-              (konv/sql-timestamp kasittelyaika)
-              (name paatos) perustelu
-              (name kasittelytapa) muukasittelytapa
-              (:id user)
-              id)
+              {:kasittelyaika (konv/sql-timestamp kasittelyaika)
+               :paatos (name paatos)
+               :perustelu perustelu
+               :kasittelytapa (if kasittelytapa (name kasittelytapa) "ei-tiedossa")
+               :muukasittelytapa muukasittelytapa
+               :muokkaaja (:id user)
+               :id id})
           sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
           _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
       sanktio-id)))

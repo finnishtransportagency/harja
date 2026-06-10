@@ -152,11 +152,8 @@
          (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                          (:id valittu-urakka))
                uusi-sanktio (merge
-                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
-                              {:toimenpideinstanssi tpi})
-               uusi-sanktio (if (>= urakan-alkuvuosi 2025)
-                              (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus)
-                              uusi-sanktio)]
+                               (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
+                               {:toimenpideinstanssi tpi})]
            (yleiset/wrap-if
              (not oikeus?)
              [yleiset/tooltip {} :%
