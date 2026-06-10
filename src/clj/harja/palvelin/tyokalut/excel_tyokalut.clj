@@ -3,7 +3,6 @@
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
 
-            [harja.fmt :as fmt]
             [harja.domain.raportointi :refer [tee-solu]]
             [harja.palvelin.raportointi.excel :as excel-raportointi]))
 
@@ -27,7 +26,12 @@
                       :font {:color :black :size 12 :name "Open Sans" :bold true}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
 
-        euro #(if (some? %) (str (fmt/euro %)) "")
+        ;; Raha-tyyli: sama visuaalinen tyyli kuin tyyli-normaali, mutta euroina.
+        ;; Tällöin soluun kirjoitettu numeerinen arvo näkyy Excelissä numerona eikä tekstinä.
+        raha-tyyli (let [tyyli (excel/create-cell-style! workbook tyyli-tiedot)
+                         raha-formaatti (excel-raportointi/luo-data-formaatti workbook "€#,##0.00;[Red]-€#,##0.00")]
+                     (.setDataFormat tyyli raha-formaatti)
+                     tyyli)
 
         kirjoita-yhteenveto! (fn [rivi-nro otsikko arvo-yht arvo-val-aika avain-yht avain-val-aika]
                                (let [otsikko-row (.createRow sheet rivi-nro)
@@ -43,11 +47,13 @@
                                  (excel-raportointi/taulukko-otsikkorivi otsikko-row sarakkeet workbook false)
 
                                  (tee-solu (.createCell arvo-rivi 0) otsikko tyyli-normaali)
-                                 (tee-solu (.createCell arvo-rivi 1) (euro arvo-yht) tyyli-normaali)
+                                 (when (some? arvo-yht) (excel/set-cell! solu-yht (double arvo-yht)))
+                                 (excel/set-cell-style! solu-yht raha-tyyli)
                                  (excel-raportointi/tasaa-solu solu-yht :oikea)
 
                                  (when kyseessa-kk-vali?
-                                   (tee-solu solu-valittu-aika (euro arvo-val-aika) tyyli-normaali)
+                                   (when (some? arvo-val-aika) (excel/set-cell! solu-valittu-aika (double arvo-val-aika)))
+                                   (excel/set-cell-style! solu-valittu-aika raha-tyyli)
                                    (excel-raportointi/tasaa-solu solu-valittu-aika :oikea))
                                  (+ rivi-nro 3)))
 
