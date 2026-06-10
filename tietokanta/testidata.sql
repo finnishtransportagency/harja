@@ -1,9 +1,15 @@
 -- Luodaan Liikennevirasto
-INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
+INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus)
+SELECT 'liikennevirasto', 'Liikennevirasto', 'Livi', '1010547-1'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM organisaatio
+     WHERE ytunnus = '1010547-1'
+);
 
--- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
-\i testidata/__Toimenpide_Kopio_01.sql 
+\i testidata/__Toimenpide_Kopio_01.sql
 \i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
@@ -85,9 +91,6 @@ SELECT setval(
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
 
--- Luodaan sanktiotyypit
-\i testidata/sanktiotyypit.sql
-
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
 
@@ -125,7 +128,7 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/hoitoluokat.sql
 
--- Tehtävämigraatiot testidataan 
+-- Tehtävämigraatiot testidataan
 \i testidata/tehtavamuutokset.sql
 
 -- Materiaalin käytöt
@@ -154,16 +157,16 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/paallystysmassat.sql
 \i testidata/yllapito/pot2.sql
 
--- Reikäpaikkaukset 
+-- Reikäpaikkaukset
 \i testidata/yllapito/reikapaikkaukset.sql
 
--- MPU kustannukset 
+-- MPU kustannukset
 \i testidata/yllapito/paikkauskustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 
--- Tiemerkinnät 
+-- Tiemerkinnät
 \i testidata/yllapito/tiemerkinta.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella

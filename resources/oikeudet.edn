@@ -92,6 +92,12 @@
   :taso1 "hallinta-kayttajat",
   :kuvaus "Osio 'Hallinta' näkymä 'Käyttäjät'",
   :roolien-oikeudet {"Jarjestelmavastaava" #{"R*" "W*"}}}
+ {:sym hallinta-laadunseuranta-profiilit,
+  :osio "Hallinta",
+  :nakyma "Laadunseuranta / Profiilit",
+  :taso1 "hallinta-laadunseuranta",
+  :kuvaus "Osio 'Hallinta' näkymä 'Laadunseuranta / Profiilit'",
+  :roolien-oikeudet {"Jarjestelmavastaava" #{"R*" "W*"}}}
  {:sym hallinta-lupaukset,
   :osio "Hallinta",
   :nakyma "Lupaukset",

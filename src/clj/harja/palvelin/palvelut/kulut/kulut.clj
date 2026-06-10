@@ -19,6 +19,7 @@
             [harja.tyokalut.big :as big]
             [harja.domain.kulut :as kulut]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
@@ -332,9 +333,9 @@
   "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
   hoitokauden päätökset (välikatselmointi tehty) ja mikäli niitä löytyy, niin estetään tallennus."
   [db urakka-id erapaiva vanha-erapaiva]
-  (let [joda-local-time-erapaiva (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
+  (let [joda-local-time-erapaiva (pvm/joda-timeksi erapaiva)
         joda-local-time-vanha-erapaiva (when vanha-erapaiva
-                                         (pvm/ajan-muokkaus (pvm/joda-timeksi vanha-erapaiva) true 1 :paiva))
+                                         (pvm/joda-timeksi vanha-erapaiva))
         erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
         vanhan-erapaivan-vuosi (when vanha-erapaiva
                                  (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
@@ -632,6 +633,12 @@
     {:laskutusraja laskutusraja
      :laskutusraja-kaytossa laskutusraja-kaytossa?}))
 
+(defn hae-urakan-tavoitehintojen-tilat
+  [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+    tavoitehintojen-tilat))
+
 (defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-kaikkien-tehtavaryhmien-nimet db))
@@ -738,6 +745,9 @@
       (julkaise-palvelu http :hae-urakan-laskutusraja
         (fn [user hakuehdot]
           (hae-urakan-laskutusraja db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-tavoitehintojen-tilat
+        (fn [user hakuehdot]
+          (hae-urakan-tavoitehintojen-tilat db user hakuehdot)))
       (julkaise-palvelu http :hae-kaikkien-tehtavaryhmien-nimet
         (fn [user hakuehdot]
           (hae-kaikkien-tehtavaryhmien-nimet db user hakuehdot)))
@@ -760,6 +770,7 @@
       :hae-urakan-rahavaraukset
       :hae-hoitokauden-kulujen-summa
       :hae-urakan-laskutusraja
+      :hae-urakan-tavoitehintojen-tilat
       :hae-kaikkien-tehtavaryhmien-nimet)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))
