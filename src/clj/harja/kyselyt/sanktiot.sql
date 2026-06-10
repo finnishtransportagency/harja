@@ -2,9 +2,9 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
+(perintapvm, maarattypvm, maaraystapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
  luotu)
-VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
+VALUES (:perintapvm, :maarattypvm, :maaraystapa, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
             (SELECT t.id -- suoraan annettu tpi
              FROM toimenpideinstanssi t
@@ -23,6 +23,7 @@ VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
 UPDATE sanktio
 SET perintapvm          = :perintapvm,
     maarattypvm         = :maarattypvm,
+    maaraystapa         = :maaraystapa,
     sakkoryhma          = :ryhma :: sanktiolaji,
     tyyppi              = :tyyppi,
     toimenpideinstanssi = COALESCE(
@@ -48,6 +49,7 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.maaraystapa,
        lp.aika                            AS laatupoikkeama_aika,
        lp.kohde                           AS laatupoikkeama_kohde,
        lp.kasittelyaika                   AS laatupoikkeama_paatos_kasittelyaika,
@@ -78,6 +80,7 @@ WHERE laatupoikkeama = :laatupoikkeama
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.maaraystapa,
        s.maara           AS summa,
        s.sakkoryhma      AS laji,
        s.suorasanktio,
@@ -107,6 +110,7 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.maaraystapa,
        -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten.
        -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
        -- sanktion laatupoikkeamassa.

@@ -216,7 +216,7 @@
                                      urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
+  [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama-id urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -243,6 +243,7 @@
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
                 :maarattypvm (konv/sql-date maarattypvm)
+                :maaraystapa maaraystapa
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
