@@ -14,6 +14,8 @@
             [harja.ui.pvm :as pvm-valinta]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
+            [harja.domain.oikeudet :as oikeudet]
+            [cljs.pprint :as pp]
             [harja.ui.modal :as modal]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.istunto :as istunto]
@@ -503,6 +505,19 @@
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
         paatos-tehty? (:paatos-tehty? lomake)
+        ;;_ (println "apps: " (pp/pprint app))
+        _ (println "urkka-id " (:urakka lomake))
+        urakka-id (:urakka lomake)
+        saa-merkita-valmiiksi?
+        (oikeudet/on-muu-oikeus? "Jarjestelmavastaava"
+          oikeudet/urakat-aikataulu
+          urakka-id
+          @istunto/kayttaja)
+        _ (println "kauttaja: " @istunto/kayttaja)
+        _ (println "saa merkita=" saa-merkita-valmiiksi?)
+
+        saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
+        _ (println "saa-muokata?" saa-muokata?)
         urakan-muutostyot (:urakan-muutostyot app)
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
