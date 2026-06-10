@@ -8,5 +8,3 @@ SET maarattypvm = lp.kasittelyaika
 FROM laatupoikkeama lp
 WHERE lp.id = s.laatupoikkeama
   AND s.maarattypvm IS NULL;
-
-
