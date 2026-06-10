@@ -629,7 +629,7 @@ INSERT INTO urakka (nimi,
                     hanke_sampoid,
                     sampoid,
                     tyyppi,
-                    hallintayksikko,
+                    elinvoimakeskus_id,
                     sopimustyyppi,
                     urakkanro,
                     urakoitsija)
@@ -639,7 +639,7 @@ VALUES (:nimi,
         :hanke_sampoid,
         :sampoid,
         :urakkatyyppi :: urakkatyyppi,
-        :hallintayksikko,
+        :elinvoimakeskus,
         :sopimustyyppi :: sopimustyyppi,
         :urakkanumero,
         :urakoitsijaid);
@@ -675,15 +675,14 @@ VALUES (:nimi,
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
-SET nimi          = :nimi,
-  alkupvm         = :alkupvm,
-  loppupvm        = :loppupvm,
-  hanke_sampoid   = :hanke_sampoid,
-  tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
-  hallintayksikko = :hallintayksikko,
-  urakkanro       = :urakkanro,
-  urakoitsija     = :urakoitsija
-
+SET nimi                = :nimi,
+  alkupvm               = :alkupvm,
+  loppupvm              = :loppupvm,
+  hanke_sampoid         = :hanke_sampoid,
+  tyyppi                = :urakkatyyppi :: URAKKATYYPPI,
+  elinvoimakeskus_id    = :elinvoimakeskus,
+  urakkanro             = :urakkanro,
+  urakoitsija           = :urakoitsija
 WHERE id = :id;
 
 -- name: paivita-harjassa-luotu-urakka<!
