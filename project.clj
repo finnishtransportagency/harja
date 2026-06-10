@@ -125,9 +125,9 @@
                  [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.4.1"]
-                 [org.apache.poi/poi-scratchpad "5.4.1"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.4.1"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "5.5.1"]
+                 [org.apache.poi/poi-scratchpad "5.5.1"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.5.1"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "2.5.2"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
@@ -167,9 +167,9 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.4.1"]
-                         [org.apache.poi/poi-scratchpad "5.4.1"]
-                         [org.apache.poi/poi-ooxml "5.4.1"]
+  :managed-dependencies [[org.apache.poi/poi "5.5.1"]
+                         [org.apache.poi/poi-scratchpad "5.5.1"]
+                         [org.apache.poi/poi-ooxml "5.5.1"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
