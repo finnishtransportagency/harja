@@ -56,9 +56,10 @@
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen hakuehdot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatiotilanne-integraatioloki kayttaja)
-  (let [{:keys [otsikot parametrit viestin-sisalto tapahtumien-tila tapahtumien-kesto max-tulokset]} hakuehdot
+  (let [{:keys [otsikot parametrit osoitteet viestin-sisalto tapahtumien-tila tapahtumien-kesto max-tulokset]} hakuehdot
         otsikot (if (str/blank? otsikot) nil otsikot)
         parametrit (if (str/blank? parametrit) nil parametrit)
+        osoitteet (if (str/blank? osoitteet) nil osoitteet)
         viestin-sisalto (if (str/blank? viestin-sisalto) nil viestin-sisalto)
         onnistuneet (case tapahtumien-tila
                       :onnistuneet true
@@ -79,6 +80,7 @@
                         :paattyen (konversio/sql-date paattyen)
                         :otsikot otsikot
                         :parametrit parametrit
+                        :osoitteet osoitteet
                         :sisalto viestin-sisalto
                         :kesto tapahtumien-kesto
                         :limit limit}))]
