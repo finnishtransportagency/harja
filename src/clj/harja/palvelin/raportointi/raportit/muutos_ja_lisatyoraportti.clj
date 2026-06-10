@@ -301,11 +301,11 @@
        {:leveys 5 :otsikko "Laskutusrajan tarkistus (€)" :tasaa :oikea}
        {:leveys 5 :otsikko "Laskutusraja (€)" :fmt :raha}]
       tarkistusrivit]
-     [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatussa tavoitehinnasta." tarkistusprosentti)]
+     [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatussa tavoitehinnasta." tarkistusprosentti) {:leveysprosentti 60}]
      [:tyhja-rivi nil]
-     [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset."]
+     [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset." {:leveysprosentti 60}]
      [:tyhja-rivi nil]
-     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." (fmt/desimaaliluku-opt hoitovuoden-alun-indeksikorjattu-tavoitehinta 2 true) tarkistusprosentti tarkistusprosenttimaara)]
+     [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." (fmt/desimaaliluku-opt hoitovuoden-alun-indeksikorjattu-tavoitehinta 2 true) tarkistusprosentti tarkistusprosenttimaara) {:leveysprosentti 60}]
      [:tyhja-rivi nil]
      [:tyhja-rivi nil]
      [:tyhja-rivi nil]]))

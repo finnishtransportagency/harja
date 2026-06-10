@@ -453,9 +453,15 @@
               :margin-top "2mm"} teksti])
 
 
-(defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
-  [:fo:block {:color (when vari vari)
-              :font-size tekstin-fonttikoko} teksti])
+(defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari leveysprosentti]}]]
+  (if leveysprosentti
+    [:fo:block-container {:width (str leveysprosentti "%")}
+     [:fo:block {:color (when vari vari)
+                 :font-size tekstin-fonttikoko}
+      teksti]]
+    [:fo:block {:color (when vari vari)
+                :font-size tekstin-fonttikoko}
+     teksti]))
 
 (defmethod muodosta-pdf :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
@@ -466,10 +472,17 @@
    [:fo:inline {:font-size tekstin-fonttikoko
                 :font-weight 100} teksti]])
 
-(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
-  [:fo:block {:color (when vari vari)
-              :font-size tekstin-fonttikoko
-              :font-weight "bold"} teksti])
+(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari leveysprosentti]}]]
+  (if leveysprosentti
+    [:fo:block-container {:width (str leveysprosentti "%")}
+     [:fo:block {:color (when vari vari)
+                 :font-size tekstin-fonttikoko
+                 :font-weight "bold"}
+      teksti]]
+    [:fo:block {:color (when vari vari)
+                :font-size tekstin-fonttikoko
+                :font-weight "bold"}
+     teksti]))
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))

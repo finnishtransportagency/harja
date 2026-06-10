@@ -340,17 +340,20 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3.raportti-otsikko teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali]}]]
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti]}]]
   [:div {:style (merge
                   {:color (when vari vari)}
+                  (when leveysprosentti {:width (str leveysprosentti "%")})
                   (when rivita? {:white-space "pre-line"})
                   (when alamarginaali {:margin-bottom alamarginaali}))}
    teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
-(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
-  [:div {:style {:font-weight 700
-                 :color (when vari vari)}} teksti
+(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura leveysprosentti]}]]
+  [:div {:style (merge
+                  {:font-weight 700
+                   :color (when vari vari)}
+                  (when leveysprosentti {:width (str leveysprosentti "%")}))} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
