@@ -505,32 +505,28 @@
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
         paatos-tehty? (:paatos-tehty? lomake)
-        ;;_ (println "apps: " (pp/pprint app))
-        _ (println "urkka-id " (:urakka lomake))
         urakka-id (:urakka lomake)
-        saa-merkita-valmiiksi?
-        (oikeudet/on-muu-oikeus? "Jarjestelmavastaava"
-          oikeudet/urakat-aikataulu
-          urakka-id
-          @istunto/kayttaja)
-        _ (println "kauttaja: " @istunto/kayttaja)
-        _ (println "saa merkita=" saa-merkita-valmiiksi?)
+        kulun-muokkaus-oikeus? (oikeudet/on-muu-oikeus? "Kulun-muokkaus"
+                                oikeudet/urakat-aikataulu
+                                urakka-id
+                                @istunto/kayttaja)
+        _ (println "kayttaja: " @istunto/kayttaja)
+        _ (println "saa muokata" kulun-muokkaus-oikeus?)
 
-        saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-        _ (println "saa-muokata?" saa-muokata?)
         urakan-muutostyot (:urakan-muutostyot app)
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
         tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
-        kulu-lukittu? (or haku-menossa
-                        (when erapaivan-hoitovuosi
-                          (some #(and
-                                   (= erapaivan-hoitovuosi (:vuosi %))
-                                   (:paatos-tehty? %))
-                            (:vuosittaiset-valikatselmukset app)))
-                        erapaivasta-yli-2kk?)
+        kulu-lukittu? (and
+                        (or haku-menossa
+                          (when erapaivan-hoitovuosi
+                            (some #(and
+                                     (= erapaivan-hoitovuosi (:vuosi %))
+                                     (:paatos-tehty? %))
+                              (:vuosittaiset-valikatselmukset app))))
+                        (not (and erapaivasta-yli-2kk? kulun-muokkaus-oikeus?)))
         ;; Vuoden päätöksen kulut voivatkin olla urakoitsijan maksettavia!
         urakoitsija-maksaa? (and (:vuoden-paatos-valittu? lomake)
                               (=
