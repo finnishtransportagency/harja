@@ -8,6 +8,7 @@
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
             [harja.kyselyt.kulut :as kulut-q]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]))
 
@@ -49,7 +50,7 @@
   "Muutosten yhteenveto on speksattu HTML raportissa sellaiseksi, ettei sitä voida toteuttaa PDF tai Excel formaatissa.
   Päätellään siis kasittelija parametrista, että millainen osio renderöidään."
   [db urakka-id alkupvm loppupvm urakan-tiedot maaramuutokset
-   hoitokauden-alkuvuosi kasittelija budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta]
+   hoitokauden-alkuvuosi kasittelija _budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta]
   (let [;; Kirjallisesti sovitut muutokset - hyödynnetään samaa hakua kuin kirjalliset muutokset -osiossa
         kirjallisesti-sovitut-muutokset (hae-kirjallisesti-sovitut-muutokset-raportille
                                           db {:urakka-id urakka-id
@@ -265,44 +266,44 @@
       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
      (into [] (concat rahavarausrivit (when-not (empty? rahavaraukset) rahavaraukset-yhteensarivi)))]))
 
-(defn muodosta-laskutusrajan-tarkistukset [db urakka-id hoitokauden-alkuvuosi budjettitavoite
+(defn muodosta-laskutusrajan-tarkistukset [db urakka-id hoitokauden-alkuvuosi _budjettitavoite
                                            hoitovuoden-alun-indeksikorjattu-tavoitehinta]
-  (let [tarkistusprosentti 3 ;; Oletettavasti joskus tämä kovakoodattu prosentti voidaan hakea tietokannasta
-        tarkistusprosenttimaara (fmt/desimaaliluku-opt (* (/ tarkistusprosentti 100) hoitovuoden-alun-indeksikorjattu-tavoitehinta) 2 true)
-        tarkistusrivit (mapv (fn [r]
-                               (rivi (or (:pvm r) "")
-                                 (or (:muutokset-yhteensa r) "")
-                                 (or (:prosenttia-tavoitehinnasta r) 0)
-                                 (or (:tarkistus-summa r) 0)
-                                 (or (:laskutusraja r) 0)))
-                         (list {:pvm "1.1.2025"
-                                :muutokset-yhteensa 15000M
-                                :prosenttia-tavoitehinnasta 10.0
-                                :tarkistus-summa (* 0.1 hoitovuoden-alun-indeksikorjattu-tavoitehinta)
-                                :laskutusraja hoitovuoden-alun-indeksikorjattu-tavoitehinta}))
+  (let [laskutusrajan-tarkistukset (ks-kyselyt/hae-laskutusrajan-tarkistukset
+                                     db
+                                     {:urakka urakka-id
+                                      :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                      :hoitovuoden_indeksikorjattu_tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta})
+        tarkistusprosentti 3
+        tarkistusprosenttimaara (fmt/desimaaliluku-opt
+                                  (* (/ tarkistusprosentti 100)
+                                    (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0))
+                                  2
+                                  true)
+        tarkistusrivit (mapv (fn [{:keys [voimassa_alkaen yhteensa prosenttiosuus laskutusrajan-tarkistus tarkistettu-laskutusraja]}]
+                               [voimassa_alkaen
+                                (or yhteensa 0)
+                                (if (some? prosenttiosuus)
+                                  (str (fmt/prosentti-opt prosenttiosuus))
+                                  "")
+                                (if (some? laskutusrajan-tarkistus)
+                                  (str "+" (fmt/desimaaliluku-opt laskutusrajan-tarkistus 2 true))
+                                  0.00)
+                                (or tarkistettu-laskutusraja 0)])
+                          laskutusrajan-tarkistukset)]
 
-        yhteensarivi [{:lihavoi? true
-                       :korosta-hennosti? true
-                       :rivi (rivi ""
-                               15000M
-                               ""
-                               (* 0.1 hoitovuoden-alun-indeksikorjattu-tavoitehinta)
-                               hoitovuoden-alun-indeksikorjattu-tavoitehinta)}]]
     [[:taulukko {:otsikko "Laskutusrajan automaattiset tarkistukset"
-                 :viimeinen-rivi-yhteenveto? true
+                 :viimeinen-rivi-yhteenveto? false
                  :sheet-nimi "Laskutusrajan tarkistukset"
                  :tyhja (when (empty? tarkistusrivit) "Ei tarkistuksia.")}
-      [{:leveys 6 :otsikko "Pvm"}
+      [{:leveys 7 :otsikko "Pvm" :fmt :pvm}
        {:leveys 5 :otsikko "Muutostyötilaukset yhteensä (€)" :fmt :raha}
-       {:leveys 5 :otsikko "%-osuus hoitovuoden alun indeksikorjatusta tavoitehinnasta"}
-       {:leveys 5 :otsikko "Laskutusrajan tarkistus (€)" :fmt :raha}
+       {:leveys 5 :otsikko "%-osuus hoitovuoden alun indeksikorjatusta tavoitehinnasta" :tasaa :oikea}
+       {:leveys 5 :otsikko "Laskutusrajan tarkistus (€)" :tasaa :oikea}
        {:leveys 5 :otsikko "Laskutusraja (€)" :fmt :raha}]
-      (into [] (concat tarkistusrivit (when-not (empty? tarkistusrivit) yhteensarivi)))]
-     [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten
-     muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatussa tavoitehinnasta." tarkistusprosentti)]
+      tarkistusrivit]
+     [:teksti (format "Laskutusrajaa voidaan tarkistaa hoitovuoden aikana, mikäli tilaaja teettää muutostöitä ja kirjallisten muutostyötilausten yhteismäärä kyseiselle hoitovuodelle on vähintään %s %% em. hoitovuoden alun indeksikorjatussa tavoitehinnasta." tarkistusprosentti)]
      [:tyhja-rivi nil]
-     [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon
-     tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset. "]
+     [:teksti "Harja laskee laskutusrajan tarkistukset automaattisesti. Laskennassa huomioidaan Kirjallisesti sovitut muutokset -osioon tallennetut erillisrahoitetut muutostyöt sekä tavoitehintaa nostavat pysyvät muutokset."]
      [:tyhja-rivi nil]
      [:teksti (format "Hoitovuoden alun indeksikorjattu tavoitehinta: %s €, josta %s %% on %s €." (fmt/desimaaliluku-opt hoitovuoden-alun-indeksikorjattu-tavoitehinta 2 true) tarkistusprosentti tarkistusprosenttimaara)]
      [:tyhja-rivi nil]
@@ -342,7 +343,7 @@
        {:leveys 5 :otsikko "Toimenpide"}
        {:leveys 10 :otsikko "Muutoksen syy"}
        {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-      (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi) ))]]))
+      (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi)))]]))
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id

@@ -1,8 +1,10 @@
 (ns harja.palvelin.raportointi.muutos-ja-lisatyoraportti-test
   (:require [clojure.test :refer :all]
+            [harja.fmt :as fmt]
             [harja.domain.kulut :as domain-kulut]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :refer :all]
+            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-raportti]
+            [harja.testi :refer [+kayttaja-jvh+ db hae-kajaanin-maanteiden-hoitourakan-2025-2030-id hae-oulun-maanteiden-hoitourakan-2019-2024-id i jarjestelma kutsu-palvelua q testi-http-palvelin testitietokanta u urakkatieto-fixture]]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.testiapurit :as apurit]
@@ -84,6 +86,11 @@
     ;; Muutokset
     (u (str "DELETE FROM mhu_muutos_historia WHERE urakka = " urakka-id))
     (u (str "UPDATE mhu_muutos set poistettu = TRUE WHERE urakka = " urakka-id))))
+
+(defn- hae-vanha-urakka-id
+  "Palauttaa Oulun MHU 2019-2024 urakan id:n (muutosten_hallinta = false, koska alkupvm < 2025-01-01)."
+  []
+  (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
 
 (defn- hae-kayttaja-id []
   (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'")))
@@ -177,7 +184,6 @@
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Kirjallisesti sovitut muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
-          datarivit (filter vector? rivit)
           yhteensarivi (last rivit)]
       ;; Pitäisi olla 3 datariviä + 1 yhteensärivi
       (is (= 4 (count rivit)) "Taulukossa on 4 riviä (3 data + yhteensä)")
@@ -198,6 +204,27 @@
       ;; Vain yhteensä-rivi (0 €)§
       (is (= 0 (count rivit)) "Taulukossa ei ole dataa"))))
 
+(deftest laskutusrajan-tarkistukset-tulevat-kyselydatasta
+  (let [urakka-id (hae-kajaani-2025-urakka-id)
+        _ (siivoa-muutosdata! urakka-id)
+        hoitokauden-alkuvuosi 2028
+        budjettitavoite {:tavoitehinta-indeksikorjattu 100000M}
+        tavoitehinta 100000M
+        muutos-id (luo-kirjallinen-muutos! urakka-id "muutostyo" "Laskutusrajatesti" "2028-11-15")
+        _ (luo-kustannusvaikutus! muutos-id hoitokauden-alkuvuosi 5000M)
+        raportin-osat (muutos-raportti/muodosta-laskutusrajan-tarkistukset
+                        (:db jarjestelma) urakka-id hoitokauden-alkuvuosi budjettitavoite tavoitehinta)
+        taulukko (first raportin-osat)
+        rivit (apurit/taulukon-rivit taulukko)
+        eka-rivi (first rivit)]
+    (is (= "Laskutusrajan automaattiset tarkistukset" (:otsikko (second taulukko))))
+    (is (= 1 (count rivit)) "Taulukossa on yksi tarkistus")
+    (is (= 5 (count eka-rivi)) "Taulukossa on viisi saraketta")
+    (is (= (pvm/->pvm "15.11.2028") (nth eka-rivi 0)))
+    (is (= 5000M (nth eka-rivi 1)))
+    (is (= (str (fmt/prosentti-opt 5.0M)) (nth eka-rivi 2)))
+    (is (= "+5 000,00" (nth eka-rivi 3)))))
+
 ;; ============================================================
 ;; Testataan: Aikaisempien vuosien pysyvien muutosten vaikutukset
 ;; ============================================================
@@ -216,7 +243,6 @@
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Aikaisempien vuosien taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
-          datarivit (filter vector? rivit)
           yhteensarivi (last rivit)]
       (is (= 2 (count rivit)) "Taulukossa on 2 riviä (1 data + yhteensä)")
       ;; Tarkista yhteensä
@@ -366,14 +392,8 @@
             yht-muutos (nth (:rivi yhteensarivi) 4)]
         (is (= 0 yht-muutos) "Yhteensä on 0 kun dataa ei ole")))))
 
-;; ============================================================
-;; Vanha-tyyppinen urakka (muutosten_hallinta = false) - 2024 ja aiemmin
-;; ============================================================
 
-(defn- hae-vanha-urakka-id
-  "Palauttaa Oulun MHU 2019-2024 urakan id:n (muutosten_hallinta = false, koska alkupvm < 2025-01-01)."
-  []
-  (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
+
 
 (defn- hae-taulukko-sheet-nimella
   "Hakee raportin taulukon sheet-nimen perusteella. Käytetään vanhan tyyppisten urakoiden
