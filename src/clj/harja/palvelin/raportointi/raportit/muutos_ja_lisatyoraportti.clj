@@ -294,7 +294,7 @@
     [[:taulukko {:otsikko "Laskutusrajan automaattiset tarkistukset"
                  :viimeinen-rivi-yhteenveto? false
                  :sheet-nimi "Laskutusrajan tarkistukset"
-                 :tyhja (when (empty? tarkistusrivit) "Ei tarkistuksia.")}
+                 :tyhja (when (empty? tarkistusrivit) "Ei muutostyötilauksia")}
       [{:leveys 7 :otsikko "Pvm" :fmt :pvm}
        {:leveys 5 :otsikko "Muutostyötilaukset yhteensä (€)" :fmt :raha}
        {:leveys 5 :otsikko "%-osuus hoitovuoden alun indeksikorjatusta tavoitehinnasta" :tasaa :oikea}
