@@ -63,12 +63,12 @@
     str))
 
 (defmulti muodosta-pdf
-          "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
-          Dispatch tyypin mukaan (vektorin 1. elementti)."
-          (fn [elementti]
-            (if (raportti-domain/raporttielementti? elementti)
-              (first elementti)
-              :vain-arvo)))
+  "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
+  Dispatch tyypin mukaan (vektorin 1. elementti)."
+  (fn [elementti]
+    (if (raportti-domain/raporttielementti? elementti)
+      (first elementti)
+      :vain-arvo)))
 
 (def ^:const +max-rivimaara-default+ 1000)
 
@@ -91,7 +91,7 @@
   (let [;; Negaativisille numeroille laitetaan negaatio, muuten ei tehdä mitään
         etuliite (if (and (number? arvo) (neg? arvo)) "-\u00A0" "")
         ;; Ja, koska etuliite lisätään käsin, pitää negaatio poistaa
-        arvo (if (and (number? arvo) (neg? arvo)) (* -1 arvo)  arvo)]
+        arvo (if (and (number? arvo) (neg? arvo)) (* -1 arvo) arvo)]
     [:fo:inline
      [:fo:inline (if-not (nil? arvo)
                    (str etuliite
@@ -139,29 +139,29 @@
   [:fo:inline
    [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? font-size himmenna?]}]]
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari
+                                                       fmt lihavoi? font-size himmenna? teksti-alle]}]]
   (let [tyyli {:color (or itsepaisesti-maaritelty-oma-vari
-                          (raportti-domain/virhetyylit tyyli)
-                          "black")}
+                        (raportti-domain/virhetyylit tyyli)
+                        "black")}
         tyyli (if font-size (assoc tyyli :font-size font-size) tyyli)
         tyyli (if himmenna? (assoc tyyli :color harmaa-himmennys-vari) tyyli)
         tyyli (if lihavoi?
                 (merge tyyli {:font-weight "bold"})
                 tyyli)]
-    ;; Muutettu inline -> block
-    ;; Korjaa bugin päiväkirjaraportissa, ei vaikuta mitenkän ulkonäköön
     [:fo:block
      [:fo:inline tyyli
-      (if fmt (fmt arvo) arvo)]]))
+      (if fmt (fmt arvo) arvo)]
+     (when teksti-alle [:fo:block tyyli teksti-alle])]))
 
 (defmethod muodosta-pdf :teksti-ja-info [[_ {:keys [arvo]}]] arvo)
 
 (defmethod muodosta-pdf :infopallura [_]
   nil)
 
-(defmethod muodosta-pdf :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara  ryhmitelty?]}]]
+(defmethod muodosta-pdf :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
   (let [etuliite (cond
-                   (neg? arvo) "-\u00A0"  
+                   (neg? arvo) "-\u00A0"
                    (zero? arvo) ""
                    :else "+\u00A0")
         arvo (Math/abs (float arvo))
@@ -189,18 +189,18 @@
 
 (defn- border-tyyli [{reunus :reunus}]
   (merge alareuna
-         (case reunus
-           ;; Reunus vain oikealle
-           :oikea oikea-reuna
+    (case reunus
+      ;; Reunus vain oikealle
+      :oikea oikea-reuna
 
-           ;; Reunus vain vasemmalle
-           :vasen vasen-reuna
+      ;; Reunus vain vasemmalle
+      :vasen vasen-reuna
 
-           ;; Ei lainkaan vaseanta eikä oikeaa reunusta
-           :ei {}
+      ;; Ei lainkaan vaseanta eikä oikeaa reunusta
+      :ei {}
 
-           ;; Ei reunusmäärittelyä, tehdään oletus
-           (merge oikea-reuna vasen-reuna))))
+      ;; Ei reunusmäärittelyä, tehdään oletus
+      (merge oikea-reuna vasen-reuna))))
 
 (defn- taulukko-valiotsikko [otsikko sarakkeet]
   [:fo:table-row
@@ -274,7 +274,7 @@
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
-                                     (= viimeinen-rivi rivi))
+                                  (= viimeinen-rivi rivi))
                             {:background-color yhteenveto-tumma-vari
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
@@ -285,8 +285,8 @@
                            {:background-color "white"
                             :color "black"})
               korosta-harmaa? (when korosta-harmaa?
-                                  {:background-color harmaa-korostettu-vari
-                                   :color "black"})
+                                {:background-color harmaa-korostettu-vari
+                                 :color "black"})
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
@@ -294,8 +294,8 @@
                           {:background-color varoitus-vari
                            :color "black"})
               huomio? (when huomio?
-                          {:background-color huomio-vari
-                           :color "black"})
+                        {:background-color huomio-vari
+                         :color "black"})
               lihavoi? (when lihavoi-rivi?
                          {:font-weight "bold"})]
           [:fo:table-row
@@ -323,7 +323,7 @@
                                {:padding "1mm"
                                 :font-weight "normal"
                                 :text-align (if (or (oikealle-tasattavat-kentat i)
-                                                    (raportti-domain/numero-fmt? (:fmt sarake)))
+                                                  (raportti-domain/numero-fmt? (:fmt sarake)))
                                               "right"
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
@@ -364,7 +364,7 @@
                            :color "black"
                            :number-columns-spanned (or sarakkeita 1)
                            :text-align (tasaus tasaa)}
-           [:fo:block 
+           [:fo:block
             (when tummenna-teksti? {:background-color valiotsikko-tumma-vari}) teksti]])])
 
      [:fo:table-row
@@ -374,7 +374,7 @@
                            :background-color raportin-tehostevari
                            :color "black"
                            :text-align (if (or (oikealle-tasattavat-kentat i)
-                                               (raportti-domain/numero-fmt? fmt))
+                                             (raportti-domain/numero-fmt? fmt))
                                          "right"
                                          (tasaus tasaa))
                            :font-weight "normal" :padding "1mm"}
@@ -387,8 +387,8 @@
         rivi-raja (or rajoita-pdf-rivimaara +max-rivimaara-default+)
         data (if (> (count data) rivi-raja)
                (vec (concat (take rivi-raja data)
-                            (when viimeinen-rivi-yhteenveto?
-                              [viimeinen-rivi])))
+                      (when viimeinen-rivi-yhteenveto?
+                        [viimeinen-rivi])))
                data)]
     [:fo:table-body
      (when (empty? data)
@@ -481,50 +481,88 @@
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
   nil)
 
-(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko]} data]]
-  (let [viimeinen-idx (dec (count data))]
+(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout]} data]]
+  (let [data (vec (keep identity data))]
     [:fo:block {:background-color "#E0EDF9"
                 :border (str "solid 0.3mm " korostettu-vari)
                 :padding "2mm"
                 :margin-bottom "1mm"}
+
      [:fo:block {:font-weight "bold"
                  :font-size taulukon-otsikon-fonttikoko
-                 :margin-bottom "1mm"} otsikko]
-     [:fo:table {:font-size tekstin-fonttikoko
-                  :table-layout "fixed"
-                  :width "100%"}
-      [:fo:table-column {:column-width "65%"}]
-      [:fo:table-column {:column-width "35%"}]
-      [:fo:table-body
-       (map-indexed
-         (fn [i rivi]
-           (let [arvo-teksti (if (= :raha (:fmt rivi))
-                               (fmt/euro-opt (:arvo rivi))
-                               (str (:arvo rivi)))]
-             (list
-               (when (= i viimeinen-idx)
-                 [:fo:table-row
-                  [:fo:table-cell {:number-columns-spanned 2
-                                   :padding-top "1mm"
-                                   :padding-bottom "1mm"}
-                   [:fo:block {:border-bottom "solid 0.3mm gray"}]]])
-               [:fo:table-row (when (:lihavoi? rivi) {:font-weight "bold"})
-                [:fo:table-cell {:padding "0.5mm"}
-                 [:fo:block (:avain rivi)]]
-                [:fo:table-cell {:padding "0.5mm" :text-align "right"}
-                 [:fo:block arvo-teksti]]])))
-         data)]]]))
+                 :margin-bottom "1mm"}
+      otsikko]
+
+     (if (= layout :sarakkeet)
+       (into
+         [:fo:table {:font-size tekstin-fonttikoko
+                     :table-layout "fixed"
+                     :width "100%"}]
+         (concat
+           (repeat (count data)
+             [:fo:table-column {:column-width "proportional-column-width(1)"}])
+           [[:fo:table-body
+             (into
+               [:fo:table-row]
+               (map
+                 (fn [rivi]
+                   [:fo:table-cell {:padding "0.5mm"}
+                    [:fo:block {:font-size "7pt"} (:avain rivi)]
+
+                    [:fo:block {:font-size "12pt"
+                                :font-weight "bold"}
+                     (if (= :raha (:fmt rivi))
+                       (fmt/euro-opt (:arvo rivi))
+                       (str (:arvo rivi)))]]))
+               data)]]))
+
+       ;; Row tyyliset laatikot
+       (let [viimeinen-idx (dec (count data))]
+         [:fo:table {:font-size tekstin-fonttikoko
+                     :table-layout "fixed"
+                     :width "100%"}
+          [:fo:table-column {:column-width "65%"}]
+          [:fo:table-column {:column-width "35%"}]
+          [:fo:table-body
+           (map-indexed
+             (fn [i rivi]
+               (let [arvo-teksti (if (= :raha (:fmt rivi))
+                                   (fmt/euro-opt (:arvo rivi))
+                                   (str (:arvo rivi)))]
+                 (list
+                   (when (= i viimeinen-idx)
+                     [:fo:table-row
+                      [:fo:table-cell {:number-columns-spanned 2
+                                       :padding-top "1mm"
+                                       :padding-bottom "1mm"}
+                       [:fo:block {:border-bottom "solid 0.3mm gray"}]]])
+
+                   [:fo:table-row
+                    (when (:lihavoi? rivi) {:font-weight "bold"})
+
+                    [:fo:table-cell {:padding "0.5mm"} [:fo:block (:avain rivi)]]
+                    [:fo:table-cell {:padding "0.5mm"
+                                     :text-align "right"}
+                     [:fo:block arvo-teksti]]])))
+             data)]]))]))
 
 (defmethod muodosta-pdf :display-flex [[_ & data]]
-  (let [sarake-leveys (str (float (/ 100 (count data))) "%")]
-    [:fo:table {:margin-top "1mm" :table-layout "fixed" :width "90%"}
+  (let [data (vec (keep identity data))
+        sarake-leveys (str (float (/ 100 (count data))) "%")]
+    [:fo:table {:margin-top "1mm"
+                :table-layout "fixed"
+                :width "100%"}
      (for [_ data]
        [:fo:table-column {:column-width sarake-leveys}])
+
      [:fo:table-body
       [:fo:table-row
-       (for [d data]
-         [:fo:table-cell {:padding "2mm"}
-          (muodosta-pdf d)])]]]))
+       (map-indexed
+         (fn [i d]
+           [:fo:table-cell {:padding-right (when-not (= i (dec (count data)))
+                                             "3mm")}
+            (muodosta-pdf d)])
+         data)]]]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
@@ -544,7 +582,7 @@
                :y-axis-font-size "4pt"
                :legend legend
                }
-              pylvaat)]
+      pylvaat)]
    [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
@@ -555,11 +593,11 @@
    [:fo:table-body
     (for [[otsikko arvo] otsikot-ja-arvot]
       (let [arvo (if (and
-                      (= arvo nil)
-                      (= otsikko "Urakka")) "Kaikki" arvo)
+                       (= arvo nil)
+                       (= otsikko "Urakka")) "Kaikki" arvo)
             arvo (if (and
-                      (= arvo nil)
-                      (= otsikko "Urakoitsija")) "-" arvo)]
+                       (= arvo nil)
+                       (= otsikko "Urakoitsija")) "-" arvo)]
         [:fo:table-row
          [:fo:table-cell
           [:fo:block {:text-align "right" :font-weight "bold"}
@@ -593,8 +631,8 @@
      (for [[otsikko vaihtoehto koko] otsikot-ja-arvot]
        [:fo:table-cell
         [:fo:block
-            (fo/checkbox koko vaihtoehto)
-            " " otsikko]])]]])
+         (fo/checkbox koko vaihtoehto)
+         " " otsikko]])]]])
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
@@ -631,16 +669,16 @@
 (defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
   (let [rivit (map (fn [rivi]
                      (assoc rivi ::aikajana/ajat
-                                 (map (fn [aika]
-                                        (assoc aika
-                                          ::aikajana/alku
-                                          (when-let [alku (::aikajana/alku aika)]
-                                            (pvm/suomen-aikavyohykkeeseen (c/from-sql-date alku)))
-                                          ::aikajana/loppu
-                                          (when-let [loppu (::aikajana/loppu aika)]
-                                            (pvm/suomen-aikavyohykkeeseen (c/from-sql-date loppu)))))
-                                      (::aikajana/ajat rivi))))
-                   rivit)
+                       (map (fn [aika]
+                              (assoc aika
+                                ::aikajana/alku
+                                (when-let [alku (::aikajana/alku aika)]
+                                  (pvm/suomen-aikavyohykkeeseen (c/from-sql-date alku)))
+                                ::aikajana/loppu
+                                (when-let [loppu (::aikajana/loppu aika)]
+                                  (pvm/suomen-aikavyohykkeeseen (c/from-sql-date loppu)))))
+                         (::aikajana/ajat rivi))))
+                rivit)
 
         orientaatio (or *orientaatio* :landscape) ;; Dynamic binding ei toimi jos aikajana upotetaan toiseen raporttiin
         partitiot (partition aikajana-rivimaara aikajana-rivimaara nil rivit)
@@ -648,9 +686,9 @@
                          (aikajana/aikajana (merge {:leveys (case orientaatio
                                                               :portrait 750
                                                               :landscape 1000)}
-                                                   optiot)
-                                            rows))
-                       partitiot)]
+                                              optiot)
+                           rows))
+                    partitiot)]
     [:fo:block
      (when (not-empty aikajanat)
        (for [aikajana aikajanat]

@@ -1,45 +1,81 @@
 (ns harja.palvelin.tyokalut.excel-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-
   (:require [taoensso.timbre :as log]
-            [harja.fmt :as fmt]
             [dk.ative.docjure.spreadsheet :as excel]
+
             [harja.domain.raportointi :refer [tee-solu]]
-            [harja.palvelin.raportointi.excel :as excel-raportointi])
-  (:import (org.apache.poi.ss.util CellRangeAddress)))
+            [harja.palvelin.raportointi.excel :as excel-raportointi]))
 
-(defmethod excel-raportointi/muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
-  ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
-  ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
 
-  (let [aiempi-sheet (last (excel/sheet-seq workbook))
-        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
+(defmethod excel-raportointi/muodosta-excel
+  :tyomaa-laskutusyhteenveto-yhteensa
+  [[_ kyseessa-kk-vali?
+    laskutusraja-kaytossa?
+    laskutusraja-ylittynyt?
+    laskutettu laskutetaan
+    laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
+    laskutettu-str laskutetaan-str] workbook]
 
-        tyyli-tiedot {:font {:color :black :size 12 :name "Open Sans"}}
+  (let [otsikko-1 (if (and (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
+                    "Laskutettavaa yhteensä"
+                    "Toteutuneet kustannukset yhteensä")
+        otsikko-2? (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+        sheet (last (excel/sheet-seq workbook))
+        start-rivi (+ 2 (.getLastRowNum sheet))
+        tyyli-tiedot {:background :light_cornflower_blue
+                      :font {:color :black :size 12 :name "Open Sans" :bold true}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
-        tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
-        rivi (.createRow sheet rivi-nro)
-        rivin-solu (.createCell rivi 0)
-        solu-laskutettu (.createCell rivi 1)
-        solu-laskutetaan (.createCell rivi 2)]
+        ;; Raha-tyyli: sama visuaalinen tyyli kuin tyyli-normaali, mutta euroina.
+        ;; Tällöin soluun kirjoitettu numeerinen arvo näkyy Excelissä numerona eikä tekstinä.
+        raha-tyyli (let [tyyli (excel/create-cell-style! workbook tyyli-tiedot)
+                         raha-formaatti (excel-raportointi/luo-data-formaatti workbook "€#,##0.00;[Red]-€#,##0.00")]
+                     (.setDataFormat tyyli raha-formaatti)
+                     tyyli)
 
-    (tee-solu rivin-solu (str "Laskutus yhteensä " hoitokausi) tyyli-otsikko)
-    (tee-solu solu-laskutettu laskutettu-str tyyli-otsikko)
-    (when kyseessa-kk-vali?
-      (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko))
+        kirjoita-yhteenveto! (fn [rivi-nro otsikko arvo-yht arvo-val-aika avain-yht avain-val-aika]
+                               (let [otsikko-row (.createRow sheet rivi-nro)
+                                     ;; Tyhjä rivi otsikkoriville 
+                                     sarakkeet (cond-> [{:otsikko "" :lihavoitu? false}
+                                                        {:otsikko avain-yht :lihavoitu? false}]
+                                                 kyseessa-kk-vali? (conj {:otsikko avain-val-aika :lihavoitu? false}))
 
-    (let [rivi-nro (+ 1 rivi-nro)
-          rivi (.createRow sheet rivi-nro)
-          solu-laskutettu (.createCell rivi 1)
-          solu-laskutetaan (.createCell rivi 2)]
-      (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
-      (when kyseessa-kk-vali?
-        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali)))))
+                                     arvo-rivi (.createRow sheet (inc rivi-nro))
+                                     solu-yht (.createCell arvo-rivi 1)
+                                     solu-valittu-aika (.createCell arvo-rivi 2)]
+
+                                 (excel-raportointi/taulukko-otsikkorivi otsikko-row sarakkeet workbook false)
+
+                                 (tee-solu (.createCell arvo-rivi 0) otsikko tyyli-normaali)
+                                 (when (some? arvo-yht) (excel/set-cell! solu-yht (double arvo-yht)))
+                                 (excel/set-cell-style! solu-yht raha-tyyli)
+                                 (excel-raportointi/tasaa-solu solu-yht :oikea)
+
+                                 (when kyseessa-kk-vali?
+                                   (when (some? arvo-val-aika) (excel/set-cell! solu-valittu-aika (double arvo-val-aika)))
+                                   (excel/set-cell-style! solu-valittu-aika raha-tyyli)
+                                   (excel-raportointi/tasaa-solu solu-valittu-aika :oikea))
+                                 (+ rivi-nro 3)))
+
+        seuraava-rivi (kirjoita-yhteenveto!
+                        start-rivi
+                        otsikko-1
+                        laskutettu laskutetaan
+                        laskutettu-str laskutetaan-str)]
+
+    (when otsikko-2?
+      (kirjoita-yhteenveto!
+        seuraava-rivi
+        "Laskutettavaa yhteensä"
+        laskutettavaa_kaikki_yht
+        laskutettavaa_kaikki_val_aika
+        "Hoitovuoden alusta"
+        laskutetaan-str))))
 
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))
+
 
 (defmethod excel-raportointi/muodosta-excel :liikenneyhteenveto [[_ sarakkeiden-arvot] workbook]
   ;; Luodaan tehdyn taulukon loppuun yhteenveto liikennetapahtumista

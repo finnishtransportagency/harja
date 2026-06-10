@@ -53,18 +53,19 @@
 /* Ensisijaista toimintoa indikoiva nappi. */
 .nappi-ensisijainen {
     .nappi(@vari:          @white-default;
-    @tausta:               @blue-default;
-    @tausta-osoitettaessa: @primaari-sininen-valittuna;
-    @fontin-paino:         600;);
+      @tausta:               @blue-default;
+      @tausta-osoitettaessa: @blue-light;
+      @reunus-osoitettaessa: @blue-light;
+      @fontin-paino:         600;);
 }
 
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
     @vari:                 @blue-default;
-    @vari-osoitettaessa:   @white-default;
+    @vari-osoitettaessa:   @blue-dark;
     @tausta:               @white-default;
-    @tausta-osoitettaessa: @primaari-sininen-valittuna;
+    @tausta-osoitettaessa: @blue-lighter;
     @reunus:               @blue-default;
     @fontin-paino:         600;
     );

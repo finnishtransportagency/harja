@@ -43,6 +43,11 @@
   urakat-vesivayla-materiaalit
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
+  urakat-toteumat-kokonaishintaisettyot
+  urakat-toteumat-erilliskustannukset
+  urakat-toteumat-muutos-ja-lisatyot
+  urakat-toteumat-vesivaylaerilliskustannukset
+  urakat-toteumat-varusteet
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
@@ -55,6 +60,7 @@
   hallinta-yhteydenpito
   hallinta-palautevayla
   hallinta-integraatiotilanne
+  hallinta-laadunseuranta-profiilit
   hallinta-urakkahenkilot
   hallinta-paallystysilmoitukset
   hallinta-lupaukset

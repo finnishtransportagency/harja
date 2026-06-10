@@ -855,6 +855,7 @@
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
+  :gridin-luokka                        luokka joka kääritään koko taulukon ympärille
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
@@ -1284,7 +1285,7 @@
        :component-will-unmount
        (fn []
          (nollaa-muokkaustiedot!))}
-      (fnc [{:keys [otsikko otsikon-luokka tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
+      (fnc [{:keys [otsikko otsikon-luokka gridin-luokka tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
@@ -1317,7 +1318,8 @@
               luokat (cond-> luokat
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
                        sivuttain-rullattava? (conj "skrollattava")
-                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
+                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky")
+                       (some? gridin-luokka) (conj gridin-luokka))
               muokattu? (not (empty? @historia))
               tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge

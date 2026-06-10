@@ -526,4 +526,5 @@
     "KT-valuasfalttipaikkaus K"
     "KT-valuasfalttipaikkaus T"
     "KT-reikävaluasfalttipaikkaus"
-    "KT-valuasfalttisaumaus"})
+    "KT-valuasfalttisaumaus"
+    "Sirotepuhalluspaikkaus (SIPU)"})

@@ -564,7 +564,7 @@
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
-(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
+(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi vain-excelraportti? voi-suorittaa? arvot-nyt]
   (let [aseta-parametrit! (fn [id]
                             (let [input (-> js/document
                                             (.getElementById id)
@@ -581,9 +581,12 @@
                                                  (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
-                              true))]
+                              true))
+        vientimuodot (if vain-excelraportti?
+                       [(yleiset/tallenna-excel-nappi (k/excel-url :raportointi))]
+                       yleiset/+raportin-vientimuodot+)]
     [:div
-     (for [[ikoni teksti id url] yleiset/+raportin-vientimuodot+]
+     (for [[ikoni teksti id url] vientimuodot]
        ^{:key id}
        [:form {:target "_blank" :method "POST" :id id
                :style {:display "inline"}
@@ -671,7 +674,8 @@
                            {:testiversio? (:testiversio? raporttityyppi)}))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
-        raportissa? (some? @raportit/suoritettu-raportti)]
+        raportissa? (some? @raportit/suoritettu-raportti)
+        toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (log "RAPORTIN-PARAMETRIT NYT: " (pr-str arvot-nyt))
@@ -723,21 +727,22 @@
           [:div.flex-row
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
-           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
+           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]]
           [:div.raportin-toiminnot.flex-row.loppuun
-           [napit/palvelinkutsu-nappi " Tee raportti"
-            #(go
-               (reset! raportit/suoritettu-raportti :ladataan)
-               (let [suorituksen-parametrit [konteksti
-                                             (:nimi raporttityyppi)
-                                             arvot-nyt
-                                             (:id v-ur)
-                                             (:id v-hal)]]
-                 (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                 (<! (suorita-raportti! suorituksen-parametrit))))
-            {:ikoni [ikonit/list]
-             :disabled (not voi-suorittaa?)}]
-           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]])]]]))
+           (when-not toimenpideraportti?
+             [napit/palvelinkutsu-nappi " Tee raportti"
+              #(go
+                 (reset! raportit/suoritettu-raportti :ladataan)
+                 (let [suorituksen-parametrit [konteksti
+                                               (:nimi raporttityyppi)
+                                               arvot-nyt
+                                               (:id v-ur)
+                                               (:id v-hal)]]
+                   (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+                   (<! (suorita-raportti! suorituksen-parametrit))))
+              {:ikoni [ikonit/list]
+               :disabled (not voi-suorittaa?)}])
+           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]])]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]

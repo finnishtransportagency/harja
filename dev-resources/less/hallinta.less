@@ -71,3 +71,43 @@
     margin: @valistys-16 0;
   }
 }
+
+.sanktio-profiilit-hallinta {
+  .sanktio-profiilit-profiililista {
+    tr.sanktio-profiili-valittu,
+    tr.sanktio-profiili-valittu > td {
+      color: @white-default;
+      background-color: @harmaa7;
+    }
+  }
+
+  .sanktio-profiilit-yhteenveto-laatikko {
+    margin-bottom: 1rem;
+  }
+
+  .sanktio-profiilit-vaikutusaika-otsikko {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  .sanktio-profiilit-vaikutusaika-palkki {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .sanktio-profiilit-vaikutusaika-pvm {
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .sanktio-profiilit-vaikutusaika-erotin {
+    color: @harmaa6;
+    font-weight: 600;
+  }
+
+  .sanktio-profiilit-vaikutusaika-selite {
+    color: @harmaa7;
+  }
+}

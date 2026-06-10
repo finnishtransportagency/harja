@@ -39,7 +39,7 @@
 
 (defn- summaa-toimenpidetaso
   "Käytetään seuraaville pääryhmille: hankintakustannukset, muutokset ja rahavaraukset."
-  [toimenpiteet paaryhmaotsikko]
+  [toimenpiteet paaryhmaotsikko & [urakan-sopimustyyppi]]
   (sort-by :jarjestys
     (mapv
       (fn [toimenpide]
@@ -50,8 +50,10 @@
                                  "Muutostyöt (erillisrahoitetut)"
 
                                  (= toimenpide-nimi "jjh-muutos")
-                                 "Johto- ja hallintokorvauksen muutokset"
-                                 
+                                 (if (= :mhu+ urakan-sopimustyyppi)
+                                   "Kumppanuusmaksun muutos"
+                                   "Johto- ja hallintokorvauksen muutokset")
+
                                  (= toimenpide-nimi "pysyva")
                                  "Pysyvät muutokset"
                                  
@@ -201,7 +203,8 @@
   ja toimenpiteiden alla mahdollisesti rahavarauksiin ja hankintoihin.
 
   Tämä kaikki kootaan tässä funktiossa."
-  [data]
+  ([data] (jarjesta-tehtavat data nil))
+  ([data urakan-sopimustyyppi]
   (let [paaryhmat (group-by :paaryhma data)
         hankintakustannukset (get (select-keys paaryhmat ["hankintakustannukset"]) "hankintakustannukset") ;; hankinta
         jjhallinta-kustannukset (get (select-keys paaryhmat ["johto-ja-hallintokorvaus"]) "johto-ja-hallintokorvaus") ;; johto-ja-hallintokorvaus
@@ -229,7 +232,7 @@
         hankintakustannusten-toimenpiteet (summaa-toimenpidetaso hankintakustannusten-toimenpiteet (nth raportin-paaryhmat 0))
         jjhallinnan-tehtavat (summaa-paaryhman-tehtavat jjhallinta-kustannukset (nth raportin-paaryhmat 1))
         hoidonjohdonpalkkiot (summaa-paaryhman-tehtavat hoidonjohdonpalkkiot (nth raportin-paaryhmat 2))
-        muutokset (summaa-toimenpidetaso muutokset (nth raportin-paaryhmat 3))
+        muutokset (summaa-toimenpidetaso muutokset (nth raportin-paaryhmat 3) urakan-sopimustyyppi)
         erillishankinta-tehtavat (summaa-paaryhman-tehtavat erillishankinnat (nth raportin-paaryhmat 4))
         rahavaraus-toimenpiteet (summaa-toimenpidetaso rahavaraukset (nth raportin-paaryhmat 5))
         bonus-tehtavat (summaa-paaryhman-tehtavat bonukset (nth raportin-paaryhmat 6))
@@ -310,7 +313,7 @@
                   :yht-budjetoitu-summa (apply + (map budjetoitu rivit))
                   :yht-budjetoitu-summa-indeksikorjattu (apply + (map budjetoitu-indeksikorjattu rivit))}]
     {:taulukon-rivit taulukon-rivit
-     :yhteensa yhteensa}))
+     :yhteensa yhteensa})))
 
 (defn valikatselmuksen-takarajapvm [vuosi]
   ;; hox: kk on tässä 0-indeksinen, eli ko. pvm on 15.11.

@@ -23,10 +23,6 @@ inputs:
   ignore-unfixed:
     description: 'Ignore unfixed vulnerabilities'
     default: 'false'
-  upload-sarif:
-    description: 'Generate Sarif report and upload it directly to GitHub Security tab. Requires security-events: write 
-                  permission.'
-    default: 'false'
   upload-sarif-as-artifact:
     description: 'Generate Sarif report and upload it as a workflow artifact (you have to upload the Sarif in a separate 
                   step into the Security tab, or into other place. More secure alternative.'
@@ -39,7 +35,7 @@ runs:
     # Note: Currently, the trivy action must be run multiple times to achieve different goals
     # Run a full scan and show results
     - name: Run Trivy vulnerability scanner (Full scan, all vuln-types, all severities, no job failure)
-      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
       with:
@@ -68,8 +64,8 @@ runs:
       shell: bash
 
     - name: Run Trivy and generate a Sarif report
-      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-      if: ${{ inputs.upload-sarif == 'true' || inputs.upload-sarif-as-artifact == 'true' }}
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      if: ${{ inputs.upload-sarif-as-artifact == 'true' }}
       env:
         IMAGE_REF: ${{ inputs.image-ref }}
       with:
@@ -86,7 +82,7 @@ runs:
     # This is a workaround for the issue where the Dockerfile path is not included in the SARIF report, to allow for better vulnerability tracking
     # The issue is tracked here: https://github.com/aquasecurity/trivy/issues/708
     - name: Update SARIF report vuln locations
-      if: ${{ inputs.upload-sarif == 'true' || inputs.upload-sarif-as-artifact == 'true' }}
+      if: ${{ inputs.upload-sarif-as-artifact == 'true' }}
       env:
         DOCKERFILE_PATH: ${{ inputs.dockerfile-path-for-sarif }}
       run: |
@@ -97,13 +93,6 @@ runs:
         mv trivy-results.sarif trivy-results.sarif.orig
         mv sarif.tmp trivy-results.sarif
       shell: bash
-
-    # Upload directly to GitHub Security tab (requires security-events: write permission in the calling job)
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # 4.35.2
-      if: ${{ inputs.upload-sarif == 'true' && inputs.upload-sarif-as-artifact != 'true' }}
-      with:
-        sarif_file: 'trivy-results.sarif'
 
     # The SARIF file is uploaded as a workflow artifact, and not directly to the Security tab.
     # Does not require `security-events: write` permission.
@@ -120,7 +109,7 @@ runs:
 
     # To fail the job on specific severity, we have to run the scanner again
     - name: Run Trivy vulnerability scanner (Limited scan, fail job if vulns found)
-      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
       if: ${{ inputs.fail-job-on-severities != 'false' }}
       env:
         SEVERITIES: ${{ inputs.fail-job-on-severities }}

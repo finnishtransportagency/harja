@@ -34,6 +34,7 @@
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -95,20 +96,20 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat]) 
-    
+      [tarjoushinnat/tarjoushinnat])
+
     "Lupaukset"
     :lupaukset
     (when (oikeudet/hallinta-lupaukset)
       ^{:key "lupaukset"}
       [lupaukset/lupaukset])
-    
+
     "Paallystysilmoitukset"
     :paallystysilmoitukset
     (when (oikeudet/hallinta-paallystysilmoitukset)
       ^{:key "paallystysilmoitukset"}
       [paallystysilmoitukset/paallystysilmoitukset])
-    
+
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)
@@ -138,7 +139,13 @@
     ;; TODO: Varmista oikeiat oikeudet
     (when (oikeudet/hallinta-urakkahenkilot)
       ^{:key "urakkahenkilot"}
-      [urakkaparametrit/urakkaparametrit])]
+      [urakkaparametrit/urakkaparametrit])
+
+    "Sanktio- ja bonusprofiilit"
+    :sanktio-profiilit
+    (when (oikeudet/hallinta-laadunseuranta-profiilit)
+      ^{:key "sanktio-profiilit"}
+      [sanktio-profiilit/sanktio-profiilit])]
 
    "Seuranta"
    :hallinta-seuranta

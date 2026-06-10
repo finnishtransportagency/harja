@@ -5,10 +5,10 @@
 
             [harja.pvm :as pvm]
             [harja.domain.mhu :as mhu]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.kulut :as kulut-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]

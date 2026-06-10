@@ -61,18 +61,9 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (cond
-              (and nayta-euromerkki nayta-plus (< 0 eur))
-              (str "\u002B" tulos " \u20AC")
-
-              (and nayta-euromerkki (not nayta-plus))
-              (str tulos " \u20AC")
-
-              (and (not nayta-euromerkki) nayta-plus (< 0 eur))
-              (str "\u002B" tulos)
-
-              :else
-              tulos)))
+            (str (when (and nayta-plus (< 0 eur)) "\u002B")
+              tulos
+              (when nayta-euromerkki " \u20AC"))))
 
         :clj
         (s/replace (.format

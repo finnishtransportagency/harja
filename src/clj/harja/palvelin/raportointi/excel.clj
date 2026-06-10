@@ -63,9 +63,9 @@
   "Luo kaavaevaluaattorin ja evaluoi kaavan. Parametrina sisään workbook ja solu."
   [workbook cell]
   (-> workbook
-      (.getCreationHelper)
-      (.createFormulaEvaluator)
-      (.evaluateFormulaCell cell)))
+    (.getCreationHelper)
+    (.createFormulaEvaluator)
+    (.evaluateFormulaCell cell)))
 
 (defn parsi-sarakekirjain
   "Parsii Excel-solun sarakekirjaimen, esim. 'A16' --> A, AC15 --> AC"
@@ -92,7 +92,7 @@
         loppusarake (or loppusarake (parsi-sarakekirjain osoite))]
     (.setCellFormula
       cell
-      (str "SUM("(or alkusarake "A") rivi  ":" loppusarake rivi ")")))
+      (str "SUM(" (or alkusarake "A") rivi ":" loppusarake rivi ")")))
   (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
@@ -123,7 +123,7 @@
   [arvo solun-tyyli])
 
 (defmethod muodosta-solu :arvo-yksikko-ja-osuus [[_ {:keys [arvo osuus yksikko]}] solun-tyyli]
-  [(str arvo " " yksikko " ("osuus " %)" ) solun-tyyli])
+  [(str arvo " " yksikko " (" osuus " %)") solun-tyyli])
 
 (defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko desimaalien-maara]}] solun-tyyli]
   [arvo solun-tyyli (when desimaalien-maara
@@ -154,7 +154,7 @@
                       solun-tyyli)]
     [(str etuliite
        (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
-             :else arvo)
+         :else arvo)
        (when prosentti (str " (" etuliite (fmt/prosentti-opt prosentti) ")"))) solun-tyyli]))
 
 ;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
@@ -175,11 +175,11 @@
                       varoitus?
                       (merge solun-tyyli
                         {:background :red
-                         :font       {:color :white :name "Open Sans" :size 12}})
+                         :font {:color :white :name "Open Sans" :size 12}})
                       huomio?
                       (merge solun-tyyli
                         {:background :orange
-                         :font       {:color :black :name "Open Sans" :size 12}})
+                         :font {:color :black :name "Open Sans" :size 12}})
                       :default solun-tyyli)]
     [arvo solun-tyyli
      (when desimaalien-maara
@@ -190,12 +190,19 @@
 (defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
   [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
 
-(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi?]}] solun-tyyli]
-  (let [solun-tyyli (if lihavoi?
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi? korosta-hennosti?]}] solun-tyyli]
+  (let [solun-tyyli (cond
+                      lihavoi?
                       (merge solun-tyyli {:font {:bold true :name "Open Sans" :size 12}})
-                      (if (nil? solun-tyyli)
-                        {:font {:name "Open Sans" :size 12}}
-                        solun-tyyli))]
+
+                      (nil? solun-tyyli)
+                      {:font {:name "Open Sans" :size 12}}
+
+                      :else solun-tyyli)
+
+        solun-tyyli (if korosta-hennosti?
+                      (merge solun-tyyli {:background :light_cornflower_blue})
+                      solun-tyyli)]
     [arvo
      (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
      fmt]))
@@ -248,9 +255,9 @@
                                        {:background (or taustavari :grey_25_percent)
                                         :font (merge
                                                 {:color :black :name "Open Sans" :size 12}
-                                                (when lihavoitu? {:bold true} ))})))
+                                                (when lihavoitu? {:bold true}))})))
 
-(defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
+(defn taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
   (dorun
     (map-indexed
       (fn [sarake-nro {:keys [otsikko taustavari lihavoitu?] :as sarake}]
@@ -278,14 +285,14 @@
   ;; voi-muokata? vaikuttaa vain, jos sheet on asetettu protected arvoon,
   ;; joka enabloidaan lipulla :varjele-sheet-muokkauksilta?)
   (.setLocked tyyli (not voi-muokata?))
-  
+
   ;; Lisätty tyyliformaatti euroille
   (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00;[Red]-€#,##0.00")]
     (case fmt
-    ;; .setDataFormat hakee indeksillä tyylejä.
-    ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
-    ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
-    ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+      ;; .setDataFormat hakee indeksillä tyylejä.
+      ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
+      ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
+      ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
       :kokonaisluku (.setDataFormat tyyli 1)
       :raha (.setDataFormat tyyli raha-formaatti)
       :prosentti (.setDataFormat tyyli 10)
@@ -295,10 +302,10 @@
       :pvm-aika (.setDataFormat tyyli 22)
       nil)))
 
-(defn- tee-raportin-tiedot-rivi  
+(defn- tee-raportin-tiedot-rivi
   [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli
                  custom-ylin-rivi] :as tiedot}]
-  (try 
+  (try
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)
           ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
@@ -340,12 +347,12 @@
   ([font-koko]
    {:color :black :size font-koko :name "Open Sans"}))
 
-(defn- tasaa-solu [solu tasaa]
+(defn tasaa-solu [solu tasaa]
   (CellUtil/setAlignment solu
-                         (case tasaa
-                           :keskita HorizontalAlignment/CENTER
-                           :oikea HorizontalAlignment/RIGHT
-                           HorizontalAlignment/LEFT)))
+    (case tasaa
+      :keskita HorizontalAlignment/CENTER
+      :oikea HorizontalAlignment/RIGHT
+      HorizontalAlignment/LEFT)))
 
 (defn- luo-rivi-ennen-tyyli
   [workbook lista-tyyli? taustavari tummenna-teksti? lihavoitu?]
@@ -355,8 +362,8 @@
                                         :border-left :thin
                                         :border-right :thin
                                         :font (font-otsikko 18)}
-                                       {:background (or taustavari (if tummenna-teksti? 
-                                                                     :pale_blue 
+                                       {:background (or taustavari (if tummenna-teksti?
+                                                                     :light_cornflower_blue
                                                                      :grey_25_percent))
                                         :font (merge {:color :black :name "Open Sans" :size 12}
                                                 (when lihavoitu? {:bold true}))})))
@@ -381,10 +388,10 @@
               (tasaa-solu solu tasaa)
               (when (> sarakkeita 1)
                 (.addMergedRegion sheet (CellRangeAddress. rivi-nro rivi-nro
-                                                           sarake-nro
-                                                           (+ sarake-nro sarakkeita -1))))
+                                          sarake-nro
+                                          (+ sarake-nro sarakkeita -1))))
               (+ sarake-nro sarakkeita)))
-          0 rivi-maaritys))
+    0 rivi-maaritys))
 
 (def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
@@ -487,7 +494,7 @@
                 (tee-tekstirivi sheet (+ 2 rivi-nro) teksti tyyli)))
             excel-alkutekstit)))
 
-      ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
+      ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja.
       (when samalle-sheetille?
         ;; Jos taulukon nimeä ei ole, käytä taulukon otsikkoa
         (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
@@ -500,38 +507,38 @@
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 
       (dorun
-       (map-indexed
-        (fn [rivi-nro rivi]
-          ;; Lisää väliotsikot mikäli nämä puuttuvat 
-          (let [lisatty-otsikko (when (:otsikko rivi)
-                                  (taulukon-valiotsikko (:otsikko rivi) workbook))
-                rivi-nro (+ nolla 1 rivi-nro)
-                rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
-                [data optiot] (if (map? rivi)
-                                [(:rivi rivi) rivi]
-                                [rivi {}])
-                row (.createRow sheet rivi-nro)]
-            (dorun
-             (map-indexed
-               (fn [sarake-nro sarake]
-                 (let [cell (.createCell row sarake-nro)
-                       lihavoi? (or (:lihavoi? optiot)
-                                    (and viimeinen-rivi-yhteenveto?
-                                      (= rivi viimeinen-rivi)))
-                       korosta? (:korosta? optiot)
-                       korosta-hennosti? (:korosta-hennosti? optiot)
-                       varoitus? (:varoitus? optiot)
-                       huomio? (:huomio? optiot)
-                       korosta-harmaa? (:korosta-harmaa? optiot)
-                       arvo-datassa (nth data sarake-nro nil)
-                       ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
-                       arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
-                                      "X"
-                                      arvo-datassa)
-                       sarake-fmt (:fmt sarake)
-                       solu-fmt (and (vector? arvo-datassa)
-                                  (:fmt (second arvo-datassa)))
-                       formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
+        (map-indexed
+          (fn [rivi-nro rivi]
+            ;; Lisää väliotsikot mikäli nämä puuttuvat
+            (let [lisatty-otsikko (when (:otsikko rivi)
+                                    (taulukon-valiotsikko (:otsikko rivi) workbook))
+                  rivi-nro (+ nolla 1 rivi-nro)
+                  rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
+                  [data optiot] (if (map? rivi)
+                                  [(:rivi rivi) rivi]
+                                  [rivi {}])
+                  row (.createRow sheet rivi-nro)]
+              (dorun
+                (map-indexed
+                  (fn [sarake-nro sarake]
+                    (let [cell (.createCell row sarake-nro)
+                          lihavoi? (or (:lihavoi? optiot)
+                                     (and viimeinen-rivi-yhteenveto?
+                                       (= rivi viimeinen-rivi)))
+                          korosta? (:korosta? optiot)
+                          korosta-hennosti? (:korosta-hennosti? optiot)
+                          varoitus? (:varoitus? optiot)
+                          huomio? (:huomio? optiot)
+                          korosta-harmaa? (:korosta-harmaa? optiot)
+                          arvo-datassa (nth data sarake-nro nil)
+                          ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
+                          arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
+                                         "X"
+                                         arvo-datassa)
+                          sarake-fmt (:fmt sarake)
+                          solu-fmt (and (vector? arvo-datassa)
+                                     (:fmt (second arvo-datassa)))
+                          formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
                           oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
                           [naytettava-arvo solun-tyyli formaatti]

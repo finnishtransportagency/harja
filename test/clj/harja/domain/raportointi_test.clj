@@ -28,7 +28,7 @@
     (is (nil? (:bold (:font korosta-hennosti))))
     (is (= :black (:color (:font korosta-hennosti))))
     (is (= "Open Sans" (:name (:font korosta-hennosti))))
-    (is (= :pale_blue (:background korosta-hennosti)))
+    (is (= :light_cornflower_blue (:background korosta-hennosti)))
     (is (nil? (:border-left korosta-hennosti))))
   (let [korosta-harmaa (r/solun-oletustyyli-excel false false false true false false)]
     (is (nil? (:bold (:font korosta-harmaa))))

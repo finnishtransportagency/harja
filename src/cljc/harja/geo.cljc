@@ -172,6 +172,8 @@
      (cond
        (= (:type geometria) :multiline) (first (:points (first (:lines geometria))))
        (= (:type geometria) :multipoint) (:coordinates (first (:coordinates geometria)))
+       (= (:type geometria) :line) (first (:points geometria))
+       (= (:type geometria) :point) (first (:coordinates geometria))
        :else nil)))
 
 #?(:clj
@@ -179,6 +181,8 @@
      (cond
        (= (:type geometria) :multiline) (last (:points (last (:lines geometria))))
        (= (:type geometria) :multipoint) (:coordinates (last (:coordinates geometria)))
+       (= (:type geometria) :line) (last (:points geometria))
+       (= (:type geometria) :point) (last (:coordinates geometria))
        :else nil)))
 
 #?(:clj

@@ -37,6 +37,14 @@
     [clojure.java.jdbc :as jdbc]
     [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]))
 
+(defn hoitokaudet-vektorimuotoon
+  "Muuntaa hoitokaudet {:alkupvm .. :loppupvm ..} -muodosta vektoreiksi [alkupvm loppupvm],
+   missä loppupvm on hoitokauden viimeinen sekunti (alkuperäinen loppupvm + 24h - 1s)."
+  [hoitokaudet]
+  (mapv (fn [{:keys [alkupvm loppupvm]}]
+          [alkupvm loppupvm])
+        hoitokaudet))
+
 (defn heita-virhe [viesti]
   (throw+ viesti))
 
@@ -83,17 +91,22 @@
   Budjettitavoite-vuodelle parametrin sisältämä tavoitehinta-oikaistu arvo sisältää mahdolliset tavoitehinnan oikaisut,
   joita on tehty 2024 ja sitä aemmin alkaneille urakoille."
   [db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle]
-  (let [;; Haetaan pysyvät muutokset, jotka vaikuttavat tähän hoitovuoteen
+  (let [urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        ;; Haetaan pysyvät muutokset, jotka vaikuttavat tähän hoitovuoteen
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
         aktiiviset-muutokset (:muutos-summa budjettitavoite-vuodelle)
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
         muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
-        ;; Hae kaikki tehtävä ja määrämuutokset
-        urakan-hoitokaudet (mapv (fn [m] (vec (vals m))) (q-urakat/hae-urakan-hoitokaudet db urakka-id))
-        tehtava-ja-maaramuutokset (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakka-id
-                                                                                          :hoitokaudet urakan-hoitokaudet
-                                                                                          :valittu-hoitokausi valittu-hoitokausi})
+        ;; Hae kaikki tehtävä ja määrämuutokset - jos ne on urakalla käytössä
+        ;; Määrämuutosten hakeminen on superhidasta, kun urakalla on paljon toteumia.
+        ;; Joten vältetään sitä, jos mahdollista.
+        tehtava-ja-maaramuutokset (when (:muutosten_hallinta urakan-parametrit)
+                                    (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja
+                                      {:urakka-id urakka-id
+                                       :laskenta-automatiikka? true
+                                       :hoitokaudet (hoitokaudet-vektorimuotoon (q-urakat/hae-urakan-hoitokaudet db urakka-id))
+                                       :valittu-hoitokausi valittu-hoitokausi}))
         rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
         tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
                                        (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
@@ -209,8 +222,9 @@
                            :hoitokauden-alkuvuosi hoitovuosi
                            :alkupvm hoitokauden-alkupvm
                            :loppupvm hoitokauden-loppupvm})
+        urakan-sopimustyyppi (:sopimustyyppi (first (q-urakat/hae-urakan-tiedot db urakkaid)))
         ;; Formatoidaan kustannukset ui:ta varten
-        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset)]
+        kustannukset-jarjestettyna (kustannusten-seuranta/jarjesta-tehtavat kustannukset urakan-sopimustyyppi)]
     kustannukset-jarjestettyna))
 
 (defn hae-valikatselmuksen-tiedot-hoitovuodelle [db kayttaja {:keys [urakkaid hoitovuosi]}]
@@ -260,11 +274,15 @@
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
         muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakkaid hoitovuosi)
-        ;; Hae kaikki tehtävä ja määrämuutokset
-        urakan-hoitokaudet (q-urakat/hae-urakan-hoitokaudet db urakkaid)
-        tehtava-ja-maaramuutokset (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja {:urakka-id urakkaid
-                                                                                          :hoitokaudet urakan-hoitokaudet
-                                                                                          :valittu-hoitokausi valittu-hoitokausi})
+        ;; Hae kaikki tehtävä ja määrämuutokset - jos ne on urakalla käytössä
+        ;; Määrämuutosten hakeminen on superhidasta, kun urakalla on paljon toteumia.
+        ;; Joten vältetään sitä, jos mahdollista.
+        tehtava-ja-maaramuutokset (when (:muutosten_hallinta urakan-parametrit)
+                                    (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja
+                                      {:urakka-id urakkaid
+                                       :laskenta-automatiikka? true
+                                       :hoitokaudet (hoitokaudet-vektorimuotoon (q-urakat/hae-urakan-hoitokaudet db urakkaid))
+                                       :valittu-hoitokausi valittu-hoitokausi}))
         rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
         tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
                                        (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
