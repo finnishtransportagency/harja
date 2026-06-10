@@ -119,6 +119,14 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
         cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type(1234);
+
+        // Käsittely ja laskutus
+        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittely ja laskutus');
+        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittely ja laskutus').parents('.form-group')
+            .first().find('.lomake-arvo').contains('Välikatselmus');
+
+
+
         // Tallenna sanktio
         cy.get('button').contains('Tallenna').click()
         // Tallenna laatupoikkeama
@@ -191,6 +199,9 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
         cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type(1234);
+
+        // Käsitelty - Varmistetaan, että se haetaan sivupaneelista
+        cy.get('.ei-sulje-sivupaneelia').find('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
         // Tallenna sanktio
         cy.get('button').contains('Tallenna').click()
         // Tallenna laatupoikkeama
