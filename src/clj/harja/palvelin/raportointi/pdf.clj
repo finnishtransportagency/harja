@@ -560,7 +560,7 @@
        (map-indexed
          (fn [i d]
            [:fo:table-cell {:padding-right (when-not (= i (dec (count data)))
-                                             "3mm")}
+                                             "6mm")}
             (muodosta-pdf d)])
          data)]]]))
 
