@@ -297,6 +297,7 @@
       :raha (.setDataFormat tyyli raha-formaatti)
       :prosentti (.setDataFormat tyyli 10)
       :numero (.setDataFormat tyyli 2)
+      :numero-opt (.setDataFormat tyyli 2)
       :numero-3desim (.setDataFormat tyyli 3)
       :pvm (.setDataFormat tyyli 14)
       :pvm-aika (.setDataFormat tyyli 22)
@@ -554,6 +555,15 @@
                                          kustomi-formaatti?
                                          (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
 
+                                         (and (= :numero-opt (or solu-fmt sarake-fmt))
+                                           (number? naytettava-arvo)
+                                           (not (zero? (mod (bigdec naytettava-arvo) 1M))))
+                                         (partial tyyli-format-mukaan workbook :numero-opt (:voi-muokata? sarake))
+
+                                         (and (= :numero-opt (or solu-fmt sarake-fmt))
+                                           (number? naytettava-arvo))
+                                         (constantly nil)
+
                                          formaatti
                                          (partial tyyli-format-mukaan workbook formaatti nil)
 
@@ -570,6 +580,10 @@
                                             ;; Muualla Harjassa prosenttilukuformatointi
                                             ;; lisää lähinnä % merkin kokonaisluvun loppuun.
                                             (/ naytettava-arvo 100)
+
+                                            (and (= :numero-opt sarake-fmt)
+                                              (number? naytettava-arvo))
+                                            (.setScale (bigdec naytettava-arvo) 2 java.math.RoundingMode/HALF_UP)
 
                                             ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
                                             (and (= :raha sarake-fmt) (number? naytettava-arvo))

@@ -151,6 +151,7 @@
   (case fmt
     :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+    :numero-opt #(raportti-domain/yrita fmt/desimaaliluku-opt % 0 2 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
     :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)

@@ -229,9 +229,9 @@
      [{:leveys 10 :otsikko "Tehtävä"}
       {:leveys 4 :otsikko "Yksikkö"}
       {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}
-      {:leveys 4 :otsikko "Suunniteltu määrä"}
-      {:leveys 4 :otsikko "Toteutunut määrä"}
-      {:leveys 4 :otsikko "Määrämuutos (+/-)"}
+      {:leveys 4 :otsikko "Suunniteltu määrä" :fmt :numero-opt}
+      {:leveys 4 :otsikko "Toteutunut määrä" :fmt :numero-opt}
+      {:leveys 4 :otsikko "Määrämuutos (+/-)" :fmt :numero-opt}
       {:leveys 5 :otsikko "Kohdistetut kulut (€)" :fmt :raha}
       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
      (into [] (concat maaramuutosrivit (when-not (empty? maaramuutokset) maaramuutokset-yhteensarivi)))]))
