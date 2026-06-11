@@ -50,7 +50,7 @@
   "Muutosten yhteenveto on speksattu HTML raportissa sellaiseksi, ettei sitä voida toteuttaa PDF tai Excel formaatissa.
   Päätellään siis kasittelija parametrista, että millainen osio renderöidään."
   [db urakka-id alkupvm loppupvm urakan-tiedot maaramuutokset
-   hoitokauden-alkuvuosi kasittelija _budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta]
+   hoitokauden-alkuvuosi kasittelija budjettitavoite hoitovuoden-alun-indeksikorjattu-tavoitehinta]
   (let [;; Kirjallisesti sovitut muutokset - hyödynnetään samaa hakua kuin kirjalliset muutokset -osiossa
         kirjallisesti-sovitut-muutokset (hae-kirjallisesti-sovitut-muutokset-raportille
                                           db {:urakka-id urakka-id
@@ -79,9 +79,9 @@
                                                                       :hoitokausinro hoitovuosinro}))
         laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)
         laskutusraja-hoitovuoden-alussa (or (:laskutusraja laskutusraja-rivi) 0)
-        ;; Laskutusrajan automaattiset tarkistukset = kirjallisesti sovitut + toteumiin perustuvat muutokset
-        laskutusrajan-tarkistukset (+ kirjallisesti-sovitut-yht toteumiin-perustuvat-yht)
-        tarkistettu-laskutusraja (+ laskutusraja-hoitovuoden-alussa laskutusrajan-tarkistukset)]
+        ;; Laskutusrajan automaattiset tarkistukset = kirjallisesti sovitut muutokset
+        laskutusrajan-tarkistukset kirjallisesti-sovitut-yht
+        tarkistettu-laskutusraja (:laskutusraja budjettitavoite)]
 
     (if (= kasittelija :excel)
       ;; Excel raportteihin tulee vain tavalliset taulukot
@@ -109,7 +109,9 @@
             [{:leveys 20 :otsikko ""}
              {:leveys 5 :otsikko "€" :fmt :raha}]
             [{:rivi (rivi "Laskutusraja hoitovuoden alussa" laskutusraja-hoitovuoden-alussa)}
-             {:rivi (rivi "Laskutusrajan automaattiset tarkistukset" laskutusrajan-tarkistukset)}
+             (if (= 0 laskutusrajan-tarkistukset)
+               {:rivi (rivi "Ei vaikutusta laskutusrajaan" nil)}
+               {:rivi (rivi "Laskutusrajan automaattiset tarkistukset" laskutusrajan-tarkistukset)})
              {:lihavoi? true
               :korosta-hennosti? true
               :rivi (rivi "Tarkistettu laskutusraja" tarkistettu-laskutusraja)}]]]))
@@ -133,8 +135,9 @@
           [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
            [{:avain "Laskutusraja hoitovuoden alussa"
              :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
-            {:avain "Laskutusrajan automaattiset tarkistukset"
-             :arvo laskutusrajan-tarkistukset :fmt :raha}
+            (if (= 0 laskutusrajan-tarkistukset)
+              {:avain "Ei vaikutusta laskutusrajaan" :arvo nil :fmt :raha}
+              {:avain "Laskutusrajan automaattiset tarkistukset" :arvo laskutusrajan-tarkistukset :fmt :raha})
             {:avain "Tarkistettu laskutusraja"
              :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]])]])))
 
