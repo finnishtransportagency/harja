@@ -219,18 +219,18 @@
       (.setTimeout js/window
         #(if @versio-haettu
            (let [data (koostettu-data app @versio)]
-            (if urakkaid
-              (go
-                (let [params {:body (.stringify js/JSON (clj->js data))
-                              :content-type :json
-                              :accect :json}
-                      ;; Työmaapäiväkirjan päivitys käyttää http/put
-                      vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja?api_version=2")
-                                    params))]
-                  (if (k/virhe? vastaus)
-                    (virhe!)
-                    (tulos!))))
-              (js/console.log "Urakkaa ei valittu! ei lähetetä (käyttöliittymä on vaikea, eli yritä uusiksi)")))
+             (if urakkaid
+               (go
+                 (let [params {:body (.stringify js/JSON (clj->js data))
+                               :content-type :json
+                               :accect :json}
+                       ;; Työmaapäiväkirjan päivitys käyttää http/put
+                       vastaus (<! (http/post (str "api/urakat/" urakkaid "/tyomaapaivakirja?api_version=2")
+                                     params))]
+                   (if (k/virhe? vastaus)
+                     (virhe!)
+                     (tulos!))))
+               (js/console.log "Urakkaa ei valittu! ei lähetetä (käyttöliittymä on vaikea, eli yritä uusiksi)")))
            (js/console.log "Versiota ei ole vielä haettu! ei lähetetä mitään"))
         500)
 
@@ -278,19 +278,17 @@
 
   LisaaOikeudetUrakkaan
   (process-event [{urakka-id :urakka-id} app]
-    (let [payload {:oikeudet (conj [] {:urakka-id urakka-id
-                                       :poistettu false})
-                   :kayttaja-id (:id @istunto/kayttaja)}
-          ;; Käyttäjä tarvitsee myös kirjoitusoikeudet, joten lisätty tällainen koodipalikka
-          _ (tuck-apurit/post! :lisaa-kayttajalle-oikeus
-              {:oikeus "kirjoitus"
-               :kayttajanimi (:kayttajanimi @istunto/kayttaja)}
+    (let [;; Käyttäjä tarvitsee myös kirjoitusoikeudet, joten lisätty tällainen koodipalikka
+          _ (tuck-apurit/post! :lisaa-kayttajalle-kirjoitusoikeus
+              {:kayttaja-id (:id @istunto/kayttaja)}
               {:onnistui ->LisaaKirjoitusOikeusOnnistui
                :epaonnistui ->LisaaKirjoitusOikeusEpaonnistui
                :paasta-virhe-lapi? true})
-          
+
           _ (tuck-apurit/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
-              payload
+              {:oikeudet (conj [] {:urakka-id urakka-id
+                                   :poistettu false})
+               :kayttaja-id (:id @istunto/kayttaja)}
               {:onnistui ->LisaaOikeudetUrakkaanOnnistui
                :epaonnistui ->LisaaOikeudetUrakkaanEpaonnistui
                :paasta-virhe-lapi? true})]
@@ -307,14 +305,14 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.error "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
     app)
-  
+
   LisaaKirjoitusOikeusOnnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaKirjoitusOikeusOnnistui :: vastaus" (pr-str vastaus))
     (viesti/nayta-toast! "LisaaKirjoitusOikeusOnnistui" :onnistui)
     (hae-kayttajan-kaytto-oikeudet)
     app)
-  
+
   LisaaKirjoitusOikeusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaKirjoitusOikeusEpaonnistui :: vastaus" (pr-str vastaus))

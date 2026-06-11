@@ -24,7 +24,7 @@
   (let [korosta-hennosti (r/solun-oletustyyli-excel false false true false false false)]
     (is (nil? (:bold (:font korosta-hennosti))))
     (is (= :black (:color (:font korosta-hennosti))))
-    (is (= :pale_blue (:background korosta-hennosti)))
+    (is (= :light_cornflower_blue (:background korosta-hennosti)))
     (is (nil? (:border-left korosta-hennosti))))
   (let [varoitus (r/solun-oletustyyli-excel false false false false true false)]
     (is (nil? (:bold (:font varoitus))))
