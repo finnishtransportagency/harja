@@ -1,1 +1,1 @@
-UPDATE tehtava SET yksikko = 'tonni' WHERE id = 17367;
+UPDATE tehtava SET suunnitteluyksikko = 'tiem' WHERE id = 17367;
