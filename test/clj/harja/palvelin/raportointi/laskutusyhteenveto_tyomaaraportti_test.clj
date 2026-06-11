@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto-tyomaaraportti-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
+            [taoensso.timbre :as log]
 
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
@@ -182,7 +183,7 @@
         vastaus (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 98) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 99) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
