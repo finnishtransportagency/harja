@@ -710,3 +710,14 @@ WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND m.poistettu IS FALSE 
 ORDER BY m.id DESC;
+
+-- name: hae-laskutusrajan-muutosten-summa-hoitovuodelle
+SELECT COALESCE(SUM(mk.summa), 0) AS muutokset_yhteensa
+FROM mhu_muutos_kustannusvaikutus mk
+         JOIN mhu_muutos m ON m.id = mk.muutos
+WHERE m.urakka = :urakka-id
+  AND mk.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+  AND m.poistettu IS FALSE
+  AND (m.tyyppi = 'muutostyo'::MHU_MUUTOSTYYPPI
+       OR (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND mk.summa > 0))
+  AND (:paivitettava-muutos-id::INTEGER IS NULL OR m.id != :paivitettava-muutos-id::INTEGER);

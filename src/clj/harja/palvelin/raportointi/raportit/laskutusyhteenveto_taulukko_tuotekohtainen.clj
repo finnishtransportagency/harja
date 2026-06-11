@@ -145,7 +145,7 @@
 
 (defn toteutuneet-taulukko
   "Näkyy viimeisenä tuotekohtaisessa laskutusyhteenvedossa"
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali?]}]
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? kalenterivuosi?]}]
   (let [kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?)
                                    (not kyseessa-hoitokausi-vali?))
 
@@ -155,19 +155,23 @@
 
         rivit (tee-taulukko-rivit
                 data
-                {:tyhja-alku? true :kyseessa-kk-vali? kyseessa-kk-vali?}
+                {:tyhja-alku? false :kyseessa-kk-vali? kyseessa-kk-vali?}
                 rivimaaritykset)]
 
     [:taulukko {:piilota-border? true
                 :viimeinen-rivi-yhteenveto? false
+                :gridin-luokka "laskutusraja-grid"
                 :raportin-tunniste :tyomaa-yhteenveto
-                :oikealle-tasattavat-kentat #{1 2 3}}
-     (rivi
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 48 :tyyppi :varillinen-teksti}
-       {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
-       (when kyseessa-kk-vali?
-         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
+                :oikealle-tasattavat-kentat #{1 2}}
+     (if kalenterivuosi?
+       (rivi
+         {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 36 :tyyppi :varillinen-teksti}
+         {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 29 :tyyppi :varillinen-teksti})
+       (rivi
+         {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}
+         {:otsikko laskutettu-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
+         (when kyseessa-kk-vali?
+           {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti})))
      rivit]))
 
 

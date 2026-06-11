@@ -299,7 +299,8 @@
      ;; ----------------- ;;
      ;;   Laskutusraja    ;;
      ;; ----------------- ;;
-     (if (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
+     (if (and (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
+           (and (not koko-vuosi?)(not vuoden-kk?)))
        (taulukot/lapinakyva-taulukko true
          {:data rivitiedot
           :otsikko "Laskutusraja"
@@ -315,4 +316,5 @@
           :laskutettu-teksti laskutettu-teksti
           :laskutetaan-teksti laskutetaan-teksti
           :kyseessa-kk-vali? kyseessa-kk-vali?
-          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?}))]))
+          :kyseessa-hoitokausi-vali? kyseessa-hoitokausi-vali?
+          :kalenterivuosi? (or koko-vuosi? vuoden-kk?)}))]))
