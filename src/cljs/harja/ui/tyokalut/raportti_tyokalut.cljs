@@ -54,6 +54,7 @@
    [:div.width-half
     [:h3.gridin-otsikko otsikko-vasen]
     (let [{otsikko :otsikko
+           gridin-luokka :gridin-luokka
            viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
            rivi-ennen :rivi-ennen
            piilota-border? :piilota-border?
@@ -69,6 +70,7 @@
            ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
       [raportointi/grid
        otsikko
+       gridin-luokka
        viimeinen-rivi-yhteenveto?
        rivi-ennen
        piilota-border?
@@ -88,6 +90,7 @@
      [:div.width-half
       [:h3.gridin-otsikko otsikko-oikea]
       (let [{otsikko :otsikko
+             gridin-luokka :gridin-luokka
              viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
              rivi-ennen :rivi-ennen
              piilota-border? :piilota-border?
@@ -102,7 +105,8 @@
              sivuttain-rullattava? :sivuttain-rullattava?
              ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
         [raportointi/grid
-         otsikko
+         otsikko 
+         gridin-luokka
          viimeinen-rivi-yhteenveto?
          rivi-ennen
          piilota-border?
