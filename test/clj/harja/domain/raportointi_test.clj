@@ -11,8 +11,7 @@
   (is (true? (r/formatoi-solu? 5))))
 
 (deftest solun-oletustyyli-excel
-  (let [vain-lihavointi (r/solun-oletustyyli-excel true false false false false false)
-        _ (println vain-lihavointi)]
+  (let [vain-lihavointi (r/solun-oletustyyli-excel true false false false false false)]
     (is (true? (:bold (:font vain-lihavointi))))
     (is (= "Open Sans" (:name (:font vain-lihavointi))))
     (is (= :black (:color (:font vain-lihavointi))))
