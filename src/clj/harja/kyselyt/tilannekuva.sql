@@ -671,24 +671,31 @@ WHERE st.poistettu IS NULL
 
 -- name: urakoitsijan-urakat
 SELECT
-  u.id, u.hallintayksikko, u.elinvoimakeskus_id, u.tyyppi
+  u.id, u.hallintayksikko, u.elinvoimakeskus_id
 FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE urk.id = :organisaatio;
 
--- name: hallintayksikoiden-urakat
+-- name: hallintayksikoiden-urakat-ilman-valaistus-urakoita
 SELECT
-  u.id, u.hallintayksikko, u.tyyppi
+  u.id, u.hallintayksikko
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-WHERE hal.id IN (:hallintayksikot);
+WHERE hal.id IN (:hallintayksikot)
+  AND u.tyyppi != 'valaistus';
 
 -- name: elinvoimakeskusten-urakat
 SELECT u.id,
-       u.elinvoimakeskus_id AS elinvoimakeskus,
-       u.tyyppi
+       u.elinvoimakeskus_id AS elinvoimakeskus
 FROM urakka u
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
+
+-- name: elinvoimakeskusten-urakat-ilman-valaistus-urakoita  
+SELECT u.id,  
+       u.elinvoimakeskus_id AS elinvoimakeskus  
+FROM urakka u  
+WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset)  
+  AND u.tyyppi != 'valaistus';
 
 -- name: hae-viimeisin-toteuma
 -- Urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
