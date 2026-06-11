@@ -22,7 +22,7 @@
       :laatupoikkeama_paatos_kasittelytapa
       :vakiofraasi
       :maaraystapa
-      :vaikuttaatavoitehintaan)
+      :vaikuttaa_tavoitehintaan)
     (konv/decimal->double :summa :indeksikorjaus :tavoitehinnanalennus)
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)

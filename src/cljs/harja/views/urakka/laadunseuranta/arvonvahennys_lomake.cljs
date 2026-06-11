@@ -119,16 +119,16 @@
        (when (or mhu25? (>= 2026 kuluvan-hoitokauden-alkuvuosi))
          (if lukutila?
            {:otsikko "Vaikuttaa tavoitehintaan"
-            :nimi :vaikuttaatavoitehintaan
+            :nimi :vaikuttaa_tavoitehintaan
             :nayta-rivina? true
             ::lomake/col-luokka "col-xs-12"
             :tyyppi :teksti
             :hae (fn [rivi]
-                   (if (= :true (:vaikuttaatavoitehintaan rivi))
+                   (if (= :true (:vaikuttaa_tavoitehintaan rivi))
                      "Vaikuttaa tavoitehintaan"
                      "Ei vaikuta tavoitehintaan"))}
            {:otsikko ""
-            :nimi :vaikuttaatavoitehintaan
+            :nimi :vaikuttaa_tavoitehintaan
             :tyyppi :radio-group
             :pakollinen? true
             :piilota-label? true
@@ -138,10 +138,10 @@
             :vaihtoehdot [:true :false]
             :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
                                :false "Ei vaikuta tavoitehintaan"}
-            :aseta (fn [rivi arvo] (assoc rivi :vaikuttaatavoitehintaan arvo))}))
+            :aseta (fn [rivi arvo] (assoc rivi :vaikuttaa_tavoitehintaan arvo))}))
 
        ;; Tavoitehinnan alennus
-       (when (= (:vaikuttaatavoitehintaan @muokattu) :true)
+       (when (= (:vaikuttaa_tavoitehintaan @muokattu) :true)
          {:otsikko "Tavoitehinnan alennus"
           :nimi :tavoitehinnanalennus
           :tyyppi :euro
@@ -168,7 +168,7 @@
        ;; MHU25 urakoille näytetään vain, jos tavoitehinta? false
        ;; Muille kuin mhu25 urakoille näytetään aina
        (when (or
-               (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :false))
+               (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :false))
                (not mhu25?))
          {:otsikko "Kulun kohdistus"
           :pakollinen? true
@@ -183,7 +183,7 @@
           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
        ;; Tehtäväryhmä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
-       (when (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :true))
+       (when (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :true))
          {:otsikko "Tehtäväryhmä"
           :nimi :tehtavaryhma
           :tyyppi :valinta
@@ -203,7 +203,7 @@
 
 
        ;; Tehtävä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
-       (when (and mhu25? (= (:vaikuttaatavoitehintaan @muokattu) :true))
+       (when (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :true))
          {:otsikko "Tehtävä"
           :nimi :tehtava
           :tyyppi :valinta

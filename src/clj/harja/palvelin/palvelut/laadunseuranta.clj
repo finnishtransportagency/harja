@@ -215,7 +215,7 @@
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu
-                   maaraystapa vaikuttaatavoitehintaan tavoitehinnanalennus
+                   maaraystapa vaikuttaa_tavoitehintaan tavoitehinnanalennus
                    tehtavaryhma tehtava] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -261,9 +261,9 @@
                 :luoja (:id user)
                 ;; Arvonvähennyksen lisäkentät
                 :maaraystapa (when maaraystapa (name maaraystapa))
-                :vaikuttaatavoitehintaan (muunnos/keyword->bool vaikuttaatavoitehintaan)
+                :vaikuttaa_tavoitehintaan (muunnos/keyword->bool vaikuttaa_tavoitehintaan)
                 ;; Tavoitehinnanalennus voi olla asetettuna, vaikka sitä ei haluta tallentaa
-                :tavoitehinnanalennus (if (= :true vaikuttaatavoitehintaan) tavoitehinnanalennus nil)
+                :tavoitehinnanalennus (if (= :true vaikuttaa_tavoitehintaan) tavoitehinnanalennus nil)
                 :tehtavaryhma (:tehtavaryhma tehtavaryhma)
                 :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)

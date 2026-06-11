@@ -14,7 +14,7 @@
     {:suorasanktio true
      :laji :arvonvahennyssanktio
      :perintapvm default-perintapvm
-     :vaikuttaatavoitehintaan :false
+     :vaikuttaa_tavoitehintaan :false
      :tavoitehinnanalennus nil
      :maaraystapa :valikatselmus
      :tehtavaryhma nil

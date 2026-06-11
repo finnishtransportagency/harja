@@ -520,7 +520,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :indeksikorjaus nil :maaraystapa nil :tavoitehinnanalennus nil :vaikuttaatavoitehintaan :false
+    :suorasanktio false, :laji :C, :indeksikorjaus nil :maaraystapa nil :tavoitehinnanalennus nil :vaikuttaa_tavoitehintaan :false
     :tehtava {:id nil :nimi nil}
     :tehtavaryhma {:id nil :nimi nil}
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
