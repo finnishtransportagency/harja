@@ -82,64 +82,68 @@
         ;; Laskutusrajan automaattiset tarkistukset = kirjallisesti sovitut muutokset
         laskutusrajan-tarkistukset kirjallisesti-sovitut-yht
         tarkistettu-laskutusraja (:laskutusraja budjettitavoite)]
-
-    (if (= kasittelija :excel)
-      ;; Excel raportteihin tulee vain tavalliset taulukot
-      (concat
-        [[:otsikko-heading "Muutosten yhteenveto"]
-         [:taulukko {:otsikko "Muutosten vaikutus tavoitehintaan"
-                     :viimeinen-rivi-yhteenveto? true
-                     :sheet-nimi "Muutosten yhteenveto"
-                     :samalle-sheetille? true}
-          [{:leveys 20 :otsikko ""}
-           {:leveys 5 :otsikko "€" :fmt :raha}]
-          [{:rivi (rivi "Hoitovuoden alun indeksikorjattu tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)}
-           {:rivi (rivi "Kirjallisesti sovitut muutokset" kirjallisesti-sovitut-yht)}
-           {:rivi (rivi "Toteumiin perustuvat muutokset" toteumiin-perustuvat-yht)}
-           {:lihavoi? true
-            :korosta-hennosti? true
-            :rivi (rivi "Yhteensä" yhteensa)}]]]
-
-        ;; Laskutusrajan taulukko näytetään vain, jos laskutusraja on käytössä
-        (when laskutusraja-kaytossa?
-          [[:taulukko {:otsikko "Muutosten vaikutus laskutusrajaan"
+    ;; Jos sekä kirjalliset muutokset, että toteutumiin perustuvat muutokset on nil tai nolla, niin yhteenvetoa ei näytetä
+    (if (and (= 0 kirjallisesti-sovitut-yht) (= 0 toteumiin-perustuvat-yht))
+      [[:tyhja-rivi nil]
+       [:teksti "Ei tavoitehinnan muutoksia."]
+       [:tyhja-rivi nil]]
+      (if (= kasittelija :excel)
+        ;; Excel raportteihin tulee vain tavalliset taulukot
+        (concat
+          [[:otsikko-heading "Muutosten yhteenveto"]
+           [:taulukko {:otsikko "Muutosten vaikutus tavoitehintaan"
                        :viimeinen-rivi-yhteenveto? true
-                       :nimi "Laskutusraja"
+                       :sheet-nimi "Muutosten yhteenveto"
                        :samalle-sheetille? true}
             [{:leveys 20 :otsikko ""}
              {:leveys 5 :otsikko "€" :fmt :raha}]
-            [{:rivi (rivi "Laskutusraja hoitovuoden alussa" laskutusraja-hoitovuoden-alussa)}
-             (if (= 0 laskutusrajan-tarkistukset)
-               {:rivi (rivi "Ei vaikutusta laskutusrajaan" nil)}
-               {:rivi (rivi "Laskutusrajan automaattiset tarkistukset" laskutusrajan-tarkistukset)})
+            [{:rivi (rivi "Hoitovuoden alun indeksikorjattu tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)}
+             {:rivi (rivi "Kirjallisesti sovitut muutokset" kirjallisesti-sovitut-yht)}
+             {:rivi (rivi "Toteumiin perustuvat muutokset" toteumiin-perustuvat-yht)}
              {:lihavoi? true
               :korosta-hennosti? true
-              :rivi (rivi "Tarkistettu laskutusraja" tarkistettu-laskutusraja)}]]]))
+              :rivi (rivi "Yhteensä" yhteensa)}]]]
 
-      ;; HTML raporttiin tulee hieno sininen tausta ja kaksi vierekkäistä laatikkoa
-      [[:tyhja-rivi nil]
-       [:otsikko-heading "Muutosten yhteenveto"]
-       [:display-flex
-        [:sininen-laatikko {:otsikko "Muutosten vaikutus tavoitehintaan"}
-         [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
-           :arvo hoitovuoden-alun-indeksikorjattu-tavoitehinta :fmt :raha}
-          {:avain "Kirjallisesti sovitut muutokset"
-           :arvo kirjallisesti-sovitut-yht :fmt :raha}
-          {:avain "Toteumiin perustuvat muutokset"
-           :arvo toteumiin-perustuvat-yht :fmt :raha}
-          {:avain "Yhteensä"
-           :arvo yhteensa :fmt :raha :lihavoi? true}]]
+          ;; Laskutusrajan taulukko näytetään vain, jos laskutusraja on käytössä
+          (when laskutusraja-kaytossa?
+            [[:taulukko {:otsikko "Muutosten vaikutus laskutusrajaan"
+                         :viimeinen-rivi-yhteenveto? true
+                         :nimi "Laskutusraja"
+                         :samalle-sheetille? true}
+              [{:leveys 20 :otsikko ""}
+               {:leveys 5 :otsikko "€" :fmt :raha}]
+              [{:rivi (rivi "Laskutusraja hoitovuoden alussa" laskutusraja-hoitovuoden-alussa)}
+               (if (= 0 laskutusrajan-tarkistukset)
+                 {:rivi (rivi "Ei vaikutusta laskutusrajaan" nil)}
+                 {:rivi (rivi "Laskutusrajan automaattiset tarkistukset" laskutusrajan-tarkistukset)})
+               {:lihavoi? true
+                :korosta-hennosti? true
+                :rivi (rivi "Tarkistettu laskutusraja" tarkistettu-laskutusraja)}]]]))
 
-        ;; Laskutusrajan laatikko näytetään vain, jos laskutusraja on käytössä
-        (when laskutusraja-kaytossa?
-          [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
-           [{:avain "Laskutusraja hoitovuoden alussa"
-             :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
-            (if (= 0 laskutusrajan-tarkistukset)
-              {:avain "Ei vaikutusta laskutusrajaan" :arvo nil :fmt :raha}
-              {:avain "Laskutusrajan automaattiset tarkistukset" :arvo laskutusrajan-tarkistukset :fmt :raha})
-            {:avain "Tarkistettu laskutusraja"
-             :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]])]])))
+        ;; HTML raporttiin tulee hieno sininen tausta ja kaksi vierekkäistä laatikkoa
+        [[:tyhja-rivi nil]
+         [:otsikko-heading "Muutosten yhteenveto"]
+         [:display-flex
+          [:sininen-laatikko {:otsikko "Muutosten vaikutus tavoitehintaan"}
+           [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
+             :arvo hoitovuoden-alun-indeksikorjattu-tavoitehinta :fmt :raha}
+            {:avain "Kirjallisesti sovitut muutokset"
+             :arvo kirjallisesti-sovitut-yht :fmt :raha}
+            {:avain "Toteumiin perustuvat muutokset"
+             :arvo toteumiin-perustuvat-yht :fmt :raha}
+            {:avain "Yhteensä"
+             :arvo yhteensa :fmt :raha :lihavoi? true}]]
+
+          ;; Laskutusrajan laatikko näytetään vain, jos laskutusraja on käytössä
+          (when laskutusraja-kaytossa?
+            [:sininen-laatikko {:otsikko "Muutosten vaikutus laskutusrajaan"}
+             [{:avain "Laskutusraja hoitovuoden alussa"
+               :arvo laskutusraja-hoitovuoden-alussa :fmt :raha}
+              (if (= 0 laskutusrajan-tarkistukset)
+                {:avain "Ei vaikutusta laskutusrajaan" :arvo nil :fmt :raha}
+                {:avain "Laskutusrajan automaattiset tarkistukset" :arvo laskutusrajan-tarkistukset :fmt :raha})
+              {:avain "Tarkistettu laskutusraja"
+               :arvo tarkistettu-laskutusraja :fmt :raha :lihavoi? true}]])]]))))
 
 (defn muodosta-kirjalliset-muutokset [db urakka-id alkupvm loppupvm hoitovuosinro hoitokauden-alkuvuosi kasittelija]
   (let [muutokset (hae-kirjallisesti-sovitut-muutokset-raportille db {:urakka-id urakka-id
@@ -324,29 +328,36 @@
                                  (or (:muutostyon_syy r) "")
                                  (or (:summa r) 0)))
                          muutostyot)
+        muutostyorivit []
         muutostyot-yhteensa (reduce + 0 (map #(or (:summa %) 0) muutostyot))
         muutostyot-yhteensarivi [{:lihavoi? true
                                   :korosta-hennosti? true
                                   :rivi (rivi "Yhteensä" "" "" "" muutostyot-yhteensa)}]
         otsikko-title [:otsikko-title "Muutostöiden kulukohdistukset"]
         ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    [(when-not (= kasittelija :excel) otsikko-title)
-     (when-not (= kasittelija :excel) ajankohtakuvaus)
-     [:taulukko {:otsikko (when-not (= kasittelija :excel) "Muutostyöt (erillisrahoitetut)")
-                 :viimeinen-rivi-yhteenveto? true
-                 :tyhja (when (empty? muutostyot) "Ei muutostöitä.")
-                 :sheet-nimi "Muutostöiden kulut"
-                 :excel-alkutekstit (when (= kasittelija :excel)
-                                      [otsikko-title
-                                       ajankohtakuvaus
-                                       [:teksti ""]
-                                       [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
-      [{:leveys 3 :otsikko "Lasku pvm"}
-       {:leveys 5 :otsikko "Muutostyö"}
-       {:leveys 5 :otsikko "Toimenpide"}
-       {:leveys 10 :otsikko "Muutoksen syy"}
-       {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-      (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi)))]]))
+    (if (= 0 (count muutostyorivit))
+      [(when-not (= kasittelija :excel) otsikko-title)
+       (when-not (= kasittelija :excel) ajankohtakuvaus)
+       [:tyhja-rivi nil]
+       [:teksti "Ei muutostöiden kulukohdistuksia."]
+       [:tyhja-rivi nil]]
+      [(when-not (= kasittelija :excel) otsikko-title)
+       (when-not (= kasittelija :excel) ajankohtakuvaus)
+       [:taulukko {:otsikko (when-not (= kasittelija :excel) "Muutostyöt (erillisrahoitetut)")
+                   :viimeinen-rivi-yhteenveto? true
+                   :tyhja (when (empty? muutostyot) "Ei muutostöitä.")
+                   :sheet-nimi "Muutostöiden kulut"
+                   :excel-alkutekstit (when (= kasittelija :excel)
+                                        [otsikko-title
+                                         ajankohtakuvaus
+                                         [:teksti ""]
+                                         [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
+        [{:leveys 3 :otsikko "Lasku pvm"}
+         {:leveys 5 :otsikko "Muutostyö"}
+         {:leveys 5 :otsikko "Toimenpide"}
+         {:leveys 10 :otsikko "Muutoksen syy"}
+         {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+        (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi)))]])))
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
@@ -364,13 +375,17 @@
                                 :rivi (rivi "Yhteensä" "" oikaisut-yhteensa)}]
         otsikko-title [:otsikko-title "Tavoitehinnan oikaisut"]
         ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    [[:taulukko {:viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Tavoitehinnan muutokset"
-                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohtakuvaus])}
-      [{:leveys 7 :otsikko "Muutos"}
-       {:leveys 15 :otsikko "Perustelu"}
-       {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-      (into [] (concat oikaisurivit (when-not (empty? oikaisut) oikaisut-yhteensarivi)))]]))
+    (if (= 0 (count oikaisurivit))
+      [[:tyhja-rivi nil]
+       [:teksti "Ei tavoitehinnan muutoksia."]
+       [:tyhja-rivi nil]]
+      [[:taulukko {:viimeinen-rivi-yhteenveto? true
+                                                :sheet-nimi "Tavoitehinnan muutokset"
+                                                :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohtakuvaus])}
+                                     [{:leveys 7 :otsikko "Muutos"}
+                                      {:leveys 15 :otsikko "Perustelu"}
+                                      {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+                                     (into [] (concat oikaisurivit (when-not (empty? oikaisut) oikaisut-yhteensarivi)))]])))
 
 (defn muodosta-lisatoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [lisatyot (hae-lisatoiden-kulukohdistukset db {:urakka-id urakka-id
@@ -388,17 +403,23 @@
                                 :rivi (rivi "Yhteensä" "" "" lisatyot-yhteensa)}]
         otsikko-title [:otsikko-title "Lisätöiden kulukohdistukset"]
         ajankohta [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    [(when-not (= kasittelija :excel) otsikko-title)
-     (when-not (= kasittelija :excel) ajankohta)
-     [:taulukko {:viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi "Lisätyöt"
-                 :tyhja (when (empty? lisatyot) "Ei lisätöitä.")
-                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohta])}
-      [{:leveys 3 :otsikko "Lasku pvm"}
-       {:leveys 5 :otsikko "Toimenpide"}
-       {:leveys 10 :otsikko "Lisätieto"}
-       {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-      (into [] (concat lisatyorivit (when-not (empty? lisatyot) lisatyot-yhteensarivi)))]]))
+    (if (= 0 (count lisatyorivit))
+      [(when-not (= kasittelija :excel) otsikko-title)
+       (when-not (= kasittelija :excel) ajankohta)
+       [:tyhja-rivi nil]
+       [:teksti "Ei lisätöiden kulukohdistuksia."]
+       [:tyhja-rivi nil]]
+      [(when-not (= kasittelija :excel) otsikko-title)
+       (when-not (= kasittelija :excel) ajankohta)
+       [:taulukko {:viimeinen-rivi-yhteenveto? true
+                   :sheet-nimi "Lisätyöt"
+                   :tyhja (when (empty? lisatyot) "Ei lisätöitä.")
+                   :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohta])}
+        [{:leveys 3 :otsikko "Lasku pvm"}
+         {:leveys 5 :otsikko "Toimenpide"}
+         {:leveys 10 :otsikko "Lisätieto"}
+         {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+        (into [] (concat lisatyorivit (when-not (empty? lisatyot) lisatyot-yhteensarivi)))]])))
 
 (defn suorita [db _user {:keys [urakka-id alkupvm loppupvm kasittelija] :as parametrit}]
   (log/info "Suoritetaan muutos- ja lisätyöraportti parametreilla: " (pr-str parametrit))
