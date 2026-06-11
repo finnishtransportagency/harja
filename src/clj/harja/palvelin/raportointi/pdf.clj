@@ -49,12 +49,22 @@
     (str/replace val #" " "\u00A0")
     val))
 
+(defn- formatoi-numero
+  [arvo min-desimaalit max-desimaalit]
+  (if (and (number? arvo) (neg? arvo))
+    (str "-"
+      (lisaa-non-breaking-spacet
+        (fmt/desimaaliluku-opt (* -1 arvo) min-desimaalit max-desimaalit true)))
+    (lisaa-non-breaking-spacet
+      (fmt/desimaaliluku-opt arvo min-desimaalit max-desimaalit true))))
+
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
     ;; Jos halutaan tukea erityyppisiä sarakkeita,
     ;; pitää tänne lisätä formatter.
     :kokonaisluku #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/kokonaisluku-opt) %)
-    :numero #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/desimaaliluku-opt) % 1 true)
+    :numero #(raportti-domain/yrita formatoi-numero % 1 1)
+    :numero-opt #(raportti-domain/yrita formatoi-numero % 0 2)
     :numero-3desim #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/pyorista-ehka-kolmeen) %)
     :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
