@@ -1,7 +1,6 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto-tyomaaraportti-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [taoensso.timbre :as log]
 
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
