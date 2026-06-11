@@ -78,6 +78,13 @@
         (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
                                      urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
 
+(defn- alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan [rivi]
+  (let [vaikuttaa-tavoitehintaan (:vaikuttaa_tavoitehintaan rivi)]
+    (-> rivi
+        (dissoc :vaikuttaa_tavoitehintaan)
+        konv/alaviiva->rakenne
+        (assoc :vaikuttaa_tavoitehintaan vaikuttaa-tavoitehintaan))))
+
 (defn- hae-bonuksen-liitteet
   "Hakee bonuksen liitteet"
   [db user urakka-id bonus-id]
@@ -120,7 +127,7 @@
                      (laatupoikkeamat-q/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
         :sanktiot (into []
                     (comp (map #(konv/array->set % :tyyppi_laji keyword))
-                      (map konv/alaviiva->rakenne)
+                      (map alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan)
                       (map #(konv/string->keyword % :laji :vakiofraasi))
                       (map #(assoc %
                               :sakko? (sanktiot-domain/muu-kuin-muistutus? %)
@@ -155,7 +162,7 @@
                    urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
-                               (map konv/alaviiva->rakenne
+                               (map alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan
                                  (concat
                                    urakan-sanktiot
                                    bonukset)))]

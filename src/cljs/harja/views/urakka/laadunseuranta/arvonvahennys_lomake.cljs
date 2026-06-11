@@ -332,6 +332,7 @@
          {:otsikko "Käsittelytapa" :nimi :kasittelytapa :tyyppi :valinta
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
+          :muokattava? (constantly false) ;; Käsittelytapa on MHU25 urakoilla aina välikatselmus, eikä sitä voi muuttaa
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)
           :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
           :valinnat [:valikatselmus]

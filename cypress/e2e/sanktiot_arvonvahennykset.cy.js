@@ -222,7 +222,6 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
         // Määräystapa ja käsittelytapa
         valitseRadio('Työmaakokous');
-        valitseAlasvetoarvo('Käsittelytapa', 'Välikatselmus');
 
         tallennaLomake();
 
@@ -266,7 +265,6 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         valitsePvm('Määrätty', maarattyPvm);
 
         valitseRadio('Työmaakokous');
-        valitseAlasvetoarvo('Käsittelytapa', 'Välikatselmus');
 
         tallennaLomake();
 
