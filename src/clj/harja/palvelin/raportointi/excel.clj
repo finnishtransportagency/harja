@@ -428,7 +428,7 @@
     :teksti                (excel/create-cell-style! workbook {:font (font-leipateksti 12)})
     (excel/create-cell-style! workbook {:font (font-leipateksti 12)})))
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko excel-alkutekstit raportin-tiedot
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko sheet-otsikko excel-alkutekstit raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
                                                 rivi-ennen rivi-jalkeen] :as optiot}
@@ -501,9 +501,13 @@
         (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
           (tee-taulukon-nimiotsikko sheet nolla rivi-otsikko raportin-tiedot-tyyli)))
 
-      ;;Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu
-      (when otsikko
+      ;; Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu ja taulukko on omalla sheetillään.
+      (when (and otsikko (not samalle-sheetille?))
         (tee-sheet-otsikkoteksti sheet 1 otsikko raportin-tiedot-tyyli))
+
+      ;; Poikkeustapa lisätä sheetin otsikko. Käytetään, kun samalla sheetillä on useita taulukoita ja ei voida lisätä sheetin otsikkoa taulukon otsikosta
+      (when sheet-otsikko
+        (tee-sheet-otsikkoteksti sheet 1 sheet-otsikko raportin-tiedot-tyyli))
 
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 

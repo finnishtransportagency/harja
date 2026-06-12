@@ -440,30 +440,6 @@
   (apply yleiset/taulukkotietonakyma {}
     (mapcat identity otsikot-ja-arvot)))
 
-(defn- muodosta-raportin-otsikko [raportin-tunnistetiedot]
-  ;; Raporteille mahdollista nyt antaa isompi otsikko
-  [:div
-   (when (:nimi raportin-tunnistetiedot)
-     (cond
-       (and
-         (= (:otsikon-koko raportin-tunnistetiedot) :iso)
-         (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
-       [:h1 (:nimi raportin-tunnistetiedot)]
-
-       (= (:piilota-otsikko? raportin-tunnistetiedot) true)
-       [:span]
-
-       (= (:otsikon-koko raportin-tunnistetiedot) :keskikoko)
-       [:h1 {:style {:font-size "20px"}} (:nimi raportin-tunnistetiedot)]
-
-       :else
-       [:h3 (:nimi raportin-tunnistetiedot)]))
-
-   (when (and (:urakan-nimi raportin-tunnistetiedot) (:aikajakso raportin-tunnistetiedot))
-     [:p {:style {:line-height "0.45rem" :font-size "0.85rem" :color " #5C5C5C"}}
-      (str (:urakan-nimi raportin-tunnistetiedot) " | Aikaväli: " (:aikajakso raportin-tunnistetiedot) " | Ajettu: "
-        (pvm/pvm-opt (pvm/nyt)) " " (pvm/aika (pvm/nyt)))])])
-
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}

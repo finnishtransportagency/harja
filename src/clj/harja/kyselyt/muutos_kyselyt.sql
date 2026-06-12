@@ -538,7 +538,7 @@ maaramuutokset AS (
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
         tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
-        0.7 AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun 
+        :talvisuolakerroin AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun
       FROM tehtava tk
           JOIN tehtavaryhma tr_alataso
             ON tr_alataso.id = tk.tehtavaryhma

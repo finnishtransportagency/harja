@@ -4,6 +4,7 @@
             [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
@@ -43,7 +44,7 @@
                                       (> (or maara 0) 0)
                                       (> (or suunniteltu_maara 0) (or maara 0)))]
     (if kayta-talvisuola-kerrointa?
-      (* tav-muutos (or talvisuola_kerroin 0.7)) ;; Kovakoodattu luku. Mutta niin se on muutostenkin puolella. Olisi ehkä hyvä yhtenäistää.
+      (* tav-muutos (or talvisuola_kerroin muutos-domain/+talvisuolakerroin+))
       tav-muutos)))
 
 (defn muodosta-muutosten-yhteenveto
@@ -92,6 +93,7 @@
         (concat
           [[:otsikko-heading "Muutosten yhteenveto"]
            [:taulukko {:otsikko "Muutosten vaikutus tavoitehintaan"
+                       :sheet-otsikko "Muutosten yhteenveto"
                        :viimeinen-rivi-yhteenveto? true
                        :sheet-nimi "Muutosten yhteenveto"
                        :samalle-sheetille? true}
@@ -108,7 +110,6 @@
           (when laskutusraja-kaytossa?
             [[:taulukko {:otsikko "Muutosten vaikutus laskutusrajaan"
                          :viimeinen-rivi-yhteenveto? true
-                         :nimi "Laskutusraja"
                          :samalle-sheetille? true}
               [{:leveys 20 :otsikko ""}
                {:leveys 5 :otsikko "€" :fmt :raha}]
@@ -328,7 +329,6 @@
                                  (or (:muutostyon_syy r) "")
                                  (or (:summa r) 0)))
                          muutostyot)
-        muutostyorivit []
         muutostyot-yhteensa (reduce + 0 (map #(or (:summa %) 0) muutostyot))
         muutostyot-yhteensarivi [{:lihavoi? true
                                   :korosta-hennosti? true
