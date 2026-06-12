@@ -13,5 +13,4 @@
   hae-paikkaukset-nykytilanteeseen hae-paikkaukset-historiakuvaan hae-paikkauskohteet-tilannekuvaan
   hae-paallystysten-viimeisin-muokkaus hae-laatupoikkeamat hae-turvallisuuspoikkeamat hae-toimenpidekoodit
   hae-toteumat hae-tarkastukset hae-tyokonereitit-kartalle hae-paallystysten-reitit hae-tietyomaat
-  hae-viimeisin-toteuma hae-toteumien-selitteet elinvoimakeskusten-urakat hae-toteumien-asiat
-  elinvoimakeskusten-urakat-ilman-valaistus-urakoita)
+  hae-viimeisin-toteuma hae-toteumien-selitteet elinvoimakeskusten-urakat hae-toteumien-asiat)

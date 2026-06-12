@@ -686,16 +686,10 @@ WHERE hal.id IN (:hallintayksikot)
 
 -- name: elinvoimakeskusten-urakat
 SELECT u.id,
-       u.elinvoimakeskus_id AS elinvoimakeskus
+       u.elinvoimakeskus_id AS elinvoimakeskus,
+       u.tyyppi
 FROM urakka u
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
-
--- name: elinvoimakeskusten-urakat-ilman-valaistus-urakoita  
-SELECT u.id,  
-       u.elinvoimakeskus_id AS elinvoimakeskus  
-FROM urakka u  
-WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset)  
-  AND u.tyyppi != 'valaistus';
 
 -- name: hae-viimeisin-toteuma
 -- Urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn

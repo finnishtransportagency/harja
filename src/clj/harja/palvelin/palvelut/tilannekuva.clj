@@ -593,7 +593,7 @@
                  nil (:urakoitsija tiedot) nil
                  nil (:alku tiedot) (:loppu tiedot))
         saman-evkn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                            (->> (q/elinvoimakeskusten-urakat-ilman-valaistus-urakoita
+                            (->> (q/elinvoimakeskusten-urakat
                                    db {:elinvoimakeskukset
                                        (set
                                          (map
@@ -628,7 +628,8 @@
                                                         (:id urakka)
                                                         user)
                                                       (when-let [ely-urakat (get saman-evkn-urakat (get-in alue [:elinvoimakeskus :id]))]
-                                                        ((set (map :id ely-urakat)) (:id urakka))))))
+                                                        ;; Poistetaan valaistus-urakat
+                                                        ((set (map :id (remove #(= (:tyyppi %) "valaistus") ely-urakat))) (:id urakka))))))
                                                 urakat)))))
                                       (map
                                         (fn [alue]
