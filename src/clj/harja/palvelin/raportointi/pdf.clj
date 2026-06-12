@@ -411,8 +411,8 @@
      ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
      [:fo:table (when skaalaa-teksti?
                   {:font-size (skaalattu-fontin-koko sarakkeet)})
-      (for [{:keys [leveys]} sarakkeet]
-        [:fo:table-column {:column-width leveys}])
+      (for [{:keys [leveys leveys-pdf]} sarakkeet]
+        [:fo:table-column {:column-width (or leveys-pdf leveys)}])
       (taulukko-header optiot sarakkeet)
       (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
