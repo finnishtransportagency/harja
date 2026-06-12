@@ -41,7 +41,11 @@
   [:fo:block {:margin-top "10px"}
    (pdf-raportointi/muodosta-pdf
      [:display-flex
-      [:sininen-laatikko {:otsikko (if laskutusraja-kaytossa?
+      [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa?
+                                         laskutusraja-ylittynyt?) ;; "Toteutuneet kustannukset yhteensä" näytetään silloin,
+                                         ;; kun on v. -25 tai myöhemmin alkanut mhu-urakka, jolla laskutusraja on ylittynyt.
+                                         ;; Muuten näytetään "Laskutettavaa yhteensä" eli kun uusilla urakoilla ei ole laskutusraja ylittynyt
+                                         ;; tai on kyseessä vanha urakka.
                                      "Toteutuneet kustannukset yhteensä"
                                      "Laskutettavaa yhteensä")
                           :layout :sarakkeet}
