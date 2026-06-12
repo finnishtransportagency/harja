@@ -1,6 +1,7 @@
 (ns harja.views.urakka.suunnittelu.kalustoresurssit
   "Suunnittelun Kalustoresurssit-alasivu MHU26-urakoille."
   (:require [tuck.core :as tuck]
+            [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader-pieni]]
@@ -28,19 +29,33 @@
      (if (nil? arvo) "–" arvo)]))
 
 (defn- kalustoresurssi-taulukko [e! muokkaustila? maarat]
-  [:table.kalustoresurssit-taulukko {:data-cy "kalustoresurssit-taulukko"}
-   [:caption "Kaluston määrä hoitoluokkaryhmittäin"]
-   [:thead
-    [:tr
-     [:th {:scope "col" :id "kalustoresurssi-otsikko-ryhma"} "Hoitoluokkaryhmä"]
-     [:th {:scope "col" :id "kalustoresurssi-otsikko-maara"} "Kaluston määrä"]]]
-   [:tbody
-    (for [{:keys [avain nimi] :as ryhma} kalustoresurssit/hoitoluokkaryhmat]
-      ^{:key avain}
-      [:tr
-       [:th {:scope "row" :id (str "kalustoresurssi-rivi-" avain)} nimi]
-       [:td {:headers (str "kalustoresurssi-otsikko-maara kalustoresurssi-rivi-" avain)}
-        [maara-solu e! muokkaustila? ryhma (get maarat avain)]]])]])
+  (let [rivit (mapv (fn [{:keys [avain nimi]}]
+                      {:avain avain
+                       :nimi nimi
+                       :maara (get maarat avain)})
+                kalustoresurssit/hoitoluokkaryhmat)]
+    [grid/grid
+     {:otsikko ""
+      :tunniste :avain
+      :data-cy "kalustoresurssit-taulukko"
+      :piilota-toiminnot? true
+      :tyhja "Ei hoitoluokkaryhmiä."
+      :rivi-jalkeen-fn (fn [rivit]
+                         (let [yhteensa (reduce + 0 (keep :maara rivit))]
+                           [{:teksti "Yhteensä" :luokka "yhteensa"}
+                            {:teksti (str yhteensa) :luokka "yhteensa" :tasaa :oikea}]))}
+     [{:otsikko "Hoitoluokka"
+       :nimi :nimi
+       :tyyppi :string
+       :leveys 60}
+      {:otsikko "Kaluston määrä (kpl)"
+       :nimi :maara
+       :tyyppi :komponentti
+       :tasaa :oikea
+       :leveys 40
+       :komponentti (fn [rivi _]
+                      [maara-solu e! muokkaustila? rivi (:maara rivi)])}]
+     rivit]))
 
 (defn- painikkeet [e! muokkaustila? tallennus-kaynnissa?]
   [:div.painikkeet {:style {:margin-top "1rem"}}
