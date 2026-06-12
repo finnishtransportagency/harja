@@ -500,7 +500,7 @@
                (map
                  (fn [rivi]
                    [:fo:table-cell {:padding "0.5mm"}
-                    [:fo:block {:font-size "7pt"} (:avain rivi)]
+                    [:fo:block {:font-size "9pt" :padding "0.5mm"} (:avain rivi)]
 
                     [:fo:block {:font-size "12pt"
                                 :font-weight "bold"}
