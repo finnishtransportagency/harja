@@ -3,19 +3,18 @@
   Sen avulla voidaan vaikuttaa sovelluksen tilaan muun muassa
   seuraavia parametrejä käyttäen: väylämuoto, hallintayksikkö,
   urakka, urakan tyyppi, urakoitsija."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom]]
 
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
-            [harja.ui.tom :refer [tom-select]]
-            [harja.kokoelmat :refer [distinct-by]]
-
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.domain.roolit :as roolit]
             [harja.asiakas.tapahtumat :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.hallintayksikot :as hal]
+            [harja.kokoelmat :refer [distinct-by]]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.tiedot.urakoitsijat :as urakoitsijat]))
 
@@ -35,27 +34,15 @@
                     (nav/valitse-hallintayksikko-varmistuksella! nil))}
        "/ Koko maa"]]
 
-     [tom-select
-      {:id "hallintayksikko-select"
-       :class "form-select"
-       :value (or (some-> valittu :id str) "")
-       :placeholder "Koko maa"
-       :aria-label "Elinvoimakeskus"
-       :on-change (fn [e]
-                    (let [id (.. e -target -value)
-                          yksikko (some #(when (= (str (:id %)) id) %) vaihtoehdot)]
-                      (nav/valitse-hallintayksikko-varmistuksella! yksikko)))
-       :ts/options #js {:dropdownParent "body"
-                        :allowEmptyOption true
-                        :controlInput nil
-                        :searchField #js []
-                        :maxItems 1}}
-      [:option {:value ""} "Koko maa"]
-
-      (for [yksikko vaihtoehdot]
-        ^{:key (:id yksikko)}
-        [:option {:value (str (:id yksikko))}
-         (hal/evknumero-ja-nimi yksikko)])]]))
+     [yleiset/livi-pudotusvalikko
+      {:valitse-fn (fn [e]
+                     (let [id (str (:id e))
+                           valinta (some #(when (= (str (:id %)) id) %) vaihtoehdot)]
+                       (nav/valitse-hallintayksikko-varmistuksella! valinta)))
+       :valinta valittu
+       :class "livi-alasveto-250"
+       :format-fn #(if % (:nimi %) "- valitse -")}
+      vaihtoehdot]]))
 
 
 (defn urakka [_valinta-auki]
@@ -67,32 +54,21 @@
           hae-valinta (fn [arvo]
                         (if (= arvo "")
                           nil
-                          (some #(when (= (str (:id %)) arvo) %) vaihtoehdot)))]
+                          (some #(when (= (str (:id %)) (str arvo)) %) vaihtoehdot)))]
 
       ;; ===============================
       ;; Pidennä hieman jos urakka valittuna 
       [:div.murupolku-select {:style (when (some-> valittu :id str) {:min-width "300px"})}
        [:label.form-label {:for "alasveto-urakka"} "Urakka"]
-       [tom-select
-        {:id "alasveto-urakka"
-         :class "form-select w-100 select--nowrap"
-         :value (or (some-> valittu :id str) "")
-         :placeholder "- Urakka -"
-         :aria-label "Urakka"
-         :on-change (fn [e]
-                      (let [arvo (.. e -target -value)]
-                        (nav/valitse-urakka-varmistuksella! (hae-valinta arvo))))
-         :ts/options #js {:dropdownParent "body"
-                          :allowEmptyOption true
-                          :controlInput nil
-                          :searchField #js []
-                          :maxItems 1
-                          :placeholder "- Urakka -"}}
-        [:option {:value ""} "- Urakka -"]
-        (for [urakka vaihtoehdot]
-          ^{:key (:id urakka)}
-          [:option {:value (str (:id urakka))}
-           (:nimi urakka)])]])))
+
+       [yleiset/livi-pudotusvalikko
+        {:valitse-fn (fn [e]
+                       (println "\n id:: " (:id e))
+                       (nav/valitse-urakka-varmistuksella! (hae-valinta (:id e))))
+         :valinta valittu
+         :class "livi-alasveto-250"
+         :format-fn #(if % (:nimi %) "- valitse -")}
+        vaihtoehdot]])))
 
 
 (defn urakoitsija []
@@ -109,69 +85,39 @@
                            @urakoitsijat/urakoitsijat-hoito)
                       (remove nil?)
                       (distinct-by :id)
-                      vec)
-        hae-valinta (fn [arvo]
-                      (if (= arvo "")
-                        nil
-                        (some #(when (= (str (:id %)) arvo) %) vaihtoehdot)))]
+                      vec)]
     [:div.murupolku-select
      [:label.form-label {:for "alasveto-urakoitsija"} "Urakoitsija"]
 
-     [tom-select
-      {:id "alasveto-urakoitsija"
-       :class "form-select w-100"
-       :value (or (some-> valittu :id str) "")
+     [yleiset/livi-pudotusvalikko
+      {:valitse-fn (fn [e]
+                     (let [id (str (:id e))
+                           valinta (some #(when (= (str (:id %)) id) %) vaihtoehdot)]
+                       (nav/valitse-urakoitsija-varmistuksella! valinta)))
        :disabled disabled?
-       :data-cy "murupolku-urakoitsija"
-       :aria-label "Urakoitsija"
-       :on-change (fn [e]
-                    (let [arvo (.. e -target -value)]
-                      (nav/valitse-urakoitsija-varmistuksella! (hae-valinta arvo))))
-       :ts/options #js {:dropdownParent "body"
-                        :allowEmptyOption true
-                        :controlInput nil
-                        :searchField #js []
-                        :maxItems 1}}
-      [:option {:value ""} "Kaikki"]
-      (for [urakoitsija vaihtoehdot]
-        ^{:key (:id urakoitsija)}
-        [:option {:value (str (:id urakoitsija))}
-         (:nimi urakoitsija)])]]))
+       :valinta valittu
+       :class "livi-alasveto-250"
+       :format-fn #(if % (:nimi %) "- valitse -")}
+      vaihtoehdot]]))
 
 
 (defn urakkatyyppi []
   (let [valittu @nav/urakkatyyppi
         disabled? (boolean @nav/valittu-urakka)
-        vaihtoehdot nav/+urakkatyypit-ja-kaikki+
-        ->arvo (fn [x]
-                 (cond
-                   (nil? x) ""
-                   (:id x) (str (:id x))
-                   (:nimi x) (:nimi x)
-                   :else (str x)))
-        hae-valinta (fn [arvo]
-                      (some #(when (= (->arvo %) arvo) %) vaihtoehdot))]
+        vaihtoehdot nav/+urakkatyypit-ja-kaikki+]
     [:div.murupolku-select
      [:label.form-label {:for "alasveto-urakkatyyppi"} "Urakkatyyppi"]
-     [tom-select
-      {:id "alasveto-urakkatyyppi"
-       :class (str "form-select" (when disabled? " disabled"))
-       :value (->arvo valittu)
+
+     [yleiset/livi-pudotusvalikko
+      {:valitse-fn (fn [e]
+                     (let [tyyppi (str (:arvo e))
+                           valinta (some #(when (= (str (:arvo %)) tyyppi) %) vaihtoehdot)]
+                       (nav/vaihda-urakkatyyppi! valinta)))
        :disabled disabled?
-       :data-cy "murupolku-urakkatyyppi"
-       :aria-label "Urakkatyyppi"
-       :on-change (fn [e]
-                    (let [arvo (.. e -target -value)]
-                      (nav/vaihda-urakkatyyppi! (hae-valinta arvo))))
-       :ts/options #js {:dropdownParent "body"
-                        :allowEmptyOption true
-                        :controlInput nil
-                        :searchField #js []
-                        :maxItems 1}}
-      (for [tyyppi vaihtoehdot]
-        ^{:key (->arvo tyyppi)}
-        [:option {:value (->arvo tyyppi)}
-         (if tyyppi (:nimi tyyppi) "Kaikki")])]]))
+       :valinta valittu
+       :class "livi-alasveto-250"
+       :format-fn #(if % (:nimi %) "- valitse -")}
+      vaihtoehdot]]))
 
 
 (defn murupolku []

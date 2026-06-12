@@ -152,7 +152,7 @@
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
                      (istunto/ominaisuus-kaytossa? :mhu-muutokset)
                      (= tyyppi :teiden-hoito)
-                     ;; Älä näytä ollenkaan alle 25 urakoille toistaiseksi 
+                     ;; Älä näytä ollenkaan alle 25 urakoille toistaiseksi
                      (or
                        ;; Näytä kuitenkin kehitysympäristössä
                        (k/kehitysymparistossa?)

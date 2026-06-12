@@ -25,7 +25,7 @@ trap clean EXIT INT TERM
 lein deps
 [ -d node_modules ] || npm ci
 
-echo "Kopioidaan tabler CSS & fontit..."
+echo "Kopioidaan Bootstrap CSS & fontit..."
 mkdir -p resources/public/css
 cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
 cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/
@@ -35,13 +35,10 @@ cp node_modules/@tabler/core/dist/css/tabler-vendors.min.css resources/public/cs
 # Nykyaikaisempiin front featureihin 
 mkdir -p dev-resources/js/out
 cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js dev-resources/js/out/
-cp node_modules/tom-select/dist/js/tom-select.complete.min.js dev-resources/js/out/
-cp node_modules/tom-select/dist/css/tom-select.bootstrap5.css resources/public/css/
 
 # Kopioidaan tässä myös tuotoantobuildille, jos ajetaan uberjarria lokaalisti
 mkdir -p resources/public/js/out
 cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js resources/public/js/out/
-cp node_modules/tom-select/dist/js/tom-select.complete.min.js resources/public/js/out/
 
 
 # Päätä käytetäänkö dev-ympäristöprofiilia (lataa asetukset.edn)

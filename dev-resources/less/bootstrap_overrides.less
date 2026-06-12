@@ -2,7 +2,6 @@
 @import "vayla/colors";
 @import "bootstrap/mixins/vendor-prefixes";
 
-
 @body-bg: @harjan-taustavari;
 
 // Leveä Harja on parempi
@@ -11,8 +10,46 @@
   width: 100%;
 }
 
+@media (min-width: 1400px) {
+  .container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
+    max-width: 2560px !important;
+  }
+}
+
+.grid {
+  display: table !important;
+}
+
+:root {
+  --tblr-border-radius: 0 !important;
+  --tblr-border-radius-sm: 0 !important;
+  --tblr-border-radius-lg: 0 !important;
+}
+
 .row-sisalto {
   padding-top: @valistys-4;
+}
+
+.dropdown-menu {
+  --tblr-bg-surface: @white-default;
+}
+
+.card {
+  --tblr-bg-surface: @harjan-taustavari;
+}
+
+.row .filtterit-container>* {
+  width: fit-content;
+}
+
+.row .nappi-ensisijainen,
+.row .nappi-toissijainen {
+  width: fit-content;
+}
+
+.valilehti .row  {
+  margin-left: unset;
+  padding-top: @valistys-8;
 }
 
 // kapeilla laitteilla vähennetään marginaalia

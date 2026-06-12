@@ -60,13 +60,11 @@
       [:link {:rel "stylesheet" :href "css/tabler.min.css"}]
       [:link {:rel "stylesheet" :href "css/tabler-vendors.min.css"}]
       [:link {:rel "stylesheet" :href "css/tabler-icons.min.css"}]
-      [:link {:rel "stylesheet" :href "css/tom-select.bootstrap5.css"}]
 
       [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]]
      [:body {:data-anti-csrf-token random-avain}
       ;; Tarvitaan nykyaikaisiin frontti featureihin 
       [:script {:src "js/out/bootstrap.bundle.min.js"}]
-      [:script {:src "js/out/tom-select.complete.min.js"}]
       [:div#app
        [:div {:style "display: flex;"}
         [:div {:style "flex: 1; display: flex; justify-content: center; align-items: center; height: 100vh;"}

@@ -100,8 +100,8 @@ table.table-striped {
     }
 }
 .livi-alasveto (@leveys: 200px, @min-leveys: 160px, @i-korkeus: @input-korkeus) {
+    z-index: 1020;
     min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
-    max-width: 100%;
     width: @leveys;
 
     .disabled {
@@ -205,7 +205,7 @@ table.table-striped {
     & > span > a {
         display: flex;
         align-items: center;
-        border-color: @harmaa7;
+        background-color: @white-default;
         color: @harmaa1;
         text-decoration: none;
         width: 100%;
