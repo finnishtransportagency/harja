@@ -415,6 +415,9 @@
                (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
           data)))))
 
+(defmethod muodosta-html :laskutusyhteenveto-otsikko [[_ teksti]]
+  [:h2 {:style {:font-size "16px"}} teksti])
+
 (defmethod muodosta-html :display-flex [[_ & data]]
   (into
     [:div.display-flex.display-container]

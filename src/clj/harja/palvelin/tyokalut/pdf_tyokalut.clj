@@ -67,6 +67,11 @@
              :avain laskutetaan-str
              :arvo laskutettavaa_kaikki_val_aika})]])])])
 
+(defmethod pdf-raportointi/muodosta-pdf :laskutusyhteenveto-otsikko [[_ teksti]]
+  [:fo:block {:padding-top "5mm"
+              :font-size "10pt"
+              :font-weight 600} teksti])
+
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))
 

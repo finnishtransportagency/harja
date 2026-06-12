@@ -102,8 +102,8 @@
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Tavoitehintaan vaikuttavat kustannukset"])
+       [:laskutusyhteenveto-otsikko (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:laskutusyhteenveto-otsikko "Tavoitehintaan vaikuttavat kustannukset"])
 
      ;; ------------------------------- ;;
      ;;    Hankinnat ja hoidonjohto     ;;
@@ -185,8 +185,8 @@
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
+       [:laskutusyhteenveto-otsikko (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:laskutusyhteenveto-otsikko "Tavoitehinnan ulkopuoliset kustannukset"])
 
      ;; ------------------------ ;;
      ;;    Lisätyöt & muut       ;;

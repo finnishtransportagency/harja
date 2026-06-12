@@ -610,7 +610,7 @@
      [:fo:table-body
       [:fo:table-row
        [:fo:table-cell [:fo:block {:font-weight "bold"} raportin-nimi]]
-       [:fo:table-cell [:fo:block "Ajettu " nyt]]
+       [:fo:table-cell [:fo:block {:margin-left "0.5mm"} "Ajettu " nyt]]
        [:fo:table-cell {:text-align "end"}
         [:fo:block
          "Sivu " [:fo:page-number]
