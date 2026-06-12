@@ -14,7 +14,11 @@
 
 (declare luo-tarkastus<! luodun-tarkastuksen-id paivita-tarkastus!
   luo-talvihoitomittaus<! paivita-talvihoitomittaus! poista-talvihoitomittaus!
-  luo-soratiemittaus<! paivita-soratiemittaus! poista-soratiemittaus!)
+  luo-soratiemittaus<! paivita-soratiemittaus! poista-soratiemittaus! hae-urakan-tarkastusten-asiat-kartalle
+  tarkastuksen-urakka hae-urakan-tarkastukset hae-tarkastus hae-tarkastuksen-liitteet luo-liite<!
+  nayta-tarkastus-urakoitsijalle<! hae-urakan-tarkastukset-kartalle liita-tarkastukselle-laatupoikkeama<!
+  liita-tarkastuksen-liitteet-laatupoikkeamalle<! hae-tarkastusajon-reittipisteet
+  hae-urakan-ei-kayty-tieturvallisuusverkko poista-poistetut-liitteet! poista-yllapitokohteiden-tarkastuksia!)
 
 (defqueries "harja/kyselyt/tarkastukset.sql"
   {:positional? true})

@@ -86,12 +86,12 @@
                                        :suorita-raportti
                                        +kayttaja-jvh+
                                        {:nimi               :materiaaliraportti
-                                        :konteksti          "hallintayksikko"
-                                        :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                        :konteksti          "elinvoimakeskus"
+                                        :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                         :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                              :loppupvm     (c/to-date (t/local-date 2015 10 1))
                                                              :urakkatyyppi :hoito}})
-               taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
+               taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Suomi, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
                rivit (sort-by ffirst (last taulukko))
                vinkki (take-last 2 vastaus)]
               (is (= (list ["Kajaanin alueurakka 2014-2019" 2000M 0 2000M 0 0 0 0]
@@ -125,7 +125,7 @@
         rivit (last taulukko)
         vinkki (take-last 2 vastaus)]
     (is (= (list ["Uusimaa" 4000M 0 4000M 0 0 0 0]
-             ["Pohjois-Pohjanmaa" 4000M 200M 3800M 2000M  500M 1000M 1000M]
+             ["Pohjois-Suomi" 4000M 200M 3800M 2000M  500M 1000M 1000M]
              (list "Yhteensä" 8000M 200M 7800M 2000M 500M 1000M 1000M))
            rivit))
        (is (=  [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. \n")] (first vinkki)))

@@ -183,7 +183,7 @@
                       :solun-luokka solun-luokka-fn
                         :tasaa :oikea
                         :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
-                     {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
+                     {:otsikko "Yksikkö" :leveys "12.5%" :nimi :suunnitteluyksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid

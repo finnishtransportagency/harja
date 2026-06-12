@@ -20,7 +20,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
 
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomen', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomi', indeksit);
 
         // Valitse ensimmäinen hoitovuosi
         cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {

@@ -17,7 +17,7 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Suomen').click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
@@ -77,7 +77,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
     it("Avaa Yleiset, Työmaapäiväkirja Turvallisuus", function () {
         alustaUrakkaKustannussuunnitteluun();
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -94,7 +94,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
     // Ohitetaan testi sen flakeyden takia. Kustannussuunnitelma avataan tässä testissä jotenkin siten, että sen tila ei ole alustunut ja testi kaatuu kokonaan
     it("Avaa Suunnittelun alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -112,7 +112,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Kulut ja sen alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -132,7 +132,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Toteumat ja sen alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -161,7 +161,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Laadunseuranta ja sen alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.wait(100)
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
@@ -184,7 +184,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Lupaukset ja tavoitteet ja sen alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -201,7 +201,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
 
     it("Avaa Paikkaukset ja sen alatabit", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
@@ -221,7 +221,7 @@ describe('MH-Urakan näkymien avaamiset', function () {
     })
 
     it("Avaa Välikatselmus", function () {
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi

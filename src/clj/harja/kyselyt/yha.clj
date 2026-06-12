@@ -3,4 +3,4 @@
 
 (defqueries "harja/kyselyt/yha.sql")
 
-(declare hae-urakan-yhatiedot)
+(declare luo-yllapitokohdeosa<! hae-urakan-yhatiedot)

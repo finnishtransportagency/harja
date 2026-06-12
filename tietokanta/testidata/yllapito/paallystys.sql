@@ -886,7 +886,7 @@ VALUES
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
    NULL,
-   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2023}', FALSE, 'A', true),
+   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P'), '{2023}', FALSE, 'A', true),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -898,7 +898,7 @@ VALUES
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
     NULL,
-    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024') , (SELECT ARRAY[date_part('year', now())]), FALSE, NULL, false),
+    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P') , (SELECT ARRAY[date_part('year', now())]), FALSE, NULL, false),
   -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
       FROM urakka
@@ -914,7 +914,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2021}', FALSE, NULL, false),
+                                             'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P'), '{2021}', FALSE, NULL, false),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -953,7 +953,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2022}', FALSE, 'B', false);
+                                             'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P'), '{2022}', FALSE, 'B', false);
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,

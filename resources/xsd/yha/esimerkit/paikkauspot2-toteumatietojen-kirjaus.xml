@@ -2,13 +2,13 @@
 <urakan-kohteiden-toteumatietojen-kirjaus xmlns="http://www.vayla.fi/xsd/yha">
     <urakka>
         <yha-id>5731290</yha-id>
-        <harja-id>57</harja-id>
+        <harja-id>61</harja-id>
         <sampotunnus>5731290-TES2</sampotunnus>
         <tunnus>YHA5731290</tunnus>
         <kohteet>
             <kohde>
                 <yha-id>123456</yha-id>
-                <harja-id>32</harja-id>
+                <harja-id>75</harja-id>
                 <kohdenumero>1</kohdenumero>
                 <kohdetyyppi>1</kohdetyyppi>
                 <kohdetyotyyppi>paallystys</kohdetyotyyppi>
@@ -146,7 +146,7 @@
                 <kulutuskerrokselle-tehdyt-toimet>
                     <kulutuskerrokselle-tehty-toimenpide>
                         <yha-id>123457</yha-id>
-                        <harja-id>45</harja-id>
+                        <harja-id>82</harja-id>
                         <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2024-12-16</karttapaivamaara>
@@ -200,7 +200,7 @@
                     </kulutuskerrokselle-tehty-toimenpide>
                     <kulutuskerrokselle-tehty-toimenpide>
                         <yha-id>123458</yha-id>
-                        <harja-id>46</harja-id>
+                        <harja-id>83</harja-id>
                         <poistettu>false</poistettu>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2024-12-16</karttapaivamaara>

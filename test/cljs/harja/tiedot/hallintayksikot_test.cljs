@@ -40,18 +40,19 @@
 (deftest hallintayksikoiden-haku
   (async done
     (go
+      (hy/nollaa-tila!)
       (let [haku (utils/fake-palvelukutsu :elinvoimakeskukset fake-hy-haku)
-           haluttu {:vesi [{:liikennemuoto :vesi :id 1 :type :hy}] :tie [{:liikennemuoto :tie :id 2 :type :hy}
-                                                               {:liikennemuoto :tie :id 3 :type :hy}]}
-           alkutilanne @hy/haetut-hallintayksikot
-           haun-tulos (<! (hy/hae-hallintayksikot!))
-           lopputilanne @hy/haetut-hallintayksikot]
-       (is (not= alkutilanne lopputilanne))
-       (is (not= alkutilanne haun-tulos))
-       (is (= haun-tulos lopputilanne))
+            haluttu {:vesi [{:liikennemuoto :vesi :id 1 :type :hy}] :tie [{:liikennemuoto :tie :id 2 :type :hy}
+                                                                          {:liikennemuoto :tie :id 3 :type :hy}]}
+            alkutilanne @hy/haetut-hallintayksikot
+            haun-tulos (<! (hy/hae-hallintayksikot!))
+            lopputilanne @hy/haetut-hallintayksikot]
+        (is (not= alkutilanne lopputilanne))
+        (is (not= alkutilanne haun-tulos))
+        (is (= haun-tulos lopputilanne))
 
-       (is (= haun-tulos haluttu))
-       (is (= lopputilanne haluttu))
+        (is (= haun-tulos haluttu))
+        (is (= lopputilanne haluttu))
 
-       (done)))))
+        (done)))))
 

@@ -16,31 +16,32 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn hae-tietyomaa []
-  (first (q (str
+(defn hae-tietyomaa [yllapitokohde-id]
+  (first (q (format
               "SELECT id, muokattu, poistettu, nopeusrajoitus FROM tietyomaa
-               WHERE osuus_id = 1 AND jarjestelma = 'Urakoitsijan järjestelmä' AND yllapitokohde = 5;"))))
+               WHERE osuus_id = 1 AND jarjestelma = 'Urakoitsijan järjestelmä' AND yllapitokohde = %s;" yllapitokohde-id))))
 
 (deftest tarkista-tietyomaan-kasittely
   (let [lisays-kutsu (slurp "test/resurssit/api/tietyomaan-kirjaus.json")
         poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")
         muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        ensimmainen-yllapitokohde-id (:id (first (q-map (format "SELECT id FROM yllapitokohde WHERE urakka = %s" muhoksen-paallystysurakan-id))))
         _ (anna-kirjoitusoikeus kayttaja)]
-    (api-tyokalut/post-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")]
+    (api-tyokalut/post-kutsu [(format "/api/urakat/%s/yllapitokohteet/%s/tietyomaa" muhoksen-paallystysurakan-id ensimmainen-yllapitokohde-id)]
                              kayttaja portti lisays-kutsu)
-    (let [[id muokattu poistettu nopeusrajoitus] (hae-tietyomaa)]
+    (let [[id muokattu poistettu nopeusrajoitus] (hae-tietyomaa ensimmainen-yllapitokohde-id)]
       (is (not (nil? id)) "Kannasta löytyy uusi tietyömaa")
       (is (nil? muokattu) "Muokkauspäivämäärä on tyhjä")
       (is (nil? poistettu) "Tietyomaata ei ole poistettu")
       (is (= 20 nopeusrajoitus) "Nopeusrajoitus on kirjattu oikein"))
 
-    (api-tyokalut/post-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")] kayttaja portti lisays-kutsu)
-    (let [[id muokattu _ _] (hae-tietyomaa)]
+    (api-tyokalut/post-kutsu [(format "/api/urakat/%s/yllapitokohteet/%s/tietyomaa" muhoksen-paallystysurakan-id ensimmainen-yllapitokohde-id)] kayttaja portti lisays-kutsu)
+    (let [[id muokattu _ _] (hae-tietyomaa ensimmainen-yllapitokohde-id)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? muokattu)) "Tieosuus on merkitty muuttuneeksi"))
 
-    (api-tyokalut/delete-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")] kayttaja portti poisto-kutsu)
-    (let [[id _ poistettu _] (hae-tietyomaa)]
+    (api-tyokalut/delete-kutsu [(format "/api/urakat/%s/yllapitokohteet/%s/tietyomaa" muhoksen-paallystysurakan-id ensimmainen-yllapitokohde-id)] kayttaja portti poisto-kutsu)
+    (let [[id _ poistettu _] (hae-tietyomaa ensimmainen-yllapitokohde-id)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? poistettu))) "Tieosuus on merkitty poistetuksi")))
 

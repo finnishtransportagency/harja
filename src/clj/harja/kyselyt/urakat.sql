@@ -200,6 +200,7 @@ SELECT
   u.nimi,
   u.lyhyt_nimi,
   u.sampoid,
+  u.projektikansio_linkki       AS "projektikansio-linkki",
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
       THEN ST_SimplifyPreserveTopology(u.alue, 50)
           END as alue,
@@ -293,6 +294,7 @@ SELECT
     u.nimi,
     u.lyhyt_nimi,
     u.sampoid,
+    u.projektikansio_linkki               AS "projektikansio-linkki",
     CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
              THEN ST_SimplifyPreserveTopology(u.alue, 50)
         END as alue,
@@ -372,10 +374,9 @@ FROM urakka u
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskusid) -- Pohjanmaan elinvoimakeskuksen urakat on palautettava, kun haetaan Etelä-Pohjanmaan elinvoimakeskuksen urakoita
   AND u.poistettu = false
   AND (u.id IN (:sallitut_urakat)
-    OR (('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+    OR ('elinvoimakeskus'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
          'liikennevirasto'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-        OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-            :kayttajan_org_id = org.id)))
+    OR ('urakoitsija'::organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND :kayttajan_org_id = org.id))
 ORDER BY u.id DESC;
 
 -- name: hae-urakkatiedot-laskutusyhteenvetoon
@@ -388,7 +389,7 @@ SELECT
   alkupvm
 FROM urakka u
 WHERE :urakkaid :: INTEGER IS NULL AND
-      u.hallintayksikko = :hallintayksikkoid AND
+      u.elinvoimakeskus_id = :elinvoimakeskus-id AND
       u.tyyppi = :urakkatyyppi :: urakkatyyppi AND
       (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
        u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
@@ -409,12 +410,18 @@ SELECT hallintayksikko AS "hallintayksikko-id"
 FROM urakka
 WHERE id = :id;
 
+-- name: urakan-elinvoimakeskus
+SELECT elinvoimakeskus_id
+  FROM urakka
+ WHERE id = :id;
+
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT
   u.id,
   u.nimi,
   u.sampoid,
+  u.projektikansio_linkki        AS "projektikansio-linkki",
   u.alue,
   u.alkupvm,
   u.loppupvm,
@@ -514,7 +521,8 @@ FROM urakka u
 WHERE (u.nimi ILIKE :termi
        OR u.sampoid ILIKE :termi OR
        :numero::INTEGER IS NOT NULL AND u.id = :numero)
-      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+      AND (('elinvoimakeskus' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+            'hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
                :kayttajan_org_id = org.id))
@@ -621,7 +629,7 @@ INSERT INTO urakka (nimi,
                     hanke_sampoid,
                     sampoid,
                     tyyppi,
-                    hallintayksikko,
+                    elinvoimakeskus_id,
                     sopimustyyppi,
                     urakkanro,
                     urakoitsija)
@@ -631,7 +639,7 @@ VALUES (:nimi,
         :hanke_sampoid,
         :sampoid,
         :urakkatyyppi :: urakkatyyppi,
-        :hallintayksikko,
+        :elinvoimakeskus,
         :sopimustyyppi :: sopimustyyppi,
         :urakkanumero,
         :urakoitsijaid);
@@ -667,15 +675,14 @@ VALUES (:nimi,
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
-SET nimi          = :nimi,
-  alkupvm         = :alkupvm,
-  loppupvm        = :loppupvm,
-  hanke_sampoid   = :hanke_sampoid,
-  tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
-  hallintayksikko = :hallintayksikko,
-  urakkanro       = :urakkanro,
-  urakoitsija     = :urakoitsija
-
+SET nimi                = :nimi,
+  alkupvm               = :alkupvm,
+  loppupvm              = :loppupvm,
+  hanke_sampoid         = :hanke_sampoid,
+  tyyppi                = :urakkatyyppi :: URAKKATYYPPI,
+  elinvoimakeskus_id    = :elinvoimakeskus,
+  urakkanro             = :urakkanro,
+  urakoitsija           = :urakoitsija
 WHERE id = :id;
 
 -- name: paivita-harjassa-luotu-urakka<!
@@ -807,6 +814,7 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
+  u.projektikansio_linkki       AS "projektikansio-linkki",
   u.alue,
   u.alkupvm,
   u.loppupvm,
@@ -871,22 +879,22 @@ WHERE u.id IN (SELECT id
                       :vuosi <= (SELECT EXTRACT(YEAR FROM u.loppupvm))));
 
 -- name: hae-hallintayksikon-kaynnissa-olevat-urakat
--- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakoista
+-- Palauttaa nimen ja id:n elinvoimakeskuksen käynnissä olevista urakoista
 SELECT
   id,
   nimi
 FROM urakka
-WHERE hallintayksikko = :hal
+WHERE elinvoimakeskus_id = :hal
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date);
 
--- name: hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
--- Palauttaa nimen ja id:n hallintayksikön käynnissä olevista urakkatyypin urakoista
+-- name: hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat
+-- Palauttaa nimen ja id:n elinvoimakeskuksen käynnissä olevista urakkatyypin urakoista
 SELECT
   id,
   nimi
 FROM urakka
-WHERE hallintayksikko = :hal
+WHERE elinvoimakeskus_id = :elinvoimakeskus-id
       AND (alkupvm IS NULL OR alkupvm <= current_date)
       AND (loppupvm IS NULL OR loppupvm >= current_date)
       AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi);
@@ -1057,6 +1065,11 @@ WHERE sampoid = :sampoid;
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
 SET takuu_loppupvm = :loppupvm
+WHERE id = :urakka;
+
+-- name: tallenna-urakan-projektikansio-linkki!
+UPDATE urakka
+SET projektikansio_linkki = :projektikansio_linkki
 WHERE id = :urakka;
 
 -- name: aseta-urakan-kesa-aika!
@@ -1313,7 +1326,8 @@ FROM urakka u
               WHERE k.kayttajanimi = :kayttajanimi
                     AND k.jarjestelma IS TRUE
                     AND o.tyyppi = 'liikennevirasto'))
-      AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi);
+      AND (:urakkatyyppi :: VARCHAR IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+ORDER BY u.alkupvm ASC;
 
 -- name: urakan-paasopimus-id
 -- single?: true

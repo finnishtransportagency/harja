@@ -107,8 +107,9 @@ Harja repon hakemistorakenne:
 
     `sh devdb_up.sh`
 
-4. Asenna tarvittavat työkalut `npm ci` 
-   * Huom: ```npm ci``` -komento asentaa package-lock.json tiedostoon jäädytetyt paketit.
+4. Asenna tarvittavat työkalut `npm ci`
+   * Huom: `.npmrc`-tiedosto sisältää `ignore-scripts=true`, joka estää npm lifecycle -skriptien automaattisen ajon (supply chain -suojaus).
+   * `npm ci` asentaa package-lock.json tiedostoon jäädytetyt paketit.
    * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
 5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
@@ -119,10 +120,10 @@ Harja repon hakemistorakenne:
 
     `sh kaynnista_harja_front_dev.sh`
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
-Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
-Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
-ja restartoida backend `lein repl` kommennolla. 
+    Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
+    Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
+    Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
+    ja restartoida backend `lein repl` kommennolla. 
 
 8. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
 Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
@@ -132,7 +133,7 @@ Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
 
    `sh kaynnista_cypress.sh`
 
-
+   Skripti asentaa tarvittaessa npm-riippuvuudet ja Cypressin binäärin automaattisesti.
 
 
 # Docker
@@ -150,8 +151,13 @@ Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scop
 >For more information, see "Security hardening for GitHub Actions."
 >As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
 
-**Ohjeet:**  
-https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+* **Ohjeet tokenin luomiseen ja kirjautumiseen:**  
+  * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+
+* **Tokenin käyttöönotto (tärkeä)**
+  * Lopuksi, luotu token täytyy vielä auktorisoida Väyläviraston GitHub-organisaatiolle, jotta sitä voi käyttää.
+  * Navigoi: https://github.com/settings/tokens
+    * Paina tokenin kohdalla "Configure SSO" ja luvita tokenin käyttö finnistransportagency-organisaatiolle.
 
 ## GitHub Actions & Docker
 Lue: [.github/docker/README.md](.github/docker/README.md)

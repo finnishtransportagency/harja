@@ -16,19 +16,6 @@
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
 
-(defn hae-hallintayksikot
-  "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
-  [db user tiedot]
-  (oikeudet/ei-oikeustarkistusta!)
-  (let [liikennemuoto (:liikennemuoto tiedot)]
-    (into []
-         (muunna-pg-tulokset :alue)
-         (q/listaa-hallintayksikot-kulkumuodolle db (when liikennemuoto
-                                                      (case liikennemuoto
-                                                       :tie "T"
-                                                       :vesi "V"
-                                                       :rata "R"))))))
-
 (defn hae-elinvoimakeskukset
   "Palvelu, joka palauttaa halutun liikennemuodon elinvoimakeskukset."
   [db user tiedot]
@@ -59,10 +46,6 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this)
-      :hallintayksikot (fn [user tiedot]
-                         (hae-hallintayksikot (:db this) user tiedot))
-      {:kysely-spec (s/keys :req-un [::liikennemuoto])})
-    (julkaise-palvelu (:http-palvelin this)
       :elinvoimakeskukset (fn [user tiedot]
                             (hae-elinvoimakeskukset (:db this) user tiedot))
       {:kysely-spec (s/keys :req-un [::liikennemuoto])})
@@ -72,7 +55,6 @@
     this)
 
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :hallintayksikot)
     (poista-palvelu (:http-palvelin this) :elinvoimakeskukset)
     (poista-palvelu (:http-palvelin this) :hae-organisaatio)
     this))

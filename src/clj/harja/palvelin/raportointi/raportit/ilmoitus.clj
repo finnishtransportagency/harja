@@ -14,9 +14,9 @@
             [clojure.string :as str]))
 
 (defn hae-ilmoitukset-raportille
-  [db user {:keys [hallintayksikko-id urakka-id urakoitsija urakkatyyppi alkupvm loppupvm]}]
+  [db user {:keys [elinvoimakeskus-id urakka-id urakoitsija urakkatyyppi alkupvm loppupvm]}]
   (ilmoituspalvelu/hae-ilmoitukset-raportille db user
-                                              {:hallintayksikko hallintayksikko-id
+                                              {:elinvoimakeskus elinvoimakeskus-id
                                                :urakka urakka-id
                                                :urakoitsija urakoitsija
                                                :urakkatyyppi urakkatyyppi
@@ -51,10 +51,10 @@
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))]))
 
-(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
+(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm]
   (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id
                                                                    (when urakkatyyppi (name urakkatyyppi))
-                                                                   hallintayksikko-id
+                                                                   elinvoimakeskus-id
                                                                    alkupvm loppupvm)
         ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
         rivit (mapv (fn [[nimi summat]]
@@ -70,14 +70,14 @@
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))
 
-(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
+(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm]
   (let [{:keys [toimenpiteita-aiheuttaneet
                 ei-toimenpiteita-aiheuttaneet
                 yhteensa]} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
                                     db
                                     urakka-id
                                     (when urakkatyyppi (name urakkatyyppi))
-                                    hallintayksikko-id
+                                    elinvoimakeskus-id
                                     alkupvm
                                     loppupvm))
         rivit [[toimenpiteita-aiheuttaneet ei-toimenpiteita-aiheuttaneet yhteensa]]]
@@ -87,15 +87,15 @@
       {:leveys 2 :otsikko "Yhteensä"}]
      rivit]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id urakkatyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [urakkatyyppi (when (not= urakkatyyppi :kaikki) urakkatyyppi) ; :kaikki = nil, ei rajata kyselyissä urakkatyypillä
         konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         ilmoitukset (hae-ilmoitukset-raportille
-                      db user {:hallintayksikko-id hallintayksikko-id :urakka-id urakka-id
+                      db user {:elinvoimakeskus-id elinvoimakeskus-id :urakka-id urakka-id
                                :urakoitsija nil :urakkatyyppi urakkatyyppi
                                :alkupvm alkupvm :loppupvm loppupvm})
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
@@ -103,7 +103,7 @@
         hoitokauden-loppupvm (second (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
                                     (hae-ilmoitukset-raportille
-                                      db user {:hallintayksikko-id hallintayksikko-id :urakka-id urakka-id
+                                      db user {:elinvoimakeskus-id elinvoimakeskus-id :urakka-id urakka-id
                                                :urakoitsija nil :urakkatyyppi urakkatyyppi
                                                :alkupvm hoitokauden-alkupvm :loppupvm hoitokauden-loppupvm}))
         ilmoitukset-kuukausittain (group-by ffirst
@@ -131,7 +131,7 @@
         raportin-nimi "Ilmoitusraportti"
         raportin-alue (case konteksti
                         :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                        :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                         :koko-maa "KOKO MAA")
         raportin-tiedot (str
                           raportin-alue
@@ -196,8 +196,9 @@
                     [(concat [raportin-alue]
                              [tpp-yht tur-yht urk-yht])])))))]
 
-     (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
-     (ilmoitukset-toimenpiteiden-mukaan db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
+     [:teksti "Ilmoitusten kokonaismäärä voi olla suurempi kuin asiakaspalauteluokittain esitetyt määrät yhteensä, sillä kaikkia ilmoituksia ei pystytä luokittelemaan." {:alamarginaali "1rem"}]
+     (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm)
+     (ilmoitukset-toimenpiteiden-mukaan db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm)
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)

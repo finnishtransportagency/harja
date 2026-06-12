@@ -130,18 +130,18 @@
                                    [(:erilliskustannukset tiedot)]
                                    (map :toteutunut-maara (vals (:kokonaishintaiset tiedot))))))])
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
-  ;(log/debug "suorita urakka id " urakka-id " hallintayksikkö id " hallintayksikko-id)
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm] :as parametrit}]
+  ;(log/debug "suorita urakka id " urakka-id " elinvoimakeskus id " elinvoimakeskus-id)
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :urakka)
-        {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
-                                     (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
+        {alueen-nimi :nimi} (first (if (= konteksti :elinvoimakeskus)
+                                     (hallintayksikko-q/hae-organisaatio db elinvoimakeskus-id)
                                      (urakat-q/hae-urakka db urakka-id)))
 
         urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
                  db {:alkupvm alkupvm :loppupvm loppupvm
-                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
+                     :elinvoimakeskus-id elinvoimakeskus-id :urakkaid urakka-id
                      :urakkatyyppi "vesivayla-hoito"})
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                                       :urakka-nimi (:nimi %)
@@ -240,8 +240,8 @@
                 kaikki-yht-rivit])
 
              ;; Listataan lopuksi mitkä urakat ovat mukana raportilla
-             (when (and hallintayksikko-id (< 0 (count urakat)))
+             (when (and elinvoimakeskus-id (< 0 (count urakat)))
                [:otsikko "Raportti sisältää seuraavien urakoiden tiedot: "])
-             (when (and hallintayksikko-id (< 0 (count urakat)))
+             (when (and elinvoimakeskus-id (< 0 (count urakat)))
                (for [u (sort-by :nimi urakat)]
                  [:teksti (str (:nimi u))]))]))))

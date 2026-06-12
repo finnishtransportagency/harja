@@ -539,7 +539,7 @@
                        (when peruuta (peruuta))
                        nil)}
          "Peruuta"])])
-   (when nayta-otsikko? [:h3.panel-title otsikko])
+   (when (and nayta-otsikko? (not (str/blank? otsikko))) [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- sort-ikoni [suunta]
@@ -558,7 +558,8 @@
         (map-indexed
           (fn [idx {:keys [teksti sarakkeita tasaa luokka]}]
             ^{:key idx}
-            [:th {:colSpan (or sarakkeita 1)
+            [:th {:scope "col"
+                  :colSpan (or sarakkeita 1)
                   :class (y/luokat luokka
                            (y/tasaus-luokka tasaa))}
              [:div teksti]])
@@ -568,7 +569,8 @@
         (map-indexed
           (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa sarake-sort] :as s-opts}]
             ^{:key (str i nimi)}
-            [:th {:class (y/luokat otsikkorivi-luokka
+            [:th {:scope "col"
+                  :class (y/luokat otsikkorivi-luokka
                            (y/tasaus-luokka tasaa)
                            (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
                   :width (or leveys "5%")
@@ -853,6 +855,7 @@
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
+  :gridin-luokka                        luokka joka kääritään koko taulukon ympärille
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
@@ -1281,7 +1284,7 @@
        :component-will-unmount
        (fn []
          (nollaa-muokkaustiedot!))}
-      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
+      (fnc [{:keys [otsikko gridin-luokka tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
@@ -1314,7 +1317,8 @@
               luokat (cond-> luokat
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
                        sivuttain-rullattava? (conj "skrollattava")
-                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
+                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky")
+                       (some? gridin-luokka) (conj gridin-luokka))
               muokattu? (not (empty? @historia))
               tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge

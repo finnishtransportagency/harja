@@ -142,7 +142,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa erillishankinnat', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
-            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
 
             // Valitse ensimmäinen hoitovuosi
             cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
@@ -210,7 +210,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa Johto- ja hallintokorvaus 2025', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2025').as('tallenna-toimenkuvat-2025');
-            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -265,7 +265,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
     describe('Testaa Hoidonjohtopalkkiot 2025 vuoden urakalle', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
-            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomen');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Taulukon arvot alussa oikein', function () {

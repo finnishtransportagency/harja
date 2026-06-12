@@ -37,7 +37,7 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
         alustaKantaanTehtavatJaMaarat('Rovaniemen MHU testiurakka (1. hoitovuosi)');
         avaaHarjaTimeoutilla();
         
-        cy.contains('.haku-lista-item', 'Lapin', {timeout: ladataanHarjaaTimeout}).click();
+        cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
         cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
         // Mene suunnittelu välilehdelle

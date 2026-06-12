@@ -28,7 +28,7 @@ function alustaIvalonUrakka() {
 describe('Testaa Suomussalmen MHU urakan kustannussuunnitelmanäkymää', function () {
     before(function () {
         alustaIvalonUrakka();
-        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomen', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomi', indeksit);
     })
 
     it('Testaa tilayhteenvedon vierityslinkit', function () {

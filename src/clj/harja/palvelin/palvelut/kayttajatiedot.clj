@@ -194,8 +194,8 @@
                         (laheta-sahkoposti-kaikille-kayttajille sahkoposti db user yhteydenotto)))
     (julkaise-palvelu http
                       :kayttajan-urakat
-                      (fn [user hallintayksikot]
-                        (#'hae-kayttajan-urakat db user hallintayksikot)))
+                      (fn [user elinvoimakeskukset]
+                        (#'hae-kayttajan-urakat db user elinvoimakeskukset)))
     this)
   (stop [this]
     (poista-palvelut (:http-palvelin this)

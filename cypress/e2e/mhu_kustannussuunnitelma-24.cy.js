@@ -10,7 +10,7 @@ function alustaSuomussalmenUrakka() {
 describe('Johto- & Hallintokorvaukset, 2024->', () => {
     before(function () {
         alustaSuomussalmenUrakka();
-        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomen', indeksit);
+        avaaKustannussuunnittelu('KOPIO POP MHU Suomussalmi 2024-2029', 'Pohjois-Suomi', indeksit);
 
         // Valitse ensimmäinen hoitovuosi
         cy.get('[data-cy="hoitokausi-jarjestysluvulla"]').within(() => {

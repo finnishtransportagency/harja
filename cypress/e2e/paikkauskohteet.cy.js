@@ -1,5 +1,6 @@
 // asetuksia
 let clickTimeout = 12000;
+let pageloadTimeout = 30000;
 let potRaportoitava = "POT-raportoitava";
 let uniikkiUlkoinenId = "97978911";
 
@@ -27,8 +28,8 @@ let avaaPaikkauskohteetSuoraan = function () {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lapin').click()
-    cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
     cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
@@ -43,7 +44,7 @@ let avaaPaikkauskohteetSuoraan = function () {
 
     cy.intercept('POST', '_/paikkauskohteet-urakalle').as('2021-kohteet')
     cy.get('[data-cy="hae-paikkauskohteita"]').click();
-    cy.wait('@2021-kohteet', {timeout: 15000})
+    cy.wait('@2021-kohteet', {timeout: clickTimeout})
 }
 
 let avaaToteumat = () => {
@@ -51,7 +52,7 @@ let avaaToteumat = () => {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lapin').click()
+    cy.contains('.haku-lista-item', 'Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
@@ -78,7 +79,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
 
-        cy.contains('.haku-lista-item', 'Lapin').click()
+        cy.contains('.haku-lista-item', 'Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
 
@@ -119,32 +120,36 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('[data-cy="lisaa-paikkauskohde"]').click();
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
-        // annetaan nimi
-        cy.get('#form-paikkauskohde-nimi').focus()
-        cy.get('#form-paikkauskohde-nimi').type("CPKohde")
-        cy.get('label[for=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
+        // annetaan nimi - valitaan id arvo html koodista
+        cy.get('label[for^="nimi-G"]').invoke('attr', 'for').then((id) => {
+            cy.get(`#${id}`).focus()
+            cy.get(`#${id}`).type("CPKohde")
+        })
+
+        cy.get('label[for*=ulkoinen-id] + span > input').type(uniikkiUlkoinenId)
         // Valitse työmenetelmä
-        cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
-        cy.get('label[for=tie] + span > input').type("4")
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '1'})
-        cy.get('label[for=aosa] + span > input').type("420")
-        cy.get('label[for=aet] + span > input').type("0")
-        cy.get('label[for=losa] + span > input').type("420")
-        cy.get('label[for=let] + span > input').type("5000")
+        cy.get('label[for*=tyomenetelma] + div').valinnatValitse({valinta: 'PAB-paikkaus levittäjällä'})
+        cy.get('label[for*=tie] + span > input').type("4")
+        cy.get('label[for*=ajorata] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for*=aosa] + span > input').type("420")
+        cy.get('label[for*=aet] + span > input').type("0")
+        cy.get('label[for*=losa] + span > input').type("420")
+        cy.get('label[for*=let] + span > input').type("5000")
         // Ajankohta
-        cy.get('label[for=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.5.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.6.2021")
+        cy.get('label[for*=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.5.2021")
+        cy.get('label[for*=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.6.2021")
         //Suunnitellut määrät ja summa
-        cy.get('label[for=suunniteltu-maara] + span > input').type("355")
-        cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
-        cy.get('label[for=suunniteltu-hinta] + span > input').type("40000")
+        cy.get('label[for*=suunniteltu-maara] + span > input').type("355")
+        cy.get('label[for=form-paikkauskohde-yksikko] + div').should('be.visible');
+        cy.get('label[for=form-paikkauskohde-yksikko] + div').valinnatValitse({valinta: 'jm'})
+        cy.get('label[for*=suunniteltu-hinta] + span > input').type("40000")
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
 
         // Vaihda oikeaan vuoteen
-        cy.get('label[for=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
+        cy.get('label[for*=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
         cy.get('[data-cy="hae-paikkauskohteita"]').click();
 
         // Ja tarkista, että kohde tuli listaan.
@@ -188,18 +193,18 @@ describe('Paikkauskohteet latautuu oikein', function () {
 
         // Lisätään toteuman tiedot
         //cy.get('label[for=aosa] + span > input').type("4")
-        cy.get('label[for=aet] + span > input').type("4")
+        cy.get('label[for*=aet] + span > input').type("4")
         //cy.get('label[for=losa] + span > input').type("5")
-        cy.get('label[for=let] + span > input').type("5")
+        cy.get('label[for*=let] + span > input').type("5")
         cy.contains('Tallenna').should('be.disabled')
-        cy.get('label[for=kaista] + div').valinnatValitse({valinta: '1'})
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
-        cy.get('label[for=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
-        cy.get('label[for=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
-        cy.get('label[for=raekoko] + div').valinnatValitse({valinta: '5'})
-        cy.get('label[for=massamaara] + span > input').type('5')
-        cy.get('label[for=massamenekki] + span > input').type('5')
-        cy.get('label[for=leveys] + span > input').type('5')
+        cy.get('label[for*=kaista] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for*=ajorata] + div').valinnatValitse({valinta: '2'})
+        cy.get('label[for*=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
+        cy.get('label[for*=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
+        cy.get('label[for*=raekoko] + div').valinnatValitse({valinta: '5'})
+        cy.get('label[for*=massamaara] + span > input').type('5')
+        cy.get('label[for*=massamenekki] + span > input').type('5')
+        cy.get('label[for*=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
         cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
@@ -215,18 +220,18 @@ describe('Paikkaustoteumat toimii', function () {
 
         cy.get('div .otsikkokomponentti').contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
         //cy.get('label[for=aosa] + span > input').type("4")
-        cy.get('label[for=aet] + span > input').type("4")
+        cy.get('label[for*=aet] + span > input').type("4")
         //cy.get('label[for=losa] + span > input').type("5")
-        cy.get('label[for=let] + span > input').type("5")
+        cy.get('label[for*=let] + span > input').type("5")
         cy.contains('Tallenna').should('be.disabled')
-        cy.get('label[for=kaista] + div').valinnatValitse({valinta: '1'})
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
-        cy.get('label[for=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
-        cy.get('label[for=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
-        cy.get('label[for=raekoko] + div').valinnatValitse({valinta: '5'})
-        cy.get('label[for=massamaara] + span > input').type('5')
-        cy.get('label[for=massamenekki] + span > input').type('5')
-        cy.get('label[for=leveys] + span > input').type('5')
+        cy.get('label[for*=kaista] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for*=ajorata] + div').valinnatValitse({valinta: '2'})
+        cy.get('label[for*=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
+        cy.get('label[for*=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
+        cy.get('label[for*=raekoko] + div').valinnatValitse({valinta: '5'})
+        cy.get('label[for*=massamaara] + span > input').type('5')
+        cy.get('label[for*=massamenekki] + span > input').type('5')
+        cy.get('label[for*=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
         cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
@@ -279,23 +284,24 @@ describe('Päällystysilmoitukset toimii', function () {
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // annetaan nimi
-        cy.get('label[for=nimi] + input').type(potRaportoitava, {force: true})
-        cy.get('label[for=ulkoinen-id] + span > input').type("87654321")
+        cy.get('label[for*=nimi] + input').type(potRaportoitava, {force: true})
+        cy.get('label[for*=ulkoinen-id] + span > input').type("87654321")
         // Valitse työmenetelmä
-        cy.get('label[for=tyomenetelma] + div').valinnatValitse({valinta: 'SMA-paikkaus levittäjällä'})
-        cy.get('label[for=tie] + span > input').type("4")
-        cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '1'})
-        cy.get('label[for=aosa] + span > input').type("421")
-        cy.get('label[for=aet] + span > input').type("225")
-        cy.get('label[for=losa] + span > input').type("421")
-        cy.get('label[for=let] + span > input').type("2000")
+        cy.get('label[for*=tyomenetelma] + div').valinnatValitse({valinta: 'SMA-paikkaus levittäjällä'})
+        cy.get('label[for*=tie] + span > input').type("4")
+        cy.get('label[for*=ajorata] + div').valinnatValitse({valinta: '1'})
+        cy.get('label[for*=aosa] + span > input').type("421")
+        cy.get('label[for*=aet] + span > input').type("225")
+        cy.get('label[for*=losa] + span > input').type("421")
+        cy.get('label[for*=let] + span > input').type("2000")
         // Ajankohta
-        cy.get('label[for=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.8.2021")
-        cy.get('label[for=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.9.2021")
+        cy.get('label[for*=alkupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.8.2021")
+        cy.get('label[for*=loppupvm] + .pvm-kentta > .pvm-ikoni > .input-default').type("1.9.2021")
         //Suunnitellut määrät ja summa
-        cy.get('label[for=suunniteltu-maara] + span > input').type("1111")
-        cy.get('label[for=yksikko] + div').valinnatValitse({valinta: 'jm'})
-        cy.get('label[for=suunniteltu-hinta] + span > input').type("200000")
+        cy.get('label[for*=suunniteltu-maara] + span > input').type("1111")
+        cy.get('label[for=form-paikkauskohde-yksikko] + div').should('be.visible');
+        cy.get('label[for=form-paikkauskohde-yksikko] + div').valinnatValitse({valinta: 'jm'})
+        cy.get('label[for*=suunniteltu-hinta] + span > input').type("200000")
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click()
 
         // Varmista, että tallennus onnistui

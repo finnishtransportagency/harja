@@ -1,24 +1,50 @@
 (ns harja.ui.tyokalut.raportti-tyokalut
   ;; Tänne voi laittaa mm yksittäisten raporttien funktioita
-  (:require [harja.ui.raportti :as raportointi]
-            [harja.fmt :as fmt]))
+  (:require [harja.fmt :as fmt]
+            [harja.ui.raportti :as raportointi]))
 
-(defmethod raportointi/muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
-  ;; Työmaakokouksen laskutusyhteenvedon footer
-  [:div
-   [:div.tyomaakokous-footer
-    [:h3 (str "Laskutus yhteensä " hoitokausi)]
 
-    (if kyseessa-kk-vali?
-      [:div.sisalto
-       [:span.laskutus-yhteensa laskutettu-str]
-       [:span.laskutus-yhteensa laskutetaan-str]
-       [:h1 (str (fmt/euro laskutettu))]
-       [:h1 [:span.vahvistamaton (str (fmt/euro laskutetaan))]]]
+(defmethod raportointi/muodosta-html
+  :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali?
+                                        laskutusraja-kaytossa?
+                                        laskutusraja-ylittynyt?
+                                        laskutettu laskutetaan
+                                        laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
+                                        laskutettu-str laskutetaan-str]]
+  [raportointi/muodosta-html
+   [:display-flex
+    [:sininen-laatikko {:otsikko (if (and
+                                       (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
+                                   "Laskutettavaa yhteensä"
+                                   ;; Vanhat urakat joilla ei ole laskutusrajaa
+                                   "Toteutuneet kustannukset yhteensä")
+                        :layout :sarakkeet}
+     [{:fmt :raha
+       :arvo laskutettu
+       :avain laskutettu-str}
 
-      [:div.sisalto-ei-kk-vali
-       [:span.laskutus-yhteensa laskutettu-str]
-       [:h1 (str (fmt/euro laskutettu))]])]])
+      (when kyseessa-kk-vali?
+        {:fmt :raha
+         :arvo laskutetaan
+         :avain laskutetaan-str
+         :korosta? (and
+                     (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)})]]
+
+    (when
+      (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+      [:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"
+                          :layout :sarakkeet}
+       [{:fmt :raha
+         :korosta? (not kyseessa-kk-vali?)
+         :avain "Hoitovuoden alusta"
+         :arvo laskutettavaa_kaikki_yht}
+
+        (when kyseessa-kk-vali?
+          {:fmt :raha
+           :korosta? true
+           :avain laskutetaan-str
+           :arvo laskutettavaa_kaikki_val_aika})]])]])
+
 
 (defmethod raportointi/muodosta-html :gridit-vastakkain [[_
                                                           {:keys [otsikko-vasen optiot-vasen otsikot-vasen rivit-vasen]}
@@ -28,6 +54,7 @@
    [:div.width-half
     [:h3.gridin-otsikko otsikko-vasen]
     (let [{otsikko :otsikko
+           gridin-luokka :gridin-luokka
            viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
            rivi-ennen :rivi-ennen
            piilota-border? :piilota-border?
@@ -43,6 +70,7 @@
            ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
       [raportointi/grid
        otsikko
+       gridin-luokka
        viimeinen-rivi-yhteenveto?
        rivi-ennen
        piilota-border?
@@ -62,6 +90,7 @@
      [:div.width-half
       [:h3.gridin-otsikko otsikko-oikea]
       (let [{otsikko :otsikko
+             gridin-luokka :gridin-luokka
              viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
              rivi-ennen :rivi-ennen
              piilota-border? :piilota-border?
@@ -76,7 +105,8 @@
              sivuttain-rullattava? :sivuttain-rullattava?
              ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
         [raportointi/grid
-         otsikko
+         otsikko 
+         gridin-luokka
          viimeinen-rivi-yhteenveto?
          rivi-ennen
          piilota-border?

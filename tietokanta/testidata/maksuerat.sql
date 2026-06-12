@@ -77,9 +77,19 @@ DO $$
 DECLARE
   toimenpide_koodit TEXT[] := ARRAY['20107','20191','23104','23116','23124','14301','23151'];
   tyypit TEXT[] := ARRAY['kokonaishintainen'];
-  urakat INT[] := (SELECT array_agg(id)
-                   FROM urakka
-                   WHERE nimi IN ('Rovaniemen MHU testiurakka (1. hoitovuosi)', 'Ivalon MHU testiurakka (uusi)', 'Kittilän MHU 2019-2024','Pellon MHU testiurakka (3. hoitovuosi)', 'Kemin MHU testiurakka (5. hoitovuosi)'));
+  urakat INT[] := (
+         SELECT array_agg(id)
+           FROM urakka
+          WHERE nimi IN (
+         'Rovaniemen MHU testiurakka (1. hoitovuosi)', 
+         'Ivalon MHU testiurakka (uusi)', 
+         'Kittilän MHU 2019-2024',
+         'Pellon MHU testiurakka (3. hoitovuosi)', 
+         'Kemin MHU testiurakka (5. hoitovuosi)',
+         'POP MHU Kajaani 2025-2030',
+         'Kittilän MHU 2025-2030'
+         )
+  );
   toimenpide_koodi_ TEXT;
   tyyppi_ TEXT;
   urakka_ INT;

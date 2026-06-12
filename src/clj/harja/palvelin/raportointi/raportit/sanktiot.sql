@@ -6,23 +6,23 @@ SELECT
   s.maara AS summa,
   s.indeksi,
   suorasanktio,
-  st.id          AS sanktiotyyppi_id,
-  st.nimi        AS sanktiotyyppi_nimi,
-  st.koodi       AS sanktiotyyppi_koodi,
-  tpi.id         AS toimenpideinstanssi_id,
-  tpi.nimi       AS toimenpideinstanssi_nimi,
-  tpk2.koodi     AS toimenpide_koodi,
-  u.id           AS "urakka-id",
-  u.nimi         AS nimi,
-  u.loppupvm     AS loppupvm,
-  o.id           AS hallintayksikko_id,
-  o.nimi         AS hallintayksikko_nimi,
-  o.elynumero    AS hallintayksikko_elynumero,
+  st.id                   AS sanktiotyyppi_id,
+  st.nimi                 AS sanktiotyyppi_nimi,
+  st.koodi                AS sanktiotyyppi_koodi,
+  tpi.id                  AS toimenpideinstanssi_id,
+  tpi.nimi                AS toimenpideinstanssi_nimi,
+  tpk2.koodi              AS toimenpide_koodi,
+  u.id                    AS "urakka-id",
+  u.nimi                  AS nimi,
+  u.loppupvm              AS loppupvm,
+  o.id                    AS elinvoimakeskus_id,
+  o.nimi                  AS elinvoimakeskus_nimi,
+  o.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
   tpk2.nimi      AS toimenpidekoodi_taso2,
   (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorotus
 FROM urakka u
      JOIN toimenpideinstanssi tpi ON tpi.urakka = u.id
-     JOIN organisaatio o ON u.hallintayksikko = o.id
+     JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
      LEFT JOIN sanktio s on tpi.id = s.toimenpideinstanssi
                             AND s.poistettu IS NOT TRUE
                             -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
@@ -48,9 +48,9 @@ WHERE u.alkupvm < :loppu::DATE AND u.loppupvm > :alku::DATE
           CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
               ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
               END))) -- varmistaa oikean urakkatyypin, ottaa huomioon 'teiden-hoito' - urakkatyypin
-    AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
+    AND ((:elinvoimakeskus::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
              OR
-         (u.hallintayksikko = :hallintayksikko AND u.urakkanro IS NOT NULL));
+         (u.elinvoimakeskus_id = :elinvoimakeskus AND u.urakkanro IS NOT NULL));
 
 -- name: hae-sanktiot-yllapidon-raportille
 -- Hakee sanktiot
@@ -68,9 +68,9 @@ SELECT
   u.id           AS "urakka-id",
   u.nimi         AS nimi,
   u.loppupvm     AS loppupvm,
-  o.id           AS hallintayksikko_id,
-  o.nimi         AS hallintayksikko_nimi,
-  o.elynumero    AS hallintayksikko_elynumero,
+  o.id           AS elinvoimakeskus_id,
+  o.nimi         AS elinvoimakeskus_nimi,
+  o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero,
   (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
@@ -78,15 +78,15 @@ FROM sanktio s
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
   JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id) AND u.alkupvm < :loppu AND u.loppupvm > :alku
-  JOIN organisaatio o ON u.hallintayksikko = o.id
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                           u.tyyppi = :urakkatyyppi :: urakkatyyppi))) -- varmistaa oikean urakkatyypin
-      AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR (u.id IN (SELECT id
+      AND ((:elinvoimakeskus::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR (u.id IN (SELECT id
                                                                                         FROM urakka
-                                                                                        WHERE hallintayksikko =
-                                                                                              :hallintayksikko) AND u.urakkanro IS NOT NULL))
+                                                                                        WHERE elinvoimakeskus_id =
+                                                                                              :elinvoimakeskus) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
       -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
       AND ((s.perintapvm BETWEEN :alku AND :loppu) OR
@@ -120,12 +120,12 @@ SELECT ek.id,
                                                      WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
                                                      ELSE FALSE
                                                      END)) AS indeksikorotus,
-       o.id           AS hallintayksikko_id,
-       o.nimi         AS hallintayksikko_nimi,
-       o.elynumero    AS hallintayksikko_elynumero
+       o.id           AS elinvoimakeskus_id,
+       o.nimi         AS elinvoimakeskus_nimi,
+       o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
-         JOIN organisaatio o ON u.hallintayksikko = o.id
+         JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
     AND u.alkupvm < :loppu::DATE
     AND u.loppupvm > :alku::DATE -- Varmista, että urakka on käynnissä annetulla aikavälillä
     AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
@@ -135,9 +135,9 @@ FROM erilliskustannus ek
                 WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
                 ELSE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                 END))) -- varmistaa oikean urakkatyypin, ottaa huomioon 'teiden-hoito' - urakkatyypin
-    AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
+    AND ((:elinvoimakeskus::INTEGER IS NULL AND u.urakkanro IS NOT NULL)
         OR
-         (u.hallintayksikko = :hallintayksikko AND u.urakkanro IS NOT NULL))
+         (u.elinvoimakeskus_id = :elinvoimakeskus AND u.urakkanro IS NOT NULL))
 WHERE ek.laskutuskuukausi BETWEEN :alku AND :loppu
   AND ek.poistettu IS NOT TRUE
   AND ek.tyyppi != 'muu'::erilliskustannustyyppi;
