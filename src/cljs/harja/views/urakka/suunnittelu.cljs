@@ -90,16 +90,7 @@
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
                   (some-> alkupvm pvm/vuosi (>= 2025)))
             ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat])
-
-          "Kalustoresurssit"
-          :kalustoresurssit
-          (when (and
-                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
-                  (valilehti-mahdollinen? :kalustoresurssit ur))
-            ^{:key "kalustoresurssit"}
-            [kalustoresurssit/kalustoresurssit])
+            [tehtavat-maarat-nakyma/tehtavat-maarat]) 
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -139,4 +130,13 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])
+          
+          "Kalustoresurssit"
+          :kalustoresurssit
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (valilehti-mahdollinen? :kalustoresurssit ur))
+            ^{:key "kalustoresurssit"}
+            [kalustoresurssit/kalustoresurssit])]]))))

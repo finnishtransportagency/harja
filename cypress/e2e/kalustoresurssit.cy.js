@@ -51,24 +51,33 @@ describe('Suunnittelu / Kalustoresurssit', function () {
         cy.get('[data-cy=tabs-taso2-Kalustoresurssit]', {timeout: 20000}).click();
         cy.get('[data-cy=kalustoresurssit]', {timeout: 20000}).should('be.visible');
 
-        // Avaa muokkaustila ja syötä määrät hoitoluokkaryhmille
-        cy.get('[data-cy=kalustoresurssit-muokkaa]').click();
+        // Syötä määrät hoitoluokkaryhmille (ensimmäinen tallennus, editointitila heti auki)
         cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').clear().type('5');
         cy.get('[data-cy="kalustoresurssi-maara-ic-iii"]').clear().type('10');
         cy.get('[data-cy="kalustoresurssi-maara-k1-k2-l"]').clear().type('3');
 
-        // Tallenna ja varmista, että näkymä siirtyy lukutilaan
+        // Tallenna - tallennuksen jälkeen siirrytään luku-tilaan ja Muokkaa-nappi ilmestyy
         cy.get('[data-cy=kalustoresurssit-tallenna]').click();
-        cy.get('[data-cy="kalustoresurssi-maara-luku-ise-ib"]', {timeout: 20000}).should('have.text', '5');
-        cy.get('[data-cy="kalustoresurssi-maara-luku-ic-iii"]').should('have.text', '10');
-        cy.get('[data-cy="kalustoresurssi-maara-luku-k1-k2-l"]').should('have.text', '3');
+        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout: 20000}).should('be.visible');
 
-        // Avaa muokkaustila uudelleen, muuta arvoa ja peruuta
+        // Luku-tilassa kentät näkyvät tekstinä taulukossa ja Tallenna/Peruuta piilotettu
+        cy.get('[data-cy=kalustoresurssit-taulukko]').contains('5');
+        cy.get('[data-cy=kalustoresurssit-taulukko]').contains('10');
+        cy.get('[data-cy=kalustoresurssit-taulukko]').contains('3');
+        cy.get('[data-cy=kalustoresurssit-tallenna]').should('not.exist');
+        cy.get('[data-cy=kalustoresurssit-peruuta]').should('not.exist');
+
+        // Muokkaa-nappia klikkaamalla siirrytään takaisin editointitilaan
         cy.get('[data-cy=kalustoresurssit-muokkaa]').click();
+        cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').should('not.be.disabled');
+        cy.get('[data-cy=kalustoresurssit-tallenna]').should('exist');
+
+        // Muuta arvoa ja peruuta - palaa tallennettuun tilaan
         cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').clear().type('99');
         cy.get('[data-cy=kalustoresurssit-peruuta]').click();
 
-        // Peruutuksen jälkeen lukutilassa näkyy alkuperäinen tallennettu arvo
-        cy.get('[data-cy="kalustoresurssi-maara-luku-ise-ib"]', {timeout: 20000}).should('have.text', '5');
+        // Peruutuksen jälkeen palataan luku-tilaan ja Muokkaa-nappi on taas näkyvissä
+        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout: 20000}).should('be.visible');
+        cy.get('[data-cy=kalustoresurssit-taulukko]').contains('5');
     });
 });

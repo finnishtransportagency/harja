@@ -57,11 +57,12 @@
 
   HaeKalustoresurssitOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tallennetut-maarat (vastaus->maarat vastaus))
-      (assoc :muokkaustila? false)
-      (dissoc :muokkausbufferi)))
+    (let [maarat (vastaus->maarat vastaus)]
+      (-> app
+        (assoc :haku-kaynnissa? false)
+        (assoc :tallennetut-maarat maarat)
+        (assoc :muokkausbufferi maarat)
+        (dissoc :muokkaustila?))))
 
   HaeKalustoresurssitEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -82,8 +83,8 @@
   PeruutaMuokkaus
   (process-event [_ app]
     (-> app
-      (assoc :muokkaustila? false)
-      (dissoc :muokkausbufferi)))
+      (dissoc :muokkaustila?)
+      (assoc :muokkausbufferi (or (:tallennetut-maarat app) {}))))
 
   TallennaKalustoresurssit
   (process-event [_ app]
@@ -103,11 +104,12 @@
   TallennaKalustoresurssitOnnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Kalustoresurssit tallennettiin onnistuneesti.")
-    (-> app
-      (assoc :tallennus-kaynnissa? false)
-      (assoc :muokkaustila? false)
-      (assoc :tallennetut-maarat (vastaus->maarat vastaus))
-      (dissoc :muokkausbufferi)))
+    (let [maarat (vastaus->maarat vastaus)]
+      (-> app
+        (assoc :tallennus-kaynnissa? false)
+        (assoc :tallennetut-maarat maarat)
+        (assoc :muokkausbufferi maarat)
+        (dissoc :muokkaustila?))))
 
   TallennaKalustoresurssitEpaonnistui
   (process-event [{vastaus :vastaus} app]
