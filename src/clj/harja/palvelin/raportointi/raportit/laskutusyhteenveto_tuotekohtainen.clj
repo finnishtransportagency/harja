@@ -19,6 +19,7 @@
 (defn- laskettavat-kentat [konteksti]
   (let [kustannusten-kentat (into []
                               (apply concat [[:laskutusraja_yht
+                                              :laskutusraja_alkuperainen
                                               :laskutusrajaan_jaljella
                                               :onko_laskutusraja_kaytossa
                                               :onko_laskutusraja_ylittynyt
@@ -111,6 +112,7 @@
      :nimi "Kaikki toteutuneet kustannukset"
      ;; Laskutusraja 
      :laskutusraja_yht laskutusraja_yht
+     :laskutusraja_alkuperainen (some :laskutusraja_alkuperainen tiedot)
      :laskutusrajaan_jaljella laskutusrajaan_jaljella
      :onko_laskutusraja_kaytossa onko_laskutusraja_kaytossa
      :onko_laskutusraja_ylittynyt onko_laskutusraja_ylittynyt
@@ -241,6 +243,10 @@
                      :onko_laskutusraja_ylittynyt (-> koostettu-yhteenveto first :onko_laskutusraja_ylittynyt)
                      :laskutusrajan_ylittynyt_yht (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_yht)
                      :laskutusrajan_ylittynyt_val_aika (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_val_aika))
+        laskutusraja-tarkistettu? (boolean (and (:onko_laskutusraja_kaytossa rivitiedot)
+                                             (:laskutusraja_yht rivitiedot)
+                                             (:laskutusraja_alkuperainen rivitiedot)
+                                             (> (:laskutusraja_yht rivitiedot) (:laskutusraja_alkuperainen rivitiedot))))
 
         sheet-nimi "Tuotekohtainen"
         otsikot [["Talvihoito" "alvi"]
@@ -308,7 +314,8 @@
           :valittu-aikavali? valittu-aikavali?
           :laskutettu-teksti laskutettu-teksti
           :laskutetaan-teksti laskutetaan-teksti
-          :kyseessa-kk-vali? kyseessa-kk-vali?})
+          :kyseessa-kk-vali? kyseessa-kk-vali?
+          :laskutusraja-tarkistettu? laskutusraja-tarkistettu?})
 
        (apurit/toteutuneet-taulukko
          {:data rivitiedot
