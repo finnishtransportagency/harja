@@ -85,7 +85,7 @@
      :voi-muokata? voi-kirjoittaa?
      :tarkkaile-ulkopuolisia-muutoksia? true
      :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
-     :header (let [muokataan?  (-> valittu-rivi :id some?)
+     :header (let [muokataan? (-> valittu-rivi :id some?)
                    otsikko (if muokataan? "Muokkaa kustannusta" "Lisää uusi kustannus")]
                [:div.col-md-12
                 [:h2.header-yhteiset otsikko]
@@ -96,7 +96,7 @@
                 [:hr]
                 [:div.muokkaus-modal-napit
                  [napit/tallenna "Tallenna" #(tallenna-fn) {:disabled (not voi-tallentaa?)}]
-                 [napit/yleinen-toissijainen "Peruuta" #(peruuta-fn) ]]
+                 [napit/yleinen-toissijainen "Peruuta" #(peruuta-fn)]]
 
                 (when virheita?
                   ;; Virheet on saatavilla (-> valittu-rivi ::lomake/virheet vals), mutta ei tarvi tässä näyttää toistaseen
@@ -136,7 +136,7 @@
         :piilota-checkbox? true
         :piilota-dropdown? true
         :validoi [#(when (and virheita? (nil? (seq %))) "Kirjoita kustannuksen selite")]
-        ::lomake/col-luokka "leveys-kokonainen"})
+        ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "PK-luokka"
@@ -161,7 +161,7 @@
     valittu-rivi]])
 
 
-(defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan 
+(defn muut-kustannukset-listaus [e! {:keys [rivit valinnat muokataan
                                             valittu-rivi haku-kaynnissa? tyypit] :as _app}]
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-muutkustannukset @nav/valittu-urakka-id)

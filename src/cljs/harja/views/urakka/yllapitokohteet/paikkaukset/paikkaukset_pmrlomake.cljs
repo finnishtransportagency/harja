@@ -121,6 +121,7 @@
   (fn [e! lomake tyomenetelmat]
     [lomake/lomake
      {:ei-borderia? true
+      :luokka "px-3"
       :tarkkaile-ulkopuolisia-muutoksia? true
       :otsikko "Muokkaa paikkauskohdetta"
       :muokkaa! #(e! (t-pmrlomake/->PaivitaPMRLomake (lomake/ilman-lomaketietoja %)))

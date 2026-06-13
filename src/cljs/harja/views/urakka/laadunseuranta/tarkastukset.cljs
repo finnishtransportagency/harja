@@ -89,52 +89,58 @@
             tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
 
         [:div.tarkastukset
-         [ui-valinnat/urakkavalinnat {:urakka urakka}
-          ^{:key "aikavali"}
-          [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
+         [:div.row.g-3.align-items-end.pb-5
+          [:div.col-md-3.col-lg-2
+           [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]]
+
+          [:div.w-100]
 
           (when-not vesivaylaurakka?
-            ^{:key "tyyppi"}
-            [tee-otsikollinen-kentta
-             {:otsikko "Tyyppi"
-              :kentta-params {:tyyppi :valinta
-                              :valinnat (conj (tarkastustyypit-urakkatyypille urakkatyyppi) nil)
-                              :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "Kaikki")}
-              :arvo-atom tiedot/tarkastustyyppi}])
+            [:div.col-md-2.col-lg-2
+             [valinnat/tienumero tiedot/tienumero]])
 
-          ^{:key "tarkastusvalinnat"}
-          [tee-otsikollinen-kentta
-           {:otsikko "Näytä"
-            :kentta-params {:tyyppi :valinta
-                            :valinnat tiedot/+naytettevat-tarkastukset-valinnat+
-                            :valinta-nayta second}
-            :arvo-atom tiedot/naytettavat-tarkastukset}]
-
-          ^{:key "tekija"}
-          [tee-otsikollinen-kentta
-           {:otsikko "Tekijä"
-            :kentta-params {:tyyppi :valinta
-                            :valinnat tiedot/+tarkastuksen-tekija-valinnat+
-                            :valinta-nayta second}
-            :arvo-atom tiedot/tarkastuksen-tekija}]
+          [:div.w-100]
 
           (when-not vesivaylaurakka?
-            ^{:key "tienumero"}
-            [valinnat/tienumero tiedot/tienumero])
+            [:div.col-md-2.col-lg-2
+             [tee-otsikollinen-kentta
+              {:otsikko "Tyyppi"
+               :kentta-params {:tyyppi :valinta
+                               :valinnat (conj (tarkastustyypit-urakkatyypille urakkatyyppi) nil)
+                               :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "Kaikki")}
+               :arvo-atom tiedot/tarkastustyyppi}]])
 
-          ^{:key "urakkatoiminnot"}
-          [ui-valinnat/urakkatoiminnot {:urakka urakka}
-           (let [oikeus? (oikeudet/voi-kirjoittaa?
-                           oikeudet/urakat-laadunseuranta-tarkastukset
-                           (:id urakka))]
-             (yleiset/wrap-if
-               (not oikeus?)
-               [yleiset/tooltip {} :%
-                (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
-               ^{:key "uusi-tarkastus"}
-               [napit/uusi "Uusi tarkastus"
-                #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
-                {:disabled (not oikeus?)}]))]]
+          [:div.col-md-2.col-lg-2
+           [tee-otsikollinen-kentta
+            {:otsikko "Näytä"
+             :kentta-params {:tyyppi :valinta
+                             :valinnat tiedot/+naytettevat-tarkastukset-valinnat+
+                             :valinta-nayta second}
+             :arvo-atom tiedot/naytettavat-tarkastukset}]]
+
+          [:div.col-md-2.col-lg-2
+           [tee-otsikollinen-kentta
+            {:otsikko "Tekijä"
+             :kentta-params {:tyyppi :valinta
+                             :valinnat tiedot/+tarkastuksen-tekija-valinnat+
+                             :valinta-nayta second}
+             :arvo-atom tiedot/tarkastuksen-tekija}]]
+
+
+          [:div.w-100]
+
+          [:div.col-md-2.col-lg-2
+           [ui-valinnat/urakkatoiminnot {:urakka urakka}
+            (let [oikeus? (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-laadunseuranta-tarkastukset
+                            (:id urakka))]
+              (yleiset/wrap-if
+                (not oikeus?)
+                [yleiset/tooltip {} :%
+                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
+                [napit/uusi "Uusi tarkastus"
+                 #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
+                 {:disabled (not oikeus?)}]))]]]
 
 
          [grid/grid

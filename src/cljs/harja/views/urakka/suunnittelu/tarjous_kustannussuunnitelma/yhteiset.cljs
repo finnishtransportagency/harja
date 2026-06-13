@@ -57,7 +57,7 @@
          [:div.body-text
           [yleiset/linkki "Siirry osioon"
            #(do
-              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]])
+              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 500))]]])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
       (when (and div3 (>= valittu-vuosi rajavuosi))

@@ -493,7 +493,7 @@
                                               {:summa summa
                                                :summa_indeksikorjattu summa-indeksikorjattu})))
                              erillishankinnat)]
-      (siirrin/siirry-elementin-id elementti 5)
+      (siirrin/siirry-elementin-id elementti 500)
       (-> app
         (assoc :onko-erillishankinnat-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :erillishankinnat] erillishankinnat))))
@@ -562,7 +562,7 @@
                                                  {:summa summa
                                                   :summa_indeksikorjattu summa-indeksikorjattu})))
                                 hoidonjohtopalkkiot)]
-      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 5)
+      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 500)
       (-> app
         (assoc :onko-hoidonjohtopalkkio-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot))))
@@ -648,7 +648,7 @@
                                                          {:summa summa
                                                           :summa_indeksikorjattu summa-indeksikorjattu})))
                                         johto-ja-hallintokorvaukset)]
-      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 5)
+      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 500)
       (-> app
         (assoc :onko-jjh-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset))))
@@ -710,7 +710,7 @@
         :varoitus
         viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
-    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
+    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 500)
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
@@ -725,7 +725,7 @@
                    "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
           kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
       (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
-      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
+      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 500)
       (-> app
         (assoc :kattohinta-virhe (or kattohinta-virhe? false))
         (assoc :tallennus-kesken? false)

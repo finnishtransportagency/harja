@@ -360,6 +360,7 @@
                                  (let [paivitetyt-tiedot (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo))]
                                    (lt/paivita-suunnat-ja-toimenpide! paivitetyt-tiedot)
                                    paivitetyt-tiedot))})
+
                      (when (tiedot/nayta-itsepalvelut? osa)
                        {:otsikko "Itsepalveluiden lukumäärä"
                         :nimi (str "lkm-" (::kohde/id (::lt/kohde valittu-liikennetapahtuma)))
@@ -367,7 +368,9 @@
                         :tyyppi :positiivinen-numero
                         :hae (constantly (::toiminto/lkm osa))
                         :aseta (fn [rivi arvo]
-                                 (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))}))
+                                 (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))}
+                       )
+                     )
                    (when (not= (::toiminto/toimenpide osa) (::osa/oletustoimenpide osa))
                      {:teksti "Aseta oletustoimenpiteeksi"
                       :piilota-label? true
@@ -434,92 +437,93 @@
     [:div.liikennetapahtumien-suodattimet
      ;; Näytä suodattimet kun aloitustiedot ladattu 
      (when-not lataa-aloitustiedot
-       [valinnat/urakkavalinnat
-        {}
-        ^{:key "valinnat"}
-        [valinnat/valintaryhmat-3
-         [:div.liikenne-valinnat
-          [:span.label-ja-kentta
+       [:<>
+        [valinnat/urakkavalinnat
+         {}
+         ^{:key "valinnat"}
+         [valinnat/valintaryhmat-3
+          [:div.liikenne-valinnat
+           [:span.label-ja-kentta
 
-           ;; Urakka alasveto
-           [:span.kentan-otsikko "Urakat"]
-           [:div.kentta
-            [yleiset/livi-pudotusvalikko
-             {:naytettava-arvo (let [valittujen-urakoiden-maara (count (filter :valittu? kayttajan-urakat))]
-                                 (str valittujen-urakoiden-maara (if (= 1 valittujen-urakoiden-maara)
-                                                                   " urakka valittu"
-                                                                   " urakkaa valittu")))
-              :itemit-komponentteja? true}
-             (mapv (fn [urakka]
-                     [:span.liikenne-urakat-suodatin
-                      [:div [:input {:type "checkbox"
-                                     ;; Kun tapahtumia haku kesken, disabloi urakoiden valinta
-                                     :disabled (or
-                                                 (:liikennetapahtumien-haku-kaynnissa? app)
-                                                 (:liikennetapahtumien-haku-tulee-olemaan-kaynnissa? app))
-                                     :checked (:valittu? urakka)
-                                     :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                   (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
-                      (:nimi urakka)])
-               kayttajan-urakat)]]]
+            ;; Urakka alasveto
+            [:span.kentan-otsikko "Urakat"]
+            [:div.kentta
+             [yleiset/livi-pudotusvalikko
+              {:naytettava-arvo (let [valittujen-urakoiden-maara (count (filter :valittu? kayttajan-urakat))]
+                                  (str valittujen-urakoiden-maara (if (= 1 valittujen-urakoiden-maara)
+                                                                    " urakka valittu"
+                                                                    " urakkaa valittu")))
+               :itemit-komponentteja? true}
+              (mapv (fn [urakka]
+                      [:span.liikenne-urakat-suodatin
+                       [:div [:input {:type "checkbox"
+                                      ;; Kun tapahtumia haku kesken, disabloi urakoiden valinta
+                                      :disabled (or
+                                                  (:liikennetapahtumien-haku-kaynnissa? app)
+                                                  (:liikennetapahtumien-haku-tulee-olemaan-kaynnissa? app))
+                                      :checked (:valittu? urakka)
+                                      :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                    (e! (tiedot/->UrakkaValittu urakka valittu?)))}]]
+                       (:nimi urakka)])
+                kayttajan-urakat)]]]
 
-          ;; Aikaväli
-          [valinnat/aikavali (atomi :aikavali)]
+           ;; Aikaväli
+           [valinnat/aikavali (atomi :aikavali)]
 
-          ;; Alus suodatin
-          [kentat/tee-otsikollinen-kentta
-           {:otsikko "Aluksen nimi"
-            :kentta-params {:tyyppi :string}
-            :arvo-atom (atomi ::lt-alus/nimi)}]
+           ;; Alus suodatin
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Aluksen nimi"
+             :kentta-params {:tyyppi :string}
+             :arvo-atom (atomi ::lt-alus/nimi)}]
 
-          ;; Urakkavuosi
-          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
+           ;; Urakkavuosi
+           [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]
 
-         ;; Kohde alasveto
-         [:div.liikenne-valinnat
-          [valinnat/kanava-kohde
-           (atomi ::lt/kohde)
-           (into [nil] kohteet)
-           #(let [nimi (kohde/fmt-kohteen-nimi %)]
-              (if-not (empty? nimi)
-                nimi
-                "Kaikki"))]
+          ;; Kohde alasveto
+          [:div.liikenne-valinnat
+           [valinnat/kanava-kohde
+            (atomi ::lt/kohde)
+            (into [nil] kohteet)
+            #(let [nimi (kohde/fmt-kohteen-nimi %)]
+               (if-not (empty? nimi)
+                 nimi
+                 "Kaikki"))]
 
-          ;; Aluslaji monivalinnat
-          [kentat/tee-otsikollinen-kentta
-           {:otsikko "Aluslaji"
-            :kentta-params {:tyyppi :checkbox-group
-                            :palstoja 2
-                            :vaihtoehdot lt-alus/aluslajit
-                            :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-            :arvo-atom (atomi ::lt-alus/aluslajit)}]]
+           ;; Aluslaji monivalinnat
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Aluslaji"
+             :kentta-params {:tyyppi :checkbox-group
+                             :palstoja 2
+                             :vaihtoehdot lt-alus/aluslajit
+                             :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
+             :arvo-atom (atomi ::lt-alus/aluslajit)}]]
 
-         ;; Suunta alasveto 
-         [:div.liikenne-valinnat
-          [kentat/tee-otsikollinen-kentta
-           {:otsikko "Suunta"
-            :luokka "liikennetapahtuma-suunta-suodatin"
-            :kentta-params {:tyyppi :valinta
-                            :valinnat (into [nil] suunta-vaihtoehdot)
-                            :valinta-nayta #(or (suunta->str %) "Kaikki")}
-            :arvo-atom (atomi ::lt-alus/suunta)}]
+          ;; Suunta alasveto 
+          [:div.liikenne-valinnat
+           [:div.label-ja-alasveto
+            [kentat/tee-otsikollinen-kentta
+             {:otsikko "Suunta"
+              :luokka "liikennetapahtuma-suunta-suodatin"
+              :kentta-params {:tyyppi :valinta
+                              :valinnat (into [nil] suunta-vaihtoehdot)
+                              :valinta-nayta #(or (suunta->str %) "Kaikki")}
+              :arvo-atom (atomi ::lt-alus/suunta)}]]
 
-          [kentat/tee-otsikollinen-kentta
-           {:otsikko "Uittoniput"
-            :kentta-params {:tyyppi :checkbox
-                            :teksti "Näytä vain uittoniput"}
-            :arvo-atom (atomi :niput?)}]
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Uittoniput"
+             :kentta-params {:tyyppi :checkbox
+                             :teksti "Näytä vain uittoniput"}
+             :arvo-atom (atomi :niput?)}]
 
-          ;; Tomienpide monivalinnat
-          [kentat/tee-otsikollinen-kentta
-           {:otsikko "Toimenpidetyyppi"
-            :kentta-params {:tyyppi :checkbox-group
-                            :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
-                            :vaihtoehto-nayta lt/sulku-toimenpide->str}
-            :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]
+           ;; Tomienpide monivalinnat
+           [kentat/tee-otsikollinen-kentta
+            {:otsikko "Toimenpidetyyppi"
+             :kentta-params {:tyyppi :checkbox-group
+                             :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
+                             :vaihtoehto-nayta lt/sulku-toimenpide->str}
+             :arvo-atom (atomi ::toiminto/toimenpiteet)}]]]]
 
-        ;; 'footer'
-        [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
+        [:div.d-flex.justify-content-end.justify-content-end.pb-3
          [napit/uusi
           "Kirjaa liikennetapahtuma"
           #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]])]))

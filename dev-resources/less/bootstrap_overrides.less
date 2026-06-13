@@ -10,6 +10,15 @@
   width: 100%;
 }
 
+.navbar-toggler {
+  width: revert !important;
+}
+
+.label-ja-alasveto-grid .select-default,
+.label-ja-alasveto-grid, .form-control {
+  min-height: 36px !important;
+}
+
 .container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
   padding: 0 @valistys-24;
 }
@@ -33,6 +42,11 @@
   --tblr-border-radius: 0 !important;
   --tblr-border-radius-sm: 0 !important;
   --tblr-border-radius-lg: 0 !important;
+  --tblr-border-color: @white-darker !important;
+}
+
+.card {
+  --tblr-border-color-translucent: @white-darker !important;
 }
 
 .row-sisalto {
@@ -47,10 +61,7 @@
   --tblr-bg-surface: @harjan-taustavari;
 }
 
-.row .filtterit-container>* {
-  width: fit-content;
-}
-
+.row .filtterit-container>*,
 .row .nappi-ensisijainen,
 .row .nappi-toissijainen {
   width: fit-content;
@@ -88,6 +99,7 @@
 .form-control {
   color: @harmaa1;
   padding: 2px 6px;
+  border-color: @black-lighter !important;
 
   // Parempikontrastinen placeholder tekstin väri input-kentille
   .placeholder(@black-lighter);
@@ -170,4 +182,8 @@ li.active > a {
 // Dropdwon-menu aina kentän levyiseksi
 .dropdown .dropdown-menu {
   width: 100%;
+}
+
+.murupolku-select .dropdown .dropdown-menu {
+  width: revert;
 }

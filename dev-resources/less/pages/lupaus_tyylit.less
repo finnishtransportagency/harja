@@ -14,6 +14,20 @@
     }
 }
 
+.lupaukset-sivu .row {
+  display: block;
+  margin-left: 0;
+  margin-right: 0;
+  --tblr-gutter-x: 0;
+  --tblr-gutter-y: 0;
+}
+
+.lupaukset-sivu .row > * {
+  width: revert;
+  max-width: revert;
+  flex-shrink: revert;
+}
+
 .lupausten-yhteenveto {
     display: flex;
     justify-content: space-between;

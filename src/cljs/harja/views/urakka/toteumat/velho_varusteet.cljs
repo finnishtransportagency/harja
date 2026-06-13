@@ -134,6 +134,8 @@
            :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
           hoitovuoden-kuukaudet]]
 
+        [:div.w-100]
+
         [:div.col-12.col-lg-3
          [yleiset/tr-kentat-flex
           {:wrap-luokka "w-100 filtteri varusteet tr-osoite-wrap"}

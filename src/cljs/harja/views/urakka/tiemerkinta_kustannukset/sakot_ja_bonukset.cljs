@@ -2,7 +2,7 @@
   "Tiemerkintöjen sakot ja bonukset välilehti"
   (:require [reagent.core :as r]
             [tuck.core :refer [tuck]]
-            
+
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
@@ -21,7 +21,7 @@
             [harja.tiedot.urakka.tiemerkinta-kustannukset.sakot-ja-bonukset-tiedot :as tiedot]))
 
 
-(defn- sakot-bonukset-grid 
+(defn- sakot-bonukset-grid
   "Taulukko"
   [e! rivit haku-kaynnissa?]
   [grid/grid {:tyhja (if haku-kaynnissa?
@@ -98,12 +98,12 @@
      :voi-muokata? voi-kirjoittaa?
      :tarkkaile-ulkopuolisia-muutoksia? true
      :muokkaa! #(e! (tiedot/->MuokkaaRivia %))
-     :header (let [muokataan?  (-> valittu-rivi :id some?)
+     :header (let [muokataan? (-> valittu-rivi :id some?)
                    otsikko (if muokataan? "Muokkaa kustannusta" "Lisää uusi sakko tai bonus")]
                [:div.col-md-12
                 [:h2.header-yhteiset otsikko]
                 [:hr]])
-     
+
      :footer (let [peruuta-fn #(e! (tiedot/->SuljeMuokkaus))
                    tallenna-fn #(e! (tiedot/->TallennaRivi valittu-rivi (lomake/virheita? valittu-rivi) liitteet))]
                [:<>
@@ -146,7 +146,7 @@
         :tyyppi :valinta
         :pakollinen? false
         :nimi :yllapitokohde
-        ::lomake/col-luokka "leveys-kokonainen"
+        ::lomake/col-luokka "col-xs-6"
         :valinnat (into [{:nimi tiedot/ei-kohdetta-teksti}] kohteet)
         :valinta-nayta #(if (:id %) (:nimi %) tiedot/ei-kohdetta-teksti)})
 
@@ -159,7 +159,7 @@
         :piilota-checkbox? true
         :piilota-dropdown? true
         :validoi [#(when (and virheita? (nil? (seq %))) "Kirjoita kustannuksen selite")]
-        ::lomake/col-luokka "leveys-kokonainen"})
+        ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "Kulun kohdistus"
@@ -178,7 +178,7 @@
                             :valinta (first toimenpideinstanssit)
                             :valitse-fn #(muokkaa-lomaketta (assoc data :toimenpideinstanssi (:tpi_id %)))}
                            toimenpideinstanssit]]))
-        ::lomake/col-luokka "leveys-kokonainen"})
+        ::lomake/col-luokka "col-xs-6"})
 
      (lomake/rivi
        {:otsikko "Summa"
@@ -238,7 +238,7 @@
 
   (let [voi-tallentaa? true ;; Valitoidaan tallennettaessa (saavutettavuus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot @nav/valittu-urakka-id)
-        
+
         grid (sakot-bonukset-grid e! rivit haku-kaynnissa?)
         laji-suodatin (suodattimet-lajit e! valinnat haku-kaynnissa?)
         lisaa-uusi-fn #(e! (tiedot/->AvaaModal {:yllapitokohde {:nimi tiedot/ei-kohdetta-teksti}}))
@@ -251,7 +251,7 @@
 (defn sakot-ja-bonukset* [e! _app]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(do 
+    (komp/sisaan #(do
                     (when (urakka-tiedot/koko-urakkakausi-valittuna?) (urakka-tiedot/valitse-kuluva-hk!))
                     (e! (tiedot/->ValitseLaji :kaikki))
                     (e! (tiedot/->HaeTiedot))))

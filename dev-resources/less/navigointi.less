@@ -18,6 +18,32 @@
   --tblr-bg-surface-tertiary: @harmaa14;
 }
 
+.navbar {
+  --tblr-navbar-border-color: @white-darker !important;
+  --tblr-navbar-active-border-color: @blue-default !important;
+}
+
+.nav {
+  --tblr-nav-link-hover-color: @blue-default !important;
+  --tblr-nav-tabs-link-active-color: @blue-default !important;
+}
+
+.nav-item.active .nav-link,
+.nav-item.active .nav-link-icon {
+  color: @blue-default !important;
+}
+
+.nav-item:not(.active) .nav-link-title,
+.nav-item:not(.active) .nav-link-icon {
+  color: @black-default;
+}
+
+.navbar a:hover, .navbar a:focus,
+.nav-item:not(.active) .nav-link:hover .nav-link-title,
+.nav-item:not(.active) .nav-link:hover .nav-link-icon {
+  color: @blue-default;
+}
+
 .tabs-taso1-legacy {
   + .valilehti {
     border-right: 1px solid @harmaa7;

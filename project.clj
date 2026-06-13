@@ -230,6 +230,8 @@
                                     "dev-resources/js/harja.js"
                                     "dev-resources/tmp"
                                     "target"
+                                    "resources/public/js/out"
+                                    "resources/public/css"
                                     "resources/public/js/harja.js"
                                     "resources/public/js/harja"
                                     "resources/public/laadunseuranta/js/compiled/out"]

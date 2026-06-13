@@ -27,7 +27,7 @@ lein deps
 
 echo "Kopioidaan Bootstrap tyylit..."
 mkdir -p resources/public/css
-cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
+# cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
 cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/
 cp -r node_modules/@tabler/icons-webfont/dist/fonts resources/public/css/
 cp node_modules/@tabler/core/dist/css/tabler-vendors.min.css resources/public/css/
