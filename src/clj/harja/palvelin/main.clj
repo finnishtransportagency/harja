@@ -128,6 +128,7 @@
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+    [harja.palvelin.palvelut.kartta-cache :as kartta-cache]
 
 
     ;; Tierekisteriosoitteen selvitys lokaalista tieverkkodatasta
@@ -623,11 +624,16 @@
       :tienakyma (component/using
                    (tienakyma/->Tienakyma)
                    {:db :db-replica
-
                     :http-palvelin :http-palvelin})
+
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
+      :kartta-cache
+      (component/using
+        (kartta-cache/->KarttaCache (:kartta-cache asetukset))
+        [:http-palvelin])
+
       :hankkeet (component/using
                   (hankkeet/->Hankkeet)
                   [:db :http-palvelin])

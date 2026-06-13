@@ -788,7 +788,7 @@
                                     ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
                                     {:type :wms
                                      :id :kapsi
-                                     :url "https://tiles.kartat.kapsi.fi/taustakartta"
+                                     :url (str (k/polku) "kartta-cache")
                                      :layer "taustakartta"
                                      :default true})
                                   {:type :mml

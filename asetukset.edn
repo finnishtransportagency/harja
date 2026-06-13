@@ -12,6 +12,11 @@
                  :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
  :harja-url #=(eval (harja.tyokalut.env/env "HARJA_ENV_HARJA_URL" "localhost:3000"))
 
+ ;; Käytetään stg/prod/dev/testeissä AWS cloudfronttia
+ :kartta-cache {:hakemisto "resources/kartta-cache"
+                :ttl-paivat 21
+                :upstream-url "https://tiles.kartat.kapsi.fi/taustakartta"}
+
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
                                             "oam_user_first_name" "Testi"

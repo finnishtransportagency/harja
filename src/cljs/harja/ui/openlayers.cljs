@@ -30,7 +30,7 @@
             [ol.control :as ol-control]
             [ol.interaction :as ol-interaction]
 
-            [ol.Overlay]                                    ;; popup
+            [ol.Overlay] ;; popup
             [harja.virhekasittely :as vk]
             [harja.asiakas.tapahtumat :as t]
             [harja.ui.openlayers.kuvataso :as kuvataso]
@@ -50,11 +50,11 @@
   animaation-odotusaika 200)
 
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
-  initial-resolution 1200)
+  initial-resolution 800)
 
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
        :const true}
-  min-zoom 0)
+  min-zoom 4)
 (def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään"
        :const true}
   max-zoom 16)
@@ -136,7 +136,7 @@
 (defn extent-sisaltaa-extent? [iso pieni]
   (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
   (assert (and (= 4 (count iso)) (= 4 (count pieni)))
-          "Alueen tulee olla vektori [minx miny maxx maxy]")
+    "Alueen tulee olla vektori [minx miny maxx maxy]")
 
   (ol/extent.containsExtent (clj->js iso) (clj->js pieni)))
 
@@ -158,8 +158,8 @@ Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
 Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
   [lahde selitteet & parametri-nimet-ja-arvot]
   (kuvataso/luo-kuvataso projektio suomen-extent selitteet
-                         (concat ["_" (name lahde)]
-                                 parametri-nimet-ja-arvot)))
+    (concat ["_" (name lahde)]
+      parametri-nimet-ja-arvot)))
 
 (defn sama-kuvataso? [vanha uusi]
   (kuvataso/sama? vanha uusi))
@@ -182,11 +182,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
    (let [geom (volatile! [])
          {:keys [ol3 geometry-layers]} (reagent/state this)]
      (.forEachFeatureAtPixel ol3 (.-pixel e)
-                             (fn [feature layer]
-                               (vswap! geom conj (feature-geometria feature))
-                               lopeta-ensimmaiseen?)
-                             ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
-                             )
+       (fn [feature layer]
+         (vswap! geom conj (feature-geometria feature))
+         lopeta-ensimmaiseen?)
+       ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
+       )
 
      (cond
        (empty? @geom)
@@ -205,27 +205,27 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   [this e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
-    {:tyyppi   (case tyyppi
-                 "pointermove" :hover
-                 "click" :click
-                 "singleclick" :click
-                 "dblclick" :dbl-click)
+    {:tyyppi (case tyyppi
+               "pointermove" :hover
+               "click" :click
+               "singleclick" :click
+               "dblclick" :dbl-click)
      :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
-     :x        (aget (.-pixel e) 0)
-     :y        (aget (.-pixel e) 1)}))
+     :x (aget (.-pixel e) 0)
+     :y (aget (.-pixel e) 1)}))
 
 (defn- aseta-postrender-kasittelija [this ol3 on-postrender]
   (.on ol3 "postrender"
-       (fn [e]
-         (when on-postrender
-           (on-postrender e)))))
+    (fn [e]
+      (when on-postrender
+        (on-postrender e)))))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution"
-       (fn [e]
-         (when on-zoom
-           (on-zoom e (laske-kartan-alue ol3))))))
+    (fn [e]
+      (when on-zoom
+        (on-zoom e (laske-kartan-alue ol3))))))
 
 (defn- aseta-drag-kasittelija [this ol3 on-move]
   (.on ol3 "pointerdrag" (fn [e]
@@ -234,37 +234,37 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "singleclick"
-       (fn [e]
-         (if-let [kasittelija (peek @klik-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
+    (fn [e]
+      (if-let [kasittelija (peek @klik-kasittelija)]
+        (kasittelija (tapahtuman-kuvaus this e))
 
-           (if-let [g (tapahtuman-geometria this e false)]
-             (when on-select (on-select g e))
-             (when on-click (on-click e)))))))
+        (if-let [g (tapahtuman-geometria this e false)]
+          (when on-select (on-select g e))
+          (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
   (.on ol3 "dblclick"
-       (fn [e]
-         (if-let [kasittelija (peek @klik-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
-           (when on-select
-             (when-let [g (tapahtuman-geometria this e false)]
-               (on-select g e)))))))
+    (fn [e]
+      (if-let [kasittelija (peek @klik-kasittelija)]
+        (kasittelija (tapahtuman-kuvaus this e))
+        (when on-select
+          (when-let [g (tapahtuman-geometria this e false)]
+            (on-select g e)))))))
 
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
-       (fn [e]
-         (if-let [kasittelija (peek @hover-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
+    (fn [e]
+      (if-let [kasittelija (peek @hover-kasittelija)]
+        (kasittelija (tapahtuman-kuvaus this e))
 
-           (reagent/set-state this
-                              (if-let [g (tapahtuman-geometria this e)]
-                                {:hover (assoc g
-                                          :x (aget (.-pixel e) 0)
-                                          :y (aget (.-pixel e) 1))}
-                                {:hover nil}))))))
+        (reagent/set-state this
+          (if-let [g (tapahtuman-geometria this e)]
+            {:hover (assoc g
+                      :x (aget (.-pixel e) 0)
+                      :y (aget (.-pixel e) 1))}
+            {:hover nil}))))))
 
 
 (defn keskita!
@@ -298,8 +298,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn luo-overlay [koordinaatti sisalto]
   (let [elt (js/document.createElement "span")
         comp (rdom/render sisalto elt)]
-    (ol.Overlay. (clj->js {:element   elt
-                           :position  koordinaatti
+    (ol.Overlay. (clj->js {:element elt
+                           :position koordinaatti
                            :stopEvent false}))))
 
 (defn- nayta-popup!
@@ -310,13 +310,13 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     (when popup
       (.removeOverlay ol3 popup))
     (let [popup (luo-overlay
-                 koordinaatti
-                 [:div.ol-popup
-                  [:a.ol-popup-closer.klikattava
-                   {:on-click #(do (.stopPropagation %)
-                                   (.preventDefault %)
-                                   (poista-popup! this))}]
-                  sisalto])]
+                  koordinaatti
+                  [:div.ol-popup
+                   [:a.ol-popup-closer.klikattava
+                    {:on-click #(do (.stopPropagation %)
+                                  (.preventDefault %)
+                                  (poista-popup! this))}]
+                   sisalto])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
@@ -334,17 +334,17 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
          geometry-layers :geometry-layers :as mapspec} (:mapspec (reagent/state this))
         interaktiot (let [oletukset (ol-interaction/defaults
                                       #js {:mouseWheelZoom true
-                                           :dragPan        false})]
+                                           :dragPan false})]
                       ;; ei kinetic-ominaisuutta!
                       (.push oletukset (ol-interaction/DragPan. #js {}))
                       oletukset)
         kontrollit (ol-control/defaults #js {})
 
-        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
-                             :target       (:id mapspec)
-                             :controls     kontrollit
+        map-optiot (clj->js {:layers (mapv taustakartta/luo-taustakartta layers)
+                             :target (:id mapspec)
+                             :controls kontrollit
                              :interactions interaktiot})
-        
+
         ol3 (ol/Map. map-optiot)
 
         _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers geometry-layers))
@@ -361,64 +361,64 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     ;; Lisää kartan animoinnin jälkeinen updateSize kutsu
     (when (animaatio/transition-end-tuettu?)
       (animaatio/kasittele-transition-end (.getElementById js/document
-                                                           (:id mapspec))
-                                          #(.updateSize ol3)))
+                                            (:id mapspec))
+        #(.updateSize ol3)))
 
     ;; Aloitetaan komentokanavan kuuntelu
     (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
-             (when-not (= ch unmount-ch)
-               (nappaa-virhe
-                 (case komento
+      (when-not (= ch unmount-ch)
+        (nappaa-virhe
+          (case komento
 
-                   ::popup
-                   (let [[coordinate content] args]
-                     (nayta-popup! this coordinate content))
+            ::popup
+            (let [[coordinate content] args]
+              (nayta-popup! this coordinate content))
 
-                   ::invalidate-size
-                   (do
-                     (.updateSize ol3)
-                     (.render ol3))
+            ::invalidate-size
+            (do
+              (.updateSize ol3)
+              (.render ol3))
 
-                   ::hide-popup
-                   (poista-popup! this)
+            ::hide-popup
+            (poista-popup! this)
 
-                   ::hide-popup-without-event
-                   (poista-popup-ilman-eventtia! this)
+            ::hide-popup-without-event
+            (poista-popup-ilman-eventtia! this)
 
-                   ::cursor
-                   (let [[cursor] args
-                         vp (.-viewport_ ol3)
-                         style (.-style vp)]
-                     (set! (.-cursor style) (case cursor
-                                              :crosshair "crosshair"
-                                              :progress "progress"
-                                              "")))
-                   ::tooltip
-                   (let [[x y teksti] args]
-                     (reagent/set-state this
-                                        {:hover {:x x :y y :tooltip teksti}}))))
-               (recur (alts! [komento-ch unmount-ch]))))
+            ::cursor
+            (let [[cursor] args
+                  vp (.-viewport_ ol3)
+                  style (.-style vp)]
+              (set! (.-cursor style) (case cursor
+                                       :crosshair "crosshair"
+                                       :progress "progress"
+                                       "")))
+            ::tooltip
+            (let [[x y teksti] args]
+              (reagent/set-state this
+                {:hover {:x x :y y :tooltip teksti}}))))
+        (recur (alts! [komento-ch unmount-ch]))))
 
     (.setView
-     ol3 (ol.View. #js {:center     (clj->js (geo/extent-keskipiste extent))
-                        :resolution initial-resolution
-                        :maxZoom    max-zoom
-                        :minZoom    min-zoom
-                        :projection projektio}))
+      ol3 (ol.View. #js {:center (clj->js (geo/extent-keskipiste extent))
+                         :resolution initial-resolution
+                         :maxZoom max-zoom
+                         :minZoom min-zoom
+                         :projection projektio}))
 
     ;;(.log js/console "L.map = " ol3)
-    (reagent/set-state this {:ol3             ol3
+    (reagent/set-state this {:ol3 ol3
                              :geometry-layers {} ; key => vector layer
-                             :hover           nil
-                             :unmount-ch      unmount-ch})
+                             :hover nil
+                             :unmount-ch unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3
-                            (:on-click mapspec)
-                            (:on-select mapspec))
+      (:on-click mapspec)
+      (:on-select mapspec))
     (aseta-dblclick-kasittelija this ol3
-                                (:on-dblclick mapspec)
-                                (:on-dblclick-select mapspec))
+      (:on-dblclick mapspec)
+      (:on-dblclick-select mapspec))
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
@@ -431,39 +431,35 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
     (tapahtumat/julkaise! {:aihe :kartta-nakyy})))
 
-(defn ol3-will-unmount [this]
-  (let [{:keys [ol3 geometries-map unmount-ch]} (reagent/state this)]
-    (async/close! unmount-ch)
-
-    ;; Poistamalla kartan target mahdollistetaan, että GC poistaa ol3 map objektin ja vapauttaa näin muistia.
-    ;; Resetoidaan myös the-kartta atom, jotta viittauksia karttaobjektiin ei jää ja GC voi tuhota karttaobjektin.
-    (some-> @the-kartta (.setTarget nil))
-    (reset! the-kartta nil)))
+(defn- ol3-will-unmount [this]
+  (let [{:keys [unmount-ch]} (reagent/state this)]
+    (when unmount-ch
+      (async/close! unmount-ch))))
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth
-                     (aget (.-childNodes (rdom/dom-node this)) 0))]
+                      (aget (.-childNodes (rdom/dom-node this)) 0))]
     (when-not (= uusi-leveys
-                 @openlayers-kartan-leveys)
+                @openlayers-kartan-leveys)
       (reset! openlayers-kartan-leveys uusi-leveys)
       (invalidate-size!))))
 
 (defn- ol3-render [mapspec]
   (let [c (reagent/current-component)]
     [:span
-     [:div {:id    (:id mapspec)
+     [:div {:id (:id mapspec)
             :class (:class mapspec)
-            :style (merge {:width  (:width mapspec)
+            :style (merge {:width (:width mapspec)
                            :height (:height mapspec)}
-                          (:style mapspec))}]
+                     (:style mapspec))}]
      (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
          (go (<! (timeout tooltipin-aika))
-             (when (= hover (:hover (reagent/state c)))
-               (reagent/set-state c {:hover nil})))
+           (when (= hover (:hover (reagent/state c)))
+             (reagent/set-state c {:hover nil})))
          (when-let [tooltipin-sisalto
                     (or (piirra-tooltip? hover)
-                        (some-> (:tooltip hover) (constantly)))]
+                      (some-> (:tooltip hover) (constantly)))]
            [:div.kartta-tooltip
             {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
             (tooltipin-sisalto)])))]))
@@ -486,21 +482,21 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
       (if-not layer
         (do
           (log "Map layer item counts: "
-               (str/join ", "
-                         (map #(str (let [l (second (second %))]
-                                      (if (counted? l)
-                                        (count l)
-                                        "N/A"))
-                                    " " (name (first %)))
-                              (seq new-geometry-layers))))
+            (str/join ", "
+              (map #(str (let [l (second (second %))]
+                           (if (counted? l)
+                             (count l)
+                             "N/A"))
+                      " " (name (first %)))
+                (seq new-geometry-layers))))
           (reagent/set-state component {:geometry-layers new-geometry-layers
                                         :geometries geometries}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
-                        layer (apply taso/paivita
-                                     taso ol3
-                                     (get geometry-layers layer)))
-                 layers)
+                   layer (apply taso/paivita
+                           taso ol3
+                           (get geometry-layers layer)))
+            layers)
           (recur new-geometry-layers layers))))))
 
 (defn- ol3-will-receive-props [this [_ {extent :extent geometries :geometries
@@ -508,11 +504,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (let [{aiempi-extent :extent aiempi-extent-key :extent-key}
         (reagent/state this)]
     (reagent/set-state this {:extent-key extent-key
-                             :extent     extent})
+                             :extent extent})
     (when (or (not (identical? aiempi-extent extent))
-              (not= aiempi-extent-key extent-key))
+            (not= aiempi-extent-key extent-key))
       (.setTimeout js/window #(keskita-kartta-alueeseen! extent)
-                   animaation-odotusaika)))
+        animaation-odotusaika)))
 
   (update-ol3-geometries this geometries))
 
@@ -523,9 +519,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   "A OpenLayers map component."
   [mapspec]
   (reagent/create-class
-    {:get-initial-state            (fn [_] {:mapspec mapspec})
-     :component-did-mount          ol3-did-mount
-     :reagent-render               ol3-render
-     :component-will-unmount       ol3-will-unmount
-     :component-did-update         ol3-did-update
+    {:get-initial-state (fn [_] {:mapspec mapspec})
+     :component-did-mount ol3-did-mount
+     :reagent-render ol3-render
+     :component-will-unmount ol3-will-unmount
+     :component-did-update ol3-did-update
      :UNSAFE_component-will-receive-props ol3-will-receive-props}))

@@ -2,6 +2,7 @@
 resources/public/css
 resources/public/js
 resources/~$roolit.xlsx
+resources/kartta-cache
 target
 .lein-repl-history
 .nrepl-port
