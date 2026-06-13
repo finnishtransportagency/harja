@@ -80,19 +80,18 @@
         :elementin-nimi "laatupoikkeamat-aikavali"}]
 
       ^{:key "urakkatoiminnot"}
-      [:div.row
-       [valinnat/urakkatoiminnot {:urakka urakka-id}
-        (let [oikeus? @laatupoikkeamat/voi-kirjata?]
-          (yleiset/wrap-if
-            (not oikeus?)
-            [yleiset/tooltip {} :%
-             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-               oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
-            ^{:key "uusi-laatupoikkeama"}
-            [:div {:style {:padding-top "12px"}}
-             [napit/uusi "Uusi laatupoikkeama"
-              #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-              {:disabled (not oikeus?)}]]))]]]
+      [valinnat/urakkatoiminnot {:urakka urakka-id}
+       (let [oikeus? @laatupoikkeamat/voi-kirjata?]
+         (yleiset/wrap-if
+           (not oikeus?)
+           [yleiset/tooltip {} :%
+            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+              oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+           ^{:key "uusi-laatupoikkeama"}
+           [:div {:style {:padding-top "12px"}}
+            [napit/uusi "Uusi laatupoikkeama"
+             #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+             {:disabled (not oikeus?)}]]))]]
 
      [:div.margin-top-16
       [grid/grid

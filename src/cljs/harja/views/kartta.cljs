@@ -102,7 +102,7 @@
         (do
           (set! (.-position tyyli) "absolute")
           (set! (.-left tyyli) (fmt/pikseleina x))
-          (set! (.-top tyyli) (fmt/pikseleina y))
+          (set! (.-top tyyli) (fmt/pikseleina (- y 10)))
           (set! (.-width tyyli) (fmt/pikseleina w))
           (set! (.-height tyyli) (fmt/pikseleina h))
           (openlayers/set-map-size! w h))))))
@@ -261,7 +261,7 @@
 
      [:div.kartan-koko-napit
       {:style (merge
-                {:position "absolute"
+                {:position "relative"
                  :top (fmt/pikseleina (- kartan-korkeus
                                         (if (= :S koko)
                                           0
@@ -271,6 +271,7 @@
                 (if (= :S koko)
                   {:right "0"
                    :left "auto"
+                   :float "right"
                    :transform "none"}
                   {:left "50%"
                    :right "auto"

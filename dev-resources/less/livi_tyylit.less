@@ -100,7 +100,7 @@ table.table-striped {
     }
 }
 .livi-alasveto (@leveys: 200px, @min-leveys: 160px, @i-korkeus: @input-korkeus) {
-    z-index: 1020;
+    max-width: 100%;
     min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
     width: @leveys;
 
@@ -142,7 +142,8 @@ table.table-striped {
         }
     }
     .livi-alasvetolista {
-        min-width: @leveys;
+        z-index: 1030;
+        min-width: 100%;
         width: fit-content;
         white-space: nowrap;
         span.listan-arvo-valittu {

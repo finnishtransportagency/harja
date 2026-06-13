@@ -20,13 +20,10 @@
 
 
 (defn hallintayksikko [_valinta-auki]
-  (let [valittu @nav/valittu-hallintayksikko
-        vaihtoehdot @hal/vaylamuodon-hallintayksikot]
+  (let [vaihtoehdot @hal/vaylamuodon-hallintayksikot]
     [:div.murupolku-select
      [:div.d-flex.align-items-center.gap-2.mb-1
       [:label.form-label.mb-0 {:for "hallintayksikko-select"} "Elinvoimakeskus"]
-      ;; ===============================
-      ;; Anna koko-maa valinta erikseen kuten on ollutkin 
       [:a.text-secondary
        {:href "#"
         :on-click (fn [e]
@@ -35,11 +32,11 @@
        "/ Koko maa"]]
 
      [yleiset/livi-pudotusvalikko
-      {:valitse-fn (fn [e]
-                     (let [id (str (:id e))
-                           valinta (some #(when (= (str (:id %)) id) %) vaihtoehdot)]
+      {:valitse-fn (fn [{:keys [id] :as e}]
+                     (let [valinta (some #(when
+                                            (= (str (:id %)) (str id)) %) vaihtoehdot)]
                        (nav/valitse-hallintayksikko-varmistuksella! valinta)))
-       :valinta valittu
+       :valinta @nav/valittu-hallintayksikko
        :class "livi-alasveto-250"
        :format-fn #(if % (:nimi %) "- valitse -")}
       vaihtoehdot]]))
@@ -47,25 +44,22 @@
 
 (defn urakka [_valinta-auki]
   (when @nav/valittu-hallintayksikko
-    (let [valittu @nav/valittu-urakka
-          vaihtoehdot (->> @nav/suodatettu-urakkalista
+    (let [vaihtoehdot (->> @nav/suodatettu-urakkalista
                         (filter #(pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
                         (sort-by :nimi))
           hae-valinta (fn [arvo]
-                        (if (= arvo "")
-                          nil
+                        (when arvo
                           (some #(when (= (str (:id %)) (str arvo)) %) vaihtoehdot)))]
 
       ;; ===============================
       ;; Pidennä hieman jos urakka valittuna 
-      [:div.murupolku-select {:style (when (some-> valittu :id str) {:min-width "300px"})}
+      [:div.murupolku-select {:style (when (some-> @nav/valittu-urakka :id str) {:min-width "300px"})}
        [:label.form-label {:for "alasveto-urakka"} "Urakka"]
 
        [yleiset/livi-pudotusvalikko
         {:valitse-fn (fn [e]
-                       (println "\n id:: " (:id e))
                        (nav/valitse-urakka-varmistuksella! (hae-valinta (:id e))))
-         :valinta valittu
+         :valinta @nav/valittu-urakka
          :class "livi-alasveto-250"
          :format-fn #(if % (:nimi %) "- valitse -")}
         vaihtoehdot]])))

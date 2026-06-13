@@ -100,6 +100,7 @@
         [:a {:href "#"
              :class (str "dropdown-item " (when (= s :info) "active"))
              :on-click #(do
+                          (.preventDefault %)
                           (reset! auki? false)
                           (nav/vaihda-sivu! :info))}
          [:span.nav-link-icon [:i.icon.ti.ti-info-hexagon]]
@@ -168,7 +169,9 @@
           (when (oikeudet/urakat)
             [:li
              {:class (str "nav-item" (when (= s :urakat) " active"))
-              :on-click #(nav/vaihda-sivu! :urakat)}
+              :on-click #(do
+                           (.preventDefault %)
+                           (nav/vaihda-sivu! :urakat))}
              [:a
               {:class "nav-link", :href "#"}
 
@@ -185,7 +188,9 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :raportit)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :raportit))}
 
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
@@ -200,7 +205,9 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :tilannekuva)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :tilannekuva))}
 
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
@@ -215,7 +222,9 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :ilmoitukset)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :ilmoitukset))}
 
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
@@ -231,7 +240,9 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :tienpidon-luvat)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :tienpidon-luvat))}
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
                [:i.icon.ti.ti-certificate]]
@@ -245,7 +256,9 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :urakoiden-tilanne)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :urakoiden-tilanne))}
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
                [:i.icon.ti.ti-progress-check]]
@@ -259,14 +272,14 @@
              [:a
               {:class "nav-link",
                :href "#"
-               :on-click #(nav/vaihda-sivu! :hallinta)}
+               :on-click #(do
+                            (.preventDefault %)
+                            (nav/vaihda-sivu! :hallinta))}
 
               [:span
                {:class "nav-link-icon d-md-none d-lg-inline-block"}
                [:i.icon.ti.ti-device-desktop-cog]]
-              [:span {:class "nav-link-title"} " Hallinta "]]])
-          ;; 
-          ]]]]]]]])
+              [:span {:class "nav-link-title"} " Hallinta "]]])]]]]]]]])
 
 (defn ladataan []
   [:div {:style {:position "absolute"

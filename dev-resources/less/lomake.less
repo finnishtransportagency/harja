@@ -19,6 +19,9 @@
 
 
 .lomake {
+  .row {
+    margin: 0;
+  }
   padding-bottom: @fontin-koko-leipateksti;
   .lomake-otsikko, .lomake-ryhman-otsikko {
     margin-bottom: 1rem;
@@ -43,7 +46,7 @@
   .lomakeryhman-rivi-tausta {
     background-color: @harmaa12;
     margin: -10px @valistys-16 0 @valistys-16;
-    padding-bottom: 16px;
+    padding: @valistys-16 @valistys-6;
   }
   &.lukutila {
     .lomake-arvo {
@@ -53,6 +56,7 @@
       font-weight: normal;
       font-size: 14px;
       line-height: 20px;
+      
       &.harmaa-tumma-teksti {
           color: @harmaa2;
       }
@@ -210,7 +214,7 @@
   .lomake-ryhman-otsikko {
     margin: 2px 0 10px;
     padding-left: 15px;
-
+    
     &.napilla {
       display: flex;
       align-items: baseline;
@@ -254,6 +258,7 @@
 
 .lomake-footer {
   margin-top: 20px;
+  padding-top: 20px;
   button + button {
     margin-left: @harja-nappien-valinen-etaisyys;
     margin-bottom: 0; // account for input[type="submit"] which gets the bottom margin like all other inputs
@@ -403,7 +408,6 @@ fieldset.lomake-osa {
   background-color: @white-default;
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.15), 0px 4px 12px rgba(0, 0, 0, 0.25);
   overflow-y: scroll;
-  padding: @valistys-24;
   &.overlay-leveampi {
     width: 1.5 * @overlay-leveys;
   }

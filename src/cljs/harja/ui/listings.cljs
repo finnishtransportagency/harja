@@ -85,7 +85,7 @@
                           (reset! korostus-idx nil)
                           (reset! term (.-value (.-target %))))}]
 
-          [:span.input-icon-addon
+          [:span.input-icon-addon {:style {:margin "auto"}}
            [:i.icon.ti.ti-search]]]
 
          (when (or nayta-aina? nayta?)

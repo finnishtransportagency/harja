@@ -25,7 +25,7 @@ trap clean EXIT INT TERM
 lein deps
 [ -d node_modules ] || npm ci
 
-echo "Kopioidaan Bootstrap CSS & fontit..."
+echo "Kopioidaan Bootstrap tyylit..."
 mkdir -p resources/public/css
 cp node_modules/@tabler/core/dist/css/tabler.min.css resources/public/css/
 cp node_modules/@tabler/icons-webfont/dist/tabler-icons.min.css resources/public/css/

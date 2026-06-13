@@ -1,5 +1,12 @@
 /* Tässä tiedostossa on navigointiin liittyvien komponenttien tyylejä.
    Huom. osa hyvin yleiskäyttöisistä navigointielementeistä löytyy yleiset-namespacesta. */
+.card-header {
+  .nav-item a:focus:not(:focus-visible),
+  .nav-item button:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+}
 
 .card.tabs-taso1 {
   // Ylä tabien taustaväri
