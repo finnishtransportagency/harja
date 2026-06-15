@@ -1,7 +1,5 @@
 (ns harja.palvelin.raportointi.muutos-ja-lisatyoraportti-test
   (:require [clojure.test :refer :all]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
 
@@ -47,20 +45,6 @@
                       urakkatieto-fixture))
 
 ;; Apufunktiot
-
-(defn- hae-kajaani-2025-urakka-id []
-  (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
-
-(defn- hoitokausi-alkupvm
-  "Palauttaa hoitokauden alkupvm (1.10.vuosi)"
-  [vuosi]
-  (c/to-date (t/local-date vuosi 10 1)))
-
-(defn- hoitokausi-loppupvm
-  "Palauttaa hoitokauden loppupvm (30.9.vuosi+1)"
-  [vuosi]
-  (c/to-date (t/local-date (inc vuosi) 9 30)))
-
 (defn- siivoa-muutosdata!
   "Poistaa kaikki muutoksiin liittyvät tiedot testidatakannasta Kajaanin 2025-2030 urakalle."
   [urakka-id]
@@ -95,20 +79,6 @@
     ;; Muutokset
     (u (str "DELETE FROM mhu_muutos_historia WHERE urakka = " urakka-id))
     (u (str "UPDATE mhu_muutos set poistettu = TRUE WHERE urakka = " urakka-id))))
-
-(defn- hae-vanha-urakka-id
-  "Palauttaa Oulun MHU 2019-2024 urakan id:n (muutosten_hallinta = false, koska alkupvm < 2025-01-01)."
-  []
-  (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
-
-(defn- hae-kayttaja-id []
-  (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'")))
-
-(defn- hae-tpi-hoidon-johto [urakka-id]
-  (ffirst (q (str "SELECT id FROM toimenpideinstanssi
-                    WHERE urakka = " urakka-id "
-                      AND toimenpide = (SELECT id FROM toimenpide WHERE koodi = '23151' LIMIT 1)
-                    LIMIT 1"))))
 
 (defn- tallenna-kirjallinen-muutos! [urakka-id tyyppi syy voimassa-alkaen valittu-hoitokausi maaramuutos euromuutos]
   (let [muutos-payload (merge
@@ -152,24 +122,23 @@
   "Luo johto- ja hallintokorvauksen muutoksen kuluineen.
    Malli: muutos_testidata.sql, Muutos 4."
   [urakka-id syy voimassa-alkaen erapaiva summa]
-  (let [kayttaja-id (hae-kayttaja-id)
-        tpi-id (hae-tpi-hoidon-johto urakka-id)
+  (let [tpi-id (hae-toimenpideinstanssi-id urakka-id "23151")
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         jjh-ryhma-id (ffirst (q "SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus'"))
         ;; Luo muutos
         muutos-id (i (str "INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, syy, luoja)
                            VALUES (1, " urakka-id ", '" voimassa-alkaen "',
-                                   'johto-ja-hallintokorvaus', '" syy "', " kayttaja-id ")"))
+                                   'johto-ja-hallintokorvaus', '" syy "', " (:id +kayttaja-jvh+) ")"))
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
         ;; Luo kulu
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, lisatieto, koontilaskun_kuukausi)
                          VALUES (%s, '%s', %s, %s, 'JJH-testikulu', '%s')"
-                     summa erapaiva urakka-id kayttaja-id koontilaskun-kuukausi))]
+                     summa erapaiva urakka-id (:id +kayttaja-jvh+) koontilaskun-kuukausi))]
     ;; Luo kulukohdistus äsken luodulle kululle
     (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma,
                                          maksueratyyppi, luoja, tyyppi, tavoitehintainen)
              VALUES (0, " kulu-id ", " summa ", " tpi-id ", " jjh-ryhma-id ",
-                     'kokonaishintainen', " kayttaja-id ", 'jjh-muutos', true)"))
+                     'kokonaishintainen', " (:id +kayttaja-jvh+) ", 'jjh-muutos', true)"))
     ;; Linkitä muutos aiemmin luotu muutos äsken luotuun kuluun
     (u (str "INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
              VALUES (1, " muutos-id ", " kulu-id ")"))
@@ -202,7 +171,7 @@
 ;; ============================================================
 
 (deftest kirjallisesti-sovitut-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         maaramuutos 10
         euromuutos-pysyva 5000
         euromuutos-muutos 3000
@@ -217,8 +186,8 @@
         _ (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028")) (pvm/->pvm (str "15.10.2028")) euromuutos-jjh)
         ;; Suorita raportti hoitokaudelle 2028-2029
         vastaus (suorita-raportti urakka-id
-                  (hoitokausi-alkupvm 2028)
-                  (hoitokausi-loppupvm 2028))
+                  (pvm/hoitokauden-alkupvm 2028)
+                  (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Kirjallisesti sovitut muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
@@ -230,12 +199,12 @@
         (is (= 9500M yhteensa-arvo) "Yhteensä-rivin tavoitehinnan muutos on 9500")))))
 
 (deftest kirjallisesti-sovitut-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Suorita raportti ilman testiaineistoa
         vastaus (suorita-raportti urakka-id
-                  (hoitokausi-alkupvm 2028)
-                  (hoitokausi-loppupvm 2028))
+                  (pvm/hoitokauden-alkupvm 2028)
+                  (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -243,7 +212,7 @@
       (is (= 0 (count rivit)) "Taulukossa ei ole dataa"))))
 
 (deftest laskutusrajan-tarkistukset-tulevat-kyselydatasta
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         hoitokauden-alkuvuosi 2028
         budjettitavoite {:tavoitehinta-indeksikorjattu 100000M}
@@ -269,7 +238,7 @@
 ;; ============================================================
 
 (deftest aiempien-vuosien-pysyvat-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         maaramuutos 12
         euromuutos-pysyva 2500
@@ -280,7 +249,7 @@
             valittu-hoitokausi maaramuutos euromuutos-pysyva)
 
         ;; Suorita raportti hoitokaudelle 2028-2029
-        vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2028) (hoitokausi-loppupvm 2029))
+        vastaus (suorita-raportti urakka-id (pvm/hoitokauden-alkupvm 2028) (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Aikaisempien vuosien taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
@@ -291,12 +260,12 @@
         (is (= (bigdec euromuutos-pysyva) yhteensa-arvo) (str "Yhteensä on " euromuutos-pysyva))))))
 
 (deftest aiempien-vuosien-pysyvat-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Suorita raportti ilman testiaineistoa
         vastaus (suorita-raportti urakka-id
-                  (hoitokausi-alkupvm 2028)
-                  (hoitokausi-loppupvm 2028))
+                  (pvm/hoitokauden-alkupvm 2028)
+                  (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Aiemmilta hoitovuosilta jatkuvat pysyvät muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -307,10 +276,9 @@
 ;; ============================================================
 
 (deftest tehtava-maaramuutokset-happy-case
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         _ (siivoa-muutosdata! urakka-id)
-        kayttaja-id (hae-kayttaja-id)
         ;; Hae tehtävä jolla on tehtavamaara (suunniteltu) tässä urakassa
         tehtava-tietorivi (first (q (str
                                       "SELECT ut.tehtava AS tehtava_id, ut.maara AS suunniteltu_maara, tk.nimi AS tehtava_nimi
@@ -335,11 +303,11 @@
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, koontilaskun_kuukausi)
                          VALUES (%s, '%s', %s, %s, '%s')"
-                     kulusumma erapaiva urakka-id kayttaja-id koontilaskun-kuukausi))]
+                     kulusumma erapaiva urakka-id (:id +kayttaja-jvh+) koontilaskun-kuukausi))]
     (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtava, maksueratyyppi, luoja)
-             VALUES (0, " kulu-id ", " kulusumma ", " tpi-id ", " tehtava-id ", 'kokonaishintainen', " kayttaja-id ")"))
+             VALUES (0, " kulu-id ", " kulusumma ", " tpi-id ", " tehtava-id ", 'kokonaishintainen', " (:id +kayttaja-jvh+) ")"))
     ;; Suorita raportti
-    (let [vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2028) (hoitokausi-loppupvm 2028))
+    (let [vastaus (suorita-raportti urakka-id (pvm/hoitokauden-alkupvm 2028) (pvm/hoitokauden-loppupvm 2029))
           taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
       (is (some? taulukko) "Tehtävä-maaramuutokset taulukko löytyy")
       (let [rivit (apurit/taulukon-rivit taulukko)
@@ -358,11 +326,11 @@
           (is (:lihavoi? viimeinen) "Yhteensä-rivi on lihavoitu"))))))
 
 (deftest tehtava-maaramuutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         ;; Poistetaan myös tehtävämäärät jotta taulukko on tyhjä
         _ (u (str "DELETE FROM urakka_tehtavamaara WHERE urakka = " urakka-id " AND \"hoitokauden-alkuvuosi\" = 2029"))
-        vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2029) (hoitokausi-loppupvm 2029))
+        vastaus (suorita-raportti urakka-id (pvm/hoitokauden-alkupvm 2029) (pvm/hoitokauden-loppupvm 2030))
         taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -374,41 +342,40 @@
 ;; ============================================================
 
 (deftest rahavarausten-muutokset-happy-case
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         hoitokauden-alkuvuosi 2028
         kuukausi 10
         summa1 5000
         summa2 3000
         _ (siivoa-muutosdata! urakka-id)
-        kayttaja-id (hae-kayttaja-id)
         sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " urakka-id " AND paasopimus IS NULL")))
         ;; Luo rahavaraus ja liitä urakkaan
         rahavaraus-id (i (format "INSERT INTO rahavaraus (nimi, jarjestys, luoja, luotu) VALUES
-        ('%s', %s, %s, NOW())" "Testirahavaraus", 1, kayttaja-id))
+        ('%s', %s, %s, NOW())" "Testirahavaraus", 1, (:id +kayttaja-jvh+)))
         _ (u (format "INSERT INTO rahavaraus_urakka (urakka_id, rahavaraus_id, luotu, luoja)
                    VALUES (%s, %s, NOW(), %S)"
-               urakka-id rahavaraus-id kayttaja-id))
+               urakka-id rahavaraus-id (:id +kayttaja-jvh+)))
         ;; Luo suunniteltu kustannus
         tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
         _ (u (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
-               hoitokauden-alkuvuosi kuukausi summa1 summa1 tpi-id sopimus-id rahavaraus-id kayttaja-id))
+               hoitokauden-alkuvuosi kuukausi summa1 summa1 tpi-id sopimus-id rahavaraus-id (:id +kayttaja-jvh+)))
         _ (u (format "INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus, rahavaraus_id, luotu, luoja)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
-               hoitokauden-alkuvuosi (inc kuukausi) summa2 summa2 tpi-id sopimus-id rahavaraus-id kayttaja-id))
+               hoitokauden-alkuvuosi (inc kuukausi) summa2 summa2 tpi-id sopimus-id rahavaraus-id (:id +kayttaja-jvh+)))
         ;; Luo toteutunut kulu kohdistettuna rahavaraukseen
         erapaiva (pvm/->pvm (str "15.11." hoitokauden-alkuvuosi))
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, koontilaskun_kuukausi)
         VALUES (%s, '%s', %s, %s, '%s')"
-                     6500, erapaiva urakka-id kayttaja-id, koontilaskun-kuukausi))
+                     6500, erapaiva urakka-id (:id +kayttaja-jvh+), koontilaskun-kuukausi))
         _ (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, rahavaraus_id, maksueratyyppi, luoja)
-                   VALUES (0, " kulu-id ", 6500, " tpi-id ", " rahavaraus-id ", 'kokonaishintainen', " kayttaja-id ")"))
+                   VALUES (0, " kulu-id ", 6500, " tpi-id ", " rahavaraus-id ", 'kokonaishintainen', " (:id +kayttaja-jvh+) ")"))
         ;; Suorita raportti
         vastaus (suorita-raportti urakka-id
-                  (hoitokausi-alkupvm 2028)
-                  (hoitokausi-loppupvm 2028))
+                  (pvm/hoitokauden-alkupvm 2028)
+                  (pvm/hoitokauden-loppupvm 2029))
         rahavaraustaulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
     (is (some? rahavaraustaulukko) "Rahavarausten muutokset -taulukko löytyy")
     (let [rahavarausrivit (apurit/taulukon-rivit rahavaraustaulukko)
@@ -427,11 +394,11 @@
         (is (= -1500M (nth yht 4)) "Yhteensä tavoitehinnan muutos on -1500")))))
 
 (deftest rahavarausten-muutokset-ei-dataa
-  (let [urakka-id (hae-kajaani-2025-urakka-id)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         _ (siivoa-muutosdata! urakka-id)
         vastaus (suorita-raportti urakka-id
-                  (hoitokausi-alkupvm 2028)
-                  (hoitokausi-loppupvm 2028))
+                  (pvm/hoitokauden-alkupvm 2028)
+                  (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Rahavarausten muutokset" :otsikko)]
     (is (some? taulukko) "Taulukko löytyy vaikka dataa ei ole")
     (let [rivit (apurit/taulukon-rivit taulukko)]
@@ -470,15 +437,14 @@
                       AND k.urakka = " urakka-id ")")))
 
 (deftest vanha-urakka-tavoitehinnan-oikaisut-nakyvat
-  (let [urakka-id (hae-vanha-urakka-id)
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         _ (siivoa-vanha-urakka-raportti-data! urakka-id)
-        kayttaja-id (hae-kayttaja-id)
         ;; Lisää tavoitehinnan oikaisu hoitokaudelle 2020
         _ (u (str "INSERT INTO tavoitehinnan_oikaisu
                    (\"urakka-id\", \"muokkaaja-id\", muokattu, otsikko, selite, summa, \"hoitokauden-alkuvuosi\", poistettu)
-                   VALUES (" urakka-id ", " kayttaja-id ", NOW(),
+                   VALUES (" urakka-id ", " (:id +kayttaja-jvh+) ", NOW(),
                            'Testioikaisu', 'Syystulvat venyttivät urakkaa', 15000, 2020, false)"))
-        vastaus (suorita-raportti urakka-id (hoitokausi-alkupvm 2020) (hoitokausi-loppupvm 2020))
+        vastaus (suorita-raportti urakka-id (pvm/hoitokauden-alkupvm 2020) (pvm/hoitokauden-loppupvm 2021))
         taulukko (hae-taulukko-sheet-nimella vastaus "Tavoitehinnan muutokset")]
 
     ;; Tavoitehinnan oikaisut -taulukko löytyy
@@ -502,26 +468,25 @@
       "Aikaisempien vuosien -taulukko ei näy vanhalla urakalla")))
 
 (deftest vanha-urakka-lisatyot-nakyvat
-  (let [urakka-id (hae-vanha-urakka-id)
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         _ (siivoa-vanha-urakka-raportti-data! urakka-id)
-        kayttaja-id (hae-kayttaja-id)
         tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
         erapaiva (pvm/->pvm (str "15.11.2020"))
         koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
         ;; Luo kulu
         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, koontilaskun_kuukausi)
                             VALUES (%s, '%s', %s, %s, '%s')"
-                     7500 erapaiva urakka-id kayttaja-id koontilaskun-kuukausi))]
+                     7500 erapaiva urakka-id (:id +kayttaja-jvh+) koontilaskun-kuukausi))]
     ;; Luo lisätyö-kohdistus
     (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, maksueratyyppi,
                                          luoja, tyyppi, lisatyon_lisatieto)
              VALUES (0, " kulu-id ", 7500, " tpi-id ", 'kokonaishintainen',
-                     " kayttaja-id ", 'lisatyo', 'Testilisätyö: lumitöiden lisäkustannus')"))
+                     " (:id +kayttaja-jvh+) ", 'lisatyo', 'Testilisätyö: lumitöiden lisäkustannus')"))
     ;; Suorita raportti
     (let [vastaus (suorita-raportti urakka-id
-                    (hoitokausi-alkupvm 2020)
-                    (hoitokausi-loppupvm 2020))
+                    (pvm/hoitokauden-alkupvm 2020)
+                    (pvm/hoitokauden-loppupvm 2021))
           taulukko (hae-taulukko-sheet-nimella vastaus "Lisätyöt")]
       ;; Lisätyöt-taulukko löytyy
       (is (some? taulukko) "Lisätyöt-taulukko löytyy vanhalla urakalla")
