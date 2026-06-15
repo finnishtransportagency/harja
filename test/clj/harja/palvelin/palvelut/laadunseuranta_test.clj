@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
+            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -1586,9 +1587,96 @@
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
-(deftest vaadi-talvisuolan-ylitys-ehdon-tayttymista-hyvaksyy-oikean-kasittelyajan
+(deftest vaadi-talvisuolan-ylitys-ehto
   (let [urakan-tiedot {:loppupvm (pvm/->pvm "30.09.2026")}]
     (is (nil? (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.09.2026"))))
     (is (nil? (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.10.2025"))))
     (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.09.2022"))))
     (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.10.2026"))))))
+
+
+(deftest suorasanktio-talvisuolan-ylitys-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "testaus-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        sanktio {:suorasanktio true
+                 :laji :talvisuolan_ylitys
+                 :summa 5000
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Talvisuolan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")))))
+
+
+(deftest suorasanktio-talvisuolan-ylitys-ei-toimi
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "testaus-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2028 22:00:00")
+        sanktio {:suorasanktio true
+                 :laji :talvisuolan_ylitys
+                 :summa 5000
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "1.6.2028 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "01.6.2029 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Talvisuolan ylitys antaa virheen vääränä hoitovuotena"
+      (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
+                                       +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
+        "Sanktion tallennus ei onnistu"))))
+
+(deftest laatupoikkeama-talvisuolan-ylitys-testi
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2030-09-15T09:00:01.000-00:00"
+                        :tr {:alkuosa 1
+                             :numero 1
+                             :alkuetaisyys 1
+                             :loppuetaisyys 2
+                             :loppuosa 2}
+                        :urakka urakka-id
+                        :sanktiot nil
+                        :tekija :tilaaja
+                        :kohde "Kohde"}
+
+        uusi-sanktio {:perintapvm #inst "2030-09-15T09:00:01.000-00:00"
+                      :laji :talvisuolan_ylitys
+                      :summa 100
+                      :indeksi "MAKU 2010"
+                      :suorasanktio false
+                      :toimenpideinstanssi 4
+                      :vakiofraasi nil}
+        paatos {:paatos :sanktio
+                :kasittelytapa :puhelin
+                :kasittelyaika #inst "2030-09-15T09:00:01.000-00:00"
+                :perustelu "Testi"}]
+
+    (testing "sanktiollisen-laatupoikkeaman-tallennus"
+      (let [_ (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+            vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+
+                      (assoc laatupoikkeama
+                        :paatos paatos
+                        :sanktiot [uusi-sanktio]))]
+        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
+        (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")))
+    
+    ;; Siivoa roskat
+    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
