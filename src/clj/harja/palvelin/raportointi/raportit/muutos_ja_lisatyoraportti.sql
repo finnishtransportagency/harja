@@ -8,14 +8,14 @@ SELECT m.id,
        -- Johto- ja hallintokorvausmuutosten summa tulee kuluista
        (SELECT SUM(k.kokonaissumma)
         FROM kulu k
-                 JOIN mhu_muutos_kulu mmk ON (k.id = mmk.kulu AND m.id = mmk.muutos AND m.versio = mmk.versio)
+                 JOIN ONLY mhu_muutos_kulu mmk ON (k.id = mmk.kulu AND m.id = mmk.muutos AND m.versio = mmk.versio)
                  JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
         WHERE k.poistettu IS FALSE
           AND kk.poistettu IS FALSE
           AND k.erapaiva BETWEEN :alkupvm AND :loppupvm)                         AS "jjh-muutosten-summa",
        -- Muiden muutosten summa tulee kustannusvaikutuksista
        (SELECT SUM(kust.summa)
-          FROM mhu_muutos_kustannusvaikutus kust
+          FROM ONLY mhu_muutos_kustannusvaikutus kust
          WHERE kust.muutos = m.id
            AND kust.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi) AS "kustannusvaikutusten-summa"
 FROM ONLY mhu_muutos m
@@ -34,7 +34,7 @@ SELECT m.id,
        COALESCE(SUM(mmk.summa), 0) AS "kustannusvaikutusten-summa",
        COALESCE(indeksikorjaa(COALESCE(SUM(mmk.summa), 0), extract(YEAR from :alkupvm::DATE)::INTEGER, 10, :urakka-id::INTEGER), 0) AS "indeksikorjattu-summa"
 FROM ONLY mhu_muutos m
-         JOIN mhu_muutos_kustannusvaikutus mmk ON m.id = mmk.muutos
+         JOIN ONLY mhu_muutos_kustannusvaikutus mmk ON m.id = mmk.muutos
 WHERE m.urakka = :urakka-id
   AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
   AND m.poistettu IS FALSE
@@ -88,7 +88,7 @@ SELECT m.nimi                     AS muutostyon_nimi
        JOIN kulu k ON kk.kulu = k.id
        LEFT JOIN toimenpideinstanssi tpi ON tpi.id = kk.toimenpideinstanssi
        LEFT JOIN toimenpide tp ON tpi.toimenpide = tp.id
-       JOIN mhu_muutos m ON kk.muutos = m.id
+       JOIN ONLY mhu_muutos m ON kk.muutos = m.id
  WHERE k.urakka = :urakka-id
    AND k.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
    AND k.poistettu IS NOT TRUE

@@ -98,7 +98,7 @@
                        :sheet-nimi "Muutosten yhteenveto"
                        :samalle-sheetille? true}
             [{:leveys 20 :otsikko ""}
-             {:leveys 5 :otsikko "€" :fmt :raha}]
+             {:leveys 5 :otsikko "" :fmt :raha}]
             [{:rivi (rivi "Hoitovuoden alun indeksikorjattu tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)}
              {:rivi (rivi "Kirjallisesti sovitut muutokset" kirjallisesti-sovitut-yht)}
              {:rivi (rivi "Toteumiin perustuvat muutokset" toteumiin-perustuvat-yht)}
@@ -112,7 +112,7 @@
                          :viimeinen-rivi-yhteenveto? true
                          :samalle-sheetille? true}
               [{:leveys 20 :otsikko ""}
-               {:leveys 5 :otsikko "€" :fmt :raha}]
+               {:leveys 5 :otsikko "" :fmt :raha}]
               [{:rivi (rivi "Laskutusraja hoitovuoden alussa" laskutusraja-hoitovuoden-alussa)}
                (if (= 0 laskutusrajan-tarkistukset)
                  {:rivi (rivi "Ei vaikutusta laskutusrajaan" nil)}
@@ -170,7 +170,7 @@
                                      [:teksti ""]
                                      [:otsikko-heading (str hoitovuosinro ". hoitovuoden (" (pvm/vuosi alkupvm) " - " (pvm/vuosi loppupvm) ") kirjallisesti sovitut muutokset")]]}
       [{:leveys 10 :otsikko "Tyyppi"}
-       {:leveys 15 :otsikko "Muutoksen syy"}
+       {:leveys 15 :otsikko "Lisätieto"}
        {:leveys 5 :otsikko "Voimassa alkaen"}
        {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
       (into [] (concat muutosrivit (when-not (empty? muutokset) muutokset-yhteensarivi)))]]))
@@ -336,7 +336,8 @@
         otsikko-title [:otsikko-title "Muutostöiden kulukohdistukset"]
         ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
     (if (= 0 (count muutostyorivit))
-      [(when-not (= kasittelija :excel) otsikko-title)
+      [[:jakaja nil]
+       (when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohtakuvaus)
        [:tyhja-rivi nil]
        [:teksti "Ei muutostöiden kulukohdistuksia."]
@@ -404,7 +405,8 @@
         otsikko-title [:otsikko-title "Lisätöiden kulukohdistukset"]
         ajankohta [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
     (if (= 0 (count lisatyorivit))
-      [(when-not (= kasittelija :excel) otsikko-title)
+      [[:jakaja nil]
+       (when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohta)
        [:tyhja-rivi nil]
        [:teksti "Ei lisätöiden kulukohdistuksia."]

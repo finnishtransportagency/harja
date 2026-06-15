@@ -64,7 +64,6 @@
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
     (is (= indeksikerroin [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]) "Laskutusyhteenvedon indeksikerroin")
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    #_ (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki" muutos-ja-lisatoiden-raportin-otsikko))
     (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))
     (is (= "Sanktioiden yhteenveto" sanktioyhteenveto))))
 
@@ -86,8 +85,7 @@
         raportit (nth vastaus 2)
         laskutusyhteenveto (take 14 raportit)
         laskutusyhteenveto-taulukot (last (nth laskutusyhteenveto 6))
-        sanktio-otsikko (-> (nth raportit 12) second)
-        #_#_ muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 11) second :otsikko)]
+        sanktio-otsikko (-> (nth raportit 12) second)]
     (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
     (is (= [["Talvihoito (#82)"
@@ -101,8 +99,4 @@
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.10.2014 - 31.10.2014" sanktio-otsikko))
-
-    ;; Muutos- ja lisätyöraporttia ei ole tuettu kuukausi kohtaisessa työmaakokousraportissa. Mutta jätän tämän tähän, jos se joskus lisätään
-    #_ (is (= "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit lokakuussa 2014, Toimenpide: kaikki"
-           muutos-ja-lisatoiden-raportin-otsikko))))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.10.2014 - 31.10.2014" sanktio-otsikko))))
