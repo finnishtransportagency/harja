@@ -215,6 +215,16 @@
         (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
                                      urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
+(defn vaadi-talvisuolan-ylitys-ehdon-tayttymista
+  "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
+  sanktion laji on talvisuolan ylitys
+  ja sanktion käsittelyaika on urakan viimeisen hoitovuoden aikana."
+  [urakan-tiedot kasittelyaika]
+  (when-not (and
+              (pvm/valissa? kasittelyaika
+                (pvm/->pvm (str "01.10." (dec (-> urakan-tiedot :loppupvm pvm/vuosi))))
+                (-> urakan-tiedot :loppupvm)))
+    (throw (SecurityException. "Talvisuolan ylityksen ehdot eivät täyttyneet: Urakka ei ole teidenhoidon hoitourakka, tai sanktion perintäpäivä ei ole urakan viimeisen hoitovuoden aikana."))))
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]

@@ -1586,3 +1586,9 @@
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
+(deftest vaadi-talvisuolan-ylitys-ehdon-tayttymista-hyvaksyy-oikean-kasittelyajan
+  (let [urakan-tiedot {:loppupvm (pvm/->pvm "30.09.2026")}]
+    (is (nil? (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.09.2026"))))
+    (is (nil? (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.10.2025"))))
+    (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.09.2022"))))
+    (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehdon-tayttymista urakan-tiedot (pvm/->pvm "15.10.2026"))))))
