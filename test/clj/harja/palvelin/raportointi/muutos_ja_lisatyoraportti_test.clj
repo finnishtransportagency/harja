@@ -89,7 +89,7 @@
                           :tehtavat_ja_maarat [{:tehtava 17345, :maaramuutos maaramuutos, :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))}],
                           :kustannusvaikutukset [{:summa euromuutos, :toimenpideinstanssi 129, :kustannuslaji "hankintakustannukset", :hoitokauden_alkuvuosi (pvm/vuosi (first valittu-hoitokausi))}]}
                          (when (= tyyppi "muutostyo"))
-                           {:alityyppi :poikkeama})]
+                         {:alityyppi :poikkeama})]
     (kutsu-palvelua (:http-palvelin jarjestelma)
       :tallenna-muutos
       +kayttaja-jvh+
@@ -111,14 +111,17 @@
        :valittu-hoitokausi valittu-hoitokausi
        :muutos payload})))
 
+(defn- tallenna-jjh-muutos! [urakka-id syy voimassa-alkaen valittu-hoitokausi summa erapaiva]
+  (let [muutos-payload {:voimassa_alkaen voimassa-alkaen,
+                        :syy syy,
+                        :kulut (list {:pvm erapaiva, :tavoitehinnan-muutos summa}),
+                        :tyyppi "johto-ja-hallintokorvaus"}]
+    (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-muutos +kayttaja-jvh+
+      {:urakka-id urakka-id
+       :valittu-hoitokausi valittu-hoitokausi
+       :muutos muutos-payload})))
 
-(defn- luo-kustannusvaikutus!
-  "Luo kustannusvaikutuksen muutokselle."
-  [muutos-id hoitokauden-alkuvuosi summa]
-  (u (str "INSERT INTO mhu_muutos_kustannusvaikutus (versio, muutos, kustannuslaji, hoitokauden_alkuvuosi, summa)
-           VALUES (1, " muutos-id ", 'hankintakustannukset', " hoitokauden-alkuvuosi ", " summa ")")))
-
-(defn- luo-jjh-muutos!
+#_ (defn- luo-jjh-muutos!
   "Luo johto- ja hallintokorvauksen muutoksen kuluineen.
    Malli: muutos_testidata.sql, Muutos 4."
   [urakka-id syy voimassa-alkaen erapaiva summa]
@@ -175,19 +178,17 @@
         maaramuutos 10
         euromuutos-pysyva 5000
         euromuutos-muutos 3000
-        euromuutos-jjh 1500
+        euromuutos-jjh -1500
         _ (siivoa-muutosdata! urakka-id)
 
         ;; Luo testiaineisto: yksi kutakin tyyppiä
         valittu-hoitokausi [(pvm/luo-pvm 2028 10 1) (pvm/luo-pvm 2029 9 30)]
         _ (tallenna-kirjallinen-muutos! urakka-id "pysyva" "Pysyvä syy" (pvm/luo-pvm 2028 11 1)
-                         valittu-hoitokausi maaramuutos euromuutos-pysyva)
+            valittu-hoitokausi maaramuutos euromuutos-pysyva)
         _ (tallenna-muutostyo-muutos! urakka-id "Muutostyö syy" (pvm/luo-pvm 2028 12 15) valittu-hoitokausi euromuutos-muutos)
-        _ (luo-jjh-muutos! urakka-id "JJH syy" (pvm/->pvm (str "20.10.2028")) (pvm/->pvm (str "15.10.2028")) euromuutos-jjh)
+        _ (tallenna-jjh-muutos! urakka-id "JJH syy" (pvm/luo-pvm 2028 10 20) valittu-hoitokausi euromuutos-jjh (pvm/luo-pvm 2028 10 15))
         ;; Suorita raportti hoitokaudelle 2028-2029
-        vastaus (suorita-raportti urakka-id
-                  (pvm/hoitokauden-alkupvm 2028)
-                  (pvm/hoitokauden-loppupvm 2029))
+        vastaus (suorita-raportti urakka-id (pvm/hoitokauden-alkupvm 2028) (pvm/hoitokauden-loppupvm 2029))
         taulukko (hae-taulukko vastaus "Kirjallisesti sovitut" :sheet-nimi)]
     (is (some? taulukko) "Kirjallisesti sovitut muutokset -taulukko löytyy")
     (let [rivit (apurit/taulukon-rivit taulukko)
@@ -196,7 +197,7 @@
       (is (= 4 (count rivit)) "Taulukossa on 4 riviä (3 data + yhteensä)")
       ;; Tarkista yhteensä: 5000 + 3000 + 1500 = 9500
       (let [yhteensa-arvo (nth (:rivi yhteensarivi) 3)]
-        (is (= 9500M yhteensa-arvo) "Yhteensä-rivin tavoitehinnan muutos on 9500")))))
+        (is (= (bigdec (+ euromuutos-jjh euromuutos-muutos euromuutos-pysyva)) yhteensa-arvo) "Yhteensä-rivin tavoitehinnan muutos on 9500")))))
 
 (deftest kirjallisesti-sovitut-muutokset-ei-dataa
   (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
@@ -294,7 +295,6 @@
                                   LIMIT 1")))
         tehtava-id (first tehtava-tietorivi)
         tehtava-nimi (nth tehtava-tietorivi 2)
-        _ (println "Valittu tehtava-rivi:" tehtava-tietorivi)
         _ (assert (some? tehtava-id) "Tehtävä löytyy testidatasta")
         ;; Luo kulu joka kohdistetaan tehtävälle
         kulusumma 800
@@ -311,8 +311,6 @@
           taulukko (hae-taulukko vastaus "Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset" :otsikko)]
       (is (some? taulukko) "Tehtävä-maaramuutokset taulukko löytyy")
       (let [rivit (apurit/taulukon-rivit taulukko)
-            _ (println "Rivi määrä:" (count rivit))
-            _ (println "rivit:"  rivit)
             tehtava-raporttirivi (some #(when (= tehtava-nimi (first %)) %) rivit)]
         ;; Pitäisi olla vähintään 2 riviä (data + yhteensä)
         (is (>= (count rivit) 2) "Taulukossa on vähintään datarivi ja yhteensä-rivi")
