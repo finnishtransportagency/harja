@@ -7,7 +7,7 @@ function avaaValitavoitteet(urakkanimi, hallintayksikko) {
     cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist');
 
     // Valitse hallintayksikkö
-    cy.contains('.haku-lista-item', hallintayksikko, { timeout: ladataanHarjaaTimeout }).click();
+    cy.get('[data-cy="haku-lista-item"]').contains(hallintayksikko, { timeout: ladataanHarjaaTimeout }).click();
     cy.get('.ajax-loader', { timeout: ladataanHarjaaTimeout }).should('not.exist');
 
     // Näytä päättyneet urakat (jos tarvitaan)
@@ -19,7 +19,7 @@ function avaaValitavoitteet(urakkanimi, hallintayksikko) {
         .should('be.checked');
 
     // Valitse urakka
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkanimi, { timeout: ladataanHarjaaTimeout }).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] button', urakkanimi, { timeout: ladataanHarjaaTimeout }).click();
     
     // Mene "Lupaukset ja tavoitteet" välilehdelle
     cy.get('[data-cy="tabs-taso1-Lupaukset ja tavoitteet"]', { timeout: ladataanHarjaaTimeout }).click();

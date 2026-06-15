@@ -40,11 +40,11 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
 
-        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.get('[data-cy="haku-lista-item"]').contains('Lappi').click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: clickTimeout}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] button', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: clickTimeout}).click()
 
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
 
@@ -200,7 +200,7 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
 
     // Indeksikorjattu Tavoitehinta muutoksista
     it('Tavoitehinta muutoksista', () => {
-        cy.get('[data-cy=tabs-taso1-Muutokset]').click();
+        cy.get('[data-cy=tabs-taso1-Muutokset]').click({force: true});
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
         cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')

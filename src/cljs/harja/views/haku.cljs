@@ -129,7 +129,7 @@
                                    (reset! hakutermi nil)))
     (fn []
       ;; d-none d-sm-block == Piilottaa pienemmällä resolla
-      [:div.d-none.d-sm-block.w-25
+      [:div.d-none.d-sm-block.w-25 {:style {:z-index "1000"}}
        [suodatettu-lista
         {:format (fn [tulos]
                    [:div {:class (when (and (= :urakka (:tyyppi tulos))

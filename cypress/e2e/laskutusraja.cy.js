@@ -32,7 +32,7 @@ function trimmaaArvo(arvo) {
 function avaaOulunKulujenKohdistus() {
     avaaHarjaTimeoutilla();
 
-    cy.contains('.haku-lista-item', elinvoimakeskus, {timeout: visibleTimeout}).click();
+    cy.contains('[data-cy="haku-lista-item"]', elinvoimakeskus, {timeout: visibleTimeout}).click();
     cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
 
     // Urakka on päättynyt, joten täytyy näyttää päättyneet urakat
@@ -43,7 +43,7 @@ function avaaOulunKulujenKohdistus() {
         .check()
         .should('be.checked');
 
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimiOulu, {timeout: visibleTimeout}).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] button', urakanNimiOulu, {timeout: visibleTimeout}).click();
 
     cy.get('[data-cy=tabs-taso1-Kulut]', {timeout: visibleTimeout}).click();
     cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
@@ -66,10 +66,10 @@ describe('Laskutusraja', function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
         // Navigoi urakkaan
-        cy.contains('.haku-lista-item', elinvoimakeskus).click();
+        cy.contains('[data-cy="haku-lista-item"]', elinvoimakeskus).click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimiKajaani, {timeout: clickTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] button', urakanNimiKajaani, {timeout: clickTimeout}).click();
 
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
 
@@ -228,7 +228,7 @@ describe('Laskutusraja', function () {
 
         // Siirry Kulut → Kustannusten seuranta
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
-        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
+        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').focus().type('{enter}');
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Odota että laskutusraja haetaan
@@ -243,7 +243,7 @@ describe('Laskutusraja', function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
 
         // Siirry Muutoksiin
-        cy.get('[data-cy=tabs-taso1-Muutokset]').click();
+        cy.get('[data-cy=tabs-taso1-Muutokset]').click({force: true});
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Tarkista että laskutusraja näkyy

@@ -16,7 +16,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         cy.visit("/");
 
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click();
+        cy.get('[data-cy="haku-lista-item"]').contains('Pohjois-Suomi').click();
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');
@@ -25,7 +25,7 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
 
         // Valitse oikea urakka
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout: clickTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] button', 'Iin MHU 2021-2026', {timeout: clickTimeout}).click();
 
         // Avaa Laadunseuranta
         cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click();

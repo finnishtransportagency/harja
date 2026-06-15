@@ -15,10 +15,10 @@
                                 #(reset! naytettava-viesti
                                    (rand-nth (lataus-viestit viesti)))
                                 1300))]
-    [:div {:style {:width "100%"
-                   :display "flex"
-                   :flex-direction "column"
-                   :align-items "center"}}
+    [:div.ajax-loader {:style {:width "100%"
+                               :display "flex"
+                               :flex-direction "column"
+                               :align-items "center"}}
      [:div {:class "text-secondary mb-3"
             :style {:width "100%"
                     :text-align "center"}}

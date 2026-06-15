@@ -36,10 +36,10 @@ describe('Tehtävä- ja määräluettelo -näkymän testaus', () => {
         // Resetoidaan urakan kaikki tehtävämäärät.
         alustaKantaanTehtavatJaMaarat('Rovaniemen MHU testiurakka (1. hoitovuosi)');
         avaaHarjaTimeoutilla();
-        
-        cy.contains('.haku-lista-item', 'Lappi', {timeout: ladataanHarjaaTimeout}).click();
+
+        cy.get('[data-cy="haku-lista-item"]').contains('Lappi', {timeout: ladataanHarjaaTimeout}).click();
         cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] button', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: ladataanHarjaaTimeout}).click();
         // Mene suunnittelu välilehdelle
         cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: ladataanHarjaaTimeout}).click();
         // Avaa Tehtävä- ja määräluettelo -välilehti

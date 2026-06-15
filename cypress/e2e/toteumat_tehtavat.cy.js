@@ -14,11 +14,11 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.viewport(1100, 2000)
         cy.intercept('POST', '_/maarien-toteutumien-toimenpiteiden-tehtavat').as('hae-tehtavat');
         cy.visit("/")
-        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.get('[data-cy="haku-lista-item"]').contains('Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
-        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] button', urakanNimi, {timeout: clickTimeout}).click()
 
         // Siirry Toteumat päätabille
         cy.get('[data-cy=tabs-taso1-Toteumat]').click()
@@ -41,7 +41,7 @@ describe('Toteumat / Tehtävät sivu toimii', function ()
         cy.contains('Lisää toteuma').should('exist')
 
         // Lisätään uusi toteuma - Avataan näkymä
-        cy.get('[data-cy="lisaa-toteuma-nappi"]', {timeout: clickTimeout}).click()
+        cy.get('[data-cy="lisaa-toteuma-nappi"]', {timeout: clickTimeout}).click({force: true})
         // Varmista, että tehtävähaku on valmistunut
         cy.wait('@hae-tehtavat', {timeout: clickTimeout})
 

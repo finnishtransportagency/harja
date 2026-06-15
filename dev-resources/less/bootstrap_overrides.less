@@ -4,6 +4,11 @@
 
 @body-bg: @harjan-taustavari;
 
+// Tätä ei päänäkymässä tarvitse
+html, body {
+  overflow-x: hidden;
+}
+
 // Leveä Harja on parempi
 .container {
   padding: 0;
@@ -19,7 +24,8 @@
   min-height: 36px !important;
 }
 
-.container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
+.container, .container-sm, .container-md, 
+.container-lg, .container-xl, .container-xxl {
   padding: 0 @valistys-24;
 }
 
@@ -29,7 +35,8 @@
 
 
 @media (min-width: 1400px) {
-  .container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl {
+  .container, .container-sm, 
+  .container-md, .container-lg, .container-xl, .container-xxl {
     max-width: 2560px !important;
   }
 }

@@ -54,7 +54,7 @@
 
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
        :const true}
-  min-zoom 4)
+  min-zoom 2)
 (def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään"
        :const true}
   max-zoom 16)

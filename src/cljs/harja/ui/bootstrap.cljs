@@ -38,8 +38,8 @@ The following keys are supported in the configuration:
                             :tabs (str "nav-tabs " classes))
               tabs (filter #(not (nil? (nth % 2)))
                      (partition 3 alternating-title-and-component))
-              taso1? (boolean (re-find #"tabs-taso1" (str classes)))
-              [active-tab-title active-tab-keyword active-component]
+              _taso1? (boolean (re-find #"tabs-taso1" (str classes)))
+              [_active-tab-title active-tab-keyword active-component]
               (or (first (filter #(= @active (nth % 1)) tabs))
                 (first tabs))
               vaihda-aktiivinen-tabi (fn [keyword event]
@@ -56,7 +56,7 @@ The following keys are supported in the configuration:
                  (for [[title keyword] tabs]
                    ^{:key title}
                    [:li.nav-item
-                    [:a.nav-link
+                    [:a.nav-link.klikattava
                      (merge
                        {:href "#"
                         :class (str

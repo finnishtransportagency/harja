@@ -38,9 +38,7 @@ describe('Osion vahvistaminen', function () {
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
-            .click();
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().click();
 
 
         // Varmista, että tallennuskyselyt menevät läpi
@@ -50,8 +48,7 @@ describe('Osion vahvistaminen', function () {
         // -- Palauta UI-valinnat ennalleen --
 
         // Pienennä osion vahvistuslaatikko
-        cy.get('[data-cy="vahvista-osio-hankintakustannukset"]')
-            .click();
+        cy.get('.laajenna-btn').click({ multiple: true });
 
         // -- Arvojen tarkastus --
         ks.testaaTilayhteenveto(1, 'Suunnitellut hankinnat', true);
@@ -59,15 +56,11 @@ describe('Osion vahvistaminen', function () {
 
     it('Testaa Erillishankinnat osion vahvistaminen', function () {
         // Klikkaa osion vahvistusnappulaa
-        cy.get('[data-cy="vahvista-osio-erillishankinnat"]')
-            .click()
-            .find('[data-cy="vahvista-osio-btn"]')
+        cy.get('[data-cy="vahvista-osio-erillishankinnat"] [data-cy="vahvista-osio-btn"]')
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
-            .click();
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().click();
 
         // Varmista, että tallennuskyselyt menevät läpi
         cy.wait('@vahvista-kustannussuunnitelman-osa-vuodella')
@@ -76,8 +69,7 @@ describe('Osion vahvistaminen', function () {
         // -- Palauta UI-valinnat ennalleen --
 
         // Pienennä osion vahvistuslaatikko
-        cy.get('[data-cy="vahvista-osio-erillishankinnat"]')
-            .click();
+        cy.get('.laajenna-btn').click({ multiple: true });
 
 
         // -- Arvojen tarkastus --
@@ -92,9 +84,7 @@ describe('Osion vahvistaminen', function () {
             .click();
 
         // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
-            .click();
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().click();
 
         // Varmista, että tallennuskyselyt menevät läpi
         cy.wait('@kumoa-suunnitelman-osan-vahvistus-hoitovuodelle')

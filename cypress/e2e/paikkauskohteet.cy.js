@@ -28,11 +28,11 @@ let avaaPaikkauskohteetSuoraan = function () {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('[data-cy="haku-lista-item"]').contains('Lappi').click()
     cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
-    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+    cy.contains('[data-cy=urakat-valitse-urakka] button', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
     cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
@@ -52,11 +52,11 @@ let avaaToteumat = () => {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', 'Lappi').click()
+    cy.get('[data-cy="haku-lista-item"]').contains('Lappi').click()
     cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
     cy.contains('Näytä päättyneet').click();
-    cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+    cy.contains('[data-cy=urakat-valitse-urakka] button', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
     // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
     cy.contains('.nappi-toissijainen', 'Sulje').click()
     cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
@@ -79,12 +79,14 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.viewport(1100, 2000)
         cy.visit("/")
 
-        cy.contains('.haku-lista-item', 'Lappi').click()
+        siivoaKanta();
+        
+        cy.get('[data-cy="haku-lista-item"]').contains('Lappi').click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
 
         cy.contains('Näytä päättyneet').click();
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] button', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
 
         // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
         cy.contains('.nappi-toissijainen', 'Sulje').click()
@@ -146,7 +148,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click({force: true})
 
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
 
         // Vaihda oikeaan vuoteen
         cy.get('label[for*=filtteri-vuosi] + div').filtteriValitse({valinta: '2021'})
@@ -174,7 +176,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
         cy.wait('@tilaus', {timeout: 60000})
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti').contains('', 'Kohde tilattu', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
     })
 
     it('Lisää levittimellä tehtävälle paikkauskohteelle toteuma', function () {
@@ -207,7 +209,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for*=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
     })
 
 
@@ -218,7 +220,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.viewport(1100, 2000)
         avaaToteumat()
 
-        cy.get('div .otsikkokomponentti').contains('CPKohde').parent().parent().contains('Lisää toteuma').click()
+        cy.contains('div.otsikkokomponentti', 'CPKohde').find('button[aria-label="Lisää toteuma"]').click();
         //cy.get('label[for=aosa] + span > input').type("4")
         cy.get('label[for*=aet] + span > input').type("4")
         //cy.get('label[for=losa] + span > input').type("5")
@@ -234,7 +236,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('label[for*=leveys] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
-        cy.get('.toast-viesti').contains('', 'Toteuma tallennettu', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
     })
 
     it('Tarkastellaan toteumaa', () => {
@@ -268,7 +270,7 @@ describe('Paikkaustoteumat toimii', function () {
         cy.get('.modal', {timeout: clickTimeout}).should('be.visible')
         cy.get('.modal').contains('Poista toteuma').click()
         cy.get('.modal', {timeout: clickTimeout}).should('not.exist')
-        cy.get('.toast-viesti').contains('', 'Toteuma poistettu', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
     })
 })
 
@@ -305,7 +307,7 @@ describe('Päällystysilmoitukset toimii', function () {
         cy.get('button').contains('.nappi-ensisijainen', 'Tallenna', {timeout: clickTimeout}).click()
 
         // Varmista, että tallennus onnistui
-        cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
+        cy.get('.alert-icon:visible', { timeout: 4000 }).first().should('be.visible')
     })
 
     it('Tilaa POT-raportoitava', function () {

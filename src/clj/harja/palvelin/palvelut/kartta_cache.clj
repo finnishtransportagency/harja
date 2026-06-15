@@ -49,8 +49,8 @@
 
 
 (defn- tuore?
-  "Cache-osuma hyväksytään jos tiedosto löytyy ja on TTL:n sisällä.
-  Vanhentunut tiedosto jätetään levylle STALE-vastausta varten."
+  "Cache hyväksytään jos tiedosto löytyy ja on time-to-live:n sisällä.
+  Vanhentunut tiedosto jätetään levylle siltä varalta, jos uutta kuvaa ei saada."
   [^File tiedosto ttl]
   (and (.isFile tiedosto)
     (< (- (System/currentTimeMillis)

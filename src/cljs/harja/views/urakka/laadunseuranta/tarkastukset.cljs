@@ -93,8 +93,6 @@
           [:div.col-md-3.col-lg-2
            [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]]
 
-          [:div.w-100]
-
           (when-not vesivaylaurakka?
             [:div.col-md-2.col-lg-2
              [valinnat/tienumero tiedot/tienumero]])
@@ -126,7 +124,6 @@
                              :valinta-nayta second}
              :arvo-atom tiedot/tarkastuksen-tekija}]]
 
-
           [:div.w-100]
 
           [:div.col-md-2.col-lg-2
@@ -141,7 +138,6 @@
                 [napit/uusi "Uusi tarkastus"
                  #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
                  {:disabled (not oikeus?)}]))]]]
-
 
          [grid/grid
           {:otsikko "Tarkastukset"

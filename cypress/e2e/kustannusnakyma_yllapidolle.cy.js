@@ -35,8 +35,10 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         // Avaa päänäkymä
         cy.visit("/");
 
+        cy.get('.ladataan-harjaa', {timeout: loaderTimeout}).should('not.exist')
+
         // Avaa hallintayksikkö
-        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click();
+        cy.get('[data-cy="haku-lista-item"]').contains('Pohjois-Suomi').trigger('mousedown');
 
         // Hyrrää ei pitäisi olla
         cy.get('.ajax-loader', {timeout: loaderTimeout}).should('not.exist');
@@ -45,7 +47,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'});
 
         // Valitse oikea urakka
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Muhoksen päällystysurakka', {timeout: clickTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] button', 'Muhoksen päällystysurakka', {timeout: clickTimeout}).click();
 
         // Avaa paikkaukset
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click();
@@ -67,7 +69,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
         cy.wait(1000);
 
         // Klikkaa kalenterivuotta
-        cy.get('.valittu.overflow-ellipsis').eq(0).click();
+        cy.get('.valittu.overflow-ellipsis').eq(2).click();
 
         // Valitse 2024 vuosi
         cy.contains('2024').click();
@@ -76,7 +78,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
     it('Pitäisi lisätä uusi Arvomuutos ja tallentaa se onnistuneesti', function () {
         cy.viewport(1100, 2000);
         // Klikkaa 'Lisää kustannus'
-        cy.get('button.button-primary-default[type="button"]')
+        cy.get('button.nappi-ensisijainen[type="button"]')
             .contains('span', 'Lisää kustannus')
             .click({force: true});
 
@@ -135,7 +137,7 @@ describe('Kustannusnäkymä toimii paikkaus urakalle', function () {
     it('Pitäisi lisätä uusi oma selitteinen kustannus ja tallentaa se onnistuneesti', function () {
         cy.viewport(1200, 1800);
         // Klikkaa 'Lisää kustannus'
-        cy.get('button.button-primary-default[type="button"]')
+        cy.get('button.nappi-ensisijainen[type="button"]')
             .contains('span', 'Lisää kustannus')
             .click({force: true});
 

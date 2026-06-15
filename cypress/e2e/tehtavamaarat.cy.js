@@ -78,7 +78,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         cy.viewport(1100, 2000)
         cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
 
-        cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click();
+        cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click({force: true});
 
         // Tämä conditionaalinen tarkistelu toimii. Tee checkboxille sama
         cy.get('table.grid').then(($ele) => {
@@ -86,7 +86,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
                 // Käytä check() koska useammalla peräkkäisellä ajolla checkbox voi olla valittuna ja check varmistaa, että se on valittuna
                 cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').check();
             } else {
-                cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click()
+                cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('div.vetolaatikon-sailio').click({force: true})
                 // Käytä check() koska useammalla peräkkäisellä ajolla checkbox voi olla valittuna ja check varmistaa, että se on valittuna
                 cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').check();
             }

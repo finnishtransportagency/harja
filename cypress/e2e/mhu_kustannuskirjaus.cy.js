@@ -4,9 +4,17 @@ let clicktimeout = 2000;
 let avaaKulujenKohdistus = (urakanNimi) => {
     cy.visit('/');
     cy.get('.ladataan-harjaa', {timeout: timeout}).should('not.exist')
-    let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]', {timeout: pageloadTimeout})
+    let hakupalkki = cy.get('.haku-input[placeholder="Hae urakoita.."]', {timeout: pageloadTimeout})
     hakupalkki.type(urakanNimi);
-    hakupalkki.siblings().contains(urakanNimi).click();
+    cy.get('.dropdown-item').should('be.visible');
+    cy.get('.haku-input[placeholder="Hae urakoita.."]', {
+        timeout: pageloadTimeout
+    })
+        .clear()
+        .type(urakanNimi)
+        .closest('.haku-container')
+        .contains('.dropdown-item', urakanNimi)
+        .click();
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();
 }
 

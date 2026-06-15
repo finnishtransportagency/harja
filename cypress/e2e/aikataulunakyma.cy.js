@@ -23,7 +23,7 @@ describe('Aikataulunäkymien avaaminen päällystysurakassa', function () {
     })
 
     it("Aikataulun avaaminen toimii päällystyksessä", function () {
-        cy.contains('.klikattava', 'Aikataulu', {timeout: 40000}).click()
+        cy.get('[data-cy=tabs-taso1-Aikataulu]').click()
         cy.get('.navigation-right', {timeout: 40000}).first().click()
         // Ei saa näkyä alikohteet omassa taulukossaan
         cy.contains('.panel-title', 'Kohteen tieosoitteet').should('not.exist')

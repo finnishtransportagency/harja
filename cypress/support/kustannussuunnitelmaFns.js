@@ -430,11 +430,11 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 
     avaaHarjaTimeoutilla();
 
-    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('[data-cy="haku-lista-item"]').contains(alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
     cy.contains('Näytä päättyneet').click();
 
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] button', urakkaNimi, {timeout: 10000}).click();
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
     // Avaa Kustannussuunnitelma
@@ -461,11 +461,11 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
     avaaHarjaTimeoutilla();
 
-    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('[data-cy="haku-lista-item"]').contains(alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
     cy.contains('Näytä päättyneet').click();
 
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] button', urakkaNimi, {timeout: 10000}).click();
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
     // Avaa Uusi Kustannussuunnitelma
@@ -482,11 +482,11 @@ export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
 export function avaaTarjous(urakkaNimi, alue) {
     avaaHarjaTimeoutilla();
 
-    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
+    cy.get('[data-cy="haku-lista-item"]').contains(alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
     cy.contains('Näytä päättyneet').click();
 
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
+    cy.contains('[data-cy=urakat-valitse-urakka] button', urakkaNimi, {timeout: 10000}).click();
     // Mene suunnittelu välilehdelle
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
     // Avaa Tarjous

@@ -21,7 +21,7 @@
 
 (defn hallintayksikko [_valinta-auki]
   (let [vaihtoehdot @hal/vaylamuodon-hallintayksikot]
-    [:div.murupolku-select
+    [:div.murupolkuvalitsin
      [:div.d-flex.align-items-center.gap-2.mb-1
       [:label.form-label.mb-0 {:for "hallintayksikko-select"} "Elinvoimakeskus"]
       [:a.text-secondary
@@ -37,7 +37,7 @@
                                             (= (str (:id %)) (str id)) %) vaihtoehdot)]
                        (nav/valitse-hallintayksikko-varmistuksella! valinta)))
        :valinta @nav/valittu-hallintayksikko
-       :class "livi-alasveto-250"
+       :class "livi-alasveto-250 alasveto-hallintayksikko"
        :format-fn #(if % (:nimi %) "- valitse -")}
       vaihtoehdot]]))
 
@@ -53,7 +53,8 @@
 
       ;; ===============================
       ;; Pidennä hieman jos urakka valittuna 
-      [:div.murupolku-select {:style (when (some-> @nav/valittu-urakka :id str) {:min-width "300px"})}
+      [:div
+       {:style (when (some-> @nav/valittu-urakka :id str) {:min-width "300px"})}
        [:label.form-label {:for "alasveto-urakka"} "Urakka"]
 
        [yleiset/livi-pudotusvalikko
@@ -61,6 +62,7 @@
                        (nav/valitse-urakka-varmistuksella! (hae-valinta (:id e))))
          :valinta @nav/valittu-urakka
          :class "livi-alasveto-250"
+         :data-cy "urakat-valitse-urakka"
          :format-fn #(if % (:nimi %) "- valitse -")}
         vaihtoehdot]])))
 
@@ -80,7 +82,7 @@
                       (remove nil?)
                       (distinct-by :id)
                       vec)]
-    [:div.murupolku-select
+    [:div.murupolku-urakoitsija
      [:label.form-label {:for "alasveto-urakoitsija"} "Urakoitsija"]
 
      [yleiset/livi-pudotusvalikko
@@ -99,7 +101,7 @@
   (let [valittu @nav/urakkatyyppi
         disabled? (boolean @nav/valittu-urakka)
         vaihtoehdot nav/+urakkatyypit-ja-kaikki+]
-    [:div.murupolku-select
+    [:div.murupolku-urakkatyyppi
      [:label.form-label {:for "alasveto-urakkatyyppi"} "Urakkatyyppi"]
 
      [yleiset/livi-pudotusvalikko
@@ -109,6 +111,7 @@
                        (nav/vaihda-urakkatyyppi! valinta)))
        :disabled disabled?
        :valinta valittu
+       :data-cy "murupolku-urakkatyyppi"
        :class "livi-alasveto-250"
        :format-fn #(if % (:nimi %) "- valitse -")}
       vaihtoehdot]]))

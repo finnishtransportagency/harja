@@ -91,21 +91,21 @@
 (defn- aseta-kartan-sijainti [x y w h naulattu?]
   (when-let [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
-      (if naulattu?
-        (do
-          (set! (.-position tyyli) "fixed")
-          (set! (.-left tyyli) (fmt/pikseleina x))
-          (set! (.-top tyyli) "0px")
-          (set! (.-width tyyli) (fmt/pikseleina w))
-          (set! (.-height tyyli) (fmt/pikseleina h))
-          (openlayers/set-map-size! w h))
-        (do
-          (set! (.-position tyyli) "absolute")
-          (set! (.-left tyyli) (fmt/pikseleina x))
-          (set! (.-top tyyli) (fmt/pikseleina (- y 10)))
-          (set! (.-width tyyli) (fmt/pikseleina w))
-          (set! (.-height tyyli) (fmt/pikseleina h))
-          (openlayers/set-map-size! w h))))))
+      (set! (.-position tyyli) (if naulattu? "fixed" "absolute"))
+      (set! (.-left tyyli) (fmt/pikseleina x))
+      (set! (.-right tyyli) "auto")
+      (set! (.-width tyyli)
+        (str "min(" (fmt/pikseleina w) ", calc(100vw - " (fmt/pikseleina x) "))"))
+      (set! (.-top tyyli) (if naulattu?
+                            "0px"
+                            (fmt/pikseleina (- y 10))))
+      (set! (.-height tyyli) (fmt/pikseleina h))
+
+      (js/requestAnimationFrame
+        (fn []
+          (openlayers/set-map-size!
+            (.-clientWidth karttasailio)
+            h))))))
 
 (defn odota-mount-tai-timeout
   "Odottaa, että paivita-kartan-sijainti kanavaan tulee :mount tapahtuma tai 150ms timeout.
@@ -257,8 +257,6 @@
                                      :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                                      ["" nil])]
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
-
-
      [:div.kartan-koko-napit
       {:style (merge
                 {:position "relative"

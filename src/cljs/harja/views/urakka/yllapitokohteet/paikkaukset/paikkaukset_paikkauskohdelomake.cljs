@@ -275,7 +275,7 @@
     :vayla-tyyli? true
     :virhe? (validointi/nayta-virhe? [:tyomenetelma] lomake)
     :pakollinen? true
-    ::lomake/col-luokka "col-sm-12"
+    ::lomake/col-luokka "col-xs-6"
     :muokattava? #(not (or (= "tilattu" (:paikkauskohteen-tila lomake))
                          (= "valmis" (:paikkauskohteen-tila lomake))))}])
 
@@ -1003,7 +1003,8 @@
          [v-pmrlomake/pmr-lomake e! pmr-lomake tyomenetelmat]])
 
       [lomake/lomake
-       {:ei-borderia? true
+       {:luokka "padding-16"
+        :ei-borderia? true
         :voi-muokata? muokkaustila?
         :tarkkaile-ulkopuolisia-muutoksia? true
         :otsikko (when (and muokkaustila? (not raportointitila?))

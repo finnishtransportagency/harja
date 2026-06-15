@@ -282,10 +282,10 @@
               [:span {:class "nav-link-title"} " Hallinta "]]])]]]]]]]])
 
 (defn ladataan []
-  [:div {:style {:position "absolute"
-                 :top "50%"
-                 :left "50%"
-                 :transform "translate(-50%, -50%)"}}
+  [:div.ladataan-harjaa {:style {:position "absolute"
+                                 :top "50%"
+                                 :left "50%"
+                                 :transform "translate(-50%, -50%)"}}
    [:div {:style {:width "320px"}}
     [ajax-loader "Ladataan..."]]])
 

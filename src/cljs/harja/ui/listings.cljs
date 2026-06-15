@@ -61,7 +61,7 @@
 
         [:div.dropdown.haku-container
          [:div.input-icon
-          [:input.form-control
+          [:input.haku-input.form-control
            {:type "text"
             :value @term
             :placeholder (:aputeksti opts)
@@ -107,6 +107,7 @@
                                      ^{:key (tunniste item)}
                                      [:button.dropdown-item.w-100.text-truncate
                                       {:type "button"
+                                       :data-cy "haku-lista-item"
                                        :on-mouse-down #(on-select item) ; ennen bluria
                                        :class (str (when (= item selected) " active ")
                                                 (when (= (+ alkuidx i) korostus) " active "))}
