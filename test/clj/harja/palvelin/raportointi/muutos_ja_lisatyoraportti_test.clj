@@ -3,7 +3,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [com.stuartsierra.component :as component]
-            [harja.testi :refer [+kayttaja-jvh+ db hae-kajaanin-maanteiden-hoitourakan-2025-2030-id hae-oulun-maanteiden-hoitourakan-2019-2024-id i jarjestelma kutsu-palvelua q testi-http-palvelin testitietokanta u urakkatieto-fixture]]
+            [harja.testi :refer :all]
 
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
