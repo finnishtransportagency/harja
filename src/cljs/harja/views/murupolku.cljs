@@ -61,7 +61,7 @@
         {:valitse-fn (fn [e]
                        (nav/valitse-urakka-varmistuksella! (hae-valinta (:id e))))
          :valinta @nav/valittu-urakka
-         :class "livi-alasveto-250"
+         :class "livi-alasveto-250 alasveto-urakka"
          :data-cy "urakat-valitse-urakka"
          :format-fn #(if % (:nimi %) "- valitse -")}
         vaihtoehdot]])))

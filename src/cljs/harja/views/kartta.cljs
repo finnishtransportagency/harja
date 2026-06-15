@@ -783,7 +783,7 @@
           :layers (keep identity [(when (or
                                           (k/kehitysymparistossa-localhost?)
                                           (k/kehitysymparistossa-gc?))
-                                    ;; Käytetään kapsi.fi:n avointa WMS-karttaa paikallisessa kehitysympäristössä MML:n karttojen sijaan.
+                                    ;; Local kehitysympäristössä käytetään avointa kapsi rajapintaa
                                     {:type :wms
                                      :id :kapsi
                                      :url (str (k/polku) "kartta-cache")

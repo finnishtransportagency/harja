@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.kartta-cache
-  "Cachetus Harjan karttaan, skipataan 200-3000ms kuvahaut kun kartta liikkuu"
+  "Kehitysympäristön cachetus Harjan karttaan"
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [taoensso.timbre :as log]
@@ -31,13 +31,13 @@
 
 
 (defn- ttl-ms
-  "Asetuksissa annettu cache-aika päivistä -> millisekunneiksi. Default 21 päivää."
+  "Asetuksissa annettu cache-aika päivistä -> millisekunneiksi"
   [asetukset]
   (* (long (or (:ttl-paivat asetukset) 21)) 24 60 60 1000))
 
 
 (defn- cache-hakemisto
-  "Palauttaa cache-hakemiston ja luo sen tarvittaessa. Polkuna toimii projektin root."
+  "Palauttaa cache-hakemiston ja luo sen tarvittaessa"
   [asetukset]
   (doto
     (io/file
@@ -142,7 +142,7 @@
                  {:as :byte-array
                   :headers {"User-Agent" "Mozilla/5.0"
                             "Accept" "image/png,image/*;q=0.8,*/*;q=0.5"}
-                  :connect-timeout 5000
+                  :connect-timeout 15000
                   :timeout 20000})]
 
           (when-not (= status 200)
@@ -196,3 +196,8 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin :kartta-cache)
     this))
+
+
+(defn luo-kartta-cache [asetukset]
+  (when (:kehitysmoodi asetukset)
+    (->KarttaCache (:kartta-cache asetukset))))

@@ -625,15 +625,12 @@
                    (tienakyma/->Tienakyma)
                    {:db :db-replica
                     :http-palvelin :http-palvelin})
-
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
-      :kartta-cache
-      (component/using
-        (kartta-cache/->KarttaCache (:kartta-cache asetukset))
-        [:http-palvelin])
-
+      :kartta-cache (component/using
+                      (kartta-cache/luo-kartta-cache asetukset)
+                      [:http-palvelin])
       :hankkeet (component/using
                   (hankkeet/->Hankkeet)
                   [:db :http-palvelin])

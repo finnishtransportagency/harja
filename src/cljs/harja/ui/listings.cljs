@@ -90,7 +90,7 @@
 
          (when (or nayta-aina? nayta?)
            [:div {:class (str "dropdown-menu dropdown-menu-card w-100" (when (or nayta-aina? nayta?) " show"))
-                  :style {:maxHeight "320px" :overflowY "auto"}}
+                  :style {:maxHeight "700px" :overflowY "auto"}}
             (when-let [v (:vinkki opts)]
               (when-let [t (v)]
                 (into [:<>]

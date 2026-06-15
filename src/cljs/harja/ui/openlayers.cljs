@@ -6,12 +6,12 @@
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<! >! chan timeout] :as async]
 
-            [harja.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
+            [harja.ui.openlayers.featuret :as featuret]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.openlayers.geometriataso]
-            [harja.ui.dom :as dom]
             [harja.ui.animaatio :as animaatio]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.geo :as geo]
 
             [ol]
@@ -31,30 +31,29 @@
             [ol.interaction :as ol-interaction]
 
             [ol.Overlay] ;; popup
-            [harja.virhekasittely :as vk]
-            [harja.asiakas.tapahtumat :as t]
             [harja.ui.openlayers.kuvataso :as kuvataso]
-            [harja.ui.ikonit :as ikonit]
-            [taoensso.timbre :as log]
             [harja.ui.openlayers.tasovalinta :as tasovalinta]
             [harja.ui.openlayers.projektiot :refer [projektio suomen-extent]]
             [harja.ui.openlayers.taustakartta :as taustakartta])
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
-                   [harja.makrot :refer [nappaa-virhe]]
-                   [harja.loki :refer [mittaa-aika]]
-                   [harja.ui.openlayers :refer [disable-rendering]]))
+                   [harja.makrot :refer [nappaa-virhe]]))
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
  kartan animoinnit on valmistuneet." :const true}
   animaation-odotusaika 200)
 
 (def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
-  initial-resolution 800)
+  initial-resolution 1200)
 
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
        :const true}
-  min-zoom 2)
+  min-zoom (if (or
+                 (k/kehitysymparistossa-localhost?)
+                 (k/kehitysymparistossa-gc?))
+             4
+             0))
+
 (def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään"
        :const true}
   max-zoom 16)
@@ -286,7 +285,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- poista-popup!
   "Poistaa kartan popupin, jos sellainen on."
   [this]
-  (t/julkaise! {:aihe :popup-suljettu})
+  (tapahtumat/julkaise! {:aihe :popup-suljettu})
   (poista-openlayers-popup! this))
 
 (defn- poista-popup-ilman-eventtia!

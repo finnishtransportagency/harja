@@ -12,7 +12,8 @@
                  :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
  :harja-url #=(eval (harja.tyokalut.env/env "HARJA_ENV_HARJA_URL" "localhost:3000"))
 
- ;; Käytetään stg/prod/dev/testeissä AWS cloudfronttia
+ ;; Lokaaliympäristön karttacache
+ ;; AWS ympäristöt käyttävät väyläpilven rasterci cachetusta
  :kartta-cache {:hakemisto "resources/kartta-cache"
                 :ttl-paivat 21
                 :upstream-url "https://tiles.kartat.kapsi.fi/taustakartta"}
