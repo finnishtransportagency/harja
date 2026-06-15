@@ -151,6 +151,7 @@
   (case fmt
     :kokonaisluku #(raportti-domain/yrita fmt/kokonaisluku-opt %)
     :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+    :numero-opt #(raportti-domain/yrita fmt/desimaaliluku-opt % 0 2 true)
     :numero-3desim #(fmt/pyorista-ehka-kolmeen %)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
     :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
@@ -164,11 +165,13 @@
             raportin-tunniste tyhja
             korosta-rivit korostustyyli
             oikealle-tasattavat-kentat vetolaatikot
-            esta-tiivis-grid? avattavat-rivit
             sivuttain-rullattava? ensimmainen-sarake-sticky?
+            esta-tiivis-grid? avattavat-rivit
+            ei-footer-muokkauspaneelia?
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
+                :otsikon-luokka "raportti-otsikko"
                 :tunniste (fn [rivi]
                             (str "raportti_rivi_"
                               (or (::rivin-indeksi rivi)
@@ -181,6 +184,7 @@
                 :esta-tiivis-grid? esta-tiivis-grid?
                 :piilota-border? piilota-border?
                 :raportin-tunniste raportin-tunniste
+                :ei-footer-muokkauspaneelia? ei-footer-muokkauspaneelia?
                 :gridin-luokka gridin-luokka}
      (into []
        (map-indexed
@@ -296,7 +300,8 @@
                                                tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
-                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
+                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
+                                               ei-footer-muokkauspaneelia?]}
                                      sarakkeet data]]
   [grid otsikko gridin-luokka
    viimeinen-rivi-yhteenveto?
@@ -306,22 +311,23 @@
    oikealle-tasattavat-kentat vetolaatikot
    esta-tiivis-grid? avattavat-rivit
    sivuttain-rullattava? ensimmainen-sarake-sticky?
+   ei-footer-muokkauspaneelia?
    sarakkeet data])
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
-  [:h1 teksti])
+  [:h1.raportti-otsikko teksti])
 
 (defmethod muodosta-html :otsikko-heading [[_ teksti tyyli]]
-  [:h2 {:style (merge {:font-size "16px"} tyyli)} teksti])
+  [:h2.raportti-otsikko {:style (merge {:font-size "20px"} tyyli)} teksti])
 
 (defmethod muodosta-html :info-laatikko [[_ ensisijainen-teksti toissijainen-teksti leveys]]
   (yleiset/info-laatikko :vahva-ilmoitus ensisijainen-teksti toissijainen-teksti leveys {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "pull-right"}))
 
 (defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
-  [:h1 {:style {:font-size "12px"}} teksti])
+  [:h1.raportti-otsikko {:style {:font-size "12px"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
-  [:h3 teksti])
+  [:h3.raportti-otsikko teksti])
 
 (defmethod muodosta-html :jakaja [ei-valitysta]
   (if ei-valitysta
@@ -329,20 +335,26 @@
     [:hr {:style {:margin-top "30px"
                   :margin-bottom "30px"}}]))
 
-(defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
-  [:h3 teksti])
+(defmethod muodosta-html :tyhja-rivi [_]
+  [:div {:style {:height "0.75rem"}}])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali]}]]
+(defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
+  [:h3.raportti-otsikko teksti])
+
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti]}]]
   [:div {:style (merge
                   {:color (when vari vari)}
+                  (when leveysprosentti {:width (str leveysprosentti "%")})
                   (when rivita? {:white-space "pre-line"})
                   (when alamarginaali {:margin-bottom alamarginaali}))}
    teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
-(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
-  [:div {:style {:font-weight 700
-                 :color (when vari vari)}} teksti
+(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura leveysprosentti]}]]
+  [:div {:style (merge
+                  {:font-weight 700
+                   :color (when vari vari)}
+                  (when leveysprosentti {:width (str leveysprosentti "%")}))} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
@@ -378,7 +390,7 @@
 (defmethod muodosta-html :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?]
                                                 :or {nayta-hr? true}} data]]
   (case layout
-    ;; Data sarakkeina otsikoineen, esimerkiksi laskutusyhteenvedossa 
+    ;; Data sarakkeina otsikoineen, esimerkiksi laskutusyhteenvedossa
     :sarakkeet
     (into
       [:div.sininen-laatikko
@@ -448,7 +460,7 @@
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
-
+   
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
