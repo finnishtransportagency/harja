@@ -30,6 +30,7 @@ function avaaUrakanSuunnittelu(alue, urakkaNimi) {
 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
     cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
 }
 
 describe('Suunnittelu / Kalustoresurssit', function () {
@@ -39,7 +40,7 @@ describe('Suunnittelu / Kalustoresurssit', function () {
 
         // Vanhemmalla MHU-urakalla näkyy suunnittelun perustabuja,
         // mutta Tarjouksen tiedot (>= 2025) ja Kalustoresurssit (>= 2026) eivät näy.
-        cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]', {timeout: 20000}).should('exist');
+        cy.get('[data-cy=tabs-taso2-Suolarajoitukset]', {timeout: 20000}).should('exist');
         cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').should('not.exist');
         cy.get('[data-cy=tabs-taso2-Kalustoresurssit]').should('not.exist');
     });
