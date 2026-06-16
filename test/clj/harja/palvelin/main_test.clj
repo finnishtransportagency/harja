@@ -239,6 +239,7 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
+    :kalustoresurssit
     :api-sampo
     :harja-status
     :info
