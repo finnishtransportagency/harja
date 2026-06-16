@@ -37,8 +37,10 @@ describe('Suunnittelu / Kalustoresurssit', function () {
     it('Kalustoresurssit-välilehti ei näy vanhemmalle MHU-urakalle', function () {
         avaaUrakanSuunnittelu(ALUE, VANHA_URAKKA);
 
-        // Suunnittelun taso2-välilehdet ovat näkyvissä, mutta Kalustoresurssit-välilehteä ei ole
-        cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]', {timeout: 20000}).should('exist');
+        // Vanhemmalla MHU-urakalla näkyy suunnittelun perustabuja,
+        // mutta Tarjouksen tiedot (>= 2025) ja Kalustoresurssit (>= 2026) eivät näy.
+        cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]', {timeout: 20000}).should('exist');
+        cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').should('not.exist');
         cy.get('[data-cy=tabs-taso2-Kalustoresurssit]').should('not.exist');
     });
 
