@@ -394,7 +394,7 @@
     :sarakkeet
     (into
       [:div.sininen-laatikko
-       [:h3 otsikko]]
+       [:h2 otsikko]]
       [(into
          [:div.sininen-laatikko-sarakkeet]
          (map-indexed
@@ -411,7 +411,7 @@
     ;; Data riveinä, viimeinen rivi yhteenveto
     (let [viimeinen-idx (dec (count data))]
       (into
-        [:div.sininen-laatikko [:h3 otsikko]]
+        [:div.sininen-laatikko [:h2 otsikko]]
         (map-indexed
           (fn [i rivi]
             ^{:key (str "sininen-laatikko-rivi-" i)}
@@ -426,6 +426,9 @@
               [:div.tasaa-oikealle
                (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
           data)))))
+
+(defmethod muodosta-html :laskutusyhteenveto-otsikko [[_ teksti]]
+  [:h2 {:style {:font-size "16px"}} teksti])
 
 (defmethod muodosta-html :display-flex [[_ & data]]
   (into
@@ -460,7 +463,7 @@
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
-   
+
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}

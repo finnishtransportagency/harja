@@ -422,8 +422,8 @@
      ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
      [:fo:table (when skaalaa-teksti?
                   {:font-size (skaalattu-fontin-koko sarakkeet)})
-      (for [{:keys [leveys]} sarakkeet]
-        [:fo:table-column {:column-width leveys}])
+      (for [{:keys [leveys leveys-pdf]} sarakkeet]
+        [:fo:table-column {:column-width (or leveys-pdf leveys)}])
       (taulukko-header optiot sarakkeet)
       (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
@@ -530,7 +530,7 @@
                (map
                  (fn [rivi]
                    [:fo:table-cell {:padding "0.5mm"}
-                    [:fo:block {:font-size "7pt"} (:avain rivi)]
+                    [:fo:block {:font-size "9pt" :padding "0.5mm"} (:avain rivi)]
 
                     [:fo:block {:font-size "12pt"
                                 :font-weight "bold"}
@@ -640,7 +640,7 @@
      [:fo:table-body
       [:fo:table-row
        [:fo:table-cell [:fo:block {:font-weight "bold"} raportin-nimi]]
-       [:fo:table-cell [:fo:block "Ajettu " nyt]]
+       [:fo:table-cell [:fo:block {:margin-left "0.5mm"} "Ajettu " nyt]]
        [:fo:table-cell {:text-align "end"}
         [:fo:block
          "Sivu " [:fo:page-number]
