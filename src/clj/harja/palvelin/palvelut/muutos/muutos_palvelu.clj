@@ -7,23 +7,26 @@
 
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+
             [harja.domain.mhu :as mhu]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.urakat :as q-urakat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kulut :as kulut-domain]
+            [harja.domain.muutos-domain :as muutos-domain]
+
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.kyselyt.kulut :as kulu-kyselyt]
             [harja.kyselyt.liitteet :as liite-kyselyt]
-            [harja.domain.muutos-domain :as muutos-domain]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.toimenpideinstanssit :as tpi-q]
-            [harja.palvelin.palvelut.muutos.muutos-apurit :as muutos-apurit]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+
+            [harja.palvelin.palvelut.muutos.muutos-apurit :as muutos-apurit]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
@@ -55,7 +58,8 @@
                                    :loppupvm loppupvm
                                    :tehtava (or tehtava_id nil)
                                    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                                   :laskenta-automatiikka? true}
+                                   :laskenta-automatiikka? true
+                                   :talvisuolakerroin muutos-domain/+talvisuolakerroin+}
                            yksikkohinta (->
                                           (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
                                           first :yksikkohinta)]
@@ -84,7 +88,8 @@
                 :alkupvm alkupvm
                 :loppupvm loppupvm
                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                :laskenta-automatiikka? laskenta-automatiikka?}
+                :laskenta-automatiikka? laskenta-automatiikka?
+                :talvisuolakerroin muutos-domain/+talvisuolakerroin+}
         vastaus (muutos-kyselyt/hae-tehtava-maaramuutokset db params)
 
         fn-lisaa-valiotsikot (fn [rivit]
@@ -371,7 +376,7 @@
        muutokset))))
 
 (defn hae-urakan-muutostiedot
-  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi laskenta-automatiikka?] :as tiedot}]
+  [db kayttaja {:keys [urakka-id hoitokaudet valittu-hoitokausi laskenta-automatiikka?] :as _tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
         kirjatut-muutokset (->
