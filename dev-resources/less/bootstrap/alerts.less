@@ -7,6 +7,8 @@
 // -------------------------
 
 .alert {
+  min-width: 270px;
+  color: @black-default !important;
   padding: @alert-padding;
   margin-bottom: @line-height-computed;
   border: 1px solid transparent;
@@ -35,6 +37,38 @@
   }
 }
 
+.alert {
+  animation: alert-slide-in 250ms ease-out;
+}
+
+@keyframes alert-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.alert.closing {
+  animation: alert-slide-out 250ms ease-in forwards;
+}
+
+@keyframes alert-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 // Dismissible alerts
 //
 // Expand the right padding and account for the close button's positioning.
@@ -57,6 +91,8 @@
 // Generate contextual modifier classes for colorizing the alert.
 
 .alert-success {
+  border: 1px solid @green-light !important;
+  background-color: @green-lighter !important;
   .alert-variant(@alert-success-bg; @alert-success-border; @alert-success-text);
 }
 
@@ -65,6 +101,9 @@
 }
 
 .alert-warning {
+  .icon { color: @punainen3; }
+  border: 1px solid @red-light !important;
+  background-color: @red-lighter !important;
   .alert-variant(@alert-warning-bg; @alert-warning-border; @alert-warning-text);
 }
 

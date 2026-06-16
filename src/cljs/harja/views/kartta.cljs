@@ -74,7 +74,7 @@
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
-                            kork @dom/korkeus
+                            kork (* 0.95 @dom/korkeus)
                             murupolku? @nav/murupolku-nakyvissa?]
                         (case koko
                           :S +kartan-korkeus-s+

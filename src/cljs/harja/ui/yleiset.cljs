@@ -27,12 +27,13 @@
 (def navigaation-min-korkeus 47)
 
 (defn navigaation-korkeus []
-  (Math/max
-    navigaation-min-korkeus
-    (some-> js/document
-      (.getElementsByTagName "nav")
-      (aget 0)
-      .-clientHeight)))
+  (* 2.0
+    (Math/max
+      navigaation-min-korkeus
+      (some-> js/document
+        (.getElementsByTagName "nav")
+        (aget 0)
+        .-clientHeight))))
 
 (defn luokat
   "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää

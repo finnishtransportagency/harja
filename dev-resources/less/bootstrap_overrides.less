@@ -14,6 +14,10 @@
   width: revert !important;
 }
 
+.form-control:focus {
+  box-shadow: 0 0 0 1px fade(@blue-default, 50%) !important;
+}
+
 .label-ja-alasveto-grid .select-default,
 .label-ja-alasveto-grid, .form-control {
   min-height: 36px !important;
@@ -98,10 +102,9 @@
   padding-right: 0;
 }
 
-.form-control {
+.form-control, .pvm {
   color: @harmaa1;
   padding: 2px 6px;
-  border-color: @black-lighter !important;
 
   // Parempikontrastinen placeholder tekstin väri input-kentille
   .placeholder(@black-lighter);

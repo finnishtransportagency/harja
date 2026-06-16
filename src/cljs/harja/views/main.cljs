@@ -366,13 +366,11 @@
       [header sivu]]
 
      [:div.container
+      (when nayta-hairio?
+        [hairioilmoitus hairio-ilmoitus {:margin-bottom? (not molemmat-nakyvissa?)}])
+      (when nayta-tiedote?
+        [hairioilmoitus tiedote-ilmoitus])
       [murupolku/murupolku]]
-
-     (when nayta-hairio?
-       [hairioilmoitus hairio-ilmoitus {:margin-bottom? (not molemmat-nakyvissa?)}])
-
-     (when nayta-tiedote?
-       [hairioilmoitus tiedote-ilmoitus])
 
      ^{:key "harjan-paasisalto"}
      [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas

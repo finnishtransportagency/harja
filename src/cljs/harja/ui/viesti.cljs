@@ -11,11 +11,12 @@
 (def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)
 (def viestin-nayttoaika-aareton 0)
+(def poistumis-animaatio-ms 250)
 
 
 (defn vakavuustaso-class [vakavuustaso]
   (case vakavuustaso
-    :danger "alalert-danger alert-important"
+    :danger "alert-danger alert-important"
     :success "alert-success alert-important"
     :warning "alert-warning alert-important"
     :info "alert-info alert-important"))
@@ -75,6 +76,23 @@
       (vec (remove #(= (:id %) viesti-id) alerts)))))
 
 
+(defn- aloita-poisto! [viesti-id]
+  (when-let [timer (get @viesti-ajastimet viesti-id)]
+    (js/clearTimeout timer)
+    (swap! viesti-ajastimet dissoc viesti-id))
+
+  (swap! kaikki-viestit
+    (fn [viestit]
+      (mapv #(if (= (:id %) viesti-id)
+               (assoc % :sulkeutuu? true)
+               %)
+        viestit)))
+
+  (js/setTimeout
+    #(poista-viesti! viesti-id)
+    poistumis-animaatio-ms))
+
+
 (defn- lisaa-viesti!
   [viesti vakavuustaso nayttoaika-ms]
   (let [viesti-id (random-uuid)]
@@ -83,43 +101,40 @@
                                 :vakavuustaso vakavuustaso})
     (when (and (number? nayttoaika-ms) (pos? nayttoaika-ms))
       (swap! viesti-ajastimet assoc viesti-id
-        (js/setTimeout #(poista-viesti! viesti-id) nayttoaika-ms)))
+        (js/setTimeout #(aloita-poisto! viesti-id) nayttoaika-ms)))
     viesti-id))
 
 
 (defn- yksittainen-viesti [alert-data]
-  (let [nakyvissa? (r/atom false)]
-    (r/create-class
-      {:display-name "Alert"
+  (r/with-let [nakyvissa? (r/atom false)
+               timer (js/setTimeout #(reset! nakyvissa? true) 10)]
+    [:div
+     {:class (str "alert "
+               (vakavuustaso-class (:vakavuustaso alert-data))
+               " alert-dismissible "
+               (cond
+                 (:sulkeutuu? alert-data) "closing"
+                 @nakyvissa? "show"
+                 :else ""))
+      :role "alert"
+      :style {:width "fit-content"
+              :max-width "min(560px, calc(100vw - 2rem))"
+              :margin-bottom "12px"
+              :pointer-events "auto"}}
 
-       :component-did-mount
-       (fn []
-         (js/setTimeout #(reset! nakyvissa? true) 10))
+     [:div {:class "d-flex"}
+      [:div {:class "alert-icon me-3"}
+       [alert-icon (:vakavuustaso alert-data)]]
 
-       :reagent-render
-       (fn []
-         [:div
-          {:class (str "alert "
-                    (vakavuustaso-class (:vakavuustaso alert-data))
-                    " alert-dismissible fade in"
-                    (when @nakyvissa? " show"))
-           :role "alert"
-           :style {:width "fit-content"
-                   :max-width "min(560px, calc(100vw - 2rem))"
-                   :margin-bottom "12px"
-                   :pointer-events "auto"}}
-          [:div {:class "d-flex"}
-           [:div {:class "alert-icon me-3"}
-            [alert-icon (:vakavuustaso alert-data)]]
-           [:div (:viesti alert-data)]
-           [:a
-            {:class "btn-close"
-             :aria-label "close"
-             :on-click
-             (fn [e]
-               (.preventDefault e)
-               (reset! nakyvissa? false)
-               (js/setTimeout #(poista-viesti! (:id alert-data)) 150))}]]])})))
+      [:div (:viesti alert-data)]
+
+      [:button
+       {:type "button"
+        :class "btn-close"
+        :aria-label "close"
+        :on-click #(aloita-poisto! (:id alert-data))}]]]
+    (finally
+      (js/clearTimeout timer))))
 
 
 (defn toast-viesti-container []

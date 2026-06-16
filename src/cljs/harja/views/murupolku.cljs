@@ -136,9 +136,9 @@
               ei-urakkaa? (nil? ur)
               urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
           [:nav {:aria-label "murupolku"
-                 :class (str "murupolku d-flex flex-wrap justify-content-between align-items-start w-100 "
-                          (when (empty? @nav/tarvitsen-isoa-karttaa)
-                            (if @nav/murupolku-nakyvissa? "" "hide")))}
+                 :class (if @nav/murupolku-nakyvissa?
+                          "murupolku d-flex flex-wrap justify-content-between align-items-start w-100"
+                          "hide")}
 
            [:div {:class "d-flex flex-wrap align-items-end gap-3"
                   :style {:flex "1 1 420px"}}

@@ -10,12 +10,58 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]])
 
   (:import [java.io File]
-           [java.nio.file CopyOption Files StandardCopyOption]
-           [java.security MessageDigest]))
+           [java.security MessageDigest]
+           [java.util.concurrent Semaphore]
+           [java.nio.file CopyOption Files StandardCopyOption]))
+
+(defonce ^{:doc "Concurrency rajoitin"}
+  ^:private kapsi-rajoitin (Semaphore. 2 true))
+
+(def ^{:doc "Yritä kuvien latausta uudelleen jos palautuu virheitä"}
+  ^:private retry-statukset #{429 500 502 503 504})
 
 (def ^{:doc "Jos asetuksissa ei ole määritelty upstream osoitetta"}
   ^:private oletus-upstream
   "https://tiles.kartat.kapsi.fi/taustakartta")
+
+
+(defn- hae-upstream
+  "Hakee karttakuvan Kapsista rajoitetuilla yrityksillä"
+  [url]
+  (.acquire kapsi-rajoitin)
+  (try
+    (loop [yritys 0]
+      (let [vastaus
+            @(http/get
+               url
+               {:as :byte-array
+                ;; Kapsi sulkee välillä keep-alive-yhteyksiä ilman vastausta
+                :keepalive -1
+                :connect-timeout 15000
+                :idle-timeout 30000
+                :timeout 45000
+                :headers {"User-Agent" "Mozilla/5.0"
+                          "Accept" "image/png,image/*"}})
+
+            retry?
+            (and (< yritys 6)
+              (or (:error vastaus)
+                (retry-statukset (:status vastaus))))]
+
+        (if retry?
+          (do
+            ;; Eksponentiaalinen viive sekä jitter estämään yhtaikaiset retryt
+            (Thread/sleep
+              (long
+                (+ (min 3000 (* 300 (bit-shift-left 1 yritys)))
+                  (rand-int 300))))
+
+            (recur (inc yritys)))
+
+          vastaus)))
+
+    (finally
+      (.release kapsi-rajoitin))))
 
 
 (defn- sha256
@@ -33,6 +79,8 @@
 (defn- ttl-ms
   "Asetuksissa annettu cache-aika päivistä -> millisekunneiksi"
   [asetukset]
+  ;; TODO .. 
+  ;;  Lisää pientä variaatiota
   (* (long (or (:ttl-paivat asetukset) 21)) 24 60 60 1000))
 
 
@@ -59,8 +107,8 @@
 
 
 (defn- kuvavastaus
-  "Muodostetaan PNG-tiedostosta ringuli vastauksen.
-  X-Map-Cache kertoo selaimessa, tuliko vastaus cachesta vai upstreamista."
+  "Muodostetaan PNG-tiedostosta vastaus.
+  X-Map-Cache kertoo selaimessa, tuliko vastaus cachesta vai apin kautta."
   [^File tiedosto ttl cache-tila]
   {:status 200
    :headers {"Content-Type" "image/png"
@@ -97,7 +145,7 @@
 
 (defn- poista-vanhat!
   "Poistetaan TTL:n ylittäneet tiedostot.
-  Tätä kutsutaan tällä hetkellä vain komponentin käynnistyessä."
+  Kutsutaan tällä hetkellä vain komponentin käynnistyessä."
   [^File hakemisto ttl]
   (doseq [^File tiedosto (or (seq (.listFiles hakemisto)) [])]
     (when (and (.isFile tiedosto)
@@ -105,11 +153,7 @@
       (.delete tiedosto))))
 
 
-(defn- hae-karttakuva
-  "Ring-käsittelijä karttakuvan hakemiseen ja tiedostocachetukseen."
-  [asetukset request]
-  ;; Käyttäjä on todennettu, karttakuvan lukeminen
-  ;; ei tarvitse erillistä toimintokohtaista oikeustarkistusta
+(defn- hae-karttakuva [asetukset request]
   (oikeudet/ei-oikeustarkistusta!)
 
   (cond
@@ -124,7 +168,7 @@
 
     :else
     ;; Muodostetaan cache tiedostonimi
-    ;; Jos parametrien järjestys muuttuu, syntyy eri välimuistitiedosto
+    ;; hox jos parametrien järjestys muuttuu, syntyy eri välimuistitiedosto
     (let [query-string (:query-string request)
           upstream-url (or (:upstream-url asetukset) oletus-upstream)
           url (str upstream-url "?" query-string)
@@ -132,18 +176,13 @@
           ttl (ttl-ms asetukset)
           cache-tiedosto (io/file hakemisto (str (sha256 url) ".png"))]
 
-      ;; Palautetaan tuore tiedosto ilman ulkoista kutsua
+      ;; Saatiin tuore tiedosto ilman api kutsuja
       (if (tuore? cache-tiedosto ttl)
         (kuvavastaus cache-tiedosto ttl "HIT")
 
-        ;; Cache osumaa ei ollut, joten haetaan kuva 
+        ;; Cache osumaa ei ollut, haetaan kuva 
         (let [{:keys [status headers body error]}
-              @(http/get url
-                 {:as :byte-array
-                  :headers {"User-Agent" "Mozilla/5.0"
-                            "Accept" "image/png,image/*;q=0.8,*/*;q=0.5"}
-                  :connect-timeout 15000
-                  :timeout 20000})]
+              (hae-upstream url)]
 
           (when-not (= status 200)
             (log/error "Kapsi palautti virheen:"
@@ -154,7 +193,7 @@
                :url url}))
 
           (cond
-            ;; Onnistunut vastaus tallennetaan välimuistiin
+            ;; Onnistunut vastaus -> tallennetaan välimuistiin
             (and (nil? error) (= status 200))
             (do
               (tallenna! cache-tiedosto body)
@@ -179,10 +218,8 @@
     (let [hakemisto (cache-hakemisto asetukset)
           ttl (ttl-ms asetukset)]
 
-      ;; Siivotaan vanhentuneet tiedostot kerran komponentin käynnistyessä
       (poista-vanhat! hakemisto ttl)
 
-      ;; Käytetään Ring-käsittelijää, koska vastaus on binary png
       (julkaise-palvelu http-palvelin :kartta-cache
         (fn [request]
           (hae-karttakuva asetukset request))
