@@ -64,23 +64,27 @@ summamaaritykset (profiili_nimi,
         ('teiden-hoito-mhu2025', 'A', 17, 'laatupoikkeama', 'kiintea_euromaara',  2000.00,          NULL,       1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / B-ryhma / kiinteat summat (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2025 / B-ryhmä / kiinteät summat (urakka ja laatupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'B', 13, 'urakka',         'kiintea_euromaara',  8000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 14, 'urakka',         'kiintea_euromaara',  6000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 17, 'urakka',         'kiintea_euromaara',  4000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 10, 'urakka',         'kiintea_euromaara',  1000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 12, 'urakka',         'kiintea_euromaara', 10000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 11, 'urakka',         'kiintea_euromaara',  4000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 13, 'laatupoikkeama', 'kiintea_euromaara',  8000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 14, 'laatupoikkeama', 'kiintea_euromaara',  6000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 17, 'laatupoikkeama', 'kiintea_euromaara',  4000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 10, 'laatupoikkeama', 'kiintea_euromaara',  1000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 12, 'laatupoikkeama', 'kiintea_euromaara', 10000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'B', 11, 'laatupoikkeama', 'kiintea_euromaara',  4000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'B', 13, 'urakka',         'kiintea_euromaara',  8000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'urakka',         'kiintea_euromaara',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 17, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 13, 'laatupoikkeama', 'kiintea_euromaara',  8000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'laatupoikkeama', 'kiintea_euromaara',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 17, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / C-ryhma / ohjetekstit (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2025 / C-ryhmä / kiinteät summat (urakka ja laatupoikkeama)
+        -- -----------------------------------------------------------------------
+        ('teiden-hoito-mhu2025', 'C', 10, 'urakka',         'kiintea_euromaara',  1000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 12, 'urakka',         'kiintea_euromaara', 10000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 11, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 10, 'laatupoikkeama', 'kiintea_euromaara',  1000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 12, 'laatupoikkeama', 'kiintea_euromaara', 10000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 11, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
+
+        -- -----------------------------------------------------------------------
+        -- teiden-hoito-mhu2025 / C-ryhmä / ohjetekstit (urakka ja laatupoikkeama)
         -- -----------------------------------------------------------------------
         ('teiden-hoito-mhu2025', 'C',  8, 'urakka',         'kiintea_euromaara',  2000.00,
             'alkavalta viikolta', 1),
