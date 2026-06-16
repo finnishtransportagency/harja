@@ -394,7 +394,7 @@
     :sarakkeet
     (into
       [:div.sininen-laatikko
-       [:h3 otsikko]]
+       [:h2 otsikko]]
       [(into
          [:div.sininen-laatikko-sarakkeet]
          (map-indexed
@@ -411,7 +411,7 @@
     ;; Data riveinä, viimeinen rivi yhteenveto
     (let [viimeinen-idx (dec (count data))]
       (into
-        [:div.sininen-laatikko [:h3 otsikko]]
+        [:div.sininen-laatikko [:h2 otsikko]]
         (map-indexed
           (fn [i rivi]
             ^{:key (str "sininen-laatikko-rivi-" i)}
@@ -463,7 +463,7 @@
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
-   
+
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
