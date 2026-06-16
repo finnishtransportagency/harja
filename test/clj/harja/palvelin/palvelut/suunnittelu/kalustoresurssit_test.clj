@@ -2,8 +2,7 @@
   (:require [clojure.test :refer [deftest testing use-fixtures compose-fixtures is]]
             [harja.palvelin.palvelut.suunnittelu.kalustoresurssit-palvelu :as kr-palvelu]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [slingshot.slingshot :refer [try+]]))
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
