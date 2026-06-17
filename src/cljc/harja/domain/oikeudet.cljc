@@ -13,6 +13,7 @@
 
 (declare on-oikeus? on-muu-oikeus?
   raporttioikeudet
+  raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus

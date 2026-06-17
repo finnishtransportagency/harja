@@ -4,7 +4,7 @@
             [harja.geo :as geo]))
 
 (declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
-  hae-urakan-sanktiot-analytiikalle)
+  hae-urakan-sanktiot-analytiikalle hae-sanktiotyyppi-koodilla merkitse-maksuera-likaiseksi!)
 
 ;; Käytössä jeesql:ssä
 (defn muunna-urakan-sanktio
