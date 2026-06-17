@@ -21,8 +21,7 @@
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
       :vakiofraasi
-      :maaraystapa
-      :vaikuttaa_tavoitehintaan)
+      :maaraystapa)
     (konv/decimal->double :summa :indeksikorjaus :tavoitehinnanalennus)
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)

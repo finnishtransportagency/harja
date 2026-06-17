@@ -3,7 +3,7 @@
 INSERT
 INTO sanktio
 (perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio,
- maaraystapa, vaikuttaa_tavoitehintaan, tavoitehinnanalennus, tehtavaryhma, tehtava,
+ maaraystapa, tehtavaryhma, tehtava,
  luoja, luotu)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
@@ -18,7 +18,7 @@ VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
                AND t.urakka = :urakka)),
         :vakiofraasi,
         :summa, :indeksi, :laatupoikkeama, :suorasanktio,
-        :maaraystapa, :vaikuttaa_tavoitehintaan, :tavoitehinnanalennus, :tehtavaryhma, :tehtava,
+        :maaraystapa, :tehtavaryhma, :tehtava,
         :luoja, NOW());
 
 -- name: paivita-sanktio!
@@ -40,8 +40,6 @@ SET perintapvm          = :perintapvm,
     laatupoikkeama      = :laatupoikkeama,
     suorasanktio        = :suorasanktio,
     maaraystapa         = :maaraystapa,
-    vaikuttaa_tavoitehintaan = :vaikuttaa_tavoitehintaan,
-    tavoitehinnanalennus = :tavoitehinnanalennus,
     tehtavaryhma        = :tehtavaryhma,
     tehtava             = :tehtava,
     muokkaaja           = :muokkaaja,
@@ -150,8 +148,6 @@ SELECT s.id,
        t.koodi                                      AS tyyppi_koodi,
 
        s.maaraystapa,
-       COALESCE(s.vaikuttaa_tavoitehintaan::text, 'false')   AS vaikuttaa_tavoitehintaan,
-       s.tavoitehinnanalennus,
        s.tehtavaryhma                               AS tehtavaryhma_id,
        tryhma.nimi                                  AS tehtavaryhma_nimi,
        s.tehtava                                    AS tehtava_id,

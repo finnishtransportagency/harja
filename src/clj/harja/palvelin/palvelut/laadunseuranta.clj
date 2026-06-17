@@ -78,13 +78,6 @@
         (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
                                      urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
 
-(defn- alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan [rivi]
-  (let [vaikuttaa-tavoitehintaan (:vaikuttaa_tavoitehintaan rivi)]
-    (-> rivi
-        (dissoc :vaikuttaa_tavoitehintaan)
-        konv/alaviiva->rakenne
-        (assoc :vaikuttaa_tavoitehintaan vaikuttaa-tavoitehintaan))))
-
 (defn- hae-bonuksen-liitteet
   "Hakee bonuksen liitteet"
   [db user urakka-id bonus-id]
@@ -127,7 +120,7 @@
                      (laatupoikkeamat-q/hae-laatupoikkeaman-kommentit db laatupoikkeama-id))
         :sanktiot (into []
                     (comp (map #(konv/array->set % :tyyppi_laji keyword))
-                      (map alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan)
+                      (map konv/alaviiva->rakenne)
                       (map #(konv/string->keyword % :laji :vakiofraasi))
                       (map #(assoc %
                               :sakko? (sanktiot-domain/muu-kuin-muistutus? %)
@@ -162,7 +155,7 @@
                    urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
-                               (map alaviiva->rakenne-sailyttaen-vaikuttaa-tavoitehintaan
+                               (map konv/alaviiva->rakenne
                                  (concat
                                    urakan-sanktiot
                                    bonukset)))]
@@ -232,8 +225,8 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu maaraystapa vaikuttaa_tavoitehintaan tavoitehinnanalennus
-                   tehtavaryhma tehtava] :as sanktio} laatupoikkeama urakka kasittelyaika]
+                   toimenpideinstanssi vakiofraasi poistettu maaraystapa tehtavaryhma tehtava] :as sanktio}
+   laatupoikkeama urakka kasittelyaika]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
@@ -280,9 +273,6 @@
                 :luoja (:id user)
                 ;; Arvonvähennyksen lisäkentät
                 :maaraystapa (when maaraystapa (name maaraystapa))
-                :vaikuttaa_tavoitehintaan (muunnos/keyword->bool vaikuttaa_tavoitehintaan)
-                ;; Tavoitehinnanalennus voi olla asetettuna, vaikka sitä ei haluta tallentaa
-                :tavoitehinnanalennus (if (= :true vaikuttaa_tavoitehintaan) tavoitehinnanalennus nil)
                 :tehtavaryhma (:tehtavaryhma tehtavaryhma)
                 :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)
