@@ -188,26 +188,17 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         siivoaKanta(testiArvonvahennysKuvaus2);
     });
 
-    it('Arvonvähennys, joka vaikuttaa tavoitehintaan (tehtäväryhmä + tehtävä)', () => {
+    it('Arvonvähennys mhu25 urakalle', () => {
         avaaSanktiotJaBonukset(testiurakka1, evk);
         avaaUusiArvonvahennys();
-
-        // MHU25-lomakkeella näkyy tavoitehinta-radiot
-        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('exist');
-        cy.get(SP).contains('label', 'Ei vaikuta tavoitehintaan').should('exist');
 
         // Perustiedot
         kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1);
         kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu1);
 
-        // Valitaan "Vaikuttaa tavoitehintaan" -> näkyviin tulevat tavoitehinnan alennus, tehtäväryhmä ja tehtävä
-        valitseRadio('Vaikuttaa tavoitehintaan');
-        cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
-        // Kulun kohdistus EI näy, kun arvonvähennys vaikuttaa tavoitehintaan
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('not.exist');
 
-        kirjoitaInputkenttaan('Tavoitehinnan alennus', '200');
-        kirjoitaInputkenttaan('Vähennyksen määrä', '150');
+        kirjoitaInputkenttaan('Arvonvähennys', '200');
 
         // Tehtäväryhmän valinta laukaisee tehtävien haun
         cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavat');
@@ -227,11 +218,13 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
         // Tallennus näkyy listalla
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1).should('exist');
+        cy.get('table.grid').should('contain', testiArvonvahennysPerustelu1);
+        cy.get('table.grid').should('contain', '-200');
+
 
         // Avataan tallennettu lukutilassa ja tarkistetaan tiedot
         avaaTallennettu(testiArvonvahennysKuvaus1);
         cy.get(SP).contains(testiArvonvahennysKuvaus1).should('exist');
-        cy.get(SP).contains('Vaikuttaa tavoitehintaan').should('exist');
 
         // Muokataan kuvausta
         siirryMuokkaustilaan();
@@ -241,46 +234,6 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1 + ' muokattu').should('exist');
     });
 
-    it('Arvonvähennys, joka ei vaikuta tavoitehintaan (Kulun kohdistus)', () => {
-        avaaSanktiotJaBonukset(testiurakka1, evk);
-        avaaUusiArvonvahennys();
-
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus2);
-        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu2);
-
-        // Oletuksena "Ei vaikuta tavoitehintaan" on valittuna (uusi-arvonvahennys -> :false)
-        valitseRadio('Ei vaikuta tavoitehintaan');
-
-        // Kun ei vaikuta tavoitehintaan: ei tavoitehinnan alennusta, ei tehtäväryhmää/tehtävää
-        cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('not.exist');
-        cy.get(SP).contains('.form-group', 'Tehtäväryhmä').should('not.exist');
-        cy.get(SP).contains('.form-group', 'Tehtävä').should('not.exist');
-        // Näkyviin tulee Kulun kohdistus
-        cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
-
-        kirjoitaInputkenttaan('Vähennyksen määrä', '120');
-        valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
-
-        valitsePvm('Havaittu', havaittuPvm);
-        valitsePvm('Määrätty', maarattyPvm);
-
-        valitseRadio('Työmaakokous');
-
-        tallennaLomake();
-
-        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus2).should('exist');
-
-        // Avaa ja muokkaa
-        avaaTallennettu(testiArvonvahennysKuvaus2);
-        cy.get(SP).contains(testiArvonvahennysKuvaus2).should('exist');
-        cy.get(SP).contains('Ei vaikuta tavoitehintaan').should('exist');
-
-        siirryMuokkaustilaan();
-        kirjoitaInputkenttaan('Vähennyksen määrä', '99');
-        tallennaLomake();
-
-        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus2).should('exist');
-    });
 });
 
 // --- Testit: MHU24-urakka (Suomussalmi) vuonna 2026 ---
@@ -302,12 +255,6 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         avaaSanktiotJaBonukset(testiurakka2, evk2);
         avaaUusiArvonvahennys();
 
-        // Kun arvonvähennyslomakkeen MHU24-tarkistus on otettu pois käytöstä,
-        // tavoitehinnan valinta näkyy myös MHU24-urakalla.
-        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('exist');
-        cy.get(SP).contains('label', 'Ei vaikuta tavoitehintaan').should('exist');
-        valitseRadio('Vaikuttaa tavoitehintaan');
-
         // MHU24-urakalla ei silti näytetä tehtäväryhmää eikä tehtävää,
         // vaan Kulun kohdistus ja Laskutuskuukausi ovat näkyvissä.
         cy.get(SP).contains('.form-group', 'Tehtäväryhmä').should('not.exist');
@@ -315,12 +262,12 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
         cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
+        cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
 
         // Täytetään lomake
         kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
         kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
-        kirjoitaInputkenttaan('Tavoitehinnan alennus', '80');
-        kirjoitaInputkenttaan('Vähennyksen määrä', '110');
+        kirjoitaInputkenttaan('Arvonvähennys', '80');
         valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
 
         valitsePvm('Havaittu', havaittuPvm);
@@ -337,8 +284,7 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         cy.get(SP).contains(testiArvonvahennysKuvaus3).should('exist');
 
         siirryMuokkaustilaan();
-        // Myös muokkaustilassa tavoitehinta-radio näkyy, kun MHU24-tarkistus on pois käytöstä.
-        cy.get(SP).contains('label', 'Vaikuttaa tavoitehintaan').should('exist');
+
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 

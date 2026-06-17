@@ -4,6 +4,8 @@
 
             [harja.pvm :as pvm]
 
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
@@ -15,10 +17,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.liitteet :as liitteet]
-
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.ui.liitteet :as liitteet]))
 
 (defn- valittavat-kulun-kohdistukset
   "MHU25 urakoilta poistetaan listalta hoidon johto toimenpideinstanssi. Muut saa nähdä kaikki vaihtoehdot."
@@ -41,7 +40,6 @@
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit mhu25?)
         tehtavat (:tehtavat app)
-        yllapitourakka? @tiedot-urakka/yllapitourakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         kuluvan-hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
@@ -94,6 +92,7 @@
                       #(do
                          (reset! sivupaneeli-auki?-atom false)
                          (reset! tiedot/valittu-sanktio nil))]])}
+
       [;; Tapahtumapaikka/kuvaus
        {:otsikko "Tapahtumapaikka/kuvaus"
         :tyyppi :text
@@ -114,46 +113,8 @@
         :tyyppi :text :koko [80 :auto]
         :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-       ;; Tavoitehinta? radio-group
-       ;; Komponenttia ei näytetä mhu24 urakoille vielä 2026 vuonna
-       (when (or mhu25? (>= 2026 kuluvan-hoitokauden-alkuvuosi))
-         (if lukutila?
-           {:otsikko "Vaikuttaa tavoitehintaan"
-            :nimi :vaikuttaa_tavoitehintaan
-            :nayta-rivina? true
-            ::lomake/col-luokka "col-xs-12"
-            :tyyppi :teksti
-            :hae (fn [rivi]
-                   (if (= :true (:vaikuttaa_tavoitehintaan rivi))
-                     "Vaikuttaa tavoitehintaan"
-                     "Ei vaikuta tavoitehintaan"))}
-           {:otsikko ""
-            :nimi :vaikuttaa_tavoitehintaan
-            :tyyppi :radio-group
-            :pakollinen? true
-            :piilota-label? true
-            :nayta-rivina? true
-            :vayla-tyyli? true
-            ::lomake/col-luokka "col-xs-12"
-            :vaihtoehdot [:true :false]
-            :vaihtoehto-nayta {:true "Vaikuttaa tavoitehintaan"
-                               :false "Ei vaikuta tavoitehintaan"}
-            :aseta (fn [rivi arvo] (assoc rivi :vaikuttaa_tavoitehintaan arvo))}))
-
-       ;; Tavoitehinnan alennus
-       (when (= (:vaikuttaa_tavoitehintaan @muokattu) :true)
-         {:otsikko "Tavoitehinnan alennus"
-          :nimi :tavoitehinnanalennus
-          :tyyppi :euro
-          :pakollinen? true
-          :aseta (fn [rivi arvo]
-                   (assoc rivi :tavoitehinnanalennus
-                     (when arvo (- (Math/abs arvo)))))
-          :validoi [[:ei-tyhja "Anna tavoitehinnan alennus"]
-                    [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]})
-
-       ;; Vähennyksen määrä
-       {:otsikko "Vähennyksen määrä"
+       ;; Arvonvähennys
+       {:otsikko "Arvonvähennys"
         :nimi :summa
         :tyyppi :euro
         :pakollinen? true
@@ -163,13 +124,16 @@
                    (when arvo (- (Math/abs arvo)))))
         :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
                   [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
+       
+       {:otsikko "Tavoitehinnan alennus"
+        :nimi :summa
+        :tyyppi :euro
+        :pakollinen? true
+        :uusi-rivi? true
+        :muokattava? (constantly false)}
 
-       ;; Kulun kohdistus
-       ;; MHU25 urakoille näytetään vain, jos tavoitehinta? false
-       ;; Muille kuin mhu25 urakoille näytetään aina
-       (when (or
-               (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :false))
-               (not mhu25?))
+       ;; Kulun kohdistus - muille kuin mhu25 urakoille näytetään aina
+       (when (not mhu25?)
          {:otsikko "Kulun kohdistus"
           :pakollinen? true
           :uusi-rivi? true
@@ -182,8 +146,8 @@
           :valinnat mahdolliset-kulun-kohdistukset
           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
-       ;; Tehtäväryhmä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
-       (when (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :true))
+       ;; Tehtäväryhmä - Näytetään vain mhu25 urakoille
+       (when mhu25?
          {:otsikko "Tehtäväryhmä"
           :nimi :tehtavaryhma
           :tyyppi :valinta
@@ -202,8 +166,8 @@
           :validoi [[:ei-tyhja "Valitse tehtäväryhmä"]]})
 
 
-       ;; Tehtävä - Näytetään vain mhu25 urakoille ja vain jos tavoitehinta? true
-       (when (and mhu25? (= (:vaikuttaa_tavoitehintaan @muokattu) :true))
+       ;; Tehtävä - Näytetään vain mhu25 urakoille
+       (when mhu25?
          {:otsikko "Tehtävä"
           :nimi :tehtava
           :tyyppi :valinta
@@ -284,7 +248,7 @@
                                 :format-fn :teksti}
                                laskutuskuukaudet]
                               ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
-                              (when (not yllapitourakka?)
+                              (when (not @tiedot-urakka/yllapitourakka?)
                                 [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
 
            (when (and (not mhu25?) lukutila?)

@@ -1,12 +1,12 @@
 (ns harja.tiedot.urakka.laadunseuranta.arvonvahennys-tiedot
   (:require [tuck.core :as tuck]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.pvm :as pvm]
+
             [harja.ui.viesti :as viesti]
 
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as nav]
-
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]))
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn uusi-arvonvahennys []
   (let [nyt (pvm/nyt)
@@ -14,8 +14,6 @@
     {:suorasanktio true
      :laji :arvonvahennyssanktio
      :perintapvm default-perintapvm
-     :vaikuttaa_tavoitehintaan :false
-     :tavoitehinnanalennus nil
      :maaraystapa :valikatselmus
      :tehtavaryhma nil
      :tehtava nil
