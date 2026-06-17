@@ -13,11 +13,9 @@
                                         laskutettu-str laskutetaan-str]]
   [raportointi/muodosta-html
    [:display-flex
-    [:sininen-laatikko {:otsikko (if (and
-                                       (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
-                                   "Laskutettavaa yhteensä"
-                                   ;; Vanhat urakat joilla ei ole laskutusrajaa
-                                   "Toteutuneet kustannukset yhteensä")
+    [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+                                   "Toteutuneet kustannukset yhteensä"
+                                   "Laskutettavaa yhteensä")
                         :layout :sarakkeet}
      [{:fmt :raha
        :arvo laskutettu

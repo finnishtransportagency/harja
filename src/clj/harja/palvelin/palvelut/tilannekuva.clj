@@ -157,6 +157,7 @@
                                    ;; Jos käyttäjällä on johonkin urakkaan rooli, jolla on oman-urakan-ely oikeus,
                                    ;; filtteröidään kaikista urakoista ne urakat, otetaan niiden urakoiden
                                    ;; hallintayksiköt, ja haetaan näiden hallintayksiköiden kaikki urakat.
+                                   ;; Ei koske valaistusurakoita, joihin oman-urakan-ely oikeus ei saa antaa oikeutta.
                                    (set
                                      (concat
                                        (set (map :id oman-organisaation-urakat))
@@ -164,7 +165,7 @@
                                        (set
                                          (map
                                            :id
-                                           (q/hallintayksikoiden-urakat
+                                           (q/hallintayksikoiden-urakat-ilman-valaistus-urakoita
                                              db
                                              {:hallintayksikot (map
                                                                  :hallintayksikko
@@ -192,7 +193,7 @@
                                      (set
                                        (mapcat
                                          (fn [[hy urakat]]
-                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan ne kaikki
+                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan kaikki paitsi valaistusurakat.
                                            (if (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma % user) urakat)
                                              (map :id urakat)
 
@@ -627,7 +628,8 @@
                                                         (:id urakka)
                                                         user)
                                                       (when-let [ely-urakat (get saman-evkn-urakat (get-in alue [:elinvoimakeskus :id]))]
-                                                        ((set (map :id ely-urakat)) (:id urakka))))))
+                                                        ;; Poistetaan valaistus-urakat
+                                                        ((set (map :id (remove #(= (:tyyppi %) "valaistus") ely-urakat))) (:id urakka))))))
                                                 urakat)))))
                                       (map
                                         (fn [alue]

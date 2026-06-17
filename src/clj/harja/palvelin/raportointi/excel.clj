@@ -34,8 +34,10 @@
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
   (fn [elementti workbook]
-    (assert (raportti-domain/raporttielementti? elementti))
-    (first elementti)))
+    (when-not (raportti-domain/raporttielementti? elementti)
+      (log/warn "Elementti ei ole raporttielementti, ohitetaan: " (pr-str elementti)))
+    (when (raportti-domain/raporttielementti? elementti)
+      (first elementti))))
 
 (defmulti muodosta-solu
   "Raporttisolujen tyylittely täytyy Apache POI kirjaston takia tehdä niin,
@@ -211,14 +213,28 @@
 (defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
 
-(defmethod muodosta-solu :teksti [[_ teksti] solun-tyyli]
-  [teksti solun-tyyli])
+(defmethod muodosta-excel :teksti [[_ teksti] workbook]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (let [viimeinen (.getLastRowNum sheet)]
+                        (if (and (zero? viimeinen) (nil? (.getRow sheet 0)))
+                          0
+                          (inc viimeinen)))
+          tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})
+          rivi (.createRow sheet rivi-numero)
+          cell (.createCell rivi 0)]
+      (excel/set-cell! cell teksti)
+      (excel/set-cell-style! cell tyyli))))
 
 (defmethod muodosta-solu :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Se ei ole mahdollista Excelissä, joten tehdään
   ;; vain tämä elementti, joka toimii kuten teksti -elementit toimii, mutta ei aiheuta erroreita
   [[_ {:keys [boldattu-teksti teksti] :as tiedot}] solun-tyyli]
   [(str boldattu-teksti teksti) solun-tyyli])
+
+(defmethod muodosta-excel :tyhja-rivi [_ workbook]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (inc (.getLastRowNum sheet))]
+      (.createRow sheet rivi-numero))))
 
 (defn- font-otsikko
   ([] (font-otsikko 14))
@@ -281,6 +297,7 @@
       :raha (.setDataFormat tyyli raha-formaatti)
       :prosentti (.setDataFormat tyyli 10)
       :numero (.setDataFormat tyyli 2)
+      :numero-opt (.setDataFormat tyyli 2)
       :numero-3desim (.setDataFormat tyyli 3)
       :pvm (.setDataFormat tyyli 14)
       :pvm-aika (.setDataFormat tyyli 22)
@@ -393,7 +410,25 @@
     (raportti-domain/tee-solu harmaa-sivu nil tyyli)
     rivi-numero))
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko excel-alkutekstit raportin-tiedot
+(defn- excel-alkuteksti->elementti
+  "Taulukon alkutekstit. Excelissä otsikointi on kinkkistä, kun ne tulevat omille sheeteilleen ja
+  näin ovat erilaisia, kuin pdf tai html versioissa. Uusi sheet tulee aina taulukon mukana.
+  Joten näillä alkuteksteillä rakennetaan samanlainen otsikointi taulukoille, kuin html ja pdf versioissa."
+  [x]
+  (cond
+    (string? x) [:teksti x]
+    (and (vector? x) (keyword? (first x))) x
+    :else [:teksti (str x)]))
+
+(defn- excel-alkuteksti-tyyli [workbook tyyppi]
+  (case tyyppi
+    :otsikko-title         (excel/create-cell-style! workbook {:font (font-otsikko 18)})
+    :otsikko-heading       (excel/create-cell-style! workbook {:font (font-otsikko 14)})
+    :otsikko-heading-small (excel/create-cell-style! workbook {:font (font-otsikko 12)})
+    :teksti                (excel/create-cell-style! workbook {:font (font-leipateksti 12)})
+    (excel/create-cell-style! workbook {:font (font-leipateksti 12)})))
+
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko sheet-otsikko excel-alkutekstit raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
                                                 rivi-ennen rivi-jalkeen] :as optiot}
@@ -450,34 +485,36 @@
           lista-tyyli?
           true))
 
-      ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
+      ;; Luodaan sheetille apuotsikot
+      (when excel-alkutekstit
+        (dorun
+          (map-indexed
+            (fn [rivi-nro rivi]
+              (let [[tyyppi teksti] (excel-alkuteksti->elementti rivi)
+                    tyyli           (excel-alkuteksti-tyyli workbook tyyppi)]
+                (tee-tekstirivi sheet (+ 2 rivi-nro) teksti tyyli)))
+            excel-alkutekstit)))
+
+      ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja.
       (when samalle-sheetille?
         ;; Jos taulukon nimeä ei ole, käytä taulukon otsikkoa
         (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
           (tee-taulukon-nimiotsikko sheet nolla rivi-otsikko raportin-tiedot-tyyli)))
 
-      ;;Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu
-      (when otsikko
+      ;; Luodaan sheet:tille otsikko - Käytä taulukolle annettua otsikkoa, jos se on annettu ja taulukko on omalla sheetillään.
+      (when (and otsikko (not samalle-sheetille?))
         (tee-sheet-otsikkoteksti sheet 1 otsikko raportin-tiedot-tyyli))
 
-      ;;Luodaan sheet:tille apuotsikot
-      (when excel-alkutekstit
-        (dorun
-          (map-indexed
-            (fn [rivi-nro rivi]
-              (tee-tekstirivi sheet (+ 2 rivi-nro) rivi (excel/create-cell-style! workbook {:font {:color :black
-                                                                                                   :size 14
-                                                                                                   :name "Open Sans"
-                                                                                                   :bold false}})))
-            excel-alkutekstit)))
-
+      ;; Poikkeustapa lisätä sheetin otsikko. Käytetään, kun samalla sheetillä on useita taulukoita ja ei voida lisätä sheetin otsikkoa taulukon otsikosta
+      (when sheet-otsikko
+        (tee-sheet-otsikkoteksti sheet 1 sheet-otsikko raportin-tiedot-tyyli))
 
       (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 
       (dorun
         (map-indexed
           (fn [rivi-nro rivi]
-            ;; Lisää väliotsikot mikäli nämä puuttuvat 
+            ;; Lisää väliotsikot mikäli nämä puuttuvat
             (let [lisatty-otsikko (when (:otsikko rivi)
                                     (taulukon-valiotsikko (:otsikko rivi) workbook))
                   rivi-nro (+ nolla 1 rivi-nro)
@@ -522,6 +559,15 @@
                                          kustomi-formaatti?
                                          (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
 
+                                         (and (= :numero-opt (or solu-fmt sarake-fmt))
+                                           (number? naytettava-arvo)
+                                           (not (zero? (mod (bigdec naytettava-arvo) 1M))))
+                                         (partial tyyli-format-mukaan workbook :numero-opt (:voi-muokata? sarake))
+
+                                         (and (= :numero-opt (or solu-fmt sarake-fmt))
+                                           (number? naytettava-arvo))
+                                         (constantly nil)
+
                                          formaatti
                                          (partial tyyli-format-mukaan workbook formaatti nil)
 
@@ -538,6 +584,10 @@
                                             ;; Muualla Harjassa prosenttilukuformatointi
                                             ;; lisää lähinnä % merkin kokonaisluvun loppuun.
                                             (/ naytettava-arvo 100)
+
+                                            (and (= :numero-opt sarake-fmt)
+                                              (number? naytettava-arvo))
+                                            (.setScale (bigdec naytettava-arvo) 2 java.math.RoundingMode/HALF_UP)
 
                                             ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
                                             (and (= :raha sarake-fmt) (number? naytettava-arvo))
@@ -583,33 +633,57 @@
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
-(defmethod muodosta-excel :otsikko [[_ _] _] nil)
-(defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
-(defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
-;; Esimerkki erillisen otsikko/teksti kentän luomisesta exceliin. Nykyiset exceliin ensimmäiseksi lisättävät
-;; tekstikentät (esim laskutusyhteenvetojen perusluvun näyttäminen) eivät toimi, koska ne eivät olet :taulukko -elementin sisällä.
-;; Tällaisella rakenteella myös :taulukko -elementin ulkopuoliset tekstit saadaan exceliin.
-;; Tämä luo tällaisenaan vain uuden sheetin, joka ei ole optimaalista, koska sen :teksti -elementin
-;; kuuluisi olla samalla sheetillä kuin muutkin elementit. Joten se on nyt kommentoitu, mutta jätetty tähän esimerkiksi.
-#_(defmethod muodosta-excel :teksti [[_ teksti] workbook]
-    (let [sheet (last (excel/sheet-seq workbook))
-          sheet (if sheet
-                  sheet
-                  (excel/add-sheet! workbook
-                    (WorkbookUtil/createSafeSheetName "Tyhja")))
-          rivi-numero (inc (.getLastRowNum sheet))
-          rivi (.createRow sheet rivi-numero)
-          cell (.createCell rivi 0)
-          sarake-tyyli (excel/create-cell-style! workbook {:font {:color :black :name "Open Sans" :size 12}})]
-      (excel/set-cell! cell teksti)
-      (excel/set-cell-style! cell sarake-tyyli)))
+(defn- luo-otsikko-rivi-sheetille
+  "Luo otsikkorivin viimeiselle sheetille. Jos sheettejä ei ole, ohitetaan.
+  Font-koko määrittää otsikon koon ja lihavointi on oletuksena päällä."
+  [workbook teksti font-koko]
+  (when-let [sheet (last (excel/sheet-seq workbook))]
+    (let [rivi-numero (let [viimeinen (.getLastRowNum sheet)]
+                        ;; Jos sheet on tyhjä (lastRowNum 0 ja ei rivejä), aloitetaan riviltä 0
+                        ;; Muuten jätetään yksi tyhjä rivi ennen otsikkoa
+                        (if (and (zero? viimeinen) (nil? (.getRow sheet 0)))
+                          0
+                          (+ 2 viimeinen)))
+        tyyli (excel/create-cell-style! workbook {:font (font-otsikko font-koko)})
+        rivi (.createRow sheet rivi-numero)
+        solu (.createCell rivi 0)]
+    (excel/set-cell! solu teksti)
+    (excel/set-cell-style! solu tyyli))))
+
+(defmethod muodosta-excel :otsikko [[_ _] _] nil)
+
+(defmethod muodosta-excel :otsikko-title [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 18))
+
+(defmethod muodosta-excel :otsikko-heading [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 14))
+
+(defmethod muodosta-excel :otsikko-heading-small [[_ teksti] workbook]
+  (luo-otsikko-rivi-sheetille workbook teksti 12))
+
+(defn- lisaa-ajettu-teksti-ensimmaiselle-sheetille!
+  "Lisää 'Ajettu'-tekstin ensimmäisen sheetin viimeiselle riville.
+  Kutsutaan kaikkien elementtien kirjoituksen jälkeen."
+  [workbook nyt]
+  (when-let [sheet (first (excel/sheet-seq workbook))]
+    (let [viimeinen-rivi (inc (.getLastRowNum sheet))
+          rivi (.createRow sheet viimeinen-rivi)
+          cell (.createCell rivi 0)]
+      (excel/set-cell! cell (str "Ajettu " nyt)))))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
-        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
+        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)
+        ;; Tulostuspäivä
+        nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
+
     (doseq [elementti (remove nil? sisalto)]
-      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+      (if (raportti-domain/raporttielementti? elementti)
+        (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook)
+        (log/warn "Ohitetaan virheellinen excel-elementti (ei raporttielementti): " (pr-str elementti))))
+
+    (lisaa-ajettu-teksti-ensimmaiselle-sheetille! workbook nyt)
     ;; Käydään lopuksi koko excel läpi ja pakotetaan solujen koot automaattisesti 20% suuremmaksi, kuin 5.2.5 versio poi kirjastosta laskee
     (doseq [sheet (excel/sheet-seq workbook)]
       (let [sarake-maara (reduce (fn [maksimi i]

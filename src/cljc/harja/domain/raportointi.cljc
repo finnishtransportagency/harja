@@ -60,8 +60,11 @@
        :font {:color :black :name "Open Sans" :size 12}}
 
       korosta-harmaa?
-      (merge rajat-excel {:background :grey_25_percent
-                          :font {:color :black :name "Open Sans" :size 12}}))
+      {:background :grey_25_percent
+       :font {:color :black :name "Open Sans" :size 12}}
+
+      :else
+      {:font {:color :black :name "Open Sans" :size 12}})
     (when lihavoi?
       {:font {:bold true :name "Open Sans" :size 12}})))
 
@@ -154,7 +157,7 @@
     #?(:clj (catch Error _ arvo))))
 
 (defn numero-fmt? [fmt]
-  (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
+  (boolean (#{:kokonaisluku :numero :numero-opt :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
 
 (def +mahdolliset-roolit+
   [[nil "Kaikki"]
