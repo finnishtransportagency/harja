@@ -10,13 +10,13 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn hae-urakan-kalustoresurssit [db kayttaja {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kalustoresurssit kayttaja urakka-id)
   (kalustoresurssit-q/hae-urakan-kalustoresurssit db {:urakka-id urakka-id}))
 
 (defn tallenna-urakan-kalustoresurssit
   "Tallentaa urakan kalustoresurssit hoitoluokkaryhmittäin ja palauttaa tallennetut tiedot."
-  [db kayttaja {:keys [urakka-id kalustoresurssit] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
+  [db kayttaja {:keys [urakka-id kalustoresurssit]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kalustoresurssit kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [hoitoluokkaryhma maara]} kalustoresurssit]
       (when-not (kalustoresurssit/validi-hoitoluokkaryhma? hoitoluokkaryhma)
