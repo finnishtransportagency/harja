@@ -663,19 +663,23 @@
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
         ;; mahdollistetaan komponentin rendaus myös otsikkorivin sisään
         komponentti-otsikon-sisaan (get-in otsikko-record [:optiot :komponentti-otsikon-sisaan])
-        otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
+        otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])
+        luokka (get-in otsikko-record [:optiot :luokka])]
     [:<>
-     [:tr.otsikko (when salli-valiotsikoiden-piilotus?
-                    {:class (str "gridin-collapsoitava-valiotsikko klikattava"
-                              (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
-                     :on-click #(toggle-valiotsikko valiotsikko-id
-                                  piilotetut-valiotsikot)
-                     :style (merge {}
-                              (when (not (empty? otsikkokomponentit))
-                                {:border-bottom "none"
-                                 :border-top "solid 0.1mm black"})
-                              (when (:otsikon-tyyli komponentti-otsikon-sisaan)
-                                (:otsikon-tyyli komponentti-otsikon-sisaan)))})
+     [:tr.otsikko
+      (merge
+        {:class (when luokka luokka)}
+       (when salli-valiotsikoiden-piilotus?
+         {:class (str "gridin-collapsoitava-valiotsikko klikattava"
+                   (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
+          :on-click #(toggle-valiotsikko valiotsikko-id
+                       piilotetut-valiotsikot)
+          :style (merge {}
+                   (when (not (empty? otsikkokomponentit))
+                     {:border-bottom "none"
+                      :border-top "solid 0.1mm black"})
+                   (when (:otsikon-tyyli komponentti-otsikon-sisaan)
+                     (:otsikon-tyyli komponentti-otsikon-sisaan)))}))
       [:td {:colSpan (if (empty? komponentti-otsikon-sisaan)
                        colspan
                        (- colspan (:col-span komponentti-otsikon-sisaan)))}

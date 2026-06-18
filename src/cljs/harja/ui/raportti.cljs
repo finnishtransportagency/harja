@@ -242,7 +242,7 @@
                           elementti))))}))))
          sarakkeet))
      (if (empty? data)
-       [(grid/otsikko (or tyhja "Ei tietoja"))]
+       [(grid/otsikko (or tyhja "Ei tietoja") {:luokka "tyhja-rivi"})]
        (let [viimeinen-rivi (last data)]
          (into []
            (map-indexed (fn [index rivi]
