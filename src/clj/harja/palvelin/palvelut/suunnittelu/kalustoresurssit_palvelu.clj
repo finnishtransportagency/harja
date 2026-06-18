@@ -1,12 +1,13 @@
 (ns harja.palvelin.palvelut.suunnittelu.kalustoresurssit-palvelu
   "MHU26-urakoiden suunnittelun kalustoresurssien endpointit."
-  (:require [com.stuartsierra.component :as component]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [slingshot.slingshot :refer [throw+]]
+            [com.stuartsierra.component :as component]
+
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kalustoresurssit :as kalustoresurssit]
             [harja.kyselyt.kalustoresurssit :as kalustoresurssit-q]
-            [slingshot.slingshot :refer [throw+]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn hae-urakan-kalustoresurssit [db kayttaja {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)

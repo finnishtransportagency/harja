@@ -63,12 +63,12 @@
      rivit]))
 
 (defn- painikkeet [e! tallennus-kaynnissa? muutoksia? voi-peruuttaa?]
-  [:div.painikkeet {:style {:margin-top "1rem"}}
+  [:div.painikkeet
    [napit/yleinen-ensisijainen "Tallenna"
     #(e! (tiedot/->TallennaKalustoresurssit))
     {:disabled (or tallennus-kaynnissa? (not muutoksia?))
      :data-cy "kalustoresurssit-tallenna"}]
-   [:span {:style {:margin-left "1rem"}}
+   [:span
     [napit/yleinen-toissijainen "Peruuta"
      #(e! (tiedot/->PeruutaMuokkaus))
      {:disabled (not voi-peruuttaa?)
@@ -82,7 +82,7 @@
         muutoksia? (not= maarat (:tallennetut-maarat app))
         voi-peruuttaa? (boolean muokkaustila?)]
     [:div.kalustoresurssit {:data-cy "kalustoresurssit"}
-     [:div {:style {:display "flex" :justify-content "space-between" :align-items "center"}}
+    [:div
       [:h1 "Kalustoresurssit"]
       (when luku-tila?
         [napit/yleinen-toissijainen "Muokkaa"
