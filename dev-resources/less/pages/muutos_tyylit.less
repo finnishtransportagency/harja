@@ -16,18 +16,26 @@
 
   .muutosten-vaikutus {
     margin-top: @valistys-24;
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    align-items: flex-start;
 
     .muutosten-vaikutus-container {
       background: @blue-lighter;
       padding: @valistys-8 @valistys-16;
       border: 1px solid @blue-default;
       border-radius: @valistys-4;
-      max-width: 550px;
+      max-width: 504px;
+      width: 100%;
 
       .tietorivi {
         span.tietokentta {
           font-weight: normal;
           width: 100%;
+          ul {
+            margin-bottom: 0;
+          }
         }
         span.tietoarvo {
           font-weight: normal;
@@ -43,6 +51,9 @@
         &.piilota-rivin-sisalto {
           display: none;
         }
+        h3 {
+          margin: 0 0 0.5rem 0;
+        }
 
         .vihje-indeksikorjaus {
           border: 1px solid @blue-default;
@@ -53,6 +64,18 @@
           }
         }
       }
+
+      .viivan-ylla {
+        padding: @valistys-8 @valistys-8 @valistys-16 @valistys-8;
+      }
+
+      .notifikaatio-viivan-ylla {
+        padding: 0 @valistys-8 @valistys-16 @valistys-8;
+      }
+
+      .viivan-alla {
+        padding: @valistys-16 @valistys-8 @valistys-8 @valistys-8;
+      }
     }
   }
 
@@ -62,10 +85,12 @@
     .toast-viesti {
       padding: 0 @valistys-4;
     }
+
     .vihjeen-sisalto {
       padding-left: 0;
     }
   }
+
   .muutoslomake {
     .form-group {
       width: 100%;
@@ -108,13 +133,16 @@
     .johto-ja-hallintokorvaus-muutokset-info {
       margin-top: @valistys-24;
     }
+
     .pvm-kentta {
       display: block;
       max-width: 168px;
     }
+
     .muutostyyppivalinta {
       margin-bottom: @valistys-16;
     }
+
     .hoitovuosi-valinta {
       width: @hoitovuosi-valinnan-leveys;
     }
@@ -143,6 +171,7 @@
         }
       }
     }
+
     .pysyvan-muutoksen-grid {
       
       .tavoitehinnan-muutos-sarake {
@@ -156,16 +185,20 @@
       }
     }
   }
+
     .otsikko-ja-hoitokausi {
         div.select-default {
           width: @hoitovuosi-valinnan-leveys;
         }
         margin-bottom: 12px;
     }
+
   .collapsoitava-osio {
     border: 1px solid @harmaa-vaalea;
     padding: @valistys-32 @valistys-32;
+    margin-top: @valistys-16;
   }
+
   .otsikkorivi {
     display: flex;
     align-items: center;
@@ -175,20 +208,34 @@
       height: @valistys-28;
       width: @valistys-28;
     }
+
     h2 {
       display: inline-block;
       margin: 0 0 0 @valistys-24;
     }
+
     .summa {
       font-size: @valistys-20;
     }
   }
+
   .toiminnot {
     margin-top: @valistys-16;
     button {
       margin-top: @valistys-8;
     }
   }
+
+  .laskutusraja-info {
+    max-width: 900px;
+    font-size: 0.875rem;
+    line-height: @valistys-24;
+    margin-top: @valistys-24;
+    p {
+      margin: @valistys-24 0 0 0;
+    }
+  }
+
   .debug {
     margin-top: @valistys-48;
   }
@@ -205,5 +252,57 @@
   
   .johto-ja-hallintokorvaus-muutokset-grid {
     padding-top: @valistys-16;
+  }
+
+  .kirjatut-muutokset-grid {
+    @media (max-width: 1370px) {
+      td:last-child,
+      th:last-child {
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+      td:last-child button {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+      }
+    }
+  }
+}
+
+.laskutusraja-muutos-modal {
+  .modal-content {
+    width: 677px;
+  }
+
+  .modal-body {
+    margin-bottom: @valistys-24;
+  }
+
+  .modal-footer {
+    text-align: left;
+  }
+
+  .ylateksti {
+    margin-top: @valistys-24;
+    margin-bottom: @valistys-24;
+  }
+
+  .alateksti {
+    margin-top: @valistys-24;
+  }
+}
+
+.laskutusraja-infoteksti {
+  label {
+    display: none;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: @black-default;
+  }
+
+  hr {
+    margin: @valistys-24 0;
   }
 }

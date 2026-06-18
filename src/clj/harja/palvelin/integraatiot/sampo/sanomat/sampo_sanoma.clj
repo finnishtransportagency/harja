@@ -49,7 +49,7 @@
    :loppupvm (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
    :hanke-sampo-id (z/xml1-> project (z/attr :programId))
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))
-   :ely-hash (z/xml1-> project (z/attr :financialDepartmentHash))
+   :kustannuspaikka (z/xml1-> project (z/attr :financialDepartmentHash))
    :alueurakkanro (z/xml1-> project (z/attr :vv_alueurakkanro))
    :urakoitsijan-nimi (z/xml1-> project (z/attr :company_name))
    :urakoitsijan-ytunnus (z/xml1-> project (z/attr :vv_corporate_id))})

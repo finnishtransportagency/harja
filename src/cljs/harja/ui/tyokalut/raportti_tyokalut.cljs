@@ -13,11 +13,9 @@
                                         laskutettu-str laskutetaan-str]]
   [raportointi/muodosta-html
    [:display-flex
-    [:sininen-laatikko {:otsikko (if (and
-                                       (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
-                                   "Laskutettavaa yhteensä"
-                                   ;; Vanhat urakat joilla ei ole laskutusrajaa
-                                   "Toteutuneet kustannukset yhteensä")
+    [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+                                   "Toteutuneet kustannukset yhteensä"
+                                   "Laskutettavaa yhteensä")
                         :layout :sarakkeet}
      [{:fmt :raha
        :arvo laskutettu
@@ -54,6 +52,7 @@
    [:div.width-half
     [:h3.gridin-otsikko otsikko-vasen]
     (let [{otsikko :otsikko
+           gridin-luokka :gridin-luokka
            viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
            rivi-ennen :rivi-ennen
            piilota-border? :piilota-border?
@@ -69,6 +68,7 @@
            ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
       [raportointi/grid
        otsikko
+       gridin-luokka
        viimeinen-rivi-yhteenveto?
        rivi-ennen
        piilota-border?
@@ -88,6 +88,7 @@
      [:div.width-half
       [:h3.gridin-otsikko otsikko-oikea]
       (let [{otsikko :otsikko
+             gridin-luokka :gridin-luokka
              viimeinen-rivi-yhteenveto? :viimeinen-rivi-yhteenveto?
              rivi-ennen :rivi-ennen
              piilota-border? :piilota-border?
@@ -102,7 +103,8 @@
              sivuttain-rullattava? :sivuttain-rullattava?
              ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
         [raportointi/grid
-         otsikko
+         otsikko 
+         gridin-luokka
          viimeinen-rivi-yhteenveto?
          rivi-ennen
          piilota-border?

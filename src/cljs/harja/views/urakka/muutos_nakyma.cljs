@@ -22,6 +22,7 @@
     [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
     [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
     [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
+    [harja.views.urakka.muutokset.laskutusrajan-tarkistukset :as laskutusrajan-tarkistukset]
     [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
 
 
@@ -39,7 +40,8 @@
        [:span.uudet-muutostiedot
         [kirjatut-muutokset/kirjatut-muutokset e! app]
         [lasketut-muutokset/lasketut-muutokset e! app]
-        [rahavarausten-muutokset/rahavarausten-muutokset e! app]])
+        [rahavarausten-muutokset/rahavarausten-muutokset e! app]
+        [laskutusrajan-tarkistukset/laskutusrajan-tarkistukset e! app]])
      [:div "Ei hoitokautta valittuna."])])
 
 

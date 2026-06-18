@@ -108,6 +108,7 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
 
     -- Laskutusraja
     laskutusraja_yht                                 NUMERIC,
+    laskutusraja_alkuperainen                        NUMERIC,
     laskutusrajaan_jaljella                          NUMERIC,
     onko_laskutusraja_kaytossa                       BOOLEAN,
     onko_laskutusraja_ylittynyt                      BOOLEAN,
@@ -318,6 +319,7 @@ DECLARE
 
     -- Laskutusraja
     laskutusraja_yht                      NUMERIC;
+    laskutusraja_alkuperainen             NUMERIC;
     laskutusrajaan_jaljella               NUMERIC;
     onko_laskutusraja_kaytossa            BOOLEAN;
     onko_laskutusraja_ylittynyt           BOOLEAN;
@@ -1575,11 +1577,12 @@ BEGIN
         onko_laskutusraja_kaytossa := FALSE;
     END IF;
     
-    SELECT laskutusraja 
-      FROM urakka_tavoite 
-     WHERE urakka = ur 
-       AND hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1) 
-      INTO laskutusraja_yht;
+    SELECT ut.laskutusraja,
+           ut.laskutusraja_alkuperainen
+      FROM urakka_tavoite ut
+     WHERE ut.urakka = ur
+       AND ut.hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1)
+      INTO laskutusraja_yht, laskutusraja_alkuperainen;
 
     laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
 
@@ -1727,7 +1730,7 @@ BEGIN
               muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
               muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht,
         -- Laskutusraja
-              laskutusraja_yht, laskutusrajaan_jaljella,
+              laskutusraja_yht, laskutusraja_alkuperainen, laskutusrajaan_jaljella,
               onko_laskutusraja_kaytossa, onko_laskutusraja_ylittynyt,
               laskutusraja_laskutettavaa_yht, laskutusraja_laskutettavaa_val_aika,
               laskutusrajan_ylittynyt_yht, laskutusrajan_ylittynyt_val_aika,
