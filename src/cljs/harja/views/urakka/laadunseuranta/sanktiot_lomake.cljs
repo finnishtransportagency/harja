@@ -436,7 +436,7 @@
                 :tyyppi :pvm
                 ::lomake/col-luokka "col-xs-6"})
              ;; MHU25 urakoille näytetään perintäpäivä hoitokautena
-             {:otsikko "Hoitokausi, jota sanktio koskee"
+             {:otsikko "Hoitovuosi, jota sanktio koskee"
               :nimi :perintapvm
               :pakollinen? true
               :tyyppi :valinta
