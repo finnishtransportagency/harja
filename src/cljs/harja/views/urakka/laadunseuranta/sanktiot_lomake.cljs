@@ -148,9 +148,9 @@
                              (dissoc :tyyppi)
                              (assoc :tyyppi nil))
                       s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
-                      vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id)
-                           yksi-tyyppi (first s-tyypit)
-                           toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
+                      vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id) 
+                      yksi-tyyppi (first s-tyypit) 
+                      toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
                       rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
