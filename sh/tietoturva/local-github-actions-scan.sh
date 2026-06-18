@@ -46,6 +46,8 @@ pull_image() {
 }
 
 run_zizmor() {
+    local mount_opts=""
+
     # Jos ei olla fix-tilassa, mountataan read-only
     # Tämä lisää tietoturvaa, koska skannauksessa ei tarvita kirjoitusoikeuksia.
     if [[ -z "$FIX_MODE" ]]; then

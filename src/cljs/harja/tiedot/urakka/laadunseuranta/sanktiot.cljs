@@ -116,7 +116,8 @@
 (defn uusi-sanktio [urakkatyyppi]
   (let [nyt (pvm/nyt)
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
-    {:suorasanktio true
+    {:harja.ui.lomake/muokatut #{:kasittelyaika}
+     :suorasanktio true
      :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
      :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))

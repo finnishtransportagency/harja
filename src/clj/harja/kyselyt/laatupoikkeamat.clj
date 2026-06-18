@@ -10,7 +10,7 @@
   {:positional? true})
 
 (declare onko-olemassa-ulkoisella-idlla paivita-laatupoikkeaman-perustiedot<! luo-laatupoikkeama<!
-  poista-laatupoikkeama!)
+  poista-laatupoikkeama! hae-bonuksen-liitteet)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))

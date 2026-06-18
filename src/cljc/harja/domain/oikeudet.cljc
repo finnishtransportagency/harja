@@ -13,6 +13,7 @@
 
 (declare on-oikeus? on-muu-oikeus?
   raporttioikeudet
+  raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
@@ -43,6 +44,10 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-toteumat-kokonaishintaisettyot
+  urakat-toteumat-erilliskustannukset
+  urakat-toteumat-muutos-ja-lisatyot
+  urakat-toteumat-vesivaylaerilliskustannukset
+  urakat-toteumat-varusteet
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit

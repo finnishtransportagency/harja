@@ -215,6 +215,17 @@
         (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
                                      urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
+(defn vaadi-talvisuolan-ylitys-ehto
+  "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
+  sanktion laji on talvisuolan ylitys
+  ja sanktion käsittelyaika on urakan viimeisen hoitovuoden aikana."
+  [urakan-tiedot kasittelyaika]
+  (when-not (and
+              (pvm/valissa? kasittelyaika
+                (pvm/->pvm (str "01.10." (dec (-> urakan-tiedot :loppupvm pvm/vuosi))))
+                (-> urakan-tiedot :loppupvm)))
+    (throw (SecurityException. "Talvisuolan ylityksen ehdot eivät täyttyneet: Urakka ei ole teidenhoidon hoitourakka, tai sanktion perintäpäivä ei ole urakan viimeisen hoitovuoden aikana."))))
+
 (defn- vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
   [db {:keys [urakka-id urakan-alkupvm paivamaara soveltuvuuskonteksti laji sanktiotyyppi-id]}]
   (when (and laji
@@ -231,13 +242,15 @@
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio}
-   laatupoikkeama urakka {:keys [paivamaara soveltuvuuskonteksti]}]
+   laatupoikkeama urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [summa (if (decimal? summa)
+
+  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
+        summa (if (decimal? summa)
                 (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
                 summa)
-        urakan-tiedot (first (urakat/hae-urakka db urakka))
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -338,13 +351,13 @@
         (name paatos) perustelu
         (name kasittelytapa) muukasittelytapa
         (:id user)
-        id))
-    (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
-      (doseq [sanktio (:sanktiot laatupoikkeama)]
-        (tallenna-laatupoikkeaman-sanktio
-          db user sanktio id urakka
+        id)
+      (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
+        (doseq [sanktio (:sanktiot laatupoikkeama)]
+          (tallenna-laatupoikkeaman-sanktio
+          db user sanktio id urakka kasittelyaika
           {:paivamaara (:aika laatupoikkeama)
-           :soveltuvuuskonteksti :laatupoikkeama})))))
+           :soveltuvuuskonteksti :laatupoikkeama}))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -426,7 +439,7 @@
               (:id user)
               id)
           sanktio-id (tallenna-laatupoikkeaman-sanktio
-                       c user sanktio id urakka
+                       c user sanktio id urakka kasittelyaika
                        {:paivamaara hk-alkupvm
                         :soveltuvuuskonteksti :urakka})
           _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]

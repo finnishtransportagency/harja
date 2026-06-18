@@ -443,15 +443,22 @@
                                                'kokonaishintainen',
                                                'harja-api',
                                                " ulkoinen-id ");")
-                                   (u "INSERT INTO toteuma_materiaali (toteuma,
-                                                                       materiaalikoodi,
-                                                                       maara,
-                                                                       luoja, urakka_id)
-                                       VALUES ((SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id "),
-                                               (SELECT id FROM materiaalikoodi WHERE nimi = '" materiaalinimi "'),
-                                               " maara ",
-                                               (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'),
-                                               (SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'));"))]
+                                    (u "INSERT INTO toteuma_materiaali (toteuma,
+                                                                        materiaalikoodi,
+                                                                        maara,
+                                                                        luoja, urakka_id,
+                                                                        hoitokauden_alkuvuosi)
+                                        VALUES ((SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id "),
+                                                (SELECT id FROM materiaalikoodi WHERE nimi = '" materiaalinimi "'),
+                                                " maara ",
+                                                (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'),
+                                                (SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'),
+                                                (SELECT EXTRACT(YEAR FROM
+                                                  CASE WHEN EXTRACT(MONTH FROM t.alkanut) >= 10
+                                                       THEN t.alkanut
+                                                       ELSE t.alkanut - INTERVAL '1 year'
+                                                  END)::INTEGER
+                                                 FROM toteuma t WHERE t.ulkoinen_id = " ulkoinen-id "));"))]
     (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola, rakeinen NaCl" (t/date-time 2015 2 18 22) testidatasta))))
         "Testidatasta haettu määrä vastaa odotettua")
 

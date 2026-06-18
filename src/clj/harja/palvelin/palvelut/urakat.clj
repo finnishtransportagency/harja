@@ -25,6 +25,8 @@
 
 (def ^{:const true} oletus-toleranssi 50)
 
+(def ^:private sallitut-projektikansio-linkin-skeemat #{"https"})
+
 (defn urakan-paivamaarat
   [db id]
   (first (q/urakan-paivamaarat db id)))
@@ -298,6 +300,36 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/aseta-takuun-loppupvm! db {:urakka   urakka-id
                                 :loppupvm (:loppupvm takuu)}))
+
+(defn- normalisoi-projektikansio-linkki [projektikansio-linkki]
+  (let [normalisoitu-linkki (not-empty (str/trim (or projektikansio-linkki "")))]
+    (when normalisoitu-linkki
+      (let [;; Lisätään https:// eteen, jos skeema puuttuu; korotetaan http:// → https://
+            normalisoitu-linkki (cond
+                                  (str/starts-with? normalisoitu-linkki "https://") normalisoitu-linkki
+                                  (str/starts-with? normalisoitu-linkki "http://") (str "https://" (subs normalisoitu-linkki (count "http://")))
+                                  :else (str "https://" normalisoitu-linkki))
+            uri (try
+                  (java.net.URI. normalisoitu-linkki)
+                  (catch Exception _
+                    nil))
+            skeema (some-> uri .getScheme str/lower-case)
+            host (some-> uri .getHost)]
+        (when-not (and uri
+                    (.isAbsolute uri)
+                    (contains? sallitut-projektikansio-linkin-skeemat skeema)
+                    (some? host)
+                    (str/includes? host "."))
+          (throw (IllegalArgumentException. "Projektikansion linkki ei ole kelvollinen – anna verkkoosoite, esim. esimerkki.fi tai https://esimerkki.fi.")))
+        normalisoitu-linkki))))
+
+(defn tallenna-urakan-projektikansio-linkki [db user {:keys [urakka-id projektikansio-linkki]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (let [projektikansio-linkki (normalisoi-projektikansio-linkki projektikansio-linkki)]
+    (q/tallenna-urakan-projektikansio-linkki! db {:urakka urakka-id
+                                                  :projektikansio_linkki projektikansio-linkki})
+    {:projektikansio-linkki projektikansio-linkki}))
+
 (defn- pvm-str->pvm [pvm-str]
   (. (. (DateTimeFormat/forPattern "d.M.yyyy") parseDateTime pvm-str) toDate))
 
@@ -571,6 +603,11 @@
         (aseta-takuun-loppupvm db user tiedot)))
 
     (julkaise-palvelu http
+      :tallenna-urakan-projektikansio-linkki
+      (fn [user tiedot]
+        (tallenna-urakan-projektikansio-linkki db user tiedot)))
+
+    (julkaise-palvelu http
       :poista-indeksi-kaytosta
       (fn [user tiedot]
         (poista-indeksi-kaytosta db user tiedot)))
@@ -605,6 +642,7 @@
       :tallenna-urakan-sopimustyyppi
       :tallenna-urakan-tyyppi
       :aseta-takuun-loppupvm
+      :tallenna-urakan-projektikansio-linkki
       :paivita-kesa-aika
       :tallenna-vesivaylaurakka
       :hae-harjassa-luodut-urakat)

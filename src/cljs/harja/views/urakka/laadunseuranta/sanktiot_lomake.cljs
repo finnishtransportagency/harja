@@ -50,6 +50,14 @@
                                  toimenpideinstanssit)
     toimenpideinstanssit))
 
+(defn- viimeinen-hoitokausi-nykyhetkella?
+  [urakan-tiedot pvm]
+  (when (and urakan-tiedot pvm)
+    (let [loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+          viimeinen (dec loppuvuosi) ; viimeisen hoitokauden alkuvuosi
+          kauden-alku (pvm/hoitokauden-alkuvuosi pvm)]
+      (= kauden-alku viimeinen))))
+
 (defn- hae-sanktiotyyppi-idlla
   [sanktiotyypit tyyppi-id]
   (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
@@ -173,6 +181,17 @@
             :valinnat (vec mahdolliset-sanktiolajit)
             :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
+
+         ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
+          (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji @muokattu)))
+            {:otsikko ""
+             :nimi :talvisuolan-kokonaiskayton-ylitys
+             ::lomake/col-luokka "col-xs-12"
+             :tyyppi :komponentti
+             :komponentti (fn [rivi]
+                            [yleiset/info-laatikko :neutraali
+                             [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
+
          (when-not (or yllapitourakka? vesivaylaurakka?)
            (if (not lukutila?)
              {:otsikko "Tyyppi" :tyyppi :valinta
@@ -326,7 +345,12 @@
                                      true
                                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
             :fmt pvm/pvm-opt :tyyppi :pvm
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+            :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                      (fn [arvo sanktio]
+                        (when (and (not (nil? arvo))
+                                (= :talvisuolan_ylitys (:laji sanktio))
+                                (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
+                          (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))]}
 
            (if (and voi-muokata? (not lukutila?))
              {:otsikko "Laskutuskuukausi"
