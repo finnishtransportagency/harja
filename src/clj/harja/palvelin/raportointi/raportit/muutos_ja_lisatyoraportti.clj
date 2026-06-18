@@ -124,6 +124,7 @@
         ;; HTML raporttiin tulee hieno sininen tausta ja kaksi vierekkäistä laatikkoa
         [[:tyhja-rivi nil]
          [:otsikko-heading "Muutosten yhteenveto"]
+         [:tyhja-rivi nil]
          [:display-flex
           [:sininen-laatikko {:otsikko "Muutosten vaikutus tavoitehintaan"}
            [{:avain "Hoitovuoden alun indeksikorjattu tavoitehinta"
@@ -321,7 +322,8 @@
      [:tyhja-rivi nil]]))
 
 (defn muodosta-muutostoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
-  (let [muutostyot (hae-muutostoiden-kulukohdistukset db {:urakka-id urakka-id
+  (let [ei-excel? (not= kasittelija :excel)
+        muutostyot (hae-muutostoiden-kulukohdistukset db {:urakka-id urakka-id
                                                           :alkupvm alkupvm
                                                           :loppupvm loppupvm})
         muutostyorivit (mapv (fn [r]
@@ -336,35 +338,35 @@
                                   :korosta-hennosti? true
                                   :rivi (rivi "Yhteensä" "" "" "" muutostyot-yhteensa)}]
         otsikko-title [:otsikko-title "Muutostöiden kulukohdistukset"]
-        ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    (if
-      ;; HTML ja PDF raporteille ei näytetä taulukkoa
-      (and (not (= kasittelija :excel)) (= 0 (count muutostyorivit)))
-      [[:jakaja nil]
-       (when-not (= kasittelija :excel) otsikko-title)
-       (when-not (= kasittelija :excel) ajankohtakuvaus)
-       [:tyhja-rivi nil]
-       [:tyhja-rivi nil]
-       [:teksti "Ei muutostöiden kulukohdistuksia." {:vari "#5C5C5C"}]
-       [:tyhja-rivi nil]]
+        ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
+        otsikon-alun-rivit (when ei-excel? [otsikko-title
+                                            ajankohtakuvaus
+                                            [:tyhja-rivi nil]
+                                            [:tyhja-rivi nil]])]
+    (if (and ei-excel? (empty? muutostyorivit))
+      (concat
+        [[:jakaja nil]]
+        otsikon-alun-rivit
+        [[:teksti "Ei muutostöiden kulukohdistuksia." {:vari "#5C5C5C"}]
+         [:tyhja-rivi nil]])
 
-      [(when-not (= kasittelija :excel) otsikko-title)
-       (when-not (= kasittelija :excel) ajankohtakuvaus)
-       [:taulukko {:otsikko (when-not (= kasittelija :excel) "Muutostyöt (erillisrahoitetut)")
-                   :viimeinen-rivi-yhteenveto? true
-                   :tyhja (when (empty? muutostyot) "Ei muutostöitä.")
-                   :sheet-nimi "Muutostöiden kulut"
-                   :excel-alkutekstit (when (= kasittelija :excel)
-                                        [otsikko-title
-                                         ajankohtakuvaus
-                                         [:teksti ""]
-                                         [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
-        [{:leveys 3 :otsikko "Lasku pvm"}
-         {:leveys 5 :otsikko "Muutostyö"}
-         {:leveys 5 :otsikko "Toimenpide"}
-         {:leveys 10 :otsikko "Muutoksen syy"}
-         {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-        (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi)))]])))
+      (concat
+        otsikon-alun-rivit
+        [[:taulukko {:otsikko (when ei-excel? "Muutostyöt (erillisrahoitetut)")
+                     :viimeinen-rivi-yhteenveto? true
+                     :tyhja (when (empty? muutostyot) "Ei muutostöitä.")
+                     :sheet-nimi "Muutostöiden kulut"
+                     :excel-alkutekstit (when (not ei-excel?)
+                                          [otsikko-title
+                                           ajankohtakuvaus
+                                           [:teksti ""]
+                                           [:otsikko-heading "Muutostyöt (erillisrahoitetut)"]])}
+          [{:leveys 3 :otsikko "Lasku pvm"}
+           {:leveys 5 :otsikko "Muutostyö"}
+           {:leveys 5 :otsikko "Toimenpide"}
+           {:leveys 10 :otsikko "Muutoksen syy"}
+           {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+          (into [] (concat muutostyorivit (when-not (empty? muutostyot) muutostyot-yhteensarivi)))]]))))
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
