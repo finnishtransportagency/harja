@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/liitteet.sql"
   {:positional? true})
 
-(declare hae-urakan-liite-id)
+(declare hae-liitteiden-tiedot hae-urakan-liite-id)

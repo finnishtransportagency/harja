@@ -22,7 +22,8 @@
 (defn uusi-sanktio [urakkatyyppi]
   (let [nyt (pvm/nyt)
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
-    {:suorasanktio true
+    {:harja.ui.lomake/muokatut #{:kasittelyaika}
+     :suorasanktio true
      :laji (cond
              (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko

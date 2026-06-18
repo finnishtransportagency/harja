@@ -114,7 +114,7 @@
   (log/debug "vahvista-tai-kumoa-indeksikorjaukset! :urakka-tavoite"
     [urakka-id hoitovuosi-nro vahvistaja vahvistus-pvm])
 
-  (let [rivit (q/vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille! db
+  (let [rivit (q/merkitse-urakan-tavoitteiden-indeksikorjaukset-vahvistetuksi! db
                 {:urakka-id urakka-id
                  :hoitovuosi-nro hoitovuosi-nro
                  :vahvista? vahvista?

@@ -238,7 +238,8 @@
             (when (and (not uusi-haun-kuukausi) (not= edellinen-hakukuukausi uusi-haun-kuukausi))
               (reset! edellinen-hakukuukausi-atom uusi-haun-kuukausi)))))
 
-      (fn [_ {:keys [haku-kaynnissa? laskutusraja-kaytossa? laskutusraja kulut hoitokauden-kulujen-summa kulut-yhteensa-hakukuukauteen-asti parametrit] :as app}
+      (fn [_ {:keys [haku-kaynnissa? laskutusraja-kaytossa? laskutusraja kulut hoitokauden-kulujen-summa kulut-yhteensa-hakukuukauteen-asti
+                     parametrit urakan-tavoitehintojen-tilat] :as app}
            valittu-hoitokausi hoitovuodet haun-kuukausi]
 
         (let [{:keys [haun-alkupvm haun-loppupvm]} parametrit
@@ -253,7 +254,11 @@
               vapaan-aikavalin-alkupvm-hoitokausi (when vapaan-aikavalin-alkupvm (pvm/paivamaaran-hoitokausi vapaan-aikavalin-alkupvm))
               vapaan-aikavalin-loppupvm-hoitokausi (when vapaan-aikavalin-loppupvm (pvm/paivamaaran-hoitokausi vapaan-aikavalin-loppupvm))
               eri-hoitovuosilla? (when (and vapaan-aikavalin-alkupvm-hoitokausi vapaan-aikavalin-loppupvm-hoitokausi
-                                         (not= vapaan-aikavalin-alkupvm-hoitokausi vapaan-aikavalin-loppupvm-hoitokausi)) true)]
+                                         (not= vapaan-aikavalin-alkupvm-hoitokausi vapaan-aikavalin-loppupvm-hoitokausi)) true)
+              indeksikorjaus-vahvistettu? (->> urakan-tavoitehintojen-tilat
+                                            (filter #(= (:hoitokauden-alkuvuosi %) valittu-hoitokausi))
+                                            first
+                                            :indeksikorjaus-vahvistettu)]
 
           (when (and laskutusraja-kaytossa? (not eri-hoitovuosilla?))
             [:div.laskutusraja
@@ -263,7 +268,7 @@
                 haku-kaynnissa?
                 [yleiset/ajax-loader "Ladataan laskutusrajaa..." {:sama-rivi? false :luokka "keskitetty-pysty"}]
 
-                (some? laskutusraja)
+                (and indeksikorjaus-vahvistettu? (some? laskutusraja))
                 [:div
                  (when (> hoitokauden-kulujen-summa laskutusraja)
                    [yleiset/info-laatikko :vahva-ilmoitus "Laskutusraja on täynnä."
@@ -341,7 +346,8 @@
                         (e! (tiedot/->HaeUrakanToimenpiteet tiedot))
                         (e! (tiedot/->HaeKaikkiTehtavaryhmat tiedot))
                         (e! (tiedot/->HaeUrakanHintapaatokset))
-                        (e! (tiedot/->HaeUrakanRahavaraukset)))))
+                        (e! (tiedot/->HaeUrakanRahavaraukset))
+                        (e! (tiedot/->HaeUrakanTavoitehintojenTilat)))))
     (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
     (fn [e! {kulut :kulut syottomoodi :syottomoodi
              {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]}

@@ -251,6 +251,7 @@
           :hoitokausi yhteensa-hoitokausi}
          "Yhteensä"
          {:lihavoi? true
+          :yhteensa? true
           :avain_yht :valittu
           :avain_hoitokausi :hoitokausi
           :kyseessa-kk-vali? kyseessa-kk-vali?})])))
