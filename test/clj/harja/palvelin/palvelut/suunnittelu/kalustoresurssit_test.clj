@@ -26,10 +26,11 @@
     resurssit))
 
 (deftest tallenna-ja-hae-kalustoresurssit-onnistuneesti
-  (let [db (:db jarjestelma)
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
     (testing "Kalustoresurssit tallennetaan ja haetaan oikein"
-      (let [vastaus (kr-palvelu/tallenna-urakan-kalustoresurssit db +kayttaja-jvh+
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-urakan-kalustoresurssit
+                      +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :kalustoresurssit [{:hoitoluokkaryhma "ise-ib" :maara 5}
                                           {:hoitoluokkaryhma "ic-iii" :maara 10}
@@ -38,18 +39,24 @@
         (is (= 10 (ryhman-maara vastaus "ic-iii")))
         (is (= 3 (ryhman-maara vastaus "k1-k2-l")))
 
-        (let [haetut (kr-palvelu/hae-urakan-kalustoresurssit db +kayttaja-jvh+ {:urakka-id urakka-id})]
+        (let [haetut (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :hae-urakan-kalustoresurssit
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id})]
           (is (= 3 (count haetut)) "Kaikki kolme hoitoluokkaryhmää löytyvät")
           (is (= 5 (ryhman-maara haetut "ise-ib"))))))))
 
 (deftest tallenna-paivittaa-olemassa-olevan-maaran
-  (let [db (:db jarjestelma)
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
     (testing "Saman hoitoluokkaryhmän tallennus päivittää määrän eikä luo uutta riviä"
-      (kr-palvelu/tallenna-urakan-kalustoresurssit db +kayttaja-jvh+
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+        :tallenna-urakan-kalustoresurssit
+        +kayttaja-jvh+
         {:urakka-id urakka-id
          :kalustoresurssit [{:hoitoluokkaryhma "ise-ib" :maara 5}]})
-      (let [vastaus (kr-palvelu/tallenna-urakan-kalustoresurssit db +kayttaja-jvh+
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-urakan-kalustoresurssit
+                      +kayttaja-jvh+
                       {:urakka-id urakka-id
                        :kalustoresurssit [{:hoitoluokkaryhma "ise-ib" :maara 42}]})
             ise-ib-rivit (filter #(= "ise-ib" (:hoitoluokkaryhma %)) vastaus)]
@@ -57,10 +64,11 @@
         (is (= 42 (ryhman-maara vastaus "ise-ib")) "Määrä on päivittynyt")))))
 
 (deftest virheellinen-hoitoluokkaryhma-hylataan
-  (let [db (:db jarjestelma)
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")]
     (testing "Tuntematon hoitoluokkaryhmä aiheuttaa virheen"
       (is (thrown? Exception
-            (kr-palvelu/tallenna-urakan-kalustoresurssit db +kayttaja-jvh+
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-urakan-kalustoresurssit
+              +kayttaja-jvh+
               {:urakka-id urakka-id
                :kalustoresurssit [{:hoitoluokkaryhma "ei-ole-olemassa" :maara 1}]}))))))
