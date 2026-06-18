@@ -203,8 +203,8 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.get('[data-cy=tabs-taso1-Muutokset]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
-        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span')
-            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function (text1) {
+        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')
+            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().next().then(function (text1) {
             const trimmattuTodellinen = trimmaaArvo(text1);
             const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
             expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);

@@ -353,12 +353,12 @@ $$
                 NOW(), null, null);
 
         -- urakka_tavoite - muutamana vuotena ei voi olla indeksikorjattua tavoite- ja kattohintaa, koska indeksikorjaus tehdään indexin MAKU2020 perusteella ja sitä ei ole vielä kannassa.
-        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, laskutusraja, tarjous_tavoitehinta) VALUES
-        (urakkaid, 1, 1988273.5, 2385928.2, NOW(), kayttajaid, 2091663.722, 2509996.4664, 2091663.722, 1988273.5),
-        (urakkaid, 2, 1988273.5, 2385928.2, NOW(), kayttajaid, 2219249.4765, 2509996.4664, 2091663.722, 1988273.5),
-        (urakkaid, 3, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, 2091663.722, 1988273.5),
-        (urakkaid, 4, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, 2091663.722, 1988273.5),
-        (urakkaid, 5, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, 2091663.722, 1988273.5);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu, laskutusraja, laskutusraja_alkuperainen, tarjous_tavoitehinta) VALUES
+        (urakkaid, 1, 1988273.5, 2385928.2, NOW(), kayttajaid, 2091663.722, 2509996.4664, 2091663.722, 2091663.722, 1988273.5),
+        (urakkaid, 2, 1988273.5, 2385928.2, NOW(), kayttajaid, 2219249.4765, 2509996.4664, 2219249.4765, 2219249.4765, 1988273.5),
+        (urakkaid, 3, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, null, null, 1988273.5),
+        (urakkaid, 4, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, null, null, 1988273.5),
+        (urakkaid, 5, 1988273.5, 2385928.2, NOW(), kayttajaid, null, null, null, null, 1988273.5);
 
 
         -- Lisätään vielä rahavaraukset kustannusarvioitu_tyo tauluun

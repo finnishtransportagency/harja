@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
   (:require
+    [harja.fmt :as fmt]
     [tuck.core :as tuck]
     [clojure.string :as str]
     [reagent.core :refer [atom]]
@@ -9,11 +10,13 @@
     [harja.ui.modal :as modal]
     [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
+    [harja.ui.ikonit :as ikonit]
     [harja.ui.lomake :as lomake]
     [harja.ui.viesti :as viesti]
     [harja.ui.liitteet :as liitteet]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.nakymasiirrin :as siirrin]
+    [harja.ui.yleiset :as yleiset]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.siirtymat :as siirtymat]
@@ -157,8 +160,43 @@
       :tavoitehinnan-muutokset-yhteensa tavoitehinnan-muutokset-yhteensa
       :hoitovuoden-indeksikorjattu-tavoitehinta (-> vastaus :yhteenveto :budjettitavoite :tavoitehinta-indeksikorjattu)
       :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+      :laskutusrajan-tarkistukset (:laskutusrajan-tarkistukset vastaus)
       :budjettitavoitteet (:budjettitavoitteet vastaus))))
 
+(defn- laskutusrajan-tarkistus-modaali
+  [app vastaus toast-viesti]
+  (let [vanha-laskutusraja (get-in app [:budjettitavoitteet :laskutusraja])
+        uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])
+        modal-sulje-fn #(do
+                          (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)
+                          (modal/piilota!))]
+    (if (and vanha-laskutusraja uusi-laskutusraja
+          (not= vanha-laskutusraja uusi-laskutusraja))
+      ;; Laskutusraja muuttui: näytä modaali ja toast
+      (modal/nayta!
+        {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
+         :luokka "modal-dialog-keskitetty-leveampi"
+         :otsikko "Laskutusraja on muuttunut"
+         :footer [napit/yleinen-ensisijainen "Sulje" modal-sulje-fn]
+         :sulje-fn modal-sulje-fn}
+        [:div
+         [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
+         [yleiset/info-laatikko :vahva-ilmoitus
+          (str "Tarkistettu laskutusraja on " (fmt/euro-opt true false uusi-laskutusraja))
+          nil
+          nil
+          {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+         [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
+      ;; Laskutusraja ei muuttunut: näytä vain toast
+      (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)))
+
+  (-> app
+    ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
+    (assoc
+      :viimeksi-valittu nil
+      :muokattava-muutos nil
+      :tallennus-kesken? false)
+    (vastaus-haku-onnistui vastaus)))
 
 (defn pienin-hoitokauden-alkuvuosi-jossa-kirjauksia
   "Hakee toimenpiteiden tiedoista pienimmän hoitovuoden alkukauden jossa kirjauksia"
@@ -530,15 +568,7 @@
 
   TallennaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-
-    (-> app
-      ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen tallennus onnistui"))
 
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -560,19 +590,12 @@
         {:onnistui ->PoistaMuutosOnnistui
          :epaonnistui ->PoistaMuutosEpaonnistui
          :paasta-virhe-lapi? true})
-      (assoc app :tallennus-kesken? true)))
+      (assoc app :tallennus-kesken? true
+                 :laskutusraja-ennen-poistoa (get-in app [:budjettitavoitteet :laskutusraja]))))
 
   PoistaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-
-    (-> app
-      ;; Resetoi muutoslomake onnistuneen poistamisen jälkeen, jotta lomake suljetaan
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen poistaminen onnistui"))
 
   PoistaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
