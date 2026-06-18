@@ -226,10 +226,15 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
-  {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
-   :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                     :yllapitokohde (:id (:yllapitokohde s)))
-   :hoitokausi     @urakka/valittu-hoitokausi})
+  (let [hoitokausi @urakka/valittu-hoitokausi]
+    {:sanktio        (-> s
+                       (dissoc :laatupoikkeama :yllapitokohde)
+                       (assoc :paivamaara (first hoitokausi)
+                         :soveltuvuuskonteksti :urakka))
+     :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
+                       :yllapitokohde (:id (:yllapitokohde s)))
+     :hoitokausi     hoitokausi}))
+
 
 (defn tallenna-sanktio
   [sanktio urakka-id onnistui-fn]
