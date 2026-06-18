@@ -173,8 +173,11 @@
                             :input-luokka "lupaus-sitoutumis-pisteet"
                             :kokonaisluku? true
                             :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
-                                                              ;; Asetetaan pisteiden yläraja 200 2025 alkaville urakoille ja 100 muille
-                                                              (if (= 2025 (pvm/vuosi (:alkupvm urakka))) 200 100)
+                                                              ;; Asetetaan pisteiden yläraja 200 2025 alkaville urakoille, 180 2026 alkaville ja 100 muille
+                                                              (case (pvm/vuosi (:alkupvm urakka))
+                                                                2025 200
+                                                                2026 180
+                                                                100)
                                                               1))
                             :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
                                             (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
