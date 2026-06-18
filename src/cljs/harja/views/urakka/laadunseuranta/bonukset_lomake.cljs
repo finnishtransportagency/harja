@@ -10,6 +10,7 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
@@ -37,6 +38,7 @@
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
         urakan-tyyppi (:tyyppi @nav/valittu-urakka)
+        mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)
 
         ;; Lista ylläpitokohteista ylläpitourakoiden kohteenvalintaa varten
@@ -89,7 +91,7 @@
          ;; Aseta toimenpideinstanssi, jos se voidaan tietää ennalta
          :aseta (fn [rivi arvo]
                   ;; Aseta toimenpideinstanssi, mikäli sitä ei ole asetettu ennakkoon oikein
-                  (let [asetettava-tpi (cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                  (let [asetettava-tpi (cljs.core/cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                                          (first (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
 
                                          :else
@@ -129,33 +131,18 @@
        :pakollinen? true
        ::lomake/col-luokka "col-xs-12"
        :validoi [[:ei-tyhja "Anna perustelu"]]}
-      {:otsikko "Kulun kohdistus"
-       :nimi :toimenpideinstanssi
-       :pakollinen? true
-       :tyyppi :komponentti
-       ::lomake/col-luokka "col-xs-12"
-       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                      (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
-                            ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
-                            toimenpideinstanssit (cond
-                                                   (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                                                   (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
 
-                                                   ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
-                                                   :else
-                                                   @tiedot-urakka/urakan-toimenpideinstanssit)]
-                        [:<>
-                         [yleiset/livi-pudotusvalikko
-                          {:valitse-oletus? true
-                           :vayla-tyyli? true
-                           :pakollinen? true
-                           :format-fn :tpi_nimi
-                           :valinta (first toimenpideinstanssit)
-                           ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
-                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
-                           :valitse-fn #(muokkaa-lomaketta
-                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
-                          toimenpideinstanssit]]))}
+      {:otsikko "Kulun kohdistus"
+       :tyyppi :string
+       :nimi :toimenpideinstanssi
+       :muokattava? (constantly false)
+       ::lomake/col-luokka "col-xs-12"
+       :hae (fn [rivi]
+              (let [tpi-id (:toimenpideinstanssi rivi)]
+                (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
+                      @tiedot-urakka/urakan-toimenpideinstanssit)
+                  "")))}
+
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
@@ -189,26 +176,25 @@
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
-                  (let [mhu25? (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025))
-                        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+                  (let [;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
                         ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
                         ;; Jos käsittelyaika on loka-joulukuussa -> 15.9.(vuosi+1), muuten 15.9.(sama vuosi)
                         mhu25-perintapvm (when (and mhu25? arvo)
-                                          (let [v (pvm/vuosi arvo)
-                                                kk (pvm/kuukausi arvo)
-                                                kohde-vuosi (if (>= kk 10) (inc v) v)]
-                                            (pvm/->pvm (str "15.9." kohde-vuosi))))
+                                           (let [v (pvm/vuosi arvo)
+                                                 kk (pvm/kuukausi arvo)
+                                                 kohde-vuosi (if (>= kk 10) (inc v) v)]
+                                             (pvm/->pvm (str "15.9." kohde-vuosi))))
                         mhu25-laskutuskuukausi-komp (when mhu25-perintapvm
-                                                     (some #(when (and
-                                                                    (= (pvm/vuosi mhu25-perintapvm) (:vuosi %))
-                                                                    (= 9 (:kuukausi %)))
-                                                              %)
-                                                       laskutuskuukaudet))]
+                                                      (some #(when (and
+                                                                     (= (pvm/vuosi mhu25-perintapvm) (:vuosi %))
+                                                                     (= 9 (:kuukausi %)))
+                                                               %)
+                                                        laskutuskuukaudet))]
                     (cond-> rivi
                       ;; MHU25: asetetaan laskutuskuukausi automaattisesti hoitokauden syyskuulle
                       mhu25?
                       (-> (assoc :perintapvm mhu25-perintapvm)
-                          (assoc :laskutuskuukausi-komp-tiedot mhu25-laskutuskuukausi-komp))
+                        (assoc :laskutuskuukausi-komp-tiedot mhu25-laskutuskuukausi-komp))
 
                       ;; Muille: Jos laskutuskuukautta ei ole vielä valittu ja bonusta ei ole tallennettu (id nil),
                       ;; niin asetetaan esivalintana perintapvm valittu kasittelyn pvm
@@ -230,8 +216,7 @@
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          (let [perintapvm (get-in data [:perintapvm])
-                                mhu25? (and (= :teiden-hoito urakan-tyyppi) (>= urakan-alkuvuosi 2025))]
+                          (if-not mhu25?
                             [:<>
                              [yleiset/livi-pudotusvalikko
                               {:data-cy "koontilaskun-kk-dropdown"
@@ -244,11 +229,11 @@
                                           ;; Näytetään valintana joko valittua laskutuskuukautta, tai
                                           (-> data :laskutuskuukausi-komp-tiedot)
                                           ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
-                                          (when perintapvm
+                                          (when (:perintapvm data)
                                             (some #(when (and
-                                                           (= (pvm/vuosi perintapvm)
+                                                           (= (pvm/vuosi (:perintapvm data))
                                                              (:vuosi %))
-                                                           (= (pvm/kuukausi perintapvm)
+                                                           (= (pvm/kuukausi (:perintapvm data))
                                                              (:kuukausi %))) %)
                                               laskutuskuukaudet)))
                                :valitse-fn #(muokkaa-lomaketta
@@ -262,7 +247,13 @@
                               laskutuskuukaudet]
                              ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                              (when (not @tiedot-urakka/yllapitourakka?)
-                               [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]))}
+                               [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]
+
+                            ;; Jos mhu25 urakka, niin ei voi muokata. Näytetään tekstinä
+                            [:div (some #(when (and
+                                                 (= (pvm/vuosi (:perintapvm data)) (pvm/vuosi (:pvm %)))
+                                                 (= (pvm/kuukausi (:perintapvm data)) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                                    laskutuskuukaudet)]))}
           {:otsikko "Laskutuskuukausi"
            :nimi :perintapvm
            :fmt (fn [pvm]
