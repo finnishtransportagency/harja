@@ -4,6 +4,7 @@
             [harja.ui.viesti :as viesti]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tiedot]))
 
 (defonce nakymassa? (atom false))
@@ -20,9 +21,6 @@
 (defrecord TallennaKalustoresurssitOnnistui [vastaus])
 (defrecord TallennaKalustoresurssitEpaonnistui [vastaus])
 
-(defn- urakka-id []
-  (:id (-> @tiedot/tila :yleiset :urakka)))
-
 (defn vastaus->maarat
   "Muuntaa palvelimen palauttaman rivilistan hoitoluokkaryhmä->määrä -mapiksi."
   [vastaus]
@@ -33,7 +31,7 @@
 
 (defn hae-kalustoresurssit []
   (tuck-apurit/post! :hae-urakan-kalustoresurssit
-    {:urakka-id (urakka-id)}
+    {:urakka-id @nav/valittu-urakka-id}
     {:onnistui ->HaeKalustoresurssitOnnistui
      :epaonnistui ->HaeKalustoresurssitEpaonnistui
      :paasta-virhe-lapi? true}))
@@ -94,7 +92,7 @@
                                     :maara maara})
                              maarat)]
       (tuck-apurit/post! :tallenna-urakan-kalustoresurssit
-        {:urakka-id (urakka-id)
+        {:urakka-id @nav/valittu-urakka-id
          :kalustoresurssit kalustoresurssit}
         {:onnistui ->TallennaKalustoresurssitOnnistui
          :epaonnistui ->TallennaKalustoresurssitEpaonnistui
