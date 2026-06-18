@@ -84,7 +84,7 @@
     [:div.kalustoresurssit {:data-cy "kalustoresurssit"}
     [:div
       [:h1 "Kalustoresurssit"]
-      (when luku-tila?
+      (when (and luku-tila? (not (:haku-kaynnissa? app)))
         [napit/yleinen-toissijainen "Muokkaa"
          #(e! (tiedot/->AloitaMuokkaus))
          {:data-cy "kalustoresurssit-muokkaa"}])]
