@@ -1,17 +1,10 @@
--- Arvonvähennys-lomakkeen tarvitsemat lisäsarakkeet sanktio-tauluun
-
+-- Lisätään sanktio-tauluun maarattypvm-kenttä
 ALTER TABLE sanktio
-    ADD COLUMN maaraystapa TEXT,
-    ADD COLUMN tehtavaryhma INTEGER REFERENCES tehtavaryhma (id),
-    ADD COLUMN tehtava INTEGER REFERENCES tehtava (id);
+    ADD COLUMN IF NOT EXISTS "maarattypvm" date;
 
-COMMENT ON COLUMN sanktio.maaraystapa IS 'Arvonvähennyksen määräystapa: tyomaakokous tai valikatselmus';
-COMMENT ON COLUMN sanktio.tehtavaryhma IS 'Arvonvähennyksen tehtäväryhmä';
-COMMENT ON COLUMN sanktio.tehtava IS 'Arvonvähennyksen tehtävä (toimenpidekoodi taso 4)';
-
--- Mahdollistetaan järjestelmäasetuksien kautta validoinnin poisto arvonvähennyslomakkeelle.
-ALTER TABLE jarjestelman_asetukset
-    ADD COLUMN arvonvahennys_validoinnit_kaytossa BOOLEAN   DEFAULT TRUE; -- Tämä asetetaan hallinnasta
-
-INSERT INTO jarjestelman_asetukset (arvonvahennys_validoinnit_kaytossa)
-VALUES (TRUE);
+-- Uusien muutosten myötä maarattypvm on pakollinen kenttä, joten lisätään kaikille sanktioille maarattypvm
+UPDATE sanktio s
+SET maarattypvm = lp.kasittelyaika
+FROM laatupoikkeama lp
+WHERE lp.id = s.laatupoikkeama
+  AND s.maarattypvm IS NULL;

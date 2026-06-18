@@ -220,6 +220,7 @@
                                      (or (:maara r) 0)
                                      (or (:maaramuutos r) 0)
                                      (or (:kirjatut_kulut_summa r) 0)
+                                     (or (:yksikkohinta r) 0)
                                      (laske-tavoitehinnan-muutos r))))
                            maaramuutokset)
         maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
@@ -238,6 +239,7 @@
       {:leveys 4 :otsikko "Toteutunut määrä" :fmt :numero-opt}
       {:leveys 4 :otsikko "Määrämuutos (+/-)" :fmt :numero-opt}
       {:leveys 5 :otsikko "Kohdistetut kulut (€)" :fmt :raha}
+      {:leveys 5 :otsikko "Yksikköhinnan keskiarvo (€)" :fmt :raha}
       {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
      (into [] (concat maaramuutosrivit (when-not (empty? maaramuutokset) maaramuutokset-yhteensarivi)))]))
 
@@ -335,13 +337,17 @@
                                   :rivi (rivi "Yhteensä" "" "" "" muutostyot-yhteensa)}]
         otsikko-title [:otsikko-title "Muutostöiden kulukohdistukset"]
         ajankohtakuvaus [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    (if (= 0 (count muutostyorivit))
+    (if
+      ;; HTML ja PDF raporteille ei näytetä taulukkoa
+      (and (not (= kasittelija :excel)) (= 0 (count muutostyorivit)))
       [[:jakaja nil]
        (when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohtakuvaus)
        [:tyhja-rivi nil]
-       [:teksti "Ei muutostöiden kulukohdistuksia."]
+       [:tyhja-rivi nil]
+       [:teksti "Ei muutostöiden kulukohdistuksia." {:vari "#5C5C5C"}]
        [:tyhja-rivi nil]]
+
       [(when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohtakuvaus)
        [:taulukko {:otsikko (when-not (= kasittelija :excel) "Muutostyöt (erillisrahoitetut)")
@@ -404,13 +410,17 @@
                                 :rivi (rivi "Yhteensä" "" "" lisatyot-yhteensa)}]
         otsikko-title [:otsikko-title "Lisätöiden kulukohdistukset"]
         ajankohta [:teksti (str urakka-nimi " | Aikaväli: " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]]
-    (if (= 0 (count lisatyorivit))
+    (if
+      ;; HTML ja PDF raporteille ei näytetä taulukkoa, jos dataa ei ole
+      (and (not (= kasittelija :excel)) (= 0 (count lisatyorivit)))
       [[:jakaja nil]
        (when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohta)
        [:tyhja-rivi nil]
-       [:teksti "Ei lisätöiden kulukohdistuksia."]
+       [:tyhja-rivi nil]
+       [:teksti "Ei lisätöiden kulukohdistuksia." {:vari "#5C5C5C"}]
        [:tyhja-rivi nil]]
+
       [(when-not (= kasittelija :excel) otsikko-title)
        (when-not (= kasittelija :excel) ajankohta)
        [:taulukko {:viimeinen-rivi-yhteenveto? true

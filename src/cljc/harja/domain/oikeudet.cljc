@@ -19,6 +19,7 @@
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
   urakat-toteumat-suola
+  urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
