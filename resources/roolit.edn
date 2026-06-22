@@ -41,7 +41,7 @@
   :osapuoli "ELY",
   :linkki nil}
  {:nimi "ELY_Urakanvalvoja",
-  :kuvaus "ELY urakanvalvoja, Hoidon projektipäälikkö",
+  :kuvaus "ELY urakanvalvoja",
   :osapuoli "ELY",
   :linkki "urakka"}
  {:nimi "ELY_turvallisuusvastaava",
