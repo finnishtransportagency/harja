@@ -386,30 +386,6 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn hae-urakan-sanktio-konfiguraatio
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
-
-(defn hae-urakan-bonus-konfiguraatio
-  [db user tiedot]
-  (bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
-
-(defn hae-sanktio-profiilit-admin
-  [db user]
-  (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
-
-(defn hae-sanktio-profiilin-detalji-admin
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
-
-(defn hae-bonus-profiilit-admin
-  [db user]
-  (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
-
-(defn hae-bonus-profiilin-detalji-admin
-  [db user tiedot]
-  (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
-
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
@@ -504,27 +480,27 @@
 
       :hae-urakan-sanktio-konfiguraatio
       (fn [user tiedot]
-        (hae-urakan-sanktio-konfiguraatio db user tiedot))
+        (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
 
       :hae-urakan-bonus-konfiguraatio
       (fn [user tiedot]
-        (hae-urakan-bonus-konfiguraatio db user tiedot))
+        (bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
 
       :hae-sanktio-profiilit-admin
       (fn [user _]
-        (hae-sanktio-profiilit-admin db user))
+        (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
 
       :hae-sanktio-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-sanktio-profiilin-detalji-admin db user tiedot))
+        (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
 
       :hae-bonus-profiilit-admin
       (fn [user _]
-        (hae-bonus-profiilit-admin db user))
+        (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
 
       :hae-bonus-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-bonus-profiilin-detalji-admin db user tiedot))
+        (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
