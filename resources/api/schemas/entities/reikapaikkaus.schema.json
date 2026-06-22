@@ -6,33 +6,31 @@
   "properties": {
     "tunniste": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tunniste",
+      "required": true,
       "additionalProperties": false,
       "description": "Reikäpaikkauksen tunniste urakoitsijajärjestelmässä. Tunniste tallennetaan Harjaan ongelmanselvitystilanteiden varalle.",
-      "required": true,
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
     "ajankohta": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajankohta",
-      "description": "Reikäpaikkauksen toteutumisajankohta. Esim. 2026-05-30T12:12:00Z Jos täsmällinen kellonaika ei ole tiedossa, välitä tässä mahdollisimman tarkka, muu aikaleima.",
       "required": true,
+      "description": "Reikäpaikkauksen toteutumisajankohta. Esim. 2026-05-30T12:12:00Z Jos täsmällinen kellonaika ei ole tiedossa, välitä tässä mahdollisimman tarkka, muu aikaleima.",
       "type": "string",
       "format": "date-time"
     },
-    "luokittelut": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/luokittelut",
+    "luokittelu": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/luokittelu",
       "type": "array",
       "description": "Välitä tässä tiedot, jos järjestelmäsi luokittelee paikkauksen jotenkin. Voit lähettää useita eri luokituksia. Esimerkkejä: Liittyi toimenpidepyyntöön, Liikennettä vaarantava, Kiireellinen.",
-      "items": {
-        "type": "string"
-      }
+       "format": "string"
     },
     "sijainti": {
       "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
+      "required": true,
       "type": "object",
       "additionalProperties": false,
       "description": "Reikäpaikkauskohteen sijainti. Anna vähintään joko tieosoite, pistegeometria tai viivageometria. Useammankin paikannustiedon voi lähettää.",
-      "required": true,
       "minProperties": 1,
       "properties": {
         "tieosoite": {
