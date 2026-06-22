@@ -1403,16 +1403,22 @@
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
+(defn hae-toimenpideinstanssin-id-23150
+  "Hakee ensimmäisen toimenpideinstanssin ID:n, joka kuuluu urakkaan ja jonka
+   toimenpideen t2-koodi on '23150'."
+  [urakka-id]
+  (ffirst (q (str "SELECT tpi.id\n"
+                  "  FROM toimenpideinstanssi tpi\n"
+                  "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+                  "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+                  " WHERE tpi.urakka = " urakka-id "\n"
+                  "   AND t2.koodi = '23150'\n"
+                  " ORDER BY tpi.id\n"
+                  " LIMIT 1"))))
+
 (deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
-                                            "  FROM toimenpideinstanssi tpi\n"
-                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                                            " WHERE tpi.urakka = " urakka-id "\n"
-                                            "   AND t2.koodi = '23150'\n"
-                                            " ORDER BY tpi.id\n"
-                                            " LIMIT 1")))
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakan-bonus-konfiguraatio
                   +kayttaja-jvh+
@@ -1428,14 +1434,7 @@
 
 (deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
-                                            "  FROM toimenpideinstanssi tpi\n"
-                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                                            " WHERE tpi.urakka = " urakka-id "\n"
-                                            "   AND t2.koodi = '23150'\n"
-                                            " ORDER BY tpi.id\n"
-                                            " LIMIT 1")))
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
