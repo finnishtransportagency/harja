@@ -19,6 +19,7 @@
             [harja.tyokalut.big :as big]
             [harja.domain.kulut :as kulut]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
@@ -632,6 +633,12 @@
     {:laskutusraja laskutusraja
      :laskutusraja-kaytossa laskutusraja-kaytossa?}))
 
+(defn hae-urakan-tavoitehintojen-tilat
+  [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+    tavoitehintojen-tilat))
+
 (defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-kaikkien-tehtavaryhmien-nimet db))
@@ -738,6 +745,9 @@
       (julkaise-palvelu http :hae-urakan-laskutusraja
         (fn [user hakuehdot]
           (hae-urakan-laskutusraja db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-tavoitehintojen-tilat
+        (fn [user hakuehdot]
+          (hae-urakan-tavoitehintojen-tilat db user hakuehdot)))
       (julkaise-palvelu http :hae-kaikkien-tehtavaryhmien-nimet
         (fn [user hakuehdot]
           (hae-kaikkien-tehtavaryhmien-nimet db user hakuehdot)))
@@ -760,6 +770,7 @@
       :hae-urakan-rahavaraukset
       :hae-hoitokauden-kulujen-summa
       :hae-urakan-laskutusraja
+      :hae-urakan-tavoitehintojen-tilat
       :hae-kaikkien-tehtavaryhmien-nimet)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))

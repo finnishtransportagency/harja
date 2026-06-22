@@ -205,6 +205,7 @@
   (process-event [_ {:keys [listaus-tyyppi valittu-aikavali] :as app}]
       ;; Kun poikkeama tallennetaan, päivitetään kaikki tiedot jotta karttaan tulee uusikin reitti näkyviin
     (resetoi-ja-hae-poikkeamat listaus-tyyppi (-> @tila/yleiset :urakka :id) valittu-aikavali)
+    (viesti/nayta-toast! "Laatupoikkeaman tallennus onnistui." :onnistui)
     (-> app
       (assoc :laatupoikkeamat nil)
       (assoc :tallennus-kaynnissa? false)))
@@ -212,5 +213,5 @@
   TallennaLaatuPoikkeamaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (log/error "Laatupoikkeaman tallennuksessa virhe!" vastaus)
-    (viesti/nayta-toast! "Oikaisun tallennuksessa tapahtui virhe" :varoitus)
+    (viesti/nayta-toast! "Laatupoikkeaman tallennuksessa tapahtui virhe" :varoitus)
     (assoc app :tallennus-kaynnissa? false)))
