@@ -416,7 +416,7 @@
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 61) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 60) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
