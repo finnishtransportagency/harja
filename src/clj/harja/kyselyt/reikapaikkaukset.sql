@@ -18,7 +18,8 @@ SELECT    p.id,
           p.loppuaika,
           p.maara, 
           p.kustannus,
-          p.pkluokka
+          p.pkluokka,
+          p.luokittelu
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
 AND       (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
@@ -60,7 +61,8 @@ INSERT INTO paikkaus (
   kustannus,
   "reikapaikkaus-yksikko",
   maara,
-  sijainti 
+  luokittelu,
+  sijainti
 )
 VALUES (
   'reikapaikkaus',                -- "paikkaus-tyyppi", aina reikäpaikkaus
@@ -88,6 +90,7 @@ VALUES (
   :kustannus::NUMERIC, -- kustannus
   :yksikko::TEXT, -- "reikapaikkaus-yksikko"
   :maara::INT, -- maara
+  :luokittelu::TEXT[], -- paikkauksen kategoisoinnit
   (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- sijainti geometria
 );
 
@@ -103,6 +106,7 @@ UPDATE paikkaus SET
   kustannus               = :kustannus::NUMERIC,
   "reikapaikkaus-yksikko" = :yksikko::TEXT, 
   maara                   = :maara::INT,
+  luokittelu              = :luokittelu::TEXT[],
   sijainti                = (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)),
   poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;

@@ -54,7 +54,7 @@
   [db kayttaja-id urakka-id paikkaus]
   ;; Destruktoi paikkaus
   (let [{:keys [tunniste tie aosa aet losa let pvm menetelma
-                tyomenetelma-id maara yksikko kustannus alkuaika loppuaika lahde]} paikkaus
+                tyomenetelma-id maara yksikko luokittelu kustannus alkuaika loppuaika lahde]} paikkaus
         ;; Koosta parametrit, alku/loppuaika reikäpaikkauksilla tällä hetkellä samoja (loppuaikaa ei ole speksattu)
         ;; joka on 'pvm' kun data tuodaan Excelistä, frontilta alkuaika/loppuaika
         parametrit {:luoja-id kayttaja-id
@@ -73,6 +73,7 @@
                     :maara maara
                     :kustannus kustannus
                     :yksikko yksikko
+                    :luokittelu (konversio/seq->array (map name luokittelu))
                     :lahde lahde}
         ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
         paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
