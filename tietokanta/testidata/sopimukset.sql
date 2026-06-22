@@ -116,3 +116,7 @@ VALUES ('Kittilän MHU sopimus 25', '2025-10-01', '2030-09-30', '11333378-LAP1',
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
     ('Raaseporin sopimus',NOW(),NOW() + INTERVAL '2 year','SemiProj23423', (SELECT id FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'));
+-- Raaseporin sopimus 2026-2031
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+    ('Raaseporin sopimus 2026-2031',NOW(),NOW() + INTERVAL '2 year','PR00061234', (SELECT id FROM urakka WHERE nimi='UUD Raasepori MHU 2026-2031, P'));
