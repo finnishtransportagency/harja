@@ -2061,7 +2061,7 @@
 
 
 (def odotetut-tiedot-sahkopostilahetykseen
-  {:tiemerkintaurakka-id 52, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "PR00057561", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+  {:tiemerkintaurakka-id 53, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "PR00057561", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827,
    :id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20"), :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
    :kaistat "11, 12" :ajoradat "1"
    :paallysteet "AB16, AN14; SMA16, AN7"
