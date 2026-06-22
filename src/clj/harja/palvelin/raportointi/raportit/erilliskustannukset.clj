@@ -13,6 +13,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/erilliskustannukset.sql"
   {:positional? true})
 
+(declare hae-erilliskustannukset)
 
 (defn erilliskustannuksen-nimi
   [tyyppi]
