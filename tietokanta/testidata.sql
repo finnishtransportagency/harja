@@ -274,9 +274,6 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/analytiikka-paallystyskohteet.sql
 
--- Kalustoresurssit-alasivun testidata (lisätty analytiikan jälkeen, jotta analytiikka-urakkojen ID:t pysyvät vakioina)
-\i testidata/kalustoresurssit_testidata.sql
-
 -- Siirretään urakat elinvoimakeskuksiin - analytiikan päällystyskohteissa vielä lisätään urakoita, niin tämän on oltava täällä lopussa
 \i testidata/elinvoimakeskusten_urakat.sql
 

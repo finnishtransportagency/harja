@@ -3,10 +3,10 @@ import {avaaHarjaTimeoutilla} from "../support/apurit.js";
 // Suunnittelu / Kalustoresurssit -alasivun Cypress-testit.
 //
 // Kalustoresurssit-välilehti näkyy vain MHU26-urakoille (alkupvm vuosi >= 2026).
-// Positiivisessa polussa käytetään testidataan lisättyä "Kittilän MHU 2026-2031" -urakkaa.
+// Positiivisessa polussa käytetään testidataan lisättyä "Sodankylän MHU 2026-2031" -urakkaa.
 // Negatiivisessa polussa käytetään vanhempaa "Kittilän MHU 2019-2024" -urakkaa.
 
-const MHU26_URAKKA = 'Kittilän MHU 2026-2031';
+const MHU26_URAKKA = 'Sodankylän MHU 2026-2031';
 const VANHA_URAKKA = 'Kittilän MHU 2019-2024';
 const ALUE = 'Lappi';
 
