@@ -249,50 +249,50 @@ INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from
 
 
 -- Sanktioita
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
                      luoja)
-VALUES ('A'::SANKTIOLAJI, 100, '2015-01-12 06:06.37', 'MAKU 2010', NULL,
+VALUES ('A'::SANKTIOLAJI, 100, '2015-01-12 06:06.37', '2015-01-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1), TRUE, 2),
-       ('A'::SANKTIOLAJI, 500, '2015-05-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 500, '2015-05-12 06:06.37', '2015-05-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 700, '2015-07-12 06:06.37', NULL, NULL,
+       ('A'::SANKTIOLAJI, 700, '2015-07-12 06:06.37', '2015-07-12 06:06.37', NULL, NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 1000, '2015-08-01 00:00.00', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 1000, '2015-08-01 00:00.00', '2015-08-01 00:00.00', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 800, '2015-08-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 800, '2015-08-12 06:06.37', '2015-08-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 900, '2015-09-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 900, '2015-09-12 06:06.37', '2015-09-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 20160, '2016-09-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 20160, '2016-09-12 06:06.37', '2016-09-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
@@ -309,9 +309,9 @@ VALUES
   (TRUE, 'harja-ui'::lahde, 'Testikohde', 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '', 'hylatty'::laatupoikkeaman_paatostyyppi, 'Poistettu laatupoikkeama perustelu',
          123, 1, NOW(), '2015-08-09 06:06.37', '2015-08-10 16:06.37', false, false,
                         (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'Poistettu laatupoikkeama 1', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
-INSERT INTO sanktio (poistettu, sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+INSERT INTO sanktio (poistettu, sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                      suorasanktio, luoja)
-VALUES (TRUE, 'A'::SANKTIOLAJI, 1000000, '2015-08-12 06:06.37',
+VALUES (TRUE, 'A'::SANKTIOLAJI, 1000000, '2015-08-12 06:06.37', '2015-08-10 16:06.37',
         (SELECT indeksi FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
         (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Poistettu laatupoikkeama 1'),
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'),

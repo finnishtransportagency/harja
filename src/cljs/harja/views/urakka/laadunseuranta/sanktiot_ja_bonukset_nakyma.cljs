@@ -12,6 +12,7 @@
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
@@ -135,29 +136,39 @@
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
-  [:div.flex-row
-   [:div
-    [valinnat/urakkavalinnat {:urakka valittu-urakka}
-       ^{:key "urakkavalinnat"}
-     [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi tiedot/valittu-sanktio)
+        tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
+              (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
+    [:div.flex-row
+        [:div
+         [valinnat/urakkavalinnat {:urakka valittu-urakka}
+          ^{:key "urakkavalinnat"}
+          [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
 
-   [:div {:style {:flex-grow 2}}
-    [lajisuodatin-valinnat lajisuodattimet]]
-   [:div {:style {:flex-grow 1}}
-    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                    (:id valittu-urakka))]
-      (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-           oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää uusi"}
-        [:div.lisaa-nappi {:style {:float "right"}}
-         [napit/uusi "Lisää uusi"
-          #(do
-             (reset! sivupaneeli-auki?-atom true)
-             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
-          {:disabled (not oikeus?)}]]))]])
+        [:div {:style {:flex-grow 2}}
+         [lajisuodatin-valinnat lajisuodattimet]]
+        [:div {:style {:flex-grow 1}}
+         (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                         (:id valittu-urakka))
+               uusi-sanktio (merge
+                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
+                              {:toimenpideinstanssi tpi})
+               uusi-sanktio (if (>= urakan-alkuvuosi 2025)
+                              (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus)
+                              uusi-sanktio)]
+           (yleiset/wrap-if
+             (not oikeus?)
+             [yleiset/tooltip {} :%
+              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                oikeudet/urakat-laadunseuranta-sanktiot)]
+             ^{:key "Lisää uusi"}
+             [:div.lisaa-nappi {:style {:float "right"}}
+              [napit/uusi "Lisää uusi"
+               #(do
+                  (reset! sivupaneeli-auki?-atom true)
+                  (reset! tiedot/valittu-sanktio uusi-sanktio))
+               {:disabled (not oikeus?)}]]))]]))
 
 
 (defn valitse-sanktio-tai-bonus! [rivi sanktio-atom]
@@ -171,19 +182,6 @@
                                                sanktio-atom))
     (viesti/nayta-toast! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
-
-(defn- sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
-  ;; Bonuksilla ei tällä hetkellä ole kuvausta.
-  ;; Näytetään sanktion kohde, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
-  ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
-  (let [kohde (:kohde laatupoikkeama)]
-    (if suorasanktio
-      (or kohde "–")
-      [:span
-       (str "Laatupoikkeama: " kohde)
-       [:br]
-       (str (when (get-in laatupoikkeama [:tr :numero])
-              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
 
 (defn- sanktion-tai-bonuksen-perustelu [{:keys [bonus] :as sanktio-tai-bonus}]
   ;; Bonuksille näytetään pelkästään lisätieto
@@ -221,11 +219,10 @@
 
         sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
                    tiedot/suodata-sanktiot-ja-bonukset
-                   (sort-by :kasittelyaika)
+                   (sort-by (if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka) :maarattypvm :kasittelyaika))
                    reverse)
         hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
-        urakan-alkupaiva (:alkupvm @nav/valittu-urakka)
         urakka-id (when valittu-urakka (:id valittu-urakka))
         urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
 
@@ -267,6 +264,7 @@
          [:button {:type "submit"
                    :class #{"nappi-toissijainen"}}
           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]]]]
+
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
@@ -277,12 +275,12 @@
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
-                            {:teksti (str (count %) " kpl") :sarakkeita 5 :luokka "lihavoitu"}
-                            {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
-                            {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
-                             :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3}
-       {:otsikko "Laskutuskuukausi" :nimi :perintapvm :fmt #(fmt-laskutuskuukausi % urakan-alkupaiva) :leveys 1.5}
+                            {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
+                            {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}])}
+
+      [(if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
+         {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
+         {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
@@ -301,13 +299,12 @@
                               :else "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
-          :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
+          :tyyppi :komponentti :komponentti tiedot/sanktion-tai-bonuksen-kuvaus :leveys 3})
        {:otsikko "Perustelu" :nimi :perustelu :leveys 3
         :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.2 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
-                "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :fmt #(fmt/euro-opt false %) :tasaa :oikea :tyyppi :numero :leveys 1.2}]
+                "Muistutus")}]
       sanktiot]
      (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
