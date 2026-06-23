@@ -14,39 +14,27 @@
           "korjauskustannus-muokattu": "2023-06-20T15:30:00Z"
         }
       ],
-      "yllapitokohdekustannukset": [
+      "paallystyskohdekustannukset": [
         {
           "sopimusvuosi": 2023,
           "nimi": "Esimerkkikohde 1",
+          "paallystyskohde-id": 1,
           "kohdenumero": 123456,
-          "sijainti": {
-            "tie": 1,
-            "alkuosa": 1,
-            "alkuetaisyys": 1,
-            "loppuosa": 1,
-            "loppuetaisyys": 1
-          },
           "linjamerkinnat": 85000.00,
           "pienmerkinnat": 40500.00,
           "jyrsinnat": 17800.75,
           "muut-kustannukset": 7000.00,
-          "yllapitokohde-poistettu": false,
-          "yllapitokohde-kustannus-luotu": "2023-01-15T10:00:00Z",
-          "yllapitokohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
+          "paallystyskohde-poistettu": false,
+          "paallystyskohde-kustannus-luotu": "2023-01-15T10:00:00Z",
+          "paallystyskohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
         }
       ],
       "paikkauskohdekustannukset": [
         {
           "sopimusvuosi": 2023,
+          "paikkauskohde-id": 1,
           "nimi": "Esimerkkikohde 1",
-          "kohdenumero": 123456,
-          "sijainti": {
-            "tie": 1,
-            "alkuosa": 1,
-            "alkuetaisyys": 1,
-            "loppuosa": 1,
-            "loppuetaisyys": 1
-          },
+          "ulkoinen-id": 123456,
           "linjamerkinnat": 85000.00,
           "pienmerkinnat": 40500.00,
           "jyrsinnat": 17800.75,
