@@ -955,7 +955,7 @@
                   {:urakkaid urakkaid
                    :urakkatunnus urakkanro
                    :korjauskustannukset (mapv konversio/alaviiva->rakenne korjauskustannukset)
-                   :yllapitokohdekustannukset (mapv #(-> %
+                   :paallystyskohdekustannukset (mapv #(-> %
                                                        konversio/alaviiva->rakenne
                                                        (update :sopimusvuosi
                                                          (fn [sv]
