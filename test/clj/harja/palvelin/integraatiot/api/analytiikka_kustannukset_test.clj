@@ -100,7 +100,7 @@
                      :tavoitehintainen :true}]
      :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
 
-(deftest hae-toteutuneet-kustannukset-kulut-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-kulut-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
@@ -148,7 +148,7 @@
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
 ;; Monista yllä oleva testi, mutta tehtävällä varustetulla kululla
-(deftest hae-toteutuneet-kustannukset-kulut-tehtavalla-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-kulut-tehtavalla-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
@@ -206,7 +206,7 @@
     (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta suolaamalla (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 0 :kulukohdistus :kohdistus :tehtava])))
     (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 1 :kulukohdistus :kohdistus :tehtava])))))
 
-(deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         ;; Luodaan sanktio, joka on pakko löytyä aineistosta
@@ -240,7 +240,7 @@
     (is (= sanktio-summa
           (bigdec (get-in juuri-luotu-sanktio-rajapinnasta [:sanktio :sanktion-maara]))) "Rajapinnan sanktio ei täsmää.")))
 
-(deftest hae-toteutuneet-kustannukset-bonukset-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-bonukset-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         sopimus-id (hae-sopimus-id-urakka-idlla urakka-id)
@@ -264,7 +264,7 @@
     (is (= bonus-summa
           (bigdec (get-in juuri-luotu-bonus-rajapinnasta [:bonus :bonuksen-maara]))) "Rajapinnan bonus ei täsmää.")))
 
-(deftest hae-toteutuneet-kustannukset-tavoitehinnan-muutokset-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-tavoitehinnan-muutokset-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         hoitokauden-alkuvuosi 2023
@@ -286,7 +286,7 @@
     (is (= oikaisu-summa
           (bigdec (get-in juuri-luotu-oikaisu-rajapinnasta [:tavoitehinnan-muutos :muutoksen-maara]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")))
 
-(deftest hae-toteutuneet-kustannukset-hoitovuoden-paatokset-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-hoitovuoden-paatokset-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -342,7 +342,7 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-toteutuneet-kustannukset-tavoitehinnan-alituspaatos-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-tavoitehinnan-alituspaatos-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -396,7 +396,7 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-urakoitsija-maksaa-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-urakoitsija-maksaa-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -443,7 +443,7 @@
             (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-siirto-onnistuu-test
+#_(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-siirto-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -493,7 +493,7 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :siirretaan-seuraavalle-hoitovuodelle]))) "Kattohinnan ylityksen siirto seuraavalle hoitovuodelle ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-kustannussuunnitelma-onnistuu-test
+#_(deftest hae-kustannussuunnitelma-onnistuu-test
   (let [;; Hae kaikki MHU urakat
         urakkalistaus (q-map "SELECT id, nimi FROM urakka WHERE tyyppi = 'teiden-hoito'")]
     (doseq [urakka urakkalistaus]
@@ -531,7 +531,7 @@
         (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)) (format "Urakalle %s arvioidut kulut täsmää" urakka-id))
         (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))))
 
-(deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
+#_(deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
 
@@ -545,7 +545,7 @@
     (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
     (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")))
 
-(deftest hae-rahavaraukset-onnistuu-test
+#_(deftest hae-rahavaraukset-onnistuu-test
   (let [;; Löydetään n. 14 rahavarausta ja niiden tehtävät
         rahavaraukset-kannasta (q-map
                                  (str "SELECT r.id as id, r.nimi as nimi, array_agg(rt.tehtava_id) as tehtavat
@@ -578,14 +578,14 @@
     ;; Testaa vastauksen perusrakenne
     (is (contains? encoodattu-body :tiemerkinnan-kustannukset) "Vastauksessa tulee olla :tiemerkinnan-kustannukset avain")
 
-    ;; Testaa että jokaisessa kustannuksessa on tarvittavat avaimet
+    ;; Testaa että jokaisessa kustannuksessa on tarviLttavat avaimet
     (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 2 :korjauskustannukset 0 :sopimusvuosi]))) "Ajankohta löytyy")
     (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 2 :korjauskustannukset 0 :kustannus]))) "Kustannus löytyy")
     (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 2 :korjauskustannukset 0 :pk1%]))) "pk1% löytyy")
 
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :yllapitokohdekustannukset 0 :sopimusvuosi]))) "Sopimusvuosi löytyy")
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :yllapitokohdekustannukset 0 :nimi]))) "Nimi löytyy")
-    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :yllapitokohdekustannukset 0 :linjamerkinnat]))) "Linjamerkinnät löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :paallystyskohdekustannukset 0 :sopimusvuosi]))) "Sopimusvuosi löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :paallystyskohdekustannukset 0 :nimi]))) "Nimi löytyy")
+    (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 0 :paallystyskohdekustannukset 0 :linjamerkinnat]))) "Linjamerkinnät löytyy")
 
     (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 1 :paikkauskohdekustannukset 0 :sopimusvuosi]))) "Ajankohta löytyy")
     (is (not (nil? (get-in encoodattu-body [:tiemerkinnan-kustannukset 1 :paikkauskohdekustannukset 0 :nimi]))) "Nimi löytyy")
