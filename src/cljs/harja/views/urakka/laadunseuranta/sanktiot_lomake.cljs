@@ -1,23 +1,21 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.pvm :as pvm]
-
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.urakka :as uu-tiedot]
-
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.liitteet :as liitteet]
+  (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.ui.komponentti :as komp]))
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.liitteet :as liitteet]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [reagent.core :refer [atom] :as r]))
 
 (defn- toimenpide-valikon-nimi
   "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
@@ -186,7 +184,6 @@
                                   (and (> (count s-tyypit) 1)
                                     (some #(= vanha-tyyppi %) s-tyypit))
                                   (assoc rivi :tyyppi vanha-tyyppi
-                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                     :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
                                   :else rivi)]

@@ -15,6 +15,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.napit :as napit]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
@@ -127,8 +128,10 @@
   (let [sivupaneeli-auki? (r/atom false)]
     (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
       (let [voi-muokata? (and paatosoikeus? muokattava?)
-            sanktiot-lista (vals @sanktiot-atom)]
-        [:div.sanktiot
+            sanktiot-lista (vals @sanktiot-atom)
+            sanktio-konfiguraation-tila @urakka/valitun-urakan-sanktio-konfiguraation-tila]
+        (if (= :valmis sanktio-konfiguraation-tila)
+          [:div.sanktiot
          ;; Sivupaneeli sanktion lisäämistä/muokkausta varten
          (when @sivupaneeli-auki?
            [sivupalkki/oikea
@@ -160,15 +163,12 @@
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)
-                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)
-                         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
-                               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
+                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)]
                     (reset! sanktiot/valittu-sanktio
-                      (-> uusi
+                      (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @urakka/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
-                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama))
-                        (assoc :toimenpideinstanssi tpi))))
+                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama)))))
                   (reset! sivupaneeli-auki? true))
                 {:ikoni (ikonit/livicon-plus)
                  :disabled (boolean disabled?)}]]
@@ -195,11 +195,20 @@
           [(if (tila/mhu25-urakka? @nav/valittu-urakka)
              {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
              {:otsikko "Käsitelty" :nimi :kasittelyaika :hae #(get-in % [:laatupoikkeama :paatos :kasittelyaika]) :fmt pvm/pvm-opt :leveys 1.2})
-           {:otsikko "Laji" :nimi :laji :hae #(sanktio-domain/sanktiolaji->teksti (:laji %)) :leveys 2}
+           {:otsikko "Laji" :nimi :laji :hae #(urakka/valitun-urakan-sanktiolajin-nimi (:laji %)) :leveys 2}
            {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
            {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
-          (or sanktiot-lista [])]]))))
+          (or sanktiot-lista [])]]
+          (case sanktio-konfiguraation-tila
+            :haku-kaynnissa [ajax-loader "Ladataan..."]
+            :haku-epaonnistui [:div
+                               [:p "Sanktioita ei voitu ladata juuri nyt."]
+                               [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
+            :ei-konfiguraatiota [:div
+                                 [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
+                                 [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
+            [ajax-loader "Ladataan..."]))))))
 
 (defn avaa-tarkastus [tarkastus-id]
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
