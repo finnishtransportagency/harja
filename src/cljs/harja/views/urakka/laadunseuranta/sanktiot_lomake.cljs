@@ -66,7 +66,8 @@
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
         tallennus-kaynnissa (atom false)
