@@ -11,6 +11,7 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as tiedot]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -212,6 +213,7 @@
       #(do
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
+         (kartta-tiedot/piilota-infopaneeli!)
 
          (reset! tiedot/valitut-kohteet-atom #{})
          (e! (tiedot/->HaeTalvihoitoreitit))

@@ -1,9 +1,15 @@
 -- Luodaan Liikennevirasto
-INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
+INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus)
+SELECT 'liikennevirasto', 'Liikennevirasto', 'Livi', '1010547-1'
+WHERE NOT EXISTS (
+    SELECT 1
+      FROM organisaatio
+     WHERE ytunnus = '1010547-1'
+);
 
--- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää 
+-- Tuotoannosta otettu data dumppi jotta tehtävien tietomallin testidata täsmää
 -- Nov 20 2025, Marraskuun klooni (data 1.11.2025 ->)
-\i testidata/__Toimenpide_Kopio_01.sql 
+\i testidata/__Toimenpide_Kopio_01.sql
 \i testidata/__Materiaaliluokka_Kopio_01.sql
 \i testidata/__Tehtavaryhmaotsikko_Kopio_01.sql
 \i testidata/__Tehtavaryhma_Kopio_01.sql
@@ -57,6 +63,8 @@ SELECT setval(
 
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
+-- Lisätään elinvoimakeskuksille geometriat
+\i testidata/elinvoimakeskukset.sql
 
 -- Luodaan urakoitsijat
 \i testidata/urakoitsijat.sql
@@ -69,6 +77,9 @@ SELECT setval(
 
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
+\i testidata/urakat2.sql
+-- Luodaan päällystysurakoita
+\i testidata/paallystysurakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
@@ -79,9 +90,6 @@ SELECT setval(
 
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
-
--- Luodaan sanktiotyypit
-\i testidata/sanktiotyypit.sql
 
 -- Luodaan yhteyshenkilöpooliin henkilöitä
 \i testidata/yhteyshenkilot.sql
@@ -120,7 +128,7 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/hoitoluokat.sql
 
--- Tehtävämigraatiot testidataan 
+-- Tehtävämigraatiot testidataan
 \i testidata/tehtavamuutokset.sql
 
 -- Materiaalin käytöt
@@ -149,16 +157,16 @@ SELECT paivita_pohjavesialueet();
 \i testidata/yllapito/paallystysmassat.sql
 \i testidata/yllapito/pot2.sql
 
--- Reikäpaikkaukset 
+-- Reikäpaikkaukset
 \i testidata/yllapito/reikapaikkaukset.sql
 
--- MPU kustannukset 
+-- MPU kustannukset
 \i testidata/yllapito/paikkauskustannukset.sql
 
 -- Ylläpidon toteumat
 \i testidata/yllapito/yllapito_toteumat.sql
 
--- Tiemerkinnät 
+-- Tiemerkinnät
 \i testidata/yllapito/tiemerkinta.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
@@ -266,6 +274,9 @@ SELECT paivita_pohjavesialueet();
 
 \i testidata/analytiikka-paallystyskohteet.sql
 
+-- Siirretään urakat elinvoimakeskuksiin - analytiikan päällystyskohteissa vielä lisätään urakoita, niin tämän on oltava täällä lopussa
+\i testidata/elinvoimakeskusten_urakat.sql
+
 -- Populoidaan rahavaraukset
 SELECT populoi_rahavaraus_idt();
 
@@ -278,45 +289,11 @@ SELECT paivita_raportti_toteutuneet_materiaalit();
 SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
 SELECT paivita_raportti_toteuma_maarat();
 
+\i testidata/analytiikka_toteumat.sql
 
--- Siirrä kaikki toteumat analytiikka_toteumat tauluun
--- Siirrertään uudet toteumat
-INSERT INTO analytiikka_toteumat (
-    SELECT t.id                                                                       as toteuma_tunniste_id,
-           t.sopimus                                                                  as toteuma_sopimus_id,
-           t.alkanut                                                                  as toteuma_alkanut,
-           t.paattynyt                                                                as toteuma_paattynyt,
-           u.urakkanro                                                                AS toteuma_alueurakkanumero,
-           t.suorittajan_ytunnus                                                      as toteuma_suorittaja_ytunnus,
-           t.suorittajan_nimi                                                         as toteuma_suorittaja_nimi,
-           t.tyyppi::toteumatyyppi                                                    as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
-           t.lisatieto                                                                as toteuma_lisatieto,
-           to_json(array_agg(DISTINCT (tkoodi.id, tt.maara, tkoodi.yksikko, tt.lisatieto, tkoodi.tehtavaryhma))) AS toteumatehtavat,
-           to_json(array_agg(DISTINCT (mk.id, mk.nimi, tm.maara, mk.yksikko)))          AS toteumamateriaalit,
-           t.tr_numero                                                                as toteuma_tiesijainti_numero,
-           t.tr_alkuosa                                                               as toteuma_tiesijainti_aosa,
-           t.tr_alkuetaisyys                                                          as toteuma_tiesijainti_aet,
-           t.tr_loppuosa                                                              as toteuma_tiesijainti_losa,
-           t.tr_loppuetaisyys                                                         as toteuma_tiesijainti_let,
-           t.luotu                                                                    as toteuma_muutostiedot_luotu,
-           t.luoja                                                                    as toteuma_muutostiedot_luoja,
-           t.muokattu                                                                 as toteuma_muutostiedot_muokattu,
-           t.muokkaaja                                                                as toteuma_muutostiedot_muokkaaja,
-           t.tyokonetyyppi                                                            as tyokone_tyokonetyyppi,
-           t.tyokonetunniste                                                          as tyokone_tunnus,
-           t.urakka                                                                   as urakkaid,
-           t.poistettu                                                                as poistettu
-    FROM toteuma t
-             LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-             LEFT JOIN tehtava tkoodi ON tkoodi.id = tt.toimenpidekoodi
-             LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-             LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-             JOIN urakka u on t.urakka = u.id
-    WHERE (t.alkanut BETWEEN '2000-01-01T00:00:00' AND '2100-01-01T00:00:00')
-    GROUP BY t.id, t.alkanut, u.id
-    ORDER BY t.alkanut ASC
-)
-ON CONFLICT DO NOTHING;
 
 -- Päivitetään toimenkuvat -25 urakoille
 SELECT lisaa_toimenkuvat_urakalle('2025-10-01'::DATE);
+
+-- Tarjoukset
+\i testidata/tarjous.sql

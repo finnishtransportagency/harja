@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/muutoshintaiset_tyot.sql"
   {:positional? true})
+
+(declare lisaa-muutoshintainen-tyo<!)

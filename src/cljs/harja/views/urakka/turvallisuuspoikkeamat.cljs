@@ -569,7 +569,8 @@
       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/sisaan #(do
                     (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                    (nav/vaihda-kartan-koko! :M)))
+                    (nav/vaihda-kartan-koko! :M)
+                    (kartta-tiedot/piilota-infopaneeli!)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn [urakka]
       [:span

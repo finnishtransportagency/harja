@@ -1,0 +1,22 @@
+{
+  "osumat": [
+    {
+      "oid": "1.2.345.678.12.2.987654321",
+      "kohdeluokka": "toimenpiteet/valimaiset-varustetoimenpiteet",
+      "version-voimassaolo": {
+        "alku": "2020-11-03",
+        "loppu": null
+      },
+      "luotu": "2020-11-03T09:30:00Z",
+      "muokattu": "2020-11-03T09:45:00.00000Z",
+      "alkaen": "2020-11-03",
+      "muutoksen-lahde-oid": "urakan-velho-oid",
+      "ominaisuudet": {
+        "toimenpiteen-kohde": "1.2.345.678.9.0.12.345.678909999",
+        "toimenpide": "varustetoimenpide/vtptest"
+      }
+    }
+  ],
+  "aggergaatiot": {},
+  "osumia": 1
+}

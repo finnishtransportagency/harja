@@ -8,11 +8,15 @@
 (s/def ::viimeinen_hoitokausi boolean?)
 (s/def ::urakkaid int?)
 (s/def ::tavoitehinta number?)
-(s/def ::tavoitehinnan_muutokset number?)
+(s/def ::hv_alun_indkorj_tavoitehinta number?)
+(s/def ::hv_lopun_tavoitehinta_ennen_indkorj number?)
 (s/def ::tavoitehinta_ennen number?)
+(s/def ::tavoitehinta_jalkeen number?)
+(s/def ::tavoitehinnan_muutokset number?)
 (s/def ::tavoitehinta_jalkeen number?)
 (s/def ::hoitokauden_alun_tavoitehinta number?)
 (s/def ::hoitokauden_lopun_tavoitehinta number?)
+(s/def ::hv_lopun_indkorjaamaton_tavoitehinta number?)
 (s/def ::kattohinta number?)
 (s/def ::toteutuneet_kustannukset number?)
 (s/def ::ylityksen_maara number?)
@@ -26,6 +30,9 @@
 (s/def ::maksimi_siirrettava_maara number?)
 (s/def ::siirron_maara #(or (nil? %) (number? %)))
 (s/def ::siirtorajoitus_prosentti #(or (nil? %) (number? %)))
+(s/def ::kirjalliset_muutokset #(or (nil? %) (number? %)))
+(s/def ::rahavaraus_muutokset #(or (nil? %) (number? %)))
+(s/def ::tehtava_muutokset #(or (nil? %) (number? %)))
 (s/def ::tavoitepalkkion_maksuprosentti number?)
 (s/def ::tavoitepalkkion_maksimi_prosentti number?)
 (s/def ::luvatut_pisteet int?)
@@ -74,7 +81,7 @@
                                                      ::luoja]
                                       :opt-un [::kulu_id ::siirto]))
 
-(s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tavoitehinnan_muutokset ::tavoitehinta_ennen
+(s/def ::indeksikorjauspaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::hv_alun_indkorj_tavoitehinta ::tavoitehinnan_muutokset ::hv_lopun_tavoitehinta_ennen_indkorj
                                                ::hoitokauden_kuukaudet ::kuukausien_keskiarvo ::alkuperaisen_pisteluvun_kuukausi
                                                ::alkuperainen_pisteluku ::pistelukujen_muutos ::pistelukujen_muutos_prosentteina  ::indeksikorotuksen_prosenttiosuus
                                                ::hoitokauden_lopun_indeksikorjaus ::luoja]))
@@ -83,7 +90,7 @@
                                                         ::tavoitehinnan_muutokset ::hoitokauden_lopun_indeksikorjaus ::kattohinta ::kattohintakerroin
                                                         ::lisaa_tavoitehintaan_lopunindeksikorjaus ::luoja]))
 
-(s/def ::hoidonjohtopalkkiomuutospaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::tavoitehinta ::tarjouksen_tavoitehinta
+(s/def ::hoidonjohtopalkkiomuutospaatos (s/keys :req-un [::urakkaid ::hoitokauden_alkuvuosi ::hv_lopun_indkorjaamaton_tavoitehinta ::tarjouksen_tavoitehinta
                                                          ::hoidonjohtopalkkio ::muutosprosentti ::hoidonjohtopalkkio_muutos ::luoja]
                                           :opt-un [::kulu_id]))
 

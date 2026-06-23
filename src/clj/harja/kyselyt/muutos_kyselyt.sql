@@ -37,21 +37,16 @@ SELECT m.id,
               AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
            ),
            '[]'::json) AS kustannusvaikutukset,
-       COALESCE(
-           (SELECT JSON_AGG(
-                       JSONB_BUILD_OBJECT(
-                           'tehtava', tjm.tehtava,
-                           'suunniteltu_maara', ut.maara,
-                           'maaramuutos', tjm.maaramuutos,
-                           -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
-                           --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
-                           --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
-                           'edellinen_maara', tjm.edellinen_maara,
-                           'uusi_maara', tjm.uusi_maara,
-                           'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
-                           'versio', tjm.versio)
-                       ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
-                   )
+    COALESCE(
+        (SELECT JSON_AGG(
+                    JSONB_BUILD_OBJECT(
+                        'tehtava', tjm.tehtava,
+                        'suunniteltu_maara', ut.maara,
+                        'maaramuutos', tjm.maaramuutos,
+                        'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
+                        'versio', tjm.versio)
+                    ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
+                )
             FROM ONLY mhu_muutos_tehtava_ja_maaraluettelo tjm
                      LEFT JOIN urakka_tehtavamaara ut
                                ON ut.urakka = :urakka
@@ -71,7 +66,7 @@ FROM ONLY mhu_muutos m
          LEFT JOIN ONLY mhu_muutos_liite lii ON (m.id = lii.muutos)
 WHERE m.urakka = :urakka
   AND 
-    CASE 
+    CASE  
         WHEN :hae-vain-aiemmat-pysyvat-muutokset?::BOOLEAN THEN
             (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND
              m.voimassa_alkaen < (SELECT TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')))
@@ -263,6 +258,16 @@ WHERE
   AND k.erapaiva < :voimassa::DATE
   AND kk.muutos = :muutos;
 
+-- name: muutostyolle-jo-kirjatut-kulut-yhteensa
+-- single?: true
+SELECT COALESCE(SUM(kk.summa), 0) AS kirjattu_summa
+ FROM kulu k
+         JOIN kulu_kohdistus kk ON kk.kulu = k.id
+WHERE
+    kk.tyyppi = :tyyppi::kohdistustyyppi
+  AND kk.poistettu IS FALSE
+  AND kk.muutos = :muutos;
+
 -- name: luo-jjh-kulun-kohdistus<!
 INSERT INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
                             tavoitehintainen)
@@ -391,11 +396,6 @@ SELECT
                         'tehtava', tjm.tehtava,
                         'suunniteltu_maara', ut.maara,
                         'maaramuutos', tjm.maaramuutos,
-                        -- TODO: Edellinen_maara ja uusi_maara tietokannan tasolla voivat olla obsolete,
-                        --       koska on sovittu suunniteltu_maara tiedon olevan baseline, jonka päälle määrämuutokset
-                        --      lasketaan. Katsotaan myöhemmin, voidaanko nämä sarakkeet poistaa, vai tarvitaanko niitä.
-                        'edellinen_maara', tjm.edellinen_maara,
-                        'uusi_maara', tjm.uusi_maara,
                         'hoitokauden_alkuvuosi', tjm.hoitokauden_alkuvuosi,
                         'versio', tjm.versio)
                     ORDER BY tjm.tehtava, tjm.hoitokauden_alkuvuosi
@@ -454,20 +454,16 @@ ORDER BY tp.jarjestys;
 
 -- name: luo-tai-paivita-tehtavan-maaramuutos<!
 -- Poikkeaminen tehtävä- ja määräluettelon määrästä
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo AS tjm (versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo AS tjm (versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
 VALUES (:versio,
         :muutos-id,
         :tehtava,
         :hoitokauden_alkuvuosi,
-        :edellinen_maara,
-        :maaramuutos,
-        :uusi_maara)
+        :maaramuutos)
     ON CONFLICT (muutos, tehtava, hoitokauden_alkuvuosi)
         DO UPDATE SET versio          = EXCLUDED.versio,
-                      edellinen_maara = EXCLUDED.edellinen_maara,
-                      maaramuutos     = EXCLUDED.maaramuutos,
-                      uusi_maara      = EXCLUDED.uusi_maara
+                      maaramuutos     = EXCLUDED.maaramuutos
 -- Päivitetään vain jos tulee uusi määrämuutos
  WHERE (tjm.maaramuutos) IS DISTINCT FROM (excluded.maaramuutos);
 
@@ -485,51 +481,44 @@ WITH urakan_tehtavat AS (
         tt.toimenpidekoodi           AS toimenpidekoodi,
         SUM(tt.maara)                AS maara,
         :urakka                      AS urakka,
-        MAX(t.id)                    AS toteuma_id,
+        MAX(tt.toteuma)              AS toteuma_id,
         MAX(tt.id)                   AS toteuma_tehtava_id
-      FROM toteuma t
-            JOIN toteuma_tehtava tt
-              ON t.id = tt.toteuma
-             AND tt.urakka_id = :urakka
-             AND tt.poistettu = FALSE
-       LEFT JOIN toteuma_materiaali tm
-              ON t.id = tm.toteuma
-             AND tm.urakka_id = :urakka
-             AND tm.poistettu = FALSE
-     WHERE t.urakka = :urakka
-       AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-       AND t.poistettu = FALSE
-  GROUP BY tt.toimenpidekoodi
+      FROM toteuma_tehtava tt
+     WHERE tt.urakka_id = :urakka
+       AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND tt.poistettu = FALSE
+     GROUP BY tt.toimenpidekoodi
 ),
-materiaalimaara AS (
-    -- Kohdista materiaaleina raportoitavat tehtävät tehtävätoteumina 
-    -- Suolauksen alle esim talvisuolamateriaalit, ja niiden toteumat 
-    -- Ref:  https://extranet.vayla.fi/wiki/spaces/HARJA/pages/285776556/Materiaaleina+raportoitavat+teht%C3%A4v%C3%A4t
-    SELECT
-         teh.id          AS tehtava_id,
-         teh.nimi        AS tehtava,
-         SUM(tm.maara)   AS maara,
-         mk.yksikko
-    -- toteuma_materiaali taulussa on kaikki urakan materiaalitoteumat 
-    FROM toteuma_materiaali tm
-              JOIN toteuma t
-                   ON t.id = tm.toteuma AND t.poistettu IS FALSE
-              -- Materiaali linkin 'päätaulu' 
-              JOIN materiaalikoodi mk  ON tm.materiaalikoodi = mk.id
-              -- tehtava taulussa on materiaalin luokka, sekä koodi linkkinä 
+ materiaalimaara AS NOT MATERIALIZED (
+     -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
+     WITH mat_summat AS (
+         SELECT tm.materiaalikoodi,
+                tm.toteuma,
+                SUM(tm.maara) AS maara
+         FROM toteuma_materiaali tm
+         WHERE tm.urakka_id = :urakka
+           AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+           AND tm.poistettu IS FALSE
+         GROUP BY tm.materiaalikoodi, tm.toteuma
+     )
+     -- Vasta aggregoinnin jälkeen JOINataan toteumaan (paljon vähemmän rivejä)
+     SELECT teh.id        AS tehtava_id,
+            teh.nimi      AS tehtava,
+            SUM(ms.maara) AS maara,
+            mk.yksikko
+     FROM mat_summat ms
+              JOIN toteuma t ON t.id = ms.toteuma
+         AND t.urakka = :urakka
+         AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+         AND t.poistettu IS FALSE
+              JOIN materiaalikoodi mk ON ms.materiaalikoodi = mk.id
               JOIN tehtava teh
                    ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
-                       AND teh."maaramitattava?" IS TRUE -- Vain määrämitattavat tehtävät mukaan  
-                       AND (teh.materiaalikoodi_id = tm.materiaalikoodi
-                           -- Jos koodi = NULL, kohdistetaan silloin kaikki luokkaan kuuluvat materiaalit  
+                       AND teh."maaramitattava?" IS TRUE
+                       AND (teh.materiaalikoodi_id = ms.materiaalikoodi
                            OR teh.materiaalikoodi_id IS NULL)
-    WHERE t.urakka = :urakka
-      AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
-      AND tm.poistettu IS FALSE
-      AND t.poistettu IS FALSE
- GROUP BY teh.id, teh.nimi, mk.yksikko
- ORDER BY teh.id
-),
+     GROUP BY teh.id, teh.nimi, mk.yksikko
+ ),
 maaramuutokset AS (
     SELECT
         tk.id                                            AS id,
@@ -549,7 +538,7 @@ maaramuutokset AS (
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
         tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
-        0.7 AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun 
+        :talvisuolakerroin AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun
       FROM tehtava tk
           JOIN tehtavaryhma tr_alataso
             ON tr_alataso.id = tk.tehtavaryhma
@@ -705,10 +694,30 @@ SELECT  DISTINCT ON (m.id)
         m.tyyppi, 
         m.alityyppi,
         m.nimi, 
-        m.voimassa_alkaen
+        m.voimassa_alkaen,
+        mmk.summa AS budjetoitu_summa,
+        COALESCE(kk.kirjattu_summa, 0) AS kirjattu_summa
  FROM mhu_muutos m
+ JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = m.id
+ LEFT JOIN (
+     SELECT muutos, SUM(summa) AS kirjattu_summa
+     FROM kulu_kohdistus
+     WHERE poistettu IS NOT TRUE
+     GROUP BY muutos
+ ) kk ON kk.muutos = m.id
 WHERE m.tyyppi =  'muutostyo'::MHU_MUUTOSTYYPPI
   AND m.urakka =  :urakka
   AND (m.voimassa_alkaen BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND m.poistettu IS FALSE 
 ORDER BY m.id DESC;
+
+-- name: hae-laskutusrajan-muutosten-summa-hoitovuodelle
+SELECT COALESCE(SUM(mk.summa), 0) AS muutokset_yhteensa
+FROM mhu_muutos_kustannusvaikutus mk
+         JOIN mhu_muutos m ON m.id = mk.muutos
+WHERE m.urakka = :urakka-id
+  AND mk.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+  AND m.poistettu IS FALSE
+  AND (m.tyyppi = 'muutostyo'::MHU_MUUTOSTYYPPI
+       OR (m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI AND mk.summa > 0))
+  AND (:paivitettava-muutos-id::INTEGER IS NULL OR m.id != :paivitettava-muutos-id::INTEGER);

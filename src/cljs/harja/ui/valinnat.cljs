@@ -122,12 +122,13 @@
   
   Optiot:
   - :wrapper-luokka - CSS-luokka (oletus: 'col-xs-6.col-md-3')
-  - :kaikki-valinta? - Lisää 'Kaikki' valinnan (arvo nil)"
+  - :kaikki-valinta? - Lisää kaikki-valinnan (arvo nil)
+  - :kaikki-teksti - Kaikki-valinnan teksti (oletus: 'Kaikki')"
   [valittu-hoitokausi hoitokaudet tuck-event optiot]
   (let [urakkatyyppi (-> @nav/valittu-urakka :tyyppi)
         vuosi-termi (palauta-urakkatyypin-vuosi-termi urakkatyyppi)
         kaikki-valinta? (:kaikki-valinta? optiot)
-        kaikki-teksti "Kaikki"
+        kaikki-teksti (or (:kaikki-teksti optiot) "Kaikki")
         valinnat (if kaikki-valinta?
                    (concat [nil] hoitokaudet)
                    hoitokaudet)]

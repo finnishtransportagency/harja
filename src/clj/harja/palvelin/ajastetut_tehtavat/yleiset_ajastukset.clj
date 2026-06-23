@@ -4,6 +4,8 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tapahtumat :as tapahtumat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
@@ -51,16 +53,43 @@
            (paivita-mahdolliset-suolatoteumat-kuluvalla-hoitokaudella db)
            (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Loppuu " (pvm/nyt)))))))
 
+(defn tarkista-paattyneet-urakat
+  "Tarkistaa tietokannasta urakat, jotka ovat päättyneet 90-180 päivää sitten,
+  ja poistaa niiden käyttäjiltä lisäoikeudet urakkaan."
+  [db]
+  (let [paattyneet (urakat-kyselyt/hae-90pv-paattyneet-urakat db)]
+    (if (seq paattyneet)
+      (doseq [{:keys [id nimi loppupvm]} paattyneet]
+        (log/info (format "Urakka '%s' on päättynyt %s. Poistetaan lisäoikeudet." nimi loppupvm))
+        (kayttajat-kyselyt/jarjestelmakysely-poista-urakan-kayttajien-lisaoikeudet! db {:urakkaid id}))
+      (log/info "Ei 90-180 päivää sitten päättyneitä urakoita."))))
+
+(defn- ajasta-paattyneiden-urakoiden-tarkistus [db]
+  (log/info "Ajastetaan päättyneiden urakoiden tarkistus - ajetaan kerran vuorokaudessa yöllä.")
+  (ajastettu-tehtava/ajasta-paivittain [2 0 0]
+    (fn [_]
+      (lukot/yrita-ajaa-lukon-kanssa
+        db
+        "paattyneiden_urakoiden_tarkistus"
+        #(do
+           (log/info "ajasta-paivittain :: paattyneiden_urakoiden_tarkistus :: Alkaa " (pvm/nyt))
+           (tarkista-paattyneet-urakat db)
+           (log/info "ajasta-paivittain :: paattyneiden_urakoiden_tarkistus :: Loppuu " (pvm/nyt)))))))
+
 (defrecord YleisetAjastuket []
   component/Lifecycle
   (start [{db :db :as this}]
     (assoc this :siivoa-tapahtuman-tiedot-ajastus (ajasta-siivoa-tapahtuman-tiedot db)
-                :paivita-rajoitusalueen-suolatoteumat-ajastus (ajasta-rajoitusalueen-suolatoteumat db)))
+                :paivita-rajoitusalueen-suolatoteumat-ajastus (ajasta-rajoitusalueen-suolatoteumat db)
+                :paattyneiden-urakoiden-tarkistus-ajastus (ajasta-paattyneiden-urakoiden-tarkistus db)))
   (stop [{poista-siivous :siivoa-tapahtuman-tiedot-ajastus
-          poista-rajoitusalue :paivita-rajoitusalueen-suolatoteumat-ajastus :as this}]
+          poista-rajoitusalue :paivita-rajoitusalueen-suolatoteumat-ajastus
+          poista-paattyneet :paattyneiden-urakoiden-tarkistus-ajastus :as this}]
     (do
       (poista-siivous)
-      (poista-rajoitusalue))
+      (poista-rajoitusalue)
+      (poista-paattyneet))
     (dissoc this
       :siivoa-tapahtuman-tiedot-ajastus
-      :paivita-rajoitusalueen-suolatoteumat-ajastus)))
+      :paivita-rajoitusalueen-suolatoteumat-ajastus
+      :paattyneiden-urakoiden-tarkistus-ajastus)))

@@ -146,7 +146,7 @@
         uusi-paatos))))
 
 (defn poista-tavoitehinnan-muutospaatos [db urakkaid kayttajaid paatosid]
-  (let [;; Varmistetaan ensin, että lupaus löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
+  (let [;; Varmistetaan ensin, että päätös löytyy annetulla id:llä ja että se kuuluu annetulle urakalle
         paatos (first (hae-tavoitehinnan-muutospaatos db {:paatos-id paatosid}))
         _ (when (or
                   (nil? paatos)
@@ -289,9 +289,9 @@
   "Indeksikorjauspäätöksen mäppi:
    {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
-   :tavoitehinta <eurot>
+   :hv_alun_indkorj_tavoitehinta <eurot>
    :tavoitehinnan_muutokset <eurot>
-   :tavoitehinta_ennen <eurot>
+   :hv_lopun_tavoitehinta_ennen_indkorj <eurot>
    :alkuperainen_pisteluku <pisteet>
    :alkuperaisen_pisteluvun_kuukausi <kuukausi vuosi>
    :pistelukujen_muutos <prosentti>
@@ -381,7 +381,7 @@
   "Hoidojohtopalkkion muutospäätöksen mäppi:
    {:urakkaid <urakkaid>
    :hoitokauden_alkuvuosi <hoitokauden-alkuvuosi>
-   :tavoitehinta <eurot>
+   :hv_lopun_indkorjaamaton_tavoitehinta <eurot>
    :tarjouksen_tavoitehinta <eurot>
    :hoidonjohtopalkkio <eurot>
    :muutosprosentti <prosentti>
@@ -409,7 +409,7 @@
                   (nil? paatos)
                   (not= urakkaid (:urakkaid paatos)))
             ;; Throw exception
-            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+            (throw (Exception. "Hoidonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-hoidonjohtopalkkio-paatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))
 
@@ -440,6 +440,6 @@
                   (nil? paatos)
                   (not= urakkaid (:urakkaid paatos)))
             ;; Throw exception
-            (throw (Exception. "Hoindonjohtopalkkionmuutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
+            (throw (Exception. "Raporttipäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle")))
         vastaus (poista-poytakirjan-raporttipaatos<! db {:poistaja kayttajaid :id paatosid})]
     vastaus))

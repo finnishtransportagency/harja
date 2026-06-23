@@ -70,15 +70,15 @@ SELECT tpi_id,
        :urakka_id                       as urakka_id,
        SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden 10. päivä.
 FROM (SELECT
-          SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu) AS kokonaishintaisten_summa,
+          SUM((mhu_laskutusyhteenveto_tuotekohtainen).kaikki_laskutettu) AS kokonaishintaisten_summa,
           lyht.alkupvm,
           lyht.loppupvm,
-          (mhu_laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id
+          (mhu_laskutusyhteenveto_tuotekohtainen).tpi                                  AS tpi_id
       FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                   mhu_laskutusyhteenveto_tuotekohtainen(hk.alkupvm, hk.loppupvm,
                                                        date_trunc('month', hk.loppupvm) :: DATE,
                                                        (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
                                                        :urakka_id :: INTEGER)
@@ -89,7 +89,7 @@ FROM (SELECT
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                   mhu_laskutusyhteenveto_tuotekohtainen(hk.alkupvm, hk.loppupvm,
                                                        date_trunc('month', now()::DATE) ::DATE,
                                                        (SELECT CASE
                                                                    WHEN

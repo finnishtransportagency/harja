@@ -277,8 +277,6 @@
        ;; Kartan paikka on hieman erilainen, kun nämä renderöidään paikkauskohteista
        (when-not (and paikkauskohteet? paallystysilmoitus-lomakedata)
          [:<>
-          (when-not paallystysilmoitus-lomakedata
-            [:h1 "Päällystysilmoitukset"])
           [kartta/kartan-paikka]])
        ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella

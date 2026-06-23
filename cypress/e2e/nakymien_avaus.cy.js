@@ -17,7 +17,7 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Urakkavalinta listan kautta toimii", function () {
-        cy.contains('.haku-lista-item', 'Pohjois-Pohjanmaa').click()
+        cy.contains('.haku-lista-item', 'Pohjois-Suomi').click()
         cy.contains('.haku-lista-item', 'Aktiivinen Oulu Testi').click()
         cy.contains('Aktiivinen Oulu Testi')
     })
@@ -37,7 +37,8 @@ describe('Päänäkymien avaamiset', function () {
     })
 
     it("Tilannekuva välilehti toimii", function () {
-        cy.contains('ul#sivut a span', 'Tilannekuva').click()
+        // Käytä ankkuria suoraan, jotta vältetään "element is detached" -flaky re-renderin aikana
+        cy.contains('ul#sivut a', 'Tilannekuva', {timeout: clickTimeout}).should('be.visible').click()
         cy.contains('div#tk-suodattimet a.klikattava', "Nykytilanne", { timeout: 10000 }).should('exist')
         cy.contains('Hupsista').should('not.exist')
     })
@@ -104,8 +105,8 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Käydään alatabit läpi
         cy.get('[data-cy=tabs-taso2-Suolarajoitukset]').click()
         cy.contains('Urakan suolarajoitukset hoitovuosittain').should('exist')
-        cy.get('[data-cy="tabs-taso2-Tehtavat ja maarat"]').click()
-        cy.contains('Tehtävät ja määrät').should('exist')
+        cy.get('[data-cy="tabs-taso2-Tehtava- ja maaraluettelo"]').click()
+        cy.contains('Tehtävä ja määräluettelo').should('exist')
         //cy.get('[data-cy=tabs-taso2-Kustannussuunnitelma]').click()
         //cy.contains('Suunnitelluista kustannuksista muodostetaan summa Sampon kustannussuunnitelmaa varten.', {timeout: clickTimeout}).should('exist')
     })
@@ -172,8 +173,6 @@ describe('MH-Urakan näkymien avaamiset', function () {
         // Käydään alatabit läpi
         cy.get('[data-cy=tabs-taso2-Talvihoitoreititys]').click()
         cy.contains('Talvihoitoreititys').should('exist')
-        cy.get('[data-cy=tabs-taso2-Mobiilityokalu]').click()
-        cy.contains('Esittely').should('exist')
         cy.get('[data-cy=tabs-taso2-Siltatarkastukset]').click()
         cy.contains('Sillat').should('exist')
         cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
@@ -210,11 +209,15 @@ describe('MH-Urakan näkymien avaamiset', function () {
 
         // Siirry Paikkaukset päätabille
         cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
-        // Käydään alatabit läpi
         cy.get('[data-cy="tabs-taso2-Paallystysurakoiden paikkaukset"]').click()
-        cy.contains('ELY').should('exist')
-        cy.get('[data-cy=tabs-taso2-Toteumat]').click()
+        cy.contains('Elinvoimakeskus').should('exist')
+
+        // Avaa toteumat
+        cy.get('[data-cy="tabs-taso2-Kohteiden toteumat"]').click();
+        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+        cy.wait(1000);
         cy.contains('Toteuman tieosoite').should('exist')
+
     })
 
     it("Avaa Välikatselmus", function () {

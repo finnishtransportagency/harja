@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatokset-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.kulut.kulut :as kulut]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
@@ -11,7 +11,6 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
@@ -131,15 +130,15 @@
   (is (= siirtorajoitus-prosentti (:siirtorajoitus_prosentti paatos)))
   (is (= luoja (:luoja paatos))))
 
-(defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+(defn testaa-indeksikorjauspaatos [paatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                                    hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                                    pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
                                    hoitokauden-lopun-indeksikorjaus luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= hv_alun_indkorj_tavoitehinta (:hv_alun_indkorj_tavoitehinta paatos)))
   (is (= tavoitehinnan-muutokset (:tavoitehinnan_muutokset paatos)))
-  (is (= tavoitehinta-ennen (:tavoitehinta_ennen paatos)))
+  (is (= hv_lopun_tavoitehinta_ennen_indkorj (:hv_lopun_tavoitehinta_ennen_indkorj paatos)))
   (is (= hoitokauden-kuukaudet (:hoitokauden_kuukaudet paatos)))
   (is (= (bigdec kuukausien-keskiarvo) (bigdec (:kuukausien_keskiarvo paatos))))
   (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku paatos)))
@@ -163,11 +162,11 @@
   (is (= lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_lopunindeksikorjaus paatos)))
   (is (= kayttajaid (:luoja paatos))))
 
-(defn testaa-hoidojohtopalkkiomuutospaatos [paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+(defn testaa-hoidojohtopalkkiomuutospaatos [paatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                                             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos luoja]
   (is (= urakkaid (:urakkaid paatos)))
   (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)))
-  (is (= tavoitehinta (:tavoitehinta paatos)))
+  (is (= hv_lopun_indkorjaamaton_tavoitehinta (:hv_lopun_indkorjaamaton_tavoitehinta paatos)))
   (is (= tarjouksen_tavoitehinta (:tarjouksen_tavoitehinta paatos)))
   (is (= muutosprosentti (:muutosprosentti paatos)))
   (is (= hoidonjohtopalkkio (:hoidonjohtopalkkio paatos)))
@@ -459,7 +458,117 @@
     (is (nil? lupauspaatoksen-poistettu-sanktio))
     (is (= "Lupaukset" (:nimi poistettu-paatos)))))
 
+(deftest tee-lupauspaatos-tyyppi-tarkistus-test
+  (testing "Varmistetaan, että bonus/sanktio tallennetaan vain kun :tyyppi on oikea - negatiivinen regressiotesti"
+    (let [paatos-pvm (pvm/->pvm "12.05.2024")
+          urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+          urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+          urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+          indeksi (:indeksi urakan-tiedot)
+          kayttajaid (:id +kayttaja-jvh+)
+          hoitokauden-alkuvuosi 2024
+          tavoitehinta 5M
+          tarjous-tavoitehinta 5M
+          luvatut-pisteet 5
+          toteutuneet-pisteet 10
+          lupausbonus 1500M
+          lupaussanktio 2000M
+          bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
+          sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
+          indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
+          
+          ;; Testi 1: Bonus-päätös (tyyppi="bonus") - datassa on sekä bonus että sanktio, mutta vain bonus saa tallentua
+          lupauspaatos-bonus (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "bonus" tavoitehinta tarjous-tavoitehinta
+                               luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio 
+                               bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
+          vastaus-bonus (try
+                          (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                                        lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                        (fn [db hakuparametrit]
+                                          {:lupaus-sitoutuminen {:pisteet 50}
+                                           :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                        :pisteet {:maksimi 100 :ennuste 100 :toteuma 100}
+                                                        :bonus-tai-sanktio {:bonus lupausbonus}
+                                                        :tavoitehinta tavoitehinta
+                                                        :odottaa-kannanottoa 0
+                                                        :merkitsevat-odottaa-kannanottoa 0}})
+                                        valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                        (fn [db hakuparametrit] tavoitehinta)
+                                        jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                        (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                            (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-bonus))
+                          (catch Exception e e))
+          tallennettu-bonus (valitse-paatos (:paatokset vastaus-bonus) :lupaukset)
+          
+          erilliskustannus-bonus (when (:erilliskustannus_id tallennettu-bonus)
+                                   (first (erilliskustannus-kyselyt/hae-erilliskustannus 
+                                            (:db jarjestelma) 
+                                            {:urakka-id urakkaid :id (:erilliskustannus_id tallennettu-bonus)})))
+          
+          ;; Testi 2: Sanktio-päätös (tyyppi="sanktio") - datassa on sekä bonus että sanktio, mutta vain sanktio saa tallentua
+          lupauspaatos-sanktio (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "sanktio" tavoitehinta tarjous-tavoitehinta
+                                 luvatut-pisteet 5 lupausbonus lupaussanktio 
+                                 bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
+          vastaus-sanktio (try
+                            (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+                                          lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                          (fn [db hakuparametrit]
+                                            {:lupaus-sitoutuminen {:pisteet 50}
+                                             :yhteenveto {:ennusteen-tila :alustava-toteuma
+                                                          :pisteet {:maksimi 100 :ennuste 100 :toteuma 100}
+                                                          :bonus-tai-sanktio {:sanktio lupaussanktio}
+                                                          :tavoitehinta tavoitehinta
+                                                          :odottaa-kannanottoa 0
+                                                          :merkitsevat-odottaa-kannanottoa 0}})
+                                          valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                          (fn [db hakuparametrit] tavoitehinta)
+                                          jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                          (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                              (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-sanktio))
+                            (catch Exception e e))
+          tallennettu-sanktio (valitse-paatos (:paatokset vastaus-sanktio) :lupaukset)
+          
+          sanktio (when (:sanktio_id tallennettu-sanktio)
+                    (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-sanktio))))]
+      
+      ;; Assertiot bonukselle: Bonus tallennetaan, sanktio EI tallennu
+      (is (not (nil? erilliskustannus-bonus)) 
+          "Bonus tallennettiin kun tyyppi oli 'bonus'")
+      (is (= lupausbonus (:rahasumma erilliskustannus-bonus)) 
+          "Lupausbonus on oikea")
+      (is (nil? (:sanktio_id tallennettu-bonus)) 
+          "REGRESSIOTESTI: Sanktiota ei tallennettu vaikka datassa oli :lupaussanktio, koska tyyppi oli 'bonus'")
+      
+      ;; Assertiot sanktiolle: Sanktio tallennetaan, bonus EI tallennu
+      (is (not (nil? sanktio)) 
+          "Sanktio tallennettiin kun tyyppi oli 'sanktio'")
+      (is (= lupaussanktio (:maara sanktio)) 
+          "Lupaussanktio on oikea")
+      (is (nil? (:erilliskustannus_id tallennettu-sanktio)) 
+          "REGRESSIOTESTI: Bonusta ei tallennettu vaikka datassa oli :lupausbonus, koska tyyppi oli 'sanktio'"))))
+
+
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
+(deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2025-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2025
+        muokkaa-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit)
+        tavoitehinta 5M
+        kattohinta 5M
+        paatos (paatos-apurit/tavoitehinnan-muutospaatos urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)]
+    (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
+
+    (is (= urakkaid (:urakkaid vastaus)))
+    (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus)))
+    (is (= tavoitehinta (:tavoitehinta vastaus)))
+    (is (= kattohinta (:kattohinta vastaus)))
+    (is (= false (:muokkaa_kattohinta vastaus)))))
+
 (deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
@@ -473,7 +582,10 @@
 
         vastaus (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
-    ;; -124 alkavalla urakalla pitää olla kattohinta 10% tavoitehinnasta
+    (is (= urakkaid (:urakkaid vastaus)))
+    (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus)))
+    (is (= tavoitehinta (:tavoitehinta vastaus)))
+    (is (= kattohinta (:kattohinta vastaus)))
     (is (= false (:muokkaa_kattohinta vastaus)))))
 
 (deftest kysely-tavoitehinnan-muutos-lisays-onnistuu-2019-test
@@ -499,6 +611,10 @@
         _ (is (= kattohinta (:kattohinta_indeksikorjattu urakkatavoite)) "Kattohinta on asetettu oikein urakka_tavoite tauluun")]
     (testaa-tavoitehinnan-muutospaatos vastaus urakkaid hoitokauden-alkuvuosi muokkaa-kattohinta tavoitehinta kattohinta kayttajaid)
     ;; -19 alkavalla urakalla pitää olla kattohinta käsin muokattavana
+    (is (= urakkaid (:urakkaid vastaus)))
+    (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus)))
+    (is (= tavoitehinta (:tavoitehinta vastaus)))
+    (is (= kattohinta (:kattohinta vastaus)))
     (is (= true (:muokkaa_kattohinta vastaus)))))
 
 (deftest rajapinta-tavoitehinnan-muutos-lisays-onnistuu-test
@@ -515,8 +631,7 @@
         vastaus (try
                   (with-redefs [
                                 ;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
-                                                                                kattohinta)
+                                valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit] kattohinta)
                                 ;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-muutospaatos +kayttaja-jvh+ paatos))
@@ -577,7 +692,7 @@
     (is (= urakkaid (:urakkaid poistettu-paatos)))))
 
 ;; Testaa tavoitehinnan alituspäätöksen lisääminen
-(deftest kysely-tavoitehinnan-alitus-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-alitus-lisays-2021-onnistuu-test
   (let [hoitokauden-alkuvuosi 2024
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Hae urakan hoitokauden alun tavoitehinta
@@ -600,7 +715,38 @@
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
       alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)))
 
-(deftest rajapinta-tavoitehinnan-alitus-lisays-onnistuu-test
+(deftest kysely-tavoitehinnan-alitus-lisays-2025-onnistuu-test
+  (let [hoitokauden-alkuvuosi 2025
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-alkuvuosi (-> (:alkupvm urakan-tiedot) pvm/vuosi)
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+        valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite (:db jarjestelma) {:urakka urakkaid})
+        budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta
+                                         (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        toteutuneet-kustannukset 5M
+        alituksen-maara 10M
+        siirron-maara 100M
+        tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id 1
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
+
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
+    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)))
+
+(deftest rajapinta-tavoitehinnan-alitus-2021-lisays-onnistuu-test
   (let [hoitokauden-alkuvuosi 2021
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Hae urakan hoitokauden alun tavoitehinta
@@ -627,6 +773,55 @@
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)]
+    (is (= "Tavoitehinnan alitus" (:nimi tallennettu-paatos)) "Päätöksen nimi täsmää")
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset tallennettu-paatos)) "Toteutuneet kustannukset tallentuu oikein")
+    (is (= tavoitepalkkio (:tavoitepalkkio tallennettu-paatos)) "Tavoitepalkkio tallentuu oikein")
+    (is (= siirron-maara (:siirron_maara tallennettu-paatos)) "Siirron määrä tallentuu oikein")
+    (is (= alituksen-maara (:alituksen_maara tallennettu-paatos)) "Alituksen määrä tallentuu oikein")
+    (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen.")
+    (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
+
+(deftest rajapinta-tavoitehinnan-alitus-2025-lisays-onnistuu-test
+  (let [hoitokauden-alkuvuosi 2025
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-alkuvuosi (-> (:alkupvm urakan-tiedot) pvm/vuosi)
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+        valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
+                                        (:db jarjestelma) {:urakka-id urakkaid
+                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite (:db jarjestelma) {:urakka urakkaid})
+        budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta
+                                         (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        haluttu-alituksen-maara 10M
+        toteutuneet-kustannukset (- hoitokauden-lopun-tavoitehinta haluttu-alituksen-maara)
+        alituksen-maara (- hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset)
+        siirron-maara haluttu-alituksen-maara
+        tavoitepalkkio 150M
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id nil
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
+        vastaus (try
+                  (with-redefs [;; Validoinnin takia päätöksiä ei saada kuluvalle hoitovuodelle haettua, joten feikataan nykyhetki
+                                pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2026 10 15))]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e))
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)]
+    (is (= "Tavoitehinnan alitus" (:nimi tallennettu-paatos)) "Päätöksen nimi täsmää")
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset tallennettu-paatos)) "Toteutuneet kustannukset tallentuu oikein")
+    (is (= tavoitepalkkio (:tavoitepalkkio tallennettu-paatos)) "Tavoitepalkkio tallentuu oikein")
+    (is (= siirron-maara (:siirron_maara tallennettu-paatos)) "Siirron määrä tallentuu oikein")
+    (is (= alituksen-maara (:alituksen_maara tallennettu-paatos)) "Alituksen määrä tallentuu oikein")
     (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen.")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")))
 
@@ -805,10 +1000,11 @@
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                           budjettisuunnittelu-kyselyt/hae-budjettitavoite
                           (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                    :hoitovuoden-lopun-tavoitehinta tavoitehinta
+                                                    :tavoitehinta-oikaistu tavoitehinta
                                                     :hoitovuoden-lopun-kattohinta (* 1.1 tavoitehinta)}])]
               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
-            (catch Exception e e))
+            (catch Exception e e
+              (println "ERROR:" (.getMessage e))))
         ;; Haetaan sen sijaan tehty päätös suoraan tietokannasta
         haettavat-paatokset [{:nimi "Tavoitehinnan ylitys" :tyyppi "A" :jarjestys 10}]
         tietokantapaatokset (paatos-kyselyt/hae-paatokset (:db jarjestelma) haettavat-paatokset urakkaid hoitokauden-alkuvuosi)
@@ -901,7 +1097,7 @@
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2024-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
-        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma) {:id urakkaid}))
         urakan-alkupvm (:alkupvm urakan-tiedot)
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
@@ -1100,10 +1296,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1122,7 +1318,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1130,7 +1326,7 @@
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)]
-    (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+    (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
       testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
       pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)))
 
@@ -1141,10 +1337,10 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1163,7 +1359,7 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1171,7 +1367,7 @@
         testattavat-indeksikuukaudet (reduce (fn [uusi-vectori kuukausi]
                                                (conj uusi-vectori [(:kuukausi kuukausi) (:indeksiluku kuukausi)]))
                                        [] hoitokauden-kuukaudet)
-        _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        _ (testaa-indeksikorjauspaatos vastaus urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
             testattavat-indeksikuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
             pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
@@ -1185,15 +1381,15 @@
         v (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (is (nil? (first v)))))
 
-(deftest rajapinta-hoitovuoden-indeksikorjaus-lisays-onnistuu-test
+(deftest rajapinta-hoitovuoden-indeksikorjaus-2024-lisays-onnistuu-test
   (let [;; Hae vaativa mhu urakka
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
         tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1212,32 +1408,36 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
+        kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
-                  (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                  (with-redefs [valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
+                                ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
-                  (catch Exception e e))
-
+                  (catch Exception e e
+                    (println "Virhe tapahtui: " (.getMessage e)) e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
     (is (= (bigdec indeksikorotuksen-prosenttiosuus) (:indeksikorotuksen_prosenttiosuus tallennettu-paatos)) "Indeksikorotuksen prosenttiosuus täsmää.")))
 
-(deftest rajapinta-hoitovuoden-indeksikorjaus-poisto-onnistuu-test
-  (let [;; Hae -24 alkava urakka
-        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+;; 2025 alkaville urakoille on esitelty muutokset, jotka muuttaa hoitovuoden lopun tavoitehintaa
+(deftest rajapinta-hoitovuoden-indeksikorjaus-2025-lisays-onnistuu-test
+  (let [;; Hae vaativa mhu urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2000000M
+        hv_alun_indkorj_tavoitehinta 2000000M
         hoitokauden-lopun-indeksikorjaus 40000M ;
-        tavoitehinnan-muutokset 30000M
-        tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+        muutokset 30000M
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta muutokset)
         hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -1256,13 +1456,65 @@
         pistelukujen-muutos 5.9
         pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
         indeksikorotuksen-prosenttiosuus 3.9
-        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta muutokset hv_lopun_tavoitehinta_ennen_indkorj
                  hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
+        kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                       :tavoitehinta-oikaistu (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
+                                       :muutos-summa muutokset}]
         vastaus (try
-                  (with-redefs [;; Feikataan vastaus tavoitehinnan hakemiseen, koska urakalla ei ole välttämättä tavoitehintaa tallennettuna
-                                valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                  (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
+                                ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
+                                ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
+                                jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
+                  (catch Exception e e
+                    (println "Virhe tapahtui: " (.getMessage e)) e))
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)]
+
+    (is (= (bigdec alkuperainen-pisteluku) (:alkuperainen_pisteluku tallennettu-paatos)) "Alkuperainen pisteluku täsmää.")
+    (is (= (bigdec indeksikorotuksen-prosenttiosuus) (:indeksikorotuksen_prosenttiosuus tallennettu-paatos)) "Indeksikorotuksen prosenttiosuus täsmää.")))
+
+(deftest rajapinta-hoitovuoden-indeksikorjaus-2024-poisto-onnistuu-test
+  (let [;; Hae -24 alkava urakka
+        urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        kayttajaid (:id +kayttaja-jvh+)
+        hoitokauden-alkuvuosi 2024
+        hv_alun_indkorj_tavoitehinta 2000000M
+        hoitokauden-lopun-indeksikorjaus 40000M ;
+        tavoitehinnan-muutokset 30000M
+        hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
+        hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
+                               {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
+                               {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
+                               {:kuukausi "Tammikuu 2022" :indeksiluku 112.7}
+                               {:kuukausi "Helmikuu 2022" :indeksiluku 112.8}
+                               {:kuukausi "Maaliskuu 2022" :indeksiluku 112.9}
+                               {:kuukausi "Huhtikuu 2022" :indeksiluku 113.0}
+                               {:kuukausi "Toukokuu 2022" :indeksiluku 113.1}
+                               {:kuukausi "Kesäkuu 2022" :indeksiluku 113.2}
+                               {:kuukausi "Heinäkuu 2022" :indeksiluku 113.3}
+                               {:kuukausi "Elokuu 2022" :indeksiluku 113.4}
+                               {:kuukausi "Syyskuu 2022" :indeksiluku 113.5}]
+        kuukausien-keskiarvo (/ (apply + (map :indeksiluku hoitokauden-kuukaudet)) (count hoitokauden-kuukaudet))
+        alkuperainen-pisteluku 112.5
+        alkuperaisen-pisteluvun-kuukausi "elokuu 2023"
+        pistelukujen-muutos 5.9
+        pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
+        indeksikorotuksen-prosenttiosuus 3.9
+        paatos (paatos-apurit/indeksikorjauspaatos urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
+                 hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                 pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
+
+        kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
+        vastaus (try
+                  (with-redefs [;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
+                                valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
@@ -1368,11 +1620,11 @@
                   (with-redefs [;; Feikataan vastaukset
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite
                                 (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                          :hoitovuoden-lopun-tavoitehinta tavoitehinta_jalkeen
+                                                          :tavoitehinta-oikaistu tavoitehinta_jalkeen
                                                           :hoitovuoden-lopun-kattohinta kattohinta}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ paatos))
+                    (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hv-lopun-tavoite-ja-kattohintapaatos +kayttaja-jvh+ paatos))
                   (catch Exception e (println "ERROR:" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     (testaa-lopun-hintapaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
@@ -1412,18 +1664,18 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)]
-    (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+    (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
 
@@ -1432,18 +1684,18 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         vastaus (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)
-        _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        _ (testaa-hoidojohtopalkkiomuutospaatos vastaus urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
             muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)
 
         ;; Poistetaan päätös
@@ -1456,28 +1708,31 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        tavoitehinta 2100000M
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M
         tarjouksen_tavoitehinta 2000000M
-        muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
+        muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
         hoidonjohtopalkkio_muutos (* hoidonjohtopalkkio muutosprosentti)
         kulu_id 1
 
-        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+        paatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
+        kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                       :tavoitehinta-oikaistu hv_lopun_indkorjaamaton_tavoitehinta}]
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] tavoitehinta)
+                                ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ paatos))
                   (catch Exception e
-                    (println "ERROR:: e" e)))
+                    (println "ERROR: e" e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoidonjohtopalkkion-muutos)]
-    (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
+    (testaa-hoidojohtopalkkiomuutospaatos tallennettu-paatos urakkaid hoitokauden-alkuvuosi hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta
       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kayttajaid)))
 
 (deftest rajapinta-hoidonjohtopalkkion-muutospaatos-poisto-onnistuu-test

@@ -9,8 +9,10 @@
             [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.transit :as transit]
+            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
@@ -27,7 +29,8 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
             [harja.views.kartta :as kartta]
-            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]))
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohdelomake :as paikkauskohdelomake]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-apurit :as paikkaukset-apurit]))
 
 (def paikkauskohteiden-tilat
   [{:nimi "Kaikki"} {:nimi "Ehdotettu"} {:nimi "Hylätty"} {:nimi "Tilattu"} {:nimi "Valmis"}])
@@ -55,157 +58,182 @@
       nakyvissa?
       toggle-fn]]))
 
-(defn- paikkauskohteet-taulukko [e! {:keys [haku-kaynnissa? nayta-vihje?] :as app}]
+(defn luo-taulukon-skeema [e! {:keys [tilaustila-aktiivinen? hae-aluekohtaiset-paikkauskohteet? valitut-tilattavat-kohteet
+                                      haku-kaynnissa?] :as app}]
   (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         nayta-hinnat? (and
                         (or (= urakkatyyppi :paallystys)
                           (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
+                            (not hae-aluekohtaiset-paikkauskohteet?)))
+                        (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+        kaikki-valittu? (= (count valitut-tilattavat-kohteet) (count (filter #(= "ehdotettu" (:paikkauskohteen-tila %)) (:paikkauskohteet app))))]
+    [(when tilaustila-aktiivinen?
+       {:otsikko-komp (fn []
+                        [kentat/raksiboksi {:disabled? false
+                                            :toiminto #(e! (t-paikkauskohteet/->ValitseKaikkiPaikkauskohteet (-> % .-target .-checked)))}
+                         kaikki-valittu?])
+        :leveys 0.6
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [kentat/raksiboksi {:disabled? (not= "ehdotettu" (:paikkauskohteen-tila rivi))
+                                           :toiminto #(e! (t-paikkauskohteet/->ValitsePaikkauskohde rivi (-> % .-target .-checked)))}
+                        (boolean (some #(= % (:id rivi)) valitut-tilattavat-kohteet))])})
+     (cond
+       ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
+       (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
+       {:otsikko "Valmistuminen"
+        :leveys 2.5
+        :nimi :loppupvm-arvio
+        :otsikkorivi-luokka "klikattava"}
+       ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
+       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
+       ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
+       ;; ei näytetä muokkaustietoa.
+       (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
+         (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+               (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+               @istunto/kayttaja)
+           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
+             (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
+       {:otsikko "Muokattu"
+        :leveys 1.7
+        :nimi :paivays
+        :fmt (fn [arvo]
+               [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])
+        :otsikkorivi-luokka "klikattava"}
+       ;; Defaulttina eli esim alueurakoitsijalle ei näytetä koko kenttää
+       :else nil)
+
+     {:otsikko "NRO"
+      :leveys 1.2
+      :nimi :ulkoinen-id
+      :otsikkorivi-luokka "klikattava"}
+     {:otsikko "Nimi"
+      :leveys 3.5
+      :nimi :nimi
+      :otsikkorivi-luokka "klikattava"}
+     {:otsikko "Tila"
+      :leveys 2
+      :nimi :paikkauskohteen-tila
+      :fmt (fn [arvo]
+             [yleiset/tila-indikaattori arvo {:fmt-fn paikkaus/fmt-tila}])
+      :solun-luokka (fn [arvo _]
+                      (str arvo "-bg"))
+      :otsikkorivi-luokka "klikattava"}
+
+     ;; Tiemerkinnän tilan indikointi
+     {:otsikko-komp (fn [_ _]
+                      [:div.tiemerkrinta-vihje.klikattava
+                       {:on-click #(e! (t-paikkauskohteet/->AvaaVihje))}
+                       "Tiemerkinnän tila " [yleiset/vihje ""]])
+      :leveys 3
+      :nimi :tiemerkinnan-tila
+      ;; Tiemerkinnällä tämä on alasveto, tasaa se vasemmalle
+      ;; Muilla urakoilla tämä on vaan teksti
+      :tasaa (if (not= urakkatyyppi :tiemerkinta) :vasen :oikea)
+      :solun-luokka (fn [arvo _rivi]
+                      ;; Korosta "käsittelemättä" sarake paikkaus urakoille
+                      (when (and
+                              (= arvo "kasittelematta")
+                              (not= urakkatyyppi :tiemerkinta))
+                        "ehdotettu-bg"))
+      :tyyppi :komponentti
+      :komponentti (fn [{:keys [tiemerkinnan-tila
+                                alasveto-valinnat paikkauskohteen-tila] :as rivi}]
+                     ;;
+                     ;; ==== Jos ei olla tiemerkintä urakassa, näytä vaan tila  ====
+                     (if (not= urakkatyyppi :tiemerkinta)
+                       [yleiset/tila-indikaattori tiemerkinnan-tila {:fmt-fn #(get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword %))}]
+
+                       ;;
+                       ;; ==== Tiemerkintä urakat voi asettaa tiemerkinnän tilan ====
+                       [:div {:on-click #(.stopPropagation %)} ;; Älä avaa lomaketta kun inffonappia painetaan
+                        [valinnat/checkbox-pudotusvalikko
+
+                         ;; Alasvedon valinnat, vectorissa, esim   [{:nimi Käsittelemättä, :arvo :kasittelematta, :valittu? false}]
+                         (remove #(= (:arvo %) :ei-tiemerkintaa) alasveto-valinnat)
+                         (fn [tila _valittu?]
+                           (e! (t-paikkauskohteet/->AsetaTiemerkinnanTila tila rivi))) ;; Muokkaa fn
+                         (get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword tiemerkinnan-tila)) ;; Alasvedon teksti
+                         ;; Komponentin optiot
+                         {:vayla-tyyli? true :disabled (or
+                                                         haku-kaynnissa?
+                                                         ;; Jos tiemerkintää ei tehdä, disabloidaan alasveto
+                                                         (= tiemerkinnan-tila "ei-tiemerkintaa")
+                                                         ;; Jos paikkauskohde ei ole valmis, ei voida asettaa tiemerkinnän tilaa vielä
+                                                         (not= paikkauskohteen-tila "valmis"))}]]))}
+
+     {:otsikko "Menetelmä"
+      :leveys 4
+      :nimi :tyomenetelma
+      :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)
+      :solun-luokka (fn [arvo _]
+                      ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
+                      ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
+                      ;; soluun rivitettynä
+                      (when (> (count (paikkaus/tyomenetelma-id->nimi arvo tyomenetelmat)) 40)
+                        "grid-solulle-2-rivia"))
+      :otsikkorivi-luokka "klikattava"}
+     {:otsikko "Aikataulu"
+      :leveys 2.1
+      :nimi :formatoitu-aikataulu
+      :fmt (fn [arvo]
+             [:span {:class (if (str/includes? arvo "arv")
+                              "prosessi-kesken"
+                              "")} arvo])
+      :otsikkorivi-luokka "klikattava"}
+     {:otsikko "Sijainti"
+      :leveys 2.3
+      :nimi :formatoitu-sijainti
+      :otsikkorivi-luokka "klikattava"}
+     ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
+     ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
+     ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
+     (when nayta-hinnat?
+       {:otsikko "Suunn. hinta"
+        :leveys 1.8
+        :nimi :suunniteltu-hinta
+        :fmt fmt/euro-opt
+        :tasaa :oikea
+        :otsikkorivi-luokka "klikattava"})
+     ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
+     (when nayta-hinnat?
+       {:otsikko "Tot. hinta"
+        :leveys 1.8
+        :nimi :toteutunut-hinta
+        :fmt fmt/euro-opt
+        :tasaa :oikea
+        :otsikkorivi-luokka "klikattava"})
+     ;; Jos ei ole oikeuksia nähdä hintatietoja, niin näytetään yhteystiedot
+     (when (not nayta-hinnat?)
+       {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
+        :leveys 3
+        :nimi :yhteystiedot
+        :tasaa :keskita
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       [:span
+                        [:span {:style {:padding-right "24px"}}
+                         (:urakoitsija rivi)]
+                        [napit/yleinen-toissijainen ""
+                         #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
+                         {:ikoni (ikonit/user)
+                          :luokka "btn-xs"}]])
+        :otsikkorivi-luokka "klikattava"})]))
+
+
+(defn- paikkauskohteet-taulukko [e! {:keys [haku-kaynnissa? nayta-vihje? tilaustila-aktiivinen? valitut-tilattavat-kohteet] :as app}]
+  (let [urakkatyyppi (-> @tila/tila :yleiset :urakka :tyyppi)
+        nayta-hinnat? (and
+                        (or (= urakkatyyppi :paallystys)
+                          (and (or (= urakkatyyppi :hoito) (= urakkatyyppi :teiden-hoito))
                             (not (:hae-aluekohtaiset-paikkauskohteet? app))))
                         (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-        skeema [(cond
-                  ;; Tiemerkintäurakoitsijalle näytetään valmistusmipäivä, eikä muokkauspäivää
-                  (= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
-                  {:otsikko "Valmistuminen"
-                   :leveys 2.5
-                   :nimi :loppupvm-arvio
-                   :otsikkorivi-luokka "klikattava"}
-                  ;; Tilaajalle näytetään ja päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
-                  ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
-                  ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
-                  ;; ei näytetä muokkaustietoa.
-                  (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                    (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
-                          (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-                          @istunto/kayttaja)
-                      (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
-                        (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
-                  {:otsikko "Muokattu"
-                   :leveys 1.7
-                   :nimi :paivays
-                   :fmt (fn [arvo]
-                          [:span {:style {:color "#646464"}} (pvm/pvm-aika-opt arvo)])
-                   :otsikkorivi-luokka "klikattava"}
-                  ;; Defaulttina eli esim alueurakoitsijalle ei näytetä koko kenttää
-                  :else nil)
 
-                {:otsikko "NRO"
-                 :leveys 1.5
-                 :nimi :ulkoinen-id
-                 :otsikkorivi-luokka "klikattava"}
-                {:otsikko "Nimi"
-                 :leveys 3.5
-                 :nimi :nimi
-                 :otsikkorivi-luokka "klikattava"}
-                {:otsikko "Tila"
-                 :leveys 2
-                 :nimi :paikkauskohteen-tila
-                 :fmt (fn [arvo]
-                        [yleiset/tila-indikaattori arvo {:fmt-fn paikkaus/fmt-tila}])
-                 :solun-luokka (fn [arvo _]
-                                 (str arvo "-bg"))
-                 :otsikkorivi-luokka "klikattava"}
-
-                ;; Tiemerkinnän tilan indikointi
-                {:otsikko-komp (fn [_ _]
-                                 [:div.tiemerkrinta-vihje.klikattava
-                                  {:on-click #(e! (t-paikkauskohteet/->AvaaVihje))}
-                                  "Tiemerkinnän tila " [yleiset/vihje ""]])
-                 :leveys 4
-                 :nimi :tiemerkinnan-tila
-                 ;; Tiemerkinnällä tämä on alasveto, tasaa se vasemmalle
-                 ;; Muilla urakoilla tämä on vaan teksti 
-                 :tasaa (if (not= urakkatyyppi :tiemerkinta) :vasen :oikea)
-                 :solun-luokka (fn [arvo _rivi]
-                                 ;; Korosta "käsittelemättä" sarake paikkaus urakoille
-                                 (when (and
-                                         (= arvo "kasittelematta")
-                                         (not= urakkatyyppi :tiemerkinta))
-                                   "ehdotettu-bg"))
-                 :tyyppi :komponentti
-                 :komponentti (fn [{:keys [tiemerkinnan-tila
-                                           alasveto-valinnat paikkauskohteen-tila] :as rivi}]
-                                ;;
-                                ;; ==== Jos ei olla tiemerkintä urakassa, näytä vaan tila  ====
-                                (if (not= urakkatyyppi :tiemerkinta)
-                                  [yleiset/tila-indikaattori tiemerkinnan-tila {:fmt-fn #(get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword %))}]
-
-                                  ;;
-                                  ;; ==== Tiemerkintä urakat voi asettaa tiemerkinnän tilan ====
-                                  [:div {:on-click #(.stopPropagation %)} ;; Älä avaa lomaketta kun inffonappia painetaan
-                                   [valinnat/checkbox-pudotusvalikko
-
-                                    ;; Alasvedon valinnat, vectorissa, esim   [{:nimi Käsittelemättä, :arvo :kasittelematta, :valittu? false}]
-                                    (remove #(= (:arvo %) :ei-tiemerkintaa) alasveto-valinnat)
-                                    (fn [tila _valittu?]
-                                      (e! (t-paikkauskohteet/->AsetaTiemerkinnanTila tila rivi))) ;; Muokkaa fn 
-                                    (get t-paikkauskohteet/tiemerkinta-tila-valinnat (keyword tiemerkinnan-tila)) ;; Alasvedon teksti
-                                    ;; Komponentin optiot
-                                    {:vayla-tyyli? true :disabled (or
-                                                                    haku-kaynnissa?
-                                                                    ;; Jos tiemerkintää ei tehdä, disabloidaan alasveto
-                                                                    (= tiemerkinnan-tila "ei-tiemerkintaa")
-                                                                    ;; Jos paikkauskohde ei ole valmis, ei voida asettaa tiemerkinnän tilaa vielä 
-                                                                    (not= paikkauskohteen-tila "valmis"))}]]))}
-
-                {:otsikko "Menetelmä"
-                 :leveys 4
-                 :nimi :tyomenetelma
-                 :fmt #(paikkaus/tyomenetelma-id->nimi % tyomenetelmat)
-                 :solun-luokka (fn [arvo _]
-                                 ;; On olemassa niin pitkiä työmenetelmiä, että ne eivät mahdu soluun
-                                 ;; Joten lisätään näille pitkille menetelmille class joka saa ne mahtumaan
-                                 ;; soluun rivitettynä
-                                 (when (> (count (paikkaus/tyomenetelma-id->nimi arvo tyomenetelmat)) 40)
-                                   "grid-solulle-2-rivia"))
-                 :otsikkorivi-luokka "klikattava"}
-                {:otsikko "Aikataulu"
-                 :leveys 2.3
-                 :nimi :formatoitu-aikataulu
-                 :fmt (fn [arvo]
-                        [:span {:class (if (str/includes? arvo "arv")
-                                         "prosessi-kesken"
-                                         "")} arvo])
-                 :otsikkorivi-luokka "klikattava"}
-                {:otsikko "Sijainti"
-                 :leveys 2.5
-                 :nimi :formatoitu-sijainti
-                 :otsikkorivi-luokka "klikattava"}
-                ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
-                ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
-                (when nayta-hinnat?
-                  {:otsikko "Suunn. hinta"
-                   :leveys 1.7
-                   :nimi :suunniteltu-hinta
-                   :fmt fmt/euro-opt
-                   :tasaa :oikea
-                   :otsikkorivi-luokka "klikattava"})
-                ;; Jos ei ole oikeuksia nähdä hintatietoja, niin ei näytetä niitä
-                (when nayta-hinnat?
-                  {:otsikko "Tot. hinta"
-                   :leveys 1.7
-                   :nimi :toteutunut-hinta
-                   :fmt fmt/euro-opt
-                   :tasaa :oikea
-                   :otsikkorivi-luokka "klikattava"})
-                ;; Jos ei ole oikeuksia nähdä hintatietoja, niin näytetään yhteystiedot
-                (when (not nayta-hinnat?)
-                  {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
-                   :leveys 3
-                   :nimi :yhteystiedot
-                   :tasaa :keskita
-                   :tyyppi :komponentti
-                   :komponentti (fn [rivi]
-                                  [:span
-                                   [:span {:style {:padding-right "24px"}}
-                                    (:urakoitsija rivi)]
-                                   [napit/yleinen-toissijainen ""
-                                    #(yllapito-yhteyshenkilot/nayta-paikkauskohteen-yhteyshenkilot-modal! (:urakka-id rivi))
-                                    {:ikoni (ikonit/user)
-                                     :luokka "btn-xs"}]])
-                   :otsikkorivi-luokka "klikattava"})]
+        skeema (luo-taulukon-skeema e! app)
         paikkauskohteet (:paikkauskohteet app)
+        skeema-filteroitu (filter some? skeema)
         yht-suunniteltu-hinta (reduce (fn [summa kohde]
                                         (+ summa (:suunniteltu-hinta kohde)))
                                 0
@@ -221,47 +249,74 @@
     ;; Riippuen vähän roolista, taulukossa on enemmän dataa tai vähemmän dataa.
     ;; Niinpä kavennetaan sitä hieman, jos siihen tulee vähemmän dataa, luettavuuden parantamiseksi
     [:div.col-xs-12.col-md-12.col-lg-12.paikkauskohde-nakyma
+     [paikkaukset-apurit/raportointi-modal! e! app]
+     [paikkaukset-apurit/tilaa-paikkauskohteet-modal! e! app]
      [grid/grid
       (merge {:sivuta 25
               :tunniste :id
               :otsikko [:div
                         (when-not aluekohtaisissa?
-                          [:div.flex-row.tasaa-alas
-                           (when-not haku-kaynnissa?
-                             [:h2 {:style {:white-space "nowrap"}} (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
-                           (when (and
-                                   (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
-                                   (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
-                             [:div.flex-row {:style {:justify-content "flex-end"}}
-                              (when loytyi-kohteita?
-                                [:span.inline-block
-                                 [:form {:style {:margin-left "auto"}
-                                         :target "_blank" :method "POST"
-                                         :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
-                                  [:input {:type "hidden" :name "parametrit"
-                                           :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
-                                                                         :tila (:valittu-tila app)
-                                                                         :elyt (:valitut-elyt app)
-                                                                         :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
-                                                                         :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
-                                                                         :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
-                                  [:button {:type "submit"
-                                            :class #{"nappi-toissijainen"}}
-                                   [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]])
+                          [:div
+                           [:div.flex-row.tasaa-alas
+                            (when-not haku-kaynnissa?
+                              [:h2 {:style {:white-space "nowrap"}} (str kohteet-count (if (= kohteet-count 1) " paikkauskohde" " paikkauskohdetta"))])
+                            (when (and
+                                    (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta) ;; Tiemerkintäurakoitsijalle ei näytetä nappeja
+                                    (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id)))
+                              [:div.flex-row {:style {:justify-content "flex-end"}}
+                               (when loytyi-kohteita?
+                                 [:span.inline-block
+                                  [:form {:style {:margin-left "auto"}
+                                          :target "_blank" :method "POST"
+                                          :action (komm/excel-url :paikkauskohteet-urakalle-excel)}
+                                   [:input {:type "hidden" :name "parametrit"
+                                            :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                                                                          :tila (:valittu-tila app)
+                                                                          :evkt (:valitut-evkt app)
+                                                                          :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
+                                                                          :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
+                                                                          :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
+                                   [:button {:type "submit"
+                                             :class #{"nappi-toissijainen"}}
+                                    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]])
 
-                              [liitteet/lataa-tiedosto
-                               {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-                               {:nappi-teksti "Tuo kohteet Excelistä"
-                                :url "lue-paikkauskohteet-excelista"
-                                :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
-                                :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
-                              [yleiset/tiedoston-lataus-linkki
-                               "Lataa Excel-pohja"
-                               "/excel/harja_paikkauskohteet_pohja.xlsx"
-                               {:luokat ["padding-top-8"]}]
-                              [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
-                               {:paksu? true
-                                :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])])
+                               [liitteet/lataa-tiedosto
+                                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                                {:nappi-teksti "Tuo kohteet Excelistä"
+                                 :url "lue-paikkauskohteet-excelista"
+                                 :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+                                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+                               [yleiset/tiedoston-lataus-linkki
+                                "Lataa Excel-pohja"
+                                "/excel/harja_paikkauskohteet_pohja.xlsx"
+                                {:luokat ["padding-top-8"]}]
+                               [napit/yleinen-toissijainen
+                                "Tilaa kohteita"
+                                #(e! (t-paikkauskohteet/->TilaustilaAktivoituToggle))
+                                {:paksu? true
+                                 :disabled tilaustila-aktiivinen?
+                                 :data-attributes {:data-cy "tilaa-paikkauskohteita"}}]
+                               [napit/uusi "Lisää kohde" #(e! (t-paikkauskohteet/->AvaaLomake {:tyyppi :uusi-paikkauskohde}))
+                                {:paksu? true
+                                 :data-attributes {:data-cy "lisaa-paikkauskohde"}}]])]
+                           ;; Vihje tilaustilan ollessa päällä
+                           (when tilaustila-aktiivinen?
+                             [:div.tilaa-kohteita-vihje {:id "tilaa-kohteita-vihje"}
+                              [:h3.otsikko "Tilaa kohteita"]
+                              [:div.flex-row.alkuun
+                               [:p.valitut-maara
+                                (str "Kohteita valittu yhteensä "
+                                  (count valitut-tilattavat-kohteet)
+                                  " kpl.")]]
+                              [:div.flex-row.alkuun.napit
+                               [napit/yleinen-ensisijainen "Tee tilaus"
+                                #(e! (t-paikkauskohteet/->RaportointitapaModalToggle))
+                                {:paksu? true
+                                 :disabled (zero? (count valitut-tilattavat-kohteet))
+                                 :data-attributes {:data-cy "tee-tilaus"}}]
+                               [napit/peruuta "Peruuta"
+                                #(e! (t-paikkauskohteet/->TilaustilaAktivoituToggle))
+                                {:paksu? true}]]])])
                         ;; Gridin päällä oleva vihje tiemerkinnöille
                         [tiemerkinta-tila-vihje nayta-vihje? urakkatyyppi #(e! (t-paikkauskohteet/->AvaaVihje))]]
               :tyhja (if haku-kaynnissa?
@@ -314,7 +369,9 @@
         (when (> (count paikkauskohteet) 0)
           {:rivi-jalkeen-fn (fn [_rivit]
                               ^{:luokka "yhteenveto"}
-                              [{:teksti "Yht."}
+                              [(when tilaustila-aktiivinen?
+                                 {:teksti ""})
+                               {:teksti "Yht."}
                                {:teksti ""}
                                {:teksti (str (count paikkauskohteet) " kohdetta")}
                                (cond
@@ -341,7 +398,7 @@
                                  {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-suunniteltu-hinta)]})
                                (when nayta-hinnat?
                                  {:teksti [:div.tasaa-oikealle {:style {:margin-right "-12px"}} (fmt/euro-opt yht-tot-hinta)]})])}))
-      skeema
+      skeema-filteroitu
       paikkauskohteet]]))
 
 (defn- filtterit [e! {:keys [haku-kaynnissa?] :as app}]
@@ -350,16 +407,16 @@
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         valitut-tilat (:valitut-tilat app)
         valittu-vuosi (:valittu-vuosi app)
-        valitut-elyt (:valitut-elyt app)
+        valitut-evkt (:valitut-evkt app)
         valitut-tyomenetelmat (:valitut-tyomenetelmat app)
-        valittavat-elyt (conj
+        valittavat-evkt (conj
                           (map (fn [h]
                                  (-> h
                                    (dissoc h :alue :type :liikennemuoto)
-                                   (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                   (assoc :valittu? (or (some #(= (:id h) %) valitut-evkt) ;; Onko kyseinen evk valittu
                                                       false))))
                             @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+                          {:id 0 :nimi "Kaikki" :evknumero 0 :valittu? (some #(= 0 %) valitut-evkt)})
         valittavat-tyomenetelmat (map (fn [t]
                                         {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
                                          :id (::paikkaus/tyomenetelma-id t)
@@ -373,15 +430,15 @@
                            paikkauskohteiden-tilat)]
     [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
 
-     ;; Tiemerkintäurakalle ja hoito ei haluta näyttää elyrajauksia.
+     ;; Tiemerkintäurakalle ja hoito ei haluta näyttää evkrajauksia.
      (when (and
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
        [:div.col-xs-2
-        [:label {:class "alasvedon-otsikko" :for "filtteri-ely"} "ELY"]
-        [valinnat/checkbox-pudotusvalikko valittavat-elyt (fn [ely valittu?]
-                                                            (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-         [" ELY valittu" " ELYä valittu"]
+        [:label {:class "alasvedon-otsikko" :for "filtteri-evk"} "Elinvoimakeskus"]
+        [valinnat/checkbox-pudotusvalikko valittavat-evkt (fn [evk valittu?]
+                                                            (e! (t-paikkauskohteet/->FiltteriValitseElinvoimakeskus evk valittu?)))
+         [" Elinvoimakeskus valittu" " Elinvoimakeskusta valittu"]
          {:vayla-tyyli? true}]])
 
      ;; Kohteen tila 
@@ -441,7 +498,8 @@
          (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row
-       [paikkauskohteet-sivu e! app]])))
+       [paikkauskohteet-sivu e! app]
+       [debug/debug app]])))
 
 (defn paikkauskohteet [e! app-state]
   (swap! tila/paikkauskohteet assoc :hae-aluekohtaiset-paikkauskohteet? false)

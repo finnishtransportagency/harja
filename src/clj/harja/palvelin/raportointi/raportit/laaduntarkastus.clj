@@ -13,11 +13,11 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [clojure.string :as str]))
 
-(defn hae-tarkastukset [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
+(defn hae-tarkastukset [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm tienumero
                                    laadunalitus]}]
   (tarkastukset-q/hae-laaduntarkastukset db
                                          {:urakka urakka-id
-                                          :hallintayksikko hallintayksikko-id
+                                          :elinvoimakeskus elinvoimakeskus-id
                                           :alku alkupvm
                                           :loppu loppupvm
                                           :tienumero tienumero
@@ -52,15 +52,15 @@
 (defn- formatoi-vakiohavainnot [vakiohavainnot]
   (str (clojure.string/join ", " vakiohavainnot) (when-not (empty? vakiohavainnot) ", ")))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
                                (hae-tarkastukset
                                 db user {:konteksti konteksti
                                     :urakka-id urakka-id
-                                    :hallintayksikko-id hallintayksikko-id
+                                    :elinvoimakeskus-id elinvoimakeskus-id
                                     :alkupvm alkupvm
                                     :loppupvm loppupvm
                                     :tienumero tienumero
@@ -74,7 +74,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape

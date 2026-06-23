@@ -374,15 +374,19 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo) "nimi:" (pr-str nimi))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
             tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
             aputeksti (get lomakkeen-opts :aputeksti)
             kentta (cond
-                     (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                   :data              data} komponentti-args)]
+                     (= tyyppi :komponentti) (let [sisalto (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data              data} komponentti-args)]
+                                               (if muokattava?
+                                                 [:div.komponentti sisalto]
+                                                 [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
+                                                  sisalto]))
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
                                                                               komponentti-args))]
@@ -432,67 +436,67 @@ ja kaikki pakolliset kentät on täytetty"
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
+  [{:keys [palstoja nimi otsikko label-for-id tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
-  
-  [:div.form-group {:class (str 
-                             ;; Korostaa input/tekstikentän reunat, jos on virhe
-                             (when (some? virheet) "lomake-validointivirhe ")
-                             (or
-                                  ;; salli skeeman ylikirjoittaa ns-avaimella
-                                  (::col-luokka s)
-                                  col-luokka
-                                  (case (or palstoja 1)
-                                    1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                    2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
-                                    3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
-                                (when (and pakollinen? muokattava?)
-                                  " required")
-                                (when-not (empty? virheet)
-                                  " sisaltaa-virheen")
-                                (when-not (empty? varoitukset)
-                                  " sisaltaa-varoituksen")
-                                (when-not (empty? huomautukset)
-                                  " sisaltaa-huomautuksen"))}
-   [:div {:class (yleiset/luokat
-                   (when sisallon-leveys?
-                     "sisallon-leveys lomake-kentan-leveys")
-                   (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row"))}
-    (when-not (or (+piilota-label+ tyyppi)
-                  piilota-label?)
-      [:label.control-label
-       (merge {:for nimi} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
-       [:span
-        [:span.kentan-label
-         (if tyhja-otsikko?
-           (gstring/unescapeEntities "&nbsp;")
-           otsikko)]
-        (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
-     (as-> opts opts
-           (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
-           (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
-           (assoc opts :muokattu? muokattu?)
-           (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
+  (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
+    [:div.form-group {:class (str
+                               ;; Korostaa input/tekstikentän reunat, jos on virhe
+                               (when (some? virheet) "lomake-validointivirhe ")
+                               (or
+                                 ;; salli skeeman ylikirjoittaa ns-avaimella
+                                 (::col-luokka s)
+                                 col-luokka
+                                 (case (or palstoja 1)
+                                   1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                   2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                   3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
+                               (when (and pakollinen? muokattava?)
+                                 " required")
+                               (when-not (empty? virheet)
+                                 " sisaltaa-virheen")
+                               (when-not (empty? varoitukset)
+                                 " sisaltaa-varoituksen")
+                               (when-not (empty? huomautukset)
+                                 " sisaltaa-huomautuksen"))}
+     [:div {:class (yleiset/luokat
+                     (when sisallon-leveys?
+                       "sisallon-leveys lomake-kentan-leveys")
+                     (when kaariva-luokka kaariva-luokka)
+                     (when label-ja-kentta-samalle-riville? "flex-row"))}
+      (when-not (or (+piilota-label+ tyyppi)
+                    piilota-label?)
+        [:label.control-label
+         (merge {:for kentan-id} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
+         [:span
+          [:span.kentan-label
+           (if tyhja-otsikko?
+             (gstring/unescapeEntities "&nbsp;")
+             otsikko)]
+          (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
+      [kentan-input (merge s {:elementin-id kentan-id}) data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
+       (as-> opts opts
+         (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
+         (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+         (assoc opts :muokattu? muokattu?)
+         (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
-    (when (and muokattu?
-               (not (empty? virheet)))
-      [virheen-ohje virheet :virhe virhe-optiot])
-    (when (:virheteksti s)
-      [virheen-ohje (if-not (vector? (:virheteksti s))
-                      (conj [] (:virheteksti s))
-                      (:virheteksti s)) :virhe virhe-optiot])
-    (when (and muokattu?
-               (not (empty? varoitukset)))
-      [virheen-ohje varoitukset :varoitus virhe-optiot])
-    (when (and muokattu?
-               (not (empty? huomautukset)))
-      [virheen-ohje huomautukset :huomautus virhe-optiot])
+      (when (and muokattu?
+              (not (empty? virheet)))
+        [virheen-ohje virheet :virhe virhe-optiot])
+      (when (:virheteksti s)
+        [virheen-ohje (if-not (vector? (:virheteksti s))
+                        (conj [] (:virheteksti s))
+                        (:virheteksti s)) :virhe virhe-optiot])
+      (when (and muokattu?
+              (not (empty? varoitukset)))
+        [virheen-ohje varoitukset :varoitus virhe-optiot])
+      (when (and muokattu?
+              (not (empty? huomautukset)))
+        [virheen-ohje huomautukset :huomautus virhe-optiot])
 
-    [kentan-vihje s]]])
+      [kentan-vihje s]]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
@@ -794,11 +798,12 @@ ja kaikki pakolliset kentät on täytetty"
                      (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
-                        (if-let [nappi (get-in otsikko [:optiot :nappi])]
-                          [:div.lomake-ryhman-otsikko.napilla
-                           [:h3 (:otsikko otsikko)]
-                           nappi]
-                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)])
+                        (when (:otsikko otsikko)            ;; Ei tehdä tyhjää otsikkoa, jos se on nil
+                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
+                           [:div.lomake-ryhman-otsikko.napilla
+                            [:h3 (:otsikko otsikko)]
+                            nappi]
+                           [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]))
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))

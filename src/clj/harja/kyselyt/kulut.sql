@@ -366,3 +366,68 @@ SELECT k.id                        AS "kulu-id",
  WHERE u.id = :urakka-id
  GROUP BY k.id, k.laskun_numero, k.lisatieto, k.poistettu, k.koontilaskun_kuukausi, k.erapaiva, k.kokonaissumma
  ORDER BY k.erapaiva;
+
+-- name: hae-urakan-laskutusraja
+SELECT ut.laskutusraja,
+       up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+  FROM urakka_tavoite ut
+       LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
+ WHERE ut.urakka     = :urakka-id
+   AND ut.hoitokausi = :hoitokausinro;
+
+-- name: hae-urakan-alkuperainen-laskutusraja
+SELECT ut.laskutusraja_alkuperainen,
+       up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
+WHERE ut.urakka     = :urakka-id
+  AND ut.hoitokausi = :hoitokausinro;
+
+-- name: paivita-urakan-laskutusraja!
+UPDATE urakka_tavoite
+SET laskutusraja = :laskutusraja,
+    muokattu     = CURRENT_TIMESTAMP,
+    muokkaaja    = :kayttaja
+WHERE urakka     = :urakka-id
+  AND hoitokausi = :hoitokausinro;
+
+-- name: hae-urakan-toteutuneet-kustannukset
+-- Hakee urakan toteutuneet kustannukset annetulta aikaväliltä
+-- Tehtäväryhmä haetaan tehtava-taulun kautta, jos sitä ei ole toteutuneet_kustannukset-taulussa
+SELECT NULL                       AS "maksuera-numero",
+       NULL                       AS "maksuera-alias",
+       tk.id                      AS "id",
+       tk.summa                   AS "kokonaissumma",
+       make_date(tk.vuosi, tk.kuukausi, 1) AS "erapaiva",
+       NULL                       AS "laskun-numero",
+       tk.kuukausi                AS "koontilaskun-kuukausi",
+       'Harjan automaattisesti luoma kulu.'     AS "lisatieto",
+       tk.id                      AS "kohdistus-id",
+       1                          AS "rivi",
+       tk.summa_indeksikorjattu   AS "summa",
+       tk.toimenpideinstanssi     AS "toimenpideinstanssi",
+       tr.id                      AS "tehtavaryhma",
+       NULL                       AS "lisatyon-lisatieto",
+       'kokonaishintainen'::maksueratyyppi AS "maksueratyyppi",
+       NULL                       AS rahavaraus,
+       tk.tyyppi                  AS tyyppi,
+       tk.tehtava                 AS "tehtava_id",
+       t.nimi                     AS "tehtava_nimi",
+       false                      AS "muu-tehtava-kaytossa",
+       NULL                       AS "muutos-id",
+       NULL                       AS "muutos-voimassa-alkaen",
+       NULL                       AS "muutos-nimi",
+       true                       AS "harjan-generoima"
+  FROM toteutuneet_kustannukset tk
+       LEFT JOIN tehtava t ON tk.tehtava = t.id
+       LEFT JOIN tehtavaryhma tr ON COALESCE(tk.tehtavaryhma, t.tehtavaryhma) = tr.id
+ WHERE tk.urakka_id = :urakka
+   AND (:alkupvm::DATE IS NULL OR :alkupvm::DATE <= make_date(tk.vuosi, tk.kuukausi, 1))
+   AND (:loppupvm::DATE IS NULL OR make_date(tk.vuosi, tk.kuukausi, 1) <= :loppupvm::DATE);
+
+-- name: hae-kaikkien-tehtavaryhmien-nimet
+-- Tarvitaan Kulujen kohdistus -näkymän generoitujen kulujen tehtäväryhmien nimien näyttämistä varten,
+-- jotta saadaan myös Johto- ja hallintokorvaus -tehtäväryhmän nimi näkyviin
+SELECT tr.id                      AS "tehtavaryhma",
+       tr.nimi                    AS "tehtavaryhma_nimi"
+FROM tehtavaryhma tr;

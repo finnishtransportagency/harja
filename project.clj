@@ -10,7 +10,7 @@
   :pedantic? false
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [org.clojure/clojurescript "1.10.764"]
-                 [org.clojure/spec.alpha "0.5.238"]
+                 [org.clojure/spec.alpha "0.6.249"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -18,7 +18,7 @@
                  [org.clojure/core.async "1.6.681"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "1.0.333"]
+                 [com.cognitect/transit-clj "1.1.357"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -28,44 +28,44 @@
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki palvelimen komponenttien hallintaan
-                 [com.stuartsierra/component "1.1.0"]
+                 [com.stuartsierra/component "1.2.0"]
 
                  ;; -- Lokitus / assertointi / virheiden käsittely
                  ;;   Taoensson kirjastoissa täytyy ottaa huomioon, että ne käyttävät yhdessä Encore ja Truss -kirjastoja
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.1.1"]
+                 [com.taoensso/truss "2.3.0"]
 
                  ;; Lokitus
-                 [com.taoensso/timbre "6.7.1"]
+                 [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.25.1"]
+                 [org.apache.logging.log4j/log4j-core "2.26.0"]
 
                  ;; --
 
                  ;; -- Metriikkadata
-                 [org.clojure/java.jmx "1.1.0"]
+                 [org.clojure/java.jmx "1.1.1"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "6.0.0"]
+                 [cheshire "6.2.0"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.49"]
-                 [http-kit "2.8.0"]
+                 [http-kit "2.8.1"]
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.14.2"]
+                 [ring/ring-core "1.15.4"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.1.234"]
-                 [org.clojure/core.memoize "1.1.266"]
+                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
-                 [org.clojure/core.match "1.1.0"]
+                 [org.clojure/core.match "1.1.1"]
 
                  ;; Todennus / kirjautumisen allekirjoituksen varmistus 
                  ;; Täältä tulee java kirjaston kautta jwt signaturen vahvistus, joka tehdään käyttäjän tullessa Harjaan
@@ -74,20 +74,20 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.9"]
+                 [org.postgresql/postgresql "42.7.11"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.11.2"]
+                 [com.mchange/c3p0 "0.14.1"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "33.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "33.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "33.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "33.3" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.0" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.7" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -125,16 +125,16 @@
                  [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "5.4.1"]
-                 [org.apache.poi/poi-scratchpad "5.4.1"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "5.4.1"] ;; .xlsx tiedoston lukua varten
-                 [org.clojure/data.json "2.5.1"]
+                 [org.apache.poi/poi "5.5.1"]
+                 [org.apache.poi/poi-scratchpad "5.5.1"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "5.5.1"] ;; .xlsx tiedoston lukua varten
+                 [org.clojure/data.json "2.5.2"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
                  [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
-                 [net.coobird/thumbnailator "0.4.20"]
+                 [net.coobird/thumbnailator "0.4.21"]
 
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.7.4"]
@@ -149,10 +149,10 @@
                  [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.15"]
+                 [org.apache.ant/ant "1.10.17"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.21.0"]
+                 [dk.ative/docjure "1.22.0"]
 
                  ;; -- Front-end tilan hallinta
                  [webjure/tuck "20181204"]
@@ -167,18 +167,18 @@
                  ;; data.xml tarvitaan mm. XML-tiedostojen parsimiseen ja pretty-printtaukseen
                  [org.clojure/data.xml "0.0.8"]]
 
-  :managed-dependencies [[org.apache.poi/poi "5.4.1"]
-                         [org.apache.poi/poi-scratchpad "5.4.1"]
-                         [org.apache.poi/poi-ooxml "5.4.1"]
+  :managed-dependencies [[org.apache.poi/poi "5.5.1"]
+                         [org.apache.poi/poi-scratchpad "5.5.1"]
+                         [org.apache.poi/poi-ooxml "5.5.1"]
                          ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
                          ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
                          ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
                          ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.27.1"]
+                         [org.apache.commons/commons-compress "1.28.0"]
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.18.0"]]
+                         [commons-codec "1.22.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
@@ -193,7 +193,7 @@
                  ]
 
   :plugins [[lein-cljsbuild "1.1.8"]
-            [lein-ancient "0.7.0"]
+            [lein-ancient "1.0.0"]
             [lein-codox "0.10.8" :exclusions [org.clojure/clojure]]
             [lein-auto "0.1.3"]
             [lein-doo "0.1.11" :exclusions [org.clojure/clojure]]]

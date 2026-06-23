@@ -1,12 +1,12 @@
 (ns harja.views.urakka
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
   (:require [harja.ui.bootstrap :as bs]
+            [harja.pvm :as pvm]
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
             [harja.views.urakka.yllapitokohteet.kustannukset-nakyma :as kustannukset-nakyma]
-            [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
@@ -38,7 +38,7 @@
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id alkupvm] :as urakka}]
   (case valilehti
     :yleiset true
     :suunnittelu (and
@@ -139,11 +139,6 @@
                                (oikeudet/urakat-tiemerkinta-kustannukset id)
                                (= tyyppi :tiemerkinta))
 
-    :paikkaukset-mpu (and
-                       (oikeudet/urakat-paikkaukset id)
-                       (= tyyppi :paallystys)
-                       (= :mpu sopimustyyppi))
-
     :valikatselmus (and
                      (oikeudet/urakat-kulut-valikatselmus id)
                      (= tyyppi :teiden-hoito))
@@ -155,9 +150,13 @@
 
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
-                     (k/kehitysymparistossa?)
-                     (= tyyppi :teiden-hoito))
+                     (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+                     (= tyyppi :teiden-hoito)
+                     ;; Älä näytä ollenkaan alle 25 urakoille toistaiseksi 
+                     (or
+                       ;; Näytä kuitenkin kehitysympäristössä
+                       (k/kehitysymparistossa?)
+                       (>= (pvm/vuosi alkupvm) 2025)))
     false))
 
 (defn urakka
@@ -285,25 +284,11 @@
          ^{:key "paallystykset"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-       (if (= sopimustyyppi :mpu)
-         "Muut paikkaukset"
-         "Paikkaukset")
+       "Paikkaukset"
        :paikkaukset-yllapito
        (when (valilehti-mahdollinen? :paikkaukset-yllapito ur)
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])
-
-       "Reikäpaikkaukset"
-       :paikkaukset-mpu
-       (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
-         ^{:key "paikkaukset-mpu"}
-         [reikapaikkaukset/reikapaikkaukset ur])
-
-       "Kustannukset"
-       :kustannukset
-       (when (valilehti-mahdollinen? :kustannukset ur)
-         ^{:key "kustannukset"}
-         [kustannukset-nakyma/kustannukset])
 
        "Laadunseuranta"
        :laadunseuranta

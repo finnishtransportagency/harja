@@ -156,9 +156,6 @@
     (let [urakka-id @oulun-alueurakan-2014-2019-id
           oulu-liik-ymp-hoito-tpi-id (hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id)
           vesakonraivaus-tpk-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha';"))
-          _ (println "q:: " "SELECT id FROM muutoshintainen_tyo WHERE urakka = " urakka-id
-              " AND sopimus = " @oulun-alueurakan-2014-2019-paasopimuksen-id
-              " AND tehtava = " vesakonraivaus-tpk-id ";")
           oulu-vesakonraivaus-muutoshinta-id (ffirst (q "SELECT id FROM muutoshintainen_tyo WHERE urakka = " urakka-id
                                                        " AND sopimus = " @oulun-alueurakan-2014-2019-paasopimuksen-id
                                                        " AND tehtava = " vesakonraivaus-tpk-id ";"))

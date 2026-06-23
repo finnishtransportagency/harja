@@ -1257,10 +1257,10 @@
           
           ;; Lisää tehtävä ja määrä muutokseen  
           _ (t/u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo 
-                          (muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara) 
-                          VALUES (%s, %s, %s, %s, %s, %s)" 
-                   muutos-id suolaus-tehtava-id hk-alkuvuosi tarjous-maara muutos-maara (+ tarjous-maara muutos-maara)))
-          
+                          (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
+                          VALUES (%s, %s, %s, %s)"
+                   muutos-id suolaus-tehtava-id hk-alkuvuosi muutos-maara))
+
           ;; Hae käyttöraja
           hakutulos (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                       :hae-talvisuolan-kayttorajat t/+kayttaja-jvh+

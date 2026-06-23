@@ -1,6 +1,7 @@
 (ns harja.views.urakka.kulut.mhu-kustannusten-seuranta
   "Urakan 'Toteumat' välilehden Määrien toteumat osio"
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
+            [reagent.core :refer [atom] :as r]
             [clojure.string :as str]
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
@@ -18,6 +19,7 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.tyokalut.big :as big]
             [harja.ui.ikonit :as ikonit]
+            [harja.views.urakka.kulut.kulut :as kulut]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]))
 
 (defn fmt->big
@@ -461,6 +463,15 @@
            (vuoden-paattamiskulu-rivi kattohinnan-ylitys))
          (paaryhman-rivitys e! app "Lisätyöt" :lisatyo lisatyo rivit-paaryhmittain false true)]]]]]))
 
+(defn laskutusraja-wrapper
+  "Wrapper-komponentti joka käyttää laskutus-kohdistetut-kulut -tilaa laskutusrajalle"
+  [e! app valittu-hoitokausi hoitokaudet valittu-kuukausi]
+  [tuck/tuck tila/laskutus-kohdistetut-kulut
+   (fn [e! kulut-app]
+     (let [valittu-kuukausi (if (= valittu-kuukausi "Kaikki") nil valittu-kuukausi)
+           yhdistetty-app (merge kulut-app
+                            (select-keys app [:urakan-tavoitehintojen-tilat]))]
+       [kulut/laskutusraja-komponentti e! yhdistetty-app  valittu-hoitokausi hoitokaudet valittu-kuukausi true]))])
 
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
@@ -551,6 +562,8 @@
             [yleiset/linkki "Siirry välikatselmukseen"
              #(siirtymat/avaa-valikatselmus @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka) hoitokausi-vec)])]]]
 
+       [laskutusraja-wrapper e! app valittu-hoitokausi hoitokaudet valittu-kuukausi]
+
        (if (:haku-kaynnissa? app)
          [:div {:style {:padding-left "20px"}} [yleiset/ajax-loader "Haetaan käynnissä"]]
          [:div
@@ -577,7 +590,8 @@
                                 nil
                                 (second valittu-kuukausi))))
                         (e! (kustannusten-seuranta-tiedot/->HaeOnkoPaatoksiaTekematta valittu-urakka-id hoitokauden-alkuvuosi))
-                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi)))))
+                        (e! (kustannusten-seuranta-tiedot/->ValitseHoitokausi valittu-urakka-id kuluva-vuosi))
+                        (e! (tiedot/->HaeUrakanTavoitehintojenTilat)))))
     (fn [e! {:keys [valikatselmus-auki?] :as app}]
       [:div {:id "vayla"}
        [:div

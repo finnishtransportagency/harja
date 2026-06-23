@@ -61,18 +61,9 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (cond
-              (and nayta-euromerkki nayta-plus (< 0 eur))
-              (str "\u002B" tulos " \u20AC")
-
-              (and nayta-euromerkki (not nayta-plus))
-              (str tulos " \u20AC")
-
-              (and (not nayta-euromerkki) nayta-plus (< 0 eur))
-              (str "\u002B" tulos)
-
-              :else
-              tulos)))
+            (str (when (and nayta-plus (< 0 eur)) "\u002B")
+              tulos
+              (when nayta-euromerkki " \u20AC"))))
 
         :clj
         (s/replace (.format
@@ -726,9 +717,28 @@
     #?(:clj (/ (Math/round (* arvo kerroin)) kerroin)
        :cljs (/ (js/Math.round (* arvo kerroin)) kerroin))))
 
-(defn trimmaa-normaali-luku
-  "Monet formatointifunktiot formatoivat luvut ikään kuin ne olisivat rahoja. Eli kahteen desimaaliin.
-  Tällä formatoinnilla muutetaan luvun piste '.' pilkuksi ja leikataan kolmannen desimaalin jälkeen ylimääräiset pois."
+(defn desimaaliluku-opt-ilman-nollia
+  "Formatoi luvun näyttämään desimaalit vain tarvittaessa, ilman pakotettuja nollia.
+  
+  Käyttö:
+  - Kun halutaan jättää kokonaisluvut ilman desimaaleja (ei \" ,00\"-päätettä)
+  - Kun lähdedata voi olla numero tai numeric-string (tämä toimii myös stringeillä)
+  
+  Toiminta:
+  - Kokonaisluvut näytetään ilman desimaaleja: 10
+  - Desimaaliluvut näytetään tarpeen mukaan: 10,5 tai 10,25
+  - Muuntaa pisteen pilkuksi automaattisesti
+  - Jos desimaaleja on >3, pyöristää 2-3 desimaaliin (ks. pyorista-ehka-kolmeen)
+  
+  Esimerkit:
+  (desimaaliluku-opt-ilman-nollia 10)       => \"10\"
+  (desimaaliluku-opt-ilman-nollia 10.0)     => \"10\"
+  (desimaaliluku-opt-ilman-nollia 10.5)     => \"10,5\"
+  (desimaaliluku-opt-ilman-nollia 10.25)    => \"10,25\"
+  (desimaaliluku-opt-ilman-nollia 10.123)   => \"10,123\"
+  (desimaaliluku-opt-ilman-nollia 10.12345) => \"10,123\" (pyöristetty)
+  
+  Vrt. desimaaliluku-opt, kun haluat määrittää min/max desimaalit tarkasti."
   [luku]
   (when luku
     (let [desimaalit (s/split (str luku) #"\.")

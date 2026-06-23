@@ -2,7 +2,7 @@
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.17_10-jre-noble
+FROM eclipse-temurin:17.0.19_10-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
@@ -21,9 +21,10 @@ RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
 # Aseta aikavyöhyke
+# Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
-    && cp /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
     && echo "Europe/Helsinki" > /etc/timezone
 
 # Asenna apurit

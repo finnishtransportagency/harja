@@ -263,7 +263,7 @@
     (is (= -2000M (::valikatselmus/summa viimeisin)))))
 
 
-(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-test-onnistuu
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-2019-2019-test-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         hoitokauden-alkuvuosi 2019
         useri (kayttaja urakka-id)
@@ -276,7 +276,7 @@
     (is (not (nil? (get-in vastaus [:yhteenveto :sanktiot]))) "Sanktiot pitäisi löytyä")
     (is (not (nil? (get-in vastaus [:yhteenveto :bonukset]))) "Bonukset pitäisi löytyä")))
 
-(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-test-onnistuu2
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-2019-2021-test-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         hoitokauden-alkuvuosi 2021
         useri (kayttaja urakka-id)
@@ -288,6 +288,27 @@
     (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
     (is (not (nil? (get-in vastaus [:yhteenveto :sanktiot]))) "Sanktiot pitäisi löytyä")
     (is (not (nil? (get-in vastaus [:yhteenveto :bonukset]))) "Bonukset pitäisi löytyä")))
+
+;; mhu+ urakka
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-2025-2025-test-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2025
+        useri (kayttaja urakka-id)
+        vastaus (try
+                  (with-redefs [;; Validoinnin takia päätöksiä ei saada kuluvalle hoitovuodelle haettua, joten feikataan nykyhetki tulevaisuuteen
+                                pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2026 10 15))]
+                    (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) useri
+                      {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi}))
+                  (catch Exception e e))]
+    (is (not= (count vastaus) 0))
+    (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
+    (is (= "Lupaukset" (:nimi (some :lupaukset (:paatokset vastaus)))) "Lupauspäätös pitäisi löytyä")
+    (is (= "Tavoitehinnan muutokset" (:nimi (some :tavoitehinnan-muutokset (:paatokset vastaus)))) "Tavoitehinnan muutokset -päätös pitäisi löytyä")
+    (is (= "Hoitovuoden lopun indeksikorjaus" (:nimi (some :hoitovuoden-lopun-indeksikorjaus (:paatokset vastaus)))) "Hoitovuoden lopun indeksikorjaus -päätös pitäisi löytyä")
+    (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi (some :hoitovuoden-lopun-tavoite-ja-kattohinta (:paatokset vastaus)))) "Hoitovuoden lopun tavoite- ja kattohinta -päätös pitäisi löytyä")
+    (is (= "Tavoitehinnan alitus" (:nimi (some :tavoitehinnan-alitus (:paatokset vastaus)))) "Tavoitehinnan alitus -päätös pitäisi löytyä")
+    (is (= "Hoidonjohtopalkkion muutos" (:nimi (some :hoidonjohtopalkkion-muutos (:paatokset vastaus)))) "Hoidonjohtopalkkion muutos -päätös pitäisi löytyä")
+    (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi (some :valikatselmuspoytakirjaan-liitettavat-raportit (:paatokset vastaus)))) "Välikatselmuspöytäkirjaan liitettävät raportit -päätös pitäisi löytyä")))
 
 (deftest onko-paatoksia-tekematta-vuodelle-2021-test
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -408,10 +429,10 @@
               _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) muutospaatos (:id kayttaja))
 
               ;; Indeksikorjauspäätös
-              tavoitehinta 2000000M
+              hv_alun_indkorj_tavoitehinta 2000000M
               hoitokauden-lopun-indeksikorjaus 40000M ;
               tavoitehinnan-muutokset 30000M
-              tavoitehinta-ennen (- tavoitehinta hoitokauden-lopun-indeksikorjaus)
+              hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset)
               hoitokauden-kuukaudet [{:kuukausi "Lokakuu 2021" :indeksiluku 112.4}
                                      {:kuukausi "Marraskuu 2021" :indeksiluku 112.5}
                                      {:kuukausi "Joulukuu 2021" :indeksiluku 112.6}
@@ -430,7 +451,7 @@
               pistelukujen-muutos 5.9
               pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
               indeksikorotuksen-prosenttiosuus 3.9
-              indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+              indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                        hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                        pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus (:id kayttaja))
               _ (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) indeksikorjauspaatos)

@@ -231,7 +231,7 @@ INSERT INTO kulu_kohdistus (kulu, rivi, toimenpideinstanssi, tehtavaryhma, maksu
 INSERT INTO kustannusarvioitu_tyo (sopimus, toimenpideinstanssi, tehtavaryhma, summa, summa_indeksikorjattu, vuosi, kuukausi, tyyppi, luoja, luotu) 
 VALUES 
 -- Talvihoitokustannuksia (käytetään A - Talvihoito tehtäväryhmää)
-((SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') LIMIT 1),
+((SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') LIMIT 1), -- Iin urakka
  (SELECT tpi.id FROM toimenpideinstanssi tpi JOIN toimenpide tp ON tpi.toimenpide = tp.id WHERE tpi.urakka = (SELECT id FROM urakka WHERE sampoid = '1242141-II3') AND tp.koodi = '23104' LIMIT 1),
  (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '6446eb02-5216-45a8-90aa-be60f3890aac'),
  15000, 15450, 2023, 10, 'kokonaishintainen', 1, NOW()),

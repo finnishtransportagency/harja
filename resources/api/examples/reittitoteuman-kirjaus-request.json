@@ -21,6 +21,7 @@
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
       },
+      "lahde": "koneellinen",
       "sopimusId": 1,
       "alkanut": "2016-01-30T12:00:00+02:00",
       "paattynyt": "2016-02-01T12:00:00+02:00",

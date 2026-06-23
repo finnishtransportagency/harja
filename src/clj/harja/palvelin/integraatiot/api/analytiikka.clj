@@ -1,34 +1,38 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
-  (:require [clojure.set :as set]
-            [com.stuartsierra.component :as component]
-            [clojure.spec.alpha :as s]
+  (:require [harja.fmt :as fmt]
+            [taoensso.timbre :as log]
+            [clojure.set :as set]
             [clojure.string :as str]
-            [compojure.core :refer [GET]]
+            [clojure.spec.alpha :as s]
             [compojure.core :refer :all]
             [compojure.route :refer :all]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
-            [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.kulut :as kulut-domain]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [taoensso.timbre :as log]
+            [compojure.core :refer [GET]]
+            [com.stuartsierra.component :as component]
+
             [harja.pvm :as pvm]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.domain.kulut :as kulut-domain]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.konversio-optimoitu :as konv-opt]
             [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.kulut :as kulu-kyselyt]
+            [harja.kyselyt.sanktiot :as sanktio-kyselyt]
+            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
+            [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-            [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
+            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.kyselyt.kulut :as kulu-kyselyt]
@@ -36,11 +40,15 @@
             [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
             [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
             [harja.kyselyt.kustannusten-kirjaus :as kustannusten-kirjaus-kyselyt]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
-            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone])
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -72,10 +80,10 @@
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))
                                                          (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muotoZ) %)))))
 
-(defn- tarkista-haun-parametrit [parametrit rajoita]
+(defn- tarkista-haun-parametrit [{:keys [alkuaika loppuaika] :as parametrit} rajoita]
   (try
-    (s/valid? ::loppuaika (:loppuaika parametrit))
-    (s/valid? ::alkuaika (:alkuaika parametrit))
+    (s/valid? ::loppuaika loppuaika)
+    (s/valid? ::alkuaika alkuaika)
     (parametrivalidointi/tarkista-parametrit
       parametrit
       {:alkuaika "Alkuaika puuttuu"
@@ -85,27 +93,34 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+puutteelliset-parametrit+
                           :viesti "Poikkeus annetuissa parametreissa. Anna päivämäärät muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03"}]})))
-  (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
+  (when (not (s/valid? ::alkuaika alkuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
-  (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" alkuaika)}))
+  (when (not (s/valid? ::loppuaika loppuaika))
     (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))}))
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03" loppuaika)}))
 
-  ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
-  (when rajoita
-    (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:alkuaika parametrit))
-          loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) (:loppuaika parametrit))
-          aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
-          syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
-          paiva-sekunteina 90000] ;; Käytetään 25 tuntia
-      ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
-      (when (> aikavali-sekunteina paiva-sekunteina)
-        (virheet/heita-viallinen-apikutsu-poikkeus
-          {:koodi virheet/+puutteelliset-parametrit+
-           :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)})))))
+  (let [alkuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) alkuaika)
+        loppuaika-pvm (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) loppuaika)]
+
+    ;; Tarkista vielä, että alku ja loppu ovat oikeasti alku & loppu, johtaa muuten virheeseen 
+    (when (pvm/jalkeen? alkuaika-pvm loppuaika-pvm)
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+virheelinen-aikavali+
+         :viesti "Alkuaika ei voi olla loppuajan jälkeen."}))
+
+    ;; Rajoitetaan toteumien haku yhteen vuorokauteen, muuten meillä voi mennä tuotannosta levyt tukkoon
+    (when rajoita
+      (let [aikavali-sekunteina (pvm/aikavali-sekuntteina alkuaika-pvm loppuaika-pvm)
+            syotetty-aikavali-tunteina-str (str (int (/ aikavali-sekunteina 60 60)))
+            paiva-sekunteina 90000] ;; Käytetään 25 tuntia
+        ;; Jos pyydetty aikaväli ylittää 25 tuntia, palautetaan virhe
+        (when (> aikavali-sekunteina paiva-sekunteina)
+          (virheet/heita-viallinen-apikutsu-poikkeus
+            {:koodi virheet/+virheelinen-aikavali+
+             :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))))
 
 (defn- tarkista-vuosihaun-parametrit [parametrit]
   (try
@@ -152,6 +167,34 @@
    :f3 :reittipiste_sijainti_epsg4326
    :f4 :reittipiste_sijainti_epsg3067
    :f5 :reittipiste_materiaalit})
+
+(def ^{:private true} toteuma-muunnos-nopea
+  (comp
+    (map (fn [toteuma]
+           (-> toteuma
+             (update :toteumatehtavat konversio/jsonb->clojuremap)
+             (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+
+    (map (fn [toteuma]
+           (update toteuma :toteumatehtavat
+             (fn [rivit]
+               (keep (fn [r]
+                       (konv-opt/alaviiva-rename-opt r db-tehtavat->avaimet))
+                 rivit)))))
+
+    (map (fn [toteuma]
+           (update toteuma :toteumamateriaalit
+             (fn [rivit]
+               (keep (fn [r]
+                       (when (:f1 r)
+                         (konv-opt/alaviiva-rename-opt r db-materiaalit->avaimet)))
+                 rivit)))))
+
+    (map (fn [toteuma]
+           (konv-opt/rename-keys-opt toteuma
+             {:toteumamateriaalit :toteuma_materiaalit
+              :toteumatehtavat :toteuma_tehtavat})))
+    (map konv-opt/alaviiva->rakenne-nopea)))
 
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
@@ -218,6 +261,8 @@
 ;; Aineistot on isoja ja se pitäisi generoida valmiiksi, jos haluaisi tietää tarkan summan. Joten hanska-arvio on
 ;; nopea, mutta vain suuntaa antava. Tällä hetkellä se antaa n. 20% liian suuria kokoja. Mittausten mukaan n. 0.0044 alkaa olla lälhellä totuutta.
 (def arvioitu-toteuman-koko 0.006)
+
+(def toteumat-ilman-reittipisteita-max 250000)
 
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
@@ -300,6 +345,31 @@
                     (map (fn [toteuma]
                            (konversio/alaviiva->rakenne toteuma))
                       toteumat)})]
+    toteumat))
+
+(defn palauta-toteumat-ilman-reittipisteita
+  "Haetaan toteumat ilman reittipisteitä annettujen alku- ja loppuajan puitteissa."
+  [db {:keys [alkuaika loppuaika] :as parametrit} _kayttaja]
+  (log/info "Analytiikka API, toteumien haku ilman reittipisteitä, parametrit: " (pr-str parametrit))
+  ;; Rajoitetaan haku yhteen vuorokauteen
+  (tarkista-haun-parametrit parametrit true)
+  (let [alkudb (System/currentTimeMillis)
+        toteumat (toteuma-kyselyt/hae-toteumat-ilman-reittipisteita-analytiikalle db {:alkuaika alkuaika
+                                                                                      :loppuaika loppuaika})
+        ;; Ei käytetä count(), syö muistia tässä liikaa
+        rivimaara (:rivimaara (first toteumat) 0)
+
+        ;; Päivällä voi olla jopa miljoona toteumaa.. Älä siirry JSON mappaukseen jos rivejä liikaa. 
+        ;; Alenna tätä, jos aiheutuu vielä ongelmia. 
+        _ (when (> rivimaara toteumat-ilman-reittipisteita-max)
+            (virheet/heita-viallinen-apikutsu-poikkeus
+              {:koodi virheet/+liikaa-tuloksia+
+               :viesti (format "Toteumia palautui liian suuri määrä käsiteltäväksi: %s kpl. Rajoita aikaväliä, jotta toteumia palautuu alle %s."
+                         (-> rivimaara fmt/formatoi-numero-tuhansittain)
+                         (-> toteumat-ilman-reittipisteita-max fmt/formatoi-numero-tuhansittain))}))
+
+        _ (log/info "Analytiikka-toteumat ilman reittipisteitä db haku" (- (System/currentTimeMillis) alkudb) " ms. Määrä: " rivimaara)
+        toteumat {:toteumat (sequence toteuma-muunnos-nopea toteumat)}]
     toteumat))
 
 (defn palauta-materiaalit
@@ -680,6 +750,7 @@
     (assoc-in [:paallystystoimenpide :kokonaismassamaara] (:massamaara alikohde))
     (assoc-in [:tierekisteriosoitevali :kaista] (:tr-kaista alikohde))
     (assoc-in [:tierekisteriosoitevali :ajorata] (:tr-ajorata alikohde))
+    (assoc :poistettu (:poistettu alikohde))
     (dissoc :tr-kaista :tr-ajorata :uusi_paallyste :tyomenetelma :raekoko :massamenekki :massamaara :yllapitokohde)))
 
 (defn hae-paallystyskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
@@ -737,7 +808,8 @@
 
 (defn- muodosta-paallystysilmoitus [paallystysilmoitus]
   (-> paallystysilmoitus
-    (set/rename-keys {:toteutunut-hinta :toteutunutHinta})
+    (set/rename-keys {:toteutunut-hinta :toteutunutHinta
+                      :paallystysilmoituksen-tila :paallystysIlmoituksenTila})
     (assoc :yhaLahetyksenTila (cond
                                 (and
                                   (false? (:lahetys-onnistunut paallystysilmoitus))
@@ -761,7 +833,7 @@
     (update-in [:massat :runkoaineet] (fn [runkoaineet] (map #(dissoc % :id) runkoaineet)))
     (update-in [:massat :lisaaineet] (fn [lisaaineet] (map #(dissoc % :id) lisaaineet)))
     (update-in [:massat :sideaineet] (fn [sideaineet] (map #(dissoc % :id) sideaineet)))
-    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))    
+    (update :massat (fn [massa] (when-not (nil? (:massatyyppi massa)) massa)))
     (set/rename-keys {:pinta-ala :pintaAla
                       :massat :massa})))
 
@@ -787,7 +859,7 @@
                       :massat :massa})))
 
 (defn- yhdista-lyhenne-ja-nimi [lyhenne nimi]
-  (cond    
+  (cond
     (and lyhenne nimi) (str lyhenne ", " nimi)
     nimi nimi
     :else nil))
@@ -822,8 +894,8 @@
                             (yhdista-lyhenne-ja-nimi
                               (:kasittelymenetelma_lyhenne a)
                               (:kasittelymenetelma a))))
-                        atp)
-                    (map #(dissoc % :kasittelymenetelma_lyhenne) atp)
+                     atp)
+                   (map #(dissoc % :kasittelymenetelma_lyhenne) atp)
                    (konversio/sarakkeet-vektoriin (map konversio/alaviiva->rakenne atp)
                      {:massa :massat})
                    (map muodosta-alustatoimenpide atp))
@@ -1173,6 +1245,16 @@
           :analytiikka)))
 
     (julkaise-reitti
+      http :analytiikka-toteumat-ilman-reittipisteita
+      (GET "/api/analytiikka/toteumat-ilman-reittipisteita/:alkuaika/:loppuaika" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
+          :analytiikka-hae-toteumat request
+          (fn [parametrit kayttaja db]
+            (palauta-toteumat-ilman-reittipisteita db parametrit kayttaja))
+          ;; Vaaditaan analytiikka-oikeudet  
+          :analytiikka)))
+
+    (julkaise-reitti
       http :analytiikka-suunnitellut-materiaalit-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
         (kasittele-kevyesti-get-kutsu db integraatioloki "analytiikka"
@@ -1379,6 +1461,7 @@
     (poista-palvelut http
       :analytiikka-toteumat
       :analytiikka-toteumat-koko
+      :analytiikka-toteumat-ilman-reittipisteita
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-toimenpiteet

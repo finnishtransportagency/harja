@@ -1,0 +1,50 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: '[Scheduled] Scan Github Actions workflows'
+run-name: '[Scheduled] Scan Github Actions workflows'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
+  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
+  cancel-in-progress: false
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+
+# Aseta least-privilege default permissionit workflowille
+# Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions:
+  contents: read
+
+jobs:
+  # Note: https://github.com/actions/stale
+  scan-github-actions:
+    name: Scan GitHub Actions workflows with zizmor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: 'false'
+
+      - name: Run zizmor scan on GitHub Actions workflows
+        uses: ./.github/actions/scan-actions-with-zizmor
+        with:
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          scan-targets: |
+            .github/workflows/
+            .github/actions/
+          persona: 'regular'
+          min-severity: 'low'
+          min-confidence: 'low'
+          offline: 'false'
+          config: ''
+          fail-on-findings: 'true'
+          upload-sarif: 'false'
+          sarif-category: 'zizmor-actions-scan'
+

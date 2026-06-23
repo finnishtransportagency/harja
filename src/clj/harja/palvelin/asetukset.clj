@@ -42,7 +42,9 @@
          :kayttajatunnus s/Str
          :salasana s/Str}
    (s/optional-key :kayttajaroolit) {:url s/Str
-                                     :apiavain s/Str}
+                                     :apiavain s/Str
+                                     (s/optional-key :timeout) s/Int
+                                     (s/optional-key :max-yritykset) s/Int}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
          (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword

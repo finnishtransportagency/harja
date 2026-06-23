@@ -108,37 +108,50 @@
       keskilampo-pitka)))
 
 (defn paattele-raportin-viimeinen-hoitovuosi
-  "Aina ei voida näyttää koko hoitokautta tai kaikkia esim viittä vuotta, koska urakka on kesken.
-  Päätellään tässä, että mikä on viimeinen valmistunut hoitokausi."
-  [urakan-loppupvm]
-  (let [nyt-kuukausi (pvm/kuukausi (pvm/nyt))
-        vuoden-loppu? (case nyt-kuukausi
-                        10 true
-                        11 true
-                        12 true
-                        false)]
-    (if (pvm/ennen? (pvm/paivan-lopussa urakan-loppupvm) (pvm/nyt))
+  "Aina ei voida näyttää koko hoitokautta tai kaikkia esim viittä vuotta, koska urakka on kesken ja
+  lämpötilatietoja ei välttämättä ole vielä syötetty.
+  Päätellään tässä, että mikä on viimeinen valmistunut hoitokausi tai viimeinen vuosi, jolle lämpötilatiedot on.
+  Näytetään aikaisintaan 1.3. kuluvan hoitokauden tiedot, edellyttäen, että lämpötilatiedot on jo syötetty. "
+  [urakan-loppupvm lampotilat]
+  (let [nyt (pvm/nyt)
+        nyt-vuosi (pvm/vuosi nyt)
+        nyt-kuukausi (pvm/kuukausi nyt)
+        ;; Hoitokausi on valmis vain jos olemme lokakuussa tai myöhemmin
+        hoitokausi-valmis? (>= nyt-kuukausi 10)
+        ;; maalis - syyskuu = 3 - 9
+        maalis-syyskuu? (>= nyt-kuukausi 3)]
+    (cond
+      ;; Jos urakka on päättynyt, palautetaan päättymispäivän vuosi
+      (pvm/ennen? (pvm/paivan-lopussa urakan-loppupvm) nyt)
       (pvm/vuosi urakan-loppupvm)
-      ;; Jos kuukausi on 10,11 tai 12, niin sama vuosi riittää,
-      ;; muuten riittää tarkastukseksi että onko edellinen vuosi
-      (if vuoden-loppu?
-        (pvm/vuosi (pvm/nyt))
-        ;; Jos on vuoden alku, niin otetaan nykypäivästä yksi vuosi pois
-        (dec (pvm/vuosi (pvm/nyt)))))))
+
+      ;; Jos ollaan lokakuussa tai myöhemmin, nykyinen hoitokausi on valmis
+      hoitokausi-valmis?
+      nyt-vuosi
+
+      ;; Jos ollaan maalis-syyskuussa, palautetaan viimeisin lämpötiladatavuosi, mutta ei tulevaisuuden vuosia, vaikka lämpötildataa vahingossa sinne olisi voinut syöttää
+      :else
+      (if maalis-syyskuu?
+        (min nyt-vuosi (pvm/vuosi (:loppupvm (last lampotilat))))
+        (dec nyt-vuosi)))))
 
 (defn jasenna-raportin-otsikko [urakan-tiedot hoitovuodet]
   (if hoitovuodet
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
-(defn suorita [db _ {:keys [urakka-id hallintayksikko-id] :as parametrit}]
+(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                    hallintayksikko-id :hallintayksikko
+                    elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
+
+        ;; Haetaan hoitovuodelle keskilämpötilojen keskiarvo tarkastelujaksolla
+        urakan-lampotilat (lampotilat-kyselyt/hae-urakan-lampotilat db {:urakka urakka-id})
+
         ;; Haetaan tiedot hoitokausittain - ja siihen tarvitaan urakan kesto
         urakan-tiedot (first (urakat-kyselyt/hae-yksittainen-urakka db {:urakka_id urakka-id}))
         urakan_alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        viimeinen-mahdollinen-vuosi (paattele-raportin-viimeinen-hoitovuosi (:loppupvm urakan-tiedot))
+        viimeinen-mahdollinen-vuosi (paattele-raportin-viimeinen-hoitovuosi (:loppupvm urakan-tiedot) urakan-lampotilat)
         ;; Jos urakka on vasta alkanut ja valmistuneita hoitokausia ei ole, niin ei haeta tietoja
         hoitovuodet (if (not= viimeinen-mahdollinen-vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
                       (range
@@ -146,9 +159,6 @@
                         ;; Näytetään vain päättyneiltä hoitokausilta
                         viimeinen-mahdollinen-vuosi)
                       nil)
-
-        ;; Haetaan hoitovuodelle keskilämpötilojen keskiarvo tarkastelujaksolla
-        urakan-lampotilat (lampotilat-kyselyt/hae-urakan-lampotilat db {:urakka urakka-id})
 
         ;; Koostetaan data map tyyppiseen rakenteeseen
         data (when hoitovuodet
@@ -199,7 +209,7 @@
                ;; HTML raportille raportin nimi muodostetaan kontekstista
                (case konteksti
                  :urakka (:nimi urakan-tiedot)
-                 :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                 :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                  :koko-maa "KOKO MAA")
                ;; PDF ja Excel raportteihin laitetaan raportille eri nimi, joka tulee tiedoston nimeksi
                (str "Talvisuolan lämpötilaraportti - " (:nimi urakan-tiedot)))

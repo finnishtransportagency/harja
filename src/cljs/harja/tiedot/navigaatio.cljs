@@ -267,7 +267,7 @@
     (when yks
       (go
         (reset! urakka-haku-kaynnissa? true)
-        (let [vastaus (<! (ur/hae-hallintayksikon-urakat yks))]
+        (let [vastaus (<! (ur/hae-elinvoimakeskuksen-urakat yks))]
           ;; Raportit näkymässä omanlainen loaderi joka tarvitsee jonkin lipun onko haku käynnissä
           (reset! urakka-haku-kaynnissa? false)
           vastaus)))))
@@ -313,7 +313,7 @@
             (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
               :tie
               (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                kayttajan-oletus-tyyppi
+                (or kayttajan-oletus-tyyppi :hoito)
                 :hoito)
 
               :vesi
@@ -589,12 +589,9 @@
     (let [uri (Uri/parse url)
           polku (.getPath uri)
           parametrit (.getQueryData uri)
-          hy-id-urlista (some-> parametrit (.get "hy") js/parseInt)
-          hallintayksikko-id-vaihtui? (not (= hy-id-urlista @valittu-hallintayksikko-id))
+          _ (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
           u-id-urlista (some-> parametrit (.get "u") js/parseInt)
           i-id-urlista (some-> parametrit (.get "i") js/parseInt)]
-      (when hallintayksikko-id-vaihtui?
-        (reset! valittu-hallintayksikko-id hy-id-urlista))
       (when-not (= u-id-urlista @valittu-urakka-id)
         (reset! valittu-urakka-id u-id-urlista))
       (when-not (= i-id-urlista @valittu-ilmoitus-id)
@@ -607,7 +604,7 @@
                      {:arvo :vesivayla}
                      {:arvo :hoito})]
           (vaihda-vaylamuoto! arvo)))
-      (when hallintayksikko-id-vaihtui?
+      (when @valittu-hallintayksikko-id
         (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))

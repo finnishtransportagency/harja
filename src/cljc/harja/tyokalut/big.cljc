@@ -115,3 +115,12 @@
      (if (big? b)
        (:b b)
        b)))
+
+#?(:clj
+  (defn bigdecimal-arvot-samat?
+    "True, jos kahden BigDecimalin numeerinen arvo on sama (scale huomioimatta).
+  Palauttaa false, jos jompikumpi arvoista on nil."
+    [^java.math.BigDecimal a ^java.math.BigDecimal b]
+    (and (some? a)
+       (some? b)
+       (zero? (.compareTo a b)))))

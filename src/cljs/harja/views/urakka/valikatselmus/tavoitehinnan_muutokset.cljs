@@ -199,10 +199,7 @@
         kattohinnan-oikaisu-mahdollinen? (and
                                            (seq tavoitehinnan-muutokset)
                                            voi-muokata?
-                                           poikkeusvuosi?)
-        avaa-tai-sulje-haitari (fn [event]
-                                 (when (dom/enter-nappain? event)
-                                   (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
+                                           poikkeusvuosi?)]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
      
@@ -231,12 +228,15 @@
 
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
-        [:hr.paatos-hr]
 
         ;; Päätöksenteko napit
-        (if-not (:virhe paatos)
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
+        (if-not hoitovuosi-kesken?
+          [:div
+           [:hr.paatos-hr]
+           (if-not (:virhe paatos)
+             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
+              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
+              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
+             [:div.muokkaustoiminnot
+              [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
+          [:div {:style {:padding-bottom "1rem"}}])])]))

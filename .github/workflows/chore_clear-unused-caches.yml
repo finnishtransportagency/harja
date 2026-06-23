@@ -2,6 +2,11 @@
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
 name: "[Chore] Clear unused caches (PR)"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     types:
@@ -13,24 +18,31 @@ on:
         type: string
         required: true
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
   cleanup:
+    name: "Clear unused caches"
     runs-on: ubuntu-latest
     permissions:
-      # `actions:write` permission is required to delete caches
-      actions: write
-      contents: read
+      actions: write # Tarvitaan cachejen poistamiseen
+      contents: read # Tarvitaan checkout actionissa
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Cleanup using GitHub Script
-        uses: actions/github-script@v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr-number }}
         with:
           script: |
-            const ref = 'refs/pull/${{ env.PR_NUMBER }}/merge'
+            const ref = `refs/pull/${process.env.PR_NUMBER}/merge`
             const { data } = await github.rest.actions.getActionsCacheList({
               owner: context.repo.owner,
               repo: context.repo.repo,

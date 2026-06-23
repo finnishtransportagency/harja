@@ -42,11 +42,18 @@
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid
 
+(def analytiikkaportaalin-linkki
+  "https://data.vaylapilvi.fi/#/home")
+
+(def paallystyksen-laatutietolinkki
+  "https://data.vaylapilvi.fi/#/views/Sisllysluettelo_17363400130860/Sisllysluettelo?:iid=1")
+
 (defn tallenna-yhteyshenkilot [ur yhteyshenkilot uudet-yhteyshenkilot]
   (go (let [tallennettavat
             (into []
               ;; Kaikki tiedon mankelointi ennen lähetystä tähän
               (comp (filter #(not (:poistettu %)))
+                (map #(select-keys % (filter keyword? (keys %))))
                 (map #(if-let [nimi (:nimi %)]
                         (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
                           (assoc %
@@ -64,8 +71,8 @@
         (reset! yhteyshenkilot res)
         (reset! paivystajat/yhteyshenkilot-haettu? false)
         (go (reset! paivystajat/paivystajaksi-merkityt
-                    (reverse (sort-by :loppu
-                                      (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
+              (reverse (sort-by :loppu
+                         (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
         true)))
 
 
@@ -593,49 +600,113 @@
             [napit/muokkaa nil muokkaa-fn {:luokka "nappi-reunaton"
                                            :aria-label "Muokkaa urakan yhteystietoja"}])])])))
 
+(defn- projektikansio-linkki-nakyma [projektikansio-linkki]
+  (if (seq projektikansio-linkki)
+    [yleiset/staattinen-linkki-uuteen-valilehteen projektikansio-linkki projektikansio-linkki]
+    "Ei asetettu"))
+
+(defn- muokkaa-projektikansiolinkkia-lomake [{:keys [id projektikansio-linkki]} avaa-toggle-fn voi-muokata?]
+  (let [projektikansio-linkki-arvo #(not-empty (str/trim (or (:projektikansio-linkki @%) "")))]
+    (r/with-let [lomaketiedot (atom {:projektikansio-linkki projektikansio-linkki})]
+      [lomake/lomake
+       {:ei-borderia? true
+        :tarkkaile-ulkopuolisia-muutoksia? true
+        :muokkaa! (fn [rivi]
+                    (swap! lomaketiedot merge rivi))
+        :header [:div.col-md-12
+                 [:h2.header-yhteiset "Muokkaa projektikansiota"]
+                 [:hr]]
+        :footer [:<>
+                 [:hr]
+                 [:div.muokkaus-modal-napit
+                  [napit/palvelinkutsu-nappi "Tallenna"
+                   #(tiedot/tallenna-urakan-projektikansio-linkki id (projektikansio-linkki-arvo lomaketiedot))
+                   {:disabled (not voi-muokata?)
+                    :virheviesti "Projektikansion tallennus epäonnistui"
+                    :nayta-virheviesti? false
+                    :kun-onnistuu (fn [vastaus]
+                                    (viesti/nayta! "Projektikansio tallennettu" :success)
+                                    (nav/paivita-urakan-tiedot! id assoc :projektikansio-linkki (:projektikansio-linkki vastaus))
+                                    (avaa-toggle-fn))
+                    :kun-virhe (fn [vastaus]
+                                 (viesti/nayta-toast! (or (:virhe (:response vastaus))
+                                                        "Projektikansion tallennus epäonnistui")
+                                   :varoitus
+                                   viesti/viestin-nayttoaika-keskipitka))}]
+                  [napit/yleinen-toissijainen "Peruuta" avaa-toggle-fn]]]}
+
+       [(lomake/rivi
+          {:nimi :projektikansio-linkki
+           :tyyppi :string
+           :otsikko "Projektikansion linkki"
+           :salli-kirjoitus? true
+           ::lomake/col-luokka "col-xs-12"})]
+       @lomaketiedot])))
+
+(defn- urakan-projektikansio [{:keys [id] :as _urakka}]
+  (let [muokataan? (atom false)
+        muokkaa-fn #(swap! muokataan? not)
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset id)]
+    (fn [{:keys [projektikansio-linkki] :as urakka}]
+      [:span
+       (if @muokataan?
+         (muokkaa-projektikansiolinkkia-lomake urakka muokkaa-fn voi-muokata?)
+         [:span
+          [projektikansio-linkki-nakyma projektikansio-linkki]
+          (when voi-muokata?
+            [napit/muokkaa nil muokkaa-fn {:luokka "nappi-reunaton"
+                                           :aria-label "Muokkaa projektikansiota"}])])])))
+
 
 (defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystysurakka? paallystysurakka-sidottu?]
-         :as yha-tiedot} (yha-tiedot ur)]
-    [bs/panel {}
-     [yleiset/tietoja {:piirra-viivat? true
-                       :class "body-text"
-                       :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
-      "Urakan nimi:" (:nimi ur)
-      "Urakan tunnus:" (:sampoid ur)
-      "Urakkanumero:" (:urakkanro ur)
+         :as yha-tiedot} (yha-tiedot ur)
+tietorivit ["Urakan nimi:" (:nimi ur)
+            "Urakan tunnus:" (:sampoid ur)
+            "Urakkanumero:" (:urakkanro ur)
 
-      "YHA:n urakkatunnus:"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (get-in ur [:yhatiedot :yhatunnus]))
-      "YHA:n ELY:t"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (str/join ", " (get-in ur [:yhatiedot :elyt])))
-      "YHA:n vuodet:"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (str/join ", " (get-in ur [:yhatiedot :vuodet])))
-      "YHA-sidonta:" (yha-sidonta ur yha-tiedot)
+                    "YHA:n urakkatunnus:"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (get-in ur [:yhatiedot :yhatunnus]))
+"YHA:n ELY:t"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (str/join ", " (get-in ur [:yhatiedot :elyt])))
+"YHA:n vuodet:"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (str/join ", " (get-in ur [:yhatiedot :vuodet])))
+"YHA-sidonta:" (yha-sidonta ur yha-tiedot)
 
-      "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
-      "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-      "Takuu päättyy:" (when paallystysurakka?
-                         [takuuaika ur])
-      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
-      "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
-                         #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"}]
+                    "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
+"Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+"Takuu päättyy:" (when paallystysurakka?
+                   [takuuaika ur])
+"Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
+"Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                   (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
+                   #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"}]
 
-      "Urakoitsija:" (:nimi (:urakoitsija ur))
-      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
-      "Urakan yhteystiedot: " [urakan-yleinen-puh-ja-sposti ur]
+                    "Urakoitsija:" (:nimi (:urakoitsija ur))
+"Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                          (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
+"Urakan yhteystiedot: " [urakan-yleinen-puh-ja-sposti ur]
 
-      ;; valaistus, tiemerkintä --> palvelusopimus
-      ;; päällystys --> kokonaisurakka
-      "Sopimustyyppi: " (sopimustyyppi ur)
-      "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
-                    [urakan-indeksi ur])
-      "Urakan kesäaika: " [urakan-kesa-aika ur]]]))
+                    ;; valaistus, tiemerkintä --> palvelusopimus
+                    ;; päällystys --> kokonaisurakka
+                    "Sopimustyyppi: " (sopimustyyppi ur)
+                    "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
+                                  [urakan-indeksi ur])
+                    "Urakan kesäaika: " [urakan-kesa-aika ur]
+                    "Projektikansio: " [urakan-projektikansio ur]
+                    "Analytiikkaportaali: " [yleiset/staattinen-linkki-uuteen-valilehteen analytiikkaportaalin-linkki analytiikkaportaalin-linkki]]
+   tietorivit (cond-> tietorivit
+                paallystysurakka?
+                (conj "Laatutiedot: "
+                  [yleiset/staattinen-linkki-uuteen-valilehteen paallystyksen-laatutietolinkki paallystyksen-laatutietolinkki]))]
+  [bs/panel {}
+   (into [yleiset/tietoja {:piirra-viivat? true
+                           :class "body-text"
+                           :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}]
+     tietorivit)]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -651,7 +722,9 @@
       (komp/kun-muuttuu hae!)
       (fn [ur]
         [grid/grid
-         {:otsikko "Yhteyshenkilöt"
+         {;; Näkymässä voi olla sama henkilö, erillä roolilla
+          :tunniste #(str (:id %) "_" (:rooli %))
+          :otsikko "Yhteyshenkilöt"
           :tyhja "Ei yhteyshenkilöitä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                       #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}
@@ -669,7 +742,7 @@
            :leveys 17
            :tyyppi :valinta
            :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+           :valinnat [nil (:urakoitsija ur) (:elinvoimakeskus ur)]}
 
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                    nimi

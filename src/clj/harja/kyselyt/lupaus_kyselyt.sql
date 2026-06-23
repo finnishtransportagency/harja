@@ -172,17 +172,6 @@ UPDATE kommentti
  WHERE id = :id
    AND luoja = :kayttaja;
 
--- name: hae-kaynnissa-olevat-lupaus-urakat
--- Hae ei-poistetut teiden-hoito -tyyppiset urakat, joiden alkuvuosi on annettu alkuvuosi.
--- Urakan täytyy olla käynnissä annettuna hetkenä, tai päättynyt korkeintaan 2 kk sitten.
-SELECT id, nimi, hallintayksikko, sampoid FROM urakka
-WHERE alkupvm = :alkupvm
-  AND tyyppi = 'teiden-hoito'::urakkatyyppi
-  AND poistettu = FALSE
--- Onko käynnissä
-AND alkupvm <= :nykyhetki::TIMESTAMP
-AND loppupvm > (date_trunc('month',:nykyhetki::TIMESTAMP) - '2 months'::interval);
-
 -- name: tallenna-kuukausittaiset-pisteet<!
 -- vuonna 2019/2020 alkaneille urakoille ei tallenneta lupauksia, vaan ennuste/toteuma pisteet kuukausittain
 INSERT INTO lupaus_pisteet ("urakka-id", kuukausi, vuosi, pisteet, tyyppi, luoja, luotu)

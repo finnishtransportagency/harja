@@ -1,23 +1,26 @@
 (ns harja.tiedot.urakka.muutokset.yhteiset-tiedot
   "Urakan muutosten tiedot - yhteiset."
   (:require
+    [harja.fmt :as fmt]
+    [tuck.core :as tuck]
     [clojure.string :as str]
     [reagent.core :refer [atom]]
-    [taoensso.timbre :as log]
-    [tuck.core :as tuck]
 
     [harja.pvm :as pvm]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
+    [harja.ui.ikonit :as ikonit]
     [harja.ui.lomake :as lomake]
     [harja.ui.viesti :as viesti]
     [harja.ui.liitteet :as liitteet]
-    [harja.ui.modal :as modal]
-    [harja.ui.napit :as napit]
-    [harja.ui.nakymasiirrin :as siirrin]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.ui.nakymasiirrin :as siirrin]
+    [harja.ui.yleiset :as yleiset]
     [harja.tiedot.urakka.urakka :as tila]
-    [harja.tyokalut.tuck :as tuck-apurit]))
+    [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka.siirtymat :as siirtymat]
+    [harja.domain.kulut.valikatselmus :as valikatselmus]))
 
 
 (defonce ^{:private true}
@@ -25,6 +28,7 @@
                      :muutoksen-tiedot-haku-kaynnissa? false
                      :tallennus-kesken? false
                      :voi-tallentaa? false
+                     :testi-nayta-uusi-sivu? false ;; Flagi kehitysympäristöön
                      :lomakkeella-virheita? false
                      :tallenna-painettu? false
                      :muokattava-muutos nil
@@ -34,8 +38,8 @@
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
                                            :lasketut-muutokset false
                                            :rahavarausten-muutokset false
-                                           :tavoitehinnan-muutokset false
-                                           :suunniteltujen-maarien-muutokset false}})
+                                           :tavoitehinnan-muutokset true
+                                           :suunniteltujen-maarien-muutokset true}})
 
 (def pakolliset-kentat-fmt {:nimi "Nimi"
                             :tyyppi "Tyyppi"
@@ -44,15 +48,18 @@
 
 (def +indeksikorjausta-ei-vahvistettu-txt+ "Ei saatavilla")
 (def +muutosten-vaikutus-yhteensa-ei-saatavilla+ "Ei saatavilla")
-(def muutoksien-kayttoonoton-hoitokauden-alkuvuosi 2025)
+(def uudet-muutokset-kaytossa-alkuvuosi 2025)
+(def vanhat-muutokset-kaytossa-alkuvuosi 2021)
+
 
 (defonce nakymassa? (atom false))
 
-(defn nayta-muutokset-sivu? []
+
+(defn nayta-muutokset-sivu? [alkuvuosi]
   (boolean
-    (and
-      @u/valittu-aikavali
-      (>= (-> @u/valittu-aikavali first (pvm/vuosi)) 2025))))
+    ;; Onko urakan alkuvuosi > x 
+    ;; Eli ei valittu aikaväli, vaan urakan alkuvuosi
+    (>= (some-> @nav/valittu-urakka :alkupvm pvm/vuosi) alkuvuosi)))
 
 (defn johto-ja-hallintokorvausmuutoksen-rivit
   "Luo johto-ja-hallintokorvausmuutoksen rivit eli kulut. Yhdistää tyhjät rivit ja kannasta tulevat kulut."
@@ -70,18 +77,24 @@
                 normalisoidut-avaimet)]
     (apply array-map parit)))
 
-(defn ennen-muutoksien-kayttoonotto?
-  "Aika ennen muutoksien käyttöönottohoitovuotta"
-  [valittu-hoitokausi]
-  (when valittu-hoitokausi
-    (< (pvm/vuosi (first valittu-hoitokausi))
-      muutoksien-kayttoonoton-hoitokauden-alkuvuosi)))
-
 ;; --- Tuck-eventit ja käsittelijät ---
+;; Init
+(defrecord AlustaNakyma [])
+(defrecord TestiymparistoToggle [])
+
 ;; Hae muutostiedot
 (defrecord HaeUrakanMuutostiedot [tyyppi])
 (defrecord HaeUrakanMuutostiedotOnnistui [vastaus])
 (defrecord HaeUrakanMuutostiedotEpaonnistui [vastaus])
+
+;; Vanhojen urakoiden näkymä 
+(defrecord HaeVanhanUrakanMuutokset [])
+(defrecord HaeValikatselmuksenTiedot [])
+(defrecord HaeValikatselmuksenTiedotOnnistui [vastaus])
+(defrecord HaeValikatselmuksenTiedotEpaonnistui [vastaus])
+(defrecord TallennaOikaisut [oikaisut])
+(defrecord TallennaOikaisutOnnistui [vastaus])
+(defrecord TallennaOikaisutEpaonnistui [vastaus])
 
 ;; Päänäkymä ja listaus
 (defrecord ToggleTaulukonNakyvyys [taulukon-avain])
@@ -115,7 +128,7 @@
 ;; -- Siirtymät ja muut UI-toiminnot --
 ;; - Siirtymä esimerkiksi kustannussuunnitelmasta muutoksiin suoraan lomakkeelle
 (defrecord SiirryMuutosNakymaan [])
-(defrecord SiirryPysyvanMuutoksenMuokkauslomakkeelle [muutos])
+(defrecord SiirryPysyvanMuutoksenMuokkauslomakkeelle [muutos valittu-hoitokausi])
 
 (defn scrollaa-viimeksi-valitulle-riville []
   (.setTimeout js/window (fn [] (siirrin/kohde-elementti-luokka "viimeksi-valittu-tausta")) 150))
@@ -132,16 +145,58 @@
      :epaonnistui ->HaeUrakanMuutostiedotEpaonnistui}))
 
 (defn- vastaus-haku-onnistui [app vastaus]
-  (assoc app
-    :haku-kaynnissa? false
-    :kirjatut-muutokset (:kirjatut-muutokset vastaus)
-    :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
-    :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
-    :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
-    :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus)
-    :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
-    :budjettitavoitteet (:budjettitavoitteet vastaus)))
+  (let [hoitokauden-alkuvuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)
+        tavoitehinnan-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
+        tavoitehinnan-muutokset-yhteensa (reduce + 0
+                                           (map ::valikatselmus/summa tavoitehinnan-muutokset))]
 
+    (assoc app
+      :haku-kaynnissa? false
+      :kirjatut-muutokset (:kirjatut-muutokset vastaus)
+      :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
+      :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
+      :rahavarausten-muutokset (:rahavarausten-muutokset vastaus)
+      :tavoitehinnan-muutokset (or tavoitehinnan-muutokset [])
+      :tavoitehinnan-muutokset-yhteensa tavoitehinnan-muutokset-yhteensa
+      :hoitovuoden-indeksikorjattu-tavoitehinta (-> vastaus :yhteenveto :budjettitavoite :tavoitehinta-indeksikorjattu)
+      :suunniteltujen-maarien-muutokset (:suunniteltujen-maarien-muutokset vastaus)
+      :laskutusrajan-tarkistukset (:laskutusrajan-tarkistukset vastaus)
+      :budjettitavoitteet (:budjettitavoitteet vastaus))))
+
+(defn- laskutusrajan-tarkistus-modaali
+  [app vastaus toast-viesti]
+  (let [vanha-laskutusraja (get-in app [:budjettitavoitteet :laskutusraja])
+        uusi-laskutusraja (get-in vastaus [:budjettitavoitteet :laskutusraja])
+        modal-sulje-fn #(do
+                          (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)
+                          (modal/piilota!))]
+    (if (and vanha-laskutusraja uusi-laskutusraja
+          (not= vanha-laskutusraja uusi-laskutusraja))
+      ;; Laskutusraja muuttui: näytä modaali ja toast
+      (modal/nayta!
+        {:modal-luokka "harja-modal-keskitetty laskutusraja-muutos-modal"
+         :luokka "modal-dialog-keskitetty-leveampi"
+         :otsikko "Laskutusraja on muuttunut"
+         :footer [napit/yleinen-ensisijainen "Sulje" modal-sulje-fn]
+         :sulje-fn modal-sulje-fn}
+        [:div
+         [:p.ylateksti "Laskutusrajaan on tehty automaattinen tarkistus kirjaamasi tavoitehinnan muutoksen perusteella."]
+         [yleiset/info-laatikko :vahva-ilmoitus
+          (str "Tarkistettu laskutusraja on " (fmt/euro-opt true false uusi-laskutusraja))
+          nil
+          nil
+          {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+         [:p.alateksti "Tarkemmat tiedot laskutusrajan laskennasta ja määräytymisestä näet Muutokset-näkymän \"Laskutusrajan automaattiset tarkistukset\" -osiossa."]])
+      ;; Laskutusraja ei muuttunut: näytä vain toast
+      (viesti/nayta-toast! toast-viesti :onnistui viesti/viestin-nayttoaika-lyhyt)))
+
+  (-> app
+    ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
+    (assoc
+      :viimeksi-valittu nil
+      :muokattava-muutos nil
+      :tallennus-kesken? false)
+    (vastaus-haku-onnistui vastaus)))
 
 (defn pienin-hoitokauden-alkuvuosi-jossa-kirjauksia
   "Hakee toimenpiteiden tiedoista pienimmän hoitovuoden alkukauden jossa kirjauksia"
@@ -231,6 +286,87 @@
     lomake-virheet))
 
 (extend-protocol tuck/Event
+
+  AlustaNakyma
+  (process-event [_ {:keys [testi-nayta-uusi-sivu?] :as app}]
+    (let [uusi? (nayta-muutokset-sivu? uudet-muutokset-kaytossa-alkuvuosi)
+          ;; testi-nayta-uusi-sivu? 
+          ;; on kehitysympäristön testiominaisuus, jolla voi pakottaa uuden näkymän päälle
+          uusi? (or testi-nayta-uusi-sivu? uusi?)
+          vanha? (and
+                   (not uusi?) (not testi-nayta-uusi-sivu?)
+                   (nayta-muutokset-sivu? vanhat-muutokset-kaytossa-alkuvuosi))
+          ei-kaytossa? (and (not uusi?) (not vanha?))
+          app (assoc app :nakyma-uusi? uusi? :nakyma-vanha? vanha?)]
+
+      (if ei-kaytossa?
+        app
+        (tuck/fx app
+          (if uusi?
+            {:tuck.effect/type :debounce
+             :event #(->HaeUrakanMuutostiedot nil)}
+
+            {:tuck.effect/type :debounce
+             :event #(->HaeVanhanUrakanMuutokset)})))))
+
+  TestiymparistoToggle
+  (process-event [_ app]
+    (let [uusi-nakyma? (not (:testi-nayta-uusi-sivu? app))]
+      (assoc app :testi-nayta-uusi-sivu? uusi-nakyma?)))
+
+  HaeVanhanUrakanMuutokset
+  (process-event [_ app]
+    (tuck/fx
+      app
+      {:tuck.effect/type :debounce
+       :event ->HaeValikatselmuksenTiedot
+       :timeout 0}))
+
+  HaeValikatselmuksenTiedot
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-valikatselmuksen-tiedot-hoitovuodelle
+      {:urakkaid (-> @tila/yleiset :urakka :id)
+       :hoitovuosi (some->> @u/valittu-hoitokausi first pvm/vuosi)}
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app
+      :haku-kaynnissa? true
+      :valittu-hoitokausi @u/valittu-hoitokausi
+      :urakan-hoitokaudet @u/valitun-urakan-hoitokaudet))
+
+  HaeValikatselmuksenTiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (vastaus-haku-onnistui app vastaus))
+
+  HaeValikatselmuksenTiedotEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tavoitehinnan muutosten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  TallennaOikaisut
+  (process-event [{:keys [oikaisut]} app]
+    (tuck/fx
+      (do
+        (doseq [oikaisu oikaisut]
+          (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+            oikaisu
+            {:onnistui ->TallennaOikaisutOnnistui
+             :epaonnistui ->TallennaOikaisutEpaonnistui
+             :paasta-virhe-lapi? true}))
+        (assoc app :haku-kaynnissa? true))
+      {:tuck.effect/type :debounce
+       :event ->HaeValikatselmuksenTiedot
+       :timeout 0}))
+
+  TallennaOikaisutOnnistui
+  (process-event [{:keys [vastaus]} app]
+    app)
+
+  TallennaOikaisutEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Oikaisun tallentaminen epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
   HaeUrakanMuutostiedot
   (process-event [{:keys [tyyppi]} app]
     "Tyyppi on joko nil, tai avain :taulukko-nakyvissa? mapille, esim. :lasketut-muutokset
@@ -296,6 +432,7 @@
                    valittu-hoitokausi :valittu-hoitokausi} app]
     (let [uudet-liitteet (:liitteet vastaus)
           lomakkeen-hoitokausi (get-in app [:muokattava-muutos :hoitovuosi])
+          hyppaa-hoitovuoteen? (get-in app [:muokattava-muutos :hyppaa-hoitovuoteen?])
           toimenpiteiden-tiedot (:toimenpiteiden-tiedot vastaus)
           toimenpiteiden-tehtavat (:toimenpiteiden-tehtavat vastaus)
           ;; Lomakkeen on kyettävä käsittelemään usealle hoitovuodelle tehtäviä kirjauksia. Kun ländätään lomakkeelle,
@@ -303,9 +440,13 @@
           ;; Jos tästä tulee jossain kohti liian hidas, voidaan tarkastelu suorittaa joko backendissä tai tietokannassakin
           aikaisin-hoitovuosi-jossa-kirjauksia (pienin-hoitokauden-alkuvuosi-jossa-kirjauksia toimenpiteiden-tiedot)
           mahdolliset-hoitovuodet-lomakkeella (:urakan-hoitokaudet app)
-          hoitovuosi-lomakkeelle (or (when aikaisin-hoitovuosi-jossa-kirjauksia
+          hoitovuosi-lomakkeelle (if (and hyppaa-hoitovuoteen? lomakkeen-hoitokausi)
+                                   lomakkeen-hoitokausi
+                                   (or
+                                     (when aikaisin-hoitovuosi-jossa-kirjauksia
                                        (pvm/vuodesta-hoitokausi aikaisin-hoitovuosi-jossa-kirjauksia))
-                                   (first mahdolliset-hoitovuodet-lomakkeella))
+                                     valittu-hoitokausi))
+
           johto-ja-hallinto (johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi (:kulut vastaus))
           app (-> app
                 ;; Disabloi tallennus, enabloituu itsestään jos lomaketta muutetaan
@@ -382,9 +523,10 @@
                   {:keys [laskenta-automatiikka?] :as app}]
     (let [urakka (:urakka @tila/yleiset)
           kulut (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-                  ;; luodaan vain kuluja, joiden summa on eri suuri kuin 0 (eli niillä on jotain vaikutusta laskentoihin)
-                  (filter #(and
-                             (some? (:tavoitehinnan-muutos %))
+                  ;; Salli 0 arvo, jos kulu-id on olemassa (se poistetaan)
+                  ;; Muuten vaadi, että tavoitehinnan muutos ei ole 0.
+                  (filter #(or
+                             (:kulu-id %)
                              (not= 0 (:tavoitehinnan-muutos %)))
                     (vals (:johto-ja-hallintokorvaukset muutos))))
           muutos (assoc muutos :kulut kulut)
@@ -426,15 +568,7 @@
 
   TallennaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Muutoksen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-
-    (-> app
-      ;; Resetoi muutoslomake onnistuneen tallennuksen jälkeen, jotta lomake suljetaan
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen tallennus onnistui"))
 
   TallennaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -456,19 +590,12 @@
         {:onnistui ->PoistaMuutosOnnistui
          :epaonnistui ->PoistaMuutosEpaonnistui
          :paasta-virhe-lapi? true})
-      (assoc app :tallennus-kesken? true)))
+      (assoc app :tallennus-kesken? true
+                 :laskutusraja-ennen-poistoa (get-in app [:budjettitavoitteet :laskutusraja]))))
 
   PoistaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]
-    (viesti/nayta-toast! "Muutoksen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-
-    (-> app
-      ;; Resetoi muutoslomake onnistuneen poistamisen jälkeen, jotta lomake suljetaan
-      (assoc
-        :viimeksi-valittu nil
-        :muokattava-muutos nil
-        :tallennus-kesken? false)
-      (vastaus-haku-onnistui vastaus)))
+    (laskutusrajan-tarkistus-modaali app vastaus "Muutoksen poistaminen onnistui"))
 
   PoistaMuutosEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -542,7 +669,7 @@
     app)
 
   SiirryPysyvanMuutoksenMuokkauslomakkeelle
-  (process-event [{muutos :muutos} app]
+  (process-event [{:keys [muutos valittu-hoitokausi]} app]
     ;; Suoritetaan peräkkäisinä efekteinä viivästettynä
     ;; Ensin siirtymä ja sitten muutoslomakkeen alustus
     (tuck/fx
@@ -551,5 +678,5 @@
        :event ->SiirryMuutosNakymaan
        :timeout 0}
       {:tuck.effect/type :debounce
-       :event #(->MuokkaaMuutosta muutos)
+       :event #(->MuokkaaMuutosta (assoc muutos :hoitovuosi valittu-hoitokausi :hyppaa-hoitovuoteen? true))
        :timeout 100})))

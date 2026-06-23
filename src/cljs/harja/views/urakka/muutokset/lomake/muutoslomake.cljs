@@ -111,34 +111,58 @@
                "johto-ja-hallintokorvaus" (assoc rivi
                                             :johto-ja-hallintokorvaukset
                                             (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+               ;; Asetetaan default arvo erillisrahoitetulle muutostyölle
+               ;; TODO: Normaalisti default-arvo tulisi lomake_muutostyo.cljs:ssä oletusarvona alityypin radio-group valinnasta
+               ;;       Mutta, koska alityypin valinta on toistaiseksi poistettu käytöstä, asetetaan se tässä default-arvoksi
+               ;;       Poista tämä, kun alityypin valinta otetaan takaisin käyttöön muutostyo-lomakkeessa.
+               "muutostyo" (assoc rivi
+                             :alityyppi :erillisrahoitus)
                rivi)]
     rivi))
 
 (defn- lomakkeen-tyyppivalinta
-  [e! {:keys [valittu-hoitokausi] :as _app}]
-  (vec
-    (keep identity
-      (concat
-        [{:otsikko "Tyyppi"
-          :nimi :tyyppi
-          :pakollinen? true
-          :aseta (fn [rivi arvo]
-                   (->>
-                     ;; Aseta valittu tyyppi
-                     (assoc rivi :tyyppi arvo)
-                     ;; Haetaan pohjatietoja tietyille lomaketyypeille, kun uutta muutosta luodaan
-                     (alusta-lomakkeen-pohjatiedot e! arvo valittu-hoitokausi)))
-          ;; Sallitaan muokkaus vain uudelle muutokselle
-          :muokattava? #(nil? (:id %))
-          :kaariva-luokka "muutostyyppivalinta"
-          :tyyppi :valinta
-          :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit-lomakkeella+
-          :valinta-arvo identity
-          :valinta-nayta (fn [arvo]
-                           (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
-          :uusi-rivi? true
-          ::lomake/col-luokka "perustiedot col-sm-6"}]))))
+  [e! {:keys [valittu-hoitokausi] :as app}]
+  (let [valittu-tyyppi (get-in app [:muokattava-muutos :tyyppi])]
+    (vec
+      (keep identity
+        (concat
+          [{:otsikko "Tyyppi"
+            :nimi :tyyppi
+            :pakollinen? true
+            :aseta (fn [rivi arvo]
+                     (->>
+                       ;; Aseta valittu tyyppi
+                       (assoc rivi :tyyppi arvo)
+                       ;; Haetaan pohjatietoja tietyille lomaketyypeille, kun uutta muutosta luodaan
+                       (alusta-lomakkeen-pohjatiedot e! arvo valittu-hoitokausi)))
+            ;; Sallitaan muokkaus vain uudelle muutokselle
+            :muokattava? #(nil? (:id %))
+            :kaariva-luokka "muutostyyppivalinta"
+            :tyyppi :valinta
+            :vayla-tyyli? true
+            :valinnat muutos-domain/+muutostyypit-lomakkeella+
+            :valinta-arvo identity
+            :valinta-nayta (fn [arvo]
+                             (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
+            :uusi-rivi? true
+            ::lomake/col-luokka "perustiedot col-sm-6"}]
+          (when (contains? #{"pysyva" "muutostyo" "johto-ja-hallintokorvaus"} valittu-tyyppi)
+            [{:nimi :teksti
+              :tyyppi :komponentti
+              :kaariva-luokka "laskutusraja-infoteksti"
+              :komponentti (fn []
+                             [:div
+                              (case valittu-tyyppi
+                                "pysyva"
+                                [:p "Tämä muutostyö otetaan huomioon hoitovuoden laskutusrajan laskennassa vain 1. voimassaolovuoden
+                                osalta ja jos voimassaolovuoden tavoitehinnan muutos on positiivinen (plusmerkkinen)."]
+
+                                "muutostyo"
+                                [:p "Tämä muutostyö otetaan huomioon hoitovuoden laskutusrajan laskennassa."]
+
+                                "johto-ja-hallintokorvaus"
+                                [:p "Tämä muutostyö ei vaikuta hoitovuoden laskutusrajan laskentaan."])
+                              [:hr]])}]))))))
 
 
 (defn muutoslomake [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as _app}]

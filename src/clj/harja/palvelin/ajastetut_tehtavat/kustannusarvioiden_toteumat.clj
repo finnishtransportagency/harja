@@ -20,7 +20,7 @@
       true)))
 
 (defn siirra-kustannukset
-  "Kustannukset siirretään aina kuukauden ensimmäisenä päivänä, jotta saadaan edellisen kuukauden kaikki
+  "Kustannukset siirretään aina kuukauden kymmenentenä päivänä, jotta saadaan edellisen kuukauden kaikki
   budjetoidut kustannukset matkaan."
   [db & args]
   (let [annettu-nyt (first args)

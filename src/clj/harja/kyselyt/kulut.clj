@@ -8,8 +8,9 @@
   paivita-kulu<! linkita-kulu-ja-liite<! tarkista-kohdistuksen-yhteensopivuus
   hae-liitteet poista-kulun-ja-liitteen-linkitys! poista-kulu!
   poista-kulun-kohdistukset! hae-kulut-kohdistuksineen-tietoineen-vientiin
-  hae-urakan-kulut-kohdistuksineen hae-tehtavan-nimi hae-tehtavaryhman-nimi luo-kulun-kohdistus<!
+  hae-urakan-kulut-kohdistuksineen hae-urakan-toteutuneet-kustannukset
+  hae-tehtavan-nimi hae-tehtavaryhman-nimi luo-kulun-kohdistus<!
   paivita-kulun-kohdistus<! hae-pvm-laskun-numerolla poista-kulun-kohdistus!
   hae-tehtavaryhman-tiedot-tunnisteella hae-urakan-hoidon-johdon-toimenpideinstanssi
-  hae-toteutuneet-kustannukset-analytiikalle)
-
+  hae-toteutuneet-kustannukset-analytiikalle hae-urakan-laskutusraja hae-urakan-alkuperainen-laskutusraja
+  paivita-urakan-laskutusraja! hae-kaikkien-tehtavaryhmien-nimet)

@@ -45,7 +45,9 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
+(use-fixtures :each
+  (compose-fixtures jarjestelma-fixture urakkatieto-fixture)
+  (fn [f] (tyhjenna-tilannekuvan-cachet!) (f)))
 
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
@@ -172,7 +174,7 @@
     (is (not (contains? vastaus :tarkastus)))
     (is (= (count (:laatupoikkeamat vastaus)) 52))
     (is (= (count (:paallystys vastaus)) 1))
-    (is (= (count (:paikkaus vastaus)) 18))
+    (is (= (count (:paikkaus vastaus)) 85))
     (is (= (count (:ilmoitukset vastaus)) 53))
     (is (= (count (:tietyomaat vastaus)) 1))
     (is (= (count (:tietyoilmoitukset vastaus)) 4))))
@@ -399,33 +401,31 @@
 
 (deftest hae-urakat-tilannekuvaan-jvh
   (let [vastaus (poista-urakan-alue-ja-id (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia))
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))
         urakkatyypit (set (distinct (keep #(get-in % [:tyyppi]) vastaus)))
-        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))
-        _ (println "OEFHUOE " vastaus)
-        _ (println "ELYNUMEROT  " elynumerot)
-        ]
+        urakat (set (mapcat #(map :nimi (:urakat %)) vastaus))]
 
-    (is (= (count elynumerot) 6) "JVH:n pitäisi nähdä kaikki ELY:t")
+    (is (= (count elynumerot) 8) "JVH:n pitäisi nähdä kaikki ELY:t")
 
     (is (contains? urakkatyypit :hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, hoito")
     (is (contains? urakkatyypit :paallystys)  "JVH:n pitäisi nähdä kaikki urakkatyypit, paallystys")
     (is (contains? urakkatyypit :tiemerkinta)  "JVH:n pitäisi nähdä kaikki urakkatyypit, tiemerkintä")
     (is (contains? urakkatyypit :valaistus)  "JVH:n pitäisi nähdä kaikki urakkatyypit, valaistus")
-    (is (contains? urakkatyypit :vesivayla-kanavien-hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, vesivayla-kanavien-hoito")
+    ;; Kommentoidaan pois. Vesiväylä urakat eivät ole koskaan kuuluneet yhteenkään ELYyn, eli tämä on ollut aina virheellinen.
+    ;;(is (contains? urakkatyypit :vesivayla-kanavien-hoito)  "JVH:n pitäisi nähdä kaikki urakkatyypit, vesivayla-kanavien-hoito")
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 54) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 60) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
-    (is (= (count elynumerot) 6)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))]
+    (is (= (count elynumerot) 8)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
 
 (deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+        elynumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))]
 
     (is (= (count elynumerot) 0))))
 
@@ -433,16 +433,16 @@
   ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
   ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
   (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
-        eka-ely (first elynumerot)]
+        evknumerot (set (distinct (keep #(get-in % [:elinvoimakeskus :evknumero]) vastaus)))
+        eka-evk (first evknumerot)]
 
-    (is (= eka-ely 12))
-    (is (every? #(= % eka-ely) elynumerot)
-      "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+    (is (= eka-evk 380048))
+    (is (every? #(= % eka-evk) evknumerot)
+      "Pääsy vain omaan urakkaan ja sen Elinvoimakeskuksen urakoihin --> kaikki EVK-numerot tulee olla samoja")))
 
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
-  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+  (with-redefs [oikeudet/tilannekuva-historia (oikeudet/->KayttoOikeus "tilannekuva historia" {"vastuuhenkilo" #{"R"}})]
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
       (is (every?
             (fn [hy]
@@ -452,9 +452,9 @@
             vastaus))
       (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
             [{:tyyppi :hoito
-              :hallintayksikko {:id 22
-                                :nimi "Pohjois-Pohjanmaa"
-                                :elynumero 12}
+              :elinvoimakeskus {:id 12
+                                :nimi "Pohjois-Suomi"
+                                :evknumero 380048}
               :urakat #{{:id 4
                          :nimi "Oulun alueurakka 2014-2019"
                          :urakkanro "1238"
@@ -465,6 +465,7 @@
         ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
         (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
           (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))))
+        _ (tyhjenna-tilannekuvan-cachet!)
         urakat-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
         (map :id (mapcat :urakat (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)))]
 
@@ -477,6 +478,7 @@
           ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
           (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
             (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella))
+          _ (tyhjenna-tilannekuvan-cachet!)
           vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
           (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia urakat-lisaoikeudella)]
 

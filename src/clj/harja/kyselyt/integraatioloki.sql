@@ -85,11 +85,15 @@ FROM integraatiotapahtuma it
   LEFT JOIN integraatioviesti iv ON it.id = iv.integraatiotapahtuma
 WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:integraatio :: VARCHAR IS NULL OR i.nimi = :integraatio) AND
-      (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut) AND
+      ((:kesken :: BOOLEAN IS TRUE AND it.paattynyt IS NULL)
+       OR
+       (:kesken :: BOOLEAN IS NOT TRUE
+        AND (:onnistunut :: BOOLEAN IS NULL OR it.onnistunut = :onnistunut))) AND
       ((:alkaen :: TIMESTAMP IS NULL AND alkanut >= current_date) OR alkanut >= :alkaen) AND
       (:paattyen :: TIMESTAMP IS NULL OR alkanut <= :paattyen) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
       (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
+      (:osoitteet :: TEXT IS NULL OR iv.osoite ILIKE '%' || :osoitteet || '%') AND
       (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%') AND
       (:kesto :: INTEGER IS NULL OR :kesto < EXTRACT(EPOCH FROM (paattynyt - alkanut )))
 ORDER BY it.id DESC, it.alkanut DESC LIMIT :limit;
@@ -112,19 +116,22 @@ FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 
 -- name: hae-integraatiotapahtumien-maarat
--- Hakee annetun integraation tapahtumien määrät päivittäin ryhmiteltynä
-SELECT
-  date_trunc('day', it.alkanut) AS pvm,
-  it.integraatio                AS integraatio,
-  i.jarjestelma                 AS jarjestelma,
-  i.nimi                        AS nimi,
-  count(*)                      AS maara
-FROM integraatiotapahtuma it
-  JOIN integraatio i ON it.integraatio = i.id
-WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
-      AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
-GROUP BY pvm, integraatio, jarjestelma, nimi
-ORDER BY pvm;
+-- Hakee annetun integraation tapahtumien määrät ryhmiteltynä granulariteetin mukaan.
+-- Käyttää PostgreSQL 14+ date_bin-funktiota, joka tukee mielivaltaisia intervalleja.
+-- Parametri :bin-intervalli on PostgreSQL interval-merkkijono, esim. '1 minute', '5 minutes', '1 hour', '1 day'.
+SELECT date_bin(:bin-intervalli :: INTERVAL, it.alkanut, '2000-01-01') AS pvm,
+       it.integraatio                                                  AS integraatio,
+       i.jarjestelma                                                   AS jarjestelma,
+       i.nimi                                                          AS nimi,
+       COUNT(*)                                                        AS maara
+  FROM integraatiotapahtuma it
+           JOIN integraatio i ON it.integraatio = i.id
+ WHERE (:jarjestelma_annettu = FALSE OR i.jarjestelma ILIKE :jarjestelma)
+   AND (:integraatio_annettu = FALSE OR i.nimi ILIKE :integraatio)
+   AND ((:alkaen :: TIMESTAMP IS NULL AND it.alkanut >= CURRENT_DATE) OR it.alkanut >= :alkaen)
+   AND (:paattyen :: TIMESTAMP IS NULL OR it.alkanut <= :paattyen)
+ GROUP BY pvm, integraatio, jarjestelma, nimi
+ ORDER BY pvm;
 
 -- name: hae-integraation-id
 SELECT id

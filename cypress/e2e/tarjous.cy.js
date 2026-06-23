@@ -1,6 +1,8 @@
 import * as ks from '../support/kustannussuunnitelmaFns.js';
 import {avaaTarjous, avaaUusiKustannussuunnittelu} from "../support/kustannussuunnitelmaFns.js";
 
+let loaderTimeout = 30000;
+
 // Apufunktiot tarjous-näkymälle
 function alustaIvalonTarjousUrakka() {
     ks.alustaKanta('Ivalon MHU testiurakka (uusi)');
@@ -92,7 +94,7 @@ describe('Tarjous-näkymä', function () {
     describe('Johto- ja hallintokorvaus-gridin testit 2025 urakalle', function () {
 
         beforeEach(function () {
-            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
+            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Johto- ja hallintokorvaus-grid näkyy oikein', function () {
@@ -135,7 +137,9 @@ describe('Tarjous-näkymä', function () {
 
             // Tarkista että success-viesti näkyy tai arvo säilyy
             cy.reload();
+            cy.get('.ladataan-harjaa', {timeout: loaderTimeout}).should('not.exist');
             cy.wait('@hae-tarjous');
+            cy.get('h1').should('contain', 'Tarjouksen tiedot');
 
             // Varmista että tallennettu arvo säilyy
 
@@ -163,7 +167,7 @@ describe('Tarjous-näkymä', function () {
     describe('Varmista tarjouksen tietojen näkyminen Kustannussuunnitelmassa 2025 urakalla', function () {
 
         beforeEach(function () {
-            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
+            avaaTarjousNakyma('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
         });
 
         it('Tallennetut tarjoushinnat on kustannussuunnitelmassa', function () {
@@ -207,13 +211,13 @@ describe('Tarjous-näkymä', function () {
                 .its('response.statusCode')
                 .should('equal', 200);
 
-            // Tarkista että success-viesti näkyy tai arvo säilyy
             cy.reload();
+            cy.get('.ladataan-harjaa', {timeout: loaderTimeout}).should('not.exist');
             cy.wait('@hae-tarjous');
-
+            cy.get('h1').should('contain', 'Tarjouksen tiedot');
 
             // Siirrytään kustiksen puolelle
-            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Pohjanmaa');
+            avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
 
             // Varmista tarjoussummat kustiksessa
             cy.contains('Kilpailutettavat hankinnat').should('be.visible');
@@ -221,7 +225,7 @@ describe('Tarjous-näkymä', function () {
             tarkistaTarjoushinta('Rahavaraukset', akillisethoitotyot);
             tarkistaTarjoushinta('Erillishankinnat', erillishankinnat);
             tarkistaTarjoushinta('Johto- ja hallintokorvaus', kaikkiToimenkuvatYhteensa);
-            tarkistaTarjoushinta('Hoidonjohtopalkkiot', hoidonjohtopalkkio);
+            tarkistaTarjoushinta('Hoidonjohtopalkkio', hoidonjohtopalkkio);
         });
     });
 });

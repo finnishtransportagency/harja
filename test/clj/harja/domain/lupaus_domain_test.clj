@@ -96,19 +96,21 @@
                               :kuukausi 11}]}]
     (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))))
 
-(deftest bonus-tai-sanktio
+(deftest bonus-tai-sanktio-19-20-urakalle-test
   (is (= {:tavoite-taytetty true}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:bonus 13.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:sanktio -33.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 90 :tavoitehinta 1000}))
+      "Legacy-polku odottaa sanktion negatiivisena, jotta indeksikorjaus laskee 2019/2020-urakoille oikein.")
   (is (= {:bonus 5200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
   (is (= {:sanktio -13200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio {})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio nil))))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 74 :tavoitehinta 2000000}))
+      "Legacy-sanktio säilyy negatiivisena vanhaa kuukausittaisten pisteiden indeksikorjauspolkua varten.")
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {})))
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle nil))))
 
 (deftest lupaus-kuukaudet
   (let [lupaus {:kirjaus-kkt nil
@@ -427,6 +429,124 @@
                       123))
             "Urakoitsija ei saa vastata vaikka on kirjoitusoikeus, koska päätösoikeus puuttuu")))))
 
+(deftest laske-lupauspaatos-bonus-tai-sanktio-test
+  (testing "Tavoite täytetty kun pisteet täsmäävät"
+    (is (= {:tavoite-taytetty true}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 100
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
 
+  (testing "Bonus lasketaan oikein kun toteutuneet > luvatut"
+    ;; Bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
+    ;; (0.13 / 100) × 1000000 × (105 - 100) = 0.0013 × 1000000 × 5 = 6500
+    (is (= {:lupausbonus 6500.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 105
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
+
+  (testing "Sanktio lasketaan oikein kun toteutuneet < luvatut"
+    ;; Sanktio = (sanktioprosentti / 100) × tavoitehinta × (luvatut - toteutuneet)
+    ;; (0.33 / 100) × 1000000 × (100 - 95) = 0.0033 × 1000000 × 5 = 16500
+    (is (= {:lupaussanktio 16500.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 95
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
+
+  (testing "Todelliset laskentaesimerkit välikatselmuksesta"
+    ;; Esimerkki 1: Bonus 2 pisteellä, tavoitehinta 2M€
+    ;; (0.13 / 100) × 2000000 × 2 = 5200
+    (is (= {:lupausbonus 5200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 78
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13})))
+
+    ;; Esimerkki 2: Sanktio 2 pisteellä, tavoitehinta 2M€
+    ;; (0.33 / 100) × 2000000 × 2 = 13200
+    (is (= {:lupaussanktio 13200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 74
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13})))
+
+    ;; Esimerkki 3: 2025 alkaen (alhaisempi sanktio%)
+    ;; (0.18 / 100) × 2000000 × 2 = 7200
+    (is (= {:lupaussanktio 7200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 74
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.18
+              :bonusprosentti 0.13}))))
+
+  (testing "Palauttaa nil kun pakolliset parametrit puuttuvat"
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio {})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio nil)))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:tavoitehinta 1000000
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13}))))
+
+  (testing "Palauttaa nil kun tavoitehinta on nolla tai negatiivinen"
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100
+                 :tavoitehinta 0
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100
+                 :tavoitehinta -1000
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13})))))
+
+(deftest paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa tietokannasta haetun päätöksen API-muotoon oikein"
+    (is (= {:bonus 5200M}
+           (lupaus-domain/paatos->bonus-tai-sanktio
+             {:tyyppi "bonus"
+              :lupausbonus 5200M
+              :lupaussanktio nil}))
+        "Bonus palautetaan positiivisena")
+    
+    (is (= {:sanktio 13200M}
+           (lupaus-domain/paatos->bonus-tai-sanktio
+             {:tyyppi "sanktio"
+              :lupausbonus nil
+              :lupaussanktio 13200M}))
+        "Sanktio palautetaan positiivisena API-muodossa")
+    
+    (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio
+                {:tyyppi "tuntematon"
+                 :lupausbonus 100M
+                 :lupaussanktio 200M}))
+        "Palauttaa nil tuntemattomalle tyypille")
+
+    (is (= {:tavoite-taytetty true}
+         (lupaus-domain/paatos->bonus-tai-sanktio
+         {:tyyppi "taytetty"
+          :lupausbonus nil
+          :lupaussanktio nil}))
+      "Tavoite täytetty muunnetaan API-muotoon oikein")
+    
+    (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun päätös on nil")))
 
 

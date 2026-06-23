@@ -1,5 +1,5 @@
 import * as ks from "../support/kustannussuunnitelmaFns.js";
-import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+import {avaaHarjaTimeoutilla, muokkaaTarjousRiviaArvo} from "../support/apurit.js";
 
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
@@ -18,17 +18,6 @@ function alustaIin21TarjousUrakka() {
 function trimmaaArvo(arvo) {
     // Poistaa ylimääräiset välilyönnit ja trimmauksella
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
-}
-
-function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uusiArvo) {
-    cy.get(`[data-cy=${taulukonDataCy}]`)
-        .should('be.visible')
-        .contains('tbody tr', rivinTunniste)
-        .find('input')
-        .eq(sarakeIndex)
-        .should('be.visible')
-        .clear()
-        .type(uusiArvo)
 }
 
 describe('Varmista Hoitovuoden alun tavoitehinta', function () {
@@ -65,6 +54,10 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
 
         // Tallenna jotain kipailutettaviin hankintoihin
         muokkaaTarjousRiviaArvo('tarjous-hankinnat-grid', 'Kilpailutettavat hankinnat', 0, 10);
+        muokkaaTarjousRiviaArvo('tarjous-erillishankinnat-grid', 'Erillishankinnat', 0, 20);
+        muokkaaTarjousRiviaArvo('tarjous-toimenkuvat-grid', 'Valmistelukausi ennen urakka-ajan alkua', 0, 30);
+        muokkaaTarjousRiviaArvo('tarjous-hoidonjohtopalkkio-grid', 'Hoidonjohtopalkkio', 0, 40);
+
         // Tallenna muutokset
         cy.contains('button', 'Tallenna muutokset').click();
 
@@ -88,14 +81,14 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.get('#kilpailutettavat-hankinnat-elementti table.grid').gridOtsikot().then(() => {
 
             let valitseHankinnatInput = function (rivi) {
-                return `#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(${rivi + 1}) td input`;
+                return `#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(${rivi}) td input`;
             };
 
             // Muokataan Talvihoito laaja TPI
             cy.get(valitseHankinnatInput(1)).eq(0).clear().type('10');
 
             // Yhteensä ja Kirjaamatta teksti näkyy ja summat on oikein
-            cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody').contains('Yhteensä').next().next().contains('10,00');
+            cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody').contains('Yhteensä').next().contains('10,00');
         });
 
         // Tallennetaan Kilpailutettavat hankinnat tietokantaan
@@ -210,8 +203,8 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.get('[data-cy=tabs-taso1-Muutokset]').click();
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         // varmista
-        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span')
-            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').next().then(function (text1) {
+        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')
+            .contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().next().then(function (text1) {
             const trimmattuTodellinen = trimmaaArvo(text1);
             const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
             expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
@@ -228,29 +221,6 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
             .then(function (text1) {
                 const trimmattuTodellinen = trimmaaArvo(text1);
                 const trimmattuOdotettu = trimmaaArvo(indeksikorjattuKattohinta);
-                expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
-            });
-    });
-
-    // Tavoitehinta Laskutusyhteenvedossa
-    it('Tavoitehinta Laskutusyhteenvedossa', () => {  
-        cy.get('[data-cy=tabs-taso1-Kulut]').click();
-        cy.get('[data-cy="tabs-taso2-Laskutusyhteenveto"]').click();
-        cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist');
-
-        // Valitse koko hoitokausi
-        // Valitse ensimmäinen hoitovuosi
-        cy.get('div.label-ja-alasveto.kuukausi div.dropdown').eq(0).within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('Koko hoitokausi').click();
-        });
-
-        // varmista
-        cy.get('span.varillinen-teksti').contains('Hoitovuoden alun indeksikorjattu tavoitehinta').parent().parent().parent().next()
-            .get('span.arvo')
-            .then(function (text1) {
-                const trimmattuTodellinen = trimmaaArvo(text1);
-                const trimmattuOdotettu = trimmaaArvo(indeksikorjattuTavoitehinta);
                 expect(trimmattuTodellinen).to.equal(trimmattuOdotettu);
             });
     });

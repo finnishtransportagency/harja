@@ -60,7 +60,7 @@
        "INSERT INTO tiemerkinta_korjauskustannus (urakka,luoja,luotu,muokattu,muokkaaja,kustannusvuosi,kustannus,pk1,pk2,pk3) 
         VALUES
         (
-        (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024')::INT,
+        (SELECT id FROM urakka WHERE nimi = 'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P')::INT,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
@@ -173,8 +173,8 @@
   (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
         alkuaika (pvm/->pvm-aika (str "01.01." nykyinen-vuosi " 00:00"))
         loppuaika (pvm/->pvm-aika (str "01.01." (inc nykyinen-vuosi) " 00:00"))
-        urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
-        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024';"))
+        urakka-id (hae-urakan-id-nimella "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P")
+        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Utajärven Tiemerkintäurakka Sopimus';"))
         paasopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024'"))
 
         params {:kaikki? false,

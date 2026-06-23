@@ -11,7 +11,7 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot])
+            [harja.tiedot.hallinta.tyokalut.toteumatyokalu-tiedot :as tiedot])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -108,6 +108,11 @@
         :tyyppi :numero
         :pituus-max 40
         :pakollinen? true}
+       {:nimi :lahde
+        :otsikko "Lähde"
+        :tyyppi :valinta
+        :valinnat ["koneellinen", "kasin"]
+        :pakollinen? true}
        {:nimi :sopimusid
         :otsikko "Sopimusid"
         :tyyppi :numero
@@ -121,10 +126,27 @@
         :valinta-nayta :nimi
         :pakollinen? true}
        {:nimi :materiaalimaara
-        :otsikko "Materiaalimäärä"
-        :tyyppi :string
-        :pakollinen? true}
-       {:nimi :tierekisteriosoite
+         :otsikko "Materiaalimäärä"
+         :tyyppi :string
+         :pakollinen? true}
+        {:nimi :valittu-tehtava
+         :otsikko "Valitse tehtävä (valinnainen)"
+         :tyyppi :valinta
+         :valinnat (concat [nil] tiedot/+mahdolliset-tehtavat+)
+         :valinta-nayta #(if % (:nimi %) "- Ei tehtävää -")
+         :pakollinen? false}
+        {:nimi :tehtavamaara
+         :otsikko "Tehtävämäärä"
+         :tyyppi :string
+         :pakollinen? false
+         :napiton? (nil? (:valittu-tehtava toteumatiedot))}
+        {:nimi :tehtavayksikko
+         :otsikko "Tehtävän yksikkö"
+         :tyyppi :valinta
+         :valinnat ["tiekm" "jkm" "kaistakm" "km" "kpl" "m2" "m3"]
+         :pakollinen? false
+         :napiton? (nil? (:valittu-tehtava toteumatiedot))}
+        {:nimi :tierekisteriosoite
         :tyyppi :tierekisteriosoite
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}

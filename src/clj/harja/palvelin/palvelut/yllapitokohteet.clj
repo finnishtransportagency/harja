@@ -498,10 +498,32 @@
                                                 :id id}))
 
               (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
-              (doseq [osa osat]
-                (if (id-olemassa? (:id osa))
-                  (paivita-yllapitokohdeosa db user urakka-id osa versio)
-                  (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa versio)))
+
+              (let [nil-yllapitoluokka? (some #(nil? (:yllapitoluokka %)) osat)]
+
+                (doseq [osa osat]
+                  (if (id-olemassa? (:id osa))
+                    (paivita-yllapitokohdeosa db user urakka-id osa versio)
+                    (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa versio)))
+
+                ;; Jos jollakin osalla ei ole ylläpitoluokkaa, päivitetään pk-luokat
+                (when nil-yllapitoluokka?
+                  (log/info "Kohteesta puuttuu ylläpitoluokka. Päivitetään pk-luokat kohteelle: " yllapitokohde-id)
+
+                  ;; Päivitetään sijainnit ensin niille osille joilla se on NULL
+                  ;; Tämä varmistaa että tierekisteriosoitteelle_viiva_ajr on laskenut geometriat
+                  (q/paivita-yllapitokohteen-kohdeosien-sijainnit! db {:yllapitokohde yllapitokohde-id})
+
+                  ;; Tarkistetaan että kaikilla osilla on sijainti ennen PK-laskentaa
+                  (let [osat-ilman-sijaintia (q/hae-ilman-sijaintia-olevat-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id})]
+                    (when (seq osat-ilman-sijaintia)
+                      (log/warn "Ylläpitokohteella " yllapitokohde-id " on osia joilla sijainti on NULL ennen PK-laskentaa: " (pr-str osat-ilman-sijaintia))))
+
+                  (q/paivita-yllapitokohteen-korjausluokat-ja-yllapitoluokat db {:id yllapitokohde-id})
+                  (let [paivitetyt-osat (hae-kaikki-osat)
+                        pk-tiedot (map #(select-keys % [:id :yllapitoluokka :pk1-pituus :pk2-pituus :pk3-pituus]) paivitetyt-osat)]
+                    (log/info "PK-luokat päivitetty kohteelle " yllapitokohde-id ". Osien PK-tiedot: " (pr-str pk-tiedot)))))
+
               (yy/paivita-yllapitourakan-geometria db urakka-id)
               (let [yllapitokohdeosat (hae-kaikki-osat)]
                 (log/debug "Tallennus suoritettu. Uudet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))

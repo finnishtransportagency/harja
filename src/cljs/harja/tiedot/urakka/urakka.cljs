@@ -17,6 +17,10 @@
     (pvm/vuosi (pvm/nyt))
     (dec (pvm/vuosi (pvm/nyt)))))
 
+(defn mhu25-urakka? [valittu-urakka]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm valittu-urakka))]
+    (and (= :teiden-hoito (:tyyppi valittu-urakka @nav/valittu-urakka)) (>= urakan-alkuvuosi 2025))))
+
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
                                                                          :kopioidaan-tuleville-vuosille? false
@@ -386,7 +390,7 @@
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
-                                               :valitut-elyt #{0}
+                                               :valitut-evkt #{0}
                                                :paikkauskohteet? true
                                                :pot-jarjestys :tila
                                                :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}

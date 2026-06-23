@@ -109,6 +109,11 @@ SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
     :alkupvm::DATE,
     :loppupvm::DATE);
 
+--name: paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla
+SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla(
+    :urakka::INTEGER,
+    :muutospvm::DATE);
+
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
   urakka.nimi             AS "urakka-nimi",
@@ -168,15 +173,15 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(rtm.kokonaismaara)              AS kokonaismaara,
-  u.nimi             AS "urakka-nimi",
-  mk.nimi    AS "materiaali-nimi",
-  mk.yksikko AS "materiaali-yksikko",
+  SUM(rtm.kokonaismaara) AS kokonaismaara,
+  u.nimi                 AS "urakka-nimi",
+  mk.nimi                AS "materiaali-nimi",
+  mk.yksikko             AS "materiaali-yksikko",
   mk.materiaalityyppi
 FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
-WHERE u.hallintayksikko = :hallintayksikko AND
+WHERE u.elinvoimakeskus_id = :elinvoimakeskus AND
       u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
 GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi
@@ -195,7 +200,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
- WHERE u.hallintayksikko = :hallintayksikko
+ WHERE u.elinvoimakeskus_id = :elinvoimakeskus
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
@@ -212,35 +217,35 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
-  SUM(rtm.kokonaismaara) AS kokonaismaara,
-  o.nimi                 AS "hallintayksikko-nimi",
-  mk.nimi                AS "materiaali-nimi",
-  mk.yksikko             AS "materiaali-yksikko",
+  SUM(rtm.kokonaismaara)  AS kokonaismaara,
+  o.nimi                  AS "elinvoimakeskus-nimi",
+  mk.nimi                 AS "materiaali-nimi",
+  mk.yksikko              AS "materiaali-yksikko",
   mk.materiaalityyppi,
-  o.elynumero
+  o.elinvoimakeskusnumero AS elinvoimakeskusnumero
 FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
   JOIN urakka u ON (u.id = rtm."urakka-id" AND u.urakkanro IS NOT NULL)
-  JOIN organisaatio o ON u.hallintayksikko = o.id
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
 WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
       rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
-GROUP BY "materiaali-nimi", o.nimi, o.elynumero, mk.yksikko, mk.materiaalityyppi
+GROUP BY "materiaali-nimi", o.nimi, o.elinvoimakeskusnumero, mk.yksikko, mk.materiaalityyppi
 
 UNION ALL
 
 -- Ota mukaan valittu joukko toteumia, joilla ei ole materiaalikoodia.
-SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
-       o.nimi                     AS "hallintayksikko-nimi",
-       tk.nimi                    AS "materiaali-nimi",
+SELECT SUM(rtmaarat.tehtavamaara)             AS kokonaismaara,
+       o.nimi                                 AS "elinvoimakeskus-nimi",
+       tk.nimi                                AS "materiaali-nimi",
        CASE
            WHEN tk.yksikko = 'tonni'
                THEN 't'
            END AS "materiaali-yksikko",
-       'paikkausmateriaali'::MATERIAALITYYPPI    AS materiaalityyppi,
-       o.elynumero
+       'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi,
+       o.elinvoimakeskusnumero                AS elinvoimakeskusnumero
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
-           JOIN organisaatio o ON u.hallintayksikko = o.id
+           JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
            LEFT JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
@@ -251,7 +256,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
                                      WHERE tpk3.koodi = '20107'
                                        AND tpk4.poistettu IS NOT TRUE
                                        AND tpk4.yksikko = 'tonni')
- GROUP BY "materiaali-nimi", "hallintayksikko-nimi", "elynumero", "materiaali-yksikko", materiaalityyppi;
+ GROUP BY "materiaali-nimi", "elinvoimakeskus-nimi", elinvoimakeskusnumero, "materiaali-yksikko", materiaalityyppi;
 
 
 -- name: hae-urakan-toteumat-materiaalille
@@ -356,14 +361,16 @@ WHERE urakka = :urakka AND sopimus = :sopimus
 -- Luo uuden materiaalin toteumalle
 INSERT
 INTO toteuma_materiaali
-(toteuma, materiaalikoodi, maara, luotu, luoja, poistettu, urakka_id)
-VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE, :urakka);
+(toteuma, materiaalikoodi, maara, luotu, luoja, poistettu, urakka_id, hoitokauden_alkuvuosi)
+VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE, :urakka, :hoitokauden_alkuvuosi);
 
 -- name: paivita-toteuma-materiaali!
 -- Päivittää toteuma_materiaalin
 UPDATE toteuma_materiaali
-SET materiaalikoodi = :materiaalikoodi, maara = :maara, muokattu = NOW(), muokkaaja = :kayttaja
-WHERE toteuma = :toteuma AND id = :id;
+   SET materiaalikoodi = :materiaalikoodi, maara = :maara, muokattu = NOW(), muokkaaja = :kayttaja,
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+ WHERE toteuma = :toteuma
+   AND id = :id;
 
 -- name: poista-toteuma-materiaali!
 UPDATE toteuma_materiaali
@@ -405,31 +412,31 @@ SELECT
        sum(tm.maara)                AS maara,
        count(t.id)                  AS lukumaara,
        array_agg(t.id)              AS toteumaidt,
-       (k.jarjestelma = TRUE)       AS koneellinen,
-       CASE WHEN k.jarjestelma = FALSE
+       t.lahde                      AS lahde,
+       -- Vain käsin kirjatuille palautetaan lisätiedot
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN t.lisatieto
             ELSE NULL
            END                                  AS lisatieto,
     -- Käsin luotuja pitää pystyä muokkaamaan, siksi niille tarvitaan toteuman id
-       CASE WHEN k.jarjestelma = FALSE
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN t.id
             ELSE NULL
            END                                  AS tid,
-       CASE WHEN k.jarjestelma = FALSE
+       CASE WHEN t.lahde  = 'harja-ui'
                  THEN tm.id
             ELSE -1 -- ei tarvita koneellisille päivitystä
            END                                  AS tmid
 FROM toteuma t
     JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
     JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-    LEFT JOIN kayttaja k ON t.luoja = k.id
 WHERE t.urakka = :urakka
   AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
   AND t.poistettu = FALSE
   AND t.tyyppi = 'kokonaishintainen'
   AND tm.poistettu IS NOT TRUE
   AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-group by mk.id, pvm, k.jarjestelma, t.lisatieto, tid, tmid
+group by mk.id, pvm, t.lahde, t.lisatieto, tid, tmid
 ORDER BY pvm DESC;
 
 -- name: hae-suolamateriaalit

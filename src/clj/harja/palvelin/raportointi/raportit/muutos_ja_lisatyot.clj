@@ -52,14 +52,14 @@
 
 (defn hae-muutos-ja-lisatyot-aikavalille
   [db user urakka-annettu? urakka-id
-   urakkatyyppi hallintayksikko-annettu? hallintayksikko-id
+   urakkatyyppi elinvoimakeskus-annettu? elinvoimakeskus-id
    toimenpide-id muutostyotyyppi
    alkupvm loppupvm ryhmiteltyna? konteksti]
   (let [parametrit {:urakka_annettu urakka-annettu?
                     :urakka urakka-id
                     :urakkatyyppi urakkatyyppi
-                    :hallintayksikko_annettu hallintayksikko-annettu?
-                    :hallintayksikko hallintayksikko-id
+                    :elinvoimakeskus_annettu elinvoimakeskus-annettu?
+                    :elinvoimakeskus elinvoimakeskus-id
                     :rajaa_tpi (not (nil? toimenpide-id)) :tpi toimenpide-id
                     :alku alkupvm :loppu loppupvm
                     :tyotyypit (if muutostyotyyppi
@@ -72,7 +72,7 @@
         toteumat (if ryhmiteltyna?
                    (if (= konteksti :koko-maa)
                      (hae-tyypin-ja-hyn-mukaan-ryhmitellyt-muutos-ja-lisatyot-raportille db parametrit)
-                     (when (= konteksti :hallintayksikko)
+                     (when (= konteksti :elinvoimakeskus)
                        (hae-tyypin-ja-urakan-mukaan-ryhmitellyt-hyn-muutos-ja-lisatyot-raportille db parametrit)))
                    (hae-muutos-ja-lisatyot-raportille db parametrit))]
     toteumat))
@@ -100,20 +100,20 @@
           (or (:korotus %) indeksi-puuttuu-info-solu))
         (sort-by tyypin-sort-avain tyot)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id muutostyotyyppi
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id toimenpide-id muutostyotyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         urakka-annettu? (boolean urakka-id)
-        hallintayksikko-annettu? (boolean hallintayksikko-id)
+        elinvoimakeskus-annettu? (boolean elinvoimakeskus-id)
         kayta-ryhmittelya? (and (not urakoittain?) (not= :urakka konteksti))
         muutos-ja-lisatyot-kannasta (into []
                                           (map konv/alaviiva->rakenne)
                                           (hae-muutos-ja-lisatyot-aikavalille db user
                                                                               urakka-annettu? urakka-id
                                                                               (when urakkatyyppi (name urakkatyyppi))
-                                                                              hallintayksikko-annettu? hallintayksikko-id
+                                                                              elinvoimakeskus-annettu? elinvoimakeskus-id
                                                                               toimenpide-id
                                                                               (when muutostyotyyppi
                                                                                 (name muutostyotyyppi))
@@ -123,7 +123,7 @@
                              muutos-ja-lisatyot-kannasta
                              (reverse (sort-by (juxt (comp :id :urakka) :alkanut) muutos-ja-lisatyot-kannasta)))
         sort-avain (if (= konteksti :koko-maa) :elynumero
-                     (if (= konteksti :hallintayksikko) :nimi :id))
+                     (if (= konteksti :elinvoimakeskus) :nimi :id))
         muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (sort-avain (first %)) 100000)
                                                (seq (group-by :hallintayksikko
                                                               muutos-ja-lisatyot)))
@@ -135,7 +135,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
 
@@ -199,7 +199,7 @@
 
                       (let [alueen-nimi (if (= konteksti :koko-maa)
                                           "KOKO MAA"
-                                          (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))))]
+                                          (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id))))]
                         (concat
                          [{:otsikko alueen-nimi}]
                          (let [kokomaan-muutos-ja-lisatyot-ryhmiteltyna

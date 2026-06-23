@@ -15,4 +15,5 @@
   hae-urakan-toteumat-materiaalille hae-toteuman-materiaalitiedot poista-urakan-materiaalinkaytto!
   poista-materiaalinkaytto-id! paivita-materiaalinkaytto-maara! luo-materiaalinkaytto<!
   paivita-toteuma-materiaali! luo-toteuma-materiaali<! paivita-sopimuksen-materiaalin-kaytto-toteumapvm
-  hae-suolauksen-toimenpidekoodi)
+  hae-suolauksen-toimenpidekoodi hae-talvisuolan-hoitovuoden-kokonaismaara
+  paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla)

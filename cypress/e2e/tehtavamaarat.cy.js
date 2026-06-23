@@ -54,7 +54,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
         alustaKantaanTehtavatJaMaarat('Pellon MHU testiurakka (3. hoitovuosi)');
 
         // Sivun tila on useiden lokaalitestien jälkeen väärässä kohdassa, joten joudumme käymään eri sivuilla nollataksemme tilateen
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('tehtavamaarat')
         cy.wait('@tehtavamaarat')
         cy.viewport(1100, 2000)
@@ -121,7 +121,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
 
     it.skip('Määrän voi syöttää', () => {
         cy.viewport(1100, 2000)
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeSuunniteltavatTehtavat')
         cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
         cy.intercept('POST', '_/tallenna-tehtavamaarat').as('TallennaTehtavamaarat')
@@ -164,7 +164,7 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     })
 
     it('Määrän voi vaihtaa', () => {
-        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=23&u=32');
+        cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32');
         cy.intercept('POST', '_/hae-mhu-suunniteltavat-tehtavat').as('HaeTehtavamaarat')
         cy.intercept('POST', '_/hae-sopimuksen-tila').as('HaeSopimuksenTila')
         cy.wait('@HaeTehtavamaarat')

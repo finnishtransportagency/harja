@@ -10,7 +10,7 @@
       "viestintunniste": {
           "id": 62711560
       },
-      "lahetysaika": "2025-02-24T08:49:22Z"
+      "lahetysaika": "2023-02-24T08:49:22Z"
   },
   "reittitoteumat": [
       {
@@ -19,8 +19,8 @@
                   "tunniste": {
                       "id": 86123323
                   },
-                  "alkanut": "2025-02-24T07:03:04Z",
-                  "paattynyt": "2025-02-24T07:03:11Z",
+                  "alkanut": "2023-02-24T07:03:04Z",
+                  "paattynyt": "2023-02-24T07:03:11Z",
                   "toteumatyyppi": "kokonaishintainen",
                   "suorittaja": {
                       "ytunnus": "__YTUNNUS__",
@@ -42,7 +42,7 @@
               "reitti": [
                   {
                       "reittipiste": {
-                          "aika": "2025-02-24T07:03:04Z",
+                          "aika": "2023-02-24T07:03:04Z",
                           "koordinaatit": {
                               "x": 432415.13100000739,
                               "y": 6896034.008000019
@@ -58,7 +58,7 @@
                   },
                   {
                       "reittipiste": {
-                          "aika": "2025-02-24T07:03:11Z",
+                          "aika": "2023-02-24T07:03:11Z",
                           "koordinaatit": {
                               "x": 432375.66300000704,
                               "y": 6896044.0150000174

@@ -613,6 +613,7 @@
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
+(def pohjois-suomen-evk-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def tampereen-alueurakan-2017-2022-id (atom nil))
@@ -898,6 +899,11 @@
                    FROM   urakka
                    WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030')"))))
+
 (defn hae-kajaani-hoitourakan-2025-2030-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -996,7 +1002,19 @@
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa' and tyyppi = 'hallintayksikko'"))))
+
+(defn hae-hallintoyksikon-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                   FROM   organisaatio
+                   WHERE  tyyppi = 'hallintayksikko' and nimi = '%s'"
+               nimi))))
+
+(defn hae-pohjois-suomen-evk-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Pohjois-Suomi' AND tyyppi = 'elinvoimakeskus'"))))
+
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -1036,6 +1054,12 @@
   (ffirst (q (format "SELECT id
                       FROM   organisaatio
                       WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-elinvoimakeskus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
+                      WHERE  nimi = '%s' AND tyyppi = 'elinvoimakeskus';"
                nimi))))
 
 (defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
@@ -1147,6 +1171,12 @@
 (defn hae-yllapitokohteen-id-nimella
   [kohteen-nimi]
   (let [query (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
+
+(defn hae-kohdeosan-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohdeosa ypko
                    WHERE nimi = '" kohteen-nimi "';")]
     (ffirst (q query))))
 
@@ -1331,6 +1361,7 @@
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
+  (reset! pohjois-suomen-evk-id (hae-pohjois-suomen-evk-id))
   (reset! muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! muhoksen-paikkausurakan-id (hae-urakan-id-nimella "Muhoksen paikkausurakka"))
@@ -1888,6 +1919,27 @@
         (conj rivi paivitettava-arvo)))
     [(inc (first edellinen))]
     (map vector edellinen (next edellinen) loput-seq)))
+
+(defn luo-kulu
+  "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
+  [urakka-id tyyppi erapaiva kohdistustyyppi koontilaskun-kuukausi
+   summa toimenpideinstanssi-id tehtavaryhma-id tehtava-id rahavaraus]
+  {:id nil
+   :urakka urakka-id
+   :viite "123456781"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi tyyppi
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava tehtava-id
+                   :tyyppi kohdistustyyppi
+                   :rahavaraus rahavaraus
+                   :tavoitehintainen :true}]
+   :koontilaskun-kuukausi koontilaskun-kuukausi})
 
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))

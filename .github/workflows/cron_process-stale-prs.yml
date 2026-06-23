@@ -5,9 +5,7 @@ name: '[Scheduled] Process stale PRs'
 run-name: '[Scheduled] Process stale PRs'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
-  # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 on:
   # Manuaalisen käynnistyksen asetukset
@@ -30,21 +28,21 @@ on:
 # Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
 # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
-permissions:
-  contents: read
-  # Vaaditaan oikeus PR:ien käsittelyyn, jotta voidaan lisätä kommentteja tai sulkea PR automaattisesti
-  pull-requests: write
-  # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja, tässä sitä tarvitaan cachen luomiseen ja poistamiseen
-  actions: write
+permissions: {}
 
 jobs:
   # Note: https://github.com/actions/stale
   process-stale-prs:
+    name: "Process stale PRs"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Vaaditaan oletusarvoinen lukuoikeus repoon
+      pull-requests: write # Vaaditaan PR:ien kommentointiin ja sulkemiseen
+      actions: write # Vaaditaan cachen luomiseen ja poistamiseen
     steps:
       - name: Find and label stale PRs
         id: label-stale-prs
-        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
+        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
         with:
           debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
@@ -63,9 +61,9 @@ jobs:
           days-before-issue-stale: -1
           days-before-issue-close: -1
 
-      - name: Get and format all PRs labeled as Stale
+      - name: Get and format stale PRs list
         id: stale-prs-list
-        uses: actions/github-script@v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
@@ -76,13 +74,24 @@ jobs:
             });
 
             const stalePRs = pullRequests.filter(pr => 
-            pr.labels.some(label => label.name === 'Stale')
+              pr.labels.some(label => label.name === 'Stale')
             );
             
             console.log(`Found ${stalePRs.length} stale PR(s).`);
             console.log(stalePRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
             
-            const formattedList = stalePRs
+            
+            const dependencyPRs = pullRequests.filter(pr => 
+              pr.labels.some(label => label.name === 'dependencies')
+            );
+            
+            console.log(`Found ${dependencyPRs.length} dependency PR(s).`);
+            console.log(dependencyPRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
+            
+            // Combine PRs listings, ensuring no duplicates (in case some PRs have both labels)
+            const prs = [...stalePRs, ...dependencyPRs.filter(depPR => !stalePRs.some(stalePR => stalePR.number === depPR.number))];
+            
+            const formattedList = prs
               .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
               .join('\\n');
             
@@ -92,7 +101,7 @@ jobs:
             return formattedList;
 
       - name: Send a summary of stale PRs into Slack
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
         if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
         with:

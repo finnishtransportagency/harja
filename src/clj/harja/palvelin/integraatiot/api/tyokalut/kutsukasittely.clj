@@ -38,17 +38,41 @@
                                             {"Content-Type" "application/json"})
                                    request-origin))
 
-(defn kutsun-formaatti
-  "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Palautetaan nil, mikäli ei passaa kumpaankaan."
+(defn- hae-header-kirjainkoosta-riippumatta [headerit header]
+  (or (get headerit header)
+      (some (fn [[avain arvo]]
+              (when (= (str/lower-case (str avain)) header)
+                arvo))
+            headerit)))
+
+(defn- normalisoi-sisaltotyyppi
+  "Hakee request-mapista content-type-headerin arvon ja normalisoi sen vertailukelpoiseksi:
+  poistetaan reunavälilyönnit, muunnetaan pieniksi kirjaimiksi ja otetaan vain
+  mediatyyppi ilman mahdollisia parametreja (esim. ';charset=UTF-8').
+  Palauttaa nil, jos headeria ei ole."
   [request]
-  (let [content-type (-> request :headers (get "content-type"))]
-    (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+  (when-let [sisaltotyyppi (some-> request
+                                   :headers
+                                   (hae-header-kirjainkoosta-riippumatta "content-type")
+                                   str/trim
+                                   not-empty)]
+    (-> sisaltotyyppi
+        str/lower-case
+        (str/split #";" 2)
+        first
+        str/trim
+        not-empty)))
+
+(defn kutsun-formaatti
+  "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Kirjainkoko ja
+  content-typen parametrit, kuten ; charset=UTF-8, sivuutetaan. Palautetaan nil,
+  mikäli ei passaa kumpaankaan."
+  [request]
+  (let [content-type (normalisoi-sisaltotyyppi request)]
     (cond
       (= content-type "application/x-www-form-urlencoded") "form"
-      (= content-type "application/xml") "xml"
-      (= content-type "text/xml") "xml"
-      (= content-type "application/json") "json"
-      (= content-type "text/json") "json"
+      (#{"application/xml" "text/xml"} content-type) "xml"
+      (#{"application/json" "text/json"} content-type) "json"
       :default nil)))
 
 (defn parsi-skeeman-polku
@@ -73,7 +97,8 @@
 
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta suunta
-   :sisaltotyyppi "application/json"
+  :sisaltotyyppi (or (hae-header-kirjainkoosta-riippumatta (:headers viesti) "content-type")
+                      "application/json")
    :siirtotyyppi "HTTP"
    :sisalto body
    :otsikko (str (walk/keywordize-keys (:headers viesti)))
@@ -383,12 +408,29 @@
           (slurp gzip))
         (slurp body)))))
 
+(defn- hylkaa-kutsu-ja-lokita
+  ([integraatioloki resurssi request response varoitusviesti]
+   (hylkaa-kutsu-ja-lokita integraatioloki resurssi request response varoitusviesti "api"))
+  ([integraatioloki resurssi request response varoitusviesti integraatio]
+   (log/error varoitusviesti)
+   (when integraatioloki
+     (try
+       (let [body (lue-body request)
+             tapahtuma-id (lokita-kutsu integraatioloki resurssi request body integraatio)]
+         (lokita-vastaus integraatioloki resurssi response tapahtuma-id))
+       (catch Exception e
+         (log/error e (format "Hylätyn kutsun integraatiolokitus epäonnistui resurssille: %s" resurssi)))))
+   response))
+
 (defn- tarkista-api-oikeus [api-oikeus]
   (when (nil? api-oikeus)
     (log/error "Parametri vaadittu-api-oikeus puuttuu sisäisestä kutsunkäsittelystä")
     (throw+ {:type virheet/+puutteelliset-parametrit+
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                         :viesti "Parametri vaadittu-api-oikeus puuttuu sisäisestä kutsunkäsittelystä"}]})))
+
+(defn- lomakedata-kutsu? [request]
+  (= "form" (kutsun-formaatti request)))
 
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
@@ -398,10 +440,15 @@
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus]
-  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
-    {:status 415
-     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+  (if (lomakedata-kutsu? request)
+    (hylkaa-kutsu-ja-lokita
+      integraatioloki
+      resurssi
+      request
+      {:status 415
+       :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+       :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+      (format "Resurssi %s: hylätty kutsu lomakedatan content-typellä (415)" resurssi))
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id-thread (thread (when integraatioloki
@@ -447,9 +494,16 @@
   yksinkertaistuu"
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   (if-not (= (kutsun-formaatti request) "xml")
-    {:status 415
-     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-     :body "Virhe: Väärä content-type. Käytä application/xml\n"}
+    (hylkaa-kutsu-ja-lokita
+      integraatioloki
+      resurssi
+      request
+      {:status 415
+       :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+       :body "Virhe: Väärä content-type. Käytä application/xml\n"}
+      (format "Resurssi %s: hylätty kutsu väärällä content-typellä '%s', vaaditaan application/xml (415)"
+              resurssi (hae-header-kirjainkoosta-riippumatta (:headers request) "content-type"))
+      "sahkoposti")
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id-thread (thread (when integraatioloki
@@ -488,10 +542,16 @@
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
   [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadittu-api-oikeus integraatio-jarjestelma]
-  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
-    {:status 415
-     :headers {"Content-Type" "text/plain"}
-     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+  (if (lomakedata-kutsu? request)
+    (hylkaa-kutsu-ja-lokita
+      integraatioloki
+      resurssi
+      request
+      {:status 415
+       :headers {"Content-Type" "text/plain"}
+       :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+      (format "Resurssi %s: hylätty kutsu lomakedatan content-typellä (415)" resurssi)
+      integraatio-jarjestelma)
     (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
           xml? (= (kutsun-formaatti request) "xml")
           tapahtuma-id-thread (thread (when integraatioloki
@@ -523,10 +583,16 @@
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
   [db integraatioloki integraatio resurssi request kasittele-kutsu-fn vaadittu-api-oikeus]
-  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
-    {:status 415
-     :headers {"Content-Type" "text/plain"}
-     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+  (if (lomakedata-kutsu? request)
+    (hylkaa-kutsu-ja-lokita
+      integraatioloki
+      resurssi
+      request
+      {:status 415
+       :headers {"Content-Type" "text/plain"}
+       :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+      (format "Resurssi %s: hylätty kutsu lomakedatan content-typellä (415)" resurssi)
+      integraatio)
     (let [kutsun-kesto-alkaa (System/currentTimeMillis)
           request-origin (get (:headers request) "origin")
           kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
@@ -548,7 +614,7 @@
                           :body "Virhe: Liian suuri aineisto palautettavaksi."}
                          (tee-optimoitu-json-vastaus 200 payload request-origin))))]
       (when integraatioloki
-        (thread
+          (thread
           (go
             (lokita-vastaus integraatioloki resurssi {:status (:status vastaus)
                                                       :body "Liian iso logitettavaksi"} (<! tapahtuma-id-thread)))))
@@ -585,9 +651,16 @@
   "Samanlainen käsittelijä, kuin ylläolevat. Räätälöity Sampo viestiin, koska se on logiikaltaan niin erilainen."
   [db integraatioloki resurssi request kutsun-skeema kasittele-kutsu-fn integraatio]
   (if (not= (kutsun-formaatti request) "xml")
-    {:status 415
-     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-     :body "Error: Wrong content type. Please use: application/xml\n"}
+    (hylkaa-kutsu-ja-lokita
+      integraatioloki
+      resurssi
+      request
+      {:status 415
+       :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+       :body "Error: Wrong content type. Please use: application/xml\n"}
+      (format "Resurssi %s: hylätty kutsu väärällä content-typellä '%s', vaaditaan application/xml (415)"
+              resurssi (hae-header-kirjainkoosta-riippumatta (:headers request) "content-type"))
+      integraatio)
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id (when integraatioloki
@@ -598,17 +671,24 @@
                     parametrit
                     (:headers request)
                     body
-                    #(let
-                       [kayttaja (hae-kayttaja db
-                                   (get (:headers request) "oam_remote_user"))
-                        origin-header (get (:headers request) "origin")
-                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                        vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
-                        purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
-                        ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
-                        ;; käsittely onnistunut
-                        mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
-                        status (if-not (str/blank? mahdollinen-virhe) 400 200)]
+                    #(let [kayttaja (hae-kayttaja db
+                                      (get (:headers request) "oam_remote_user"))
+                           origin-header (get (:headers request) "origin")
+                           kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                           vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
+                           purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
+                           vastauksen-sisalto (:content (first purettu-vastauksen-data))
+                           ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
+                           ;; käsittely onnistunut
+                           mahdollinen-virhe (get-in (first vastauksen-sisalto) [:attrs :ErrorMessage])
+                           status-state (some (fn [{:keys [tag attrs]}]
+                                                (when (= tag :Status)
+                                                  (:state attrs)))
+                                              vastauksen-sisalto)
+                           status (if (or (= (some-> status-state str/lower-case) "failure")
+                                          (not (str/blank? mahdollinen-virhe)))
+                                    400
+                                    200)]
 
                        {:status status
                         :headers (lisaa-request-headerit true origin-header)

@@ -60,6 +60,7 @@
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
 (def +virhe-tietolajin-arvojen-versiossa+ "virhe-tietolajin-arvojen-versiossa")
 (def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
+(def +liikaa-tuloksia+ "liikaa-tuloksia")
 
 (defn heita-poikkeus
   ([tyyppi virheet] (heita-poikkeus tyyppi virheet nil))
@@ -69,7 +70,7 @@
      (let [virheet (if (map? virheet) [virheet] virheet)]
        (merge {:type tyyppi
                :virheet virheet}
-              parametrit)))))
+         parametrit)))))
 
 ;; TODO tämä ei heitä IllegalArgumentException, vaikka pitäisi
 

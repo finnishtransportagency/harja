@@ -491,24 +491,74 @@
 (defn sallittu-kuukausi? [lupaus kuukausi paatos]
   (sallittu-kuukausi-hoitovuodelle? lupaus kuukausi paatos nil nil))
 
-(defn bonus-tai-sanktio
+(defn bonus-tai-sanktio-19-20-urakalle
   "Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet.
   Bonukset lasketaan kaavalla:
   0,0013 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta
 
   Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet
   Sanktiot lasketaan kaavalla:
-  0,0033 x (toteumapistemäärä - lupauspistemäärä) x tavoitehinta"
+  0,0033 x (lupauspistemäärä - toteumapistemäärä) x tavoitehinta
+  
+  HUOM: Tämä funktio käyttää kiinteitä kertoimia ja on jätetty 2019/2020-urakoiden vanhan polun yhteensopivuuden vuoksi.
+  Uusi yhteinen laskenta on funktiossa laske-lupauspaatos-bonus-tai-sanktio.
+  
+  Palauttaa:
+  - {:bonus <positiivinen>} kun bonus
+  - {:sanktio <negatiivinen>} kun legacy-polku tarvitsee sanktion indeksikorjaukseen
+  - {:tavoite-taytetty true} kun tavoite täytetty"
   [{:keys [toteuma lupaus tavoitehinta]}]
   (when (and (number? toteuma) (number? lupaus) (number? tavoitehinta) (pos? tavoitehinta))
     (cond
       (> toteuma lupaus)
       {:bonus (* 0.0013 (- toteuma lupaus) tavoitehinta)}
       (< toteuma lupaus)
-      {:sanktio (* 0.0033 (- toteuma lupaus) tavoitehinta)}
+      {:sanktio (* -0.0033 (- lupaus toteuma) tavoitehinta)}
       ;; Jos pisteet täsmää, niin tavoite on täytetty
       :else
       {:tavoite-taytetty true})))
+
+(defn laske-lupauspaatos-bonus-tai-sanktio
+  "Yhteinen lupausbonus/sanktio-laskenta, joka käyttää välikatselmuksen logiikkaa.
+  
+  Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet:
+    bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
+  
+  Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet:
+    sanktio = (sanktioprosentti / 100) × tavoitehinta × (luvatut - toteutuneet)
+  
+  Parametrit:
+  - toteutuneet-pisteet: Toteutuneet lupauksen pisteet
+  - luvatut-pisteet: Luvatut lupauksen pisteet
+  - tavoitehinta: Urakan tavoitehinta (tarjouksen tavoitehinta)
+  - sanktioprosentti: Sanktioprosentti urakan parametreista (esim. 0.33 tai 0.18)
+  - bonusprosentti: Bonusprosentti urakan parametreista (esim. 0.13)
+  
+  Palauttaa:
+  - {:lupausbonus <positiivinen luku>} kun toteutuneet > luvatut
+  - {:lupaussanktio <positiivinen luku>} kun toteutuneet < luvatut
+  - {:tavoite-taytetty true} kun toteutuneet == luvatut
+  - nil jos parametrit puuttuvat tai tavoitehinta <= 0"
+  [{:keys [toteutuneet-pisteet luvatut-pisteet tavoitehinta sanktioprosentti bonusprosentti]}]
+  (when (and (number? toteutuneet-pisteet)
+             (number? luvatut-pisteet)
+             (number? tavoitehinta)
+             (number? sanktioprosentti)
+             (number? bonusprosentti)
+             (pos? tavoitehinta))
+    (let [erotus (- luvatut-pisteet toteutuneet-pisteet)]
+      (cond
+        ;; Toteutuneet pisteet ylittää luvatut -> bonus
+        (< erotus 0)
+        {:lupausbonus (* (/ bonusprosentti 100) tavoitehinta (Math/abs ^long erotus))}
+        
+        ;; Toteutuneet pisteet alittaa luvatut -> sanktio (positiivinen)
+        (> erotus 0)
+        {:lupaussanktio (* (/ sanktioprosentti 100) tavoitehinta erotus)}
+        
+        ;; Pisteet täsmäävät
+        :else
+        {:tavoite-taytetty true}))))
 
 (defn vastauskuukausi?
   "Voiko kuukaudelle ylipäänsä antaa vastausta, eli onko se joko päätös- tai kirjauskuukausi."
@@ -580,12 +630,24 @@
       [])))
 
 (defn paatos->bonus-tai-sanktio
+  "Muuntaa tietokannasta haetun päätöksen API-muotoon.
+  
+  Tietokanta sisältää:
+  - :lupausbonus (positiivinen) ja :tyyppi 'bonus'
+  - :lupaussanktio (positiivinen) ja :tyyppi 'sanktio'
+  - :tyyppi 'taytetty' kun tavoite on täytetty
+  
+  API-muoto:
+  - {:bonus <positiivinen>}
+  - {:sanktio <positiivinen>}
+  - {:tavoite-taytetty true}"
   [{tyyppi :tyyppi
     tilaajan-maksu :lupausbonus
     urakoitsijan-maksu :lupaussanktio}]
   (case tyyppi
     "bonus" {:bonus tilaajan-maksu}
     "sanktio" {:sanktio urakoitsijan-maksu}
+    "taytetty" {:tavoite-taytetty true}
     nil))
 
 (defn kokoa-vastauspisteet [kayttaja pistekuukaudet urakka-id valittu-hoitokausi

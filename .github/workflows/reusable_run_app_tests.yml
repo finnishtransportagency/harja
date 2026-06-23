@@ -72,6 +72,10 @@ on:
         required: false
 
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 env:
   GH_DOCKER_REGISTRY: ghcr.io
 
@@ -87,7 +91,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -110,7 +117,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -134,7 +144,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
@@ -175,16 +188,16 @@ jobs:
     runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -219,8 +232,10 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Delete old branch build artifacts (only the latest is needed)
-        uses: actions/github-script@v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: artifact
+        env:
+          ARTIFACT_NAME: ${{ steps.artifact-name.outputs.value }}
         with:
           script: |
             const res = await github.rest.actions.listArtifactsForRepo({
@@ -229,7 +244,7 @@ jobs:
             })
 
             res.data.artifacts
-              .filter(({ name }) => name === '${{ steps.artifact-name.outputs.value }}')
+              .filter(({ name }) => name === process.env.ARTIFACT_NAME)
               .forEach(({ id }) => {
                 github.rest.actions.deleteArtifact({
                   owner: context.repo.owner,
@@ -239,7 +254,7 @@ jobs:
               })
 
       - name: Upload a new build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
@@ -252,12 +267,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-harja
     permissions:
-      contents: read
-      packages: read
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: Get the build artifact name
         id: artifact-name
@@ -268,16 +285,16 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           # Download to the same directory as the uberjar is built to
           path: ./target
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -285,7 +302,7 @@ jobs:
 
       - name: Build and tag Harja app test image
         id: build-test-image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
         env:
           IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
@@ -317,8 +334,8 @@ jobs:
           fail-job-on-severities: 'CRITICAL'
           #fail-job-on-severities: 'CRITICAL,HIGH'
           ignore-unfixed: true
-          # Disabloi upload-sarif, koska sarif uploadataan develop-branchin testien yhteydessä
-          upload-sarif: false
+          # Disabloi upload-sarif-as-artifact, koska sarif uploadataan develop-branchin testien yhteydessä
+          upload-sarif-as-artifact: false
 
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
@@ -327,14 +344,16 @@ jobs:
     env:
       TZ: "EET"
     permissions:
-      contents: read
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -354,7 +373,7 @@ jobs:
         run: lein test2junit
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@97744eca465b8df9e6e33271cb155003f85327f1
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -375,16 +394,16 @@ jobs:
       TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -404,7 +423,7 @@ jobs:
         run: lein test2junit :hidas
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@97744eca465b8df9e6e33271cb155003f85327f1
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -425,16 +444,15 @@ jobs:
       TZ: "EET"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      #checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -471,14 +489,16 @@ jobs:
       HARJA_ITMF_BROKER_AI_PORT: 8161
 
     permissions:
-      contents: read
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
@@ -506,7 +526,7 @@ jobs:
         run: lein test2junit :integraatio
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@97744eca465b8df9e6e33271cb155003f85327f1
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -533,16 +553,16 @@ jobs:
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
@@ -555,15 +575,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           service-name: ${{ env.TEST_DB_SERVICE }}
 
-      # Asenna pelkkä Java
+      # Asenna pelkkä Java- ja NodeJS-ympäristö ilman riippuvuuksia
       - name: Setup environment
         uses: ./.github/actions/setup-build-env-and-tools
         with:
-          install-java: true
+          setup-java: true
+          setup-node: true
           install-leiningen: false
           install-clojure-deps: false
           install-node-deps: false
-
 
       - name: Get the build artifact name
         id: artifact-name
@@ -574,7 +594,7 @@ jobs:
         run: echo "value=${NAME_PREFIX}${REF////-}-uberjar" >> $GITHUB_OUTPUT
 
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v7.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ steps.artifact-name.outputs.value }}
           path: ./
@@ -599,10 +619,6 @@ jobs:
           touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,sms-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
           touch ../.harja/kaista-aineisto.csv
           
-          echo "Lisätään downloads oikeudet Cypressille"
-          mkdir -p cypress/downloads
-          sudo chmod -R 711 cypress/downloads
-          
           echo "Käynnistetään Harja..."
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
           javapid=$!
@@ -625,7 +641,7 @@ jobs:
           echo +++++++++++++++++++
           echo
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         id: cache-npm
         with:
           path: node_modules
@@ -652,7 +668,7 @@ jobs:
           browser: ${{ matrix.browser }}
 
       - name: Publish Test Report for ${{ matrix.browser }}
-        uses: mikepenz/action-junit-report@97744eca465b8df9e6e33271cb155003f85327f1
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -666,14 +682,14 @@ jobs:
           detailed_summary: true
 
       # Mikäli testit epäonnistuvat, tallenna cypress screenshotit ja videot artifakteina
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.browser }}
           path: cypress/screenshots
           retention-days: 4
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: cypress-videos-${{ matrix.browser }}

@@ -1,59 +1,61 @@
 (ns harja.palvelin.palvelut.lupaus-palvelu-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+
             [harja.pvm :as pvm]
+            [harja.testi :refer :all]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
-            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :hae-urakan-lupaustiedot (component/using
-                                                   (lupaus-palvelu/->Lupaus {:kehitysmoodi true})
-                                                   [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :hae-urakan-lupaustiedot (component/using
+                                     (lupaus-palvelu/->Lupaus {:kehitysmoodi true})
+                                     [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each
-              urakkatieto-fixture
-              jarjestelma-fixture)
+  urakkatieto-fixture
+  jarjestelma-fixture)
 
 (defn hae-urakan-lupaustiedot [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-urakan-lupaustiedot
-                  kayttaja
-                  tiedot))
+    :hae-urakan-lupaustiedot
+    kayttaja
+    tiedot))
 
 (defn- vastaa-lupaukseen [lupaus-vastaus]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :vastaa-lupaukseen
-                  +kayttaja-jvh+
-                  lupaus-vastaus))
+    :vastaa-lupaukseen
+    +kayttaja-jvh+
+    lupaus-vastaus))
 
 (defn- kommentit [tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :lupauksen-kommentit
-                  +kayttaja-jvh+
-                  tiedot))
+    :lupauksen-kommentit
+    +kayttaja-jvh+
+    tiedot))
 
 (defn- lisaa-kommentti [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :lisaa-lupauksen-kommentti
-                  kayttaja
-                  tiedot))
+    :lisaa-lupauksen-kommentti
+    kayttaja
+    tiedot))
 
 (defn- poista-kommentti [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :poista-lupauksen-kommentti
-                  kayttaja
-                  tiedot))
+    :poista-lupauksen-kommentti
+    kayttaja
+    tiedot))
 
 (defn- tallenna-kuukausittaiset-pisteet [kayttaja tiedot]
   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kuukausittaiset-pisteet kayttaja tiedot))
@@ -119,19 +121,19 @@
 
     (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
-        "koko hoitovuoden piste-maksimi")
+      "koko hoitovuoden piste-maksimi")
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
-        "koko hoitovuoden piste-ennuste")
+      "koko hoitovuoden piste-ennuste")
 
     (is (= vastaus (hae-urakan-lupaustiedot
                      +kayttaja-yit_uuvh+
                      tiedot))
-        "Urakan vastuuhenkilö saa saman vastauksen kuin järjestelmänvalvoja.")
+      "Urakan vastuuhenkilö saa saman vastauksen kuin järjestelmänvalvoja.")
 
     (is (thrown? Exception (hae-urakan-lupaustiedot
                              +kayttaja-vastuuhlo-muhos+
                              tiedot))
-        "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
+      "Toisen urakan vastuuhenkilö ei saa hakea tietoja.")))
 
 (deftest urakan-lupaustietojen-haku-lupausryhmat-eroavat-kun-urakat-samalla-alkuvuodella
   (let [suomussalmi-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
@@ -166,9 +168,9 @@
 (deftest urakan-2025-lupaustiedot-toimii
   (let [kajaani-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         kajaani-tiedot {:urakka-id kajaani-id
-                       :valittu-hoitokausi [#inst "2025-09-30T21:00:00.000-00:00"
-                                            #inst "2026-09-30T20:59:59.000-00:00"]
-                       :nykyhetki #inst "2025-10-01T21:00:00.000-00:00"}
+                        :valittu-hoitokausi [#inst "2025-09-30T21:00:00.000-00:00"
+                                             #inst "2026-09-30T20:59:59.000-00:00"]
+                        :nykyhetki #inst "2025-10-01T21:00:00.000-00:00"}
         kajaani-vastaus (hae-urakan-lupaustiedot +kayttaja-jvh+ kajaani-tiedot)
 
         kajaani-ryhmat (:lupausryhmat kajaani-vastaus)
@@ -260,7 +262,7 @@
     (is (= 14 (:pisteet-ennuste lupaus-3)) "lupauksen 3 piste-ennuste")
     (is (= 22 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
     (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
-        "koko hoitovuoden piste-ennuste")))
+      "koko hoitovuoden piste-ennuste")))
 
 (deftest piste-toteuma
   (let [yhteiset-tiedot {:lupaus-id 9
@@ -269,8 +271,8 @@
                     {:vuosi 2022 :kuukausi 2 :paatos false :vastaus false}
                     {:vuosi 2022 :kuukausi 9 :paatos true :vastaus true}]
         tulokset (doall (->> vastaukset
-                             (map #(merge % yhteiset-tiedot))
-                             (map vastaa-lupaukseen)))
+                          (map #(merge % yhteiset-tiedot))
+                          (map vastaa-lupaukseen)))
         lupaustiedot (hae-urakan-lupaustiedot
                        +kayttaja-jvh+
                        {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -279,16 +281,16 @@
         ryhma-4 (etsi-ryhma (:lupausryhmat lupaustiedot) 4)
         lupaus-9 (etsi-lupaus lupaustiedot 9)]
     (is (every? boolean tulokset)
-        "Pyynnöt onnistuvat.")
+      "Pyynnöt onnistuvat.")
     (is (= 5 (:pisteet-toteuma lupaus-9))
-        "Koska päättävä vastaus on hyväksytty, toteuma täytyy olla 5 pistettä (maksimipisteet).
-        Urakoitsijan kirjaukset eivät saa vaikuttaa tähän.")
+      "Koska päättävä vastaus on hyväksytty, toteuma täytyy olla 5 pistettä (maksimipisteet).
+      Urakoitsijan kirjaukset eivät saa vaikuttaa tähän.")
     (is (= 5 (:pisteet-ennuste lupaus-9))
-        "Jos toteuma on annettu, ennuste == toteuma.")
+      "Jos toteuma on annettu, ennuste == toteuma.")
     (is (= (:pisteet-max ryhma-4) (:pisteet-ennuste ryhma-4))
-        "Ryhmän ennusteen mukaan on tulossa maksimipisteet.")
+      "Ryhmän ennusteen mukaan on tulossa maksimipisteet.")
     (is (nil? (:pisteet-toteuma ryhma-4))
-        "Koko ryhmälle ei ole vielä toteumaa, vaan yhdelle lupaukselle.")
+      "Koko ryhmälle ei ole vielä toteumaa, vaan yhdelle lupaukselle.")
 
     ;; Annetaan päätökset ryhmän muihin lupauksiin 8 ja 10:
     ;; Lupaus 8: kielteinen (5 pistettä)
@@ -296,7 +298,7 @@
     (let [vastaukset [{:lupaus-id 8 :vuosi 2022 :kuukausi 1 :paatos true :vastaus false :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
                       {:lupaus-id 10 :vuosi 2022 :kuukausi 9 :paatos true :vastaus true :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}]
           tulokset (doall (->> vastaukset
-                               (map vastaa-lupaukseen)))
+                            (map vastaa-lupaukseen)))
           lupaustiedot (hae-urakan-lupaustiedot
                          +kayttaja-jvh+
                          {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -306,13 +308,13 @@
           lupaus-8 (etsi-lupaus lupaustiedot 8)
           lupaus-10 (etsi-lupaus lupaustiedot 10)]
       (is (every? boolean tulokset)
-          "Pyynnöt onnistuvat.")
+        "Pyynnöt onnistuvat.")
       (is (= 0 (:pisteet-toteuma lupaus-8))
-          "Lupaukselle 8 annettiin kielteinen vastaus, eli nolla pistetä.")
+        "Lupaukselle 8 annettiin kielteinen vastaus, eli nolla pistetä.")
       (is (= 5 (:pisteet-toteuma lupaus-10))
-          "Lupaukselle 10 annettiin myönteinen vastaus, eli viisi pistettä.")
+        "Lupaukselle 10 annettiin myönteinen vastaus, eli viisi pistettä.")
       (is (= 10 (:pisteet-toteuma ryhma-4))
-          "Ryhmälle 4 voidaan laskea toteuma, koska kaikkiin sen lupauksiin on vastattu."))))
+        "Ryhmälle 4 voidaan laskea toteuma, koska kaikkiin sen lupauksiin on vastattu."))))
 
 (deftest joustovara
   (let [hakutiedot {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -342,18 +344,18 @@
     (is lupaustiedot-a)
     (is lupaustiedot-b)
     (is (= 10 (:pisteet-ennuste (etsi-lupaus lupaustiedot-a 4)))
-        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla vielä täydet pisteet, kun on annettu yksi kieltävä vastaus.")
+      "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla vielä täydet pisteet, kun on annettu yksi kieltävä vastaus.")
     (is (= 0 (:pisteet-ennuste (etsi-lupaus lupaustiedot-b 4)))
-        "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
+      "Lupauksella 4 on joustovara 1, joten ennusteen mukaan pitäisi olla nolla pistettä, kun on annettu kaksi kieltävää vastausta.")))
 
 (deftest urakan-lupauspisteiden-tallennus-toimii-insert
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-            :tallenna-luvatut-pisteet +kayttaja-jvh+
-            {:pisteet 67
-             :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
-             :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-             :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                  #inst "2022-09-30T20:59:59.000-00:00"]})
+                  :tallenna-luvatut-pisteet +kayttaja-jvh+
+                  {:pisteet 67
+                   :id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+                   :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                        #inst "2022-09-30T20:59:59.000-00:00"]})
         lupaustiedot (hae-urakan-lupaustiedot +kayttaja-jvh+ {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
                                                               :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
                                                                                    #inst "2022-09-30T20:59:59.000-00:00"]})
@@ -421,27 +423,27 @@
 
 (deftest urakan-lupauspisteiden-tallennus-vaatii-oikean-urakkaidn
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
-                                 :pisteet 67, :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                                      #inst "2022-09-30T20:59:59.000-00:00"]})
+                  :tallenna-luvatut-pisteet +kayttaja-jvh+
+                  {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+                   :pisteet 67, :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                        #inst "2022-09-30T20:59:59.000-00:00"]})
         _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                         :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                                         {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
-                                                          :pisteet 167
-                                                          :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-                                                          :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                                                               #inst "2022-09-30T20:59:59.000-00:00"]})))]))
+                                           :tallenna-luvatut-pisteet +kayttaja-jvh+
+                                           {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
+                                            :pisteet 167
+                                            :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+                                            :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                                 #inst "2022-09-30T20:59:59.000-00:00"]})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
   (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true) 2021]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :tallenna-luvatut-pisteet +kayttaja-jvh+
-                                                {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
-                                                 :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-                                                 :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
-                                                                      #inst "2022-09-30T20:59:59.000-00:00"]})))))
+                                  :tallenna-luvatut-pisteet +kayttaja-jvh+
+                                  {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
+                                   :pisteet 67, :urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+                                   :valittu-hoitokausi [#inst "2021-09-30T21:00:00.000-00:00"
+                                                        #inst "2022-09-30T20:59:59.000-00:00"]})))))
 
 (deftest lisaa-lupaus-vastaus
   (let [lupaus-vastaus {:lupaus-id 6
@@ -453,10 +455,10 @@
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
     (is (= (select-keys tulos (keys lupaus-vastaus)) ; Ei piitata muista avaimista.
-           lupaus-vastaus)
-        "Tallennetut arvot ovat palautetaan")
+          lupaus-vastaus)
+      "Tallennetut arvot ovat palautetaan")
     (is (thrown? Exception (vastaa-lupaukseen lupaus-vastaus))
-        "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
+      "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
 
 (deftest paivita-lupaus-vastaus
   (let [lupaus-vastaus {:id 2
@@ -464,30 +466,30 @@
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
     (is (= (select-keys tulos (keys lupaus-vastaus)) ; Ei piitata muista avaimista.
-           lupaus-vastaus)
-        "Tallennetut arvot palautetaan."))
+          lupaus-vastaus)
+      "Tallennetut arvot palautetaan."))
 
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:id 9873456387435
                                  :vastaus false
                                  :lupaus-vaihtoehto-id nil}))
-      "Olematon lupaus-vastaus-id heittää poikkeuksen.")
+    "Olematon lupaus-vastaus-id heittää poikkeuksen.")
 
   (let [lupaus-vastaus {:id 2
                         :vastaus nil
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
     (is (= (select-keys tulos (keys lupaus-vastaus))
-           lupaus-vastaus)
-        "Boolean-vastauksen voi asettaa takaisin nil-arvoon."))
+          lupaus-vastaus)
+      "Boolean-vastauksen voi asettaa takaisin nil-arvoon."))
 
   (let [lupaus-vastaus {:id 3
                         :vastaus nil
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
     (is (= (select-keys tulos (keys lupaus-vastaus))
-           lupaus-vastaus)
-        "Monivalintavastauksen voi asettaa takaisin nil-arvoon.")))
+          lupaus-vastaus)
+      "Monivalintavastauksen voi asettaa takaisin nil-arvoon.")))
 
 (deftest ei-saa-lisata-vastausta-valikatselmuksen-jalkeen
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -519,7 +521,7 @@
                                  :paatos false
                                  :vastaus true
                                  :lupaus-vaihtoehto-id nil}))
-      "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
+    "Lupaus 1:lle ei voi lisätä kirjausta kuukaudelle 6 (vain päätöksen)")
   (is (vastaa-lupaukseen
         {:lupaus-id 1
          :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -528,7 +530,7 @@
          :paatos true
          :vastaus true
          :lupaus-vaihtoehto-id nil})
-      "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)")
+    "Lupaus 1:lle voi lisätä päätöksen kuukaudelle 6 (ei kirjausta)")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 6
                                  :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -537,7 +539,7 @@
                                  :paatos true
                                  :vastaus true
                                  :lupaus-vaihtoehto-id nil}))
-      "Lupaus 6:lle ei voi lisätä päätöstä kuukaudelle 6 (vain kirjauksen)")
+    "Lupaus 6:lle ei voi lisätä päätöstä kuukaudelle 6 (vain kirjauksen)")
   (is (vastaa-lupaukseen
         {:lupaus-id 6
          :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -546,7 +548,7 @@
          :paatos false
          :vastaus true
          :lupaus-vaihtoehto-id nil})
-      "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)")
+    "Lupaus 6:lle voi lisätä kirjauksen kuukaudelle 6 (ei päätöstä)")
   (is (vastaa-lupaukseen
         {:lupaus-id 4
          :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -555,7 +557,7 @@
          :paatos true
          :vastaus true
          :lupaus-vaihtoehto-id nil})
-      "Lupaus 4:lle voi lisätä päätöksen mille tahansa kuukaudelle (paatos-kk = 0)"))
+    "Lupaus 4:lle voi lisätä päätöksen mille tahansa kuukaudelle (paatos-kk = 0)"))
 
 (deftest tarkista-monivalinta-vastaus
   (is (vastaa-lupaukseen
@@ -566,7 +568,7 @@
          :paatos false
          :vastaus nil
          :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 5))})
-      "Lupaus 5:lle voi antaa sille kuuluvan vaihtoehdon.")
+    "Lupaus 5:lle voi antaa sille kuuluvan vaihtoehdon.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 5
                                  :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -575,7 +577,7 @@
                                  :paatos false
                                  :vastaus nil
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
-      "Lupaus 5:lle ei voi antaa lupaus 3:n vaihtoehtoa.")
+    "Lupaus 5:lle ei voi antaa lupaus 3:n vaihtoehtoa.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 5
                                  :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -584,7 +586,7 @@
                                  :paatos false
                                  :vastaus true
                                  :lupaus-vaihtoehto-id nil}))
-      "Lupaus 5:lle ei voi antaa boolean-vastausta."))
+    "Lupaus 5:lle ei voi antaa boolean-vastausta."))
 
 (deftest tarkista-boolean-vastaus
   (is (vastaa-lupaukseen
@@ -595,7 +597,7 @@
          :paatos false
          :vastaus true
          :lupaus-vaihtoehto-id nil})
-      "Lupaus 6:lle voi antaa boolean-vastauksen.")
+    "Lupaus 6:lle voi antaa boolean-vastauksen.")
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:lupaus-id 6
                                  :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -604,37 +606,37 @@
                                  :paatos false
                                  :vastaus nil
                                  :lupaus-vaihtoehto-id (ffirst (hae-lupaus-vaihtoehdot 3))}))
-      "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
+    "Lupaus 6:lle ei voi antaa monivalinta-vaihtoehtoa."))
 
 (deftest kommentti-test
   (let [lupaus-tiedot {:lupaus-id 4
                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
         hakutiedot (merge lupaus-tiedot
-                          {:aikavali [#inst "2021-09-30T21:00:00.000-00:00"
-                                      #inst "2022-09-30T20:59:59.000-00:00"]})]
+                     {:aikavali [#inst "2021-09-30T21:00:00.000-00:00"
+                                 #inst "2022-09-30T20:59:59.000-00:00"]})]
     (is (empty? (kommentit hakutiedot))
-        "Lupauksella ei ole vielä kommentteja.")
+      "Lupauksella ei ole vielä kommentteja.")
     (let [kommentti-str-a "2021-10 Eka"
           kommentti-a (merge lupaus-tiedot
-                             {:kommentti kommentti-str-a
-                              :vuosi 2021
-                              :kuukausi 10})
+                        {:kommentti kommentti-str-a
+                         :vuosi 2021
+                         :kuukausi 10})
           kommentti-str-b "2021-10 Toka"
           kommentti-b (merge lupaus-tiedot
-                             {:kommentti kommentti-str-b
-                              :vuosi 2021
-                              :kuukausi 10})
+                        {:kommentti kommentti-str-b
+                         :vuosi 2021
+                         :kuukausi 10})
           kommentti-str-c "2022-09 Eka"
           kommentti-c (merge lupaus-tiedot
-                             {:kommentti kommentti-str-c
-                              :vuosi 2022
-                              :kuukausi 9})
+                        {:kommentti kommentti-str-c
+                         :vuosi 2022
+                         :kuukausi 9})
           ;; Valitun aikavälin ulkopuolella
           kommentti-str-d "2022-10 Eka"
           kommentti-d (merge lupaus-tiedot
-                             {:kommentti kommentti-str-d
-                              :vuosi 2022
-                              :kuukausi 10})
+                        {:kommentti kommentti-str-d
+                         :vuosi 2022
+                         :kuukausi 10})
 
           tulos-a (lisaa-kommentti +kayttaja-jvh+ kommentti-a)
           ;; Odota 1ms, koska kommentit järjestetään luontiaikojen perusteella
@@ -648,29 +650,29 @@
       (is (number? (:kommentti-id tulos-c)))
       (is (number? (:kommentti-id tulos-d)))
       (is (= kommentti-a (select-keys tulos-a (keys kommentti-a)))
-          "Kommentti A tallentuu oikein.")
+        "Kommentti A tallentuu oikein.")
       (is (= kommentti-b (select-keys tulos-b (keys kommentti-b)))
-          "Kommentti B tallentuu oikein.")
+        "Kommentti B tallentuu oikein.")
       (is (= kommentti-c (select-keys tulos-c (keys kommentti-c)))
-          "Kommentti C tallentuu oikein.")
+        "Kommentti C tallentuu oikein.")
       (is (= kommentti-d (select-keys tulos-d (keys kommentti-d)))
-          "Kommentti D tallentuu oikein.")
+        "Kommentti D tallentuu oikein.")
       (is (= 3 (count listaus))
-          "Listaus palauttaa kommentit A, B ja C (kommentti D on aikavälin ulkopuolella).")
+        "Listaus palauttaa kommentit A, B ja C (kommentti D on aikavälin ulkopuolella).")
       (is (= [kommentti-str-a kommentti-str-b kommentti-str-c]
-             (map :kommentti listaus))
-          "Kommentit on järjestetty vanhimmasta uusimpaan.")
+            (map :kommentti listaus))
+        "Kommentit on järjestetty vanhimmasta uusimpaan.")
       (is (thrown? SecurityException (poista-kommentti +kayttaja-yit_uuvh+ {:id (:id tulos-a)}))
-          "Toisen tekemää kommenttia ei saa poistaa.")
+        "Toisen tekemää kommenttia ei saa poistaa.")
       (is (thrown? SecurityException (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-b)}))
-          "Toisen tekemää kommenttia ei saa poistaa.")
+        "Toisen tekemää kommenttia ei saa poistaa.")
       (is (poista-kommentti +kayttaja-jvh+ {:id (:id tulos-a)})
-          "Oman kommentin poisto onnistuu.")
+        "Oman kommentin poisto onnistuu.")
       (is (poista-kommentti +kayttaja-yit_uuvh+ {:id (:id tulos-b)})
-          "Oman kommentin poisto onnistuu.")
+        "Oman kommentin poisto onnistuu.")
       (is (= [true true false]
-             (map :poistettu (kommentit hakutiedot)))
-          "Kommentti A on poistettu."))))
+            (map :poistettu (kommentit hakutiedot)))
+        "Kommentti A on poistettu."))))
 
 (deftest tavoitehinta-loytyy
   (let [vastaus (hae-urakan-lupaustiedot
@@ -722,7 +724,7 @@
         pisteet 10
         tyyppi "ennuste"]
     (is (thrown? AssertionError (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id vuosi kuukausi pisteet tyyppi))
-        "Kuukausiennustetta ei voi lisätä 2021 urakalle")))
+      "Kuukausiennustetta ei voi lisätä 2021 urakalle")))
 
 (deftest hae-kuukausipisteet-2019-urakalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
@@ -737,17 +739,17 @@
         _ (tallenna-kk-pisteet +kayttaja-jvh+ urakka-id (inc vuosi) 2 pisteet tyyppi)
         vastaus (hae-kuukausittaiset-pisteet +kayttaja-jvh+ {:valittu-hoitokausi valittu-hoitokausi :urakka-id urakka-id})
         odotettu-tulos (list {:id 1, :urakka-id 35, :kuukausi 10, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
-                             {:id 2, :urakka-id 35, :kuukausi 11, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
-                             {:urakka-id 35, :kuukausi 12, :vuosi 2019, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:id 3, :urakka-id 35, :kuukausi 1, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
-                             {:id 4, :urakka-id 35, :kuukausi 2, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
-                             {:urakka-id 35, :kuukausi 3, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 4, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 5, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 6, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 7, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 8, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
-                             {:urakka-id 35, :kuukausi 9, :vuosi 2020, :tyyppi "toteuma", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true})]
+                         {:id 2, :urakka-id 35, :kuukausi 11, :vuosi 2019, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                         {:urakka-id 35, :kuukausi 12, :vuosi 2019, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:id 3, :urakka-id 35, :kuukausi 1, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                         {:id 4, :urakka-id 35, :kuukausi 2, :vuosi 2020, :pisteet 10, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? false}
+                         {:urakka-id 35, :kuukausi 3, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 4, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 5, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 6, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 7, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 8, :vuosi 2020, :tyyppi "ennuste", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true}
+                         {:urakka-id 35, :kuukausi 9, :vuosi 2020, :tyyppi "toteuma", :kuluva-kuukausi? false, :voi-vastata? true :odottaa-vastausta? true})]
     (is (= odotettu-tulos (:kuukausipisteet vastaus)) "Kuukausipisteet eivät täsmää odotettuun tulokseen.")))
 
 (deftest hae-kuukausipisteet-2021-urakalle
@@ -763,7 +765,7 @@
                             #inst "2020-09-30T20:59:59.000-00:00"]
 
         ;; Siivotaan varalta kaikki pisteet urakalta
-        _ (u (str "DELETE FROM lupaus_pisteet WHERE vuosi = " vuosi " AND \"urakka-id\" ="  urakka-id ))
+        _ (u (str "DELETE FROM lupaus_pisteet WHERE vuosi = " vuosi " AND \"urakka-id\" =" urakka-id))
 
         pisteet 10
         uudet-pisteet 100
@@ -853,16 +855,16 @@
 (deftest vastaa-lupaukseen-oikeustarkistus
   (testing "Urakoitsija voi vastata kirjauskuukauteen"
     (let [vastaus {:lupaus-id 6
-                   :kuukausi 7  ; Heinäkuu 2022 - kirjauskuukausi lupaus 6:lle
+                   :kuukausi 7 ; Heinäkuu 2022 - kirjauskuukausi lupaus 6:lle
                    :vuosi 2022
                    :vastaus true
-                   :paatos false  ; Kirjauskuukausi, ei päätös
+                   :paatos false ; Kirjauskuukausi, ei päätös
                    :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
           tulos (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :vastaa-lupaukseen
-                                  +kayttaja-yit_uuvh+
-                                  vastaus)
+                    :vastaa-lupaukseen
+                    +kayttaja-yit_uuvh+
+                    vastaus)
                   :onnistui
                   (catch Exception e
                     :epaonnistui))]
@@ -870,7 +872,7 @@
 
   (testing "Urakoitsija ei voi vastata päättävään kuukauteen"
     (let [vastaus {:lupaus-id 4
-                   :kuukausi 1  ; Tammikuu - Päättävä kuukausi lupaus 4:lle
+                   :kuukausi 1 ; Tammikuu - Päättävä kuukausi lupaus 4:lle
                    :vuosi 2022
                    :paatos true
                    :vastaus false
@@ -878,23 +880,23 @@
       ;; Tämän pitäisi heittää poikkeus
       (is (thrown? Exception
             (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :vastaa-lupaukseen
-                            +kayttaja-yit_uuvh+
-                            vastaus))
-          "Urakoitsija ei saa vastata päättävään kuukauteen")))
+              :vastaa-lupaukseen
+              +kayttaja-yit_uuvh+
+              vastaus))
+        "Urakoitsija ei saa vastata päättävään kuukauteen")))
 
   (testing "Tilaaja voi tehdä päätöksen"
     (let [vastaus {:lupaus-id 4
-                   :kuukausi 2  ; Helmikuu - Päättävä kuukausi lupaus 4:lle
+                   :kuukausi 2 ; Helmikuu - Päättävä kuukausi lupaus 4:lle
                    :vuosi 2022
                    :paatos true
                    :vastaus false
                    :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id}
           tulos (try
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :vastaa-lupaukseen
-                                  +kayttaja-jvh+
-                                  vastaus)
+                    :vastaa-lupaukseen
+                    +kayttaja-jvh+
+                    vastaus)
                   :onnistui
                   (catch Exception e
                     :epaonnistui))]
@@ -905,7 +907,7 @@
    offset-logiikan perusteella. Elokuun offset on 1 (seuraava HK),
    lokakuun offset on 0 (oma HK)."
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
-    
+
     (testing "Elokuun kustannusennuste tallentuu seuraavalle hoitovuodelle (offset=1)"
       ;; Elokuun offset pitäisi olla 1 lupaus_kustannusennuste_kuukausi_pisteet taulussa
       ;; HK1: 2019-09-30 - 2020-09-30, joten elokuun 2020 = seuraava HK = 2020 (HK2)
@@ -920,8 +922,8 @@
             ;; HUOM: Tämä testi voi epäonnistua koska offset ei ole vielä käytössä
             ;; kaikille urakoille. Testi on placeholder integraatiolle.
             (is (or (= 2020 hoitovuosi) (nil? hoitovuosi))
-                "Elokuun ennuste tallentuu oikealle hoitovuodelle")))))
-    
+              "Elokuun ennuste tallentuu oikealle hoitovuodelle")))))
+
     (testing "Lokakuun kustannusennuste tallentuu omalle hoitovuodelle (offset=0)"
       ;; Lokakuu kuuluu HK1:lle normaalisti
       (let [tallennetut (q (str "SELECT hoitovuosi "
@@ -932,7 +934,7 @@
         (when (seq tallennetut)
           (let [[hoitovuosi] (first tallennetut)]
             (is (or (= 2019 hoitovuosi) (nil? hoitovuosi))
-                "Lokakuun ennuste tallentuu oikealle hoitovuodelle")))))))
+              "Lokakuun ennuste tallentuu oikealle hoitovuodelle")))))))
 
 (deftest hae-kustannusennuste-kuukausi-offset-test
   "Testaa että offset-arvo haetaan oikein tietokannasta eri kuukausille.
@@ -944,34 +946,34 @@
                            (q "SELECT pisteytys_hoitovuosi_offset FROM lupaus_kustannusennuste_kuukausi_pisteet LIMIT 0")
                            true
                            (catch Exception e false))]
-    
+
     (if (and lupaus-id sarake-olemassa?)
       (do
-      (testing "Lokakuu: offset = 0 (pisteet omalle HK:lle)"
-        (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
-                                       "FROM lupaus_kustannusennuste_kuukausi_pisteet "
-                                       "WHERE \"lupaus-id\" = " lupaus-id
-                                       " AND kuukausi = 10 LIMIT 1")))]
-          (when offset-tulos
-            (is (= 0 (first offset-tulos))
+        (testing "Lokakuu: offset = 0 (pisteet omalle HK:lle)"
+          (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
+                                         "FROM lupaus_kustannusennuste_kuukausi_pisteet "
+                                         "WHERE \"lupaus-id\" = " lupaus-id
+                                         " AND kuukausi = 10 LIMIT 1")))]
+            (when offset-tulos
+              (is (= 0 (first offset-tulos))
                 "Lokakuun offset on 0"))))
-      
-      (testing "Tammikuu: offset = 0 (pisteet omalle HK:lle)"
-        (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
-                                       "FROM lupaus_kustannusennuste_kuukausi_pisteet "
-                                       "WHERE \"lupaus-id\" = " lupaus-id
-                                       " AND kuukausi = 1 LIMIT 1")))]
-          (when offset-tulos
-            (is (= 0 (first offset-tulos))
+
+        (testing "Tammikuu: offset = 0 (pisteet omalle HK:lle)"
+          (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
+                                         "FROM lupaus_kustannusennuste_kuukausi_pisteet "
+                                         "WHERE \"lupaus-id\" = " lupaus-id
+                                         " AND kuukausi = 1 LIMIT 1")))]
+            (when offset-tulos
+              (is (= 0 (first offset-tulos))
                 "Tammikuun offset on 0"))))
-      
-      (testing "Elokuu: offset = 1 (KRIITTINEN - pisteet seuraavalle HK:lle)"
-        (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
-                                       "FROM lupaus_kustannusennuste_kuukausi_pisteet "
-                                       "WHERE \"lupaus-id\" = " lupaus-id
-                                       " AND kuukausi = 8 LIMIT 1")))]
-          (when offset-tulos
-            (is (= 1 (first offset-tulos))
+
+        (testing "Elokuu: offset = 1 (KRIITTINEN - pisteet seuraavalle HK:lle)"
+          (let [offset-tulos (first (q (str "SELECT pisteytys_hoitovuosi_offset "
+                                         "FROM lupaus_kustannusennuste_kuukausi_pisteet "
+                                         "WHERE \"lupaus-id\" = " lupaus-id
+                                         " AND kuukausi = 8 LIMIT 1")))]
+            (when offset-tulos
+              (is (= 1 (first offset-tulos))
                 "Elokuun offset on 1 - pisteet menevät seuraavalle hoitokaudelle")))))
       (testing "Offset-sarake puuttuu"
         (is true "Testi ohitettu")))))
@@ -981,20 +983,20 @@
    Pisterajat määrittävät, kuinka monta pistettä annetaan kustannusennusteen tarkkuuden perusteella.
    Testataan epäsuorasti maarita-kustannusennuste-pisteet-funktion kautta."
   (let [lupaus-id (ffirst (q "SELECT id FROM lupaus WHERE lupaustyyppi = 'kustannusennuste' LIMIT 1"))]
-    
+
     (when lupaus-id
       (testing "Pisterajat toimivat oikein lokakuulle (testataan pisteiden kautta)"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 0.0 10 lupaus-id)]
           (is (number? pisteet) "Palauttaa pisteet numerona")
           (is (>= pisteet 0) "Pisteet ovat ei-negatiiviset")))
-      
+
       (testing "Pisterajat toimivat elokuulle (kriittinen kuukausi)"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 0.0 8 lupaus-id)]
           (is (number? pisteet) "Palauttaa pisteet numerona")
           (is (>= pisteet 0) "Pisteet ovat ei-negatiiviset")))
-      
+
       (testing "Tyhjä tulos ei kaada (ei-olemassa oleva lupaus)"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 0.0 99 9999999)]
@@ -1005,39 +1007,39 @@
    Pisterajat haetaan tietokannasta ja pisteet määritetään tarkkuusprosentin mukaan."
   (let [lupaus-id (ffirst (q "SELECT id FROM lupaus WHERE lupaustyyppi = 'kustannusennuste' LIMIT 1"))
         kuukausi 10]
-    
+
     (when lupaus-id
       (testing "Täydellinen tarkkuus: 0% -> maksimipisteet"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 0.0 kuukausi lupaus-id)]
           (is (number? pisteet) "Palauttaa numeerisen arvon")
           (is (>= pisteet 0) "Pisteet ovat ei-negatiiviset")))
-      
+
       (testing "Hyvä tarkkuus: ≤2%"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 1.5 kuukausi lupaus-id)]
           (is (number? pisteet) "Palauttaa numeerisen arvon")
           (is (>= pisteet 0) "Pisteet ovat ei-negatiiviset")))
-      
+
       (testing "Kohtalainen tarkkuus: >2% ja ≤5%"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 3.5 kuukausi lupaus-id)]
           (is (number? pisteet) "Palauttaa numeerisen arvon")
           (is (>= pisteet 0) "Pisteet ovat ei-negatiiviset")))
-      
+
       (testing "Huono tarkkuus: >5% -> vähän tai 0 pistettä"
         (let [pisteet (lupaus-palvelu/maarita-kustannusennuste-pisteet
                         (:db jarjestelma) 8.0 kuukausi lupaus-id)]
           (is (number? pisteet) "Palauttaa numeerisen arvon")
           (is (<= pisteet 4) "Huono tarkkuus antaa max 4 pistettä")))
-      
+
       (testing "Negatiivinen tarkkuus käsitellään absoluuttisena"
         (let [pisteet-pos (lupaus-palvelu/maarita-kustannusennuste-pisteet
                             (:db jarjestelma) 2.0 kuukausi lupaus-id)
               pisteet-neg (lupaus-palvelu/maarita-kustannusennuste-pisteet
                             (:db jarjestelma) -2.0 kuukausi lupaus-id)]
-          (is (= pisteet-pos pisteet-neg) 
-              "Negatiivinen ja positiivinen tarkkuus antavat samat pisteet"))))))
+          (is (= pisteet-pos pisteet-neg)
+            "Negatiivinen ja positiivinen tarkkuus antavat samat pisteet"))))))
 
 (deftest laske-lopullinen-kustannusennuste-perustapaus-test
   "Testaa, että laske-lopullinen-kustannusennuste! -funktio laskee pisteet oikein,
@@ -1049,14 +1051,14 @@
         toteutunut-kustannus 950000M
         valikatselmus-pvm (pvm/nyt)
         user-id (:id +kayttaja-jvh+)]
-    
+
     (testing "Lopputilanne tallentuu oikein"
       ;; Suorita laskenta
-      (lupaus-palvelu/laske-lopullinen-kustannusennuste! 
-        (:db jarjestelma) urakka-id hoitokauden-alkuvuosi 
-        toteutunut-tavoitehinta toteutunut-kustannus 
+      (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+        (:db jarjestelma) urakka-id hoitokauden-alkuvuosi
+        toteutunut-tavoitehinta toteutunut-kustannus
         valikatselmus-pvm user-id)
-      
+
       ;; Tarkista että lopputilanne tallentui
       (let [lopputilanne (first (q (str "SELECT lopullinen_tavoitehinta, lopulliset_kustannukset, vahvistaja, "
                                      "kustannusennuste_keskiarvo_pisteet "
@@ -1066,30 +1068,30 @@
         (is lopputilanne "Lopputilanne tallentui")
         (when lopputilanne
           (is (= toteutunut-tavoitehinta (first lopputilanne))
-              "Lopullinen tavoitehinta tallentui oikein")
+            "Lopullinen tavoitehinta tallentui oikein")
           (is (= toteutunut-kustannus (second lopputilanne))
-              "Lopulliset kustannukset tallentui oikein")
+            "Lopulliset kustannukset tallentui oikein")
           (is (= user-id (nth lopputilanne 2))
-              "Vahvistaja tallentui oikein")
+            "Vahvistaja tallentui oikein")
           (let [keskiarvo (nth lopputilanne 3)]
             (is (or (nil? keskiarvo) (number? keskiarvo))
-                "Keskiarvo on nil tai numero")
+              "Keskiarvo on nil tai numero")
             (when (number? keskiarvo)
               (is (and (>= keskiarvo 0) (<= keskiarvo 10))
-                  "Keskiarvo on välillä 0-10"))))))
-    
+                "Keskiarvo on välillä 0-10"))))))
+
     (testing "Funktio ei kaadu"
       ;; Testaa että funktio suoriutuu ilman virheitä
-      (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste! 
-                  (:db jarjestelma) urakka-id hoitokauden-alkuvuosi 
+      (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
+                  (:db jarjestelma) urakka-id hoitokauden-alkuvuosi
                   1000000M 950000M (pvm/nyt) user-id))
-          "Funktio suoriutuu ilman virheitä"))))
+        "Funktio suoriutuu ilman virheitä"))))
 
 (deftest maarita-urakan-tavoitehinta-test
   "Testaa hoitokauden tavoitehinnan määrittämisen.
    Tavoitehinta haetaan budjetista hoitokauden numeron perusteella."
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id]
-    
+
     (testing "HK1 tavoitehinta"
       (let [hk1-alkupvm (pvm/luo-pvm 2021 9 1)
             tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta
@@ -1097,7 +1099,7 @@
         (when tavoitehinta
           (is (number? tavoitehinta) "Palauttaa numeerisen arvon")
           (is (pos? tavoitehinta) "Tavoitehinta on positiivinen"))))
-    
+
     (testing "HK2 tavoitehinta"
       (let [hk2-alkupvm (pvm/luo-pvm 2022 9 1)
             tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta
@@ -1105,16 +1107,16 @@
         (when tavoitehinta
           (is (number? tavoitehinta) "Palauttaa numeerisen arvon")
           (is (pos? tavoitehinta) "Tavoitehinta on positiivinen"))))
-    
+
     (testing "Hoitokauden numero lasketaan oikein"
       ;; Testaa että eri alkupäivät menevät oikealle hoitokaudelle
       (let [urakan-tiedot (first (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
             urakan-alkupvm (first urakan-tiedot)
             hk1-pvm (pvm/luo-pvm 2021 9 1)
             hk2-pvm (pvm/luo-pvm 2022 9 1)
-            hk1-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro 
+            hk1-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro
                       urakan-alkupvm (pvm/vuosi hk1-pvm))
-            hk2-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro 
+            hk2-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro
                       urakan-alkupvm (pvm/vuosi hk2-pvm))]
         (is (= 1 hk1-nro) "Ensimmäinen hoitokausi on numero 1")
         (is (= 2 hk2-nro) "Toinen hoitokausi on numero 2")))))
@@ -1134,14 +1136,14 @@
       (is (thrown? AssertionError
             (lupaus-palvelu/laske-lopullinen-kustannusennuste!
               db urakka-id hoitokauden-alkuvuosi nil toteutunut-kustannus valikatselmus-pvm user-id))
-          "Pre-condition hylkää nil tavoitehinnan"))
-    
+        "Pre-condition hylkää nil tavoitehinnan"))
+
     (testing "NULL toteutuneet kustannukset parametrissa hylätään pre-conditionilla"
       (is (thrown? AssertionError
             (lupaus-palvelu/laske-lopullinen-kustannusennuste!
               db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta nil valikatselmus-pvm user-id))
-          "Pre-condition hylkää nil kustannukset"))
-    
+        "Pre-condition hylkää nil kustannukset"))
+
     (testing "Funktio toimii kun urakkaa ei löydy tai sillä ei ole ennusteita"
       ;; Funktio ei kaadu vaikka urakkaa ei löydy tai sillä ei ole dataa
       (let [tulos (try
@@ -1150,7 +1152,7 @@
                     (catch Exception _e
                       nil))]
         (is (nil? tulos)
-            "Palauttaa nil kun urakkaa ei ole tai sillä ei ole ennusteita")))))
+          "Palauttaa nil kun urakkaa ei ole tai sillä ei ole ennusteita")))))
 
 (deftest laske-lopullinen-kustannusennuste-ei-ennusteita-test
   "Testaa, että funktio toimii oikein, kun kustannusennusteita ei ole saatavilla.
@@ -1162,29 +1164,29 @@
         toteutunut-kustannus 950000
         valikatselmus-pvm (pvm/luo-pvm 2022 8 15)
         user-id (:id +kayttaja-jvh+)]
-    
+
     (testing "Käsittelee puuttuvat ennusteet"
       ;; Poistetaan kaikki kustannusennusteet tältä hoitokaudelta testidatasta
       (u (str "DELETE FROM lupaus_kustannusennuste 
                WHERE \"urakka-id\" = " urakka-id " 
                AND hoitovuosi = 1"))
-      
+
       (let [tulos (try
                     (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                      db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta 
+                      db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta
                       toteutunut-kustannus valikatselmus-pvm user-id)
                     (catch Exception _e nil))]
-        (is (or (nil? tulos) (map? tulos)) 
-            "Käsittelee tilanteen kun ennusteita ei ole")))
-    
+        (is (or (nil? tulos) (map? tulos))
+          "Käsittelee tilanteen kun ennusteita ei ole")))
+
     (testing "Virheellinen urakka-id ei kaada järjestelmää"
       (let [tulos (try
                     (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                      db 999999 hoitokauden-alkuvuosi toteutunut-tavoitehinta 
+                      db 999999 hoitokauden-alkuvuosi toteutunut-tavoitehinta
                       toteutunut-kustannus valikatselmus-pvm user-id)
                     (catch Exception _e nil))]
-        (is (or (nil? tulos) (map? tulos)) 
-            "Palauttaa nil tai mapin kun urakkaa ei ole")))))
+        (is (or (nil? tulos) (map? tulos))
+          "Palauttaa nil tai mapin kun urakkaa ei ole")))))
 
 (deftest laske-lopullinen-kustannusennuste-keskiarvo-test
   "Testaa, että laske-lopullinen-kustannusennuste! tallentaa keskiarvon oikein.
@@ -1196,26 +1198,26 @@
         toteutunut-kustannus 950000M
         valikatselmus-pvm (pvm/nyt)
         user-id (:id +kayttaja-jvh+)]
-    
+
     (testing "Keskiarvo tallentuu tietokantaan"
       ;; Suorita laskenta
       (lupaus-palvelu/laske-lopullinen-kustannusennuste!
         db urakka-id hoitokauden-alkuvuosi
         toteutunut-tavoitehinta toteutunut-kustannus
         valikatselmus-pvm user-id)
-      
+
       ;; Hae tallennettu keskiarvo
       (let [keskiarvo (ffirst (q (str "SELECT kustannusennuste_keskiarvo_pisteet "
                                    "FROM lupaus_hoitovuosi_lopputilanne "
                                    "WHERE \"urakka-id\" = " urakka-id
                                    " AND hoitovuosi_alkuvuosi = " hoitokauden-alkuvuosi)))]
         (is (or (nil? keskiarvo) (number? keskiarvo))
-            "Keskiarvo on nil tai numero")
-        
+          "Keskiarvo on nil tai numero")
+
         (when (number? keskiarvo)
           (is (and (>= keskiarvo 0) (<= keskiarvo 10))
-              "Keskiarvo on järkevällä välillä 0-10"))))
-    
+            "Keskiarvo on järkevällä välillä 0-10"))))
+
     (testing "Keskiarvo lasketaan oikein kun kaikki kuukaudet ovat saatavilla"
       ;; Hae kaikki lasketut pisteet kyseiseltä hoitokaudelta
       (let [pisteet (flatten (q (str "SELECT lasketut_pisteet "
@@ -1230,19 +1232,19 @@
                                                "FROM lupaus_hoitovuosi_lopputilanne "
                                                "WHERE \"urakka-id\" = " urakka-id
                                                " AND hoitovuosi_alkuvuosi = " hoitokauden-alkuvuosi)))]
-        
+
         (when (and manuaalinen-keskiarvo tallennettu-keskiarvo)
-          (is (< (Math/abs (- (double manuaalinen-keskiarvo) 
-                            (double tallennettu-keskiarvo)))
-               0.01)
-              (str "Tallennettu keskiarvo vastaa laskettua. "
-                   "Laskettu: " manuaalinen-keskiarvo 
-                   ", Tallennettu: " tallennettu-keskiarvo)))))
-    
+          (is (< (Math/abs (- (double manuaalinen-keskiarvo)
+                             (double tallennettu-keskiarvo)))
+                0.01)
+            (str "Tallennettu keskiarvo vastaa laskettua. "
+              "Laskettu: " manuaalinen-keskiarvo
+              ", Tallennettu: " tallennettu-keskiarvo)))))
+
     (testing "Keskiarvo on nil kun ei ole yhtään pistettä"
       ;; Käytetään urakkaa/vuotta jolla ei ole ennusteita
       (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-        db urakka-id 2025  ;; Tuleva vuosi, ei dataa
+        db urakka-id 2025 ;; Tuleva vuosi, ei dataa
         toteutunut-tavoitehinta toteutunut-kustannus
         valikatselmus-pvm user-id)
       (let [keskiarvo (ffirst (q (str "SELECT kustannusennuste_keskiarvo_pisteet "
@@ -1251,7 +1253,7 @@
                                    " AND hoitovuosi_alkuvuosi = 2025")))]
         ;; Kun ei ole yhtään pistettä, keskiarvo on nil
         (is (nil? keskiarvo)
-            "Keskiarvo on nil kun ei ole yhtään laskettua pistettä")))))
+          "Keskiarvo on nil kun ei ole yhtään laskettua pistettä")))))
 
 (deftest maarita-kustannusennuste-pisteet-null-tapaukset-test
   "Testaa pisteytyksen reunatapaukset: NULL-arvot, suuret luvut ja negatiiviset arvot.
@@ -1260,26 +1262,26 @@
         ;; Hae olemassa oleva lupaus-id testidatasta, jos löytyy
         lupaus-id (or (ffirst (q "SELECT id FROM lupaus WHERE lupaustyyppi = 'kustannusennuste' LIMIT 1")) 1)
         kuukausi 10] ;; Käytetään lokakuuta testeissä
-    
+
     (testing "NULL arvot tarkkuudessa"
       ;; Funktio ottaa parametrit: db, tarkkuus-prosentti, kuukausi, lupaus-id
       ;; NULL-tarkkuus aiheuttaa AssertionError:n pre-ehdosta
-      (is (thrown? AssertionError 
+      (is (thrown? AssertionError
             (lupaus-palvelu/maarita-kustannusennuste-pisteet db nil kuukausi lupaus-id))
-          "NULL tarkkuus heittää virheen pre-ehdon takia"))
-    
+        "NULL tarkkuus heittää virheen pre-ehdon takia"))
+
     (testing "Erittäin suuret arvot"
       (let [pisteet-100 (lupaus-palvelu/maarita-kustannusennuste-pisteet db 100.0 kuukausi lupaus-id)
             pisteet-1000 (lupaus-palvelu/maarita-kustannusennuste-pisteet db 1000.0 kuukausi lupaus-id)]
         (is (<= pisteet-100 8) "100% tarkkuus palauttaa max 8 pistettä (lokakuulla)")
         (is (>= pisteet-1000 1) "1000% tarkkuus palauttaa vähintään 1 pisteen (>9% sääntö)")))
-    
+
     (testing "Negatiiviset arvot käsitellään absoluuttisina"
       (let [pisteet-neg-1 (lupaus-palvelu/maarita-kustannusennuste-pisteet db -1.0 kuukausi lupaus-id)
             pisteet-pos-1 (lupaus-palvelu/maarita-kustannusennuste-pisteet db 1.0 kuukausi lupaus-id)]
-        (is (= pisteet-neg-1 pisteet-pos-1) 
-            "Negatiivinen ja positiivinen sama absoluuttinen arvo antavat samat pisteet")))
-    
+        (is (= pisteet-neg-1 pisteet-pos-1)
+          "Negatiivinen ja positiivinen sama absoluuttinen arvo antavat samat pisteet")))
+
     (testing "Rajatapaukset lokakuulle (raja ≤7% → 8p, ≤9% → 4p, >9% → 1p)"
       (let [pisteet-0 (lupaus-palvelu/maarita-kustannusennuste-pisteet db 0.0 kuukausi lupaus-id)
             pisteet-7 (lupaus-palvelu/maarita-kustannusennuste-pisteet db 7.0 kuukausi lupaus-id)
@@ -1295,15 +1297,15 @@
    Käsittelee tulevaisuuden, menneisyyden ja virheelliset hoitokaudet."
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         db (:db jarjestelma)]
-    
+
     (testing "Tulevaisuuden hoitokausi"
       (let [tuleva-hk (pvm/luo-pvm 2030 9 1)
             tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta
                            db urakka-id tuleva-hk)]
         ;; Tulevaisuuden hoitokaudelle ei välttämättä löydy dataa
         (is (or (nil? tavoitehinta) (number? tavoitehinta))
-            "Käsittelee tulevaisuuden hoitokauden")))
-    
+          "Käsittelee tulevaisuuden hoitokauden")))
+
     (testing "Menneisyyden hoitokausi ennen urakan alkua"
       (let [vanha-hk (pvm/luo-pvm 2018 9 1)
             tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta
@@ -1311,8 +1313,8 @@
         ;; Nykyinen logiikka palauttaa ensimmäisen hoitokauden hinnan myös menneisyydelle
         ;; koska hoitokausivuosi->mhu-hoitovuosi-nro käyttää max funktiota
         (is (or (nil? tavoitehinta) (number? tavoitehinta))
-            "Käsittelee hoitokauden ennen urakan alkua")))
-    
+          "Käsittelee hoitokauden ennen urakan alkua")))
+
     (testing "Ensimmäinen hoitokausi"
       (let [urakan-tiedot (first (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
             urakan-alkupvm (first urakan-tiedot)
@@ -1321,14 +1323,14 @@
                            db urakka-id ensimmainen-hk-pvm)]
         (is (some? tavoitehinta) "Ensimmäiselle hoitokaudelle löytyy tavoitehinta")
         (is (pos? tavoitehinta) "Tavoitehinta on positiivinen")))
-    
+
     (testing "Virheellinen urakka-id"
       (let [hoitovuosi-alkupvm (pvm/luo-pvm 2021 9 1)]
         ;; Funktio voi kaatua tai palauttaa nil virheellisellä urakka-id:llä
         (is (thrown? Exception
               (lupaus-palvelu/maarita-urakan-tavoitehinta
                 db 999999 hoitovuosi-alkupvm))
-            "Funktio heittää poikkeuksen virheellisellä urakka-id:llä")))))
+          "Funktio heittää poikkeuksen virheellisellä urakka-id:llä")))))
 
 (deftest laske-lopullinen-kustannusennuste-tietokantavirheet-test
   "Testaa tietokantaoperaatioiden virheenkäsittelyn.
@@ -1340,23 +1342,23 @@
         toteutunut-kustannus 950000
         valikatselmus-pvm (pvm/luo-pvm 2022 8 15)
         user-id (:id +kayttaja-jvh+)]
-    
+
     (testing "UPSERT käsittelee duplikaatit"
       ;; Aja funktio kaksi kertaa - toisen pitäisi päivittää ensimmäisen
       (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                  db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta 
+                  db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta
                   toteutunut-kustannus valikatselmus-pvm user-id))
-          "Ensimmäinen ajo onnistuu ilman virhettä")
+        "Ensimmäinen ajo onnistuu ilman virhettä")
       (is (nil? (lupaus-palvelu/laske-lopullinen-kustannusennuste!
-                  db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta 
+                  db urakka-id hoitokauden-alkuvuosi toteutunut-tavoitehinta
                   toteutunut-kustannus valikatselmus-pvm user-id))
-          "Toinen ajo onnistuu (UPSERT päivittää) - ei kaadu duplikaattiin"))
-    
+        "Toinen ajo onnistuu (UPSERT päivittää) - ei kaadu duplikaattiin"))
+
     (testing "Transaktio rollback virhetilanteessa"
       ;; Tämä on vaikeampi testata ilman mock-dataa
       ;; Tarkistetaan vain että funktio ei kaadu virheeseen
       (is (fn? lupaus-palvelu/laske-lopullinen-kustannusennuste!)
-          "Funktio on olemassa ja kutsuttavissa"))))
+        "Funktio on olemassa ja kutsuttavissa"))))
 
 (deftest offset-logiikka-skenaariot-test
   (testing "Offset-arvot määritellyille kuukausille"
@@ -1365,39 +1367,39 @@
                           FROM lupaus_kustannusennuste_kuukausi_pisteet 
                           ORDER BY kuukausi")]
       ;; Pitäisi löytyä rivejä ainakin muutamalle kuukaudelle
-      (is (pos? (count offset-data)) 
-          "Offset määritelty ainakin yhdelle kuukaudelle")
-      
+      (is (pos? (count offset-data))
+        "Offset määritelty ainakin yhdelle kuukaudelle")
+
       ;; Tarkista, että elokuu (kuukausi 8) käyttää offset=1, jos data löytyy
       (let [elokuu (first (filter (fn [[kk _offset]] (= 8 kk)) offset-data))]
         (if elokuu
           (let [[_kuukausi offset] elokuu]
-            (is (= 1 offset) 
-                "Elokuun offset on 1"))
+            (is (= 1 offset)
+              "Elokuun offset on 1"))
           (println "HUOM: Elokuuta (kuukausi 8) ei löytynyt testidatasta")))
-      
+
       ;; Tarkista, että kaikki muut kuukaudet paitsi elokuu käyttävät offset=0
       (let [muut-kuukaudet (filter (fn [[kk _offset]] (not= 8 kk)) offset-data)]
         (doseq [[kuukausi offset] muut-kuukaudet]
           (is (= 0 offset)
-              (str "Kuukausi " kuukausi " käyttää offset=0"))))))
-  
+            (str "Kuukausi " kuukausi " käyttää offset=0"))))))
+
   (testing "laske-pisteytyshoitovuosi eri kuukausilla"
     ;; laske-pisteytyshoitovuosi-funktio ottaa parametrit (vuosi kuukausi offset) 
     ;; ja palauttaa hoitovuoden alkuvuoden
     (let [vuosi 2024
           lokakuu 10
           elokuu 8]
-      
+
       ;; Lokakuu (offset=0) - menee omalle HK:lle
       (let [tulos (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi lokakuu 0)]
         (is (= 2024 tulos) "Lokakuu 2024 offset=0 -> HK 2024-2025"))
-      
+
       ;; Elokuu (offset=1) - menee seuraavalle HK:lle  
       (let [tulos (kustannusennuste-domain/laske-pisteytyshoitovuosi vuosi elokuu 1)]
         (is (= 2025 tulos) "Elokuu 2024 offset=1 -> HK 2025-2026"))))
-    
-  
+
+
   (testing "Offset-logiikka eri vuosilla"
     ;; Testaa, että offset toimii johdonmukaisesti eri kalenterivuosilla
     (let [;; Lokakuu eri vuosina
@@ -1405,7 +1407,7 @@
           hk-2021-offset-1 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2021 10 1)
           hk-2022-offset-0 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2022 10 0)
           hk-2022-offset-1 (kustannusennuste-domain/laske-pisteytyshoitovuosi 2022 10 1)]
-      
+
       (is (= 2021 hk-2021-offset-0) "Loka 2021 + offset 0 = HK 2021")
       (is (= 2022 hk-2021-offset-1) "Loka 2021 + offset 1 = HK 2022")
       (is (= 2022 hk-2022-offset-0) "Loka 2022 + offset 0 = HK 2022")
@@ -1416,7 +1418,7 @@
         ;; Hoitokausi 2015-2016 (urakan toinen hoitovuosi)
         valittu-hoitokausi [(pvm/luo-pvm 2015 9 1) (pvm/luo-pvm 2016 8 31)]
         perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
-    
+
     (testing "Palauttaa kaikki vaaditut kentät"
       (is (contains? perustiedot :urakan-tiedot) "Sisältää :urakan-tiedot")
       (is (contains? perustiedot :urakan-alkupvm) "Sisältää :urakan-alkupvm")
@@ -1425,39 +1427,39 @@
       (is (contains? perustiedot :hoitovuosi-nro) "Sisältää :hoitovuosi-nro")
       (is (contains? perustiedot :hk-alkupvm) "Sisältää :hk-alkupvm")
       (is (contains? perustiedot :hk-loppupvm) "Sisältää :hk-loppupvm"))
-    
+
     (testing "Urakan tiedot haetaan oikein"
       (is (= urakka-id (:id (:urakan-tiedot perustiedot))) "Urakan ID täsmää")
       (is (inst? (:alkupvm (:urakan-tiedot perustiedot))) "Alkupvm on instant")
       (is (string? (:nimi (:urakan-tiedot perustiedot))) "Urakalla on nimi"))
-    
+
     (testing "Urakan alkupäivämäärä ja -vuosi lasketaan oikein"
       (is (inst? (:urakan-alkupvm perustiedot)) "Urakan alkupvm on instant")
       (is (number? (:urakan-alkuvuosi perustiedot)) "Urakan alkuvuosi on numero")
       (is (= 2014 (:urakan-alkuvuosi perustiedot)) "Oulun alueurakka alkoi 2014"))
-    
+
     (testing "Hoitokauden alkuvuosi lasketaan oikein"
       (is (= 2015 (:hoitokauden-alkuvuosi perustiedot)) "Hoitokauden alkuvuosi on 2015"))
-    
+
     (testing "Hoitovuosi-nro lasketaan oikein"
       (is (number? (:hoitovuosi-nro perustiedot)) "Hoitovuosi-nro on numero")
       (is (pos? (:hoitovuosi-nro perustiedot)) "Hoitovuosi-nro on positiivinen")
       ;; Urakka alkoi lokakuussa 2014, joten hoitokausi 2015-2016 on toinen hoitovuosi
       (is (= 2 (:hoitovuosi-nro perustiedot)) "2015-2016 on toinen hoitovuosi"))
-    
+
     (testing "Päivämäärät säilyvät"
       (is (= (first valittu-hoitokausi) (:hk-alkupvm perustiedot)) "Hoitokauden alkupvm säilyy")
       (is (= (second valittu-hoitokausi) (:hk-loppupvm perustiedot)) "Hoitokauden loppupvm säilyy"))))
 
 (deftest hae-perustiedot-eri-hoitokausilla-test
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
-    
+
     (testing "Ensimmäinen hoitovuosi 2014-2015"
       (let [valittu-hoitokausi [(pvm/luo-pvm 2014 9 1) (pvm/luo-pvm 2015 8 31)]
             perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
         (is (= 2014 (:hoitokauden-alkuvuosi perustiedot)))
         (is (= 1 (:hoitovuosi-nro perustiedot)) "Ensimmäinen hoitovuosi")))
-    
+
     (testing "Kolmas hoitovuosi 2016-2017"
       (let [valittu-hoitokausi [(pvm/luo-pvm 2016 9 1) (pvm/luo-pvm 2017 8 31)]
             perustiedot (#'lupaus-palvelu/hae-perustiedot ds urakka-id valittu-hoitokausi)]
@@ -1468,15 +1470,15 @@
   (testing "Preconditions validoivat parametrit"
     (is (thrown? AssertionError
           (#'lupaus-palvelu/hae-perustiedot ds "ei-numero" [(pvm/nyt) (pvm/nyt)]))
-        "Urakka-id täytyy olla numero")
-    
+      "Urakka-id täytyy olla numero")
+
     (is (thrown? AssertionError
           (#'lupaus-palvelu/hae-perustiedot ds 1 "ei-vektori"))
-        "Valittu-hoitokausi täytyy olla vektori")
-    
+      "Valittu-hoitokausi täytyy olla vektori")
+
     (is (thrown? AssertionError
           (#'lupaus-palvelu/hae-perustiedot ds 1 [(pvm/nyt)]))
-        "Valittu-hoitokausi täytyy sisältää 2 päivämäärää")))
+      "Valittu-hoitokausi täytyy sisältää 2 päivämäärää")))
 
 ;; Testit ylikirjoita-hoitovuosikohtaiset-arvot funktiolle
 (deftest ylikirjoita-hoitovuosikohtaiset-arvot-test
@@ -1486,14 +1488,14 @@
                  {:lupaus-id 3 :lupaustyyppi "monivalinta" :otsikko "Lupaus 3"}]
         hoitovuosi-nro 2
         tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
-    
+
     (testing "Palauttaa vektorin"
       (is (vector? tulos) "Palauttaa vektorin"))
-    
+
     (testing "Vastaukset säilyvät"
       (is (= 3 (count tulos)) "Kaikki vastaukset säilyvät")
       (is (every? :lupaus-id tulos) "Lupaus-id säilyy kaikilla"))
-    
+
     (testing "Alkuperäiset kentät säilyvät"
       (is (= "yksittainen" (:lupaustyyppi (first tulos))))
       (is (= "Lupaus 1" (:otsikko (first tulos)))))))
@@ -1503,7 +1505,7 @@
     (let [vastaus []
           hoitovuosi-nro 1
           tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
-      
+
       (is (= [] tulos) "Tyhjä vastaus palauttaa tyhjän listan"))))
 
 (deftest ylikirjoita-hoitovuosikohtaiset-arvot-nil-hoitovuosi-test
@@ -1511,18 +1513,18 @@
     (let [vastaus [{:lupaus-id 1 :lupaustyyppi "yksittainen"}]
           hoitovuosi-nro nil
           tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
-      
+
       (is (= 1 (count tulos)) "Vastaus käsitellään vaikka hoitovuosi-nro on nil"))))
 
 (deftest ylikirjoita-hoitovuosikohtaiset-arvot-validointi-testvalidointi-test
   (testing "Preconditions validoivat parametrit"
     (is (thrown? AssertionError
           (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds "ei-collection" 1))
-        "Vastaus täytyy olla collection")
-    
+      "Vastaus täytyy olla collection")
+
     (is (thrown? AssertionError
           (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds [{:lupaus-id 1}] "ei-numero"))
-        "Hoitovuosi-nro täytyy olla numero tai nil")))
+      "Hoitovuosi-nro täytyy olla numero tai nil")))
 
 (deftest ylikirjoita-hoitovuosikohtaiset-arvot-kentat-ylikirjoitetaan-test
   (testing "Hoitovuosikohtaiset arvot ylikirjoittavat oletusarvot"
@@ -1532,7 +1534,7 @@
           hoitovuosi-nro 1
           tulos (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)
           vastaus-tulos (first tulos)]
-      
+
       ;; Ilman erikoisarvoja, alkuperäiset kentät säilyvät
       (is (= 999999 (:lupaus-id vastaus-tulos)) "Lupaus-id säilyy")
       (is (= [1 2 3] (:kirjaus-kkt vastaus-tulos)) "Kirjaus-kkt säilyy ilman ylikirjoitusta"))))
@@ -1543,29 +1545,29 @@
           vastaus (vec alkuperainen-vastaus) ;; Kopioi
           hoitovuosi-nro 2
           _ (#'lupaus-palvelu/ylikirjoita-hoitovuosikohtaiset-arvot ds vastaus hoitovuosi-nro)]
-      
-      (is (= alkuperainen-vastaus vastaus) 
-          "Alkuperäinen vastaus ei muutu"))))
+
+      (is (= alkuperainen-vastaus vastaus)
+        "Alkuperäinen vastaus ei muutu"))))
 
 ;; Testit rikasta-lupaus-lisatiedoilla funktiolle
 (deftest rikasta-lupaus-lisatiedoilla-yksittainen-test
   (testing "Yksittäinen lupaus palautetaan muuttumattomana"
     (let [lupaus {:lupaustyyppi "yksittainen" :lupaus-id 1 :otsikko "Testi"}
-          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
                   lupaus ds 1 2021 2020 1)]
       (is (= lupaus tulos) "Yksittäinen lupaus ei tarvitse rikastusta"))))
 
 (deftest rikasta-lupaus-lisatiedoilla-monivalinta-test
   (testing "Monivalinta lupaus palautetaan muuttumattomana"
     (let [lupaus {:lupaustyyppi "monivalinta" :lupaus-id 2 :otsikko "Testi"}
-          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
                   lupaus ds 1 2021 2020 1)]
       (is (= lupaus tulos) "Monivalinta lupaus ei tarvitse rikastusta"))))
 
 (deftest rikasta-lupaus-lisatiedoilla-kysely-test
   (testing "Kysely lupaus palautetaan muuttumattomana"
     (let [lupaus {:lupaustyyppi "kysely" :lupaus-id 3 :otsikko "Testi"}
-          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
                   lupaus ds 1 2021 2020 1)]
       (is (= lupaus tulos) "Kysely lupaus ei tarvitse rikastusta"))))
 
@@ -1576,32 +1578,32 @@
           hoitokauden-alkuvuosi 2021
           urakan-alkuvuosi 2020
           hoitovuosi-nro 1
-          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
                   lupaus ds urakka-id hoitokauden-alkuvuosi urakan-alkuvuosi hoitovuosi-nro)]
-      
+
       ;; Tarkista että alkuperäiset kentät säilyvät
       (is (= "kustannusennuste" (:lupaustyyppi tulos)))
       (is (= 100 (:lupaus-id tulos)))
       (is (= "Kustannusennuste" (:otsikko tulos)))
-      
+
       ;; Tarkista että uudet kentät lisätään
       (is (contains? tulos :hoitovuosi-paattynyt?)
-          "Kustannusennusteelle lisätään hoitovuosi-paattynyt? -kenttä")
+        "Kustannusennusteelle lisätään hoitovuosi-paattynyt? -kenttä")
       (is (= urakan-alkuvuosi (:urakan-alkuvuosi tulos))
-          "Urakan alkuvuosi lisätään")
+        "Urakan alkuvuosi lisätään")
       (is (= hoitovuosi-nro (:hoitovuosi-nro tulos))
-          "Hoitovuosi-nro lisätään")
+        "Hoitovuosi-nro lisätään")
       (is (contains? tulos :lopputilanne)
-          "Kustannusennusteelle lisätään lopputilanne-kenttä")
+        "Kustannusennusteelle lisätään lopputilanne-kenttä")
       (is (contains? tulos :kustannusennusteet)
-          "Kustannusennusteelle lisätään kustannusennusteet-kenttä"))))
+        "Kustannusennusteelle lisätään kustannusennusteet-kenttä"))))
 
 (deftest rikasta-lupaus-lisatiedoilla-nil-parametrit-test
   (testing "Funktio toimii nil-parametreilla"
     (let [lupaus {:lupaustyyppi "kustannusennuste" :lupaus-id 100}
-          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
+          tulos (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
                   lupaus nil nil nil nil nil)]
-      
+
       ;; Alkuperäinen lupaus säilyy
       (is (= 100 (:lupaus-id tulos)))
       ;; Rikastuskentät lisätään vaikka parametrit olisivat nil
@@ -1611,11 +1613,11 @@
   (testing "Funktio on puhdas - ei muuta alkuperäistä lupausta"
     (let [alkuperainen {:lupaustyyppi "yksittainen" :lupaus-id 1}
           lupaus (into {} alkuperainen)
-          _ (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla 
-             lupaus ds 1 2021 2020 1)]
-      
-      (is (= alkuperainen lupaus) 
-          "Alkuperäinen lupaus ei muutu"))))
+          _ (#'lupaus-palvelu/rikasta-lupaus-lisatiedoilla
+              lupaus ds 1 2021 2020 1)]
+
+      (is (= alkuperainen lupaus)
+        "Alkuperäinen lupaus ei muutu"))))
 
 ;; Testit prosessoi-lupausvastaukset funktiolle
 (deftest prosessoi-lupausvastaukset-test
@@ -1629,17 +1631,17 @@
                 :hoitovuosi-nro 2
                 :valittu-hoitokausi [2021 2022]
                 :nykyhetki (java.util.Date.)}
-          tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset
                   vastaus
                   maarapaiva-tiedot
                   opts)]
-      
+
       (is (vector? tulos) "Tulos on vektori")
       (is (empty? tulos) "Tyhjä vastaus palauttaa tyhjän vektorin"))))
 
 (deftest prosessoi-lupausvastaukset-tyhja-test
   (testing "Tyhjä vastaus käsitellään oikein"
-    (let [tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+    (let [tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset
                   []
                   {}
                   {:db ds
@@ -1654,7 +1656,7 @@
 (deftest prosessoi-lupausvastaukset-validointi-test
   (testing "Preconditions validoivat parametrit"
     (is (thrown? AssertionError
-          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset
             "ei-collection"
             {}
             {:db ds
@@ -1664,10 +1666,10 @@
              :hoitovuosi-nro 1
              :valittu-hoitokausi [2021 2022]
              :nykyhetki (java.util.Date.)}))
-        "Vastaus täytyy olla collection")
-    
+      "Vastaus täytyy olla collection")
+
     (is (thrown? AssertionError
-          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset
             []
             "ei-map"
             {:db ds
@@ -1677,26 +1679,26 @@
              :hoitovuosi-nro 1
              :valittu-hoitokausi [2021 2022]
              :nykyhetki (java.util.Date.)}))
-        "Määräpäivä-tiedot täytyy olla map")
-    
+      "Määräpäivä-tiedot täytyy olla map")
+
     (is (thrown? AssertionError
-          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset
             []
             {}
             "ei-map"))
-        "Options täytyy olla map")))
+      "Options täytyy olla map")))
 
 (deftest prosessoi-lupausvastaukset-options-validointi-test
   (testing "Options-map validoidaan"
     (is (thrown? AssertionError
-          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset
             []
             {}
             {:urakka-id 1}))
-        "Kaikki pakolliset kentät validoidaan")
-    
+      "Kaikki pakolliset kentät validoidaan")
+
     (is (thrown? AssertionError
-          (#'lupaus-palvelu/prosessoi-lupausvastaukset 
+          (#'lupaus-palvelu/prosessoi-lupausvastaukset
             []
             {}
             {:db ds
@@ -1706,7 +1708,7 @@
              :hoitovuosi-nro 1
              :valittu-hoitokausi [2021 2022]
              :nykyhetki (java.util.Date.)}))
-        "urakka-id täytyy olla numero")))
+      "urakka-id täytyy olla numero")))
 
 (deftest prosessoi-lupausvastaukset-funktionaalinen-test
   (testing "Funktio on puhdas - ei muuta alkuperäisiä parametrejä"
@@ -1722,7 +1724,7 @@
                 :valittu-hoitokausi [2021 2022]
                 :nykyhetki (java.util.Date.)}
           tulos (#'lupaus-palvelu/prosessoi-lupausvastaukset vastaus maarapaiva-tiedot opts)]
-      
+
       (is (= alkuperainen-vastaus vastaus) "Alkuperäinen vastaus ei muutu")
       (is (= alkuperaiset-maarapaiva-tiedot maarapaiva-tiedot) "Alkuperäiset määräpäivä-tiedot eivät muutu")
       (is (vector? tulos) "Palauttaa vektorin"))))
@@ -1735,14 +1737,14 @@
           hk-loppupvm (pvm/luo-pvm 2016 8 31)
           hoitokauden-alkuvuosi 2015
           lupaus-sitoutuminen {:pisteet 100}
-          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
-                  ds 
-                  urakka-id 
-                  hk-alkupvm 
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat
+                  ds
+                  urakka-id
+                  hk-alkupvm
                   hk-loppupvm
                   hoitokauden-alkuvuosi
                   lupaus-sitoutuminen)]
-      
+
       (is (map? tulos) "Tulos on map")
       (is (contains? tulos :tavoitehinta) "Sisältää :tavoitehinta")
       (is (contains? tulos :oikaistu-tavoitehinta) "Sisältää :oikaistu-tavoitehinta")
@@ -1753,14 +1755,14 @@
 (deftest hae-talouslaskelmat-nil-alkupvm-test
   (testing "Nil hoitokauden alkupvm käsitellään oikein"
     (let [urakka-id 1
-          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
-                  ds 
-                  urakka-id 
-                  nil 
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat
+                  ds
+                  urakka-id
+                  nil
                   nil
                   2021
                   {:pisteet 100})]
-      
+
       (is (map? tulos) "Palauttaa mapin")
       (is (nil? (:tavoitehinta tulos)) "Tavoitehinta on nil kun alkupvm on nil")
       (is (nil? (:oikaistu-tavoitehinta tulos)) "Oikaistu tavoitehinta on nil")
@@ -1773,37 +1775,37 @@
           hk-loppupvm (pvm/luo-pvm 2016 8 31)
           hoitokauden-alkuvuosi 2015
           lupaus-sitoutuminen {:pisteet 100}
-          tulos (#'lupaus-palvelu/hae-talouslaskelmat 
-                  ds 
-                  urakka-id 
-                  hk-alkupvm 
+          tulos (#'lupaus-palvelu/hae-talouslaskelmat
+                  ds
+                  urakka-id
+                  hk-alkupvm
                   hk-loppupvm
                   hoitokauden-alkuvuosi
                   lupaus-sitoutuminen)]
-      
+
       (is (boolean? (:tavoitehinta-puuttuu? tulos)) "tavoitehinta-puuttuu? on boolean")))
-  
+
   (testing "Luvatut-pisteet-puuttuu? laskenta"
     (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
           hk-alkupvm (pvm/luo-pvm 2015 9 1)
           hk-loppupvm (pvm/luo-pvm 2016 8 31)
           hoitokauden-alkuvuosi 2015]
-      
+
       ;; Ilman pisteitä
-      (let [tulos-ilman (#'lupaus-palvelu/hae-talouslaskelmat 
-                          ds 
-                          urakka-id 
-                          hk-alkupvm 
+      (let [tulos-ilman (#'lupaus-palvelu/hae-talouslaskelmat
+                          ds
+                          urakka-id
+                          hk-alkupvm
                           hk-loppupvm
                           hoitokauden-alkuvuosi
                           {})]
         (is (true? (:luvatut-pisteet-puuttuu? tulos-ilman)) "Pisteet puuttuvat"))
-      
+
       ;; Pisteillä
-      (let [tulos-pisteilla (#'lupaus-palvelu/hae-talouslaskelmat 
-                              ds 
-                              urakka-id 
-                              hk-alkupvm 
+      (let [tulos-pisteilla (#'lupaus-palvelu/hae-talouslaskelmat
+                              ds
+                              urakka-id
+                              hk-alkupvm
                               hk-loppupvm
                               hoitokauden-alkuvuosi
                               {:pisteet 100})]
@@ -1825,17 +1827,20 @@
                 :odottaa-urakoitsijan-kannanottoa? true
                 :valikatselmus-tehty? false
                 :tavoitehinta-puuttuu? false
+                :lupausprosentit-puuttuu? false
                 :luvatut-pisteet-puuttuu? false
                 :ennusteen-tila :ennuste
                 :tallennettu-paatos nil}
           tulos (#'lupaus-palvelu/muodosta-yhteenveto opts)]
-      
+
       (is (map? tulos) "Yhteenveto on map")
       (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
       (is (contains? tulos :pisteet) "Sisältää pisteet")
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :tavoitehinta) "Sisältää tavoitehinta")
+      (is (contains? tulos :lupausprosentit-puuttuu?) "Sisältää lupausprosentit-puuttuu?")
       (is (= :ennuste (:ennusteen-tila tulos)) "Ennusteen tila on :ennuste")
+      (is (false? (:lupausprosentit-puuttuu? tulos)) "Lupausprosentit löytyvät")
       (is (= 100 (get-in tulos [:pisteet :maksimi])) "Maksimipisteet oikein")
       (is (= 80 (get-in tulos [:pisteet :ennuste])) "Ennustepisteet oikein")
       (is (= 85 (get-in tulos [:pisteet :toteuma])) "Toteumapisteet oikein"))))
@@ -1860,7 +1865,7 @@
                 :tallennettu-paatos {:toteutuneet_pisteet 90
                                      :tavoitehinta 1100000}}
           tulos (#'lupaus-palvelu/muodosta-yhteenveto opts)]
-      
+
       (is (= 90 (get-in tulos [:pisteet :toteuma])) "Näytetään päätöksen pisteet")
       (is (= 1100000 (:tavoitehinta tulos)) "Näytetään päätöksen tavoitehinta"))))
 
@@ -1868,25 +1873,25 @@
   (testing "Ennusteen tilan määrittely"
     ;; Katselmoitu toteuma
     (let [opts-katselmoitu {:piste-maksimi 100
-                             :piste-ennuste 80
-                             :piste-toteuma nil
-                             :bonus-tai-sanktio 5000
-                             :tavoitehinta 1000000
-                             :oikaistu-tavoitehinta nil
-                             :oikaistu-toteutuneet-kustannukset nil
-                             :kustannusennuste-pisteet-tila true
-                             :odottaa-kannanottoa 0
-                             :merkitsevat-odottaa-kannanottoa 0
-                             :odottaa-urakoitsijan-kannanottoa? false
-                             :valikatselmus-tehty? false
-                             :tavoitehinta-puuttuu? false
-                             :luvatut-pisteet-puuttuu? false
-                             :ennusteen-tila :katselmoitu-toteuma
-                             :tallennettu-paatos {:toteutuneet_pisteet 90}}]
-      (is (= :katselmoitu-toteuma 
-             (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-katselmoitu)))
-          "Katselmoitu toteuma kun päätös on tallennettu"))
-    
+                            :piste-ennuste 80
+                            :piste-toteuma nil
+                            :bonus-tai-sanktio 5000
+                            :tavoitehinta 1000000
+                            :oikaistu-tavoitehinta nil
+                            :oikaistu-toteutuneet-kustannukset nil
+                            :kustannusennuste-pisteet-tila true
+                            :odottaa-kannanottoa 0
+                            :merkitsevat-odottaa-kannanottoa 0
+                            :odottaa-urakoitsijan-kannanottoa? false
+                            :valikatselmus-tehty? false
+                            :tavoitehinta-puuttuu? false
+                            :luvatut-pisteet-puuttuu? false
+                            :ennusteen-tila :katselmoitu-toteuma
+                            :tallennettu-paatos {:toteutuneet_pisteet 90}}]
+      (is (= :katselmoitu-toteuma
+            (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-katselmoitu)))
+        "Katselmoitu toteuma kun päätös on tallennettu"))
+
     ;; Alustava toteuma
     (let [opts-alustava {:piste-maksimi 100
                          :piste-ennuste 80
@@ -1904,13 +1909,15 @@
                          :luvatut-pisteet-puuttuu? false
                          :ennusteen-tila :alustava-toteuma
                          :tallennettu-paatos nil}]
-      (is (= :alustava-toteuma 
-             (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-alustava)))
-          "Alustava toteuma kun toteumapisteet on olemassa"))))
+      (is (= :alustava-toteuma
+            (:ennusteen-tila (#'lupaus-palvelu/muodosta-yhteenveto opts-alustava)))
+        "Alustava toteuma kun toteumapisteet on olemassa"))))
 
 (deftest laske-bonus-ja-ennuste-test
   (testing "Bonus ja ennusteen tilan laskenta"
-    (let [opts {:tallennettu-paatos nil
+    (let [opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos nil
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1918,25 +1925,29 @@
                 :nykyhetki (pvm/luo-pvm 2020 1 15)
                 :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
           tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
-      
+
       (is (map? tulos) "Palauttaa mapin")
       (is (contains? tulos :bonus-tai-sanktio) "Sisältää bonus-tai-sanktio")
       (is (contains? tulos :ennusteen-tila) "Sisältää ennusteen-tila")
       (is (map? (:bonus-tai-sanktio tulos)) "Bonus on map")
-      (is (or (contains? (:bonus-tai-sanktio tulos) :sanktio)
-              (contains? (:bonus-tai-sanktio tulos) :bonus)
-              (contains? (:bonus-tai-sanktio tulos) :tavoite-taytetty))
-          "Bonus-tai-sanktio sisältää joko :bonus, :sanktio tai :tavoite-taytetty")
+      (is (contains? (:bonus-tai-sanktio tulos) :sanktio)
+        "Tässä skenaariossa palautuu sanktio")
+      (is (number? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Sanktio on numero")
+      (is (pos? (get-in tulos [:bonus-tai-sanktio :sanktio]))
+        "Palvelun API-muodossa sanktio on positiivinen")
       (is (keyword? (:ennusteen-tila tulos)) "Ennusteen tila on keyword"))))
 
 (deftest laske-bonus-ja-ennuste-paatos-test
   (testing "Päätös olemassa - käytetään tallennetun päätöksen bonusta"
     (let [tallennettu-paatos {:toteutuneet_pisteet 90
-                               :luvatut_pisteet 100
-                               :tavoitehinta 1000000
-                               :tyyppi "sanktio"
-                               :lupaussanktio -10000M}
-          opts {:tallennettu-paatos tallennettu-paatos
+                              :luvatut_pisteet 100
+                              :tavoitehinta 1000000
+                              :tyyppi "sanktio"
+                              :lupaussanktio 10000M}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
                 :piste-toteuma 85
                 :piste-ennuste 80
                 :lupaus-sitoutuminen {:pisteet 100}
@@ -1944,14 +1955,40 @@
                 :nykyhetki (pvm/luo-pvm 2020 1 15)
                 :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
           tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
-      
-      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos)) 
-          "Ennusteen tila on katselmoitu-toteuma kun päätös on"))))
+
+      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
+        "Ennusteen tila on katselmoitu-toteuma kun päätös on")
+      (is (= {:sanktio 10000M} (:bonus-tai-sanktio tulos))
+        "Tallennettu sanktio palautetaan positiivisena API-muodossa"))))
+
+(deftest laske-bonus-ja-ennuste-paatos-taytetty-test
+  (testing "Tallennettu taytetty-päätös näkyy katselmoituna toteumana"
+    (let [tallennettu-paatos {:toteutuneet_pisteet 100
+                              :luvatut_pisteet 100
+                              :tavoitehinta 1000000
+                              :tyyppi "taytetty"
+                              :lupaussanktio nil}
+          opts {:db (:db jarjestelma)
+                :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                :tallennettu-paatos tallennettu-paatos
+                :piste-toteuma 100
+                :piste-ennuste 100
+                :lupaus-sitoutuminen {:pisteet 100}
+                :tavoitehinta 1000000
+                :nykyhetki (pvm/luo-pvm 2020 1 15)
+                :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+          tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste opts)]
+      (is (= :katselmoitu-toteuma (:ennusteen-tila tulos))
+        "Tallennettu taytetty-päätös käsitellään katselmoituna toteumana")
+      (is (= {:tavoite-taytetty true} (:bonus-tai-sanktio tulos))
+        "Tallennettu taytetty-päätös näkyy API-muodossa tavoite täytetty -tilana"))))
 
 (deftest laske-bonus-ja-ennuste-ennusteen-tila-test
   (testing "Ennusteen tilan määrittely eri tilanteissa"
     ;; Alustava toteuma (hoitovuosi valmis)
-    (let [opts-alustava {:tallennettu-paatos nil
+    (let [opts-alustava {:db (:db jarjestelma)
+                         :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                         :tallennettu-paatos nil
                          :piste-toteuma 85
                          :piste-ennuste 80
                          :lupaus-sitoutuminen {:pisteet 100}
@@ -1960,10 +1997,12 @@
                          :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
           tulos-alustava (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-alustava)]
       (is (= :alustava-toteuma (:ennusteen-tila tulos-alustava))
-          "Alustava toteuma kun toteuma on olemassa"))
-    
+        "Alustava toteuma kun toteuma on olemassa"))
+
     ;; Ennuste (hoitokausi alkanut, ei toteumaa)
-    (let [opts-ennuste {:tallennettu-paatos nil
+    (let [opts-ennuste {:db (:db jarjestelma)
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                        :tallennettu-paatos nil
                         :piste-toteuma nil
                         :piste-ennuste 80
                         :lupaus-sitoutuminen {:pisteet 100}
@@ -1972,16 +2011,91 @@
                         :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
           tulos-ennuste (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ennuste)]
       (is (= :ennuste (:ennusteen-tila tulos-ennuste))
-          "Ennuste kun hoitokausi on alkanut ja bonus on laskettavissa"))
-    
+        "Ennuste kun hoitokausi on alkanut ja bonus on laskettavissa"))
+
     ;; Ei vielä ennustetta
-    (let [opts-ei-ennustetta {:tallennettu-paatos nil
-                               :piste-toteuma nil
-                               :piste-ennuste 80
-                               :lupaus-sitoutuminen {:pisteet 100}
-                               :tavoitehinta 1000000
-                               :nykyhetki (pvm/luo-pvm 2019 8 1)
-                               :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+    (let [opts-ei-ennustetta {:db (:db jarjestelma)
+                              :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                              :tallennettu-paatos nil
+                              :piste-toteuma nil
+                              :piste-ennuste 80
+                              :lupaus-sitoutuminen {:pisteet 100}
+                              :tavoitehinta 1000000
+                              :nykyhetki (pvm/luo-pvm 2019 8 1)
+                              :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
           tulos-ei-ennustetta (#'lupaus-palvelu/laske-bonus-ja-ennuste opts-ei-ennustetta)]
       (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ei-ennustetta))
-          "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))
+        "Ei vielä ennustetta kun hoitokausi ei ole alkanut"))))
+
+(deftest laske-bonus-ja-ennuste-kun-lupausprosentti-puuttuu-test
+  (testing "Puuttuva lupausprosentti estää onnistuneen ennustetilan"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [{:lupauspaatoksen_sanktioprosentti 2M
+                                :lupauspaatoksen_bonusprosentti nil}])]
+      (let [yhteiset-opts {:db (:db jarjestelma)
+                           :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                           :tallennettu-paatos nil
+                           :lupaus-sitoutuminen {:pisteet 100}
+                           :tavoitehinta 1000000
+                           :nykyhetki (pvm/luo-pvm 2020 8 31)
+                           :hk-alkupvm (pvm/luo-pvm 2019 10 1)}
+            tulos-alustava (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                             (assoc yhteiset-opts
+                               :piste-toteuma 85
+                               :piste-ennuste 80))
+            tulos-ennuste (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                            (assoc yhteiset-opts
+                              :piste-toteuma nil
+                              :piste-ennuste 80))]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-alustava))
+          "Pelkkä pisteiden toteuma ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos-ennuste))
+          "Pelkkä piste-ennuste ei riitä ilman puuttuvia prosenttiparametreja")
+        (is (true? (:lupausprosentit-puuttuu? tulos-alustava))
+          "Puuttuvat prosentit merkitään eksplisiittisesti yhteenvetoa varten")
+        (is (nil? (:bonus-tai-sanktio tulos-alustava))
+          "Bonusta tai sanktiota ei voida laskea ilman kaikkia prosenttiparametreja")))))
+
+(deftest laske-bonus-ja-ennuste-kun-urakan-parametrit-puuttuvat-test
+  (testing "Myos kokonaan puuttuva parametririvi merkitään puuttuviksi lupausprosenteiksi"
+    (with-redefs [urakat-q/hae-urakan-parametrit
+                  (constantly [])]
+      (let [tulos (#'lupaus-palvelu/laske-bonus-ja-ennuste
+                    {:db (:db jarjestelma)
+                     :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                     :tallennettu-paatos nil
+                     :piste-toteuma 85
+                     :piste-ennuste 80
+                     :lupaus-sitoutuminen {:pisteet 100}
+                     :tavoitehinta 1000000
+                     :nykyhetki (pvm/luo-pvm 2020 8 31)
+                     :hk-alkupvm (pvm/luo-pvm 2019 10 1)})]
+        (is (= :ei-viela-ennustetta (:ennusteen-tila tulos))
+          "Ilman parametreja ennustetta ei voida laskea")
+        (is (true? (:lupausprosentit-puuttuu? tulos))
+          "Puuttuva parametririvi pitää näyttää puuttuvina lupausprosentteina")
+        (is (nil? (:bonus-tai-sanktio tulos))
+          "Bonusta tai sanktiota ei voida laskea ilman parametririviä")))))
+
+(deftest yhteinen-paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa yhteisen päätöksen API-muotoon oikein"
+    (is (= {:bonus 5200.0}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:lupausbonus 5200.0}))
+        "Bonus palautetaan positiivisena")
+    
+    (is (= {:sanktio 13200.0}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:lupaussanktio 13200.0}))
+        "Sanktio palautetaan positiivisena API-muodossa")
+    
+    (is (= {:tavoite-taytetty true}
+           (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio
+             {:tavoite-taytetty true}))
+        "Tavoite täytetty palautetaan sellaisenaan")
+    
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun yhteinen päätös on nil")
+    
+    (is (nil? (#'lupaus-palvelu/yhteinen-paatos->bonus-tai-sanktio {}))
+        "Palauttaa nil kun yhteinen päätös on tyhjä map")))

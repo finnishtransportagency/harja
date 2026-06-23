@@ -22,6 +22,11 @@
   .viesti {
     align-content: center;
   }
+
+  &.keskitetty-pysty {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .ajax-loader-valistys-kustannukset {
@@ -31,15 +36,15 @@
   justify-content: right;
 }
 
+.poista-ajax-loader-valistykset {
+  padding: 0;
+}
+
 div.tietorivi {
   border-bottom: solid 1px lightGray;
 
   & .nappi-alasveto {
-    height: @input-korkeus-matalampi;
-
-    > .livicon-chevron-down {
-      height: 4px;
-    }
+    height: @input-korkeus-vayla;
   }
 
   .pvm-kentta {
@@ -502,6 +507,8 @@ button > .ajax-loader {
 
 .tierekisteriosoite-flex { 
     display: flex;
+    height: 60px;
+
     & > div {
       width:58px;
     }
@@ -796,6 +803,8 @@ button > .ajax-loader {
 }
 
 .vahvistamaton {
+    border-bottom: 1px solid @black-light;
+    border-top: 1px solid @black-light;
     background-color: @yellow;
 }
 

@@ -76,7 +76,7 @@
 (defmethod tee-kentta :haku [{:keys [_lahde nayta placeholder pituus lomake? sort-fn disabled?
                                      kun-muuttuu hae-kun-yli-n-merkkia monivalinta? salli-kirjoitus?
                                      tarkkaile-ulkopuolisia-muutoksia? monivalinta-teksti piilota-checkbox? piilota-dropdown?
-                                     hakuikoni? input-id piilota-haetaan-teksti-ja-spinner?]} data]
+                                     hakuikoni? piilota-haetaan-teksti-ja-spinner?]} data]
   (when monivalinta?
     (assert (ifn? monivalinta-teksti) "Monivalintahakukentällä pitää olla funktio monivalinta-teksti!"))
   (let [nyt-valittu @data
@@ -98,7 +98,7 @@
         edellinen-data (atom @data)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! tulokset nil))
-      (fn [{:keys [lahde disabled?]} data]
+      (fn [{:keys [lahde disabled? elementin-id]} data]
 
         (when (and
                 tarkkaile-ulkopuolisia-muutoksia?
@@ -117,7 +117,7 @@
                              (str "input-default komponentin-input"))
                            (when disabled? "disabled"))
                   :value @teksti
-                  :id input-id
+                  :id elementin-id
                   :placeholder placeholder
                   :disabled disabled?
                   :size pituus
@@ -206,10 +206,10 @@
                 [:span.ei-hakutuloksia "Ei tuloksia"]
                 (doall (map-indexed (fn [i t]
                                       (let [checkbox-input-id (str
-                                                                (when input-id (str input-id "-"))
+                                                                (when elementin-id (str elementin-id "-"))
                                                                 (str "checkbox-id-" i))
                                             checkbox-label-id (str
-                                                                (when input-id (str input-id "-"))
+                                                                (when elementin-id (str elementin-id "-"))
                                                                 (str "label-id-" i))]
                                         ^{:key (hash t)}
                                         [:li {:class [(when (= i idx) "korostettu") "padding-left-8"
@@ -330,20 +330,21 @@
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defn- normalisoi-numero [n salli-whitespace?]
-  (when n (-> n
-            ;; Poistetaan whitespace, jos ei sallittu
-            (as-> n n
-              (if-not salli-whitespace? (str/replace n #"\s" "")
-                n))
-            ;; Poistetaan mahd. euromerkki lopusta
-            (str/replace #"€$" "")
-            ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
-            ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
-            ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
-            (str/replace #"[−–—]" "-")
+  (when (and n (string? n))
+    (-> n
+      ;; Poistetaan whitespace, jos ei sallittu
+      (as-> n n
+        (if-not salli-whitespace? (str/replace n #"\s" "")
+          n))
+      ;; Poistetaan mahd. euromerkki lopusta
+      (str/replace #"€$" "")
+      ;; Korvataan välimerkin variaatiot tavallisellä välimerkillä (hyphen)
+      ;; fmt/desimaaliluku-opt muuntaa negatiivisen numeron väliviivan matemaattiseksi väliviivaksi (U+2212)
+      ;; joka voi sotkea numerosyötteen validoinnin ja käsittelyn
+      (str/replace #"[−–—]" "-")
 
-            ;; Poistetaan ympäröivä whitespace joka tapauksessa
-            (str/trim))))
+      ;; Poistetaan ympäröivä whitespace joka tapauksessa
+      (str/trim))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
@@ -373,11 +374,11 @@
   (let [fmt-fn (or (numero-fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
-        id (or elementin-id (gensym))]
+        generoitu-id (gensym)]
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus elementin-id
                    disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
         (let [yksikko (if-not yksikko teksti-oikealla yksikko)
               nykyinen-data @data
@@ -409,7 +410,7 @@
                                              "})?"))]
 
           [:span.numero
-           [:input (merge {:id id
+           [:input (merge {:id (or elementin-id generoitu-id)
                            :class (cond-> nil
                                     (and lomake?
                                       (not vayla-tyyli?)) (str "form-control ")
@@ -1122,7 +1123,7 @@
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
 (defmethod tee-kentta :pvm [{:keys [pvm-tyhjana rivi on-focus lomake? pakota-suunta validointi
-                                    on-datepicker-select vayla-tyyli? elementin-nimi]} data]
+                                    on-datepicker-select vayla-tyyli?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -1171,7 +1172,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? muokattu?]} data]
+                    kentan-tyylit virhe? muokattu? elementin-id elementin-nimi]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1185,9 +1186,10 @@
                                 (pvm/->pvm nykyinen-teksti)
                                 nykyinen-pvm
                                 (pvm-tyhjana rivi))
-               elementin-id (if elementin-nimi
-                              elementin-nimi
-                              (str (gensym "pvm-input")))
+               elementin-id (cond
+                              elementin-id elementin-id
+                              elementin-nimi elementin-nimi
+                              :else (str (gensym "pvm-input")))
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                                    (cond
                                                      kentan-tyylit (apply str kentan-tyylit)
@@ -1537,12 +1539,9 @@
     (fn [{:keys [pakollinen? disabled? alaotsikot?]} tie aosa aet losa loppuet tr-otsikot? sijainnin-tyhjennys
          karttavalinta virhe piste? vaadi-vali?]
 
-      (let [flex (if alaotsikot?
-                   "flex-start"
-                   "flex-end")
-            top (if alaotsikot?
-                  "2px"
-                  "0px")]
+      (let [top (if alaotsikot?
+                  "1px"
+                  "16px")]
         [:div
          [:div.tierekisteriosoite-flex
           [osio alaotsikot? tie "Tie"]
@@ -1555,7 +1554,7 @@
           (when virhe
             [:div virhe])
           (when karttavalinta
-            [:div {:style {:padding-left "16px" :padding-top top :align-self flex}}
+            [:div {:style {:padding-left "16px" :padding-top top}}
              [:div.karttavalinta
               karttavalinta]])]]))))
 

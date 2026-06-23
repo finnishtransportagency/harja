@@ -585,7 +585,8 @@
     (komp/sisaan-ulos #(do
                          (kartta-tasot/taso-paalle! :sillat)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :L))
+                         (nav/vaihda-kartan-koko! :L)
+                         (kartta-tiedot/piilota-infopaneeli!))
       #(do
          (kartta-tasot/taso-pois! :sillat)
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)

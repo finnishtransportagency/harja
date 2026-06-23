@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.jarjestelma-asetukset
   (:require [harja.ui.komponentti :as komp]
+            [clojure.string :as str]
             [tuck.core :refer [tuck]]
             [harja.tiedot.hallinta.jarjestelma-asetukset :as tiedot]
             [harja.ui.grid :as grid]
@@ -94,11 +95,24 @@
           :nimi ::geometria-aineistot/nimi
           :tyyppi :string
           :leveys 1}
-         {:otsikko "Viimeisen päivitys"
-          :nimi ::geometria-aineistot/viimeisen_paivitys
+         {:otsikko "Viimeisin päivitys"
+          :nimi ::geometria-aineistot/viimeisin_paivitys
           :tyyppi :pvm-aika
           :fmt pvm/pvm-opt
           :leveys 1}
+         {:otsikko "Lähdetiedosto"
+          :nimi :lahdetiedosto-display
+          :hae (fn [rivi]
+                 (or (when-let [lahde (::geometria-aineistot/viimeisin_lahde rivi)]
+                       (->> (str/split lahde #"[\\/]")
+                            (remove str/blank?)
+                            last))
+                     "-"))
+          :tyyppi :string
+          :leveys 1
+          :solun-tooltip (fn [rivi]
+                           (when-let [lahde (::geometria-aineistot/viimeisin_lahde rivi)]
+                             {:teksti lahde :suunta :oikea}))}
          {:otsikko "Seuraava päivitys"
           :nimi ::geometria-aineistot/seuraava_paivitys
           :tyyppi :pvm-aika

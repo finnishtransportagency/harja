@@ -61,14 +61,12 @@ RETURNING id INTO muutos_id_3;
 INSERT INTO mhu_muutos_kustannusvaikutus(versio, muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi, summa)
 VALUES (_versio, muutos_id_3, 'hankintakustannukset',
         _toimenpideinstanssi_id_mhu_yllapito, ensimmainen_tayden_hkn_alkuvuosi, 1000);
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
 VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_alle_600mm,
-        ensimmainen_tayden_hkn_alkuvuosi,
-        30, -30, 0);
-INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara, maaramuutos, uusi_maara)
+        ensimmainen_tayden_hkn_alkuvuosi, -30);
+INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
 VALUES (_versio, muutos_id_3, _tehtava_id_soratien_rummut_600_1000mm,
-        ensimmainen_tayden_hkn_alkuvuosi,
-        40, -40, 0);
+        ensimmainen_tayden_hkn_alkuvuosi, -40);
 INSERT INTO liite (nimi, tyyppi, lahde, urakka, luotu, luoja)
 VALUES ('rumpu.jpg', 'image/png', 'harja-ui'::lahde,
         urakka_id, NOW(), kayttaja_id_tero)
@@ -114,10 +112,9 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi
         VALUES (_versio, muutos_id_1, 'hankintakustannukset',
                 _toimenpideinstanssi_id_paall_paikk, vuosi, 1000);
         -- Muutos 1: Päällysteiden paikkausta enemmän - tehtävä- ja määräluettelon muutokset
-        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
-        VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi,
-                1000, 100, 1100);
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
+        VALUES (_versio, muutos_id_1, _tehtava_id_ab_paikkaus, vuosi, 100);
 
         -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - kustannusvaikutus
         --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta kustannusvaikutusta lisätään
@@ -129,10 +126,9 @@ FOR vuosi IN ensimmainen_tayden_hkn_alkuvuosi..viimeinen_tayden_hkn_alkuvuosi
         -- Muutos 5: Lisää paikkausta (aiemman hoitovuoden pysyvä muutos) - tehtävä- ja määräluettelon muutokset
         --           HOX: Muutos on voimassa alkaen edellisen hoitokauden alusta, mutta määrämuutoksia lisätään
         --           seuraaville kokonaisille hoitovuosille
-        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi, edellinen_maara,
-                                                        maaramuutos, uusi_maara)
-        VALUES (_versio, muutos_id_5, _tehtava_id_ab_paikkaus, vuosi,
-                1000, 100, 1100);
+        INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo(versio, muutos, tehtava, hoitokauden_alkuvuosi,
+                                                        maaramuutos)
+        VALUES (_versio, muutos_id_5, _tehtava_id_ab_paikkaus, vuosi, 100);
 
     END LOOP;
 
@@ -499,14 +495,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 1 ' || p_urakka);
 
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 1 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen'),
          10, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 1');
+         '[Muutokset] Määrämitattava toteuma 1', p_vuosi);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -519,14 +515,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 2 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 2 ' || p_urakka),
          to_timestamp((p_vuosi - 1)::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'),
          4, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 2');
+         '[Muutokset] Määrämitattava toteuma 2', p_vuosi - 1);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -539,14 +535,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 3 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 3 ' || p_urakka),
          to_timestamp((p_vuosi - 2)::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)'),
          4, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 3 ' || p_urakka);
+         '[Muutokset] Määrämitattava toteuma 3 ' || p_urakka, p_vuosi - 2);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -559,14 +555,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 4 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 4 ' || p_urakka),
          to_timestamp((p_vuosi - 1)::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Päällystettyjen teiden palteiden poisto'),
          5, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 4');
+         '[Muutokset] Määrämitattava toteuma 4', p_vuosi - 1);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -579,14 +575,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 5 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 5 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Maakivien (>1m3) poisto'),
          43, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 5');
+         '[Muutokset] Määrämitattava toteuma 5', p_vuosi);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -599,14 +595,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 6 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 6 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm' limit 1),
          38, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 6');
+         '[Muutokset] Määrämitattava toteuma 6', p_vuosi);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -619,14 +615,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 7 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 7 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Yksityisten rumpujen korjaus ja uusiminen  Ø > 400 mm ≤ 600 mm, päällystetyt tiet' limit 1),
          15, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 7');
+         '[Muutokset] Määrämitattava toteuma 7', p_vuosi);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -639,14 +635,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 8 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 8 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet' limit 1),
          2450, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 8');
+         '[Muutokset] Määrämitattava toteuma 8', p_vuosi);
 
 
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -659,14 +655,14 @@ BEGIN
          NULL, NULL, 'kokonaishintainen',
          '[Muutokset] Määrämitattava toteuma 9 ' || p_urakka);
     
-    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto)
+    INSERT INTO toteuma_tehtava (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
     VALUES
         (v_kayttaja_id,
          (SELECT id FROM toteuma WHERE lisatieto = '[Muutokset] Määrämitattava toteuma 9 ' || p_urakka),
          to_timestamp(p_vuosi::text || '-11-30 17:00:00', 'YYYY-MM-DD HH24:MI:SS'),
          (SELECT id FROM tehtava WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)' limit 1),
          3854, v_urakka_id,
-         '[Muutokset] Määrämitattava toteuma 9');
+         '[Muutokset] Määrämitattava toteuma 9', p_vuosi);
 
 
 END $$;

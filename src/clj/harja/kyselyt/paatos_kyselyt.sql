@@ -176,12 +176,12 @@ WHERE id = :paatos-id
 
 -- name: tee-hoitokauden-indeksikorjaus-paatos<!
 -- Tee hoitokauden indeksikorjaus päätös
-INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tavoitehinnan_muutokset,
-                                               tavoitehinta_ennen, hoitokauden_kuukaudet, kuukausien_keskiarvo,
+INSERT INTO paatos_hoitokauden_indeksikorjaus (urakkaid, hoitokauden_alkuvuosi, hv_alun_indkorj_tavoitehinta, tavoitehinnan_muutokset,
+                                               hv_lopun_tavoitehinta_ennen_indkorj, hoitokauden_kuukaudet, kuukausien_keskiarvo,
                                                alkuperainen_pisteluku, alkuperaisen_pisteluvun_kuukausi, pistelukujen_muutos,
                                                pistelukujen_muutos_prosentteina, indeksikorotuksen_prosenttiosuus,
                                                hoitokauden_lopun_indeksikorjaus, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tavoitehinnan_muutokset, :tavoitehinta_ennen,
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :hv_alun_indkorj_tavoitehinta, :tavoitehinnan_muutokset, :hv_lopun_tavoitehinta_ennen_indkorj,
         (SELECT ARRAY[:hoitokauden_kuukaudet]::indeksikorjauskuukausi[]), :kuukausien_keskiarvo, :alkuperainen_pisteluku,
         :alkuperaisen_pisteluvun_kuukausi, :pistelukujen_muutos, :pistelukujen_muutos_prosentteina,
         :indeksikorotuksen_prosenttiosuus, :hoitokauden_lopun_indeksikorjaus, :luoja, NOW());
@@ -209,9 +209,9 @@ WHERE urakkaid = :urakkaid
 
 --name: tee-hoidonjohtopalkkio-paatos<!
 -- Tee hoidonjohtopalkkio päätös
-INSERT INTO paatos_hoidonjohtopalkkio (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, tarjouksen_tavoitehinta, hoidonjohtopalkkio,
+INSERT INTO paatos_hoidonjohtopalkkio (urakkaid, hoitokauden_alkuvuosi, hv_lopun_indkorjaamaton_tavoitehinta, tarjouksen_tavoitehinta, hoidonjohtopalkkio,
                                        muutosprosentti, hoidonjohtopalkkio_muutos, kulu_id, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :tavoitehinta, :tarjouksen_tavoitehinta, :hoidonjohtopalkkio,
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :hv_lopun_indkorjaamaton_tavoitehinta, :tarjouksen_tavoitehinta, :hoidonjohtopalkkio,
         :muutosprosentti, :hoidonjohtopalkkio_muutos, :kulu_id, :luoja, NOW());
 
 --name: poista-hoidonjohtopalkkio-paatos<!
@@ -237,12 +237,10 @@ WHERE id = :paatos-id
   AND poistettu = FALSE;
 
 --name: tee-poytakirjan-raporttipaatos<!
--- Tee hoidonjohtopalkkio päätös
 INSERT INTO paatos_poytakirjan_raportti (urakkaid, hoitokauden_alkuvuosi, tarkistettu, luoja, luotu)
 VALUES (:urakkaid, :hoitokauden_alkuvuosi, NOW(), :luoja, NOW());
 
 --name: poista-poytakirjan-raporttipaatos<!
--- Poista hoidonjohtopalkkio päätös
 UPDATE paatos_poytakirjan_raportti
 SET poistettu = TRUE,
     poistaja  = :poistaja

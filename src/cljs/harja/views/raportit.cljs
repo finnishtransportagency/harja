@@ -1,6 +1,7 @@
 (ns harja.views.raportit
   "Harjan raporttien pääsivu."
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.istunto :as istunto]
+            [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.urakka :as urakka-domain]
             [harja.ui.komponentti :as komp]
@@ -73,7 +74,7 @@
                                            ;; Jos urakkakin on valittu, tulee pelkästään "urakka"
                                            (cond
                                              (when v-ur "urakka") #{"urakka"}
-                                             (when v-hal "hallintayksikko") #{"hallintayksikko"}
+                                             (when v-hal "elinvoimakeskus") #{"elinvoimakeskus"}
                                              :default #{"koko maa"})
                                            #{"urakka"})
                   sopimustyypin-raportit (filter
@@ -180,7 +181,7 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko} raportti))
+  (#{:suolasakko :muutos-ja-lisatyot} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]
@@ -480,7 +481,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
-   "Muutos- ja lisätyöt" :muutos-ja-lisatyot
+   ;"Muutos- ja lisätyöraportti" :muutos-ja-lisatyoraportti ;; Jätetaan uudempi versio pois, koska se toimii vain hoitovuosi tasolla
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti
@@ -563,7 +564,7 @@
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
-(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
+(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi vain-excelraportti? voi-suorittaa? arvot-nyt]
   (let [aseta-parametrit! (fn [id]
                             (let [input (-> js/document
                                             (.getElementById id)
@@ -580,9 +581,12 @@
                                                  (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
-                              true))]
+                              true))
+        vientimuodot (if vain-excelraportti?
+                       [(yleiset/tallenna-excel-nappi (k/excel-url :raportointi))]
+                       yleiset/+raportin-vientimuodot+)]
     [:div
-     (for [[ikoni teksti id url] yleiset/+raportin-vientimuodot+]
+     (for [[ikoni teksti id url] vientimuodot]
        ^{:key id}
        [:form {:target "_blank" :method "POST" :id id
                :style {:display "inline"}
@@ -670,7 +674,8 @@
                            {:testiversio? (:testiversio? raporttityyppi)}))
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
-        raportissa? (some? @raportit/suoritettu-raportti)]
+        raportissa? (some? @raportit/suoritettu-raportti)
+        toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (log "RAPORTIN-PARAMETRIT NYT: " (pr-str arvot-nyt))
@@ -722,21 +727,22 @@
           [:div.flex-row
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
-           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]]
+           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]]
           [:div.raportin-toiminnot.flex-row.loppuun
-           [napit/palvelinkutsu-nappi " Tee raportti"
-            #(go
-               (reset! raportit/suoritettu-raportti :ladataan)
-               (let [suorituksen-parametrit [konteksti
-                                             (:nimi raporttityyppi)
-                                             arvot-nyt
-                                             (:id v-ur)
-                                             (:id v-hal)]]
-                 (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                 (<! (suorita-raportti! suorituksen-parametrit))))
-            {:ikoni [ikonit/list]
-             :disabled (not voi-suorittaa?)}]
-           [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]])]]]))
+           (when-not toimenpideraportti?
+             [napit/palvelinkutsu-nappi " Tee raportti"
+              #(go
+                 (reset! raportit/suoritettu-raportti :ladataan)
+                 (let [suorituksen-parametrit [konteksti
+                                               (:nimi raporttityyppi)
+                                               arvot-nyt
+                                               (:id v-ur)
+                                               (:id v-hal)]]
+                   (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+                   (<! (suorita-raportti! suorituksen-parametrit))))
+              {:ikoni [ikonit/list]
+               :disabled (not voi-suorittaa?)}])
+           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]])]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]
@@ -745,11 +751,11 @@
      {:valitse-fn nav/valitse-hallintayksikko!
       :valinta v-hal
       :class "raportti-alasveto"
-      :format-fn (fnil hy/elynumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
-                                                     "Valitse hallintayksikkö"
+      :format-fn (fnil hy/evknumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
+                                                     "Valitse elinvoimakeskus"
                                                      (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                                         "Kaikki ELYt"
-                                                         "Valitse ELY"))})}
+                                                         "Kaikki Elinvoimakeskukset"
+                                                         "Valitse Elinvoimakeskus"))})}
      (concat (if (and
                    (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
                    ;; vesiväylille ei haluta "Kaikki ELYt" vaihtoehtoa
@@ -769,7 +775,7 @@
   (if (and (nil? valittu-urakka)
            (or (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?))
                (= urakkatyyppi "vesiväylät")))              ;Vesiväylissä raportteja toistaiseksi vain urakkatasolla
-    (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
+    (str "Valitse elinvoimakeskus ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
 (defn raporttivalinnat [ensimmainen-urakka-viimeksi]
@@ -811,7 +817,7 @@
             [:h3 "Raportin tiedot"]
 
             [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
-             "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             "Elinvoimakeskus" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
                         (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)

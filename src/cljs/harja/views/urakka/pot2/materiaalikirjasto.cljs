@@ -40,7 +40,7 @@
       :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/massa-id %) :massat))
       :tunniste :harja.domain.pot2/massa-id}
      [{:otsikko-komp (fn []
-                       [kentat/raksiboksi {:disabled false
+                       [kentat/raksiboksi {:disabled? false
                                            :toiminto #(e! (mk-tiedot/->ValitseKaikkiMassatTaiMurskeet :massat))}
                         (mk-tiedot/materiaalien-ruksin-tila (:massat materiaalit-toisesta-urakasta))])
        :tyyppi :komponentti
@@ -66,12 +66,12 @@
       :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id %) :murskeet))
       :tunniste ::pot2-domain/murske-id}
      [{:otsikko-komp (fn []
-                       [kentat/raksiboksi {:disabled false
+                       [kentat/raksiboksi {:disabled? false
                                            :toiminto #(e! (mk-tiedot/->ValitseKaikkiMassatTaiMurskeet :murskeet))}
                         (mk-tiedot/materiaalien-ruksin-tila (:murskeet materiaalit-toisesta-urakasta))])
        :tyyppi :komponentti
        :komponentti (fn [rivi]
-                      [kentat/raksiboksi {:disabled false
+                      [kentat/raksiboksi {:disabled? false
                                           :toiminto #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id rivi) :murskeet))}
                        (:valittu? rivi)])
        :leveys 2}

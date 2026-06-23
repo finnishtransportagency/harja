@@ -1,8 +1,8 @@
--- Joka yö siirretään raskaista toteumiin liittyvistä tauluista edellisen vuorokauden aikana tulleet ja muokatut
+-- Joka yö siirretään raskaista toteumiin liittyvistä tauluista valittujen alkuajan ja loppuajan väliset
 -- toteumat analytiikalle tehtyyn omaan tauluun.
--- Jos vahingossa siirretään sama toteuma toiseen kertaan, niin luovutaan yrityksestä
+-- Jos vahingossa siirretään sama toteuma toiseen kertaan, niin ei haittaa. Konfliktissa ei tehdä mitään erityistä.
 
-CREATE OR REPLACE FUNCTION siirra_toteumat_analytiikalle(ajankohta TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
+CREATE OR REPLACE FUNCTION siirra_toteumat_analytiikalle(alkuaika TIMESTAMP WITH TIME ZONE, loppuaika TIMESTAMP WITH TIME ZONE) RETURNS VOID AS
 $$
 DECLARE
     muuttunut_toteuma RECORD;
@@ -42,8 +42,8 @@ BEGIN
                     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                     JOIN urakka u ON t.urakka = u.id
-          WHERE (t.luotu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
-             OR (tm.luotu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
+         WHERE (t.luotu BETWEEN alkuaika AND loppuaika)
+            OR (tm.luotu BETWEEN alkuaika AND loppuaika)
           GROUP BY t.id, t.luotu, u.id
           ORDER BY t.luotu ASC)
         ON CONFLICT DO NOTHING;
@@ -58,8 +58,8 @@ BEGIN
                    LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                    LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                    JOIN urakka u ON t.urakka = u.id
-         WHERE (t.muokattu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
-            OR (tm.muokattu BETWEEN ajankohta - '1 day'::INTERVAL AND ajankohta)
+         WHERE (t.muokattu BETWEEN alkuaika AND loppuaika)
+            OR (tm.muokattu BETWEEN alkuaika AND loppuaika)
          GROUP BY t.id, t.luotu, u.id
         LOOP
         -- Käytetään poista - lisää uuusiksi, menetelmää, koska update lauseessa ei voi käyttää group by komentoa

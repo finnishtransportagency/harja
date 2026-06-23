@@ -11,6 +11,7 @@
             [harja.domain.hanke :as h]
             [harja.domain.organisaatio :as o]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.palvelin.palvelut.hankkeet :as hankkeet-palvelu]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
@@ -23,6 +24,8 @@
   (:import (org.joda.time.format DateTimeFormat)))
 
 (def ^{:const true} oletus-toleranssi 50)
+
+(def ^:private sallitut-projektikansio-linkin-skeemat #{"https"})
 
 (defn urakan-paivamaarat
   [db id]
@@ -163,9 +166,9 @@
 
         (map pura-yhteystiedot)
 
-        (map #(assoc % :hallintayksikko {:id      (:hallintayksikko_id %)
-                                         :nimi    (:hallintayksikko_nimi %)
-                                         :lyhenne (:hallintayksikko_lyhenne %)}))
+        (map #(assoc % :elinvoimakeskus {:id (:elinvoimakeskus_id %)
+                                         :nimi (:elinvoimakeskus_nimi %)
+                                         :lyhenne (:elinvoimakeskus_lyhenne %)}))
 
         (map #(if-let [tyyppi (:tyyppi %)]
                 ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
@@ -194,11 +197,11 @@
 
         ;; Poista käsitellyt avaimet
 
-        (map #(dissoc %
-                      :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
-                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
-                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
+    (map #(dissoc %
+            :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
+            :elinvoimakeskus_id :elinvoimakeskus_nimi :elinvoimakeskus_lyhenne
+            :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
+            :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
@@ -219,6 +222,35 @@
                               ;; dummy, jotta IN toimii
                               [-1]
                               urakat)})))))
+
+(defn elinvoimakeskuksen-urakat [db {organisaatio :organisaatio :as user} elinvoimakeskusid]
+  (log/info "Haetaan elinvoimakeskuksen urakat: " elinvoimakeskusid)
+  (let [urakat (oikeudet/kayttajan-urakat user)
+        elinvoimakeskus (when elinvoimakeskusid (first (organisaatiot-q/hae-elinvoimakeskus db {:id elinvoimakeskusid})))
+        ;; Jos haetaan Pohjamaan elinvoimakeskuksen urakoita, niin näytetään myös Etelä-pohjanmaan elinvoimakeskuksen urakat.
+        ;; Eli riippumatta, haetaan eteläpohjanmaan tai pohjanmaan, niin aina haetaan molempien urakat
+        toinen-elinvoimakeskus-id (cond
+                                    (= (:nimi elinvoimakeskus) "Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Etelä-Pohjanmaa"})))
+                                    (= (:nimi elinvoimakeskus) "Etelä-Pohjanmaa") (:id (first (organisaatiot-q/hae-elinvoimakeskus-nimella db {:nimi "Pohjanmaa"})))
+                                    :else nil)
+         elinvoimakeskusidt (if toinen-elinvoimakeskus-id
+                               [elinvoimakeskusid toinen-elinvoimakeskus-id]
+                               [elinvoimakeskusid])
+        organisaatiotyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
+        ;; Varmisettaan, että jvh käyttäjällä on elinvoimakeskus urakkatyyppi
+        organisaatiotyyppi (if (roolit/jvh? user) "elinvoimakeskus" organisaatiotyyppi)]
+    (if (and (nil? organisaatio) (empty? urakat) (not (roolit/jvh? user))) ;; Varmista, että jvh käyttäjä ei jää osattomaksi koskaan.
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        [])
+      (into []
+        urakka-xf
+        (q/listaa-urakat-elinvoimakeskukselle db
+          {:elinvoimakeskusid elinvoimakeskusidt
+           :kayttajan_org_id (:id organisaatio)
+           :kayttajan_org_tyyppi organisaatiotyyppi
+           :urakat_annettu (boolean (seq urakat))
+           :sallitut_urakat (if (empty? urakat) [-1] urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
@@ -268,6 +300,36 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/aseta-takuun-loppupvm! db {:urakka   urakka-id
                                 :loppupvm (:loppupvm takuu)}))
+
+(defn- normalisoi-projektikansio-linkki [projektikansio-linkki]
+  (let [normalisoitu-linkki (not-empty (str/trim (or projektikansio-linkki "")))]
+    (when normalisoitu-linkki
+      (let [;; Lisätään https:// eteen, jos skeema puuttuu; korotetaan http:// → https://
+            normalisoitu-linkki (cond
+                                  (str/starts-with? normalisoitu-linkki "https://") normalisoitu-linkki
+                                  (str/starts-with? normalisoitu-linkki "http://") (str "https://" (subs normalisoitu-linkki (count "http://")))
+                                  :else (str "https://" normalisoitu-linkki))
+            uri (try
+                  (java.net.URI. normalisoitu-linkki)
+                  (catch Exception _
+                    nil))
+            skeema (some-> uri .getScheme str/lower-case)
+            host (some-> uri .getHost)]
+        (when-not (and uri
+                    (.isAbsolute uri)
+                    (contains? sallitut-projektikansio-linkin-skeemat skeema)
+                    (some? host)
+                    (str/includes? host "."))
+          (throw (IllegalArgumentException. "Projektikansion linkki ei ole kelvollinen – anna verkkoosoite, esim. esimerkki.fi tai https://esimerkki.fi.")))
+        normalisoitu-linkki))))
+
+(defn tallenna-urakan-projektikansio-linkki [db user {:keys [urakka-id projektikansio-linkki]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (let [projektikansio-linkki (normalisoi-projektikansio-linkki projektikansio-linkki)]
+    (q/tallenna-urakan-projektikansio-linkki! db {:urakka urakka-id
+                                                  :projektikansio_linkki projektikansio-linkki})
+    {:projektikansio-linkki projektikansio-linkki}))
+
 (defn- pvm-str->pvm [pvm-str]
   (. (. (DateTimeFormat/forPattern "d.M.yyyy") parseDateTime pvm-str) toDate))
 
@@ -478,13 +540,13 @@
                            (map konv/alaviiva->rakenne)
                            (map #(assoc % :hanke (when (get-in % [:hanke :id]) (:hanke %))))
                            (map #(assoc % :urakoitsija (when (get-in % [:urakoitsija :id]) (:urakoitsija %))))
-                           (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
+                           (map #(assoc % :elinvoimakeskus (when (get-in % [:elinvoimakeskus :id]) (:elinvoimakeskus %)))))
                          (q/hae-harjassa-luodut-urakat db))
                    {:sopimus      :sopimukset
                     ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
                     :sahkelahetys :sahkelahetykset})]
       (namespacefy urakat {:ns    :harja.domain.urakka
-                           :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
+                           :inner {:elinvoimakeskus {:ns :harja.domain.organisaatio}
                                    :urakoitsija     {:ns :harja.domain.organisaatio}
                                    :sopimukset      {:ns :harja.domain.sopimus}
                                    :hanke           {:ns :harja.domain.hanke}}}))))
@@ -499,6 +561,11 @@
       :hallintayksikon-urakat
       (fn [user hallintayksikko]
         (hallintayksikon-urakat db user hallintayksikko)))
+
+    (julkaise-palvelu http
+      :elinvoimakeskuksen-urakat
+      (fn [user elinvoimakeskusid]
+        (elinvoimakeskuksen-urakat db user elinvoimakeskusid)))
 
     (julkaise-palvelu http
       :hae-urakka
@@ -536,6 +603,11 @@
         (aseta-takuun-loppupvm db user tiedot)))
 
     (julkaise-palvelu http
+      :tallenna-urakan-projektikansio-linkki
+      (fn [user tiedot]
+        (tallenna-urakan-projektikansio-linkki db user tiedot)))
+
+    (julkaise-palvelu http
       :poista-indeksi-kaytosta
       (fn [user tiedot]
         (poista-indeksi-kaytosta db user tiedot)))
@@ -551,6 +623,7 @@
         (tallenna-vesivaylaurakka db user tiedot))
       {:kysely-spec ::u/tallenna-urakka-kysely
        :vastaus-spec ::u/tallenna-urakka-vastaus})
+
     (julkaise-palvelu http
       :hae-harjassa-luodut-urakat
       (fn [user _]
@@ -562,12 +635,14 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
       :hallintayksikon-urakat
+      :elinvoimakeskuksen-urakat
       :hae-urakka
       :hae-urakoita
       :hae-organisaation-urakat
       :tallenna-urakan-sopimustyyppi
       :tallenna-urakan-tyyppi
       :aseta-takuun-loppupvm
+      :tallenna-urakan-projektikansio-linkki
       :paivita-kesa-aika
       :tallenna-vesivaylaurakka
       :hae-harjassa-luodut-urakat)

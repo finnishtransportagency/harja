@@ -13,14 +13,14 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportin hakuhimmeli
-with urakat as (select u.id, u.hallintayksikko
-                from urakka u
-                where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
-                  and case
+with urakat as (select u.id, u.elinvoimakeskus_id
+                  from urakka u
+                 where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
+                   and case
                         when :urakka::integer is not null then
                           u.id = :urakka
-                        when :hallintayksikko::integer is not null then
-                          u.hallintayksikko = :hallintayksikko
+                        when :elinvoimakeskus::integer is not null then
+                          u.elinvoimakeskus_id = :elinvoimakeskus
                         else true
                   end
                   and u.tyyppi = 'teiden-hoito'),
@@ -47,8 +47,8 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
        tpk.suunnitteluyksikko   as "suunnitteluyksikko",
        tpk.yksikko              as "yksikko",
        tpk.id                   as "toimenpidekoodi",
-       u.hallintayksikko        as "hallintayksikko",
-       o.elynumero              as elynumero,
+       u.elinvoimakeskus_id     as elinvoimakeskus_id,
+       o.elinvoimakeskusnumero  as elinvoimakeskusnumero,
        tpk3.nimi                as "toimenpide",
        toteumat.maara           as "toteuma",
        toteumat.materiaalimaara as "toteutunut-materiaali",
@@ -64,7 +64,7 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
 from toimenpideinstanssi tpi
        join urakat u
        join organisaatio o
-            on o.id = u.hallintayksikko
+            on o.id = u.elinvoimakeskus_id
             on u.id = tpi.urakka
        join tehtava tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%' AND tpk."raportoi-tehtava?" = TRUE
        join toimenpide tpk3 on tpi.toimenpide = tpk3.id
@@ -77,9 +77,9 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, o.elynumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
+         u.elinvoimakeskus_id, o.elinvoimakeskusnumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
+order by o.elinvoimakeskusnumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
@@ -121,6 +121,8 @@ FROM tehtavaryhma tr
        JOIN toimenpide tp ON t.emo = tp.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
+   -- Rajaa johto- ja hallinto pois, jos muutokset on käytössä 
+   AND (:muutokset-kaytossa? IS FALSE OR tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54'))
    AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;

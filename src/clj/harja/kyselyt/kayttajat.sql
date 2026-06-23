@@ -76,24 +76,7 @@ SELECT
 FROM kayttaja k
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.poistettu = FALSE
-      AND k.id = :id
-
--- name: poista-rooli!
--- Poista käyttäjältä rooli.
-UPDATE kayttaja_rooli
-SET poistettu = TRUE, muokkaaja = :muokkaaja, muokattu = NOW()
-WHERE kayttaja = :kayttaja AND rooli = :rooli :: kayttajarooli;
-
--- name: lisaa-rooli<!
--- Lisää käyttäjälle rooli.
-INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW(), :kayttaja, :rooli :: kayttajarooli);
-
-
--- name: poista-kayttaja!
--- Merkitsee annetun käyttäjän poistetuksi
-UPDATE kayttaja
-SET poistettu = TRUE, muokkaaja = :muokkaaja, muokattu = NOW()
-WHERE id = :kayttaja
+      AND k.id = :id;
 
 -- name: hae-organisaatio-nimella
 -- Hakee nimetyn organisaation. Tämä kysely on FIM käyttäjän tietojen yhdistämistä varten.
@@ -187,6 +170,16 @@ SELECT EXISTS(SELECT klu.id
                  --AND k.jarjestelma IS TRUE
                  AND k.poistettu IS NOT TRUE
                  AND klu.poistettu IS NOT TRUE);
+
+-- name: jarjestelmakysely-poista-urakan-kayttajien-lisaoikeudet!
+-- Poista tietyn urakan kaikilta käyttäjiltä lisäoikeus urakkaan.
+-- Tätä kutsutaan, kun urakat ovat päättyneet ja halutaan poistaa kaikki lisäoikeudet, jotta käyttäjillä ei enää ole oikeuksia vanhoihin urakoihin.
+UPDATE kayttajan_lisaoikeudet_urakkaan
+   SET poistettu = TRUE,
+       muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio'),
+       muokattu = NOW()
+ WHERE urakka = :urakkaid;
+
 
 -- name: onko-kayttaja-organisaatiossa
 -- Tarkistaa onko käyttäjä organisaatiossa

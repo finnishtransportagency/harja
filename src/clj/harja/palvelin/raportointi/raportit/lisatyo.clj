@@ -9,6 +9,8 @@
 (defqueries "harja/kyselyt/lisatyot_kyselyt.sql"
   {:positional? true})
 
+(declare hae-urakan-lisatyot)
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (log/debug "Lisätyöraportti :: suorita urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm
     " parametrit=" parametrit)

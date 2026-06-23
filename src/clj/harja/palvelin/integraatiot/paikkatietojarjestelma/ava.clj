@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.ava
   (:require
     [taoensso.timbre :as log]
+    [clojure.string :as str]
     [clojure.java.io :as io]
     [clj-time.coerce :as time-coerce]
     [harja.palvelin.tyokalut.lukot :as lukko]
@@ -30,7 +31,7 @@
   ([integraatioloki db integraatio url kohde]
    (hae-tiedosto integraatioloki db integraatio url kohde nil nil))
   ([integraatioloki db integraatio url kohde kayttajatunnus salasana]
-   (log/debug "Haetaan tiedosto AVA:sta URL:lla: " url " kohteeseen: " kohde)
+   (log/info "Haetaan tiedosto AVA:sta URL:lla: " url " kohteeseen: " kohde)
    (tiedosto/lataa-tiedosto integraatioloki db "ptj" integraatio url kohde kayttajatunnus salasana)))
 
 (defn aja-paivitys [integraatioloki
@@ -43,7 +44,7 @@
                     paivitys
                     kayttajatunnus
                     salasana]
-      (log/debug (format "Päivitetään geometria-aineisto: %s. Päivitystyyppi on %s." paivitystunnus paivitystyyppi))
+      (log/info (format "Päivitetään geometria-aineisto: %s. Päivitystyyppi on %s." paivitystunnus paivitystyyppi))
 
       ;; Hae geometria-aineisto palvelimelta, jos niin määritelty
       (when (= :palvelimelta paivitystyyppi)
@@ -59,35 +60,44 @@
 ;; Päivitystyypit ovat :palvelimelta ja :paikallinen. Paikallinen päivitys ei vaatisi tiedostourlia eikä kohdetiedoston polkua, mutta
 ;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
-      (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+      (log/info (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
       (try
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
-              ava-paivitys (fn [] (aja-paivitys
-                                    integraatioloki
-                                    db
-                                    paivitystunnus
-                                    tiedostourl
-                                    kohdetiedoston-polku
-                                    shapefile
-                                    paivitystyyppi
-                                    paivitys
-                                    kayttajatunnus
-                                    salasana))]
+              lahde (or (not-empty shapefile) (not-empty tiedostourl))
+              tallenna-lahde! (fn []
+                                (when lahde
+                                  (geometriapaivitykset/paivita-viimeisin-lahde! db paivitystunnus lahde)))
+              ava-paivitys (fn []
+                             ;; Tallenna lähde ennen päivitystä, jotta se tulee talteen sekä onnistumisessa että epäonnistumisessa
+                             (tallenna-lahde!)
+                             (aja-paivitys
+                               integraatioloki
+                               db
+                               paivitystunnus
+                               tiedostourl
+                               kohdetiedoston-polku
+                               shapefile
+                               paivitystyyppi
+                               paivitys
+                               kayttajatunnus
+                               salasana))]
              ;; Tehdään esitarkastukset päivitystyypin mukaan
              (case paivitystyyppi
                    :palvelimelta
-                   (when (or (empty tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
+               (when (or (str/blank? tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
+                 ;; Esitarkastuksen epäonnistuessa tallennetaan lähde, jotta se näkyy UI:ssa virheen selvittelyssä
+                 (tallenna-lahde!)
                          (throw (Exception. "Virhe geometria-aineston haun osoitteessa tai kohdekansiossa.")))
                    :ei-paivitystarvetta
-                   (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
+                   (log/info (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
                    :ei-kaytossa
                    (log/warn (format "Geometriapäivitystä %s ei ajeta lainkaan. Päivitä geometriapaivitys-taulun tiedot, jos päivitys täytyy ajaa." paivitystunnus))
                    nil)
              ;; Päivitetään jos tarvetta
              (when (#{:palvelimelta :paikallinen} paivitystyyppi)
                (if (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
-                 (log/debug (format "[ONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
-                 (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
+                 (log/info (format "[ONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+                 (log/info (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
         (catch Exception e
           (do (log/warn (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] Geometria-aineiston päivityksessä: %s tapahtui poikkeus. %s Tarkista konfiguraatio asetukset.edn-tiedostossa ja tietokantatauluissa." paivitystunnus (.getMessage e)))
               (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus nil)))))

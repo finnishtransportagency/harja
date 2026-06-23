@@ -103,6 +103,7 @@
 
           ;; Taulukon kentät
           [{:otsikko "Tehtävä"
+            :elementin-id #(str (:tehtava-id %) (gensym))
             :nimi :tehtava
             :tyyppi :valinta
             :muokattava? (constantly voi-muokata?)
@@ -415,7 +416,7 @@
           :tyyppi :komponentti
           :komponentti (fn [_]
                          (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
-                                                (some-> valittu-hoitokausi (first) (pvm/vuosi))
+                                                (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
                                                 (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
                                                 false)]
                            [yleiset/info-laatikko :vahva-ilmoitus

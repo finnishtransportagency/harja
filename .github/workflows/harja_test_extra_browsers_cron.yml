@@ -22,6 +22,11 @@ on:
   schedule:
     - cron: '0 9 * * MON'
 
+# Aseta least-privilege default permissionit workflowille
+# Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions: {}
 
 jobs:
   tests:
@@ -30,14 +35,10 @@ jobs:
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     with:
       test-db-service: harjadb-latest
@@ -54,13 +55,14 @@ jobs:
 
   # Tarkistaa testijobin yleisen statuksen ja lähettää notifikaation, mikäli jotain meni pieleen
   check-status-and-notify:
+    name: "Check test status and notify"
     needs: tests
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success
         if: ${{ job.status != 'success' || needs.tests.result != 'success' }}
         with:

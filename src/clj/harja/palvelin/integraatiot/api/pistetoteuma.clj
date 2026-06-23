@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
@@ -48,15 +49,23 @@
     (doseq [sopimus-id sopimus-idt]
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:pistetoteuma data)
+    (let [alkanut (get-in data [:pistetoteuma :toteuma :alkanut])
+          toteuma-alkanut (aika-string->java-sql-date alkanut)
+          ulkoinen-id (get-in data [:pistetoteuma :toteuma :tunniste :id])]
+      (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
     (toteuman-validointi/tarkista-tehtavat
       db
       urakka-id
       (get-in data [:pistetoteuma :toteuma :tehtavat])))
   (doseq [pistetoteuma (:pistetoteumat data)]
-    (toteuman-validointi/tarkista-tehtavat
-      db
-      urakka-id
-      (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat]))))
+     (let [alkanut (get-in pistetoteuma [:pistetoteuma :toteuma :alkanut])
+           toteuma-alkanut (aika-string->java-sql-date alkanut)
+           ulkoinen-id (get-in pistetoteuma [:pistetoteuma :toteuma :tunniste :id])]
+       (tarkistukset/vaadi-toteuma-urakan-aikana db toteuma-alkanut urakka-id ulkoinen-id))
+     (toteuman-validointi/tarkista-tehtavat
+       db
+       urakka-id
+       (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat]))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

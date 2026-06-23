@@ -32,7 +32,8 @@
                                  :palvelu palvelu})))
 
 (defn kehitysymparistossa-localhost?* [host]
-  (#{"localhost" "localhost:3000" "localhost:8000"} host))
+  (or (#{"localhost"} host)
+    (gstr/startsWith host "localhost:")))
 
 (defn kehitysymparistossa-yhteiset?
   [host]

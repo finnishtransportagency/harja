@@ -536,7 +536,6 @@ UNION ALL
 
 (deftest toteutuneet-rahavaraukset-test
   (let [vastaus (hae-kustannukset oulumhu-parametrit)
-        _ (println vastaus)
         hankintakustannukset (filter
                                #(when (= "hankintakustannukset" (:paaryhma %))
                                   true)
@@ -549,7 +548,6 @@ UNION ALL
                            hankintakustannukset))
         h-sql (q (hankintakustannukset-toteutuneet-sql-haku oulumhu-parametrit))
         sql-summa (apply + (map #(first %) h-sql))]
-    (println "h-summa " h-summa)
     (is (= h-summa sql-summa))))
 
 ;; Testataan/vertaillaan toteutuneita lisätöitä

@@ -3,7 +3,6 @@
             [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
@@ -11,38 +10,9 @@
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
             [harja.pvm :as pvm]))
 
-(defn luo-oletusrivit-puuttuviin-osioihin [tarjous]
-  (let [tarjous-tiedot (:tarjous tarjous)
-        nollatut-arvot (mapv (fn [osio]
-                               (update osio :hoitovuosittaiset-arvot
-                                 (fn [arvot]
-                                   (mapv #(update % :summa (fn [a] (if (nil? a) 0.00M a))) arvot))))
-                         tarjous-tiedot)]
-    (assoc tarjous :tarjous nollatut-arvot)))
-
-(defn kustannussuunnitelman-vahvistukset [db urakka-id]
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot db urakka-id))
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        ;; Varmista, että yhtenäkään vuonna koko urakan keston ajalta kustannussuunnitelmaa ei ole vahvistettu. Jos on, niin tarjousta ei voi enää muokata
-        vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id urakan-alkuvuosi true)
-        vahvistukset (reduce (fn [lista vuosi]
-                               (let [vahvistettu? (ks-kyselyt/kustannussuunnitelma-vahvistettu? db urakka-id vuosi)]
-                                 (conj lista {:vuosi vuosi :vahvistettu? vahvistettu?})))
-                       [] vuodet)]
-    vahvistukset))
-
-(defn koosta-tarjouksen-tiedot [db urakka-id]
-  (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
-        tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
-        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)]
-    (-> tarjous
-      (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))
-      (assoc :vahvistetut-vuodet (into #{}
-                                   (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))))))
-
 (defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (koosta-tarjouksen-tiedot db urakka-id))
+  (apurit/koosta-tarjouksen-tiedot db urakka-id))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
@@ -65,7 +35,7 @@
                           (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))) ;; Haetaan kaikki urakan vuodet
 
           ;; Varmistetaan, että ei yritetä tallentaa sellaisen vuoden tietoja, jotka on jo vahvistettu
-          vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)
+          vahvistukset (apurit/kustannussuunnitelman-vahvistukset db urakka-id)
           vahvistetut-vuodet (set (map :vuosi (filter :vahvistettu? vahvistukset)))
           kaikki-vahvistettu? (= (count vahvistetut-vuodet) (count urakan-vuodet))
 
@@ -82,9 +52,8 @@
           _ (when kaikki-vahvistettu?
               (throw (IllegalArgumentException. (str "Tarjousta ei voi enää muokata, koska kustannussuunitelmat on jo vahvistettu."))))
           urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
-          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
-          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) kattohintakerroin tiedot vahvistetut-vuodet)]
-      (koosta-tarjouksen-tiedot db urakka-id))))
+          _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) tiedot vahvistetut-vuodet)]
+      (apurit/koosta-tarjouksen-tiedot db urakka-id))))
 
 (defrecord Tarjous []
   component/Lifecycle

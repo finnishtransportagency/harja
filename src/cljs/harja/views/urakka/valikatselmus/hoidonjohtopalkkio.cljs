@@ -16,14 +16,14 @@
 
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia"]
-    [:div.laskenta-rivi-lukema (fmt/euro-opt (:tavoitehinta paatos))]]
+    [:div.laskenta-rivi-lukema (fmt/euro-opt (:hv_lopun_indkorjaamaton_tavoitehinta paatos))]]
 
    [:div.flex-row.laskenta-rivi-matalampi
     [:div "Tarjouksen mukainen tavoitehinta"]
     [:div.laskenta-rivi-lukema (fmt/euro-opt (:tarjouksen_tavoitehinta paatos))]]
 
    [:div.flex-row.laskenta-rivi-matalampi
-    [:div (str "Muutosprosentti (" (fmt/euro-opt (:tavoitehinta paatos)) " / "
+    [:div (str "Muutosprosentti (" (fmt/euro-opt (:hv_lopun_indkorjaamaton_tavoitehinta paatos)) " / "
             (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * 100")]
     [:div.laskenta-rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
 
@@ -35,7 +35,7 @@
    (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
      [:div.row.laskenta-kaava
       [:div.laskenta-rivi-lukema.laskenta-avattuna "Hoidonjohtopalkkion muutos ="]
-      [:div.laskenta-rivi-matalampi (str "(" (fmt/euro-opt (:tavoitehinta paatos)) " / "
+      [:div.laskenta-rivi-matalampi (str "(" (fmt/euro-opt (:hv_lopun_indkorjaamaton_tavoitehinta paatos)) " / "
                                       (fmt/euro-opt (:tarjouksen_tavoitehinta paatos)) " - 1) * "
                                       (fmt/euro-opt (:hoidonjohtopalkkio paatos))
                                       " = ")

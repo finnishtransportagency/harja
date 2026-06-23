@@ -10,7 +10,8 @@
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
             [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -516,7 +517,7 @@
       (apply conj kaikki rivit))))
 
 (def odotettu-kulu_kohdistus-id-9
-  {:maksuera-numero 94 :id 9, :tyyppi "lisatyo",
+  {:maksuera-numero 108 :id 9, :tyyppi "lisatyo",
    :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00",
    :laskun-numero nil, :maksuera-alias nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
@@ -540,7 +541,7 @@
                      :alkupvm alkupvm
                      :loppupvm loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 32
+          odotettu-count 37
           kulu-id-9 (first (filter #(= 9 (:id %))
                              vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -556,7 +557,7 @@
                      :alkupvm nil
                      :loppupvm nil})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 32
+          odotettu-count 38
           kulu-id-9 (first (filter #(= 9 (:id %))
                              vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -574,7 +575,7 @@
                      :alkupvm hoitokauden-alkupvm
                      :loppupvm hoitokauden-loppupvm})
           vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 31 ;; yksi kulu on päivätty ennen hoitokauden alkua
+          odotettu-count 36 ;; yksi kulu on päivätty ennen hoitokauden alkua
           kulu-id-9 (first (filter #(= 9 (:id %))
                              vastaus))]
       (is (= odotettu-count (count vastaus)))
@@ -624,3 +625,124 @@
   (is (= 2026 (harja.domain.kulut/koontilaskun-kuukausi->vuosi "lokakuu/4-hoitovuosi" (pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2028"))) "vuosi ei muuttunut 2026:ksi")
   (is (= 2027 (harja.domain.kulut/koontilaskun-kuukausi->vuosi "huhtikuu/4-hoitovuosi" (pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2028"))) "vuosi ei muuttunut 2026:ksi")
   (is (= 2028 (harja.domain.kulut/koontilaskun-kuukausi->vuosi "toukokuu/5-hoitovuosi" (pvm/->pvm "1.10.2023") (pvm/->pvm "30.9.2028"))) "vuosi ei muuttunut 2027:ksi"))
+
+(deftest harjan-generoimat-kulut-haetaan-toteutuneet-kustannukset-taulusta
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm (pvm/->pvm "1.2.2020")
+        loppupvm (pvm/->pvm "31.3.2020")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :kulut-kohdistuksineen
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :alkupvm alkupvm
+                   :loppupvm loppupvm})
+        vastaus (reduce riisu-kilkkeet [] vastaus)
+        harjan-generoimat (filter #(true? (:harjan-generoima %)) vastaus)]
+
+    ;; Varmistetaan että Harjan generoimat kulut löytyvät
+    (is (= (count harjan-generoimat) 3) "Harjan generoimia kuluja pitäisi löytyä 3")
+
+    ;; Tarkistetaan että harjan-generoima-lippu on asetettu
+    (is (every? true? (map :harjan-generoima harjan-generoimat))
+      "Kaikilla toteutuneet_kustannukset-taulusta haetuilla kuluilla pitää olla harjan-generoima=true")
+
+    ;; Tarkistetaan että summat ovat oikein (indeksikorjatut summat kannassa)
+    (let [summat (set (map :summa harjan-generoimat))]
+      (is (contains? summat 49.55M) "Maaliskuun kulujen summa pitää löytyä")
+      (is (contains? summat 252.954M) "Helmikuun kulun summa pitää löytyä"))
+
+    ;; Tarkistetaan että eräpäivät ovat oikein (kuukauden ensimmäinen päivä)
+    (let [erapaivat (set (map #(pvm/pvm (:erapaiva %)) harjan-generoimat))]
+      (is (contains? erapaivat "01.02.2020") "Helmikuun kulu pitää löytyä")
+      (is (contains? erapaivat "01.03.2020") "Maaliskuun kulu pitää löytyä"))
+
+    ;; Tarkistetaan että lisätieto on oikein
+    (is (every? #(= "Harjan automaattisesti luoma kulu." (:lisatieto %)) harjan-generoimat)
+      "Harjan generoimilla kuluilla pitää olla oikea lisätieto")))
+
+(deftest harjan-generoimat-kulut-erotetaan-tavallista-kuluista
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm (pvm/->pvm "1.2.2020")
+        loppupvm (pvm/->pvm "31.3.2020")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :kulut-kohdistuksineen
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :alkupvm alkupvm
+                   :loppupvm loppupvm})
+        vastaus (reduce riisu-kilkkeet [] vastaus)
+        harjan-generoimat (filter #(true? (:harjan-generoima %)) vastaus)
+        tavalliset-kulut (filter #(not (:harjan-generoima %)) vastaus)]
+
+    ;; Varmistetaan että molempia tyyppejä löytyy
+    (is (pos? (count harjan-generoimat)) "Harjan generoimia kuluja pitäisi löytyä")
+    (is (pos? (count tavalliset-kulut)) "Tavallisia kuluja pitäisi löytyä")
+
+    ;; Varmistetaan että harjan-generoima-lippu erottaa kulut oikein
+    (is (every? true? (map :harjan-generoima harjan-generoimat))
+      "Harjan generoimilla kuluilla pitää olla harjan-generoima=true")
+    (is (every? #(or (nil? (:harjan-generoima %)) (false? (:harjan-generoima %))) tavalliset-kulut)
+      "Tavallisilla kuluilla ei pitäisi olla harjan-generoima=true")))
+
+(deftest harjan-generoimat-kulut-eivat-nay-jos-ei-dataa
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        ;; Haetaan ajalta jolloin ei ole toteutuneet_kustannukset-taulun dataa
+        alkupvm (pvm/->pvm "1.1.2030")
+        loppupvm (pvm/->pvm "31.3.2030")
+        kulut (kutsu-palvelua (:http-palvelin jarjestelma)
+                :kulut-kohdistuksineen
+                +kayttaja-jvh+
+                {:urakka-id urakka-id
+                 :alkupvm alkupvm
+                 :loppupvm loppupvm})
+        vastaus (reduce riisu-kilkkeet [] kulut)
+        harjan-generoimat (filter #(true? (:harjan-generoima %)) vastaus)]
+
+    ;; Varmistetaan että Harjan generoimia kuluja ei löydy kun ei ole dataa
+    (is (zero? (count harjan-generoimat))
+      "Harjan generoimia kuluja ei pitäisi löytyä kun toteutuneet_kustannukset-taulussa ei ole dataa aikavälillä")))
+
+(deftest erillishankintakulu-siirtyy-toteutuneet-kustannukset-tauluun
+  (let [db (:db jarjestelma)
+        kayttaja-id (:id +kayttaja-jvh+)
+        tpi-id (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23151")
+        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tehtavaryhma-id (hae-tehtavaryhman-id "W - Erillishankinnat")
+
+        ;; Luodaan rivi menneeseen kuukauteen (2021/10), jotta siirtoehto täyttyy
+        _ (i (format "INSERT INTO kustannusarvioitu_tyo
+                        (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma,
+                         toimenpideinstanssi, sopimus, luotu, luoja,
+                         summa_indeksikorjattu, versio, osio, \"siirretty?\")
+                      VALUES (2021, 10, 500, 'laskutettava-tyo', null, %s,
+                              %s, %s, NOW(), %s, 500, 0, 'erillishankinnat', false);"
+               tehtavaryhma-id tpi-id sopimus-id kayttaja-id))
+        uusi-rivi-id (ffirst (q "SELECT id FROM kustannusarvioitu_tyo
+                                  WHERE osio = 'erillishankinnat'
+                                    AND vuosi = 2021 AND kuukausi = 10
+                                    AND summa = 500
+                                  ORDER BY id DESC LIMIT 1;"))
+
+        ;; Kutsutaan siirtofunktiota pvm:llä joka on lisätyn rivin kuukauden jälkeen
+        ;; siirra-kustannukset käyttää idempotenssitarkistusta, joten nollataan
+        ;; siirretty?-lippu ensin koko taulussa (sama kuin kustannusarvioiden_toteumat_siirto_test.clj:ssä)
+        _ (u "UPDATE kustannusarvioitu_tyo SET \"siirretty?\" = false WHERE id = " uusi-rivi-id ";")
+        siirto-pvm (pvm/luo-pvm 2021 10 11)
+        _ (kustannusarvioiden-toteumat/siirra-kustannukset db siirto-pvm)
+
+        ;; Tarkistetaan tulos
+        toteutunut (first (q-map (format "SELECT * FROM toteutuneet_kustannukset
+                                           WHERE toimenpideinstanssi = %s
+                                             AND vuosi = 2021 AND kuukausi = 10
+                                             AND summa = 500;"
+                                   tpi-id)))
+        siirretty? (ffirst (q (format "SELECT \"siirretty?\" FROM kustannusarvioitu_tyo
+                                        WHERE id = %s;" uusi-rivi-id)))]
+
+    (is (some? toteutunut) "Erillishankintarivi löytyy toteutuneet_kustannukset-taulusta siirron jälkeen.")
+    (is (true? siirretty?) "kustannusarvioitu_tyo-rivin siirretty?-lippu on true siirron jälkeen.")
+
+    ;; Siivotaan luodut rivit
+    (u (format "DELETE FROM toteutuneet_kustannukset WHERE toimenpideinstanssi = %s
+                  AND vuosi = 2021 AND kuukausi = 10 AND summa = 500;" tpi-id))
+    (u (format "DELETE FROM kustannusarvioitu_tyo WHERE id = %s;" uusi-rivi-id))))

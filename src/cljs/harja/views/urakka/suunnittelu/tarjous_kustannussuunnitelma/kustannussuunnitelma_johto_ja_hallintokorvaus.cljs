@@ -103,8 +103,8 @@
         :voi-muokata? (not vahvistettu?)
         :on-rivi-blur (fn [kuukausi-rivi]
                         (let [muut-kulut-toimenkuva (first (filter
-                                                  #(= "Muut kulut" (:toimenkuva %))
-                                                  @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
+                                                             #(= "Muut kulut" (:toimenkuva %))
+                                                             @yhteiset/grid-johto-ja-hallintokorvaukset-atom))
                               toimenkuvat-ilman-muutettavaa (remove
                                                               #(= "Muut kulut" (:toimenkuva %))
                                                               @yhteiset/grid-johto-ja-hallintokorvaukset-atom)
@@ -142,7 +142,7 @@
        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "40%"
          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
         {:otsikko "Yhteensa (€)" :nimi :yhteensa-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
-         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+         :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
         {:otsikko "Indeksikorjattu (€)" :nimi :yhteensa-indeksikorjattu-kk :leveys "20%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
@@ -314,9 +314,9 @@
       {:otsikko "Tunnit (h/kk)" :nimi :tunnit :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
        :fmt #(when % (fmt/euro-opt false %)) :muokattava? #(voiko-muokata? % voi-muokata? false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Tuntipalkka (€/h)" :nimi :tuntipalkka :leveys "15%" :tyyppi :positiivinen-numero :tasaa :oikea
-       :fmt #(when % (fmt/euro-opt false %)) :muokattava? #(voiko-muokata? % voi-muokata? false) :otsikkorivi-luokka "korkea"}
+       :fmt #(fmt/euro-opt false (or % 0)) :muokattava? #(voiko-muokata? % voi-muokata? false) :otsikkorivi-luokka "korkea"}
       {:otsikko "Yhteensä (€/vuosi)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-       :fmt #(when % (fmt/euro-opt false %))
+       :fmt #(fmt/euro-opt false (or % 0))
        :muokattava? #(voiko-muokata? % voi-muokata? true)
        :voi-muokata-rivia? (constantly true)
        :otsikkorivi-luokka "korkea"}
@@ -388,7 +388,7 @@
        [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "70%"
          :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
         {:otsikko "Suunniteltu määrä (€)" :nimi :tuntipalkka :leveys "30%" :tyyppi :euro :tasaa :oikea
-         :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+         :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
         {:otsikko "Indeksikorjattu (€)" :nimi :tuntipalkka-indeksikorjattu :leveys "30%" :tyyppi :euro :tasaa :oikea
          :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
        kuukaudet-atom]]]))
@@ -454,7 +454,7 @@
             {:otsikko "Tarjouksen määrä (€)" :nimi :tarjous-summa :leveys "25%" :tyyppi :euro :tasaa :oikea
              :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
             {:otsikko "Suunniteltu määrä (€)" :nimi :summa :leveys "25%" :tyyppi :euro :tasaa :oikea
-             :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
+             :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}]
            toimenkuvat-atom]]))
 
 (defn johto-ja-hallintokorvaus [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous
@@ -559,7 +559,7 @@
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
           (when-not viimeinen-hoitovuosi?
             #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
-          tulevaisuudessa-arvoja?
+          (:johto-ja-hallintokorvaukset tulevaisuudessa-arvoja?)
           onko-jjh-muutoksia?)])
 
      [:div.row
@@ -597,8 +597,8 @@
                      :rivin-luokka (fn [_] "korkea")}
           [{:otsikko "Kalenterikuukausi" :nimi :kalenterikuukausi :tyyppi :string :leveys "60%"
             :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}
-           {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :euro :tasaa :oikea
-            :fmt #(when % (fmt/euro-opt false %)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
+           {:otsikko "Suunniteltu kustannus (€)" :nimi :summa :leveys "20%" :tyyppi :numero :tasaa :oikea
+            :fmt #(fmt/euro-opt false (or % 0)) :muokattava? (constantly voi-muokata?) :otsikkorivi-luokka "korkea"}
            {:otsikko "Indeksikorjattu (€)" :nimi :summa_indeksikorjattu :leveys "20%" :tyyppi :euro :tasaa :oikea
             :fmt #(if-not (= 0 yht-indeksikorjattu) (fmt/euro-opt false %) "-") :muokattava? (constantly false) :otsikkorivi-luokka "korkea"}]
           johto-ja-hallintokorvaukset])]]
@@ -616,5 +616,5 @@
           (when (>= urakan-alkuvuosi 2025) #(e! (kust-tiedot/->JaaJohtoJaHallintokorvauksetTasan tarjouksen-maara "johto-ja-hallintokorvaus-elementti")))
           (when-not viimeinen-hoitovuosi?
             #(e! (kust-tiedot/->TallennaJohtoJaHallintokorvaukset @yhteiset/grid-johto-ja-hallintokorvaukset-atom urakan-alkuvuosi true)))
-          tulevaisuudessa-arvoja?
+          (:johto-ja-hallintokorvaukset tulevaisuudessa-arvoja?)
           onko-jjh-muutoksia?)])]))

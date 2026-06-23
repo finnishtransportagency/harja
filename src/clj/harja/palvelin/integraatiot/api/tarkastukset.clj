@@ -13,6 +13,7 @@
     [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
     [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
     [harja.kyselyt.tarkastukset :as q-tarkastukset]
+    [harja.kyselyt.urakat :as q-urakat]
     [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
     [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]))
 
@@ -45,10 +46,37 @@
                                     urakka-id, ulkoinen-id)}]})
       (throw (IllegalArgumentException.)))))
 
+(defn vaadi-tarkastus-urakan-aikana [db tarkastus-aika urakka-id ulkoinen-id tyyppi]
+  (when tarkastus-aika
+    (let [urakka (first (q-urakat/hae-urakka db {:id urakka-id}))
+          urakan-loppupvm (:loppupvm urakka)
+          onko-olemassa (when ulkoinen-id
+                          (first (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla
+                                  db {:id ulkoinen-id
+                                       :tyyppi (name tyyppi)
+                                       :urakka-id urakka-id})))]
+      (when (and urakan-loppupvm (not onko-olemassa))
+        (let [sallittu-viimeinen-pvm (-> urakan-loppupvm
+                                       pvm/joda-timeksi
+                                       pvm/suomen-aikavyohykkeeseen
+                                       (pvm/ajan-muokkaus true 1 :paiva)
+                                       pvm/paivan-lopussa
+                                       pvm/millisekunteina)
+              tarkastus-aika-ms (.getTime tarkastus-aika)]
+          (when (> tarkastus-aika-ms sallittu-viimeinen-pvm)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+virheellinen-paivamaara+
+                                :viesti "Urakka on päättynyt ja kirjaaminen estetty."}]})))))))
+
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (varmista-etta-ulkoinen-id-on-uniikki db tyyppi urakka-id data)
+    (doseq [t (:tarkastukset data)
+            :let [tarkastus (:tarkastus t)
+                  aika (json/aika-string->java-sql-timestamp (get tarkastus :aika))
+                  ulkoinen-id (get-in tarkastus [:tunniste :id])]]
+      (vaadi-tarkastus-urakan-aikana db aika urakka-id ulkoinen-id tyyppi))
     (let [varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 

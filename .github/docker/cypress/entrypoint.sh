@@ -7,6 +7,9 @@ if [[ "$(uname -a)" = *"arm"* || "$(uname -a)" = *"aarch64"* ]]; then
     echo "Ainoastaan Cypressin electron-selain käytettävissä ARM-imagessa, muut selainversiot eivät tue vielä ARM-arkkitehtuuria."
 fi
 
+# Tulosta käyttäjän tiedot
+echo "User: $(whoami) UID: $(id -u) GID: $(id -g)"
+
 echo "Ajetaan CMD"
 # Ajetaan ulkopuolelta annettu CMD (esim. cypress run --browser chrome)
 exec "$@"

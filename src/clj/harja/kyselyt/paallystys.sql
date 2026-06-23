@@ -25,7 +25,7 @@ SELECT
   pi.muokattu,
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
   pktm.nimi                     AS "tyomenetelma",
-  u.hallintayksikko             AS "ely",
+  u.elinvoimakeskus_id          AS "evk",
   p.id                          AS "paikkauskohde-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -971,6 +971,7 @@ WHERE ypk.luotu BETWEEN :alku AND :loppu
 SELECT osa.yllapitokohde,
        osa.yhaid,
        osa.id,
+       osa.poistettu,
        ST_ASTEXT(st_simplify(osa.sijainti, 1)) AS geometria,
        osa.tr_numero           AS "tr-numero",
        osa.tr_alkuosa          AS "tr-alkuosa",
@@ -1009,6 +1010,12 @@ WHERE luotu BETWEEN :alku AND :loppu
 -- name: hae-paallystysilmoitukset-analytiikalle
 SELECT paallystyskohde,
        pi.id,
+       CASE
+           WHEN pi.tila = 'aloitettu' THEN 'Kesken'
+           WHEN (pi.tila = 'valmis' AND pi.paatos_tekninen_osa IS NULL) THEN 'Valmis'
+           WHEN (pi.tila = 'lukittu' AND pi.paatos_tekninen_osa = 'hyvaksytty') THEN 'Hyväksytty'
+           WHEN pi.paatos_tekninen_osa = 'hylatty' THEN 'Hylätty'
+       END AS "paallystysilmoituksen-tila",
        ypk.lahetetty,
        ypk.lahetys_onnistunut AS "lahetys-onnistunut",
        takuupvm               AS takuupaivamaara,
