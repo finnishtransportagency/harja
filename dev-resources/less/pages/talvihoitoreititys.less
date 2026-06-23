@@ -2,6 +2,58 @@
 {
   padding-top: @valistys-16;
 
+  .kalustoyhteenveto {
+    margin-bottom: @valistys-24;
+
+    h2 {
+      margin-bottom: @valistys-8;
+    }
+
+    .kalustoyhteenveto-ei-reitteja {
+      color: @gray92;
+    }
+
+    .kalustoyhteenveto-taulukko {
+      width: 100%;
+      max-width: 56rem;
+      border-collapse: collapse;
+
+      th, td {
+        padding: @valistys-8 @valistys-12;
+        border-bottom: 0.0625rem solid @gray220;
+        text-align: left;
+      }
+
+      th {
+        background-color: @gray240;
+        font-weight: 600;
+      }
+
+      th.tasaa-oikealle, td.tasaa-oikealle {
+        text-align: right;
+      }
+    }
+
+    .kalustoyhteenveto-otsikko-tooltip {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: @valistys-4;
+    }
+
+    .kalustoyhteenveto-info-ikoni {
+      display: inline-flex;
+      align-items: center;
+      cursor: help;
+
+      &:focus-visible {
+        outline: 0.125rem solid @blue-dark;
+        outline-offset: 0.125rem;
+      }
+    }
+  }
+
   .talvihoitoreitti-rivi 
   {
     padding: 0px;

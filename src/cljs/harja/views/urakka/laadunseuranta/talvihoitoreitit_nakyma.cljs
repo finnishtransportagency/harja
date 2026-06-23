@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma
   "Talvihoitoreittien näkymä. Kartta ja listaus."
   (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.liitteet :as liitteet]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
@@ -152,7 +153,71 @@
            :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2 :luokka "nakyma-valkoinen-solu"}]
          reitit]])]))
 
-(defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit] :as app}]
+(def ^:private kalustoyhteenveto-tooltip-otsikko
+  "Reiteille suunniteltu kalusto")
+
+(def ^:private kalustoyhteenveto-tooltip-teksti
+  (str "Reitille suunniteltu kalusto lasketaan automaattisesti reittisuunnitelman perusteella. "
+    "Jos reitillä on useampaa tarjouksessa esiintyvää hoitoluokkaryhmää, kalusto kirjataan "
+    "sille hoitoluokkaryhmälle, jota on reitillä eniten."))
+
+(def ^:private kalustoyhteenveto-ei-reitteja-teksti
+  "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa.")
+
+(defn- mhu26-urakka?
+  "Talvihoitoreittien kalustoyhteenveto näytetään vain MHU26-urakoille eli teiden hoidon
+   urakoille, joiden alkupäivämäärän vuosi on vähintään 2026."
+  [{:keys [tyyppi alkupvm]}]
+  (and (= tyyppi :teiden-hoito)
+    (>= (pvm/vuosi alkupvm) 2026)))
+
+(defn- suunniteltu-kalusto-tooltip
+  "Saavutettava info-tooltip reiteille suunnitellun kaluston laskennasta."
+  []
+  [yleiset/tooltip {:suunta :alas :leveys :levea}
+   [:span.kalustoyhteenveto-info-ikoni
+    {:tab-index 0
+     :role "button"
+     :aria-label (str kalustoyhteenveto-tooltip-otsikko ". " kalustoyhteenveto-tooltip-teksti)}
+    (ikonit/nelio-info 16)]
+   [:div
+    [:div.semibold kalustoyhteenveto-tooltip-otsikko]
+    [:div kalustoyhteenveto-tooltip-teksti]]])
+
+(defn- kalustoyhteenveto-osio
+  "Sivun yläosan yhteenveto: tarjouksessa luvattu kalusto suhteessa reiteille suunniteltuun
+   kalustoon hoitoluokkaryhmittäin. Näytetään vain MHU26-urakoille."
+  [reitteja? kalustoyhteenveto]
+  [:div.kalustoyhteenveto
+   [:h2 "Tarjouksessa luvatun kaluston käyttö reittisuunnitelmissa"]
+   (cond
+     (not reitteja?)
+     [:div.kalustoyhteenveto-ei-reitteja kalustoyhteenveto-ei-reitteja-teksti]
+
+     (empty? kalustoyhteenveto)
+     [:div.kalustoyhteenveto-ei-reitteja
+      "Urakalle ei ole kirjattu hoitoluokkaryhmiä Suunnittelu / Kalustoresurssit -sivulla."]
+
+     :else
+     [:table.kalustoyhteenveto-taulukko
+      [:thead
+       [:tr
+        [:th "Hoitoluokkaryhmä"]
+        [:th.tasaa-oikealle "Tarjouksessa luvattu kalusto (kpl)"]
+        [:th.tasaa-oikealle
+         [:div.kalustoyhteenveto-otsikko-tooltip
+          [:span "Reiteille suunniteltu kalusto (kpl)"]
+          [suunniteltu-kalusto-tooltip]]]]]
+       [:tbody
+        (doall
+          (for [{:keys [hoitoluokkaryhma nimi luvattu suunniteltu]} kalustoyhteenveto]
+            ^{:key hoitoluokkaryhma}
+            [:tr
+             [:td nimi]
+             [:td.tasaa-oikealle (or luvattu 0)]
+             [:td.tasaa-oikealle suunniteltu]]))]])])
+
+(defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit kalustoyhteenveto] :as app}]
   [:<>
    [:h1 "Talvihoitoreititys"]
    [kartta/kartan-paikka]
@@ -161,6 +226,8 @@
      [ajax-loader "Ladataan talvihoitoreittejä..."]
 
      [:div.talvihoitoreititys
+      (when (mhu26-urakka? @nav/valittu-urakka)
+        [kalustoyhteenveto-osio (not (empty? talvihoitoreitit)) kalustoyhteenveto])
       [:div.flex-row {:style {:justify-content "space-between"}}
        [:div {:style {:display "flex"}}
         ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
@@ -217,6 +284,8 @@
 
          (reset! tiedot/valitut-kohteet-atom #{})
          (e! (tiedot/->HaeTalvihoitoreitit))
+         (when (mhu26-urakka? @nav/valittu-urakka)
+           (e! (tiedot/->HaeKalustoyhteenveto)))
 
          (kartta-tasot/taso-paalle! :talvihoitoreitit)
          (kartta-tasot/taso-paalle! :organisaatio)
