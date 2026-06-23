@@ -227,9 +227,9 @@
     (throw (SecurityException. "Talvisuolan ylityksen ehdot eivät täyttyneet: Urakka ei ole teidenhoidon hoitourakka, tai sanktion perintäpäivä ei ole urakan viimeisen hoitovuoden aikana."))))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka kasittelyaika]
-  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
+  [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
+                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama-id urakka kasittelyaika]
+  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
@@ -255,6 +255,7 @@
                               (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
+                :maarattypvm (konv/sql-date maarattypvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
@@ -267,7 +268,7 @@
                            (- (Math/abs summa))
                            (Math/abs summa)))
                 :indeksi indeksi
-                :laatupoikkeama laatupoikkeama
+                :laatupoikkeama laatupoikkeama-id
                 :suorasanktio (or suorasanktio false)
                 :id id
                 :poistettu poistettu
