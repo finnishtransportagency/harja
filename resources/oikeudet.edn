@@ -1891,6 +1891,7 @@
   :kuvaus "Osio 'Urakat' näkymä 'Suunnittelu / Kalustoresurssit'",
   :roolien-oikeudet
   {"ELY_Urakanvalvoja" #{"R*" "W"},
+   "Jarjestelmavastaava" #{"R*" "W*"},
    "Tilaajan_Urakanvalvoja" #{"R*" "W"}}}
  {:sym urakat-suunnittelu-kokonaishintaisettyot,
   :osio "Urakat",

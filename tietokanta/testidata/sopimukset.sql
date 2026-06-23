@@ -112,9 +112,6 @@ VALUES ('Kittilän MHU sopimus', '2019-10-01', '2023-09-30', '11333377-LAP1',
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Kittilän MHU sopimus 25', '2025-10-01', '2030-09-30', '11333378-LAP1',
         (SELECT id FROM urakka WHERE nimi = 'Kittilän MHU 2025-2030'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
-VALUES ('Kittilän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333379-LAP1',
-        (SELECT id FROM urakka WHERE nimi = 'Kittilän MHU 2026-2031'));
 -- Raaseporin sopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
