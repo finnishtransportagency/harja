@@ -75,10 +75,10 @@
       :data-cy "kalustoresurssit-peruuta"}]]])
 
 (defn- nakyma [e! app]
-  (let [muokkaustila? (:muokkaustila? app)
+  (let [muokkaustila? (:muokkaustila app)
         tallennettu? (seq (:tallennetut-maarat app))
         luku-tila? (and tallennettu? (not muokkaustila?))
-        maarat (:muokkausbufferi app)
+        maarat (:rivit app)
         muutoksia? (not= maarat (:tallennetut-maarat app))
         voi-peruuttaa? (boolean muokkaustila?)]
     [:div.kalustoresurssit {:data-cy "kalustoresurssit"}

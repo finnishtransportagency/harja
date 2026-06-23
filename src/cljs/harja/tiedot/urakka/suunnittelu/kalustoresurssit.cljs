@@ -5,7 +5,7 @@
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.urakka :as tiedot]))
+            [harja.fmt :as fmt]))
 
 (defonce nakymassa? (atom false))
 
@@ -36,16 +36,6 @@
      :epaonnistui ->HaeKalustoresurssitEpaonnistui
      :paasta-virhe-lapi? true}))
 
-(defn- parsi-maara
-  "Parsii käyttäjän syöttämän arvon kokonaisluvuksi tai nil:ksi, jos arvo on tyhjä."
-  [arvo]
-  (cond
-    (nil? arvo) nil
-    (and (string? arvo) (str/blank? arvo)) nil
-    (number? arvo) arvo
-    :else (let [n (js/parseInt arvo 10)]
-            (when-not (js/isNaN n) n))))
-
 (extend-protocol tuck/Event
 
   HaeKalustoresurssit
@@ -59,8 +49,8 @@
       (-> app
         (assoc :haku-kaynnissa? false)
         (assoc :tallennetut-maarat maarat)
-        (assoc :muokkausbufferi maarat)
-        (dissoc :muokkaustila?))))
+        (assoc :rivit maarat)
+        (assoc :muokkaustila false))))
 
   HaeKalustoresurssitEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -71,22 +61,22 @@
   AloitaMuokkaus
   (process-event [_ app]
     (-> app
-      (assoc :muokkaustila? true)
-      (assoc :muokkausbufferi (or (:tallennetut-maarat app) {}))))
+      (assoc :muokkaustila true)
+      (assoc :rivit (or (:tallennetut-maarat app) {}))))
 
   PaivitaMaara
   (process-event [{avain :avain arvo :arvo} app]
-    (assoc-in app [:muokkausbufferi avain] (parsi-maara arvo)))
+    (assoc-in app [:rivit avain] (fmt/kokonaisluku-opt arvo)))
 
   PeruutaMuokkaus
   (process-event [_ app]
     (-> app
-      (dissoc :muokkaustila?)
-      (assoc :muokkausbufferi (or (:tallennetut-maarat app) {}))))
+      (assoc :muokkaustila false)
+      (assoc :rivit (or (:tallennetut-maarat app) {}))))
 
   TallennaKalustoresurssit
   (process-event [_ app]
-    (let [maarat (:muokkausbufferi app)
+    (let [maarat (:rivit app)
           kalustoresurssit (mapv (fn [[hoitoluokkaryhma maara]]
                                    {:hoitoluokkaryhma hoitoluokkaryhma
                                     :maara maara})
@@ -106,8 +96,8 @@
       (-> app
         (assoc :tallennus-kaynnissa? false)
         (assoc :tallennetut-maarat maarat)
-        (assoc :muokkausbufferi maarat)
-        (dissoc :muokkaustila?))))
+        (assoc :rivit maarat)
+        (assoc :muokkaustila false))))
 
   TallennaKalustoresurssitEpaonnistui
   (process-event [{vastaus :vastaus} app]
