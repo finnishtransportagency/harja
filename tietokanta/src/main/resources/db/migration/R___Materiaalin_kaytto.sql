@@ -73,6 +73,7 @@ CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muuto
 ) RETURNS void AS $$
 DECLARE
     rivi RECORD;
+    u_id INTEGER := urakka_id;
 BEGIN
     FOR rivi IN 
         -- Valitaan viime päivältä muokatut/luodut toteumat 
@@ -86,7 +87,7 @@ BEGIN
            OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
         
         UNION
-        
+        -- Valitaan viime päivältä muokatut/luodut käsin (UI) syötetyt toteumat
         SELECT DISTINCT 
             t.alkanut::date AS pvm
          FROM toteuma t
@@ -94,10 +95,24 @@ BEGIN
           AND t.lahde = 'harja-ui'
           AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
                    OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+        
+        UNION
+        -- Valitaan vanhat päivämäärät jos toteuma.alkanut on muuttunut
+        SELECT DISTINCT
+          tm.vanha_alkanut::date AS pvm
+        FROM toteuma_muutos tm
+        WHERE tm.urakka_id = u_id
+          AND tm.kasitelty = FALSE
     LOOP
         -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
         PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
     END LOOP;
+
+    -- Merkitään toteuma_muutos rivit käsitellyiksi
+    UPDATE toteuma_muutos
+    SET kasitelty = TRUE
+    WHERE toteuma_muutos.urakka_id = u_id
+      AND kasitelty = FALSE;
 END;
 $$ LANGUAGE plpgsql;
 
