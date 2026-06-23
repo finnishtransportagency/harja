@@ -195,3 +195,184 @@ Kamerat tulee pyrkiä sijoittamaan niin, ettei yksittäisen tienkäyttäjän tun
  'Tyytyväisyystutkimustulokset',
  'Teemme Talven tienkäyttäjätyytyväisyystutkimustuloksista (ml. vapaat vastaukset) analyysin kerran vuodessa. Saatamme tutkimuksen ja analyysin tulokset henkilöstön ja alihankkijoiden tietoisuuteen. Huomioimme havaitut kehitystarpeet toiminnassa ja viestinnässä. Esitämme analyysit, havainnot ja kehitystoimet tilaajalle 2 kk:n kuluessa tulosten saamisesta.',
  2026);
+
+
+-- Lupaus nro. 4 Maksuehto - Vaihtoehdot- kaikki urakat
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Alihankintasopimuksissa käytetty pisin maksuehto');
+
+        PERFORM luo_lupauksen_vaihtoehto(4, 2026, '> 30 pv', 0, 'Kannustavat alihankintasopimukset', 'Yleinen', null, null,ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(4, 2026, '≤ 30 pv', 6, 'Kannustavat alihankintasopimukset', 'Yleinen', null, null,ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(4, 2026, '≤ 21 pv', 12, 'Kannustavat alihankintasopimukset', 'Yleinen', null,null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(4, 2026, '≤ 14 pv', 18, 'Kannustavat alihankintasopimukset', 'Yleinen', null,null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 5 Hoidon vuosikierron mukainen suunnittelu
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Suunnittelukerrat per hoitovuosi');
+
+        PERFORM luo_lupauksen_vaihtoehto(5, 2026, '< 6 suunnittelukertaa / hoitovuosi', 0,'Toiminnan suunnitelmallisuus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(5, 2026, '≥ 6 suunnittelukertaa / hoitovuosi', 2,'Toiminnan suunnitelmallisuus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(5, 2026, '≥ 8 suunnittelukertaa / hoitovuosi', 6,'Toiminnan suunnitelmallisuus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(5, 2026, '≥ 10 suunnittelukertaa / hoitovuosi', 10,'Toiminnan suunnitelmallisuus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(5, 2026, '≥ 12 suunnittelukertaa / hoitovuosi', 14,'Toiminnan suunnitelmallisuus','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 6 Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen
+-- Ensimmäinen hoitovuosi: erikoiskuukaudet
+INSERT INTO lupaus_hoitovuoden_kirjauskuukaudet ("lupaus-id", "hoitovuosi-nro", "kirjaus-kkt", "paatos-kk", "joustovara-kkta", luoja)
+VALUES
+    ((SELECT id FROM lupaus
+      WHERE jarjestys = 6
+        AND "urakan-alkuvuosi" = 2026
+        AND kuvaus = 'Hoitovuoden lopun tavoitehinnan ja toteutuvien kustannuksien ennustaminen'),
+     1,
+     '{10,1,4,6,8}',
+     '{10,1,4,6,8}',
+     0,
+     1);
+
+-- Lupaus 6 tarvitsemat deadline ja pisteytysmääritykset 2026 urakoille
+INSERT INTO lupaus_kustannusennuste_kuukausi_pisteet ("lupaus-id", "urakan-alkuvuosi", kuukausi, paiva, kuvaus, pisterajat) VALUES
+((SELECT id FROM lupaus WHERE jarjestys = 6 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2026),
+2026, 10, 15, 'Lokakuu 15. päivä (2026 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]'),
+
+((SELECT id FROM lupaus WHERE jarjestys = 6 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2026),
+2026, 1, 15, 'Tammikuu 15. päivä (2026 urakat)', '[
+    {"operaattori": "≤", "raja": 4.0, "pisteet": 8, "kuvaus": "≤ 4,0%"},
+    {"operaattori": "≤", "raja": 6.0, "pisteet": 4, "kuvaus": "≤ 6,0%"},
+    {"operaattori": ">", "raja": 6.0, "pisteet": 1, "kuvaus": "> 6,0%"}
+]'),
+
+((SELECT id FROM lupaus WHERE jarjestys = 6 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2026),
+2026, 4, 30, 'Huhtikuu 30. päivä (2026 urakat)', '[
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 8, "kuvaus": "≤ 2,0%"},
+    {"operaattori": "≤", "raja": 3.0, "pisteet": 4, "kuvaus": "≤ 3,0%"},
+    {"operaattori": ">", "raja": 3.0, "pisteet": 1, "kuvaus": "> 3,0%"}
+]'),
+
+((SELECT id FROM lupaus WHERE jarjestys = 6 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2026),
+2026, 6, 30, 'Kesäkuu 30. päivä (2026 urakat)', '[
+    {"operaattori": "≤", "raja": 1.0, "pisteet": 8, "kuvaus": "≤ 1,0%"},
+    {"operaattori": "≤", "raja": 2.0, "pisteet": 4, "kuvaus": "≤ 2,0%"},
+    {"operaattori": ">", "raja": 2.0, "pisteet": 1, "kuvaus": "> 2,0%"}
+]'),
+
+((SELECT id FROM lupaus WHERE jarjestys = 6 AND lupaustyyppi = 'kustannusennuste' AND "urakan-alkuvuosi" = 2026),
+2026, 8, 15, 'Elokuu 15. päivä (2026 urakat)', '[
+    {"operaattori": "≤", "raja": 7.0, "pisteet": 8, "kuvaus": "≤ 7,0%"},
+    {"operaattori": "≤", "raja": 9.0, "pisteet": 4, "kuvaus": "≤ 9,0%"},
+    {"operaattori": ">", "raja": 9.0, "pisteet": 1, "kuvaus": "> 9,0%"}
+]');
+
+
+-- Lupaus nro. 7 Luovutuksen menettely
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Itselleluovutettavista töistä / työkokonaisuuksista');
+        PERFORM luo_lupauksen_vaihtoehto(7, 2026, '<40% itselleluovutettu', 0,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(7, 2026, '≥40% itselleluovutettu', 5,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(7, 2026, '≥60% itselleluovutettu', 10,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(7, 2026, '≥ 80% itselleluovutettu', 15,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(7, 2026, '100% itselleluovutettu', 20,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 8 Kohdistetun seurannan parantaminen
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Itselleluovutettavista töistä / työkokonaisuuksista');
+
+        PERFORM luo_lupauksen_vaihtoehto(8, 2026, '0 kpl', 0,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(8, 2026, '1 kpl', 1,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(8, 2026, '2 kpl', 2,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(8, 2026, '3 kpl', 3,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(8, 2026, '4 kpl', 4,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 9 Turvallisuuden teemakokoukset
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Koulutusten osallistumisprosentti');
+
+        PERFORM luo_lupauksen_vaihtoehto(9, 2026, '< 50 %', 0, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(9, 2026, '≥ 50 %', 3, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(9, 2026, '≥ 70 %', 6, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(9, 2026, '≥ 90 %', 10, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 10 Ajoneuvokohtainen ajotavanseurantajärjestelmä
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Ajoneuvoseurantajärjestelmä käytössä');
+
+        PERFORM luo_lupauksen_vaihtoehto(10, 2026, '< 15%:ssa ajoneuvoista', 0, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(10, 2026, '≥ 15 %:ssa ajoneuvoista', 3, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(10, 2026, '≥ 40 %:ssa ajoneuvoista', 6, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(10, 2026, '≥ 65 %:ssa ajoneuvoista', 8, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(10, 2026, '≥ 90 %:ssa ajoneuvoista', 10, 'Turvallisuus ja ympäristö','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 11 Tilanne- ja ennakkotiedotus
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Lupauksen toteuma');
+
+        PERFORM luo_lupauksen_vaihtoehto(11, 2026, 'Lupaus ei toteudu', 0, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(11, 2026, 'Lupaus toteutuu', 10, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(11, 2026, 'Lupaus toteutuu siten, että julkaisut tavoittavat<br>
+<ul><li>Perusurakassa vähintään 3 000</li>
+<li>Vaativassa urakassa 6 000</li>
+<li>Erittäin vaativassa urakassa 10 000 henkeä kuukaudessa.</li></ul>', 18, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+
+END
+$$ LANGUAGE plpgsql;
+
+-- Lupaus nro. 12 Viestintä sidosryhmien kanssa
+DO
+$$
+    DECLARE
+ryhma_otsikko_id_1 INTEGER;
+BEGIN
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Vuoropuhelutilaisuudet');
+
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '0 per hoitovuosi', 0, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '1 per hoitovuosi', 2, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '2 per hoitovuosi', 4, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '3 per hoitovuosi', 7, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '4 per hoitovuosi', 10, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+        PERFORM luo_lupauksen_vaihtoehto(12, 2026, '≥ 5 per hoitovuosi', 14, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
+END
+$$ LANGUAGE plpgsql;
