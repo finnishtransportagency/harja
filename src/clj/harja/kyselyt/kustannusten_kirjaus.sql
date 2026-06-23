@@ -186,6 +186,7 @@ WHERE tpk.luotu BETWEEN :alkupvm AND :loppupvm
 -- name: hae-analytiikalle-tiemerkinta-korjauskustannukset
 -- Hakee tiemerkintäurakan korjauskustannukset aikaväliltä
 SELECT ukk.kustannusvuosi         AS sopimusvuosi,
+       ukk.id                     AS "korjauskustannus-id",
        COALESCE(ukk.kustannus, 0) AS "kustannus",
        COALESCE(ukk.pk1, 0)       AS "pk1%",
        COALESCE(ukk.pk2, 0)       AS "pk2%",
@@ -200,20 +201,16 @@ ORDER BY sopimusvuosi ASC;
 -- name: hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset
 -- Hakee ylläpitokohteiden tiemerkintäkustannukset aikaväliltä
 SELECT ypk.vuodet                         AS sopimusvuosi,
+       ypk.id                             AS "paallystyskohde-id",
        ypk.kohdenumero,
        ypk.nimi,
-       ypk.tr_numero                      AS sijainti_tie,
-       ypk.tr_alkuosa                     AS sijainti_alkuosa,
-       ypk.tr_alkuetaisyys                AS sijainti_alkuetaisyys,
-       ypk.tr_loppuosa                    AS sijainti_loppuosa,
-       ypk.tr_loppuetaisyys               AS sijainti_loppuetaisyys,
        COALESCE(tyk.linjamerkinnat, 0)    AS "linjamerkinnat",
        COALESCE(tyk.pienmerkinnat, 0)     AS "pienmerkinnat",
        COALESCE(tyk.jyrsinnat, 0)         AS "jyrsinnat",
        COALESCE(tyk.muut_kustannukset, 0) AS "muut-kustannukset",
-       ypk.poistettu                      AS "yllapitokohde-poistettu",
-       tyk.luotu                          as "yllapitokohde-kustannus-luotu",
-       tyk.muokattu                       as "yllapitokohde-kustannus-muokattu"
+       ypk.poistettu                      AS "paallystyskohde-poistettu",
+       tyk.luotu                          as "paallystyskohde-kustannus-luotu",
+       tyk.muokattu                       as "paallystyskohde-kustannus-muokattu"
 FROM yllapitokohde ypk
          JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
 WHERE (COALESCE(ypk.muokattu, ypk.luotu) BETWEEN :alkupvm AND :loppupvm)
@@ -223,13 +220,9 @@ ORDER BY sopimusvuosi ASC;
 -- name: hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset
 -- Hakee paikkauskohteiden tiemerkintäkustannukset aikaväliltä
 SELECT extract(YEAR FROM pk.alkupvm)            AS sopimusvuosi,
-       pk."ulkoinen-id"::TEXT                   AS kohdenumero,
+       pk.id                                    AS "paikkauskohde-id",
+       pk."ulkoinen-id"::TEXT                   AS "ulkoinen-id",
        pk.nimi,
-       (pk.tierekisteriosoite_laajennettu).tie  AS sijainti_tie,
-       (pk.tierekisteriosoite_laajennettu).aosa AS sijainti_alkuosa,
-       (pk.tierekisteriosoite_laajennettu).aet  AS sijainti_alkuetaisyys,
-       (pk.tierekisteriosoite_laajennettu).losa AS sijainti_loppuosa,
-       (pk.tierekisteriosoite_laajennettu).let  AS sijainti_loppuetaisyys,
        COALESCE(tpk.linjamerkinnat, 0)          AS "linjamerkinnat",
        COALESCE(tpk.pienmerkinnat, 0)           AS "pienmerkinnat",
        COALESCE(tpk.jyrsinnat, 0)               AS "jyrsinnat",
