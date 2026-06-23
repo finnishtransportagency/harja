@@ -29,6 +29,10 @@
                   "type": "integer",
                   "description": "Kustannusvuosi"
                 },
+                "korjauskustannus-id": {
+                  "type": "integer",
+                  "description": "Korjauskustannuksen Harjassa yksilöivä id."
+                },
                 "kustannus": {
                   "type": "number",
                   "description": "Korjauskustannusten kokonaissumma euroina. Kustannuksen poistaminen tapahtuu muuttamalla arvo nollaksi."
@@ -57,7 +61,8 @@
                 }
               },
               "required": [
-                "sopimusvuosi"
+                "sopimusvuosi",
+                "korjauskustannus-id"
               ]
             }
           },
