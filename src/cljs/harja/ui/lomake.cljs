@@ -374,15 +374,19 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo) "nimi:" (pr-str nimi))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
             tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
             aputeksti (get lomakkeen-opts :aputeksti)
             kentta (cond
-                     (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                   :data              data} komponentti-args)]
+                     (= tyyppi :komponentti) (let [sisalto (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data              data} komponentti-args)]
+                                               (if muokattava?
+                                                 [:div.komponentti sisalto]
+                                                 [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
+                                                  sisalto]))
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
                                                                               komponentti-args))]
