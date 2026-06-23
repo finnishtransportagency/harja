@@ -24,7 +24,6 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -130,7 +129,7 @@
     (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
       (let [voi-muokata? (and paatosoikeus? muokattava?)
             sanktiot-lista (vals @sanktiot-atom)
-            sanktio-konfiguraation-tila @urakka/valitun-urakan-sanktio-konfiguraation-tila]
+            sanktio-konfiguraation-tila @sanktiot/valitun-urakan-sanktio-konfiguraation-tila]
         (if (= :valmis sanktio-konfiguraation-tila)
           [:div.sanktiot
          ;; Sivupaneeli sanktion lisäämistä/muokkausta varten
