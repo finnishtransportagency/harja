@@ -19,13 +19,13 @@
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 
 (deftest otsikko
-  (is (= [:fo:block {:padding-top "5mm" :font-size "10pt" :font-weight 600} "TÄMÄ ON OTSIKKO"]
+  (is (= [:fo:block {:padding-top "5mm" :font-size "14pt" :font-weight 600} "TÄMÄ ON OTSIKKO"]
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
   (is (= [:fo:block
           {:color nil
-           :font-size "10pt"}
+           :font-size "9pt"}
           "TEKSTIÄ"]
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 

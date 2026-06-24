@@ -10,11 +10,10 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]
+            [harja.id :as id]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
-            [harja.pvm :as pvm]
-            [harja.id :as id]))
+            [harja.pvm :as pvm]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -172,12 +171,21 @@
             (do
               (log/debug "Päivitä materiaalitoteuma "
                 tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
-              (q/paivita-toteuma-materiaali!
-                c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) tm-id)))
+              (q/paivita-toteuma-materiaali! c
+                {:materiaalikoodi (:materiaalikoodi tm)
+                 :maara (:maara tm)
+                 :kayttaja (:id user)
+                 :toteuma (:toteuma tm)
+                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))
+                 :id tm-id})))
           (do
             (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
-            (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
-                                        (:maara tm) (:id user) urakka-id)))
+            (q/luo-toteuma-materiaali<! c {:toteuma (:toteuma tm),
+                                           :materiaalikoodi (:materiaalikoodi tm),
+                                           :maara (:maara tm),
+                                           :kayttaja (:id user),
+                                           :urakka urakka-id,
+                                           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))})))
 
 
         ;; Päivitä toteuman päivän mukainen materiaalin käyttö
@@ -189,7 +197,8 @@
         ;; 100, eli 'hoitoluokka ei tiedossa'.
         (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
                                                                 :alkupvm toteuman-pvm
-                                                                :loppupvm toteuman-pvm}))))
+                                                                :loppupvm toteuman-pvm})
+        (toteumat-q/paivita-toteuman-muokattu! c {:id (:toteuma tm) :kayttaja (:id user)}))))
 
   (when hoitokausi
     (hae-urakassa-kaytetyt-materiaalit db user urakka-id (first hoitokausi) (second hoitokausi)
@@ -266,31 +275,32 @@
 
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
   (let [toteuman-id (toteumat-q/luo-uusi-toteuma db
-                                                 {:urakka urakka-id
-                                                  :sopimus sopimus-id
-                                                  :alkanut (:pvm toteuma)
-                                                  :paattynyt (:pvm toteuma)
-                                                  :tyyppi "kokonaishintainen"
-                                                  :kayttaja (:id user)
-                                                  :suorittaja ""
-                                                  :ytunnus ""
-                                                  :lisatieto (:lisatieto toteuma)
-                                                  :ulkoinen_id nil
-                                                  :reitti nil
-                                                  :numero nil
-                                                  :alkuosa nil
-                                                  :alkuetaisyys nil
-                                                  :loppuosa nil
-                                                  :loppuetaisyys nil
-                                                  :lahde "harja-ui"
-                                                  :tyokonetyyppi nil
-                                                  :tyokonetunniste nil
-                                                  :tyokoneen-lisatieto nil})]
-    (toteumat-q/luo-toteuma-materiaali<! db toteuman-id
-                                         (:id (:materiaali toteuma))
-                                         (:maara toteuma)
-                                         (:id user)
-                                         urakka-id)))
+                      {:urakka urakka-id
+                       :sopimus sopimus-id
+                       :alkanut (:pvm toteuma)
+                       :paattynyt (:pvm toteuma)
+                       :tyyppi "kokonaishintainen"
+                       :kayttaja (:id user)
+                       :suorittaja ""
+                       :ytunnus ""
+                       :lisatieto (:lisatieto toteuma)
+                       :ulkoinen_id nil
+                       :reitti nil
+                       :numero nil
+                       :alkuosa nil
+                       :alkuetaisyys nil
+                       :loppuosa nil
+                       :loppuetaisyys nil
+                       :lahde "harja-ui"
+                       :tyokonetyyppi nil
+                       :tyokonetunniste nil
+                       :tyokoneen-lisatieto nil})]
+    (q/luo-toteuma-materiaali<! db {:toteuma toteuman-id,
+                                    :materiaalikoodi (:id (:materiaali toteuma)),
+                                    :maara (:maara toteuma),
+                                    :kayttaja (:id user),
+                                    :urakka urakka-id,
+                                    :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:pvm toteuma)))})))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
@@ -300,7 +310,7 @@
               :let [toteuma-id (:tid toteuma)]]
         (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
         (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
-        (if-not (id-olemassa? (:tid toteuma))
+        (if-not (id/id-olemassa? (:tid toteuma))
           ;; INSERT
           (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
           (let [tmid (:tmid toteuma)
@@ -331,10 +341,13 @@
                 (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reittigeometria<! db
                                                                              {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
                                                                               :id toteuma-id}))
-                (toteumat-q/paivita-toteuma-materiaali!
-                  db (:id (:materiaali toteuma))
-                  (:maara toteuma) (:id user)
-                  (:tmid toteuma) urakka-id)
+                (q/paivita-toteuma-materiaali! db {:materiaalikoodi (:id (:materiaali toteuma))
+                                                   :maara (:maara toteuma)
+                                                   :kayttaja (:id user)
+                                                   :toteuma toteuma-id
+                                                   :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:pvm toteuma)))
+                                                   :id (:tmid toteuma)})
+
 
                 ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
                 ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle

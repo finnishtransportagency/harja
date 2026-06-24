@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
+            [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
@@ -802,14 +803,16 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
-                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
+                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 9, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
+    :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot
@@ -1404,16 +1407,22 @@
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
 
+(defn hae-toimenpideinstanssin-id-23150
+  "Hakee ensimmäisen toimenpideinstanssin ID:n, joka kuuluu urakkaan ja jonka
+   toimenpideen t2-koodi on '23150'."
+  [urakka-id]
+  (ffirst (q (str "SELECT tpi.id\n"
+                  "  FROM toimenpideinstanssi tpi\n"
+                  "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+                  "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+                  " WHERE tpi.urakka = " urakka-id "\n"
+                  "   AND t2.koodi = '23150'\n"
+                  " ORDER BY tpi.id\n"
+                  " LIMIT 1"))))
+
 (deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
-                                            "  FROM toimenpideinstanssi tpi\n"
-                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                                            " WHERE tpi.urakka = " urakka-id "\n"
-                                            "   AND t2.koodi = '23150'\n"
-                                            " ORDER BY tpi.id\n"
-                                            " LIMIT 1")))
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-urakan-bonus-konfiguraatio
                   +kayttaja-jvh+
@@ -1429,14 +1438,7 @@
 
 (deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        toimenpideinstanssi-id (ffirst (q (str "SELECT tpi.id\n"
-                                            "  FROM toimenpideinstanssi tpi\n"
-                                            "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                                            "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                                            " WHERE tpi.urakka = " urakka-id "\n"
-                                            "   AND t2.koodi = '23150'\n"
-                                            " ORDER BY tpi.id\n"
-                                            " LIMIT 1")))
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
@@ -1963,9 +1965,16 @@
               (map (fn [{:keys [soveltuvuuskonteksti lajit]}]
                      [soveltuvuuskonteksti (lajit->yhteenveto lajit)]))
               (:sisalto vastaus)))
-          (lisaa-urakan-laskutusrajalaji [yhteenveto]
-            (update yhteenveto :urakka conj {:laji :laskutus_yli_laskutusrajan
-                                             :sanktiotyyppi-koodit [0]}))]
+          (muodosta-odotettu-mhu25-yhteenveto [yhteenveto]
+            (update yhteenveto :urakka
+              (fn [lajit]
+                (let [lajit-ilman-testikeskiarvoa
+                      (->> lajit
+                           (remove #(= :testikeskiarvo-sanktio (:laji %)))
+                           vec)]
+                  (conj lajit-ilman-testikeskiarvoa
+                    {:laji :laskutus_yli_laskutusrajan
+                     :sanktiotyyppi-koodit [0]})))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -1980,7 +1989,7 @@
                             {:sanktio-profiili-id mhu25-profiili-id}))
           mhu21-24-yhteenveto (vastaus->yhteenveto mhu21-24-vastaus)
           mhu25-yhteenveto (vastaus->yhteenveto mhu25-vastaus)
-          odotettu-mhu25-yhteenveto (lisaa-urakan-laskutusrajalaji mhu21-24-yhteenveto)
+          odotettu-mhu25-yhteenveto (muodosta-odotettu-mhu25-yhteenveto mhu21-24-yhteenveto)
           mhu25-urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           mhu25-laatupoikkeama-konteksti (first (filter #(= :laatupoikkeama (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           laskutus-laji (first (filter #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-urakka-konteksti)))]
@@ -1990,6 +1999,101 @@
         "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
         "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
+      (is (not-any? #(= :testikeskiarvo-sanktio (:laji %)) (:lajit mhu25-urakka-konteksti))
+        "MHU25-profiilin urakka-kontekstissa ei pidä olla testikeskiarvo-sanktiota")
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
 
+(deftest vaadi-talvisuolan-ylitys-ehto
+  (let [urakan-tiedot {:loppupvm (pvm/->pvm "30.09.2026")}]
+    (is (nil? (ls/vaadi-talvisuolan-ylitys-ehto urakan-tiedot (pvm/->pvm "15.09.2026"))))
+    (is (nil? (ls/vaadi-talvisuolan-ylitys-ehto urakan-tiedot (pvm/->pvm "15.10.2025"))))
+    (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehto urakan-tiedot (pvm/->pvm "15.09.2022"))))
+    (is (thrown? SecurityException (ls/vaadi-talvisuolan-ylitys-ehto urakan-tiedot (pvm/->pvm "15.10.2026"))))))
+
+
+(deftest suorasanktio-talvisuolan-ylitys-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "testaus-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        sanktio {:suorasanktio true
+                 :laji :talvisuolan_ylitys
+                 :summa 5000
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Talvisuolan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")))))
+
+
+(deftest suorasanktio-talvisuolan-ylitys-ei-toimi
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "testaus-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2028 22:00:00")
+        sanktio {:suorasanktio true
+                 :laji :talvisuolan_ylitys
+                 :summa 5000
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "1.6.2028 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "01.6.2029 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Talvisuolan ylitys antaa virheen vääränä hoitovuotena"
+      (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
+                                       +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
+        "Sanktion tallennus ei onnistu"))))
+
+(deftest laatupoikkeama-talvisuolan-ylitys-testi
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2030-09-15T09:00:01.000-00:00"
+                        :tr {:alkuosa 1
+                             :numero 1
+                             :alkuetaisyys 1
+                             :loppuetaisyys 2
+                             :loppuosa 2}
+                        :urakka urakka-id
+                        :sanktiot nil
+                        :tekija :tilaaja
+                        :kohde "Kohde"}
+
+        uusi-sanktio {:perintapvm #inst "2030-09-15T09:00:01.000-00:00"
+                      :laji :talvisuolan_ylitys
+                      :summa 100
+                      :indeksi "MAKU 2010"
+                      :suorasanktio false
+                      :toimenpideinstanssi 4
+                      :vakiofraasi nil}
+        paatos {:paatos :sanktio
+                :kasittelytapa :puhelin
+                :kasittelyaika #inst "2030-09-15T09:00:01.000-00:00"
+                :perustelu "Testi"}]
+
+    (testing "sanktiollisen-laatupoikkeaman-tallennus"
+      (let [_ (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+            vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+
+                      (assoc laatupoikkeama
+                        :paatos paatos
+                        :sanktiot [uusi-sanktio]))]
+        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
+        (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")))
+    
+    ;; Siivoa roskat
+    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
