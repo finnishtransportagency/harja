@@ -53,6 +53,18 @@
         }
       }
     },
+    "ajorata": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajorata",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "kaista": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kaista",
+      "type": "integer",
+      "minimum": 11,
+      "maximum": 39
+    },
     "tyomenetelma": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
       "required": true,
