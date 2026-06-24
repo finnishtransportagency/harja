@@ -9,6 +9,7 @@ import {avaaHarjaTimeoutilla} from "../support/apurit.js";
 const MHU26_URAKKA = 'Sodankylän MHU 2026-2031';
 const VANHA_URAKKA = 'Kittilän MHU 2019-2024';
 const ALUE = 'Lappi';
+const timeout = 20000;
 
 function tyhjennaKalustoresurssit(urakkaNimi) {
     cy.terminaaliKomento().then((terminaaliKomento) => {
@@ -29,8 +30,8 @@ function avaaUrakanSuunnittelu(alue, urakkaNimi) {
     cy.contains('Näytä päättyneet').click();
 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();
-    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout: 20000}).click();
-    cy.get('img[src="images/ajax-loader.gif"]', {timeout: 20000}).should('not.exist');
+    cy.get('[data-cy=tabs-taso1-Suunnittelu]', {timeout}).click();
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout}).should('not.exist');
 }
 
 describe('Suunnittelu / Kalustoresurssit', function () {
@@ -40,7 +41,7 @@ describe('Suunnittelu / Kalustoresurssit', function () {
 
         // Vanhemmalla MHU-urakalla näkyy suunnittelun perustabuja,
         // mutta Tarjouksen tiedot (>= 2025) ja Kalustoresurssit (>= 2026) eivät näy.
-        cy.get('[data-cy=tabs-taso2-Suolarajoitukset]', {timeout: 20000}).should('exist');
+        cy.get('[data-cy=tabs-taso2-Suolarajoitukset]', {timeout}).should('exist');
         cy.get('[data-cy="tabs-taso2-Tarjouksen tiedot"]').should('not.exist');
         cy.get('[data-cy=tabs-taso2-Kalustoresurssit]').should('not.exist');
     });
@@ -51,8 +52,8 @@ describe('Suunnittelu / Kalustoresurssit', function () {
         avaaUrakanSuunnittelu(ALUE, MHU26_URAKKA);
 
         // Avaa Kalustoresurssit-välilehti
-        cy.get('[data-cy=tabs-taso2-Kalustoresurssit]', {timeout: 20000}).click();
-        cy.get('[data-cy=kalustoresurssit]', {timeout: 20000}).should('be.visible');
+        cy.get('[data-cy=tabs-taso2-Kalustoresurssit]', {timeout}).click();
+        cy.get('[data-cy=kalustoresurssit]', {timeout}).should('be.visible');
 
         // Syötä määrät hoitoluokkaryhmille (ensimmäinen tallennus, editointitila heti auki)
         cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').clear().type('5');
@@ -61,7 +62,7 @@ describe('Suunnittelu / Kalustoresurssit', function () {
 
         // Tallenna - tallennuksen jälkeen siirrytään luku-tilaan ja Muokkaa-nappi ilmestyy
         cy.get('[data-cy=kalustoresurssit-tallenna]').click();
-        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout: 20000}).should('be.visible');
+        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout}).should('be.visible');
 
         // Luku-tilassa kentät näkyvät tekstinä taulukossa ja Tallenna/Peruuta piilotettu
         cy.get('[data-cy=kalustoresurssit-taulukko]').contains('5');
@@ -80,7 +81,7 @@ describe('Suunnittelu / Kalustoresurssit', function () {
         cy.get('[data-cy=kalustoresurssit-peruuta]').click();
 
         // Peruutuksen jälkeen palataan luku-tilaan ja Muokkaa-nappi on taas näkyvissä
-        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout: 20000}).should('be.visible');
+        cy.get('[data-cy=kalustoresurssit-muokkaa]', {timeout}).should('be.visible');
         cy.get('[data-cy=kalustoresurssit-taulukko]').contains('5');
     });
 });
