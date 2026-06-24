@@ -122,8 +122,10 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-materiaalit
                                 +kayttaja-jvh+ urakka-id)]
-    ;; Tests must not rely on DB-generated numeric :id values (they change when load order changes).
-    ;; Normalize actual result by removing DB ids and compare relevant fields instead.
+    ;; Testit eivät saa nojata tietokannan generoimiin numeerisiin :id-arvoihin,
+    ;; koska ne muuttuvat latausjärjestyksen vaihtuessa.
+    ;; Normalisoidaan varsinainen tulos poistamalla tietokanta-id:t ja vertaillaan
+    ;; niiden sijaan vain olennaiset kentät.
     (let [normalize (fn [m] (-> m (dissoc :id :tmid)))
           actual (sort-by :alkupvm (map normalize vastaus))
           expected (sort-by :alkupvm [{:alkupvm #inst "2014-09-30T21:00:00.000-00:00" :loppupvm #inst "2015-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}
