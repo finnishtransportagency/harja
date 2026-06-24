@@ -13,17 +13,20 @@
 
 (declare on-oikeus? on-muu-oikeus?
   raporttioikeudet
+  raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
   urakat-toteumat-suola
+  urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
   hallinta-lupaukset
   urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
+  urakat-laadunseuranta-sanktiot
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
@@ -44,6 +47,10 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-toteumat-kokonaishintaisettyot
+  urakat-toteumat-erilliskustannukset
+  urakat-toteumat-muutos-ja-lisatyot
+  urakat-toteumat-vesivaylaerilliskustannukset
+  urakat-toteumat-varusteet
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit

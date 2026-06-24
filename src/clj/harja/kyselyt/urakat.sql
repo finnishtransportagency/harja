@@ -200,6 +200,7 @@ SELECT
   u.nimi,
   u.lyhyt_nimi,
   u.sampoid,
+  u.projektikansio_linkki       AS "projektikansio-linkki",
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
       THEN ST_SimplifyPreserveTopology(u.alue, 50)
           END as alue,
@@ -293,6 +294,7 @@ SELECT
     u.nimi,
     u.lyhyt_nimi,
     u.sampoid,
+    u.projektikansio_linkki               AS "projektikansio-linkki",
     CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
              THEN ST_SimplifyPreserveTopology(u.alue, 50)
         END as alue,
@@ -419,6 +421,7 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
+  u.projektikansio_linkki        AS "projektikansio-linkki",
   u.alue,
   u.alkupvm,
   u.loppupvm,
@@ -626,7 +629,7 @@ INSERT INTO urakka (nimi,
                     hanke_sampoid,
                     sampoid,
                     tyyppi,
-                    hallintayksikko,
+                    elinvoimakeskus_id,
                     sopimustyyppi,
                     urakkanro,
                     urakoitsija)
@@ -636,7 +639,7 @@ VALUES (:nimi,
         :hanke_sampoid,
         :sampoid,
         :urakkatyyppi :: urakkatyyppi,
-        :hallintayksikko,
+        :elinvoimakeskus,
         :sopimustyyppi :: sopimustyyppi,
         :urakkanumero,
         :urakoitsijaid);
@@ -672,15 +675,14 @@ VALUES (:nimi,
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
-SET nimi          = :nimi,
-  alkupvm         = :alkupvm,
-  loppupvm        = :loppupvm,
-  hanke_sampoid   = :hanke_sampoid,
-  tyyppi          = :urakkatyyppi :: URAKKATYYPPI,
-  hallintayksikko = :hallintayksikko,
-  urakkanro       = :urakkanro,
-  urakoitsija     = :urakoitsija
-
+SET nimi                = :nimi,
+  alkupvm               = :alkupvm,
+  loppupvm              = :loppupvm,
+  hanke_sampoid         = :hanke_sampoid,
+  tyyppi                = :urakkatyyppi :: URAKKATYYPPI,
+  elinvoimakeskus_id    = :elinvoimakeskus,
+  urakkanro             = :urakkanro,
+  urakoitsija           = :urakoitsija
 WHERE id = :id;
 
 -- name: paivita-harjassa-luotu-urakka<!
@@ -812,6 +814,7 @@ SELECT
   u.id,
   u.nimi,
   u.sampoid,
+  u.projektikansio_linkki       AS "projektikansio-linkki",
   u.alue,
   u.alkupvm,
   u.loppupvm,
@@ -1062,6 +1065,11 @@ WHERE sampoid = :sampoid;
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
 SET takuu_loppupvm = :loppupvm
+WHERE id = :urakka;
+
+-- name: tallenna-urakan-projektikansio-linkki!
+UPDATE urakka
+SET projektikansio_linkki = :projektikansio_linkki
 WHERE id = :urakka;
 
 -- name: aseta-urakan-kesa-aika!

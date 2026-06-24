@@ -1,0 +1,64 @@
+# Composite action to verify that NPM supply chain security settings from .npmrc are active.
+# This action should be called before any `npm ci` or `npm install` command in workflows.
+# It fails the workflow if the expected security settings are not in effect.
+
+name: 'Verify NPM Security Settings'
+description: 'Verifies that .npmrc supply chain protection settings (ignore-scripts, allow-git) are active'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify NPM security settings (For NPM v11.10.x and later)
+      shell: bash
+      run: |
+        echo "::group::NPM Supply Chain Security Settings"
+
+        ignore_scripts=$(npm config get ignore-scripts)
+        allow_git=$(npm config get allow-git)
+        before=$(npm config get before)
+        
+        echo "ignore-scripts = $ignore_scripts"
+        echo "allow-git = $allow_git"
+        echo "before (derived from 'min-release-age') = $before"
+        
+        errors=0
+        
+        if [[ "$ignore_scripts" != "true" ]]; then
+          echo "::error::ignore-scripts is not enabled! Expected 'true', got '$ignore_scripts'"
+          errors=$((errors + 1))
+        fi
+        
+        if [[ "$allow_git" != "none" ]]; then
+          echo "::error::allow-git is not restricted! Expected 'none', got '$allow_git'"
+          errors=$((errors + 1))
+        fi
+        
+        if [ -z "$before" ] || [ "$before" = "null" ]; then
+          echo "::error::before (derived from 'min-release-age') has no value. Expected a date string, got '$before'. Check that 'min-release-age' is defined."
+          errors=$((errors + 1))
+        else
+          before_seconds=$(date -d "$before" +%s 2>/dev/null)
+          current_seconds=$(date +%s)
+
+          if [ -z "$before_seconds" ]; then
+            echo "::error::Failed to transform 'before' date string into seconds."
+            errors=$((errors + 1))
+          else
+            before_diff_seconds=$(( current_seconds - before_seconds ))
+
+            if [ "$before_diff_seconds" -gt 60 ]; then
+              echo "Validation successful: 'min-release-age' is greater than 0, got '$(( before_diff_seconds / 86400 ))' days."
+            else
+              echo "::error::min-release-age is <= 0."
+              errors=$((errors + 1))
+            fi
+          fi
+        fi
+
+        if [[ $errors -gt 0 ]]; then
+          echo "::error::NPM security settings verification failed. Check that .npmrc is present and correctly configured."
+          exit 1
+        fi
+        
+        echo "✅ All NPM supply chain security settings verified"
+        echo "::endgroup::"

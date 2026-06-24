@@ -167,6 +167,7 @@
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
+(def kasittelytavat-mhu25 [:valikatselmus])
 
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))

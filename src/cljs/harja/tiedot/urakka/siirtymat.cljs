@@ -3,20 +3,21 @@
   Joissain näkymissä halutaan tarjota käyttäjälle kätevyyden nimissä nappi, jolla pääsee
   suoraan urakan tietoihin syvälle. Tämä vaatii useita eri tietoatomien manipulaatioita
   ja on hyvä keskittää yhteen paikkaan."
-  (:require [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.navigaatio.reitit :as reitit]
-            [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
-            [harja.asiakas.kommunikaatio :as k]
+  (:require [clojure.string :as str]
             [cljs.core.async :refer [<!] :as async]
-            [harja.loki :refer [log]]
+
             [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.nakymasiirrin :as siirrin]
+            [harja.tiedot.navigaatio.reitit :as reitit]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-            [harja.tiedot.urakka.urakka :as urakka-tila]
-            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
-            [harja.ui.nakymasiirrin :as siirrin])
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
@@ -143,10 +144,10 @@
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
         (swap! paallystys/tila assoc :paallystysilmoitus-lomakedata
-               (assoc vastaus
-                 :kirjoitusoikeus?
-                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                           urakka-id)))))))
+          (assoc vastaus
+            :kirjoitusoikeus?
+            (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+              urakka-id)))))))
 
 (defn avaa-paikkausten-pot!
   "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."
@@ -165,10 +166,10 @@
       (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :paikkausten-paallystysilmoitukset)
       ;; Päivitetään app-stateen pot lomakkeen tiedot, jotka on mukiloitu letissä oikeaksi
       (swap! urakka-tila/paikkauskohteet assoc :paallystysilmoitus-lomakedata
-             (assoc vastaus
-               :kirjoitusoikeus?
-               (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                         valittu-urakka-id))))))
+        (assoc vastaus
+          :kirjoitusoikeus?
+          (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+            valittu-urakka-id))))))
 
 (defn avaa-toteuma-listaus! [{:keys [paikkauskohde-id] :as tiedot}]
   (go
@@ -190,6 +191,24 @@
         (nav/aseta-valittu-valilehti! :urakat :valikatselmus)
         (nav/salli-url-paivitys!)
         (swap! urakka-tila/valikatselmus merge app-state)))))
+
+(defn tee-siirrin-valikatselmukseen
+  "Passataan string, palauttaa [:span <teksti>]
+  Jossa formatoituna siirtymä välikatselmukseen"
+  [teksti urakka-id hy valittu-alkuvuosi]
+  (into
+    [:span]
+    (map (fn [s]
+           ;; Muuttaa sanan linkiksi joka siirtyy välikatselmukseen
+           (if (str/includes? s "välikatselm")
+             [:a.klikattava.alleviivaa
+              {:href (str "/#urakat/valikatselmus?&hy=" hy "&u=" urakka-id)
+               :on-click #(avaa-valikatselmus hy urakka-id
+                            [(pvm/hoitokauden-alkupvm valittu-alkuvuosi)
+                             (pvm/hoitokauden-loppupvm (inc valittu-alkuvuosi))])}
+              s]
+             s)))
+    (re-seq #"\S+|\s+" teksti)))
 
 (defn avaa-lupaukset [hoitokauden-alkuvuosi]
   (go

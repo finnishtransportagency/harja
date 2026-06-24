@@ -69,10 +69,11 @@ SET
 WHERE elynumero = :elynumero
   and tyyppi = 'hallintayksikko';
 
--- name: hae-ely-id-sampo-hashilla
+-- name: hae-elinvoimakeskus-id-kustannuspaikalla
 SELECT id
 FROM organisaatio
-WHERE sampo_ely_hash = :ely_hash;
+WHERE elinvoimakeskusnumero = :elinvoimakeskusnumero
+  AND tyyppi = 'elinvoimakeskus';
 
 -- name: listaa-organisaatiot
 SELECT
