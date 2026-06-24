@@ -122,12 +122,16 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-materiaalit
                                 +kayttaja-jvh+ urakka-id)]
-    (is (= (sort-by :id vastaus)
-           (sort-by :id [{:id 6, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :loppupvm #inst "2015-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 6, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
-                         {:id 7, :alkupvm #inst "2015-09-30T21:00:00.000-00:00", :loppupvm #inst "2016-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 6, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
-                         {:id 8, :alkupvm #inst "2016-09-30T21:00:00.000-00:00", :loppupvm #inst "2017-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 6, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
-                         {:id 4, :alkupvm #inst "2017-09-30T21:00:00.000-00:00", :loppupvm #inst "2018-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 6, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}
-                         {:id 9, :alkupvm #inst "2018-09-30T21:00:00.000-00:00", :loppupvm #inst "2019-09-29T21:00:00.000-00:00", :maara 666.0, :sopimus 6, :materiaali {:id 5, :nimi "Hiekoitushiekka, liukkaudentorjunta", :yksikko "t"}}])))))
+    ;; Tests must not rely on DB-generated numeric :id values (they change when load order changes).
+    ;; Normalize actual result by removing DB ids and compare relevant fields instead.
+    (let [normalize (fn [m] (-> m (dissoc :id :tmid)))
+          actual (sort-by :alkupvm (map normalize vastaus))
+          expected (sort-by :alkupvm [{:alkupvm #inst "2014-09-30T21:00:00.000-00:00" :loppupvm #inst "2015-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}
+                                      {:alkupvm #inst "2015-09-30T21:00:00.000-00:00" :loppupvm #inst "2016-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}
+                                      {:alkupvm #inst "2016-09-30T21:00:00.000-00:00" :loppupvm #inst "2017-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}
+                                      {:alkupvm #inst "2017-09-30T21:00:00.000-00:00" :loppupvm #inst "2018-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}
+                                      {:alkupvm #inst "2018-09-30T21:00:00.000-00:00" :loppupvm #inst "2019-09-29T21:00:00.000-00:00" :maara 666.0 :sopimus sopimus-id :materiaali {:id 5 :nimi "Hiekoitushiekka, liukkaudentorjunta" :yksikko "t"}}])]
+      (is (= actual expected)))))
 
 (deftest hae-urakan-toteumat-materiaalille-sarakkeet
   (let [tunnisteet
@@ -237,12 +241,12 @@
 (deftest tallenna-toteumamateriaaleja-cachet-pysyy-jiirissa-kun-pvm-muuttuu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-        sopimuksen-kaytetty-mat-ennen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 16 123M]])
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                         [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                         [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 123M]])
         hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
@@ -287,12 +291,12 @@
 (deftest tallenna-toteumamateriaaleja-cachet-pysyy-jiirissa-kun-toteuma-poistetaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-        sopimuksen-kaytetty-mat-ennen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 16 0M]])
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                         [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                         [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 0M]])
         hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
@@ -536,16 +540,16 @@
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (1, 'Talvisuolaliuos NaCl', 't', false, 'talvisuola');
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (7, 'Talvisuola, rakeinen NaCl', 't', false, 'talvisuola');
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (16, 'Natriumformiaatti', 't', false, 'muu');
-(def sopimuksen-kaytetty-mat-ennen-odotettu
-  [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-   [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-   [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+(defn sopimuksen-kaytetty-mat-ennen-odotettu [sopimus-id]
+  [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+   [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+   [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
 
-(defn- sopimuksen-kaytetty-mat-jalkeen-odotettu [lisatty]
+(defn- sopimuksen-kaytetty-mat-jalkeen-odotettu [sopimus-id lisatty]
   [lisatty
-   [6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-   [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-   [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+   [sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+   [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+   [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
 
 (def hoitoluokittaiset-ennen-odotettu
   [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
@@ -615,8 +619,8 @@
     (is (= (map #(dissoc % :pvm :tid :toteumaidt) ennen) (map #(dissoc % :pvm :tid :toteumaidt) (conj odotettu-ennen odotettu-yht-rivi))) "Suolatoteumat ennen lisäystä")
     (is (= (map #(dissoc % :pvm :tid :toteumaidt) jalkeen) (map #(dissoc % :pvm :tid :toteumaidt) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
 
-    (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
-    (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu [6 #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")
+    (is (= sopimuksen-mat-kaytto-ennen (sopimuksen-kaytetty-mat-ennen-odotettu sopimus-id)) "Materiaalicache 1 ennen OK")
+    (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu sopimus-id [sopimus-id #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")
     (is (= hoitoluokittaiset-ennen hoitoluokittaiset-ennen-odotettu) "Hoitoluokittainen materiaalicache ennen OK")
     (is (= hoitoluokittaiset-jalkeen (hoitoluokittaiset-jalkeen-odotettu [#inst "2015-02-15T22:00:00.000-00:00" 1 99 4 666M])) "Hoitoluokittainen materiaalicache jälkeen OK")
 
@@ -644,9 +648,9 @@
                                 :tallenna-suolatoteumat +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :toteumat lisattava-toteuma})
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [6 #inst "2015-02-13T22:00:00.000-00:00" 7 500M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                         [sopimus-id #inst "2015-02-13T22:00:00.000-00:00" 7 500M]
+                         [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
         hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                                [#inst "2015-02-13T22:00:00.000-00:00" 7 99 4 500M] ;; tässä uusi pvm
                                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
@@ -657,8 +661,8 @@
         hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
                                           (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
     (is (true? vastaus) "onnistui")
-    (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
+    (is (= sopimuksen-mat-kaytto-ennen (sopimuksen-kaytetty-mat-ennen-odotettu sopimus-id)) "Materiaalicache 1 ennen OK")
     (is (= sopimuksen-mat-kaytto-jalkeen sopimuksen-kaytetty-mat-jalkeen-odotettu)
-        "Materiaalicache 1 jälkeen OK")
+      "Materiaalicache 1 jälkeen OK")
     (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen) "Hoitoluokittainen materiaalicache ennen OK")
     (is (= hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set hoitoluokittaiset-jalkeen)) "Hoitoluokittainen materiaalicache jälkeen OK")))
