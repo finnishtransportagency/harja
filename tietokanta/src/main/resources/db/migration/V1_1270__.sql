@@ -2,7 +2,9 @@
 
 -- Päivitetään vanhat viherhoidon tehtävät päättymään vuoden 2025 urakoihin.
 UPDATE tehtava
-SET voimassaolo_loppuvuosi = 2025
+SET voimassaolo_loppuvuosi = 2025,
+    muokattu = current_timestamp,
+    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE NIMI IN ('Nurmetuksen hoito / niitto T1/E1',
                'Nurmetuksen hoito / niitto T2/E2',
                'Puiden ja pensaiden hoito T1/E1',
