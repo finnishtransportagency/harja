@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/yllapito_toteumat.sql"
   {:positional? true})
+
+(declare luo-uusi-urakan_laskentakohde<! paivita-muu-tyo<! luo-uusi-muu-tyo<!)

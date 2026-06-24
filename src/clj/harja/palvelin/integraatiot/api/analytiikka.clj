@@ -28,12 +28,13 @@
             [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
+            [harja.kyselyt.kustannusten-kirjaus :as kustannusten-kirjaus-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
@@ -115,6 +116,22 @@
           (virheet/heita-viallinen-apikutsu-poikkeus
             {:koodi virheet/+virheelinen-aikavali+
              :viesti (format "Aikaväli ylittää sallitun rajan. Syötetty aikaväli: %s tuntia. Sallittu aikaväli max. 24 tuntia." syotetty-aikavali-tunteina-str)}))))))
+
+(defn- tarkista-vuosihaun-parametrit [parametrit]
+  (try
+    (s/valid? ::alkuvuosi (:vuosi parametrit))
+    (parametrivalidointi/tarkista-parametrit
+      parametrit
+      {:vuosi "Vuosi puuttuu"})
+    (catch Exception e
+      (log/error "Virhe Analytiikka-api kutsussa:" e)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                          :viesti "Poikkeus annetussa parametrissa. Anna vuosi muodossa: yyyy"}]})))
+  (when (not (s/valid? ::alkuvuosi (:vuosi parametrit)))
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+puutteelliset-parametrit+
+       :viesti (format "Vuosi väärässä muodossa: %s Anna muodossa: yyyy" (:vuosi parametrit))})))
 
 (def db-tehtavat->avaimet
   {:f1 :id
@@ -899,6 +916,51 @@
 
     {:kulut kulut}))
 
+(defn hae-tiemerkkinnan-kustannukset
+  "Haetaan tiemerkinnän kustannukset urakkakohtaisesti analytiikkaa varten."
+  [db {:keys [alkuaika loppuaika] :as parametrit}]
+  (log/info "Analytiikka API tiemerkinnän kustannukset :: parametrit" (pr-str parametrit))
+  (tarkista-haun-parametrit parametrit false)
+  (let [;; Hae distinct urakat kannasta
+        urakat-kannassa (kustannusten-kirjaus-kyselyt/analytiikalle-tiemerkintaurakat-kannasta db
+                          {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                           :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)})
+
+        ;; Hae kustannukset ryhmiteltynä urakkakohtaisesti
+        tiemerkinnan-kustannukset
+        (mapv (fn [{:keys [urakkaid urakkanro]}]
+                (let [korjauskustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-korjauskustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})
+
+                      yllapitokohdekustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})
+
+                      paikkauskohdekustannukset
+                      (kustannusten-kirjaus-kyselyt/hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset db
+                        {:alkupvm (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+                         :loppupvm (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                         :urakkaid urakkaid})]
+
+                  {:urakkaid urakkaid
+                   :urakkatunnus urakkanro
+                   :korjauskustannukset (mapv konversio/alaviiva->rakenne korjauskustannukset)
+                   :paallystyskohdekustannukset (mapv #(-> %
+                                                       konversio/alaviiva->rakenne
+                                                       (update :sopimusvuosi
+                                                         (fn [sv]
+                                                           (when sv
+                                                             (apply max (konversio/pgarray->vector sv))))))
+                                                yllapitokohdekustannukset)
+                   :paikkauskohdekustannukset (mapv konversio/alaviiva->rakenne paikkauskohdekustannukset)}))
+          urakat-kannassa)]
+    {:tiemerkinnan-kustannukset tiemerkinnan-kustannukset}))
+
 (defn hae-paikkauskohteet [db {:keys [alkuaika loppuaika] :as parametrit}]
   (log/info "Analytiikka API paikkauskohteet :: parametrit" (pr-str parametrit))
   (tarkista-haun-parametrit parametrit false)
@@ -1342,6 +1404,15 @@
           :analytiikka "analytiikka")))
 
     (julkaise-reitti
+      http :analytiikka-hae-tiemerkinnan-kustannukset
+      (GET "/api/analytiikka/tiemerkinnan-kustannukset/:alkuaika/:loppuaika" parametrit
+        (kasittele-get-kutsu db integraatioloki :analytiikka-hae-tiemerkinnan-kustannukset parametrit
+          json-skeemat/+analytiikka-tiemerkinnan-kustannukset-haku-vastaus+
+          (fn [parametrit _kayttaja db]
+            (hae-tiemerkkinnan-kustannukset db parametrit))
+          :analytiikka "analytiikka")))
+
+    (julkaise-reitti
       http :analytiikka-hae-paikkauskohteet
       (GET "/api/analytiikka/paikkauskohteet/:alkuaika/:loppuaika" parametrit
         (kasittele-get-kutsu db integraatioloki :analytiikka-hae-paikkauskohteet parametrit
@@ -1402,6 +1473,7 @@
       :analytiikka-hae-paallystyskohteiden-aikataulut
       :analytiikka-hae-paallystysilmoitukset
       :analytiikka-hae-hoidon-paikkauskustannukset
+      :analytiikka-hae-tiemerkinnan-kustannukset
       :analytiikka-hae-paikkauskohteet
       :analytiikka-hae-paikkaukset
       :analytiikka-toteutuneet-kustannukset
