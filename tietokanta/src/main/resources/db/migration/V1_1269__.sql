@@ -1,14 +1,10 @@
--- Luodaan suunnittelu_kalustoresurssi-taulu kalustoresurssien suunnittelua varten
-CREATE TABLE suunnittelu_kalustoresurssi
-(
-    id               SERIAL PRIMARY KEY,
-    urakka_id        INTEGER     NOT NULL REFERENCES urakka (id),
-    hoitoluokkaryhma VARCHAR(50) NOT NULL,
-    maara            INTEGER,
-    poistettu        BOOLEAN,
-    luoja            INTEGER REFERENCES kayttaja (id),
-    luotu            TIMESTAMP,
-    muokkaaja        INTEGER REFERENCES kayttaja (id),
-    muokattu         TIMESTAMP,
-    UNIQUE (urakka_id, hoitoluokkaryhma)
-);
+-- Lisätään sanktio-tauluun maarattypvm-kenttä
+ALTER TABLE sanktio
+    ADD COLUMN IF NOT EXISTS "maarattypvm" date;
+
+-- Uusien muutosten myötä maarattypvm on pakollinen kenttä, joten lisätään kaikille sanktioille maarattypvm
+UPDATE sanktio s
+SET maarattypvm = lp.kasittelyaika
+FROM laatupoikkeama lp
+WHERE lp.id = s.laatupoikkeama
+  AND s.maarattypvm IS NULL;
