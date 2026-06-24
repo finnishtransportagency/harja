@@ -1,19 +1,20 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
-  (:require [reagent.core :refer [atom]]
-            [reagent.ratom :refer [reaction]]
+  (:require [clojure.string :as str]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
-            [harja.pvm :as pvm]
+            [reagent.core :refer [atom]]
+            [reagent.ratom :refer [reaction]]
 
+            [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain]
-            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
-            [harja.ui.viesti :as viesti])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.tierekisteri :as tr]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -121,7 +122,7 @@
      :suorasanktio true
      :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
      :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                          (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
                       :valikatselmus
                       nil)
      :perintapvm default-perintapvm
@@ -165,8 +166,8 @@
   voi estää :hae-sanktiot? false tai :hae-bonukset? false optiolla."
   [{:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (k/post! :hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka-id
-                                             :alku      alku
-                                             :loppu     loppu
+                                             :alku alku
+                                             :loppu loppu
                                              :vain-yllapitokohteettomat? vain-yllapitokohteettomat?
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
@@ -347,4 +348,4 @@
        (str "Laatupoikkeama: " kohde)
        [:br]
        (str (when (get-in laatupoikkeama [:tr :numero])
-              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
+              (str " (" (tr/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
