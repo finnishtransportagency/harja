@@ -1,16 +1,17 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto-raportti-test
-  (:require [clojure.test :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
+  (:require [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
+
+            [harja.fmt :as fmt]
+            [harja.testi :refer :all]
+            [harja.palvelin.palvelut.urakat :refer :all]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.fmt :as fmt]))
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.toimenpidekoodit :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -36,8 +37,10 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+
 (defn- arvo-raportin-nnesta-elementista [vastaus n]
   (second (first (second (second (last (nth (nth (last vastaus) n) 3)))))))
+
 
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2014-2015
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -76,6 +79,7 @@
       (is (=marginaalissa? talvisuolasakot 1000.0M))
       (is (=marginaalissa? muutos-ja-lisatyot 3000.0M)))))
 
+
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -112,6 +116,7 @@
             (fmt/desimaaliluku nurkkasumma 2)
             "7720,57")) "Loppusumma oikein")))
 
+
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015-kun-092015-indeksiarvo-puuttuu
   (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi = 9 AND vuosi = 2015"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -143,6 +148,7 @@
       (is (=marginaalissa? sanktiot -8000.0M))
       (is (=marginaalissa? talvisuolasakot -59520.0M))
       (is (=marginaalissa? muutos-ja-lisatyot 12000.0M)))))
+
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

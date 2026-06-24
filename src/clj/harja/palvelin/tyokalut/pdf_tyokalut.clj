@@ -30,17 +30,51 @@
        (when kyseessa-kk-vali?
          [:fo:table-cell [:fo:block laskutetaan-arvo]])])]])
 
-(defmethod pdf-raportointi/muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
-  ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
-  ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
+(defmethod pdf-raportointi/muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa
+  [[_ kyseessa-kk-vali?
+    laskutusraja-kaytossa?
+    laskutusraja-ylittynyt?
+    laskutettu laskutetaan
+    laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
+    laskutettu-str laskutetaan-str]]
+
   [:fo:block {:margin-top "10px"}
-   (arvotaulukko-valittu-aika
-    kyseessa-kk-vali?
-    (str "Laskutus yhteensä " hoitokausi)
-    (str laskutettu-str)
-    (str laskutetaan-str)
-    (str (fmt/euro laskutettu))
-    (str (fmt/euro laskutetaan)))])
+   (pdf-raportointi/muodosta-pdf
+     [:display-flex
+      [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa?
+                                         laskutusraja-ylittynyt?) ;; "Toteutuneet kustannukset yhteensä" näytetään silloin,
+                                         ;; kun on v. -25 tai myöhemmin alkanut mhu-urakka, jolla laskutusraja on ylittynyt.
+                                         ;; Muuten näytetään "Laskutettavaa yhteensä" eli kun uusilla urakoilla ei ole laskutusraja ylittynyt
+                                         ;; tai on kyseessä vanha urakka.
+                                     "Toteutuneet kustannukset yhteensä"
+                                     "Laskutettavaa yhteensä")
+                          :layout :sarakkeet}
+       [{:fmt :raha
+         :arvo laskutettu
+         :avain laskutettu-str}
+
+        (when kyseessa-kk-vali?
+          {:fmt :raha
+           :arvo laskutetaan
+           :avain laskutetaan-str})]]
+
+      (when (and laskutusraja-kaytossa?
+              laskutusraja-ylittynyt?)
+        [:sininen-laatikko {:otsikko "Laskutettavaa yhteensä"
+                            :layout :sarakkeet}
+         [{:fmt :raha
+           :avain "Hoitovuoden alusta"
+           :arvo laskutettavaa_kaikki_yht}
+
+          (when kyseessa-kk-vali?
+            {:fmt :raha
+             :avain laskutetaan-str
+             :arvo laskutettavaa_kaikki_val_aika})]])])])
+
+(defmethod pdf-raportointi/muodosta-pdf :laskutusyhteenveto-otsikko [[_ teksti]]
+  [:fo:block {:padding-top "5mm"
+              :font-size "10pt"
+              :font-weight 600} teksti])
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))
@@ -136,7 +170,7 @@
       [:fo:table-row
        [:fo:table-cell [:fo:block saapunut-tyyli (str "Saapunut: " (pvm/pvm-aika-klo (:luotu tyomaapaivakirja)))]]
 
-       [:fo:table-cell [:fo:block paivitetty-tyyli (str "Päivitetty " (or 
+       [:fo:table-cell [:fo:block paivitetty-tyyli (str "Päivitetty " (or
                                                                         "-"
                                                                         (pvm/pvm-aika-klo (:muokattu tyomaapaivakirja))))]]
        [:fo:table-cell [:fo:block versio-tyyli (str "Versio " (:versio tyomaapaivakirja))]]

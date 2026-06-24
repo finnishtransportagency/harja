@@ -377,7 +377,7 @@
                                 custom-toiminto paneelikomponentit
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
-                                peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                                peruuta otsikko otsikon-luokka validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva? tallenna-id]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
@@ -539,7 +539,7 @@
                        (when peruuta (peruuta))
                        nil)}
          "Peruuta"])])
-   (when (and nayta-otsikko? (not (str/blank? otsikko))) [:h6.panel-title otsikko])
+   (when (and nayta-otsikko? (not (str/blank? otsikko))) [:h6 {:class (y/luokat otsikon-luokka "panel-title")} otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
 (defn- sort-ikoni [suunta]
@@ -663,19 +663,23 @@
   (let [valiotsikko-id (get-in otsikko-record [:optiot :id])
         ;; mahdollistetaan komponentin rendaus myös otsikkorivin sisään
         komponentti-otsikon-sisaan (get-in otsikko-record [:optiot :komponentti-otsikon-sisaan])
-        otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])]
+        otsikkokomponentit (get-in otsikko-record [:optiot :otsikkokomponentit])
+        luokka (get-in otsikko-record [:optiot :luokka])]
     [:<>
-     [:tr.otsikko (when salli-valiotsikoiden-piilotus?
-                    {:class (str "gridin-collapsoitava-valiotsikko klikattava"
-                              (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
-                     :on-click #(toggle-valiotsikko valiotsikko-id
-                                  piilotetut-valiotsikot)
-                     :style (merge {}
-                              (when (not (empty? otsikkokomponentit))
-                                {:border-bottom "none"
-                                 :border-top "solid 0.1mm black"})
-                              (when (:otsikon-tyyli komponentti-otsikon-sisaan)
-                                (:otsikon-tyyli komponentti-otsikon-sisaan)))})
+     [:tr.otsikko
+      (merge
+        {:class (when luokka luokka)}
+       (when salli-valiotsikoiden-piilotus?
+         {:class (str "gridin-collapsoitava-valiotsikko klikattava"
+                   (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
+          :on-click #(toggle-valiotsikko valiotsikko-id
+                       piilotetut-valiotsikot)
+          :style (merge {}
+                   (when (not (empty? otsikkokomponentit))
+                     {:border-bottom "none"
+                      :border-top "solid 0.1mm black"})
+                   (when (:otsikon-tyyli komponentti-otsikon-sisaan)
+                     (:otsikon-tyyli komponentti-otsikon-sisaan)))}))
       [:td {:colSpan (if (empty? komponentti-otsikon-sisaan)
                        colspan
                        (- colspan (:col-span komponentti-otsikon-sisaan)))}
@@ -855,9 +859,11 @@
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
 
   :nimi                                 kentän hakufn
+  :gridin-luokka                        luokka joka kääritään koko taulukon ympärille
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
+  :otsikon-luokka                       Lisää yksittäinen luokka otsikolle. Otsikko on h6 elementti.
   :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
   :muokattava?                          funktio, jonka avulla päätellään, voiko solun tietoja muokata. Anna esim. (constantly false) - Olisi hyvä, jos tämä voitaisiin joskus nimetä :solu-muokattava?
   :piilota-muokkaus?                    Default false, piilottaa muokkausrivin.
@@ -1283,7 +1289,7 @@
        :component-will-unmount
        (fn []
          (nollaa-muokkaustiedot!))}
-      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
+      (fnc [{:keys [otsikko otsikon-luokka gridin-luokka tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
@@ -1316,7 +1322,8 @@
               luokat (cond-> luokat
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
                        sivuttain-rullattava? (conj "skrollattava")
-                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
+                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky")
+                       (some? gridin-luokka) (conj gridin-luokka))
               muokattu? (not (empty? @historia))
               tallenna-id (str "tallenna-" (gensym))]
           [:div.panel.panel-default.livi-grid (merge
@@ -1335,7 +1342,7 @@
                                :tallenna-vain-muokatut tallenna-vain-muokatut
                                :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
-                               :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
+                               :peruuta peruuta :otsikko otsikko :otsikon-luokka otsikon-luokka :custom-toiminto custom-toiminto
                                :paneelikomponentit paneelikomponentit
                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta

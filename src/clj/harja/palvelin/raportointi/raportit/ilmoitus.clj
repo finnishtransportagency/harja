@@ -196,6 +196,7 @@
                     [(concat [raportin-alue]
                              [tpp-yht tur-yht urk-yht])])))))]
 
+     [:teksti "Ilmoitusten kokonaismäärä voi olla suurempi kuin asiakaspalauteluokittain esitetyt määrät yhteensä, sillä kaikkia ilmoituksia ei pystytä luokittelemaan." {:alamarginaali "1rem"}]
      (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm)
      (ilmoitukset-toimenpiteiden-mukaan db urakka-id urakkatyyppi elinvoimakeskus-id alkupvm loppupvm)
 

@@ -251,7 +251,8 @@
         [valinnat/aikavali tiedot/valittu-aikavali {:tyyppi :pvm-aika :vayla-tyyli? true}]
         [lomake/lomake
          {:otsikko "Vapaaehtoiset tarkemmat hakuehdot"
-          :muokkaa! #(reset! tiedot/hakuehdot %)}
+          :muokkaa! #(reset! tiedot/hakuehdot %)
+          :tarkkaile-ulkopuolisia-muutoksia? true}
          [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
            :valinta-arvo first
            :valinta-nayta second
@@ -273,6 +274,9 @@
              :tyyppi :string}
             {:otsikko "Viestin sisältö"
              :nimi :viestin-sisalto
+             :tyyppi :string}
+             {:otsikko "Osoitteet"
+             :nimi :osoitteet
              :tyyppi :string})
           (lomake/rivi
             {:nimi :hae
@@ -282,7 +286,7 @@
              :tyyppi :komponentti
              :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
                                                                             tiedot/hakuehdot
-                                                                            dissoc :otsikot :parametrit :viestin-sisalto)}
+                                                                            dissoc :otsikot :parametrit :osoitteet :viestin-sisalto)}
                                    "Tyhjennä"])})]
          @tiedot/hakuehdot]
 
