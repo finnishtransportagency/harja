@@ -1,4 +1,7 @@
 
+-- Lisätään yksi uusi vaihtoehtoryhmäotsikko
+INSERT INTO lupaus_vaihtoehto_ryhma ("ryhma-otsikko", luotu) VALUES ('Urakka-alueen työmaakamerat (tai vastaavat)', NOW());
+
 -- Lupausten pohjadata hoitokaudelle 2026-2027
 INSERT INTO lupausryhma(otsikko, jarjestys, "urakan-alkuvuosi", luotu, "rivin-tunnistin-selite")
 VALUES
@@ -301,7 +304,7 @@ $$
     DECLARE
 ryhma_otsikko_id_1 INTEGER;
 BEGIN
-        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Itselleluovutettavista töistä / työkokonaisuuksista');
+        ryhma_otsikko_id_1 = (SELECT id FROM lupaus_vaihtoehto_ryhma where "ryhma-otsikko" = 'Urakka-alueen työmaakamerat (tai vastaavat)');
 
         PERFORM luo_lupauksen_vaihtoehto(8, 2026, '0 kpl', 0,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
         PERFORM luo_lupauksen_vaihtoehto(8, 2026, '1 kpl', 1,'Laadunvarmistus ja laadunosoitus','Yleinen', null, null, ryhma_otsikko_id_1);
@@ -376,3 +379,8 @@ BEGIN
         PERFORM luo_lupauksen_vaihtoehto(12, 2026, '≥ 5 per hoitovuosi', 14, 'Viestintä ja tienkäyttäjäasiakkaan palvelu','Yleinen', null, null, ryhma_otsikko_id_1);
 END
 $$ LANGUAGE plpgsql;
+
+-- Muutos v. 2025 lupaus nro. 9 Kohdistetun seurannan parantaminen -lupaukseen: muuta ryhmäotsikko
+UPDATE lupaus_vaihtoehto
+SET "vaihtoehto-ryhma-otsikko-id" = (SELECT id FROM lupaus_vaihtoehto_ryhma WHERE "ryhma-otsikko" = 'Urakka-alueen työmaakamerat (tai vastaavat)')
+WHERE "lupaus-id" = (SELECT id FROM lupaus WHERE kuvaus = 'Kohdistetun seurannan parantaminen' AND "urakan-alkuvuosi" = 2025);
