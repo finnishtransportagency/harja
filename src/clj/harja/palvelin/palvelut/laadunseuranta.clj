@@ -230,6 +230,7 @@
   [db {:keys [urakka-id urakan-alkupvm paivamaara soveltuvuuskonteksti laji sanktiotyyppi-id]}]
   (when (and laji
           (not= :yllapidon_bonus laji)
+          (not= :lupaussanktio laji)
           paivamaara)
     (sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
       db
