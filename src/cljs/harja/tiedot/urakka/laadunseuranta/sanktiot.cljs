@@ -1,19 +1,20 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
-  (:require [reagent.core :refer [atom]]
-            [reagent.ratom :refer [reaction]]
+  (:require [clojure.string :as str]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
-            [harja.pvm :as pvm]
+            [reagent.core :refer [atom]]
+            [reagent.ratom :refer [reaction]]
 
+            [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain]
-            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
-            [harja.ui.viesti :as viesti])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.tierekisteri :as tr]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -24,12 +25,9 @@
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:harja.ui.lomake/muokatut #{:kasittelyaika}
      :suorasanktio true
-     :laji (cond
-             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
-             (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-             :else :yllapidon_sakko)
+     :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi @urakka/valitun-urakan-sanktiolajit)
      :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                             (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                          (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
                       :valikatselmus
                       nil)
      :perintapvm default-perintapvm
@@ -73,8 +71,8 @@
   voi estää :hae-sanktiot? false tai :hae-bonukset? false optiolla."
   [{:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (k/post! :hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka-id
-                                             :alku      alku
-                                             :loppu     loppu
+                                             :alku alku
+                                             :loppu loppu
                                              :vain-yllapitokohteettomat? vain-yllapitokohteettomat?
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
@@ -85,11 +83,11 @@
                hoitokausi @urakka/valittu-hoitokausi
                _ @nakymassa?
                _ @paivita-sanktiot-ja-bonukset-atom]
-              {:nil-kun-haku-kaynnissa? true}
-              (when @nakymassa?
-                (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (first hoitokausi)
-                                                  :loppu (second hoitokausi)}))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when @nakymassa?
+      (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
+                                        :alku (first hoitokausi)
+                                        :loppu (second hoitokausi)}))))
 
 (defn paivita-sanktiot-ja-bonukset!
   "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
@@ -100,7 +98,7 @@
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
   perusteella."
   [urakka-id laatupoikkeama-id sanktio-atom]
-  (log "hae-sanktion-liitteet!  " (pr-str urakka-id ) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
+  (log "hae-sanktion-liitteet!  " (pr-str urakka-id) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
   (go (let [vastaus (<! (k/post! :hae-sanktion-liitteet {:urakka-id urakka-id
                                                          :laatupoikkeama-id laatupoikkeama-id}))]
         (if (k/virhe? vastaus)
@@ -139,10 +137,10 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
-  {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
+  {:sanktio (dissoc s :laatupoikkeama :yllapitokohde)
    :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                                              :yllapitokohde (:id (:yllapitokohde s)))
-   :hoitokausi     @urakka/valittu-hoitokausi})
+                     :yllapitokohde (:id (:yllapitokohde s)))
+   :hoitokausi @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
   [sanktio urakka-id onnistui-fn]
@@ -185,16 +183,16 @@
             (second @urakka/valittu-hoitokausi)))
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot-ja-bonukset)
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
+        (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
 
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
+        (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
 
 
 (defonce sanktiotyypit
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
-              (when laadunseurannassa?
-                (k/get! :hae-sanktiotyypit))))
+    (when laadunseurannassa?
+      (k/get! :hae-sanktiotyypit))))
 
 (defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
   (let [kaikki @urakan-lajisuodattimet
@@ -247,4 +245,4 @@
        (str "Laatupoikkeama: " kohde)
        [:br]
        (str (when (get-in laatupoikkeama [:tr :numero])
-              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
+              (str " (" (tr/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
