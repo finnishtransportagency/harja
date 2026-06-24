@@ -34,6 +34,11 @@ function avaaUrakanSuunnittelu(alue, urakkaNimi) {
     cy.get('img[src="images/ajax-loader.gif"]', {timeout}).should('not.exist');
 }
 
+function asetaKalustoresurssi(dataCy, arvo) {
+		cy.get(`[data-cy="${dataCy}"]`, {timeout: timeout}).should('be.visible').and('not.be.disabled');
+		cy.get(`[data-cy="${dataCy}"]`).clear().type(arvo);
+}
+
 describe('Suunnittelu / Kalustoresurssit', function () {
 
     it('Kalustoresurssit-välilehti ei näy vanhemmalle MHU-urakalle', function () {
@@ -56,9 +61,9 @@ describe('Suunnittelu / Kalustoresurssit', function () {
         cy.get('[data-cy=kalustoresurssit]', {timeout}).should('be.visible');
 
         // Syötä määrät hoitoluokkaryhmille (ensimmäinen tallennus, editointitila heti auki)
-        cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').clear().type('5');
-        cy.get('[data-cy="kalustoresurssi-maara-ic-iii"]').clear().type('10');
-        cy.get('[data-cy="kalustoresurssi-maara-k1-k2-l"]').clear().type('3');
+        asetaKalustoresurssi('kalustoresurssi-maara-ise-ib', '5');
+        asetaKalustoresurssi('kalustoresurssi-maara-ic-iii', '10');
+        asetaKalustoresurssi('kalustoresurssi-maara-k1-k2-l', '3');
 
         // Tallenna - tallennuksen jälkeen siirrytään luku-tilaan ja Muokkaa-nappi ilmestyy
         cy.get('[data-cy=kalustoresurssit-tallenna]').click();
@@ -77,7 +82,7 @@ describe('Suunnittelu / Kalustoresurssit', function () {
         cy.get('[data-cy=kalustoresurssit-tallenna]').should('exist');
 
         // Muuta arvoa ja peruuta - palaa tallennettuun tilaan
-        cy.get('[data-cy="kalustoresurssi-maara-ise-ib"]').clear().type('99');
+        asetaKalustoresurssi('kalustoresurssi-maara-ise-ib', '99');
         cy.get('[data-cy=kalustoresurssit-peruuta]').click();
 
         // Peruutuksen jälkeen palataan luku-tilaan ja Muokkaa-nappi on taas näkyvissä
