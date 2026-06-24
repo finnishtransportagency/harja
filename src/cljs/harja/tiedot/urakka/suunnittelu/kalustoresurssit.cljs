@@ -1,8 +1,8 @@
 (ns harja.tiedot.urakka.suunnittelu.kalustoresurssit
   "Suunnittelun kalustoresurssien näkymän tila ja Tuck-eventit MHU26-urakoille."
-  (:require [clojure.string :as str]
+  (:require [tuck.core :as tuck]
+
             [harja.ui.viesti :as viesti]
-            [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]))
