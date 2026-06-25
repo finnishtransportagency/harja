@@ -33,23 +33,29 @@
     (is (nil? (json/validoi json-skeemat/+analytiikka-hoidon-paikkaukset-haku-vastaus+ hoidon-paikkaukset-esimerkki false)))))
 
 (deftest paallystysurakoiden-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-paallystysurakoiden-haku-response.json")
+  (let [analytiikka-urakka-id (hae-urakan-id-sampo-idlla "5731289-TES2")
+        odotettu-vastaus (-> (slurp "resources/api/examples/analytiikka-paallystysurakoiden-haku-response.json")
+                             cheshire/decode
+                             (update-in ["paallystysurakat" 0] assoc "harjaId" analytiikka-urakka-id))
         alkuaika "2022-07-15T00:00:00Z"
         loppuaika "2022-07-15T23:59:59Z"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/paallystysurakat/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)]
     (is (=
-          (cheshire/decode odotettu-vastaus)
+          odotettu-vastaus
           (cheshire/decode (:body vastaus))))))
 
 (deftest paallystyskohteiden-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-paallystyskohteiden-haku-response.json")
+  (let [analytiikka-urakka-id (hae-urakan-id-sampo-idlla "5731289-TES2")
+        odotettu-vastaus (-> (slurp "resources/api/examples/analytiikka-paallystyskohteiden-haku-response.json")
+                             cheshire/decode
+                             (update-in ["paallystyskohteet" 0] assoc "urakka" analytiikka-urakka-id))
         alkuaika "2022-07-15T00:00:00Z"
         loppuaika "2022-07-15T23:59:59Z"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/paallystyskohteet/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)]
     (is (=
-          (cheshire/decode odotettu-vastaus)
+          odotettu-vastaus
           (cheshire/decode (:body vastaus))))))
 
 (deftest paallystyskohteiden-aikataulujen-haku-toimii
@@ -83,13 +89,17 @@
           (cheshire/decode (:body vastaus))))))
 
 (deftest paikkauskohteiden-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-paikkauskohteiden-haku-response.json")
+  (let [analytiikka-urakka-id (hae-urakan-id-sampo-idlla "5731289-TES2")
+        odotettu-vastaus (-> (slurp "resources/api/examples/analytiikka-paikkauskohteiden-haku-response.json")
+                             cheshire/decode
+                             (update "paikkauskohteet" (fn [kohteet]
+                                                         (mapv #(assoc % "urakka" analytiikka-urakka-id) kohteet))))
         alkuaika "2023-11-02T00:00:00Z"
         loppuaika "2023-11-02T23:59:59Z"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/paikkauskohteet/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)]
     (is (=
-          (cheshire/decode odotettu-vastaus)
+          odotettu-vastaus
           (cheshire/decode (:body vastaus))))))
 
 (deftest pot-paikkausten-haku-toimii
@@ -103,11 +113,15 @@
           (cheshire/decode (:body vastaus))))))
 
 (deftest paikkausten-haku-toimii
-  (let [odotettu-vastaus (slurp "resources/api/examples/analytiikka-paikkausten-haku-response.json")
+  (let [analytiikka-urakka-id (hae-urakan-id-sampo-idlla "5731289-TES2")
+        odotettu-vastaus (-> (slurp "resources/api/examples/analytiikka-paikkausten-haku-response.json")
+                             cheshire/decode
+                             (update "paikkaukset" (fn [paikkaukset]
+                                                     (mapv #(assoc % "urakka" analytiikka-urakka-id) paikkaukset))))
         alkuaika "2023-11-02T00:00:00Z"
         loppuaika "2023-11-02T23:59:59Z"
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/paikkaukset/" alkuaika "/" loppuaika)]
                   "analytiikka-testeri" portti)]
     (is (=
-          (cheshire/decode odotettu-vastaus)
+          odotettu-vastaus
           (cheshire/decode (:body vastaus))))))
