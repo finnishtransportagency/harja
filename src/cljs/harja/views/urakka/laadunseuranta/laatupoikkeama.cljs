@@ -42,7 +42,7 @@
 (defn uuden-sanktion-rivi
   [rivi urakkatyyppi mahdolliset-sanktiolajit urakan-tpit]
   (assoc rivi
-    :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi mahdolliset-sanktiolajit)
+    :laji (sanktiot/oletus-uuden-sanktion-laji urakkatyyppi mahdolliset-sanktiolajit)
     :toimenpideinstanssi (when (= 1 (count urakan-tpit))
                            (:tpi_id (first urakan-tpit)))))
 
@@ -129,7 +129,7 @@
     (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
       (let [voi-muokata? (and paatosoikeus? muokattava?)
             sanktiot-lista (vals @sanktiot-atom)
-            sanktio-konfiguraation-tila @urakka/valitun-urakan-sanktio-konfiguraation-tila]
+            sanktio-konfiguraation-tila @sanktiot/valitun-urakan-sanktio-konfiguraation-tila]
         (if (= :valmis sanktio-konfiguraation-tila)
           [:div.sanktiot
          ;; Sivupaneeli sanktion lisäämistä/muokkausta varten
@@ -165,7 +165,7 @@
                          uusi-sanktio-atom (atom uusi)
                          mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)]
                     (reset! sanktiot/valittu-sanktio
-                      (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @urakka/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)
+                      (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @sanktiot/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
                         (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama)))))
@@ -195,7 +195,7 @@
           [(if (tila/mhu25-urakka? @nav/valittu-urakka)
              {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
              {:otsikko "Käsitelty" :nimi :kasittelyaika :hae #(get-in % [:laatupoikkeama :paatos :kasittelyaika]) :fmt pvm/pvm-opt :leveys 1.2})
-           {:otsikko "Laji" :nimi :laji :hae #(urakka/valitun-urakan-sanktiolajin-nimi (:laji %)) :leveys 2}
+           {:otsikko "Laji" :nimi :laji :hae #(sanktiot/valitun-urakan-sanktiolajin-nimi (:laji %)) :leveys 2}
            {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
            {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]

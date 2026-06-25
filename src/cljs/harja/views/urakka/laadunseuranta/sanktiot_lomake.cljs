@@ -62,6 +62,10 @@
           kauden-alku (pvm/hoitokauden-alkuvuosi pvm)]
       (= kauden-alku viimeinen))))
 
+(defn- hae-sanktiotyyppi-idlla
+  [sanktiotyypit tyyppi-id]
+  (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -77,9 +81,9 @@
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
+        mahdolliset-sanktiolajit @tiedot/valitun-urakan-sanktiolajit
         kaikki-sanktiotyypit @tiedot/sanktiotyypit 
-        sanktio-konfiguraation-tila @tiedot-urakka/valitun-urakan-sanktio-konfiguraation-tila
+        sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
@@ -163,36 +167,37 @@
             :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [;; Ota vanha tyyppi talteen, mikäli se on asetettu
-                           vanha-tyyppi (:tyyppi rivi)
-                           rivi (-> rivi
-                                  (assoc :laji arvo)
-                                  (dissoc :tyyppi)
-                                  (assoc :tyyppi nil))
-                           s-tyypit (tiedot-urakka/valitun-urakan-sanktiotyypit arvo)
-                           rivi (cond
+                (let [;; Ota vanhan tyypin id talteen, jotta valinta ei riipu mapin identiteetistä.
+                      vanha-tyyppi-id (get-in rivi [:tyyppi :id])
+                      rivi (-> rivi
+                             (assoc :laji arvo)
+                             (dissoc :tyyppi)
+                             (assoc :tyyppi nil))
+                      s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
+                      vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id) 
+                      yksi-tyyppi (first s-tyypit) 
+                      toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
+                      rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                  (and
-                                    (and (= 1 (count s-tyypit)) (first s-tyypit))
-                                    (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))
-                                  (assoc rivi
-                                    :tyyppi (first s-tyypit)
-                                    :toimenpideinstanssi
-                                    (when (:toimenpidekoodi (first s-tyypit))
-                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi (first s-tyypit))))))
+                             (and (= 1 (count s-tyypit)) yksi-tyyppi (not= toimenpideinstansseja 1))
+                             (assoc rivi
+                               :tyyppi yksi-tyyppi
+                               :toimenpideinstanssi
+                               (when (:toimenpidekoodi yksi-tyyppi)
+                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi yksi-tyyppi)))))
                                   ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
-                                  (and (> (count s-tyypit) 1)
-                                    (some #(= vanha-tyyppi %) s-tyypit))
-                                  (assoc rivi :tyyppi vanha-tyyppi
-                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                             (and (> (count s-tyypit) 1)
+                               vanha-tyyppi)
+                             (assoc rivi :tyyppi vanha-tyyppi
+                               :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
-                                  :else rivi)]
-                       (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
-                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
-                         rivi)))
+                             :else rivi)]
+                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
+                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                    rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (tiedot-urakka/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
+            :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
 
          ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus

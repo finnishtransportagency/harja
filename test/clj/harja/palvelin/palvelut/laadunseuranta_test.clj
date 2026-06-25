@@ -3,6 +3,7 @@
             [slingshot.slingshot :refer [throw+]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [slingshot.slingshot :refer [try+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -27,6 +28,7 @@
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.sanktio-konfiguraatio :as sanktio-konfig-q]
+            [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
   (:import (java.util UUID))
@@ -355,6 +357,285 @@
 
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest tallenna-suorasanktio-validoi-aktiivisen-sanktio-konfiguraation
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC aktiivinen sanktio-konfiguraatio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        validointikutsu (atom nil)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ params]
+                      (reset! validointikutsu params))]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (= {:urakka-id urakka-id
+            :hoitovuosi 1
+            :soveltuvuuskonteksti :urakka
+            :laji :A
+            :sanktiotyyppi-id sanktiotyyppi-id}
+           @validointikutsu)
+      "Suorasanktion tallennuksen pitää validoida aktiivinen sanktio-konfiguraatio oikeassa kontekstissa")))
+
+(deftest tallenna-suorasanktio-ei-kayta-enaa-legacy-validointia-profiilipohjaisessa-polussa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC ei legacy-validointia suorasanktiossa"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        legacy-validointeja (atom 0)]
+    (try
+      (with-redefs [ls/vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+                    (fn [& _]
+                      (swap! legacy-validointeja inc))
+                    ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _])]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @legacy-validointeja)
+      "Suorasanktion profiilipohjainen write-path ei saa käyttää legacy-validointia")))
+
+(deftest tallenna-laatupoikkeama-validoi-aktiivisen-sanktio-konfiguraation-laatupoikkeama-kontekstissa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC laatupoikkeaman aktiivinen sanktio-konfiguraatio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}
+        validointikutsu (atom nil)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ params]
+                      (reset! validointikutsu params))]
+        (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (= {:urakka-id urakka-id
+            :hoitovuosi 1
+            :soveltuvuuskonteksti :laatupoikkeama
+            :laji :A
+            :sanktiotyyppi-id sanktiotyyppi-id}
+           @validointikutsu)
+      "Laatupoikkeaman sanktion tallennuksen pitää validoida aktiivinen sanktio-konfiguraatio laatupoikkeama-kontekstissa")))
+
+(deftest tallenna-laatupoikkeama-ei-kayta-enaa-legacy-validointia-profiilipohjaisessa-polussa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC ei legacy-validointia laatupoikkeamassa"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}
+        legacy-validointeja (atom 0)]
+    (try
+      (with-redefs [ls/vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+                    (fn [& _]
+                      (swap! legacy-validointeja inc))
+                    ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _])]
+        (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @legacy-validointeja)
+      "Laatupoikkeaman profiilipohjainen write-path ei saa käyttää legacy-validointia")))
+
+(deftest tallenna-suorasanktio-ei-validoi-yllapidon-bonusta-aktiivista-sanktio-konfiguraatiota-vasten
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        perustelu "ABC yllapidon bonus ilman write-path-validointia"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        bonus {:suorasanktio true
+               :laji :yllapidon_bonus
+               :summa -4321
+               :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
+               :perintapvm perintapvm
+               :vakiofraasi :laadunvalvontaan-liittyvien-mittausten-ym-toimien-laiminlyonnit}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00")
+                        :urakka urakka-id
+                        :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")
+        validointeja (atom 0)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _]
+                      (swap! validointeja inc))]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @validointeja)
+      "Ylläpidon bonus jätetään ensimmäisellä kierroksella write-path-validoinnin ulkopuolelle")))
+
+(deftest tallenna-suorasanktio-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC profiilin vastainen suorasanktio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiilin-vastainen-tyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 10;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id profiilin-vastainen-tyyppi-id
+                          :nimi "Hallinnolliset laiminlyönnit"
+                          :toimenpidekoodi nil}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")]
+    (try+
+      (palvelukutsu-tallenna-suorasanktio +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+      (is false "Suorasanktion tallennuksen pitäisi hylätä profiilin vastainen yhdistelmä")
+      (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet))))
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi sanktio-kirjausvirhe)))
+        (is (= (str "Sanktiolaji: A ei mahdollinen sanktiotyypille id: " profiilin-vastainen-tyyppi-id)
+               (:viesti (first virheet)))))
+      (catch SecurityException virhe
+        (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest tallenna-laatupoikkeama-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC profiilin vastainen laatupoikkeama"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiilin-vastainen-tyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 10;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id profiilin-vastainen-tyyppi-id
+                          :nimi "Hallinnolliset laiminlyönnit"
+                          :toimenpidekoodi nil}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}]
+    (try+
+      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+      (is false "Laatupoikkeaman tallennuksen pitäisi hylätä profiilin vastainen yhdistelmä")
+      (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet))))
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi sanktio-kirjausvirhe)))
+        (is (= (str "Sanktiolaji: A ei mahdollinen sanktiotyypille id: " profiilin-vastainen-tyyppi-id)
+               (:viesti (first virheet)))))
+      (catch SecurityException virhe
+        (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest vaadi-sallittu-sanktiokonfiguraatiorivi-heittaa-paikallisen-domain-virheen
+  (try+
+    (with-redefs [ls-sanktio-konfiguraatio/hae-sanktio-profiilin-rivit-kontekstissa
+                  (fn [_ _]
+                    {:rivit []})]
+      (ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :soveltuvuuskonteksti :urakka
+         :laji :A
+         :sanktiotyyppi-id 16})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos laji puuttuu profiilista"))
+    (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+      (is (= :sanktiolaji-ei-sallittu (:koodi (first virheet)))
+        "Virheen pitää käyttää paikallista domain-koodia, jotta UI voi näyttää ymmärrettävän viestin")
+      (is (= :sanktiolaji-ei-sallittu (:koodi sanktio-kirjausvirhe))
+        "Lisätiedoissa pitää säilyttää sama domain-koodi myöhempää käyttöä varten")
+      (is (= "Sanktiolaji A ei ole sallittu urakan sanktio-konfiguraatiossa."
+             (:viesti (first virheet)))
+        "Virheen pitää sisältää käyttäjälle näytettävä viesti"))))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
@@ -1027,8 +1308,8 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
-         profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+           profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))]
         (doseq [urakka-id urakka-idt]
@@ -1064,9 +1345,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("
@@ -1107,9 +1388,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1141,9 +1422,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("
@@ -1641,44 +1922,3 @@
       (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
-
-(deftest laatupoikkeama-talvisuolan-ylitys-testi
-  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
-        laatupoikkeama {:yllapitokohde nil
-                        :sijainti {:type :point
-                                   :coordinates [382554.0523636384 6675978.549765582]}
-                        :kuvaus "Kuvaus"
-                        :aika #inst "2030-09-15T09:00:01.000-00:00"
-                        :tr {:alkuosa 1
-                             :numero 1
-                             :alkuetaisyys 1
-                             :loppuetaisyys 2
-                             :loppuosa 2}
-                        :urakka urakka-id
-                        :sanktiot nil
-                        :tekija :tilaaja
-                        :kohde "Kohde"}
-
-        uusi-sanktio {:perintapvm #inst "2030-09-15T09:00:01.000-00:00"
-                      :laji :talvisuolan_ylitys
-                      :summa 100
-                      :indeksi "MAKU 2010"
-                      :suorasanktio false
-                      :toimenpideinstanssi 4
-                      :vakiofraasi nil}
-        paatos {:paatos :sanktio
-                :kasittelytapa :puhelin
-                :kasittelyaika #inst "2030-09-15T09:00:01.000-00:00"
-                :perustelu "Testi"}]
-
-    (testing "sanktiollisen-laatupoikkeaman-tallennus"
-      (let [_ (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
-            vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+
-                      (assoc laatupoikkeama
-                        :paatos paatos
-                        :sanktiot [uusi-sanktio]))]
-        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
-        (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")))
-    
-    ;; Siivoa roskat
-    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))

@@ -2,7 +2,8 @@
   (:require [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]
-            [harja.kyselyt.sanktio-konfiguraatio :as q]))
+            [harja.kyselyt.sanktio-konfiguraatio :as q]
+            [slingshot.slingshot :refer [throw+]]))
 
 (def ^:private urakat-laadunseuranta-sanktiot-oikeus
   (delay @(requiring-resolve 'harja.domain.oikeudet/urakat-laadunseuranta-sanktiot)))
@@ -12,6 +13,15 @@
 
 (def ^:private hallinta-oikeus
   (delay @(requiring-resolve 'harja.domain.oikeudet/hallinta-laadunseuranta-profiilit)))
+
+(def ^:private sanktio-kirjausvirhe-tyyppi :sanktio-kirjausvirhe)
+
+(defn- heita-sanktio-kirjausvirhe!
+  [koodi viesti lisatiedot]
+  (throw+ {:type sanktio-kirjausvirhe-tyyppi
+           :virheet [{:koodi koodi
+                      :viesti viesti}]
+           :sanktio-kirjausvirhe (merge {:koodi koodi} lisatiedot)}))
 
 (defn- laji->rivin-tyyppi
   [laji]
@@ -228,20 +238,37 @@
         sentinel-rivi (first (filter #(= 0 (get-in % [:sanktiotyyppi :koodi])) lajin-rivit))]
     (cond
       (empty? lajin-rivit)
-      (throw (IllegalArgumentException.
-               (str "Sanktiolaji " (name laji) " ei ole sallittu urakan sanktio-konfiguraatiossa.")))
+      (heita-sanktio-kirjausvirhe!
+        :sanktiolaji-ei-sallittu
+        (str "Sanktiolaji " (name laji) " ei ole sallittu urakan sanktio-konfiguraatiossa.")
+        {:urakka-id urakka-id
+         :hoitovuosi hoitovuosi
+         :soveltuvuuskonteksti soveltuvuuskonteksti
+         :laji laji
+         :sanktiotyyppi-id sanktiotyyppi-id})
 
       (nil? sanktiotyyppi-id)
       (if (and sentinel-rivi (= 1 (count lajin-rivit)))
         sentinel-rivi
-        (throw (IllegalArgumentException.
-                 (str "Sanktiotyyppi puuttuu lajille " (name laji) "."))))
+        (heita-sanktio-kirjausvirhe!
+          :sanktiotyyppi-puuttuu
+          (str "Sanktiotyyppi puuttuu lajille " (name laji) ".")
+          {:urakka-id urakka-id
+           :hoitovuosi hoitovuosi
+           :soveltuvuuskonteksti soveltuvuuskonteksti
+           :laji laji}))
 
       :else
       (or (some #(when (= sanktiotyyppi-id (get-in % [:sanktiotyyppi :id])) %) lajin-rivit)
-        (throw (IllegalArgumentException.
-                 (str "Sanktiolaji: " (name laji)
-                   " ei mahdollinen sanktiotyypille id: " sanktiotyyppi-id)))))))
+        (heita-sanktio-kirjausvirhe!
+          :sanktiotyyppi-ei-sallittu
+          (str "Sanktiolaji: " (name laji)
+            " ei mahdollinen sanktiotyypille id: " sanktiotyyppi-id)
+          {:urakka-id urakka-id
+           :hoitovuosi hoitovuosi
+           :soveltuvuuskonteksti soveltuvuuskonteksti
+           :laji laji
+           :sanktiotyyppi-id sanktiotyyppi-id})))))
 
 (defn hae-urakan-sanktio-konfiguraatio
   [db user {:keys [urakka-id hoitovuosi soveltuvuuskonteksti]}]
@@ -280,15 +307,15 @@
     (mapv (fn [rivi]
             (let [rajauksen-tyyppi (get-in rivi [:profiilirivi :toimenpideinstanssi-rajauksen-tyyppi])
                   t2-koodi (get-in rivi [:profiilirivi :toimenpideinstanssi-t2-koodi])]
-            {:id (get-in rivi [:profiilirivi :id])
-             :jarjestys (get-in rivi [:profiilirivi :jarjestys])
-             :toimenpideinstanssi-rajauksen-tyyppi rajauksen-tyyppi
-             :toimenpideinstanssi-t2-koodi t2-koodi
-             :toimenpideinstanssi-teksti (if (= :kaikki rajauksen-tyyppi) "Kaikki" t2-koodi)
-             :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
-             :urakat (->> (get-in rivi [:profiilirivi :urakat])
-                       sort
-                       vec)})))))
+              {:id (get-in rivi [:profiilirivi :id])
+               :jarjestys (get-in rivi [:profiilirivi :jarjestys])
+               :toimenpideinstanssi-rajauksen-tyyppi rajauksen-tyyppi
+               :toimenpideinstanssi-t2-koodi t2-koodi
+               :toimenpideinstanssi-teksti (if (= :kaikki rajauksen-tyyppi) "Kaikki" t2-koodi)
+               :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
+               :urakat (->> (get-in rivi [:profiilirivi :urakat])
+                         sort
+                         vec)})))))
 
 
 (defn- bonus-lajin-nayttonimi
