@@ -408,7 +408,7 @@
         db-paikkaus (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " ulkoinen-id ";"))
         db-tieosoite (dissoc (trosoite-obj->map db-paikkaus)
                        :ajorata)]
-    (is (= 200 (:status vastaus)) "Tietueen lis(:luokittelu db-paikkaus)äys onnistui")
+    (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= "reikapaikkaus" (:paikkaus-tyyppi db-paikkaus)) "Tyyppi täsmää")
     (is (= ["TPP" "Kiireellinen"] (harja.kyselyt.konversio/pgarray->vector (:luokittelu db-paikkaus))) "Luokittelu täsmää")
