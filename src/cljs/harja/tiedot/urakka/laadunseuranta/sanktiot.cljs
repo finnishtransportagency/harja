@@ -25,10 +25,7 @@
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:harja.ui.lomake/muokatut #{:kasittelyaika}
      :suorasanktio true
-     :laji (cond
-             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
-             (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-             :else :yllapidon_sakko)
+     :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi @urakka/valitun-urakan-sanktiolajit)
      :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
                           (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
                       :valikatselmus
