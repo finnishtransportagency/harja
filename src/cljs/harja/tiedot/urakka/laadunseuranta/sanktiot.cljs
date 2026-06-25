@@ -20,12 +20,107 @@
 
 (def nakymassa? (atom false))
 
+(defn sanktio-konfiguraation-soveltuvuuskonteksti
+  [ls-sivu vv-ls-sivu]
+  (cond
+    (= :laatupoikkeamat ls-sivu) :laatupoikkeama
+    (or (= :sanktiot ls-sivu)
+      (= :vesivayla-sanktiot vv-ls-sivu)) :urakka
+    :else nil))
+
+(defonce valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? (atom false))
+(defonce valitun-urakan-sanktio-konfiguraation-pyynto-id (atom 0))
+
+(defn hae-urakan-sanktio-konfiguraatio
+  [urakka-id hoitovuosi soveltuvuuskonteksti]
+  (let [pyynto-id (swap! valitun-urakan-sanktio-konfiguraation-pyynto-id inc)
+        vastaus-ch (k/post! :hae-urakan-sanktio-konfiguraatio
+                     {:urakka-id urakka-id
+                      :hoitovuosi hoitovuosi
+                      :soveltuvuuskonteksti soveltuvuuskonteksti})]
+    (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? true)
+    (go
+      (<! vastaus-ch)
+      (when (= pyynto-id @valitun-urakan-sanktio-konfiguraation-pyynto-id)
+        (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? false)))
+    vastaus-ch))
+
+(defn sanktio-konfiguraation-tila
+  [sanktio-konfiguraatio haku-kaynnissa?]
+  (cond
+    haku-kaynnissa?
+    :haku-kaynnissa
+
+    (seq (domain-sanktio/sanktio-konfiguraation-lajit sanktio-konfiguraatio))
+    :valmis
+
+    (and (some? sanktio-konfiguraatio)
+      (k/virhe? sanktio-konfiguraatio))
+    :haku-epaonnistui
+
+    :else
+    :ei-konfiguraatiota))
+
+(defn oletus-uuden-sanktion-laji
+  [urakkatyyppi mahdolliset-sanktiolajit]
+  (cond
+    (u-domain/mh-tai-hoitourakka? urakkatyyppi)
+    (first mahdolliset-sanktiolajit)
+
+    (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+    :vesivayla_sakko
+
+    :else
+    :yllapidon_sakko))
+
+(def valitun-urakan-sanktio-konfiguraatio
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+               ls-sivu (nav/valittu-valilehti :laadunseuranta)
+               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+               valittu-hoitokausi @urakka/valittu-hoitokausi]
+    {:nil-kun-haku-kaynnissa? true}
+    (let [soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+          hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                       (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+      (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+        (hae-urakan-sanktio-konfiguraatio urakka-id hoitovuosi soveltuvuuskonteksti)))))
+
+(def valitun-urakan-sanktio-konfiguraation-tila
+  (reaction
+    (let [urakka-id (:id @nav/valittu-urakka)
+          urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+          ls-sivu (nav/valittu-valilehti :laadunseuranta)
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+          valittu-hoitokausi @urakka/valittu-hoitokausi
+          soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+          hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                       (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+      (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+        (sanktio-konfiguraation-tila
+          @valitun-urakan-sanktio-konfiguraatio
+          @valitun-urakan-sanktio-konfiguraation-haku-kaynnissa?)))))
+
+(defn valitun-urakan-sanktiolajin-nimi
+  [laji]
+  (or (domain-sanktio/sanktio-konfiguraation-lajin-nimi @valitun-urakan-sanktio-konfiguraatio laji)
+    (domain-sanktio/sanktiolaji->teksti laji)))
+
+(defn valitun-urakan-sanktiotyypit
+  [laji]
+  (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
+
+(def valitun-urakan-sanktiolajit
+  "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
+  (reaction
+    (domain-sanktio/sanktio-konfiguraation-lajit @valitun-urakan-sanktio-konfiguraatio)))
+
 (defn uusi-sanktio [urakkatyyppi]
   (let [nyt (pvm/nyt)
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:harja.ui.lomake/muokatut #{:kasittelyaika}
      :suorasanktio true
-     :laji (urakka/oletus-uuden-sanktion-laji urakkatyyppi @urakka/valitun-urakan-sanktiolajit)
+     :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
      :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
                           (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
                       :valikatselmus
@@ -103,7 +198,7 @@
                                                          :laatupoikkeama-id laatupoikkeama-id}))]
         (if (k/virhe? vastaus)
           :virhe
-          (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
+          (swap! sanktio-atom assoc-in [:laatupoikkeama :liitteet] vastaus)))))
 
 (def lajisuodatin-tiedot
   {:muistutukset {:teksti "Muistutukset" :jarjestys 1}
@@ -137,17 +232,25 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
-  {:sanktio (dissoc s :laatupoikkeama :yllapitokohde)
-   :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                     :yllapitokohde (:id (:yllapitokohde s)))
-   :hoitokausi @urakka/valittu-hoitokausi})
+  (let [hoitokausi @urakka/valittu-hoitokausi]
+    {:sanktio        (-> s
+                       (dissoc :laatupoikkeama :yllapitokohde)
+                       (assoc :paivamaara (first hoitokausi)
+                         :soveltuvuuskonteksti :urakka))
+     :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
+                       :yllapitokohde (:id (:yllapitokohde s)))
+     :hoitokausi     hoitokausi}))
+
 
 (defn tallenna-sanktio
   [sanktio urakka-id onnistui-fn]
   (go
-    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
+    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id) nil true))]
       (if (k/virhe? vastaus)
-        (viesti/nayta-toast! "Sanktion tallennus epäonnistui!" :varoitus)
+        (viesti/nayta-toast!
+          (or (k/virheviesti vastaus)
+            "Sanktion tallennus epäonnistui!")
+          :varoitus)
         (do
           (viesti/nayta-toast! "Sanktion tallennus onnistui" :onnistui)
           (reset! valittu-sanktio nil)

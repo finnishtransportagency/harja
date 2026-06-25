@@ -226,9 +226,24 @@
                 (-> urakan-tiedot :loppupvm)))
     (throw (SecurityException. "Talvisuolan ylityksen ehdot eivät täyttyneet: Urakka ei ole teidenhoidon hoitourakka, tai sanktion perintäpäivä ei ole urakan viimeisen hoitovuoden aikana."))))
 
+(defn- vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+  [db {:keys [urakka-id urakan-alkupvm paivamaara soveltuvuuskonteksti laji sanktiotyyppi-id]}]
+  (when (and laji
+          (not= :yllapidon_bonus laji)
+          (not= :lupaussanktio laji)
+          paivamaara)
+    (sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+      db
+      {:urakka-id urakka-id
+       :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+       :soveltuvuuskonteksti soveltuvuuskonteksti
+       :laji laji
+       :sanktiotyyppi-id sanktiotyyppi-id})))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama-id urakka kasittelyaika]
+                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio}
+   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
@@ -248,7 +263,17 @@
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
+        paivamaara (or paivamaara perintapvm)
+        _ (when (= :yllapidon_bonus laji)
+            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
+        _ (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+            db
+            {:urakka-id urakka
+             :urakan-alkupvm (:alkupvm urakan-tiedot)
+             :paivamaara paivamaara
+             :soveltuvuuskonteksti soveltuvuuskonteksti
+             :laji laji
+             :sanktiotyyppi-id sanktiotyyppi})
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -331,7 +356,10 @@
         id)
       (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
         (doseq [sanktio (:sanktiot laatupoikkeama)]
-          (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka kasittelyaika))))))
+          (tallenna-laatupoikkeaman-sanktio
+          db user sanktio id urakka kasittelyaika
+          {:paivamaara (:aika laatupoikkeama)
+           :soveltuvuuskonteksti :laatupoikkeama}))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -412,7 +440,10 @@
               (name kasittelytapa) muukasittelytapa
               (:id user)
               id)
-          sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka kasittelyaika)
+          sanktio-id (tallenna-laatupoikkeaman-sanktio
+                       c user sanktio id urakka kasittelyaika
+                       {:paivamaara hk-alkupvm
+                        :soveltuvuuskonteksti :urakka})
           _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
       sanktio-id)))
 
