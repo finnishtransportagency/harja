@@ -35,8 +35,14 @@ function avaaUrakanSuunnittelu(alue, urakkaNimi) {
 }
 
 function asetaKalustoresurssi(dataCy, arvo) {
-		cy.get(`[data-cy="${dataCy}"]`, {timeout: timeout}).should('be.visible').and('not.be.disabled');
-		cy.get(`[data-cy="${dataCy}"]`).clear().type(arvo);
+    cy.get(`[data-cy="${dataCy}"]`, { timeout })
+        .should('be.visible')
+        .and('not.be.disabled');
+
+    cy.get(`[data-cy="${dataCy}"]`, { timeout })
+        .click()
+        .clear()
+        .type(arvo);
 }
 
 describe('Suunnittelu / Kalustoresurssit', function () {
@@ -53,7 +59,6 @@ describe('Suunnittelu / Kalustoresurssit', function () {
 
     it('MHU26-urakka voi tallentaa, tarkastella ja peruuttaa kalustoresurssit', function () {
         tyhjennaKalustoresurssit(MHU26_URAKKA);
-
         avaaUrakanSuunnittelu(ALUE, MHU26_URAKKA);
 
         // Avaa Kalustoresurssit-välilehti
