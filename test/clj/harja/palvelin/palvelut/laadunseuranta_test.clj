@@ -1601,7 +1601,7 @@
                       first
                       :id)]
     (try
-      (let [vastaus (sanktio/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})]
@@ -1666,7 +1666,7 @@
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
