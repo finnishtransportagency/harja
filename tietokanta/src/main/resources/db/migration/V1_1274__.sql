@@ -55,3 +55,42 @@ CREATE UNIQUE INDEX bonus_profiili_rivi_t2_unique_idx
 
 CREATE INDEX bonus_profiili_rivi_haku_idx
     ON bonus_profiili_rivi (bonus_profiili_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, aktiivinen, jarjestys);
+
+-- Parannetaan bonus- ja sanktio-taulujen tietokantakommentteja siten, että
+-- rakenne aukeaa ilman lähdekoodin lukemista.
+
+COMMENT ON TABLE bonus_profiili
+                IS 'Bonusten konfiguraatioprofiili: sitoo urakkatyypin ja sopimuskauden (hoitovuosiväli) yhteen bonuslajijoukkoon. '
+                   'Ratkaistaan ajonaikaisesti urakan urakkatyyppi- ja hoitovuosikontekstin perusteella - '
+                   'vastaa sanktio_profiilia sanktioiden puolella.';
+
+COMMENT ON TABLE bonus_profiili_rivi
+                IS 'Yksi profiiliin kuuluva bonus_laji-rivi. Toimenpiderajauksen_tyyppi määrää, '
+                   'koskeeko rivi kaikkia toimenpideinstansseja (''kaikki'') vai vain tietyn t2-tason '
+                   'toimenpiteen instansseja (''t2-koodi'', jolloin toimenpide_t2_koodi tallentaa '
+                   'toimenpide-taulun t2-tason koodin, esim. ''23150'').';
+
+COMMENT ON TABLE bonus_profiili_laji_esitystiedot
+                IS 'Profiilikohtainen nimi bonuslajille, joka ohittaa bonus_laji.nimi -oletuksen. '
+                   'Käytetään, kun profiili tarvitsee lajista eri nimitystä kuin masterdata - '
+                   'esim. eri sopimuskausien erilaiset nimeämiskäytänteet samalle lajille.';
+
+COMMENT ON TABLE sanktio_profiili
+                IS 'Sanktioiden konfiguraatioprofiili: sitoo urakkatyypin ja sopimuskauden (hoitovuosiväli) yhteen sanktiolajijoukkoon. '
+                   'Ratkaistaan ajonaikaisesti urakan urakkatyyppi- ja hoitovuosikontekstin perusteella - '
+                   'vastaa bonus_profiilia bonusten puolella.';
+
+COMMENT ON TABLE sanktio_profiili_rivi
+                IS 'Yksi profiiliin kuuluva sanktio_laji + sanktiotyyppi -yhdistelmä. '
+                   'Soveltuvuuskonteksti rajaa rivin joko urakkatasolle (''urakka'') tai '
+                   'yksittäiseen laatupoikkeamaan (''laatupoikkeama'').';
+
+COMMENT ON TABLE sanktio_profiili_laji_esitystiedot
+                IS 'Profiilikohtainen nimi sanktiolajille, joka ohittaa sanktio_laji.nimi -oletuksen. '
+                   'Käytetään, kun profiili tarvitsee lajista eri nimitystä kuin masterdata - '
+                   'vastaa bonus_profiili_laji_esitystiedot-taulua bonusten puolella.';
+
+COMMENT ON TABLE sanktio_profiili_rivi_lukittu_summa
+                IS 'Sanktio-profiiliriville sidottu euromääräväli hoitovuosittain. '
+                   'Löydetään profiilirivin ja hoitovuoden yhdistelmällä - mahdollistaa '
+                   'eri sopimuskausien eri euromäärävälit samalle sanktiolajille.';
