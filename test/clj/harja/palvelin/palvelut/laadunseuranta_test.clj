@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
-            [slingshot.slingshot :refer [throw+]]
-            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
