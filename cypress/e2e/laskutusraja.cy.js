@@ -240,19 +240,23 @@ describe('Laskutusraja', function () {
     });
 
     it("Laskutusraja näkyy Muutokset-näkymässä", function () {
-        cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
+
+        cy.intercept('POST', '_/hae-urakan-muutostiedot').as('hae-muutostiedot');
 
         // Siirry Muutoksiin
         cy.get('[data-cy=tabs-taso1-Muutokset]').click();
-        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
+        cy.wait('@hae-muutostiedot');
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+        
         // Tarkista että laskutusraja näkyy
-        cy.get('div.muutosten-vaikutus div.tietoja.muutosten-vaikutus-container span span')
-            .contains('Laskutusraja').parent().next()
+        cy.contains('.muutosten-vaikutus-container .tietokentta .semibold', 'Laskutusraja')
+            .closest('.tietorivi')
+            .find('.tietoarvo .semibold')
             .invoke('text')
-            .then(function (teksti) {
-            expect(trimmaaArvo(teksti)).to.equal(laskutusraja_Kajaani_hoitovuosi1);
-        });
+            .then((teksti) => {
+                expect(trimmaaArvo(teksti)).to.equal(laskutusraja_Kajaani_hoitovuosi1);
+            });
     });
 });
 
