@@ -110,7 +110,8 @@ BEGIN
 
     -- Merkitään toteuma_muutos rivit käsitellyiksi
     UPDATE toteuma_muutos
-    SET kasitelty = TRUE
+    SET kasitelty = TRUE,
+        muokattu = CURRENT_TIMESTAMP
     WHERE toteuma_muutos.urakka_id = u_id
       AND kasitelty = FALSE;
 END;

@@ -1,10 +1,11 @@
-CREATE TABLE IF NOT EXISTS toteuma_muutos (
+CREATE TABLE toteuma_muutos (
   id SERIAL PRIMARY KEY,
   toteuma_id INTEGER NOT NULL,
   urakka_id INTEGER NOT NULL,
   vanha_alkanut TIMESTAMP NOT NULL,
   muutospvm TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  kasitelty BOOLEAN NOT NULL DEFAULT FALSE
+  kasitelty BOOLEAN NOT NULL DEFAULT FALSE,
+  muokattu TIMESTAMP
 );
 
 CREATE OR REPLACE FUNCTION update_toteuma_check_partition()
