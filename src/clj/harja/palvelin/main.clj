@@ -69,6 +69,7 @@
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tehtavat-maarat-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.kalustoresurssit-palvelu :as kalustoresurssit-palvelu]
     [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
@@ -493,6 +494,9 @@
       :tehtavat-maarat (component/using
                          (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
                          [:http-palvelin :db])
+      :kalustoresurssit (component/using
+                          (kalustoresurssit-palvelu/->Kalustoresurssit)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])

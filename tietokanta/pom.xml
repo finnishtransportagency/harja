@@ -43,6 +43,13 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>12.9.0</version>
                 <configuration>
+                    <!--
+                    Asetetaan Flywayn historiataulu saman nimiseksi kuin tuotannossa, jotta voidaan
+                    testata migraatioiden ajamista stg/prod-ympäristöjen toimintaa simuloiden.
+                    Default-asetuksella historiataulu on nimeltään: "flyway_schema_history",
+                    mutta tuotannossa se on "schema_version".
+                    -->
+                    <table>schema_version</table>
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <baselineVersion>0</baselineVersion>
                     <!--
