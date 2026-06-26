@@ -6,6 +6,7 @@
             [slingshot.slingshot :refer [try+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfig]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.testi :refer :all]
@@ -27,7 +28,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfiguraatio-q]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1081,7 +1082,7 @@
             soveltuvuuskonteksti soveltuvuuskontekstit]
       (let [urakka (first (q-map (format "SELECT id, tyyppi, alkupvm FROM urakka WHERE id = %s" urakka-id)))
             odotettu (legacy-sanktio-konfiguraatio-odotus (:db jarjestelma) urakka soveltuvuuskonteksti)
-            toteutunut (ls/hae-urakan-sanktio-konfiguraatio
+            toteutunut (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                          (:db jarjestelma)
                          +kayttaja-jvh+
                          {:urakka-id urakka-id
@@ -1111,7 +1112,7 @@
     (testing "Virheellinen soveltuvuuskonteksti aiheuttaa eksplisiittisen validointivirheen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1121,7 +1122,7 @@
     (testing "Puuttuva soveltuvuuskonteksti ei saa johtaa hiljaiseen onnistumiseen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1142,7 +1143,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
     (is (thrown-with-msg? IllegalArgumentException
           #"Sanktio-profiilia ei loytynyt"
-          (ls/hae-urakan-sanktio-konfiguraatio
+          (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
             (:db jarjestelma)
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -1152,7 +1153,7 @@
 (deftest hae-urakan-sanktio-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls/hae-urakan-sanktio-konfiguraatio
+        profiili-id (get-in (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -1173,7 +1174,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia sanktio-profiileja"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1315,7 +1316,7 @@
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfiguraatio-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1439,7 +1440,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
+        profiili-id (get-in (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -1460,7 +1461,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia bonus-profiileja"
-            (ls/hae-urakan-bonus-konfiguraatio
+            (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1473,7 +1474,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
     (is (thrown-with-msg? IllegalArgumentException
           #"puuttuu rivit toimenpideinstanssiin"
-          (ls/hae-urakan-bonus-konfiguraatio
+          (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
             (:db jarjestelma)
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -1600,7 +1601,7 @@
                       first
                       :id)]
     (try
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (sanktio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})]
@@ -1740,7 +1741,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatun-mhu2026-metadatan
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1762,7 +1763,7 @@
                                     " WHERE splet.sanktio_profiili_id = " profiili-id "\n"
                                     "   AND sl.koodi IN ('A', 'B', 'C')")))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1789,7 +1790,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1802,7 +1803,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1845,7 +1846,7 @@
          :aktiivinen true
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1918,12 +1919,12 @@
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
-                             (ls/hae-sanktio-profiilin-detalji-admin
+                             (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:sanktio-profiili-id mhu21-24-profiili-id}))
           mhu25-vastaus (when mhu25-profiili-id
-                          (ls/hae-sanktio-profiilin-detalji-admin
+                          (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                             (:db jarjestelma)
                             +kayttaja-jvh+
                             {:sanktio-profiili-id mhu25-profiili-id}))
