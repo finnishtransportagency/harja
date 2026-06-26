@@ -45,6 +45,9 @@
           (get-in rivi [:profiilirivi :toimenpide :t2 :koodi]))
         (update-in [:profiilirivi :toimenpide] dissoc :t2))
 
+      (string? (get-in rivi [:profiilirivi :toimenpiderajauksen-tyyppi]))
+      (update-in [:profiilirivi :toimenpiderajauksen-tyyppi] keyword)
+
       (get-in rivi [:profiilirivi :toimenpiderajauksen :tyyppi])
       (->
         (assoc-in [:profiilirivi :toimenpiderajauksen-tyyppi]

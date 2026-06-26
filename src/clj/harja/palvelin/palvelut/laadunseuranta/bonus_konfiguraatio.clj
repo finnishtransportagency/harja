@@ -155,7 +155,9 @@
                :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
                :urakat (->> (get-in rivi [:profiilirivi :urakat])
                          sort
-                         vec)}))))
+                         vec)})))))
+
+(defn- muodosta-bonus-laji-admin
   [rivit]
   (let [eka-rivi (first rivit)
         laji (get-in eka-rivi [:laji :koodi])
