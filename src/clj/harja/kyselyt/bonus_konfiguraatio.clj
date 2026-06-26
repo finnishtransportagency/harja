@@ -39,17 +39,17 @@
       (get-in rivi [:profiilirivi :urakat])
       (update-in [:profiilirivi :urakat] normalisoi-vektoriksi)
 
-      (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi])
+      (get-in rivi [:profiilirivi :toimenpide :t2 :koodi])
       (->
-        (assoc-in [:profiilirivi :toimenpideinstanssi-t2-koodi]
-          (get-in rivi [:profiilirivi :toimenpideinstanssi :t2 :koodi]))
-        (update-in [:profiilirivi :toimenpideinstanssi] dissoc :t2))
+        (assoc-in [:profiilirivi :toimenpide-t2-koodi]
+          (get-in rivi [:profiilirivi :toimenpide :t2 :koodi]))
+        (update-in [:profiilirivi :toimenpide] dissoc :t2))
 
-      (get-in rivi [:profiilirivi :toimenpideinstanssi :rajauksen :tyyppi])
+      (get-in rivi [:profiilirivi :toimenpiderajauksen :tyyppi])
       (->
-        (assoc-in [:profiilirivi :toimenpideinstanssi-rajauksen-tyyppi]
-          (keyword (get-in rivi [:profiilirivi :toimenpideinstanssi :rajauksen :tyyppi])))
-        (update-in [:profiilirivi :toimenpideinstanssi] dissoc :rajauksen))
+        (assoc-in [:profiilirivi :toimenpiderajauksen-tyyppi]
+          (keyword (get-in rivi [:profiilirivi :toimenpiderajauksen :tyyppi])))
+        (update :profiilirivi dissoc :toimenpiderajauksen))
 
       (get-in rivi [:profiili :urakkatyyppi])
       (muunna-urakkatyyppi [:profiili :urakkatyyppi])

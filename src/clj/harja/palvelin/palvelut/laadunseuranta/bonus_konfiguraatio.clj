@@ -141,23 +141,21 @@
   [rivit]
   (->> rivit
     (sort-by (juxt #(get-in % [:profiilirivi :jarjestys])
-               #(get-in % [:profiilirivi :toimenpideinstanssi-rajauksen-tyyppi])
-               #(get-in % [:profiilirivi :toimenpideinstanssi-t2-koodi])
+               #(get-in % [:profiilirivi :toimenpiderajauksen-tyyppi])
+               #(get-in % [:profiilirivi :toimenpide-t2-koodi])
                #(get-in % [:profiilirivi :id])))
     (mapv (fn [rivi]
-            (let [rajauksen-tyyppi (get-in rivi [:profiilirivi :toimenpideinstanssi-rajauksen-tyyppi])
-                  t2-koodi (get-in rivi [:profiilirivi :toimenpideinstanssi-t2-koodi])]
+            (let [rajauksen-tyyppi (get-in rivi [:profiilirivi :toimenpiderajauksen-tyyppi])
+                  t2-koodi (get-in rivi [:profiilirivi :toimenpide-t2-koodi])]
               {:id (get-in rivi [:profiilirivi :id])
                :jarjestys (get-in rivi [:profiilirivi :jarjestys])
-               :toimenpideinstanssi-rajauksen-tyyppi rajauksen-tyyppi
-               :toimenpideinstanssi-t2-koodi t2-koodi
+               :toimenpiderajauksen-tyyppi rajauksen-tyyppi
+               :toimenpide-t2-koodi t2-koodi
                :toimenpideinstanssi-teksti (if (= :kaikki rajauksen-tyyppi) "Kaikki" t2-koodi)
                :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
                :urakat (->> (get-in rivi [:profiilirivi :urakat])
                          sort
-                         vec)})))))
-
-(defn- muodosta-bonus-laji-admin
+                         vec)}))))
   [rivit]
   (let [eka-rivi (first rivit)
         laji (get-in eka-rivi [:laji :koodi])
