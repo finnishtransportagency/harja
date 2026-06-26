@@ -19,7 +19,9 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
+            [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.kommentit :as kommentit]
@@ -29,7 +31,6 @@
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as sanktio-konfiguraatio]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
             [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
@@ -42,16 +43,10 @@
             [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
-            [harja.geo :as geo]
-
-            [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]
-            [clojure.core.async :as async]))
-
+            [harja.id :refer [id-olemassa?]]))
 
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
