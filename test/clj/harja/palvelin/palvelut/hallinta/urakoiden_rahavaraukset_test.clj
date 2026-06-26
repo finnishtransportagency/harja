@@ -36,7 +36,7 @@
         tietokanta-urakoiden-maara (count mhurakat)
         ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta ja muutamalla on pari enemmän.
         ;; Tämä on kovakoodattu määrä ja jos se muuttuu, niin tämä testi failaa.
-        tietokantaan-lisatty-maara 51
+        tietokantaan-lisatty-maara 54
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})]
     ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.

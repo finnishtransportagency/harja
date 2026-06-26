@@ -7,6 +7,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
+            [harja.views.urakka.suunnittelu.kalustoresurssit :as kalustoresurssit]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -33,6 +34,7 @@
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
     :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
+    :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
     :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
 
 (defn suunnittelu [ur]
@@ -88,7 +90,7 @@
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
                   (some-> alkupvm pvm/vuosi (>= 2025)))
             ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat])
+            [tehtavat-maarat-nakyma/tehtavat-maarat]) 
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -128,4 +130,13 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])
+          
+          "Kalustoresurssit"
+          :kalustoresurssit
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (valilehti-mahdollinen? :kalustoresurssit ur))
+            ^{:key "kalustoresurssit"}
+            [kalustoresurssit/kalustoresurssit])]]))))
