@@ -120,7 +120,7 @@
         ;; Lähetetään viesti ja tarkistetaan kuittaus
         viesti-id (str (UUID/randomUUID))
         vastaus (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                              integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                              integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -151,7 +151,7 @@
         integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         vastaus
         (try+ (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                                    integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                    integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                                            {:status 200
                                                                             :header "jotain"
                                                                             :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -378,7 +378,7 @@
                            :vastuuhenkilo true
                            :varahenkilo true}))
                   sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                  integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                  integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                          {:status 200
                                                           :header "jotain"
                                                           :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -486,7 +486,7 @@
 
 (deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan
   (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                        {:status 200
                                                         :header "jotain"
                                                         :body (onnistunut-sahkopostikuittaus nil)})]

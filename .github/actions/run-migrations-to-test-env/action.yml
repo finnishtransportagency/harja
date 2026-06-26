@@ -1,0 +1,49 @@
+name: '[Test-envs] Run migrations'
+description: 'Ajaa migraatiot testiympäristön kantaan testiympäristön lambdalla'
+
+inputs:
+  commit-sha:
+    description: ''
+    required: true
+    
+  function-name:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: '[Test-envs] Run migrations'
+      env:
+        SHA: ${{ inputs.commit-sha }}
+        FUNCTION_NAME: ${{ inputs.function-name }}
+        TIMEOUT: "900"
+      run: |
+        echo "[Test-environments] Run migrations using lambda ${FUNCTION_NAME} (Timeout ${TIMEOUT} sec)"
+
+        if [[ "$FUNCTION_NAME" != *"HarjaTestMigrationRunner"* ]]; then
+          echo "Refusing to invoke: ${FUNCTION_NAME}. Only test migration runners are allowed in this workflow."
+        exit 1
+        fi
+  
+        readonly payload="{\"payload\":{\"sha\":\"${SHA}\"}}"
+
+        aws lambda invoke \
+          --function-name "$FUNCTION_NAME" \
+          --invocation-type "RequestResponse" \
+          --cli-read-timeout "${TIMEOUT}" \
+          --cli-binary-format raw-in-base64-out \
+          --payload "$payload" \
+          result.json
+
+        RESULT=$(cat result.json)
+
+        if [[ "$RESULT" = "success" ]]; then
+          echo "[Test-environments] Migration successful"
+        else
+          echo "[Test-environments] Migration failed!"
+          echo "Result: $RESULT"
+          exit 1
+        fi
+      shell: bash
+      

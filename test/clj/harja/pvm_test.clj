@@ -95,6 +95,11 @@
   (is (true? (pvm/sama-kuukausi? (pvm/->pvm-date-timeksi "3.4.2020")
                                  (t/local-date 2020 4 25)))))
 
+(deftest aika->sql
+  (is (nil? (pvm/aika->sql nil)))
+  (is (instance? java.sql.Timestamp
+        (pvm/aika->sql (t/date-time 2024 1 2 3 4 5)))))
+
 (deftest kuukauden-numero-toimii-myos-umlautilla
   (is (= 6 (pvm/kuukauden-numero "kesäkuu")))
   (is (= 6 (pvm/kuukauden-numero "kesakuu")))
@@ -514,3 +519,10 @@
               #inst "2022-12-14T22:00:00.000-00:00"
               #inst "2023-01-14T22:00:00.000-00:00"
               #inst "2023-02-14T22:00:00.000-00:00"])))))
+
+
+(deftest hoitokauden-alkuvuosi-test
+  (is (= 2021 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "1.10.2021")))))
+  (is (= 2021 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "30.9.2022")))))
+  (is (= 2020 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "30.9.2021")))))
+  (is (= 2020 (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (pvm/->pvm "1.10.2020"))))))

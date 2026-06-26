@@ -338,7 +338,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! elementin-id]} _]
-  (let [generoitu-id (str (gensym "livi-pudotusvalikko"))  ;; fallback, ei sido elementin-id:tä
+  (let [generoitu-id (str (gensym "livi-pudotusvalikko")) ;; fallback, ei sido elementin-id:tä
         auki? (atom false)
         term (atom "")
         valikko-ref (atom false)
@@ -864,7 +864,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
        [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-              :style {:width leveys :white-space "pre-line"}}
+              :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
            :varoitus (ikonit/livicon-warning-sign)
@@ -876,7 +876,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
          (when toissijainen-viesti
-           [:div {:style {:padding-left "8px" :font-weight 400}}
+           [:div {:style {:font-weight 400}}
             toissijainen-viesti])]
         (when sulje-nappi-id
           ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
