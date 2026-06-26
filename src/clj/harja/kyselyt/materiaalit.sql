@@ -377,6 +377,9 @@ UPDATE toteuma_materiaali
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
+-- name: hae-toteuma-id-materiaali-idlla  
+SELECT toteuma FROM toteuma_materiaali WHERE id = :id;
+
 -- name: hae-materiaalikoodin-id-nimella
 SELECT id
 FROM materiaalikoodi
