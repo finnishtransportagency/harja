@@ -54,49 +54,49 @@ summamaaritykset (profiili_nimi,
                   jarjestys) AS (
     VALUES
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / A-ryhma / kiinteat summat (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2025 / A-ryhma / automaattiset summat (urakka ja lattupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'A', 13, 'urakka',         'kiintea_euromaara',  4000.00::numeric, NULL::text, 1),
-        ('teiden-hoito-mhu2025', 'A', 14, 'urakka',         'kiintea_euromaara',  3000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'A', 17, 'urakka',         'kiintea_euromaara',  2000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'A', 13, 'laatupoikkeama', 'kiintea_euromaara',  4000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'A', 14, 'laatupoikkeama', 'kiintea_euromaara',  3000.00,          NULL,       1),
-        ('teiden-hoito-mhu2025', 'A', 17, 'laatupoikkeama', 'kiintea_euromaara',  2000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'A', 13, 'urakka',         'automaattinen',  4000.00::numeric, NULL::text, 1),
+        ('teiden-hoito-mhu2025', 'A', 14, 'urakka',         'automaattinen',  3000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'A', 17, 'urakka',         'automaattinen',  2000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'A', 13, 'laatupoikkeama', 'automaattinen',  4000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'A', 14, 'laatupoikkeama', 'automaattinen',  3000.00,          NULL,       1),
+        ('teiden-hoito-mhu2025', 'A', 17, 'laatupoikkeama', 'automaattinen',  2000.00,          NULL,       1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / B-ryhmä / kiinteät summat (urakka ja laatupoikkeama)
+        -- teiden-hoito-mhu2025 / B-ryhmä / automaattiset summat (urakka ja laatupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'B', 13, 'urakka',         'kiintea_euromaara',  8000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'B', 14, 'urakka',         'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'B', 17, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'B', 13, 'laatupoikkeama', 'kiintea_euromaara',  8000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'B', 14, 'laatupoikkeama', 'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'B', 17, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 13, 'urakka',         'automaattinen',  8000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'urakka',         'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 17, 'urakka',         'automaattinen',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 13, 'laatupoikkeama', 'automaattinen',  8000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 14, 'laatupoikkeama', 'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'B', 17, 'laatupoikkeama', 'automaattinen',  4000.00, NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / C-ryhmä / kiinteät summat (urakka ja laatupoikkeama)
+        -- teiden-hoito-mhu2025 / C-ryhmä / automaattiset summat (urakka ja laatupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'C', 10, 'urakka',         'kiintea_euromaara',  1000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'C', 12, 'urakka',         'kiintea_euromaara', 10000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'C', 11, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'C', 10, 'laatupoikkeama', 'kiintea_euromaara',  1000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'C', 12, 'laatupoikkeama', 'kiintea_euromaara', 10000.00, NULL, 1),
-        ('teiden-hoito-mhu2025', 'C', 11, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 10, 'urakka',         'automaattinen',  1000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 12, 'urakka',         'automaattinen', 10000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 11, 'urakka',         'automaattinen',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 10, 'laatupoikkeama', 'automaattinen',  1000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 12, 'laatupoikkeama', 'automaattinen', 10000.00, NULL, 1),
+        ('teiden-hoito-mhu2025', 'C', 11, 'laatupoikkeama', 'automaattinen',  4000.00, NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / C-ryhmä / ohjetekstit (urakka ja laatupoikkeama)
+        -- teiden-hoito-mhu2025 / C-ryhmä / manuaaliset kirjaukset ohjetekstillä (urakka ja laatupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'C',  8, 'urakka',         'kiintea_euromaara',  2000.00,
+        ('teiden-hoito-mhu2025', 'C',  8, 'urakka',         'automaattinen',  2000.00,
             'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2025', 'C',  9, 'urakka',         'vapaa_ohjeteksti',   NULL,
+        ('teiden-hoito-mhu2025', 'C',  9, 'urakka',         'manuaalinen',   NULL,
             'Tilaajalla tehtäväkohtaisen sanktion perimisen lisäksi oikeus teettaa työ ulkopuolisella '
             'ja periä ko. kustannukset urakoitsijalta kaksinkertaisena. '
             'Jos tekemätön työ on sen luonteinen, ettei sitä viivästymisen vuoksi voida enää tehdä, '
             'tilaajalla on tehtäväkohtaisen sanktion perimisen lisäksi oikeus periä tekemätöntä työtä '
             'vastaava kustannusosuus urakoitsijalta kaksinkertaisena.', 1),
-        ('teiden-hoito-mhu2025', 'C',  8, 'laatupoikkeama', 'kiintea_euromaara',  2000.00,
+        ('teiden-hoito-mhu2025', 'C',  8, 'laatupoikkeama', 'automaattinen',  2000.00,
             'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2025', 'C',  9, 'laatupoikkeama', 'vapaa_ohjeteksti',   NULL,
+        ('teiden-hoito-mhu2025', 'C',  9, 'laatupoikkeama', 'manuaalinen',   NULL,
             'Tilaajalla tehtäväkohtaisen sanktion perimisen lisäksi oikeus teettaa työ ulkopuolisella '
             'ja periä ko. kustannukset urakoitsijalta kaksinkertaisena. '
             'Jos tekemätön työ on sen luonteinen, ettei sitä viivästymisen vuoksi voida enää tehdä, '
@@ -104,101 +104,110 @@ summamaaritykset (profiili_nimi,
             'vastaava kustannusosuus urakoitsijalta kaksinkertaisena.', 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2025 / standalone-lajit / vain urakka-konteksti
+        -- teiden-hoito-mhu2025 / standalone-lajit / manuaalinen kirjaus ohjetekstillä / vain urakka-konteksti
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2025', 'pohjavesisuolan_ylitys',     7, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2025', 'pohjavesisuolan_ylitys',     7, 'urakka', 'manuaalinen', NULL,
             '1 000 euroa / ylitystonni / pohjavesialueen ajorata-km '
             '(kohtuullistaminen mahdollista poikkeuksellisen lämpimänä talvena)', 1),
-        ('teiden-hoito-mhu2025', 'talvisuolan_ylitys',         7, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2025', 'talvisuolan_ylitys',         7, 'urakka', 'manuaalinen', NULL,
             '5 % ylittävältä osalta sanktio: toteutunut suolan keskihinta x 1,1 '
             '(kohtuullistaminen mahdollista poikkeuksellisen lämpimänä talvena)', 1),
-        ('teiden-hoito-mhu2025', 'laskutus_yli_laskutusrajan', 0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2025', 'laskutus_yli_laskutusrajan', 0, 'urakka', 'manuaalinen', NULL,
             '20 % summasta, joka on laskutettu yli', 1),
-        ('teiden-hoito-mhu2025', 'tenttikeskiarvo-sanktio',    0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2025', 'tenttikeskiarvo-sanktio',    0, 'urakka', 'manuaalinen', NULL,
             'Asiakirjan taulukon mukainen sanktio jokaiselta alkavalta kuukaudelta, '
             'kun pistekeskiarvo alittuu tarjouksessa annetusta pistekeskiarvosta.', 1),
-        ('teiden-hoito-mhu2025', 'vaihtosanktio',              0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2025', 'vaihtosanktio',              0, 'urakka', 'manuaalinen', NULL,
             '1 % tarjouksen mukaisesta tavoitehinnasta', 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / A-ryhma / kiinteat summat (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2026 / A-ryhma / automaattiset summat (urakka ja lattupoikkeama)
         -- Huom: A+18+lattupoikkeama on jo seedattu V1_1259:ssa (jarjestys 1 ja 2).
         --       ON CONFLICT DO NOTHING suojaa olemassaolevan datan.
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'A', 18, 'urakka',         'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 19, 'urakka',         'kiintea_euromaara',  5000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 20, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 17, 'urakka',         'kiintea_euromaara',  3000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 21, 'urakka',         'kiintea_euromaara',  2000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 18, 'laatupoikkeama', 'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 19, 'laatupoikkeama', 'kiintea_euromaara',  5000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 20, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 17, 'laatupoikkeama', 'kiintea_euromaara',  3000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'A', 21, 'laatupoikkeama', 'kiintea_euromaara',  2000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 18, 'urakka',         'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 19, 'urakka',         'automaattinen',  5000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 20, 'urakka',         'automaattinen',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 17, 'urakka',         'automaattinen',  3000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 21, 'urakka',         'automaattinen',  2000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 18, 'laatupoikkeama', 'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 19, 'laatupoikkeama', 'automaattinen',  5000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 20, 'laatupoikkeama', 'automaattinen',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 17, 'laatupoikkeama', 'automaattinen',  3000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'A', 21, 'laatupoikkeama', 'automaattinen',  2000.00, NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / B-ryhma / kiinteat summat (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2026 / B-ryhma / automaattiset summat (urakka ja lattupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'B', 18, 'urakka',         'kiintea_euromaara', 14000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 19, 'urakka',         'kiintea_euromaara', 11000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 20, 'urakka',         'kiintea_euromaara',  9000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 17, 'urakka',         'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 21, 'urakka',         'kiintea_euromaara',  4000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 18, 'laatupoikkeama', 'kiintea_euromaara', 14000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 19, 'laatupoikkeama', 'kiintea_euromaara', 11000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 20, 'laatupoikkeama', 'kiintea_euromaara',  9000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 17, 'laatupoikkeama', 'kiintea_euromaara',  6000.00, NULL, 1),
-        ('teiden-hoito-mhu2026', 'B', 21, 'laatupoikkeama', 'kiintea_euromaara',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 18, 'urakka',         'automaattinen', 14000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 19, 'urakka',         'automaattinen', 11000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 20, 'urakka',         'automaattinen',  9000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 17, 'urakka',         'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 21, 'urakka',         'automaattinen',  4000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 18, 'laatupoikkeama', 'automaattinen', 14000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 19, 'laatupoikkeama', 'automaattinen', 11000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 20, 'laatupoikkeama', 'automaattinen',  9000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 17, 'laatupoikkeama', 'automaattinen',  6000.00, NULL, 1),
+        ('teiden-hoito-mhu2026', 'B', 21, 'laatupoikkeama', 'automaattinen',  4000.00, NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / standalone-lajit / vain urakka-konteksti
+        -- teiden-hoito-mhu2026 / standalone-lajit / automaattiset summat / vain urakka-konteksti
         -- -----------------------------------------------------------------------
         ('teiden-hoito-mhu2026', 'asiakirjamerkintojen_paikkansa_pitamattomyys', 0, 'urakka',
-            'kiintea_euromaara', 20000.00, NULL, 1),
+            'automaattinen', 20000.00, NULL, 1),
         ('teiden-hoito-mhu2026', 'muu_sopimuksen_vastainen_toiminta', 0, 'urakka',
-            'kiintea_euromaara', 6000.00,  NULL, 1),
+            'automaattinen', 6000.00,  NULL, 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / C-ryhma / ohjetekstit (urakka ja lattupoikkeama)
+        -- teiden-hoito-mhu2026 / C-ryhma / automaattiset summat ohjetekstilla (urakka ja lattupoikkeama)
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'C', 18, 'urakka',         'kiintea_euromaara', 4000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 19, 'urakka',         'kiintea_euromaara', 3000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 20, 'urakka',         'kiintea_euromaara', 2000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 17, 'urakka',         'kiintea_euromaara', 2000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 21, 'urakka',         'kiintea_euromaara', 1000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 18, 'laatupoikkeama', 'kiintea_euromaara', 4000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 19, 'laatupoikkeama', 'kiintea_euromaara', 3000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 20, 'laatupoikkeama', 'kiintea_euromaara', 2000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 17, 'laatupoikkeama', 'kiintea_euromaara', 2000.00, 'alkavalta viikolta', 1),
-        ('teiden-hoito-mhu2026', 'C', 21, 'laatupoikkeama', 'kiintea_euromaara', 1000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 18, 'urakka',         'automaattinen', 4000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 19, 'urakka',         'automaattinen', 3000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 20, 'urakka',         'automaattinen', 2000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 17, 'urakka',         'automaattinen', 2000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 21, 'urakka',         'automaattinen', 1000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 18, 'laatupoikkeama', 'automaattinen', 4000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 19, 'laatupoikkeama', 'automaattinen', 3000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 20, 'laatupoikkeama', 'automaattinen', 2000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 17, 'laatupoikkeama', 'automaattinen', 2000.00, 'alkavalta viikolta', 1),
+        ('teiden-hoito-mhu2026', 'C', 21, 'laatupoikkeama', 'automaattinen', 1000.00, 'alkavalta viikolta', 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / tyon_tekematta_jattaminen / vain urakka-konteksti
+        -- teiden-hoito-mhu2026 / tyon_tekematta_jattaminen / manuaalinen kirjaus / vain urakka-konteksti
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 22, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 22, 'urakka', 'manuaalinen', NULL,
             'Käyttäjä kirjaa tiekm-määrän, Harja laskee sanktion. 200,00 € / tiekm.', 1),
-        ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 23, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 23, 'urakka', 'manuaalinen', NULL,
             'Kirjataan käsin.', 1),
 
         -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / muut standalone-lajit / vain urakka-konteksti
+        -- teiden-hoito-mhu2026 / muut standalone-lajit / manuaalinen kirjaus ohjetekstilla / vain urakka-konteksti
         -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'pohjavesisuolan_ylitys',             0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'pohjavesisuolan_ylitys',             0, 'urakka', 'manuaalinen', NULL,
             '1 000 euroa / ylitystonni / pohjavesialueen ajorata-km '
             '(kohtuullistaminen mahdollista poikkeuksellisen lämpimänä talvena)', 1),
-        ('teiden-hoito-mhu2026', 'talvisuolan_kokonaiskayton_ylitys',  0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'talvisuolan_kokonaiskayton_ylitys',  0, 'urakka', 'manuaalinen', NULL,
             '5 % ylittävältä osalta sanktio: toteutunut suolan keskihinta x 1,1 '
             '(kohtuullistaminen mahdollista poikkeuksellisen lämpimänä talvena)', 1),
-        ('teiden-hoito-mhu2026', 'laskutus_yli_laskutusrajan',         0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'laskutus_yli_laskutusrajan',         0, 'urakka', 'manuaalinen', NULL,
             'Sanktio on 20 % summasta, joka on laskutettu yli.', 1),
-        ('teiden-hoito-mhu2026', 'laskutus_ilman_laskutuskelpoisuutta', 0, 'urakka', 'vapaa_ohjeteksti', NULL,
+        ('teiden-hoito-mhu2026', 'laskutus_ilman_laskutuskelpoisuutta', 0, 'urakka', 'manuaalinen', NULL,
             'Sanktio on 20 % laskun summasta, joka ei ollut laskutuskelpoinen.', 1),
         ('teiden-hoito-mhu2026', 'vastuuhenkilon_tenttipistemaara_alentuminen', 0, 'urakka',
-            'vapaa_ohjeteksti', NULL,
+            'manuaalinen', NULL,
             'Asiakirjan taulukon mukainen sanktio jokaiselta alkavalta kuukaudelta, '
             'kun pistekeskiarvo alittuu tarjouksessa annetusta pistekeskiarvosta.', 1),
-        ('teiden-hoito-mhu2026', 'vastuuhenkilon_vaihto', 0, 'urakka', 'vapaa_ohjeteksti', NULL,
-            '1 % tarjouksen mukaisesta tavoitehinnasta.', 1)
+        ('teiden-hoito-mhu2026', 'vastuuhenkilon_vaihto', 0, 'urakka', 'manuaalinen', NULL,
+            '1 % tarjouksen mukaisesta tavoitehinnasta.', 1),
+
+        -- -----------------------------------------------------------------------
+        -- teiden-hoito-mhu2026 / bonukset / vain urakka-konteksti
+        -- Huom: maaraaikaan_tehtavien_toiden_aiempi_toteutusbonus, asiakastyytyvaisyysbonus ja
+        --       liikennevahinkojen_aiheuttajien_selvitysbonus kirjataan normaalikirjauksina ilman
+        --       summamaaritys-rivia - niilla ei ole vakiosummaa eika ohjetekstia.
+        -- -----------------------------------------------------------------------
+        ('teiden-hoito-mhu2026', 'alihankkijatyytyvaisyyskyselybonus', 0, 'urakka',
+            'automaattinen', 5000.00, NULL, 1)
 )
 INSERT INTO sanktio_profiili_rivi_summamaaritys (sanktio_profiili_rivi_id,
                                                  maaritystapa,
