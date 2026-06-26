@@ -18,6 +18,7 @@
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
+  urakat-suunnittelu-kalustoresurssit
   urakat-toteumat-suola
   urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
