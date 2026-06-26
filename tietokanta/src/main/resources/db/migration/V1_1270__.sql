@@ -1,28 +1,82 @@
--- MHU2025 ja MHU2026-sanktiolajien puuttuvat sanktiolaji-enumista.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'tyon_tekematta_jattaminen' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'tyon_tekematta_jattaminen';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'asiakirjamerkintojen_paikkansa_pitamattomyys' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'asiakirjamerkintojen_paikkansa_pitamattomyys';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'muu_sopimuksen_vastainen_toiminta' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'muu_sopimuksen_vastainen_toiminta';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'talvisuolan_kokonaiskayton_ylitys' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'talvisuolan_kokonaiskayton_ylitys';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'laskutus_ilman_laskutuskelpoisuutta' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'laskutus_ilman_laskutuskelpoisuutta';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'vastuuhenkilon_tenttipistemaara_alentuminen' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'vastuuhenkilon_tenttipistemaara_alentuminen';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'vastuuhenkilon_vaihto' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'vastuuhenkilon_vaihto';
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'laskutus_yli_laskutusrajan' AND enumtypid = 'sanktiolaji'::regtype) THEN
-    ALTER TYPE sanktiolaji ADD VALUE 'laskutus_yli_laskutusrajan';
-  END IF;
-END $$;
+-- MH-urakat. Vuoden 2026 sopimusmuutosten tehtäväpäivitykset.
+
+-- Päivitetään vanhat viherhoidon tehtävät päättymään vuoden 2025 urakoihin.
+UPDATE tehtava
+SET voimassaolo_loppuvuosi = 2025,
+    muokattu = current_timestamp,
+    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
+WHERE NIMI IN ('Nurmetuksen hoito / niitto T1/E1',
+               'Nurmetuksen hoito / niitto T2/E2',
+               'Puiden ja pensaiden hoito T1/E1',
+               'Puiden ja pensaiden hoito T2/E2/N1');
+
+-- Lisätään viherhoitoon vuodesta 2026 lähtien voimassa olevia uusia tehtäviä luokitusmuutoksen takia.
+INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
+                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, nopeusrajoitus,
+                     "maaramitattava?")
+VALUES ('Nurmetuksen hoito / niitto VH1',
+        (select id from toimenpide where koodi = '23116'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        '-', 680, '{kokonaishintainen}',
+        (select id from tehtavaryhma where nimi = 'N - Nurmetukset ja muut vihertyöt'),
+        true,
+        2026,
+        false,
+        false,
+        false,
+        108,
+        false);
+
+INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
+                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, nopeusrajoitus,
+                     "maaramitattava?")
+VALUES ('Nurmetuksen hoito / niitto VH2',
+        (select id from toimenpide where koodi = '23116'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        '-', 690, '{kokonaishintainen}',
+        (select id from tehtavaryhma where nimi = 'N - Nurmetukset ja muut vihertyöt'),
+        true,
+        2026,
+        false,
+        false,
+        false,
+        108,
+        false);
+
+INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
+                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, nopeusrajoitus,
+                     "maaramitattava?")
+VALUES ('Puiden ja pensaiden hoito VH1',
+        (select id from toimenpide where koodi = '23116'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        '-', 700, '{kokonaishintainen}',
+        (select id from tehtavaryhma where nimi = 'N - Nurmetukset ja muut vihertyöt'),
+        true,
+        2026,
+        false,
+        false,
+        false,
+        108,
+        false);
+
+INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
+                     voimassaolo_alkuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", aluetieto, nopeusrajoitus,
+                     "maaramitattava?")
+VALUES ('Puiden ja pensaiden hoito VH2',
+        (select id from toimenpide where koodi = '23116'),
+        current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'),
+        '-', 710, '{kokonaishintainen}',
+        (select id from tehtavaryhma where nimi = 'N - Nurmetukset ja muut vihertyöt'),
+        true,
+        2026,
+        false,
+        false,
+        false,
+        108,
+        false);
+
+

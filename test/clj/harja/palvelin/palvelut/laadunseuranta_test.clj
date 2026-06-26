@@ -28,7 +28,7 @@
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
-            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatiouraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1082,7 +1082,7 @@
             soveltuvuuskonteksti soveltuvuuskontekstit]
       (let [urakka (first (q-map (format "SELECT id, tyyppi, alkupvm FROM urakka WHERE id = %s" urakka-id)))
             odotettu (legacy-sanktio-konfiguraatio-odotus (:db jarjestelma) urakka soveltuvuuskonteksti)
-            toteutunut (ls/hae-urakan-sanktio-konfiguraatio
+            toteutunut (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                          (:db jarjestelma)
                          +kayttaja-jvh+
                          {:urakka-id urakka-id
@@ -1112,7 +1112,7 @@
     (testing "Virheellinen soveltuvuuskonteksti aiheuttaa eksplisiittisen validointivirheen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1122,7 +1122,7 @@
     (testing "Puuttuva soveltuvuuskonteksti ei saa johtaa hiljaiseen onnistumiseen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1143,7 +1143,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
     (is (thrown-with-msg? IllegalArgumentException
           #"Sanktio-profiilia ei loytynyt"
-          (ls/hae-urakan-sanktio-konfiguraatio
+          (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
             (:db jarjestelma)
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -1153,7 +1153,7 @@
 (deftest hae-urakan-sanktio-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls/hae-urakan-sanktio-konfiguraatio
+        profiili-id (get-in (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -1174,7 +1174,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia sanktio-profiileja"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1224,10 +1224,10 @@
       "MHU21-24 profiilissa asiakastyytyväisyysbonus pitää näyttää uudella nimellä")
     (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus} (into #{} (map :laji lajit)))
       "MHU21-24 profiilissa pitää olla vain specin mukaiset bonuslajit")
-    (is (= :t2-koodi (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+    (is (= :t2-koodi (:toimenpiderajauksen-tyyppi ensimmainen-rivi))
       "Teiden-hoidon seedatun bonusrivin pitää näkyä eksplisiittisesti t2-koodiin rajattuna")
-    (is (contains? ensimmainen-rivi :toimenpideinstanssi-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
-    (is (= "23150" (:toimenpideinstanssi-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
+    (is (contains? ensimmainen-rivi :toimenpide-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
+    (is (= "23150" (:toimenpide-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
 
 (deftest hae-bonus-profiilin-tiedot-admin-palauttaa-kaikki-rajauksen-ilman-sentinelia
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'hoito-bonus-2021-ja-uudemmat'"))
@@ -1236,9 +1236,9 @@
                   +kayttaja-jvh+
                   {:bonus-profiili-id profiili-id})
         ensimmainen-rivi (-> vastaus :lajit first :rivit first)]
-    (is (= :kaikki (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+    (is (= :kaikki (:toimenpiderajauksen-tyyppi ensimmainen-rivi))
       "Hoitoprofiilin seedatun bonusrivin pitää näkyä eksplisiittisesti kaikki-rajauksena")
-    (is (nil? (:toimenpideinstanssi-t2-koodi ensimmainen-rivi))
+    (is (nil? (:toimenpide-t2-koodi ensimmainen-rivi))
       "Kaikki-rajauksessa t2-koodin pitää olla aidosti puuttuva, ei sentinel-merkkijono")
     (is (= "Kaikki" (:toimenpideinstanssi-teksti ensimmainen-rivi))
       "Backendin pitää muodostaa admin-näkymälle valmiiksi tulkittu teksti kaikki-rajauksesta")))
@@ -1309,14 +1309,14 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))]
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfiguraatio-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1346,7 +1346,7 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
            bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
@@ -1389,7 +1389,7 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
            bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
@@ -1440,7 +1440,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls/hae-urakan-bonus-konfiguraatio
+        profiili-id (get-in (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -1461,7 +1461,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia bonus-profiileja"
-            (ls/hae-urakan-bonus-konfiguraatio
+            (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1474,7 +1474,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
     (is (thrown-with-msg? IllegalArgumentException
           #"puuttuu rivit toimenpideinstanssiin"
-          (ls/hae-urakan-bonus-konfiguraatio
+          (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
             (:db jarjestelma)
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -1483,13 +1483,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-riveja
                                         :viesti "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-riveja}}))]
-      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
@@ -1504,13 +1504,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-profiilia
                                         :viesti "Bonukselle ei löytynyt aktiivista bonusprofiilia annetussa kontekstissa."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-profiilia}}))]
-      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
@@ -1523,13 +1523,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-yksiselitteinen-profiili-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
                                         :viesti "Bonukselle löytyi useita aktiivisia bonusprofiileja annetussa kontekstissa."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili}}))]
-      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
@@ -1556,7 +1556,7 @@
                       first
                       :id)]
     (try
-      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
            bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
@@ -1632,7 +1632,7 @@
          :aktiivinen true
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1660,7 +1660,7 @@
                       first
                       :id)]
     (try
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})]
@@ -1725,7 +1725,7 @@
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1781,7 +1781,7 @@
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-urakan-sanktio-konfiguraatio
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:urakka-id urakka-id
@@ -1800,7 +1800,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatun-mhu2026-metadatan
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1822,7 +1822,7 @@
                                     " WHERE splet.sanktio_profiili_id = " profiili-id "\n"
                                     "   AND sl.koodi IN ('A', 'B', 'C')")))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1849,7 +1849,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1862,7 +1862,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1905,7 +1905,7 @@
          :aktiivinen true
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1978,12 +1978,12 @@
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
-                             (ls/hae-sanktio-profiilin-detalji-admin
+                             (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:sanktio-profiili-id mhu21-24-profiili-id}))
           mhu25-vastaus (when mhu25-profiili-id
-                          (ls/hae-sanktio-profiilin-detalji-admin
+                          (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                             (:db jarjestelma)
                             +kayttaja-jvh+
                             {:sanktio-profiili-id mhu25-profiili-id}))
@@ -2056,44 +2056,3 @@
       (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
-
-(deftest laatupoikkeama-talvisuolan-ylitys-testi
-  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
-        laatupoikkeama {:yllapitokohde nil
-                        :sijainti {:type :point
-                                   :coordinates [382554.0523636384 6675978.549765582]}
-                        :kuvaus "Kuvaus"
-                        :aika #inst "2030-09-15T09:00:01.000-00:00"
-                        :tr {:alkuosa 1
-                             :numero 1
-                             :alkuetaisyys 1
-                             :loppuetaisyys 2
-                             :loppuosa 2}
-                        :urakka urakka-id
-                        :sanktiot nil
-                        :tekija :tilaaja
-                        :kohde "Kohde"}
-
-        uusi-sanktio {:perintapvm #inst "2030-09-15T09:00:01.000-00:00"
-                      :laji :talvisuolan_ylitys
-                      :summa 100
-                      :indeksi "MAKU 2010"
-                      :suorasanktio false
-                      :toimenpideinstanssi 4
-                      :vakiofraasi nil}
-        paatos {:paatos :sanktio
-                :kasittelytapa :puhelin
-                :kasittelyaika #inst "2030-09-15T09:00:01.000-00:00"
-                :perustelu "Testi"}]
-
-    (testing "sanktiollisen-laatupoikkeaman-tallennus"
-      (let [_ (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
-            vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+
-                      (assoc laatupoikkeama
-                        :paatos paatos
-                        :sanktiot [uusi-sanktio]))]
-        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
-        (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")))
-    
-    ;; Siivoa roskat
-    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))

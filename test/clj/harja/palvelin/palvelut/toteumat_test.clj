@@ -543,12 +543,12 @@
 (deftest materiaalin-pvm-muuttuu-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-        sopimuksen-kaytetty-mat-ennen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                       [6 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                       [sopimus-id #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
         hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
@@ -598,7 +598,7 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
         hoitoluokittaiset-ennen-odotettu (set [])
         hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 99 4 200M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
