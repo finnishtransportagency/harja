@@ -1722,7 +1722,7 @@
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-urakan-sanktio-konfiguraatio
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:urakka-id urakka-id
