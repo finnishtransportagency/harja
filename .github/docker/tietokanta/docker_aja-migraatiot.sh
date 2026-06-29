@@ -26,7 +26,7 @@ mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokant
 
 ## Aja migraatiot alusta
 mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
--DbaselineVersion="0" -DbaseLineOnMigrate="true" \
+-Dflyway.baselineVersion="0" -Dflyway.baselineOnMigrate="true" -Dflyway.table="schema_version" \
  flyway:migrate
 
 echo "Migraatio ajettu."

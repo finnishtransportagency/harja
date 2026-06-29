@@ -167,6 +167,7 @@
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
+(def kasittelytavat-mhu25 [:valikatselmus])
 
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
@@ -221,6 +222,17 @@
     :arvonvahennyssanktio "Arvonvähennys"
     :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
     :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+
+    ;; MHU2026-uudet sanktiolajit - varmistetaan raporttien toimivuus
+    :tyon_tekematta_jattaminen "Työn tekemättä jättäminen"
+    :asiakirjamerkintojen_paikkansa_pitamattomyys "Asiakirjamerkintöjen paikkansa pitämättömyys"
+    :muu_sopimuksen_vastainen_toiminta "Muu sopimuksen vastainen toiminta"
+    :talvisuolan_kokonaiskayton_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :laskutus_yli_laskutusrajan "Laskutus yli laskutusrajan"
+    :laskutus_ilman_laskutuskelpoisuutta "Laskutus ilman laskutuskelpoisuutta"
+    :vastuuhenkilon_tenttipistemaara_alentuminen "Vastuuhenkilön tenttipistemäärän alentuminen"
+    :vastuuhenkilon_vaihto "Vastuuhenkilön vaihto"
+
     :lupaussanktio "Lupaussanktio"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"

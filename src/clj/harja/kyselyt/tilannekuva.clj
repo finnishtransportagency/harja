@@ -9,7 +9,7 @@
 (defqueries "harja/kyselyt/tilannekuva.sql"
   {:positional? true})
 
-(declare hallintayksikoiden-urakat hae-tyokoneselitteet urakoitsijan-urakat hae-ilmoitukset
+(declare hallintayksikoiden-urakat-ilman-valaistus-urakoita hae-tyokoneselitteet urakoitsijan-urakat hae-ilmoitukset
   hae-paikkaukset-nykytilanteeseen hae-paikkaukset-historiakuvaan hae-paikkauskohteet-tilannekuvaan
   hae-paallystysten-viimeisin-muokkaus hae-laatupoikkeamat hae-turvallisuuspoikkeamat hae-toimenpidekoodit
   hae-toteumat hae-tarkastukset hae-tyokonereitit-kartalle hae-paallystysten-reitit hae-tietyomaat

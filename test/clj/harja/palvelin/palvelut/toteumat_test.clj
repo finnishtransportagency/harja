@@ -139,21 +139,24 @@
       (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))
 
+(defn- luo-testi-bonus [urakka-id sopimus-id toimenpideinstanssi-id lisatieto tyyppi rahasumma]
+  {:urakka-id urakka-id
+   :sopimus sopimus-id
+   :toimenpideinstanssi toimenpideinstanssi-id
+   :pvm (pvm/->pvm "15.10.2021")
+   :laskutuskuukausi (pvm/->pvm "15.10.2021")
+   :rahasumma rahasumma
+   :indeksin_nimi "MAKU 2020"
+   :tyyppi tyyppi
+   :lisatieto lisatieto
+   :palauta-tallennettu? true})
+
 (deftest tallenna-erilliskustannus-hylkaa-bonusprofiilin-vastaisen-mhu-bonuksen-domain-virheena
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
         lisatieto "Bonusprofiilin vastainen write-path testi"
-        bonus {:urakka-id urakka-id
-               :sopimus sopimus-id
-               :toimenpideinstanssi toimenpideinstanssi-id
-               :pvm (pvm/->pvm "15.10.2021")
-               :laskutuskuukausi (pvm/->pvm "15.10.2021")
-               :rahasumma 1234.0
-               :indeksin_nimi "MAKU 2020"
-               :tyyppi "muu-bonus"
-               :lisatieto lisatieto
-               :palauta-tallennettu? true}
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "muu-bonus" 1234.0)
         maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
     (try+
       (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
@@ -169,16 +172,7 @@
         sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
         lisatieto "Bonusprofiilin mukainen write-path testi"
-        bonus {:urakka-id urakka-id
-               :sopimus sopimus-id
-               :toimenpideinstanssi toimenpideinstanssi-id
-               :pvm (pvm/->pvm "15.10.2021")
-               :laskutuskuukausi (pvm/->pvm "15.10.2021")
-               :rahasumma 4321.0
-               :indeksin_nimi "MAKU 2020"
-               :tyyppi "asiakastyytyvaisyysbonus"
-               :lisatieto lisatieto
-               :palauta-tallennettu? true}
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "asiakastyytyvaisyysbonus" 4321.0)
         tallennettu (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)]
     (is (= urakka-id (:urakka tallennettu)) "Sallittu bonus tallentuu edelleen oikealle urakalle")
     (is (= toimenpideinstanssi-id (:toimenpideinstanssi tallennettu)) "Sallittu bonus tallentuu oikeaan toimenpideinstanssiin")
@@ -263,22 +257,26 @@
                     WHERE id = " (get-in lisatty [:toteuma :id])))))
 
 
+(defn- luo-testi-yksikkohintainen-tyo [urakka-id sopimus-id tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm lisatieto]
+  {:urakka-id urakka-id
+   :sopimus-id sopimus-id
+   :alkanut tyon-pvm :paattynyt tyon-pvm
+   :hoitokausi-aloituspvm hoitokausi-aloituspvm
+   :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+   :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+   :tyyppi :yksikkohintainen
+   :toteuma-id nil
+   :lisatieto lisatieto
+   :tehtavat [{:toimenpidekoodi 1368 :maara 333}]})
+
 (deftest tallenna-yksikkohintainen-toteuma-testi
   (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
         hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1) ; 1.10.2005
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30) ;30.9.2006
         urakka-id @oulun-alueurakan-2005-2010-id
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id urakka-id
-             :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
-             :hoitokausi-aloituspvm hoitokausi-aloituspvm
-             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :yksikkohintainen
-             :toteuma-id nil
-             :lisatieto toteuman-lisatieto
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        tyo (luo-testi-yksikkohintainen-tyo urakka-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+              tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm toteuman-lisatieto)
         hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
                            :urakan-toteumien-tehtavien-summat
                            +kayttaja-jvh+
@@ -362,16 +360,8 @@
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30) ;30.9.2006
         urakka-id @oulun-alueurakan-2005-2010-id
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id urakka-id
-             :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
-             :hoitokausi-aloituspvm hoitokausi-aloituspvm
-             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :yksikkohintainen
-             :toteuma-id nil
-             :lisatieto toteuman-lisatieto
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        tyo (luo-testi-yksikkohintainen-tyo urakka-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+              tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm toteuman-lisatieto)
         hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
                            :urakan-toteumien-tehtavien-summat
                            +kayttaja-jvh+
@@ -553,12 +543,12 @@
 (deftest materiaalin-pvm-muuttuu-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-        sopimuksen-kaytetty-mat-ennen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                     [6 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [6 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                       [6 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                       [sopimus-id #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
         hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
@@ -608,7 +598,7 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[6 #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
         hoitoluokittaiset-ennen-odotettu (set [])
         hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 99 4 200M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id

@@ -82,7 +82,18 @@
         ;; Lista ylläpitokohteista ylläpitourakoiden kohteenvalintaa varten
         yllapitokohteet (conj
                           @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                          {:id nil})]
+                          {:id nil})
+        ;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
+        ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
+        toimenpideinstanssit (cond
+                               (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                               (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
+
+                               ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
+                               :else
+                               @tiedot-urakka/urakan-toimenpideinstanssit)
+        hae-tpi-nimi-idlla (fn [tpi-id]
+                          (some #(when (= tpi-id (:tpi_id %)) (:tpi_nimi %)) toimenpideinstanssit))]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
@@ -169,33 +180,33 @@
        :pakollinen? true
        ::lomake/col-luokka "col-xs-12"
        :validoi [[:ei-tyhja "Anna perustelu"]]}
-      {:otsikko "Kulun kohdistus"
-       :nimi :toimenpideinstanssi
-       :pakollinen? true
-       :tyyppi :komponentti
-       ::lomake/col-luokka "col-xs-12"
-       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                      (let [;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
-                            ;; Lisäksi alihankintabonus laitetaan MHU Ylläpidon alle, kun se tehdään 1.10.2022 jälkeen, muut Hoidon johtoon
-                            toimenpideinstanssit (cond
-                                                   (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                                                   (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
-
-                                                   ;; Muille urakakkatyypeille näytetään kaikki toimenpideinstanssit
-                                                   :else
-                                                   @tiedot-urakka/urakan-toimenpideinstanssit)]
-                        [:<>
-                         [yleiset/livi-pudotusvalikko
-                          {:valitse-oletus? true
-                           :vayla-tyyli? true
-                           :pakollinen? true
-                           :format-fn :tpi_nimi
-                           :valinta (first toimenpideinstanssit)
-                           ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
-                           :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
-                           :valitse-fn #(muokkaa-lomaketta
-                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
-                          toimenpideinstanssit]]))}
+      ;; näytä lukutilassa vain teksti
+      (if (and voi-muokata? (not lukutila?))
+       {:otsikko "Kulun kohdistus"
+        :nimi :toimenpideinstanssi
+        :pakollinen? true
+        :tyyppi :komponentti
+        ::lomake/col-luokka "col-xs-12"
+        :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                       [:<>
+                        [yleiset/livi-pudotusvalikko
+                         {:valitse-oletus? true
+                          :vayla-tyyli? true
+                          :pakollinen? true
+                          :format-fn :tpi_nimi
+                          :valinta (first toimenpideinstanssit)
+                          ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
+                          :disabled (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)
+                          :valitse-fn #(muokkaa-lomaketta
+                                         (assoc data :toimenpideinstanssi (:tpi_id %)))}
+                         toimenpideinstanssit]])}
+        {:otsikko "Kulun kohdistus"
+         :nimi :toimenpideinstanssi
+         :pakollinen? true
+         :tyyppi :string
+         :hae #(do
+                 (hae-tpi-nimi-idlla (:toimenpideinstanssi %)))
+         ::lomake/col-luokka "col-xs-12"})
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"

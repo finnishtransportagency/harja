@@ -1,35 +1,96 @@
-ALTER TABLE sanktio_profiili_rivi_lukittu_summa
-    RENAME TO sanktio_profiili_rivi_summamaaritys;
+-- Nimetaan bonus_profiili_rivi-taulun sarakkeet selkeammiksi:
+--   toimenpideinstanssi_t2_koodi         -> toimenpide_t2_koodi
+--   toimenpideinstanssi_rajauksen_tyyppi -> toimenpiderajauksen_tyyppi
+--
+-- Perustelut: t2-koodi loytyy toimenpide-taulusta, ei toimenpideinstanssi-taulusta.
+-- Ketju: toimenpideinstanssi.toimenpide -> t3 -> t3.emo = t2 -> t2.koodi
 
-ALTER INDEX sanktio_profiili_rivi_lukittu_summa_haku_idx
-    RENAME TO sanktio_profiili_rivi_summamaaritys_haku_idx;
+ALTER TABLE bonus_profiili_rivi
+  RENAME COLUMN toimenpideinstanssi_t2_koodi
+              TO toimenpide_t2_koodi;
 
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD COLUMN maaritystapa TEXT,
-    ADD COLUMN ohjeteksti  TEXT;
+ALTER TABLE bonus_profiili_rivi
+  RENAME COLUMN toimenpideinstanssi_rajauksen_tyyppi
+              TO toimenpiderajauksen_tyyppi;
 
--- automaattinen = jarjestelma tayttaa summan profiilista (voidaan laajentaa laskenta-automaatioksi)
--- manuaalinen   = kayttaja kirjaa summan kasin; ohjeteksti vapaaehtoinen
-UPDATE sanktio_profiili_rivi_summamaaritys
-   SET maaritystapa = 'automaattinen'
- WHERE maaritystapa IS NULL;
+-- Paivitetaan CHECK-rajoitteet (poistetaan nimet generoimattomat vanhat, lisataan nimetyt uudet).
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT conname
+      FROM pg_constraint
+     WHERE conrelid = 'bonus_profiili_rivi'::regclass
+       AND contype = 'c'
+  LOOP
+    EXECUTE format('ALTER TABLE bonus_profiili_rivi DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+END;
+$$;
 
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ALTER COLUMN maaritystapa SET DEFAULT 'automaattinen',
-    ALTER COLUMN maaritystapa SET NOT NULL,
-    ALTER COLUMN summa_euroina DROP NOT NULL;
+ALTER TABLE bonus_profiili_rivi
+  ADD CONSTRAINT bonus_profiili_rivi_toimenpiderajauksen_tyyppi_check
+    CHECK (toimenpiderajauksen_tyyppi IN ('kaikki', 't2-koodi')),
+  ADD CONSTRAINT bonus_profiili_rivi_toimenpide_t2_koodi_check
+    CHECK (
+        (toimenpiderajauksen_tyyppi = 'kaikki'   AND toimenpide_t2_koodi IS NULL)
+        OR
+        (toimenpiderajauksen_tyyppi = 't2-koodi' AND toimenpide_t2_koodi IS NOT NULL
+                                                  AND btrim(toimenpide_t2_koodi) <> '')
+    );
 
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_maaritystapa_check
-        CHECK (maaritystapa IN ('automaattinen', 'manuaalinen')),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_ohjeteksti_check
-        CHECK (ohjeteksti IS NULL OR btrim(ohjeteksti) <> ''),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_sisalto_check
-        CHECK (
-            (maaritystapa = 'automaattinen' AND summa_euroina IS NOT NULL)
-            OR
-            (maaritystapa = 'manuaalinen' AND (summa_euroina IS NOT NULL OR ohjeteksti IS NOT NULL))
-        );
+-- Paivitetaan indeksit uusille sarakkeiden nimille
+DROP INDEX bonus_profiili_rivi_kaikki_unique_idx;
+DROP INDEX bonus_profiili_rivi_t2_unique_idx;
+DROP INDEX bonus_profiili_rivi_haku_idx;
 
-COMMENT ON TABLE sanktio_profiili_rivi_summamaaritys
-                IS 'Sanktio-profiiliriviin sidotut summan maaritykset, joissa voi olla euromaara ja ohjeteksti samalla rivilla.';
+CREATE UNIQUE INDEX bonus_profiili_rivi_kaikki_unique_idx
+    ON bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id)
+    WHERE toimenpiderajauksen_tyyppi = 'kaikki';
+
+CREATE UNIQUE INDEX bonus_profiili_rivi_t2_unique_idx
+    ON bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpide_t2_koodi)
+    WHERE toimenpiderajauksen_tyyppi = 't2-koodi';
+
+CREATE INDEX bonus_profiili_rivi_haku_idx
+    ON bonus_profiili_rivi (bonus_profiili_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, aktiivinen, jarjestys);
+
+-- Parannetaan bonus- ja sanktio-taulujen tietokantakommentteja siten, että
+-- rakenne aukeaa ilman lähdekoodin lukemista.
+
+COMMENT ON TABLE bonus_profiili
+                IS 'Bonusten konfiguraatioprofiili: sitoo urakkatyypin ja sopimuskauden (hoitovuosiväli) yhteen bonuslajijoukkoon. '
+                   'Ratkaistaan ajonaikaisesti urakan urakkatyyppi- ja hoitovuosikontekstin perusteella - '
+                   'vastaa sanktio_profiilia sanktioiden puolella.';
+
+COMMENT ON TABLE bonus_profiili_rivi
+                IS 'Yksi profiiliin kuuluva bonus_laji-rivi. Toimenpiderajauksen_tyyppi määrää, '
+                   'koskeeko rivi kaikkia toimenpideinstansseja (''kaikki'') vai vain tietyn t2-tason '
+                   'toimenpiteen instansseja (''t2-koodi'', jolloin toimenpide_t2_koodi tallentaa '
+                   'toimenpide-taulun t2-tason koodin, esim. ''23150'').';
+
+COMMENT ON TABLE bonus_profiili_laji_esitystiedot
+                IS 'Profiilikohtainen nimi bonuslajille, joka ohittaa bonus_laji.nimi -oletuksen. '
+                   'Käytetään, kun profiili tarvitsee lajista eri nimitystä kuin masterdata - '
+                   'esim. eri sopimuskausien erilaiset nimeämiskäytänteet samalle lajille.';
+
+COMMENT ON TABLE sanktio_profiili
+                IS 'Sanktioiden konfiguraatioprofiili: sitoo urakkatyypin ja sopimuskauden (hoitovuosiväli) yhteen sanktiolajijoukkoon. '
+                   'Ratkaistaan ajonaikaisesti urakan urakkatyyppi- ja hoitovuosikontekstin perusteella - '
+                   'vastaa bonus_profiilia bonusten puolella.';
+
+COMMENT ON TABLE sanktio_profiili_rivi
+                IS 'Yksi profiiliin kuuluva sanktio_laji + sanktiotyyppi -yhdistelmä. '
+                   'Soveltuvuuskonteksti rajaa rivin joko urakkatasolle (''urakka'') tai '
+                   'yksittäiseen laatupoikkeamaan (''laatupoikkeama'').';
+
+COMMENT ON TABLE sanktio_profiili_laji_esitystiedot
+                IS 'Profiilikohtainen nimi sanktiolajille, joka ohittaa sanktio_laji.nimi -oletuksen. '
+                   'Käytetään, kun profiili tarvitsee lajista eri nimitystä kuin masterdata - '
+                   'vastaa bonus_profiili_laji_esitystiedot-taulua bonusten puolella.';
+
+COMMENT ON TABLE sanktio_profiili_rivi_lukittu_summa
+                IS 'Sanktio-profiiliriville sidottu euromääräväli hoitovuosittain. '
+                   'Löydetään profiilirivin ja hoitovuoden yhdistelmällä - mahdollistaa '
+                   'eri sopimuskausien eri euromäärävälit samalle sanktiolajille.';

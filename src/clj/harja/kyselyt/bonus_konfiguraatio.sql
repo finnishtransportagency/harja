@@ -115,8 +115,8 @@ SELECT bp.id                    AS profiili_id,
        bl.automaattinen         AS laji_automaattinen,
        bpr.id                   AS profiilirivi_id,
        bpr.jarjestys            AS profiilirivi_jarjestys,
-       bpr.toimenpideinstanssi_rajauksen_tyyppi AS profiilirivi_toimenpideinstanssi_rajauksen_tyyppi,
-       bpr.toimenpideinstanssi_t2_koodi AS profiilirivi_toimenpideinstanssi_t2_koodi
+       bpr.toimenpiderajauksen_tyyppi AS profiilirivi_toimenpiderajauksen_tyyppi,
+       bpr.toimenpide_t2_koodi AS profiilirivi_toimenpide_t2_koodi
   FROM bonus_profiili bp
        JOIN bonus_profiili_rivi bpr
          ON bpr.bonus_profiili_id = bp.id
@@ -135,9 +135,9 @@ SELECT bp.id                    AS profiili_id,
        LEFT JOIN toimenpide t2
          ON t2.id = t3.emo
  WHERE bp.id = :bonus_profiili_id
-   AND (bpr.toimenpideinstanssi_rajauksen_tyyppi = 'kaikki'
-     OR (bpr.toimenpideinstanssi_rajauksen_tyyppi = 't2-koodi'
-       AND bpr.toimenpideinstanssi_t2_koodi = t2.koodi))
+   AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
+     OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
+       AND bpr.toimenpide_t2_koodi = t2.koodi))
    AND (NOT EXISTS (
           SELECT 1
             FROM bonus_profiili_rivi_urakka bpru
@@ -171,8 +171,8 @@ SELECT bp.id                    AS profiili_id,
        bl.automaattinen         AS laji_automaattinen,
        bpr.id                   AS profiilirivi_id,
        bpr.jarjestys            AS profiilirivi_jarjestys,
-       bpr.toimenpideinstanssi_rajauksen_tyyppi AS profiilirivi_toimenpideinstanssi_rajauksen_tyyppi,
-       bpr.toimenpideinstanssi_t2_koodi AS profiilirivi_toimenpideinstanssi_t2_koodi,
+       bpr.toimenpiderajauksen_tyyppi AS profiilirivi_toimenpiderajauksen_tyyppi,
+       bpr.toimenpide_t2_koodi AS profiilirivi_toimenpide_t2_koodi,
        COUNT(DISTINCT bpru.urakka_id)  AS profiilirivi_urakkarajausten_maara,
        ARRAY_REMOVE(ARRAY_AGG(DISTINCT COALESCE(u.lyhyt_nimi, u.nimi)), NULL) AS profiilirivi_urakat
   FROM bonus_profiili bp
@@ -208,9 +208,9 @@ SELECT bp.id                    AS profiili_id,
           bl.automaattinen,
           bpr.id,
           bpr.jarjestys,
-          bpr.toimenpideinstanssi_rajauksen_tyyppi,
-          bpr.toimenpideinstanssi_t2_koodi
+          bpr.toimenpiderajauksen_tyyppi,
+          bpr.toimenpide_t2_koodi
  ORDER BY bl.jarjestys,
           bpr.jarjestys,
-          bpr.toimenpideinstanssi_rajauksen_tyyppi,
-          bpr.toimenpideinstanssi_t2_koodi;
+          bpr.toimenpiderajauksen_tyyppi,
+          bpr.toimenpide_t2_koodi;
