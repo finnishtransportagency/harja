@@ -1,39 +1,4 @@
--- Vaihe 1: Lisataan MHU25 B-ryhmaan puuttuvat profiilirivit
---           (B + sanktiotyyppi 10/11/12 ei ole V1_1259-seedissa teiden-hoito-mhu2025-profiilille)
-WITH integraatio AS (
-    SELECT id
-      FROM kayttaja
-     WHERE kayttajanimi = 'Integraatio'
-),
-uudet_profiilirivit (profiili_nimi, laji_koodi, sanktiotyyppi_koodi, soveltuvuuskonteksti, jarjestys) AS (
-    VALUES ('teiden-hoito-mhu2025', 'B', 10, 'urakka',         4),
-           ('teiden-hoito-mhu2025', 'B', 10, 'laatupoikkeama', 4),
-           ('teiden-hoito-mhu2025', 'B', 12, 'urakka',         5),
-           ('teiden-hoito-mhu2025', 'B', 12, 'laatupoikkeama', 5),
-           ('teiden-hoito-mhu2025', 'B', 11, 'urakka',         6),
-           ('teiden-hoito-mhu2025', 'B', 11, 'laatupoikkeama', 6)
-)
-INSERT INTO sanktio_profiili_rivi (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti,
-                                   jarjestys, aktiivinen, lisametatiedot, luoja, luotu, muokkaaja, muokattu)
-SELECT sp.id,
-       sl.id,
-       st.id,
-       pr.soveltuvuuskonteksti,
-       pr.jarjestys,
-       TRUE,
-       NULL,
-       (SELECT id FROM integraatio),
-       CURRENT_TIMESTAMP,
-       (SELECT id FROM integraatio),
-       CURRENT_TIMESTAMP
-  FROM uudet_profiilirivit pr
-       JOIN sanktio_profiili sp ON sp.nimi = pr.profiili_nimi
-       JOIN sanktio_laji     sl ON sl.koodi = pr.laji_koodi
-       JOIN sanktiotyyppi    st ON st.koodi = pr.sanktiotyyppi_koodi
-    ON CONFLICT (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti) DO NOTHING;
-
-
--- Vaihe 2: Lisataan summamaaritykset
+-- Lisataan summamaaritykset
 --
 -- Lahde: plans/HARJA-2470-sanktioiden-ja-bonusten-euromaarat/summamaaritysten-syottopohja.md
 -- Profiilirivi-koodi- ja kontekstiparit johdettu V1_1259-seedista.
@@ -178,7 +143,7 @@ summamaaritykset (profiili_nimi,
         ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 22, 'urakka', 'manuaalinen', NULL,
             'Käyttäjä kirjaa tiekm-määrän, Harja laskee sanktion. 200,00 € / tiekm.', 1),
         ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 23, 'urakka', 'manuaalinen', NULL,
-            'Kirjataan käsin.', 1),
+            NULL, 1),
 
         -- -----------------------------------------------------------------------
         -- teiden-hoito-mhu2026 / muut standalone-lajit / manuaalinen kirjaus ohjetekstilla / vain urakka-konteksti
