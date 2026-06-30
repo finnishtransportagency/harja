@@ -1,10 +1,22 @@
--- Lisataan summamaaritykset
---
--- Lahde: plans/HARJA-2470-sanktioiden-ja-bonusten-euromaarat/summamaaritysten-syottopohja.md
--- Profiilirivi-koodi- ja kontekstiparit johdettu V1_1259-seedista.
--- "urakka + laatupoikkeama" -merkinta = sama summamaaritys lisataan molempiin konteksteihin.
--- Rivit joilla vain "urakka" = soveltuvuuskonteksti on 'urakka', ei lattupoikkeama-riviä.
+-- Päivitetään voi_puolittaa_omailmoituksella = TRUE Mhu26
+-- A- ja B-ryhmän sanktio-profiiliriveille kaikissa A/B-sanktiotyypeissä,
+-- sekä urakka- että laatupoikkeama-kontekstissa.
+UPDATE sanktio_profiili_rivi spr
+   SET voi_puolittaa_omailmoituksella = TRUE,
+       muokkaaja = i.id,
+       muokattu = CURRENT_TIMESTAMP
+  FROM sanktio_profiili sp,
+       sanktio_laji sl,
+       kayttaja i
+ WHERE i.kayttajanimi = 'Integraatio'
+   AND sp.nimi = 'teiden-hoito-mhu2026'
+   AND spr.sanktio_profiili_id = sp.id
+   AND spr.sanktio_laji_id = sl.id
+   AND sl.koodi IN ('A', 'B')
+   AND spr.soveltuvuuskonteksti IN ('urakka', 'laatupoikkeama');
+
 WITH integraatio AS (
+
     SELECT id
       FROM kayttaja
      WHERE kayttajanimi = 'Integraatio'
@@ -142,8 +154,6 @@ summamaaritykset (profiili_nimi,
         -- -----------------------------------------------------------------------
         ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 22, 'urakka', 'manuaalinen', NULL,
             'Käyttäjä kirjaa tiekm-määrän, Harja laskee sanktion. 200,00 € / tiekm.', 1),
-        ('teiden-hoito-mhu2026', 'tyon_tekematta_jattaminen', 23, 'urakka', 'manuaalinen', NULL,
-            NULL, 1),
 
         -- -----------------------------------------------------------------------
         -- teiden-hoito-mhu2026 / muut standalone-lajit / manuaalinen kirjaus ohjetekstilla / vain urakka-konteksti
