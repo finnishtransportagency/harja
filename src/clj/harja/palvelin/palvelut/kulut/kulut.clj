@@ -171,8 +171,8 @@
                                                                                    :alkupvm (:alkupvm hakuehdot)
                                                                                    :loppupvm (:loppupvm hakuehdot)})
                                            (q/hae-urakan-toteutuneet-kustannukset db {:urakka (:urakka-id hakuehdot)
-                                                                                   :alkupvm (:alkupvm hakuehdot)
-                                                                                   :loppupvm (:loppupvm hakuehdot)}))))
+                                                                                      :alkupvm (:alkupvm hakuehdot)
+                                                                                      :loppupvm (:loppupvm hakuehdot)}))))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -191,14 +191,14 @@
   (let [kulut (concat (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
                                                               :alkupvm alkupvm
                                                               :loppupvm loppupvm})
-                      (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
-                                                                 :alkupvm alkupvm
-                                                                 :loppupvm loppupvm}))
+                (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
+                                                           :alkupvm alkupvm
+                                                           :loppupvm loppupvm}))
         ;; Lasketaan summa kaikista kohdistuksista
         summa (reduce (fn [acc kulu]
                         (+ acc (or (tyokalut/pyorista-kahteen-decimaaliin (:summa kulu)) 0)))
-                      0
-                      kulut)]
+                0
+                kulut)]
     summa))
 
 (defn hae-kulu-kohdistuksineen
@@ -314,8 +314,7 @@
                       (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi loppupvm)))]
     (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
-               (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
-                 " sisällä. Urakka id = " urakka-id))))))
+               (str "Laskun pvm " (some-> erapaiva (pvm/pvm)) " ei ole koontilaskun kuukauden sisällä."))))))
 
 (defn poista-kulun-kohdistus
   "Poistaa yksittäisen rivin kulun kohdistuksista. Palauttaa päivittyneen kantatilanteen."
@@ -627,7 +626,7 @@
                      (str "Virheellinen urakka-id " urakka-id))))
         hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuosi)
         laskutusraja-rivi (first (q/hae-urakan-laskutusraja db {:urakka-id urakka-id
-                                                                 :hoitokausinro hoitokausinro}))
+                                                                :hoitokausinro hoitokausinro}))
         laskutusraja (:laskutusraja laskutusraja-rivi)
         laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)]
     {:laskutusraja laskutusraja
