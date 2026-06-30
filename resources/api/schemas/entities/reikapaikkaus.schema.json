@@ -30,7 +30,7 @@
       "required": true,
       "type": "object",
       "additionalProperties": false,
-      "description": "Reikäpaikkauskohteen sijainti. Anna vähintään joko tieosoite, pistegeometria tai viivageometria. Useammankin paikannustiedon voi lähettää.",
+      "description": "Reikäpaikkauskohteen sijainti. Raportoi vähintään joko tieosoite, pistegeometria tai viivageometria. Useammankin paikannustiedon voi lähettää. Jos tieosoite ei ole tiedossa, mutta käyttäjä kertoo kaistan/ajoradan manuaalisesti valitsemalla, lähetä tieto erillisessä kaista- ja/tai ajorata-kentässä.",
       "minProperties": 1,
       "properties": {
         "tieosoite": {
@@ -53,17 +53,19 @@
         }
       }
     },
-    "ajorata": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajorata",
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 2
-    },
-    "kaista": {
+    "kaista-kasinkirjaus": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kaista",
       "type": "integer",
       "minimum": 11,
-      "maximum": 39
+      "maximum": 39,
+      "description": "Käyttäjän käsin valitsema kaista. Pyri välittämään kaista, jos et välitä sijainniksi koneelta saatua tieosoitetta."
+    },
+    "ajorata-kasinkirjaus": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajorata",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "Käyttäjän käsin valitsema ajorata. Pyri välittämään ajorata, jos et välitä käsin kirjattua kaistatietoa tai sijainniksi koneelta saatua tieosoitetta."
     },
     "tyomenetelma": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
