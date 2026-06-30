@@ -1713,7 +1713,7 @@
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-         :maaritystapa "kiintea_euromaara"
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
          :ohjeteksti "alkavalta viikolta"
          :jarjestys 1
@@ -1721,14 +1721,14 @@
          :muokkaaja integraatio-id})
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-         :maaritystapa "kiintea_euromaara"
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-         :maaritystapa "vapaa_ohjeteksti"
+         :maaritystapa "manuaalinen"
          :summa_euroina nil
          :ohjeteksti "tai sopimuksen mukaan"
          :jarjestys 3
@@ -1741,15 +1741,15 @@
             rivi (-> vastaus :sisalto first :lajit first :rivit first)]
         (is (= true (:voi-puolittaa-omailmoituksella rivi))
           "Admin-palautuksen pitää näyttää profiilirivin 50 % -sääntö")
-        (is (= [{:maaritystapa :kiintea-euromaara
+        (is (= [{:maaritystapa :automaattinen
                  :summa-euroina 6000M
                  :ohjeteksti "alkavalta viikolta"
                  :jarjestys 1}
-                {:maaritystapa :kiintea-euromaara
+                {:maaritystapa :automaattinen
                  :summa-euroina 12000M
                  :ohjeteksti nil
                  :jarjestys 2}
-                {:maaritystapa :vapaa-ohjeteksti
+                {:maaritystapa :manuaalinen
                   :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]
@@ -1794,21 +1794,21 @@
     (try
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-        :maaritystapa "kiintea_euromaara"
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
          :jarjestys 1
          :luoja integraatio-id
          :muokkaaja integraatio-id})
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-        :maaritystapa "kiintea_euromaara"
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
       (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
-         :maaritystapa "vapaa_ohjeteksti"
+         :maaritystapa "manuaalinen"
          :summa_euroina nil
          :ohjeteksti "tai sopimuksen mukaan"
          :jarjestys 3
@@ -1823,15 +1823,15 @@
             sanktiotyyppi (-> vastaus :sanktio-lajit first :sanktiotyypit first)]
         (is (= true (:voi-puolittaa-omailmoituksella sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiilirivin 50 % -metadata sanktiotyypin yhteydessä")
-        (is (= [{:maaritystapa :kiintea-euromaara
+        (is (= [{:maaritystapa :automaattinen
                  :summa-euroina 6000M
                  :ohjeteksti nil
                  :jarjestys 1}
-                {:maaritystapa :kiintea-euromaara
+                {:maaritystapa :automaattinen
                  :summa-euroina 12000M
                  :ohjeteksti nil
                  :jarjestys 2}
-                {:maaritystapa :vapaa-ohjeteksti
+                {:maaritystapa :manuaalinen
                   :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]

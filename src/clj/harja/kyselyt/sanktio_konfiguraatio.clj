@@ -61,7 +61,7 @@
   [summamaaritykset]
   (->> summamaaritykset
     (keep (fn [{:keys [maaritystapa summa-euroina]}]
-            (when (= :kiintea-euromaara maaritystapa)
+            (when (= :automaattinen maaritystapa)
               summa-euroina)))
     vec))
 

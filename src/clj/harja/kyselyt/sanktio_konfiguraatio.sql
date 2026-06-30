@@ -110,7 +110,7 @@ SELECT sp.id                    AS profiili_id,
        COALESCE((SELECT ARRAY_AGG(sprsm.summa_euroina ORDER BY sprsm.jarjestys)
                    FROM sanktio_profiili_rivi_summamaaritys sprsm
                   WHERE sprsm.sanktio_profiili_rivi_id = spr.id
-                    AND sprsm.maaritystapa = 'kiintea_euromaara'
+                    AND sprsm.maaritystapa = 'automaattinen'
                     AND sprsm.summa_euroina IS NOT NULL),
                 ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
@@ -166,7 +166,7 @@ SELECT sp.id                    AS profiili_id,
        COALESCE((SELECT ARRAY_AGG(sprsm.summa_euroina ORDER BY sprsm.jarjestys)
                    FROM sanktio_profiili_rivi_summamaaritys sprsm
                   WHERE sprsm.sanktio_profiili_rivi_id = spr.id
-                    AND sprsm.maaritystapa = 'kiintea_euromaara'
+                    AND sprsm.maaritystapa = 'automaattinen'
                     AND sprsm.summa_euroina IS NOT NULL),
                 ARRAY[]::NUMERIC[]) AS profiilirivi_lukitut_summat,
        st.id                    AS sanktiotyyppi_id,
