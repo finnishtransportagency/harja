@@ -62,9 +62,16 @@
      :fmt #(get % :koodi)}
     {:nimi :voi-puolittaa-omailmoituksella :otsikko "50 %" :leveys 0.7 :muokattava? (constantly false)
      :fmt #(if % "Kyllä" "Ei")}
-    {:nimi :lukitut-summat :otsikko "Lukitut summat" :leveys 1.2 :muokattava? (constantly false)
+    {:nimi :summamaaritykset :otsikko "Summamääritykset" :leveys 1.8 :muokattava? (constantly false)
      :fmt #(if (seq %)
-             (str/join ", " (map str %))
+             (str/join "; "
+               (map (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                      (str/join " "
+                        (cond-> []
+                          summa-euroina (conj (str summa-euroina "€"))
+                          ohjeteksti (conj (str "(" ohjeteksti ")"))
+                          (and (nil? summa-euroina) (nil? ohjeteksti)) (conj (name maaritystapa)))))
+                 %))
              "-")}
     {:nimi :sanktiotyyppi :otsikko "Toimenpidekoodi" :leveys 1 :muokattava? (constantly false)
      :fmt #(or (get % :toimenpidekoodi) "-")}]
