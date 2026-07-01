@@ -15,13 +15,12 @@
         valittu-aktiivisuus (some #(when (= (:arvo %) aktiivisuus) %) aktiivisuus-vaihtoehdot)]
     [:div.row
      [:div.col-md-4
-      [:div.label-ja-alasveto
-       [:label.alasvedon-otsikko "Hae nimellä"]
-       [:input.input-default
-        {:type "text"
-         :value teksti
-         :placeholder "Kirjoita profiilin nimi"
-         :on-change #(e! (paivita-suodatin :teksti (-> % .-target .-value)))}]]]
+      [:label "Hae nimellä"]
+      [:input.form-control
+       {:type "text"
+        :value teksti
+        :placeholder "Kirjoita profiilin nimi"
+        :on-change #(e! (paivita-suodatin :teksti (-> % .-target .-value)))}]]
      [:div.col-md-4
       [pudotusvalikko
        "Urakkatyyppi"
