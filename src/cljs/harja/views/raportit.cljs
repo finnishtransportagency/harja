@@ -181,7 +181,7 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko} raportti))
+  (#{:suolasakko :muutos-ja-lisatyot} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]
@@ -481,7 +481,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
-   "Muutos- ja lisätyöt" :muutos-ja-lisatyot
+   ;"Muutos- ja lisätyöraportti" :muutos-ja-lisatyoraportti ;; Jätetaan uudempi versio pois, koska se toimii vain hoitovuosi tasolla
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti

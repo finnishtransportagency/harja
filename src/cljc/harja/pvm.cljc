@@ -875,10 +875,14 @@
 #?(:cljs
    (defn hoitokauden-alkuvuosi
      ([pvm]
-      (let [aika (parsi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm)
-            vuosi (t/year aika)
-            kuukausi (t/month aika)]
-        (hoitokauden-alkuvuosi vuosi kuukausi)))
+      (if (instance? goog.date.DateTime pvm)
+        (let [vuosi (.getFullYear pvm)
+              kuukausi (inc (.getMonth pvm))] ;; JS:ssä kuukaudet 0-11, meidän funktioissa 1-12
+          (hoitokauden-alkuvuosi vuosi kuukausi))
+        (let [aika (parsi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm)
+              vuosi (t/year aika)
+              kuukausi (t/month aika)]
+          (hoitokauden-alkuvuosi vuosi kuukausi))))
      ([vuosi kuukausi]
       (if (<= 10 kuukausi)
         vuosi

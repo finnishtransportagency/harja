@@ -168,6 +168,7 @@
     [:raportti {:nimi (str "Kulut tehtäväryhmittäin")}
      [:taulukko
       {:viimeinen-rivi-yhteenveto? true
+       :sheet-nimi                 "Kulut tehtäväryhmittäin"
        :otsikko                    (str "Kulut tehtäväryhmittäin ajalla " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
       otsikot
       (conj rivit yhteensa)]

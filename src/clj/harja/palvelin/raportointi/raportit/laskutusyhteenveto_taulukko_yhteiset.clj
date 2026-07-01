@@ -101,7 +101,7 @@
   "Läpinäkyvä välitaulukko"
   [tuotekohtainen?
    {:keys [data otsikko laskutettu-teksti valittu-aikavali? aikavali
-           laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti]}]
+           laskutetaan-teksti kyseessa-kk-vali? kyseessa-hoitokausi-vali? vapaa-aikavali-teksti laskutusraja-tarkistettu?]}]
 
   (let [laskutusraja-ylittynyt? (boolean (:onko_laskutusraja_ylittynyt data))
         kyseessa-vapaa-aikavali? (and (not kyseessa-kk-vali?) (not kyseessa-hoitokausi-vali?))
@@ -119,7 +119,7 @@
                       (= otsikko "Laskutusraja"))
                     [;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
                      (when-not valittu-aikavali?
-                       (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
+                       (valitaulukko-rivi data (str (if laskutusraja-tarkistettu? "Tarkistettu laskutusraja" otsikko) " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
 
                      ;; Tuotekohtaiseen tulee tällainen
                      (when tuotekohtainen?
@@ -153,7 +153,7 @@
                       (= otsikko "Laskutusraja"))
                     [;; Kun valittu oma aikaväli, laskutusrajaa ei näytetä
                      (when-not valittu-aikavali?
-                       (valitaulukko-rivi data (str otsikko " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
+                       (valitaulukko-rivi data (str (if laskutusraja-tarkistettu? "Tarkistettu laskutusraja" otsikko) " " (yhteiset/summa-fmt (:laskutusraja_yht data)))))
 
                      ;; Tuotekohtaiseen tulee tällainen
                      (when tuotekohtainen?
@@ -245,9 +245,9 @@
                 :gridin-luokka "laskutusraja-grid"
                 :raportin-tunniste :tyomaa-yhteenveto}
      (rivi
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}
+       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :leveys-pdf 36 :tyyppi :varillinen-teksti}
        {:otsikko (if valittu-aikavali? (or vapaa-aikavali-teksti aikavali) laskutettu-teksti)
-        :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
+        :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :leveys-pdf 29 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
-         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
+         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :leveys-pdf 29 :tyyppi :varillinen-teksti}))
      rivit]))

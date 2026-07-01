@@ -148,18 +148,35 @@
     ;; MHU ja muut
     :else [:muistutus :A :B :C :arvonvahennyssanktio]))
 
+(defn sanktio-konfiguraation-lajin-tiedot
+  [sanktio-konfiguraatio laji]
+  (some #(when (= laji (:laji %)) %) (:sanktio-lajit sanktio-konfiguraatio)))
+
+(defn sanktio-konfiguraation-lajit
+  [sanktio-konfiguraatio]
+  (mapv :laji (:sanktio-lajit sanktio-konfiguraatio)))
+
+(defn sanktio-konfiguraation-lajin-nimi
+  [sanktio-konfiguraatio laji]
+  (:nimi (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji)))
+
+(defn sanktio-konfiguraation-sanktiotyypit
+  [sanktio-konfiguraatio laji]
+  (vec (:sanktiotyypit (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji))))
+
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
+(def kasittelytavat-mhu25 [:valikatselmus])
 
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
-       (not= :yllapidon_muistutus (:laji sanktio))
-       (not= :vesivayla_muistutus (:laji sanktio))))
+    (not= :yllapidon_muistutus (:laji sanktio))
+    (not= :vesivayla_muistutus (:laji sanktio))))
 
 (defn sakkoryhmasta-sakko? [sanktio]
   (and (not= :muistutus (:sakkoryhma sanktio))
-       (not= :yllapidon_muistutus (:sakkoryhma sanktio))))
+    (not= :yllapidon_muistutus (:sakkoryhma sanktio))))
 
 (defn paatos-on-sanktio? [sanktio]
   (= :sanktio (get-in sanktio [:paatos :paatos])))
@@ -185,7 +202,7 @@
 (defn sanktiofraasi-avaimella
   [fraasin-avain]
   (first (filter #(= (first %) (keyword fraasin-avain))
-                 +yllapidon-sanktiofraasit+)))
+           +yllapidon-sanktiofraasit+)))
 
 (defn yllapidon-sanktiofraasin-nimi
   [fraasin-avain]
@@ -250,25 +267,25 @@
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
              (= :muu-bonus %)
              true)
-          (cond
-            (urakka-domain/alueurakka? urakkatyyppi)
-            [:asiakastyytyvaisyysbonus :muu-bonus]
+    (cond
+      (urakka-domain/alueurakka? urakkatyyppi)
+      [:asiakastyytyvaisyysbonus :muu-bonus]
             ;; Hoidon johto
-            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
+      (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+      [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
             ;; MHU Ylläpito
-            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "20190" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus]
-            (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:muu-bonus]
+      (and (urakka-domain/mh-urakka? urakkatyyppi) (= "20190" (:t2_koodi toimenpideinstanssi)))
+      [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus]
+      (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+      [:muu-bonus]
 
             ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
             ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
-            (urakka-domain/yllapitourakka? urakkatyyppi)
-            [:yllapidon_bonus]
+      (urakka-domain/yllapitourakka? urakkatyyppi)
+      [:yllapidon_bonus]
 
-            :else
-            [:asiakastyytyvaisyysbonus :muu-bonus])))
+      :else
+      [:asiakastyytyvaisyysbonus :muu-bonus])))
 
 (defn- bonus? [rivi]
   (boolean (:bonus? rivi)))

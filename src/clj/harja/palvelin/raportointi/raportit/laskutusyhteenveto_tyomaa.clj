@@ -79,7 +79,11 @@
 
         rivitiedot (first (first laskutusyhteenvedot))
         otsikot ["Hankinnat" "Hoidonjohto"]
-        sheet-nimi "Työmaakokous"]
+        sheet-nimi "Työmaakokous"
+        laskutusraja-tarkistettu? (boolean (and (:onko_laskutusraja_kaytossa rivitiedot)
+                                               (:laskutusraja_yht rivitiedot)
+                                               (:laskutusraja_alkuperainen rivitiedot)
+                                               (> (:laskutusraja_yht rivitiedot) (:laskutusraja_alkuperainen rivitiedot))))]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :keskikoko :piilota-otsikko? true}
@@ -98,8 +102,8 @@
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Tavoitehintaan vaikuttavat kustannukset"])
+       [:laskutusyhteenveto-otsikko (str "Tavoitehintaan vaikuttavat kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:laskutusyhteenveto-otsikko "Tavoitehintaan vaikuttavat kustannukset"])
 
      ;; ------------------------------- ;;
      ;;    Hankinnat ja hoidonjohto     ;;
@@ -157,7 +161,8 @@
           :valittu-aikavali? valittu-aikavali?
           :laskutettu-teksti laskutettu-teksti
           :laskutetaan-teksti laskutetaan-teksti
-          :kyseessa-kk-vali? kyseessa-kk-vali?})
+          :kyseessa-kk-vali? kyseessa-kk-vali?
+          :laskutusraja-tarkistettu? laskutusraja-tarkistettu?})
 
        ;; ------------------------------------------------------------ ;;
        ;;    Hoitovuoden alun indeksikorjattutavoitehinta              ;;
@@ -180,8 +185,8 @@
        (and
          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
          (pvm/ennen? (pvm/nyt) loppupvm))
-       [:otsikko-heading (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
-       [:otsikko-heading "Tavoitehinnan ulkopuoliset kustannukset"])
+       [:laskutusyhteenveto-otsikko (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
+       [:laskutusyhteenveto-otsikko "Tavoitehinnan ulkopuoliset kustannukset"])
 
      ;; ------------------------ ;;
      ;;    Lisätyöt & muut       ;;

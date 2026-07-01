@@ -44,4 +44,16 @@ UPDATE urakka_parametrit
 SET laskutusraja_kaytossa = true
 WHERE urakkaid = (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030');
 
+-- Kalustoresurssit-alasivun testaamista varten tarvittava testidata.
+-- Luodaan MHU26-urakka (alkuvuosi 2026) Suunnittelu/Kalustoresurssit-alasivun testaamista varten.
+-- Kopioidaan hallintayksikkö, elinvoimakeskus ja urakoitsija Kittilän MHU 2025-2030 -urakalta.
+INSERT INTO urakka (sampoid,        hallintayksikko, elinvoimakeskus_id, nimi,                     alkupvm,      loppupvm,     tyyppi, urakkanro, urakoitsija, alue)
+SELECT              '1242141-KITT6', hallintayksikko, elinvoimakeskus_id, 'Sodankylän MHU 2026-2031', '2026-10-01', '2031-09-30', tyyppi, '1447',    urakoitsija, alue
+  FROM urakka
+ WHERE nimi = 'Kittilän MHU 2025-2030';
+
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Sodankylän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333380-LAP2',
+        (SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'));
+
 
