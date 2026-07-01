@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.bonus-konfiguraatio :as q]))
+            [harja.kyselyt.bonus-konfiguraatio :as q]
+            [taoensso.timbre :as log]))
 
 (declare bonus-lajin-tehokas-nimi)
 
@@ -56,15 +57,6 @@
                (str "Useita aktiivisia bonus-profiileja loytyi urakalle " urakka-id
                  " ja hoitovuodelle " hoitovuosi "."))))))
 
-(defn- vaadi-profiililla-rivit
-  [profiili toimenpideinstanssi-id rivit]
-  (when-not (seq rivit)
-    (throw (IllegalArgumentException.
-             (str "Bonus-profiililta " (:nimi profiili)
-               " puuttuu rivit toimenpideinstanssiin " toimenpideinstanssi-id "."))))
-
-  rivit)
-
 (defn- bonus-lajin-nayttonimi
   [rivit]
   (let [nimi (get-in (first rivit) [:laji :esitystiedot :nimi])]
@@ -115,12 +107,15 @@
                       :hoitovuosi hoitovuosi})
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi})
-        rivit (->> (q/hae-bonus-profiilin-rivit
-                     db
-                     {:bonus_profiili_id (:id profiili)
-                      :urakka_id urakka-id
-                      :toimenpideinstanssi_id toimenpideinstanssi-id})
-                (vaadi-profiililla-rivit profiili toimenpideinstanssi-id))]
+        rivit (q/hae-bonus-profiilin-rivit
+                db
+                {:bonus_profiili_id (:id profiili)
+                 :urakka_id urakka-id
+                 :toimenpideinstanssi_id toimenpideinstanssi-id})]
+    (when (empty? rivit)
+      (log/warn "Bonus-profiililta" (:nimi profiili)
+        "ei löytynyt rivejä toimenpideinstanssille" toimenpideinstanssi-id
+        "- toimenpideinstanssin t2-koodi ei vastaa profiilin rivejä tai toimenpideinstanssia ei löydy"))
     {:profiili profiili
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :rivit rivit}))
