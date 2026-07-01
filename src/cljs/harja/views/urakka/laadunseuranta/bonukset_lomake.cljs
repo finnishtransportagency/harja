@@ -148,10 +148,14 @@
          :validoi [[:ei-tyhja "Valitse laji"]]})
 
       (when @tiedot-urakka/yllapitourakka?
-        {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
-         :pakollinen? false :muokattava? (constantly voi-muokata?)
+        {:otsikko "Kohde" 
+         :tyyppi :valinta 
+         :nimi :yllapitokohde
+         :pakollinen? false 
+         :muokattava? (constantly voi-muokata?)
          ::lomake/col-luokka "col-xs-12"
-         :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
+         :valinnat yllapitokohteet 
+         :jos-tyhja "Ei valittavia kohteita"
          :valinta-nayta (fn [arvo voi-muokata?]
                           (if (:id arvo)
                             (yllapitokohde-domain/yllapitokohde-tekstina
