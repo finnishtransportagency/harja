@@ -207,29 +207,19 @@
 (defn poista-toteuma-materiaali!
   "Poistaa toteuma-materiaalin id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
   Id:n voi antaa taulukossa, jolloin poistetaan useampi kerralla.
+
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka tiedot))
   (jdbc/with-db-transaction
     [db db]
-    (let [urakka-id (:urakka tiedot)
-          sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
-      (when (:tmid tiedot)
-        (let [toteuma-id (:toteuma (q/hae-toteuma-id-materiaali-idlla db {:id (:tmid tiedot)}))
-              toteuman-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})]
-          (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot))
-          (doseq [sopimus-id sopimus-idt]
-            (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm db {:sopimus sopimus-id
-                                                                    :toteuma toteuma-id
-                                                                    :urakkaid urakka-id}))
-          (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                   :alkupvm toteuman-pvm
-                                                                   :loppupvm toteuman-pvm})))
-      (when (:tid tiedot)
-        (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot)))
-      (when (:hk-alku tiedot)
-        (hae-urakassa-kaytetyt-materiaalit
-          db user urakka-id (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot))))))
+    (when (:tmid tiedot)
+      (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot)))
+    (when (:tid tiedot)
+      (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot)))
+    (when (:hk-alku tiedot)
+      (hae-urakassa-kaytetyt-materiaalit
+        db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
 (defn hae-suolatoteumien-tarkat-tiedot
   [db user {:keys [toteumaidt materiaali-id urakka-id]}]
