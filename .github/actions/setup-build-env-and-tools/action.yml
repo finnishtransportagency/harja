@@ -32,7 +32,7 @@ runs:
 
     - name: Cache Leiningen
       id: cache-leiningen
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-leiningen != 'false' }}
       with:
         path: /usr/local/bin/lein
@@ -53,7 +53,7 @@ runs:
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
@@ -94,7 +94,7 @@ runs:
     # https://www.voorhoede.nl/en/blog/super-fast-npm-install-on-github-actions/
     - name: Cache NPM packages
       id: cache-npm
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-node-deps == 'true' }}
       with:
         # Cypress cachettaa binaryn omaan pathiin, https://docs.cypress.io/app/references/advanced-installation#Binary-cache
