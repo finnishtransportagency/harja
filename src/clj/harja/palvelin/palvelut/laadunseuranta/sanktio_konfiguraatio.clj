@@ -79,7 +79,7 @@
             {:id (get-in rivi [:profiilirivi :id])
              :jarjestys (get-in rivi [:profiilirivi :jarjestys])
              :voi-puolittaa-omailmoituksella (boolean (get-in rivi [:profiilirivi :voi-puolittaa-omailmoituksella]))
-           :summamaaritykset (vec (get-in rivi [:profiilirivi :summamaaritykset]))
+             :summamaaritykset (vec (get-in rivi [:profiilirivi :summamaaritykset]))
              :lukitut-summat (vec (get-in rivi [:profiilirivi :lukitut-summat]))
              :soveltuvuuskonteksti soveltuvuuskonteksti
              :sanktiotyyppi (muodosta-sanktiotyyppi-dto rivi)}))))
