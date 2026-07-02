@@ -174,15 +174,15 @@
 (defn- suunniteltu-kalusto-tooltip
   "Saavutettava info-tooltip reiteille suunnitellun kaluston laskennasta."
   []
-  [yleiset/tooltip {:suunta :alas :leveys :levea}
+  [yleiset/tooltip {:suunta :ylos :leveys :levea}
    [:span.kalustoyhteenveto-info-ikoni
     {:tab-index 0
      :role "button"
      :aria-label (str kalustoyhteenveto-tooltip-otsikko ". " kalustoyhteenveto-tooltip-teksti)}
     (ikonit/nelio-info 16)]
    [:div
-    [:div.semibold kalustoyhteenveto-tooltip-otsikko]
-    [:div kalustoyhteenveto-tooltip-teksti]]])
+    [:h2 kalustoyhteenveto-tooltip-otsikko]
+    [:p kalustoyhteenveto-tooltip-teksti]]])
 
 (defn- kalustoyhteenveto-osio
   "Sivun yläosan yhteenveto: tarjouksessa luvattu kalusto suhteessa reiteille suunniteltuun
