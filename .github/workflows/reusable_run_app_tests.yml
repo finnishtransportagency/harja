@@ -653,7 +653,7 @@ jobs:
       - name: Install Cypress test dependencies (transit-js)
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
-          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
+          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package.json").dependencies["transit-js"]')
           npm install "transit-js@${NPM_TRANSITJS_VERSION}" --ignore-scripts
 
       # Ajaa cypress testit erillisessä kontissa

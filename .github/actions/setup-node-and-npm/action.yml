@@ -21,7 +21,7 @@ runs:
         package-manager-cache: ${{ inputs.package-manager-cache }}
     - name: Setup NPM (version defined in package.json "engines")
       run: |
-        NPM_VERSION=$(node -pe 'require("./package").engines.npm')
+        NPM_VERSION=$(node -pe 'require("./package.json").engines.npm')
 
         if [ -z "${NPM_VERSION}" ] || [ "${NPM_VERSION}" = "undefined" ]; then
           echo "::error::NPM_VERSION is not defined in package.json 'engines.npm' setting. Cannot continue."
