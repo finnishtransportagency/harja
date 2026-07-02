@@ -187,13 +187,10 @@
 (defn- kalustoyhteenveto-osio
   "Sivun yläosan yhteenveto: tarjouksessa luvattu kalusto suhteessa reiteille suunniteltuun
    kalustoon hoitoluokkaryhmittäin. Näytetään vain MHU26-urakoille."
-  [reitteja? kalustoyhteenveto]
+  [kalustoyhteenveto]
   [:div.kalustoyhteenveto
    [:h2 "Tarjouksessa luvatun kaluston käyttö reittisuunnitelmissa"]
    (cond
-     (not reitteja?)
-     [:div.kalustoyhteenveto-ei-reitteja kalustoyhteenveto-ei-reitteja-teksti]
-
      (empty? kalustoyhteenveto)
      [:div.kalustoyhteenveto-ei-reitteja
       "Urakalle ei ole kirjattu hoitoluokkaryhmiä Suunnittelu / Kalustoresurssit -sivulla."]
@@ -226,8 +223,9 @@
      [ajax-loader "Ladataan talvihoitoreittejä..."]
 
      [:div.talvihoitoreititys
-      (when (mhu26-urakka? @nav/valittu-urakka)
-        [kalustoyhteenveto-osio (not (empty? talvihoitoreitit)) kalustoyhteenveto])
+      (when (and (mhu26-urakka? @nav/valittu-urakka)
+                 (or (seq talvihoitoreitit) (seq kalustoyhteenveto)))
+        [kalustoyhteenveto-osio kalustoyhteenveto])
       [:div.flex-row {:style {:justify-content "space-between"}}
        [:div {:style {:display "flex"}}
         ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
@@ -252,7 +250,7 @@
          "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]
 
       (if (empty? talvihoitoreitit)
-        [:div "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa."]
+        [:div kalustoyhteenveto-ei-reitteja-teksti]
 
         (doall
           [:div.margin-top-16
