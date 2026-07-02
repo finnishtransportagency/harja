@@ -4,7 +4,8 @@ CREATE TABLE toteuma_muutos (
   urakka_id INTEGER NOT NULL,
   vanha_alkanut TIMESTAMP NOT NULL,
   muutospvm TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  kasitelty BOOLEAN NOT NULL DEFAULT FALSE,
+  urakan_valimuisti_paivitetty BOOLEAN NOT NULL DEFAULT FALSE,
+  sopimuksen_valimuisti_paivitetty BOOLEAN NOT NULL DEFAULT FALSE,
   muokattu TIMESTAMP
 );
 

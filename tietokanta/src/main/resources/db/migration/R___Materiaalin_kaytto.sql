@@ -102,7 +102,7 @@ BEGIN
           tm.vanha_alkanut::date AS pvm
         FROM toteuma_muutos tm
         WHERE tm.urakka_id = u_id
-          AND tm.kasitelty = FALSE
+          AND tm.urakan_valimuisti_paivitetty = FALSE
     LOOP
         -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
         PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
@@ -110,10 +110,10 @@ BEGIN
 
     -- Merkitään toteuma_muutos rivit käsitellyiksi
     UPDATE toteuma_muutos
-    SET kasitelty = TRUE,
+    SET urakan_valimuisti_paivitetty = TRUE,
         muokattu = CURRENT_TIMESTAMP
     WHERE toteuma_muutos.urakka_id = u_id
-      AND kasitelty = FALSE;
+      AND urakan_valimuisti_paivitetty = FALSE;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -34,6 +34,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION paivita_sopimuksen_materiaalikaytto_muutospaivalla(
+    sopimus_id INTEGER, urakka_id INTEGER, muutospvm DATE
+) RETURNS void AS $$
+DECLARE
+    rivi RECORD;
+    u_id INTEGER := urakka_id;
+BEGIN
+    -- Päivitetään eilinen päivä (nykyinen logiikka)
+    PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, muutospvm, urakka_id);
+  
+    -- Käsitellään toteuma_muutos-taulun vanhat päivämäärät tälle sopimukselle
+    FOR rivi IN
+        SELECT DISTINCT tm.vanha_alkanut::date AS pvm
+        FROM toteuma_muutos tm
+        JOIN toteuma t ON t.id = tm.toteuma_id
+        WHERE tm.urakka_id = u_id
+          AND t.sopimus = sopimus_id
+          AND tm.sopimuksen_valimuisti_paivitetty = FALSE
+    LOOP
+        PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+    END LOOP;
+  
+    UPDATE toteuma_muutos tm
+    SET sopimuksen_valimuisti_paivitetty = TRUE,
+        muokattu = CURRENT_TIMESTAMP
+    FROM toteuma t
+    WHERE t.id = tm.toteuma_id
+      AND tm.urakka_id = u_id
+      AND t.sopimus = sopimus_id
+      AND tm.sopimuksen_valimuisti_paivitetty = FALSE;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Päivittää tietyn sopimuksen kaiken materiaalin käytön
 CREATE OR REPLACE FUNCTION paivita_koko_sopimuksen_materiaalin_kaytto(
   sopimus INTEGER)

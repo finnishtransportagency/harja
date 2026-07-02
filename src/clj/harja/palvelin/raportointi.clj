@@ -217,7 +217,7 @@
     (doseq [sopimus-id urakan-sopimus-idt]
       ;; Päivitetään sopimuksen_kaytetty_materiaali (sisältää saman datan kuin myöhemmin luotu materialized view raportti_toteutuneet_materiaalit, jos aika sallii, voidaan refaktoroida ja hankkiutua toisesta eroon)
       ;; (Ympäristöraporttia varten)
-      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+      (materiaalit/paivita-sopimuksen-materiaalikaytto-muutospaivalla db {:sopimus sopimus-id
                                                              :alkupvm (pvm/eilinen)
                                                              :urakkaid urakka-id}))
     ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
