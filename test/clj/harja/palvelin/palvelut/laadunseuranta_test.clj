@@ -1468,16 +1468,18 @@
       (finally
         (u "DELETE FROM bonus_profiili WHERE nimi = 'iin-mhu-bonus-duplikaatti'")))))
 
-(deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-kontekstissa-ei-ole-riveja
-  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
-    (is (thrown-with-msg? IllegalArgumentException
-          #"puuttuu rivit toimenpideinstanssiin"
-          (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
-            (:db jarjestelma)
-            +kayttaja-jvh+
-            {:urakka-id urakka-id
-             :hoitovuosi 1
-             :toimenpideinstanssi-id 999999999})))))
+(deftest hae-urakan-bonus-konfiguraatio-palauttaa-tyhjan-lajilistan-tuntemattomalla-toimenpideinstanssi-idlla
+  ;; Olematon toimenpideinstanssi-id → t2-konteksti puuttuu → t2-koodi-rivit eivät vastaa
+  ;; → tyhjä lajilista (ei poikkeus)
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        vastaus (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
+                  (:db jarjestelma)
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuosi 1
+                   :toimenpideinstanssi-id 999999999})]
+    (is (= [] (:bonus-lajit vastaus))
+      "Tuntemattomalla toimenpideinstanssi-id:llä pitää palauttaa tyhjä lajilista")))
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
   (try+

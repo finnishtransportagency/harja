@@ -1,5 +1,6 @@
 (ns harja.kyselyt.bonus-konfiguraatio
   (:require [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.muunnos :refer [keywordiksi]]
             [jeesql.core :refer [defqueries]]))
 
 (declare hae-bonus-profiilit-admin hae-urakan-bonus-profiilit hae-bonus-profiili-admin
@@ -25,39 +26,53 @@
     konv/alaviiva->rakenne
     (muunna-urakkatyyppi [:urakkatyyppi])))
 
+(defn- muunna-profiili
+  [{:keys [profiili_id profiili_nimi profiili_urakkatyyppi
+           profiili_hoitovuosi_alku profiili_hoitovuosi_loppu
+           profiili_alkupvm profiili_loppupvm profiili_aktiivinen]}]
+  {:id profiili_id
+   :nimi profiili_nimi
+   :urakkatyyppi (keywordiksi profiili_urakkatyyppi)
+   :hoitovuosi {:alku profiili_hoitovuosi_alku
+                :loppu profiili_hoitovuosi_loppu}
+   :alkupvm profiili_alkupvm
+   :loppupvm profiili_loppupvm
+   :aktiivinen profiili_aktiivinen})
+
+(defn- muunna-laji
+  [{:keys [laji_id laji_koodi laji_nimi laji_esitystiedot_nimi laji_esitystiedot_kuvaus
+           laji_jarjestys laji_kirjaustapa laji_automaattinen]}]
+  {:id laji_id
+   :koodi (keywordiksi laji_koodi)
+   :nimi laji_nimi
+   :esitystiedot {:nimi laji_esitystiedot_nimi
+                  :kuvaus laji_esitystiedot_kuvaus}
+   :jarjestys laji_jarjestys
+   :kirjaustapa laji_kirjaustapa
+   :automaattinen laji_automaattinen})
+
+(defn- muunna-profiilirivi
+  "Muodostaa littean profiilirivin SQL:n palauttamista sarakkeista.
+  Admin-kysely palauttaa lisaksi urakkarajausten maaran ja urakat, ei-admin ei."
+  [{:keys [profiilirivi_id profiilirivi_jarjestys
+           profiilirivi_toimenpiderajauksen_tyyppi profiilirivi_toimenpide_t2_koodi]
+    urakkarajausten-maara :profiilirivi_urakkarajausten_maara
+    urakat :profiilirivi_urakat
+    :as rivi}]
+  (cond-> {:id profiilirivi_id
+           :jarjestys profiilirivi_jarjestys
+           :toimenpiderajauksen-tyyppi (keywordiksi profiilirivi_toimenpiderajauksen_tyyppi)
+           :toimenpide-t2-koodi profiilirivi_toimenpide_t2_koodi}
+    (contains? rivi :profiilirivi_urakkarajausten_maara)
+    (assoc :urakkarajausten-maara urakkarajausten-maara)
+
+    (contains? rivi :profiilirivi_urakat)
+    (assoc :urakat (normalisoi-vektoriksi urakat))))
+
 (defn muunna-bonus-konfiguraatiorivi
   [{:as rivi}]
-  (let [rivi (konv/alaviiva->rakenne rivi)
-        urakkarajausten-maara (or (get-in rivi [:profiilirivi :urakkarajausten-maara])
-                                (get-in rivi [:profiilirivi :urakkarajausten :maara]))]
-    (cond-> rivi
-      (some? urakkarajausten-maara)
-      (->
-        (assoc-in [:profiilirivi :urakkarajausten-maara] urakkarajausten-maara)
-        (update :profiilirivi dissoc :urakkarajausten))
-
-      (get-in rivi [:profiilirivi :urakat])
-      (update-in [:profiilirivi :urakat] normalisoi-vektoriksi)
-
-      (get-in rivi [:profiilirivi :toimenpide :t2 :koodi])
-      (->
-        (assoc-in [:profiilirivi :toimenpide-t2-koodi]
-          (get-in rivi [:profiilirivi :toimenpide :t2 :koodi]))
-        (update-in [:profiilirivi :toimenpide] dissoc :t2))
-
-      (string? (get-in rivi [:profiilirivi :toimenpiderajauksen-tyyppi]))
-      (update-in [:profiilirivi :toimenpiderajauksen-tyyppi] keyword)
-
-      (get-in rivi [:profiilirivi :toimenpiderajauksen :tyyppi])
-      (->
-        (assoc-in [:profiilirivi :toimenpiderajauksen-tyyppi]
-          (keyword (get-in rivi [:profiilirivi :toimenpiderajauksen :tyyppi])))
-        (update :profiilirivi dissoc :toimenpiderajauksen))
-
-      (get-in rivi [:profiili :urakkatyyppi])
-      (muunna-urakkatyyppi [:profiili :urakkatyyppi])
-
-      (get-in rivi [:laji :koodi])
-      (update-in [:laji :koodi] keyword))))
+  {:profiili (muunna-profiili rivi)
+   :laji (muunna-laji rivi)
+   :profiilirivi (muunna-profiilirivi rivi)})
 
 (defqueries "harja/kyselyt/bonus_konfiguraatio.sql")
