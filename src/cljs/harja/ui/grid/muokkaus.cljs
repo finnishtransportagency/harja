@@ -356,11 +356,11 @@
                          (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                 [napit/poista
                  ""
-                 #(do (.preventDefault %)
-                    (muokkaa! muokatut-atom
-                      virheet varoitukset huomautukset skeema
-                      id assoc
-                      :poistettu true))
+                 (fn []
+                   (muokkaa! muokatut-atom
+                     virheet varoitukset huomautukset skeema
+                     id assoc
+                     :poistettu true))
                  {:teksti-nappi? false
                   :vayla-tyyli? true
                   :tooltip "Poista rivi"
