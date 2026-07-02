@@ -26,7 +26,7 @@
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
-            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatiouraatio]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1314,7 +1314,7 @@
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (bonus-konfiguraatio-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1472,7 +1472,7 @@
   ;; Olematon toimenpideinstanssi-id → t2-konteksti puuttuu → t2-koodi-rivit eivät vastaa
   ;; → tyhjä lajilista (ei poikkeus)
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        vastaus (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
+        vastaus (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
                   (:db jarjestelma)
                   +kayttaja-jvh+
                   {:urakka-id urakka-id
@@ -1483,13 +1483,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-riveja
                                         :viesti "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-riveja}}))]
-      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
@@ -1504,13 +1504,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-profiilia
                                         :viesti "Bonukselle ei löytynyt aktiivista bonusprofiilia annetussa kontekstissa."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-profiilia}}))]
-      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
@@ -1523,13 +1523,13 @@
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-yksiselitteinen-profiili-domain-virheen
   (try+
-    (with-redefs [ls-bonus-konfiguraatiouraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                   (fn [_ _]
                     (throw+ {:type :bonus-kirjausvirhe
                              :virheet [{:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
                                         :viesti "Bonukselle löytyi useita aktiivisia bonusprofiileja annetussa kontekstissa."}]
                              :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili}}))]
-      (ls-bonus-konfiguraatiouraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
         nil
         {:urakka-id 36
          :hoitovuosi 1
