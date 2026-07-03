@@ -1,12 +1,9 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
-            [slingshot.slingshot :refer [throw+]]
-            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [slingshot.slingshot :refer [try+]]
+            [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
-            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfig]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.testi :refer :all]
@@ -28,7 +25,8 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [clojure.string :as str]
             [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfiguraatio-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
@@ -1316,7 +1314,7 @@
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (bonus-konfiguraatio-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1440,7 +1438,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
+        profiili-id (get-in (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -1461,7 +1459,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia bonus-profiileja"
-            (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
+            (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -1474,7 +1472,7 @@
   ;; Olematon toimenpideinstanssi-id → t2-konteksti puuttuu → t2-koodi-rivit eivät vastaa
   ;; → tyhjä lajilista (ei poikkeus)
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        vastaus (ls-bonus-konfig/hae-urakan-bonus-konfiguraatio
+        vastaus (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
                   (:db jarjestelma)
                   +kayttaja-jvh+
                   {:urakka-id urakka-id
@@ -1482,6 +1480,65 @@
                    :toimenpideinstanssi-id 999999999})]
     (is (= [] (:bonus-lajit vastaus))
       "Tuntemattomalla toimenpideinstanssi-id:llä pitää palauttaa tyhjä lajilista")))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-riveja
+                                        :viesti "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-riveja}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisessa profiilissa ei ole rivejä"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi bonus-kirjausvirhe)))
+      (is (= "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."
+             (:viesti (first virheet)))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-profiilia
+                                        :viesti "Bonukselle ei löytynyt aktiivista bonusprofiilia annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-profiilia}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivista profiilia ei löydy"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi bonus-kirjausvirhe))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-yksiselitteinen-profiili-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+                                        :viesti "Bonukselle löytyi useita aktiivisia bonusprofiileja annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisia profiileja löytyy useita"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi bonus-kirjausvirhe))))))
 
 (deftest bonus-profiilin-lajin-esitystiedot-eivat-salli-kahta-rivia-samalle-lajille
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
