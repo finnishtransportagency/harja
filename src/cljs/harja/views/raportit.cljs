@@ -820,7 +820,7 @@
              [:span "Elinvoimakeskus\u00a0"
               [tooltip {:suunta :oikea}
                [ikonit/harja-icon-status-info]
-               "Harjan raportteja voi muodostaa vain elinvoimakeskustiedon pohjalta. Vanhatkin urakat on linkitetty elinvoimakeskukseen ELY:n sijaan."]]
+               "Harjan raportteja voi muodostaa vain elinvoimakeskustiedon pohjalta ELY:jen sijaan. Myös menneiden hoitovuosien tiedot löytyvät uuden elinvoimakeskuksen raporteilta."]]
              [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
