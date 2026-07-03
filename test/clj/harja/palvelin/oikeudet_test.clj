@@ -320,8 +320,8 @@
   (testing "ELY-urakanvalvoja ei saa muokata urakassa, johon häntä ei ole nimetty"
     (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-uv-eri-elyssa 1))))
 
-  (testing "Järjestelmävastaava (JVH) ei ole muokkaajaroolissa"
-    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? jvh 1))))
+  (testing "Järjestelmävastaava (JVH) saa muokata"
+    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? jvh 1)))
 
   (testing "Tilaajan urakanvalvoja ei saa muokata"
     (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? tilaajan-uv 1))))

@@ -105,12 +105,13 @@ rooleista."
 (def laatupoikkeaman-sanktion-muokkaajaroolit
   "Roolit, joilla saa muokata myös laatupoikkeaman kautta tehtyjä sanktioita
   (eli sanktioita, jotka eivät ole suorasanktioita)."
-  #{"ELY_Urakanvalvoja" "ELY_Paakayttaja"})
+  #{"ELY_Urakanvalvoja" "ELY_Paakayttaja" "Jarjestelmavastaava"})
 
 (defn saa-muokata-laatupoikkeaman-sanktiota?
   "Tarkistaa saako käyttäjä muokata laatupoikkeaman kautta tehtyä sanktiota annetussa urakassa.
-  Muokkaus on sallittu ELY-urakanvalvojalle ja ELY-pääkäyttäjälle. Rooli voi olla käyttäjällä joko
-  yleisroolina, urakkakohtaisena roolina tai organisaatioroolina, joten tarkistetaan kaikki lähteet."
+  Muokkaus on sallittu ELY-urakanvalvojalle, ELY-pääkäyttäjälle ja järjestelmävastaavalle (JVH). Rooli voi
+  olla käyttäjällä joko yleisroolina, urakkakohtaisena roolina tai organisaatioroolina, joten tarkistetaan
+  kaikki lähteet."
   #?(:cljs ([urakka-id] (saa-muokata-laatupoikkeaman-sanktiota? @istunto/kayttaja urakka-id)))
   ([kayttaja urakka-id]
    (boolean (or (roolissa? kayttaja laatupoikkeaman-sanktion-muokkaajaroolit)
