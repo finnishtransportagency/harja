@@ -424,16 +424,31 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm]]
-  ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
-  ;; riittäisi varmaan vain roolit/urakanvalvoja?
+(defn hae-urakan-sanktio-konfiguraatio
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
+
+(defn hae-sanktio-profiilit-admin
+  [db user]
+  (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
+
+(defn hae-sanktio-profiilin-detalji-admin
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
+
+(defn hae-bonus-profiilit-admin
+  [db user]
+  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
+
+(defn hae-bonus-profiilin-detalji-admin
+  [db user tiedot]
+  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
+
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
-  ;; Selvitetään palvelimelta, onko kyseessä olemassa olevan laatupoikkeaman kautta tehdyn
-  ;; (ei-suora)sanktion muokkaus. Näiden muokkaus on sallittu vain ELY-urakanvalvojalle ja
-  ;; ELY-pääkäyttäjälle. Uusien sanktioiden ja suorasanktioiden käsittely säilyy ennallaan.
   (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
         laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
