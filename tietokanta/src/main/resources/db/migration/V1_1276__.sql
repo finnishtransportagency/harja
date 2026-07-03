@@ -173,16 +173,9 @@ summamaaritykset (profiili_nimi,
             'Asiakirjan taulukon mukainen sanktio jokaiselta alkavalta kuukaudelta, '
             'kun pistekeskiarvo alittuu tarjouksessa annetusta pistekeskiarvosta.', 1),
         ('teiden-hoito-mhu2026', 'vastuuhenkilon_vaihto', 0, 'urakka', 'manuaalinen', NULL,
-            '1 % tarjouksen mukaisesta tavoitehinnasta.', 1),
-
-        -- -----------------------------------------------------------------------
-        -- teiden-hoito-mhu2026 / bonukset / vain urakka-konteksti
-        -- Huom: maaraaikaan_tehtavien_toiden_aiempi_toteutusbonus, asiakastyytyvaisyysbonus ja
-        --       liikennevahinkojen_aiheuttajien_selvitysbonus kirjataan normaalikirjauksina ilman
-        --       summamaaritys-rivia - niilla ei ole vakiosummaa eika ohjetekstia.
-        -- -----------------------------------------------------------------------
-        ('teiden-hoito-mhu2026', 'alihankkijatyytyvaisyyskyselybonus', 0, 'urakka',
-            'automaattinen', 5000.00, NULL, 1)
+            '1 % tarjouksen mukaisesta tavoitehinnasta.', 1)
+        -- Huom: bonusten (alihankkijatyytyvaisyyskyselybonus ym.) euromäärät seedataan
+        --       bonus_profiili_rivi_summamaaritys-tauluun V1_1278:ssa, ei tänne.
 )
 INSERT INTO sanktio_profiili_rivi_summamaaritys (sanktio_profiili_rivi_id,
                                                  maaritystapa,
@@ -216,3 +209,75 @@ SELECT spr.id,
         AND spr.soveltuvuuskonteksti   = sm.soveltuvuuskonteksti
        CROSS JOIN integraatio
     ON CONFLICT (sanktio_profiili_rivi_id, jarjestys) DO NOTHING;
+
+
+-- Lisätään bonus_profiili_rivi_summamaaritys-taulu bonus-profiiliriveille.
+-- Rakenne identtinen sanktio_profiili_rivi_summamaaritys-taulun kanssa.
+-- V1_1276:ssa alihankkijatyytyvaisyyskyselybonus-bonuksen euromäärä yritettiin
+-- seedata virheellisesti sanktio_*-tauluihin; tässä se korjataan oikeaan paikkaan.
+
+CREATE TABLE bonus_profiili_rivi_summamaaritys (
+    id                       SERIAL        PRIMARY KEY,
+    bonus_profiili_rivi_id   INTEGER       NOT NULL REFERENCES bonus_profiili_rivi (id),
+    maaritystapa             TEXT          NOT NULL DEFAULT 'automaattinen',
+    summa_euroina            NUMERIC(12,2),
+    ohjeteksti               TEXT,
+    jarjestys                INTEGER       NOT NULL DEFAULT 1,
+    luoja                    INTEGER       NOT NULL REFERENCES kayttaja (id),
+    luotu                    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja                INTEGER       NOT NULL REFERENCES kayttaja (id),
+    muokattu                 TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (bonus_profiili_rivi_id, jarjestys),
+    CHECK (summa_euroina IS NULL OR summa_euroina >= 0),
+    CHECK (maaritystapa IN ('automaattinen', 'manuaalinen')),
+    CHECK (ohjeteksti IS NULL OR btrim(ohjeteksti) <> ''),
+    CHECK (
+        (maaritystapa = 'automaattinen' AND summa_euroina IS NOT NULL)
+        OR
+        (maaritystapa = 'manuaalinen' AND (summa_euroina IS NOT NULL OR ohjeteksti IS NOT NULL))
+    )
+);
+
+CREATE INDEX bonus_profiili_rivi_summamaaritys_haku_idx
+    ON bonus_profiili_rivi_summamaaritys (bonus_profiili_rivi_id, jarjestys);
+
+COMMENT ON TABLE bonus_profiili_rivi_summamaaritys
+    IS 'Bonus-profiiliriville kiinnitettävä euromäärä ja/tai ohjeteksti. '
+       'Automaattinen: järjestelmä täyttää summan profiilista. '
+       'Manuaalinen: käyttäjä kirjaa summan käsin; ohjeteksti valinnainen.';
+
+-- Seedataan alihankkijatyytyvaisyyskyselybonus-bonuksen euromäärä (5 000 €, automaattinen)
+-- teiden-hoito-bonus-mhu2026 -profiilin riveille.
+-- Huom: bonus_profiili_rivi on t2-koodi-rajattu (23150), jarjestys 2.
+WITH integraatio AS (
+    SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'Integraatio'
+)
+INSERT INTO bonus_profiili_rivi_summamaaritys (bonus_profiili_rivi_id,
+                                               maaritystapa,
+                                               summa_euroina,
+                                               ohjeteksti,
+                                               jarjestys,
+                                               luoja,
+                                               luotu,
+                                               muokkaaja,
+                                               muokattu)
+SELECT bpr.id,
+       'automaattinen',
+       5000.00,
+       NULL,
+       1,
+       integraatio.id,
+       CURRENT_TIMESTAMP,
+       integraatio.id,
+       CURRENT_TIMESTAMP
+  FROM bonus_profiili bp
+       JOIN bonus_profiili_rivi bpr
+         ON bpr.bonus_profiili_id = bp.id
+       JOIN bonus_laji bl
+         ON bl.id = bpr.bonus_laji_id
+       CROSS JOIN integraatio
+ WHERE bp.nimi  = 'teiden-hoito-bonus-mhu2026'
+   AND bl.koodi = 'alihankkijatyytyvaisyyskyselybonus'
+    ON CONFLICT (bonus_profiili_rivi_id, jarjestys) DO NOTHING;

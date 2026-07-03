@@ -58,6 +58,15 @@
       (muunna-urakkatyyppi [:profiili :urakkatyyppi])
 
       (get-in rivi [:laji :koodi])
-      (update-in [:laji :koodi] keyword))))
+      (update-in [:laji :koodi] keyword)
+
+      ;; Normalisoidaan sm-* avaimet -> :summamaaritys-mapiksi
+      (get-in rivi [:profiilirivi :sm])
+      (->  
+        (assoc-in [:profiilirivi :summamaaritys]
+          {:summa-euroina (get-in rivi [:profiilirivi :sm :summa])
+           :maaritystapa  (get-in rivi [:profiilirivi :sm :tapa])
+           :ohjeteksti    (get-in rivi [:profiilirivi :sm :ohje])})
+        (update :profiilirivi dissoc :sm)))))
 
 (defqueries "harja/kyselyt/bonus_konfiguraatio.sql")
