@@ -330,6 +330,16 @@ SELECT l.id                  AS id,
  WHERE el.bonus = :bonus
  ORDER BY l.luotu ASC;
 
+-- name: hae-laatupoikkeaman-tallennuksen-perustiedot
+-- Hakee laatupoikkeaman ne kentät, joita sanktiolomake ei näytä/käsittele, mutta jotka
+-- päivitetään perustietojen tallennuksessa. Näitä tarvitaan, jotta laatupoikkeaman kautta
+-- tehdyn sanktion muokkaus ei tyhjennä kyseisiä kenttiä.
+SELECT lp.tekija                        AS tekija,
+       lp.selvitys_pyydetty             AS selvitys_pyydetty,
+       lp."sisaltaa-poikkeamaraportin?" AS "sisaltaa-poikkeamaraportin?"
+  FROM laatupoikkeama lp
+ WHERE lp.id = :id;
+
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama

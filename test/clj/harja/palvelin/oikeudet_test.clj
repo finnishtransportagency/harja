@@ -302,3 +302,32 @@
   
   (testing "ELY käyttäjä (ei urakanvalvoja) ei voi syöttää kustannusennusteita"
     (is (not (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ely-kayttaja)))))
+
+;; ELYn pääkäyttäjä (rooli yleisroolina)
+(def ely-pk {:roolit #{"ELY_Paakayttaja"}
+             :urakkaroolit {}
+             :organisaatioroolit {}
+             :organisaatio ely
+             :organisaation-urakat ely-urakat})
+
+(deftest laatupoikkeaman-sanktion-muokkausoikeus
+  (testing "ELY-urakanvalvoja saa muokata laatupoikkeaman kautta tehtyä sanktiota omassa urakassa"
+    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-uv 1)))
+
+  (testing "ELY-pääkäyttäjä saa muokata (rooli yleisroolina)"
+    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-pk 1)))
+
+  (testing "ELY-urakanvalvoja ei saa muokata urakassa, johon häntä ei ole nimetty"
+    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-uv-eri-elyssa 1))))
+
+  (testing "Järjestelmävastaava (JVH) ei ole muokkaajaroolissa"
+    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? jvh 1))))
+
+  (testing "Tilaajan urakanvalvoja ei saa muokata"
+    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? tilaajan-uv 1))))
+
+  (testing "Urakoitsijan pääkäyttäjä ei saa muokata"
+    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ur-pk 1))))
+
+  (testing "ELY-peruskäyttäjä ei saa muokata"
+    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-kayttaja 1)))))

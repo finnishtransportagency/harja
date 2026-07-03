@@ -431,28 +431,53 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
-  (jdbc/with-db-transaction [c db]
-    ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
-    ;; koska laatupoikkeamalla voi olla 0...n sanktiota
-    (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
-          sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
-          id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
-                                                                        :poistettu poista-laatupoikkeama?))
-          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
-          _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-              {:kasittelyaika (konv/sql-timestamp kasittelyaika)
-               :paatos (name paatos)
-               :perustelu perustelu
-               :kasittelytapa (if kasittelytapa (name kasittelytapa) "ei-tiedossa")
-               :muukasittelytapa muukasittelytapa
-               :muokkaaja (:id user)
-               :id id})
-          sanktio-id (tallenna-laatupoikkeaman-sanktio
-                       c user sanktio id urakka kasittelyaika
-                       {:paivamaara hk-alkupvm
-                        :soveltuvuuskonteksti :urakka})
-          _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
-      sanktio-id)))
+  ;; Selvitetään palvelimelta, onko kyseessä olemassa olevan laatupoikkeaman kautta tehdyn
+  ;; (ei-suora)sanktion muokkaus. Näiden muokkaus on sallittu vain ELY-urakanvalvojalle ja
+  ;; ELY-pääkäyttäjälle. Uusien sanktioiden ja suorasanktioiden käsittely säilyy ennallaan.
+  (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
+                                 (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
+        laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
+                                                       (not (:suorasanktio olemassa-oleva-sanktio))))]
+    (when laatupoikkeaman-sanktion-muokkaus?
+      (vaadi-sanktio-kuuluu-urakkaan db urakka (:id sanktio))
+      (when-not (roolit/saa-muokata-laatupoikkeaman-sanktiota? user urakka)
+        (throw (SecurityException.
+                 (str "Käyttäjällä ei ole oikeutta muokata laatupoikkeaman kautta tehtyä sanktiota "
+                   (:id sanktio) " urakassa " urakka)))))
+    (jdbc/with-db-transaction [c db]
+      ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+      ;; koska laatupoikkeamalla voi olla 0...n sanktiota
+      (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+            sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
+            ;; Laatupoikkeaman kautta tehtyä sanktiota muokattaessa säilytetään laatupoikkeaman ne
+            ;; kentät, joita sanktiolomake ei näytä eikä käsittele oikein (tekijä, selvityspyyntö sekä
+            ;; poikkeamaraportti-lippu). Näin muokkaus ei tyhjennä niitä. Suorasanktioille ja uusille
+            ;; sanktioille tekijäksi asetetaan "tilaaja" kuten aiemminkin.
+            tallennettava-laatupoikkeama (if laatupoikkeaman-sanktion-muokkaus?
+                                           (let [sailytettavat (first (laatupoikkeamat-q/hae-laatupoikkeaman-tallennuksen-perustiedot
+                                                                        c {:id (:id laatupoikkeama)}))]
+                                             (assoc laatupoikkeama
+                                               :tekija (:tekija sailytettavat)
+                                               :selvitys-pyydetty (:selvitys_pyydetty sailytettavat)
+                                               :sisaltaa-poikkeamaraportin? (get sailytettavat (keyword "sisaltaa-poikkeamaraportin?"))
+                                               :poistettu poista-laatupoikkeama?))
+                                           (assoc laatupoikkeama
+                                             :tekija "tilaaja"
+                                             :poistettu poista-laatupoikkeama?))
+            id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user tallennettava-laatupoikkeama)
+            {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
+            _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
+                (konv/sql-timestamp kasittelyaika)
+                (name paatos) perustelu
+                (name kasittelytapa) muukasittelytapa
+                (:id user)
+                id)
+            sanktio-id (tallenna-laatupoikkeaman-sanktio
+                         c user sanktio id urakka kasittelyaika
+                         {:paivamaara hk-alkupvm
+                          :soveltuvuuskonteksti :urakka})
+            _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
+        sanktio-id))))
 
 (defn poista-suorasanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
@@ -469,6 +494,14 @@
           ;; Poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
           ;;   koska laatupoikkeamalla voi olla 0...n sanktiota
           poista-laatupoikkeama? (and (boolean (:suorasanktio sanktio)) (:laatupoikkeama_id sanktio))]
+      ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto on sallittu vain ELY-urakanvalvojalle
+      ;; ja ELY-pääkäyttäjälle, samoin kuin muokkaus.
+      (when (and sanktio (not (:suorasanktio sanktio)))
+        (vaadi-sanktio-kuuluu-urakkaan c urakka-id sanktio-id)
+        (when-not (roolit/saa-muokata-laatupoikkeaman-sanktiota? user urakka-id)
+          (throw (SecurityException.
+                   (str "Käyttäjällä ei ole oikeutta poistaa laatupoikkeaman kautta tehtyä sanktiota "
+                     sanktio-id " urakassa " urakka-id)))))
       (when poista-laatupoikkeama?
         (laatupoikkeamat-q/poista-laatupoikkeama c user {:id (:laatupoikkeama_id sanktio)
                                                          :urakka-id urakka-id}))
