@@ -244,23 +244,53 @@
       (fn [rivi]
         (for [alkuvuosi alkuvuodet
               :let [kv (some
-                         #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %) (:kustannusvaikutukset rivi))
+                         #(when (= alkuvuosi (:hoitokauden_alkuvuosi %)) %)
+                         (:kustannusvaikutukset rivi))
+
                     tjm (filter
-                          #(and (= alkuvuosi (:hoitokauden_alkuvuosi %)) (not (:poistettu %)))
+                          #(and (= alkuvuosi (:hoitokauden_alkuvuosi %))
+                             (not (:poistettu %)))
                           (:tehtavat_ja_maarat rivi))
-                    kv-syotetty? (and kv (number? (:summa kv)) (not= 0 (:summa kv)))
-                    tjm-syotetty? (some #(and
-                                           (and (number? (:maaramuutos %)) (number? (:tehtava %)))
-                                           ;; Validi tehtävä-id (> 0) JA määrämuutos pitää olla syötettynä
-                                           (and (pos? (:tehtava %)) (not= 0 (:maaramuutos %)))) tjm)
+
+                    kv-syotetty? (and kv
+                                   (number? (:summa kv))
+                                   (not= 0 (:summa kv)))
+
+                    tjm-syotetty? (some
+                                    #(and
+                                       ;; Validi tehtävä-id (> 0) JA määrämuutos pitää olla syötettynä
+                                       (number? (:maaramuutos %))
+                                       (number? (:tehtava %))
+                                       (pos? (:tehtava %))
+                                       (not= 0 (:maaramuutos %)))
+                                    tjm)
+
+                    ;; Jos halutaan tallentaa pysyvä muutos ilman tehtävämääriä, vaaditaan syy
+                    syy-puuttuu? (and kv-syotetty?
+                                   (false? (:tehtavamuutoksia kv))
+                                   (str/blank? (:syy kv)))
+
+                    ei-tehtavamuutoksia-ok? (and kv-syotetty?
+                                              (false? (:tehtavamuutoksia kv))
+                                              (not syy-puuttuu?))
+
                     toinen-syotetty? (or kv-syotetty? tjm-syotetty?)
-                    molemmat-ok? (and kv-syotetty? tjm-syotetty?)]
-              ;; Luodaan virhe-map, vain jos toinen vaadituista asioista on syötetty
-              :when (and toinen-syotetty? (not molemmat-ok?))]
+
+                    molemmat-ok? (or
+                                   (and kv-syotetty? tjm-syotetty?)
+                                   ei-tehtavamuutoksia-ok?)]
+
+              ;; Luodaan virhe-map, jos syötetyt tiedot ovat puuttellisia
+              :when (or syy-puuttuu?
+                      (and toinen-syotetty? (not molemmat-ok?)))]
+
           {:toimenpideinstanssi (:toimenpideinstanssi rivi)
            :toimenpide (:toimenpide rivi)
            :alkuvuosi alkuvuosi
-           :puuttuu (if kv-syotetty? :maaramuutos :tavoitehinnan-muutos)}))
+           :puuttuu (cond
+                      syy-puuttuu? :syy
+                      kv-syotetty? :maaramuutos
+                      :else :tavoitehinnan-muutos)}))
       rivit)))
 
 (defn koosta-pysyvan-muutoksen-lomake-virheet [tpi-vetolaatikoiden-virheet]
@@ -269,7 +299,8 @@
       (str (:alkuvuosi virhe) " / Toimenpide '" (:toimenpide virhe) "': "
         (case (:puuttuu virhe)
           :tavoitehinnan-muutos "Tavoitehinnan muutos"
-          :maaramuutos "Vaikutus tehtävämäärään")
+          :maaramuutos "Vaikutus tehtävämäärään"
+          :syy "Tehtävämäärien puutoksen syy")
         " puuttuu."))
     (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
 
@@ -591,7 +622,7 @@
          :epaonnistui ->PoistaMuutosEpaonnistui
          :paasta-virhe-lapi? true})
       (assoc app :tallennus-kesken? true
-                 :laskutusraja-ennen-poistoa (get-in app [:budjettitavoitteet :laskutusraja]))))
+        :laskutusraja-ennen-poistoa (get-in app [:budjettitavoitteet :laskutusraja]))))
 
   PoistaMuutosOnnistui
   (process-event [{:keys [vastaus]} app]

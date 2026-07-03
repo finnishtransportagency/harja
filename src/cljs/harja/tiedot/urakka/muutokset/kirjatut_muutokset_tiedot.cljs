@@ -35,6 +35,8 @@
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
+(defrecord PaivitaTehtavavaikutus [rivi])
+(defrecord PaivitaTehtavavaikutusSyy [toimenpideinstanssi syy])
 
 (defn pysyvia-muutoksia-tulevilla-hoitovuosilla?
   "Hakee pysyvän muutoksen tiedoista, onko muutoksia tulevilla hoitovuosilla."
@@ -79,16 +81,17 @@
     :toimenpideinstanssi toimenpideinstanssi
     :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
     :kustannuslaji "hankintakustannukset"
-    :summa summa))
+    :summa summa
+    ))
 
 (defn koosta-kustannusvaikutukset-pysyvaan-muutokseen
   "Koostetaan kustannusvaikutukset kaikista toimenpide-vetolaatikoista yhteen vektoriksi tallennusta varten."
   [app]
   ;; Yhdistä tehtavat ja määrät kaikista vetolaatikoista tallennusta varten
   (assoc-in app [:muokattava-muutos :kustannusvaikutukset]
-    (->> (map :kustannusvaikutukset (get-in app [:muokattava-muutos :toimenpiteiden-tiedot]))
-      (flatten)
-      (vec))))
+    (->> (get-in app [:muokattava-muutos :toimenpiteiden-tiedot])
+      (mapcat :kustannusvaikutukset)
+      vec)))
 
 ;; -- Apureita tehtävien määrämuutosten ja kustannusvaikutusten kopiointiin hoitovuodelle
 (defn- korvaa-rivi-tai-merkitse-poistetuksi
@@ -202,7 +205,10 @@
         {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
          :onnistui-parametrit [valittu-hoitokausi]
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
-    (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
+    (-> app
+      (assoc
+        :tehtavavaikutuksia? true
+        :muutoksen-tiedot-haku-kaynnissa? true)))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
@@ -387,7 +393,40 @@
       "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
       :varoitus
       viesti/viestin-nayttoaika-keskipitka)
-    app))
+    app)
+
+  PaivitaTehtavavaikutus
+  (process-event [{:keys [rivi]} app]
+    (-> app
+      (assoc :voi-tallentaa? true)
+      (muokkaa-toimenpiteen-rivit-pysyva-muutos
+        (:toimenpideinstanssi rivi)
+        (fn [r]
+          (update r :kustannusvaikutukset
+            (fn [kustannusvaikutukset]
+              (let [nykyinen (-> kustannusvaikutukset first :tehtavamuutoksia)
+                    uusi-arvo (if (some? nykyinen)
+                                (not nykyinen)
+                                false)]
+                (cons
+                  (assoc (first kustannusvaikutukset)
+                    :tehtavamuutoksia uusi-arvo)
+                  (rest kustannusvaikutukset)))))))
+      (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))
+
+  PaivitaTehtavavaikutusSyy
+  (process-event [{:keys [toimenpideinstanssi syy]} app]
+    (-> app
+      (assoc :voi-tallentaa? true)
+      (muokkaa-toimenpiteen-rivit-pysyva-muutos
+        toimenpideinstanssi
+        (fn [r]
+          (update r :kustannusvaikutukset
+            (fn [kustannusvaikutukset]
+              (cons
+                (assoc (first kustannusvaikutukset) :syy syy)
+                (rest kustannusvaikutukset))))))
+      (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 
 ;; -- Pysyvät muutokset -- LOPPUU
 
