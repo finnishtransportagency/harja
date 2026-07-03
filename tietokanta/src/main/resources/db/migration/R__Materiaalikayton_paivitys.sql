@@ -35,7 +35,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION paivita_sopimuksen_materiaalikaytto_muutospaivalla(
-    sopimus_id INTEGER, urakka_id INTEGER, muutospvm DATE
+    sopimus_id INTEGER, muutospvm DATE, urakka_id INTEGER
 ) RETURNS void AS $$
 DECLARE
     rivi RECORD;
