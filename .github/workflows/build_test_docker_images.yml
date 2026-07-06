@@ -149,7 +149,7 @@ jobs:
       - name: Get cypress version
         id: cypress-version
         if: ${{ inputs.dockerfile == 'harja_cypress' }}
-        run: echo "value=$(node -pe 'require("./package").devDependencies.cypress')" >> $GITHUB_OUTPUT
+        run: echo "value=$(node -pe 'require("./package.json").devDependencies.cypress')" >> $GITHUB_OUTPUT
 
       - name: Build and publish harja_cypress
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
