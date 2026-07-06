@@ -41,8 +41,18 @@ DECLARE
     rivi RECORD;
     u_id INTEGER := urakka_id;
 BEGIN
-    -- Päivitetään eilinen päivä (nykyinen logiikka)
-    PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, muutospvm, urakka_id);
+    -- Haetaan kaikki t.alkanut-päivät niille toteumille,
+    -- joiden t.luotu tai t.muokattu on muutospvm-päivänä
+    FOR rivi IN
+        SELECT DISTINCT t.alkanut::date AS pvm
+        FROM toteuma t
+        WHERE t.urakka = u_id
+          AND t.sopimus = sopimus_id
+          AND ((t.luotu  >= muutospvm AND t.luotu  < muutospvm + INTERVAL '1 day')
+            OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+    LOOP
+        PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+    END LOOP;
   
     -- Käsitellään toteuma_muutos-taulun vanhat päivämäärät tälle sopimukselle
     FOR rivi IN
