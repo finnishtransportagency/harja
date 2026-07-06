@@ -34,7 +34,7 @@ runs:
         SERVICE_NAME: ${{ inputs.service-name }}
       run: |
         cd .github/docker
-        echo "Docker Compose version: $(docker-compose version --short)"
+        echo "Docker Compose version: $(docker compose version --short)"
         
         echo "Pulling harja test database docker image for service: ${SERVICE_NAME}"
         docker compose pull "${SERVICE_NAME}"
