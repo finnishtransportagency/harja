@@ -19,16 +19,18 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
-            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
+            [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as sanktio-konfiguraatio]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
             [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
@@ -41,16 +43,10 @@
             [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
-            [harja.geo :as geo]
-
-            [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]
-            [clojure.core.async :as async]))
-
+            [harja.id :refer [id-olemassa?]]))
 
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
@@ -400,26 +396,6 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn hae-urakan-sanktio-konfiguraatio
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
-
-(defn hae-sanktio-profiilit-admin
-  [db user]
-  (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
-
-(defn hae-sanktio-profiilin-detalji-admin
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
-
-(defn hae-bonus-profiilit-admin
-  [db user]
-  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
-
-(defn hae-bonus-profiilin-detalji-admin
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
-
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
@@ -514,23 +490,27 @@
 
       :hae-urakan-sanktio-konfiguraatio
       (fn [user tiedot]
-        (hae-urakan-sanktio-konfiguraatio db user tiedot))
+        (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
+
+      :hae-urakan-bonus-konfiguraatio
+      (fn [user tiedot]
+        (bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
 
       :hae-sanktio-profiilit-admin
       (fn [user _]
-        (hae-sanktio-profiilit-admin db user))
+        (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
 
       :hae-sanktio-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-sanktio-profiilin-detalji-admin db user tiedot))
+        (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
 
       :hae-bonus-profiilit-admin
       (fn [user _]
-        (hae-bonus-profiilit-admin db user))
+        (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
 
       :hae-bonus-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-bonus-profiilin-detalji-admin db user tiedot))
+        (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
@@ -557,6 +537,7 @@
       :hae-urakan-sanktiot-ja-bonukset
       :hae-sanktiotyypit
       :hae-urakan-sanktio-konfiguraatio
+      :hae-urakan-bonus-konfiguraatio
       :hae-sanktio-profiilit-admin
       :hae-sanktio-profiilin-detalji-admin
       :hae-bonus-profiilit-admin
