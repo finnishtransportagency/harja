@@ -13,6 +13,7 @@ VALUES
 UPDATE silta
 SET tyyppi          = :tyyppi,
     siltanimi       = :siltanimi,
+    siltatunnus     = :tunnus,
     alue            = ST_GeomFromText(:geometria) :: GEOMETRY,
     tr_numero       = :numero,
     tr_alkuosa      = :aosa,
