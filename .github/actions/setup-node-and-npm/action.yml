@@ -3,12 +3,15 @@
 #  * Validate, that NPM version was installed correctly. Printing the NPM version will suffice for now.
 
 name: 'Setup Node.js and NPM'
-description: 'Installs specific Node.js and NPM versions that are defined in package.json of this project. 
-Also verifies tha required NPM supply chain security settings are active.'
+description: >
+  Installs specific Node.js and NPM versions that are defined in package.json of this project.
+  Also verifies tha required NPM supply chain security settings are active.
 
 inputs:
   package-manager-cache:
-    description: 'Set to false to disable actions/setup-node automatic caching.'
+    description: >
+      Set to false to disable actions/setup-node automatic caching.
+      If not defined, "actions/setup-node"-action default functionality will be applied.
     required: false
 
 runs:
@@ -21,7 +24,7 @@ runs:
         package-manager-cache: ${{ inputs.package-manager-cache }}
     - name: Setup NPM (version defined in package.json "engines")
       run: |
-        NPM_VERSION=$(node -pe 'require("./package").engines.npm')
+        NPM_VERSION=$(node -pe 'require("./package.json").engines?.npm')
 
         if [ -z "${NPM_VERSION}" ] || [ "${NPM_VERSION}" = "undefined" ]; then
           echo "::error::NPM_VERSION is not defined in package.json 'engines.npm' setting. Cannot continue."
