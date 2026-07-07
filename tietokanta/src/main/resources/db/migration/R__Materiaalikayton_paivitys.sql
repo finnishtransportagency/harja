@@ -40,7 +40,10 @@ CREATE OR REPLACE FUNCTION paivita_sopimuksen_materiaalikaytto_muutospaivalla(
 DECLARE
     rivi RECORD;
     u_id INTEGER := urakka_id;
+    kasitellyt_muutos_idt INTEGER[];
 BEGIN
+    kasitellyt_muutos_idt := ARRAY[]::INTEGER[];
+    
     -- Haetaan kaikki t.alkanut-päivät niille toteumille,
     -- joiden t.luotu tai t.muokattu on muutospvm-päivänä
     FOR rivi IN
@@ -56,7 +59,9 @@ BEGIN
   
     -- Käsitellään toteuma_muutos-taulun vanhat päivämäärät tälle sopimukselle
     FOR rivi IN
-        SELECT DISTINCT tm.vanha_alkanut::date AS pvm
+        SELECT DISTINCT
+            tm.id AS muutos_id,
+            tm.vanha_alkanut::date AS pvm
         FROM toteuma_muutos tm
         JOIN toteuma t ON t.id = tm.toteuma_id
         WHERE tm.urakka_id = u_id
@@ -64,16 +69,16 @@ BEGIN
           AND tm.sopimuksen_valimuisti_paivitetty = FALSE
     LOOP
         PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+        kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
     END LOOP;
   
-    UPDATE toteuma_muutos tm
-    SET sopimuksen_valimuisti_paivitetty = TRUE,
-        muokattu = CURRENT_TIMESTAMP
-    FROM toteuma t
-    WHERE t.id = tm.toteuma_id
-      AND tm.urakka_id = u_id
-      AND t.sopimus = sopimus_id
-      AND tm.sopimuksen_valimuisti_paivitetty = FALSE;
+    -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
+    IF array_length(kasitellyt_muutos_idt, 1) > 0 THEN
+        UPDATE toteuma_muutos
+        SET sopimuksen_valimuisti_paivitetty = TRUE,
+            muokattu = CURRENT_TIMESTAMP
+        WHERE id = ANY(kasitellyt_muutos_idt);
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
