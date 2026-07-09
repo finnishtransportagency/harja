@@ -2,7 +2,7 @@
   "Sanktiolomake"
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.domain.roolit :as roolit]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
@@ -71,11 +71,11 @@
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
-        ;; Laatupoikkeaman kautta tehtyjä sanktioita saa muokata vain ELY-urakanvalvoja ja ELY-pääkäyttäjä.
-        ;; Suorasanktioille tämä on aina tosi, jotta muokattavuus säilyy ennallaan.
-        saa-muokata-lp-sanktiota? (or suorasanktio?
-                                    (roolit/saa-muokata-laatupoikkeaman-sanktiota?
-                                      (:id @nav/valittu-urakka)))
+        ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
+        ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
+        saa-poistaa? (or suorasanktio?
+                       (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot
+                         (:id @nav/valittu-urakka)))
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
@@ -181,7 +181,7 @@
                              :ikoni (ikonit/tallenna)
                              :disabled (or (not voi-muokata?)
                                          (not (lomake/voi-tallentaa? sanktio)))}]))
-                       (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
+                       (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
                          [:button.nappi-kielteinen.oikealle
                           {:class (when @tallennus-kaynnissa "disabled")
                            :on-click
@@ -319,7 +319,7 @@
             ::lomake/col-luokka "col-xs-12"
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
             :pakollinen? true
-            :muokattava? (if saa-muokata-lp-sanktiota? (constantly voi-muokata?) (constantly false) )
+            :muokattava? (constantly voi-muokata?)
             :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
 
 
@@ -339,7 +339,7 @@
           :nimi :perustelu
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
-          :muokattava? (if saa-muokata-lp-sanktiota? (constantly voi-muokata?) (constantly false))
+          :muokattava? (constantly voi-muokata?)
           :hae (comp :perustelu :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
           :tyyppi :text :koko [80 3]
@@ -438,7 +438,7 @@
            (if (not mhu25?)
             {:otsikko "Käsitelty" :nimi :kasittelyaika
              :pakollinen? true
-             :muokattava? (if saa-muokata-lp-sanktiota? (constantly voi-muokata?) (constantly false)) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
+             :muokattava? (constantly voi-muokata?) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
              ::lomake/col-luokka "col-xs-3"
              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
              :aseta (fn [rivi arvo]

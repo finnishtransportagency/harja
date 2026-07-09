@@ -26,7 +26,6 @@
             [harja.ui.debug :as debug]
 
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
@@ -87,9 +86,6 @@
               oikeus-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                 (:id @nav/valittu-urakka))
               muokataan-vanhaa? (some? (:id @muokattu))
-              suorasanktio? (:suorasanktio @muokattu)
-              saa-muokata-lp-sanktion? (roolit/saa-muokata-laatupoikkeaman-sanktiota?
-                                         (:id @nav/valittu-urakka))
               lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))
@@ -117,15 +113,14 @@
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
               [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
-               ;; Estä muokkaus-nappulan käyttö laatupoikkeaman kautta tehdyille sanktioille,
-               ;; paitsi jos käyttäjällä on ELY-urakanvalvojan tai ELY-pääkäyttäjän rooli, sekä
-               ;; urakan_paatos-taulusta haetuille sanktioille ja bonuksille
+               ;; Muokkaus vaatii kirjoitusoikeuden (W). Lupaussanktioita ja -bonuksia ei voi muokata
+               ;; tällä lomakkeella, koska ne tehdään välikatselmuksessa lupauspäätöksen yhteydessä.
                ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
-               ;;       niin, poista "lupaus?" ehto. Lupausbonus ja lupaussanktio tehdään välikatselmuksessa, kun lupauspäätöstä tehdään.
-               {:disabled (or (and (not suorasanktio?) (not saa-muokata-lp-sanktion?)) lupaus?)}]
+               ;;       niin, poista "lupaus?" ehto.
+               {:disabled (or (not oikeus-muokata?) lupaus?)}]
               (cond
-                (and (not suorasanktio?) (not saa-muokata-lp-sanktion?))
-                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18]
+                (not oikeus-muokata?)
+                [yleiset/vihje (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-sanktiot) nil 18]
                 lupaus?
                 [yleiset/vihje "Lupaussanktiota tai lupausbonusta ei voi muokata tällä lomakkeella" nil 18])])
 

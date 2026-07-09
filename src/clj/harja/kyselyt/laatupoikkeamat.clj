@@ -15,7 +15,7 @@
   hae-laatupoikkeaman-urakka-id hae-laatupoikkeaman-liitteet hae-urakan-laatupoikkeama-liitteet
   hae-laatupoikkeaman-tiedot hae-laatupoikkeaman-kommentit liita-kommentti<! liita-liite<! kirjaa-laatupoikkeaman-paatos!
   paivita-laatupoikkeama-ulkoisella-idlla<!
-  hae-laatupoikkeaman-tallennuksen-perustiedot)
+  peru-laatupoikkeaman-paatos! hae-laatupoikkeaman-tallennuksen-perustiedot)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))

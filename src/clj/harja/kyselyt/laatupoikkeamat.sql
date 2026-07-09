@@ -410,6 +410,19 @@ SET kasittelyaika   = :kasittelyaika,
   muokattu          = current_timestamp
 WHERE id = :id;
 
+-- name: peru-laatupoikkeaman-paatos!
+-- Peruu laatupoikkeaman päätöksen nollaamalla käsittelytiedot ja päätöksen. Tämä poistaa
+-- laatupoikkeaman lukituksen, jolloin laatupoikkeamaa voi taas muokata (vrt. HARJA-1954).
+UPDATE laatupoikkeama
+   SET kasittelyaika     = NULL,
+       paatos            = NULL,
+       perustelu         = NULL,
+       kasittelytapa     = NULL,
+       muu_kasittelytapa = NULL,
+       muokkaaja         = :muokkaaja,
+       muokattu          = current_timestamp
+ WHERE id = :id;
+
 -- name: liita-kommentti<!
 -- Liittää laatupoikkeamaon uuden kommentin
 INSERT INTO laatupoikkeama_kommentti (laatupoikkeama, kommentti) VALUES (:laatupoikkeama, :kommentti);

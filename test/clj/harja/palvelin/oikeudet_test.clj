@@ -310,24 +310,32 @@
              :organisaatio ely
              :organisaation-urakat ely-urakat})
 
-(deftest laatupoikkeaman-sanktion-muokkausoikeus
-  (testing "ELY-urakanvalvoja saa muokata laatupoikkeaman kautta tehtyä sanktiota omassa urakassa"
-    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-uv 1)))
+(deftest laatupoikkeaman-sanktion-poisto-oikeus
+  ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii "poisto"-oikeuden, joka on
+  ;; määritelty roolit-Excelissä näkymälle Urakat / Laadunseuranta / Sanktiot.
+  (testing "ELY-urakanvalvoja saa poistaa omassa urakassaan (poisto)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-uv)))
 
-  (testing "ELY-pääkäyttäjä saa muokata (rooli yleisroolina)"
-    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-pk 1)))
+  (testing "ELY-urakanvalvoja ei saa poistaa urakassa, johon häntä ei ole nimetty"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 ely-uv)))
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-uv-eri-elyssa))))
 
-  (testing "ELY-urakanvalvoja ei saa muokata urakassa, johon häntä ei ole nimetty"
-    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-uv-eri-elyssa 1))))
+  (testing "Tilaajan urakanvalvoja saa poistaa omassa urakassaan (poisto)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 tilaajan-uv)))
 
-  (testing "Järjestelmävastaava (JVH) saa muokata"
-    (is (roolit/saa-muokata-laatupoikkeaman-sanktiota? jvh 1)))
+  (testing "Tilaajan urakanvalvoja ei saa poistaa urakassa, johon häntä ei ole nimetty"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 tilaajan-uv))))
 
-  (testing "Tilaajan urakanvalvoja ei saa muokata"
-    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? tilaajan-uv 1))))
+  (testing "ELY-pääkäyttäjä saa poistaa missä tahansa urakassa (vaatii poisto*)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-pk))
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 ely-pk)))
 
-  (testing "Urakoitsijan pääkäyttäjä ei saa muokata"
-    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ur-pk 1))))
+  (testing "Järjestelmävastaava saa poistaa missä tahansa urakassa (vaatii poisto*)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 jvh))
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 jvh)))
 
-  (testing "ELY-peruskäyttäjä ei saa muokata"
-    (is (not (roolit/saa-muokata-laatupoikkeaman-sanktiota? ely-kayttaja 1)))))
+  (testing "Urakoitsijan pääkäyttäjä ei saa poistaa"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ur-pk))))
+
+  (testing "ELY-peruskäyttäjä (ELY_Kayttaja) ei saa poistaa"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-kayttaja)))))
