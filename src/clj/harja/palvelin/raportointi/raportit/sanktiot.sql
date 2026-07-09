@@ -141,3 +141,72 @@ FROM erilliskustannus ek
 WHERE ek.laskutuskuukausi BETWEEN :alku AND :loppu
   AND ek.poistettu IS NOT TRUE
   AND ek.tyyppi != 'muu'::erilliskustannustyyppi;
+
+-- name: hae-urakkataso-sanktiot
+-- Hakee sanktiot urakkataso-sanktioraportille profiili-driven tavalla
+SELECT
+  s.id AS sanktio_id,
+  sl.koodi AS sanktiolaji_koodi,
+  COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
+  st.id AS sanktiotyyppi_id,
+  st.nimi AS sanktiotyyppi_nimi,
+  st.koodi AS sanktiotyyppi_koodi,
+  s.maara AS summa,
+  s.indeksi AS indeksi,
+  s.suorasanktio,
+  (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi, s.maara, u.id, s.sakkoryhma)) AS indeksikorotus,
+  u.id AS urakka_id,
+  u.nimi AS urakan_nimi
+FROM sanktio s
+  JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  JOIN urakka u ON tpi.urakka = u.id
+  LEFT JOIN sanktiotyyppi st ON s.tyyppi = st.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  -- Liitetään profiili ja rivi
+  JOIN sanktio_profiili sp
+    ON sp.urakkatyyppi = u.tyyppi::TEXT
+    AND sp.aktiivinen IS TRUE
+    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+  JOIN sanktio_profiili_rivi spr
+    ON spr.sanktio_profiili_id = sp.id
+    AND spr.sanktiotyyppi_id = s.tyyppi
+  JOIN sanktio_laji sl ON spr.sanktio_laji_id = sl.id
+  LEFT JOIN sanktio_profiili_laji_esitystiedot splet
+    ON splet.sanktio_profiili_id = sp.id
+    AND splet.sanktio_laji_id = sl.id
+WHERE s.poistettu IS NOT TRUE
+  AND s.perintapvm BETWEEN :alku AND :loppu
+  AND u.id = :urakka
+  AND (lp.yllapitokohde IS NULL OR (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+
+-- name: hae-urakkataso-bonukset
+-- Hakee bonukset urakkataso-sanktioraportille profiili-driven tavalla
+SELECT
+  ek.id AS bonus_id,
+  bl.koodi AS bonuslaji_koodi,
+  COALESCE(bplet.nimi, bl.nimi) AS bonuslaji_nimi,
+  ek.rahasumma AS summa,
+  ek.indeksin_nimi AS indeksi,
+  (SELECT korotus
+   FROM erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi, ek.rahasumma,
+                                            ek.urakka, ek.tyyppi,
+                                            u.tyyppi = 'teiden-hoito')) AS indeksikorotus,
+  u.id AS urakka_id,
+  u.nimi AS urakan_nimi
+FROM erilliskustannus ek
+  JOIN urakka u ON ek.urakka = u.id
+  -- Liitetään bonus_profiili ja rivi
+  JOIN bonus_profiili bp
+    ON bp.urakkatyyppi = u.tyyppi::TEXT
+    AND bp.aktiivinen IS TRUE
+    AND :hoitovuosi BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu
+  JOIN bonus_laji bl ON bl.koodi = ek.tyyppi::TEXT
+  JOIN bonus_profiili_rivi bpr
+    ON bpr.bonus_profiili_id = bp.id
+    AND bpr.bonus_laji_id = bl.id
+  LEFT JOIN bonus_profiili_laji_esitystiedot bplet
+    ON bplet.bonus_profiili_id = bp.id
+    AND bplet.bonus_laji_id = bl.id
+WHERE ek.poistettu IS NOT TRUE
+  AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
+  AND u.id = :urakka;

@@ -210,6 +210,7 @@
         hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupaiva laskutuskuukausi)]
     (str kuukausi-vuosi " (" hoitovuoden-nro ". hoitokausi)")))
 
+
 (defn sanktiot-ja-bonukset-listaus
   [sivupaneeli-auki?-atom valittu-urakka]
   (let [;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
@@ -227,8 +228,6 @@
         urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
 
     [:div.sanktiot
-     #_[harja.ui.debug/debug sanktiot]
-
      [:div.header-rivi
       [:div.laadunseuranta-otsikko
        [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]]
