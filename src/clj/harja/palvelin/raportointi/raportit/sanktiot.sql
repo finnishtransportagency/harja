@@ -163,10 +163,13 @@ FROM sanktio s
   LEFT JOIN sanktiotyyppi st ON s.tyyppi = st.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
   -- Liitetään profiili ja rivi
+  -- Valitaan urakalle sopiva profiili urakan alkupäivämäärän perusteella
   JOIN sanktio_profiili sp
     ON sp.urakkatyyppi = u.tyyppi::TEXT
     AND sp.aktiivinen IS TRUE
     AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+    AND sp.alkupvm <= u.alkupvm
+    AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
   JOIN sanktio_profiili_rivi spr
     ON spr.sanktio_profiili_id = sp.id
     AND spr.sanktiotyyppi_id = s.tyyppi
@@ -196,10 +199,13 @@ SELECT
 FROM erilliskustannus ek
   JOIN urakka u ON ek.urakka = u.id
   -- Liitetään bonus_profiili ja rivi
+  -- Valitaan urakalle sopiva profiili urakan alkupäivämäärän perusteella
   JOIN bonus_profiili bp
     ON bp.urakkatyyppi = u.tyyppi::TEXT
     AND bp.aktiivinen IS TRUE
     AND :hoitovuosi BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu
+    AND bp.alkupvm <= u.alkupvm
+    AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
   JOIN bonus_laji bl ON bl.koodi = ek.tyyppi::TEXT
   JOIN bonus_profiili_rivi bpr
     ON bpr.bonus_profiili_id = bp.id
@@ -210,3 +216,85 @@ FROM erilliskustannus ek
 WHERE ek.poistettu IS NOT TRUE
   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
   AND u.id = :urakka;
+
+-- name: hae-urakkataso-sanktiolajit
+-- Hakee kaikki urakan sanktiolajit ja -tyypit profiilista (myös tyhjät = nollasummat)
+-- Tätä käytetään urakkataso-sanktioraportin taulukon rakenteen muodostamiseen
+-- UNIQUE (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti)
+-- sallii saman (laji_id, tyyppi_id)-yhdistelmän eri soveltuvuuskonteksteissa ('urakka', 'laatupoikkeama').
+-- CTE laskee summat kaikista soveltuvuuskonteksteista GROUP BY(laji_id, tyyppi_id).
+-- DISTINCT ON (sl.id, st.id) näyttää vain yhden rivin per laji-tyyppi-yhdistelmä.
+WITH sanktio_profiili_rivit AS (
+  SELECT spr_cte.sanktio_laji_id,
+         spr_cte.sanktiotyyppi_id,
+         SUM(s.maara) AS yhteissumma
+  FROM sanktio_profiili_rivi spr_cte
+    JOIN sanktio_profiili sp ON sp.id = spr_cte.sanktio_profiili_id
+    JOIN sanktio_laji sl ON sl.id = spr_cte.sanktio_laji_id AND sl.aktiivinen IS TRUE
+    JOIN sanktiotyyppi st ON st.id = spr_cte.sanktiotyyppi_id
+    JOIN sanktio s ON s.tyyppi = spr_cte.sanktiotyyppi_id
+    JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+    JOIN urakka u ON tpi.urakka = u.id AND u.id = :urakka
+  WHERE s.poistettu IS NOT TRUE
+    AND s.perintapvm BETWEEN :alku AND :loppu
+    AND sp.urakkatyyppi = u.tyyppi::TEXT
+    AND sp.aktiivinen IS TRUE
+    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+    AND sp.alkupvm <= u.alkupvm
+    AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
+  GROUP BY spr_cte.sanktio_laji_id, spr_cte.sanktiotyyppi_id
+)
+SELECT DISTINCT ON (sl.id, st.id)
+  sl.koodi AS sanktiolaji_koodi,
+  COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
+  sl.jarjestys AS sanktiolaji_jarjestys,
+  st.id AS sanktiotyyppi_id,
+  st.nimi AS sanktiotyyppi_nimi,
+  st.koodi AS sanktiotyyppi_koodi,
+  COALESCE(spr_cte.yhteissumma, 0) AS summa
+FROM sanktio_profiili sp
+  JOIN sanktio_profiili_rivi spr
+    ON spr.sanktio_profiili_id = sp.id
+    AND spr.aktiivinen IS TRUE
+  JOIN sanktio_laji sl
+    ON sl.id = spr.sanktio_laji_id
+    AND sl.aktiivinen IS TRUE
+  JOIN sanktiotyyppi st
+    ON st.id = spr.sanktiotyyppi_id
+  LEFT JOIN sanktio_profiili_laji_esitystiedot splet
+    ON splet.sanktio_profiili_id = sp.id
+    AND splet.sanktio_laji_id = sl.id
+  LEFT JOIN sanktio_profiili_rivit spr_cte ON spr_cte.sanktio_laji_id = sl.id AND spr_cte.sanktiotyyppi_id = st.id
+  JOIN urakka u ON u.id = :urakka
+WHERE sp.urakkatyyppi = u.tyyppi::TEXT
+  AND sp.aktiivinen IS TRUE
+  AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+  AND sp.alkupvm <= u.alkupvm
+  AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
+ORDER BY sl.id, st.id, sl.jarjestys, st.koodi;
+
+-- name: hae-urakkataso-bonuslajit
+-- Hakee kaikki urakan bonuslajit profiilista (myös tyhjät = nollasummat)
+-- DISTINCT ON suojaa bonus_profiili_rivi-taulun mahdollisilta duplikaateilta
+SELECT DISTINCT ON (bl.id)
+  bl.koodi AS bonuslaji_koodi,
+  COALESCE(bplet.nimi, bl.nimi) AS bonuslaji_nimi,
+  bl.jarjestys AS bonuslaji_jarjestys,
+  0 AS summa
+FROM bonus_profiili bp
+  JOIN bonus_profiili_rivi bpr
+    ON bpr.bonus_profiili_id = bp.id
+    AND bpr.aktiivinen IS TRUE
+  JOIN bonus_laji bl
+    ON bl.id = bpr.bonus_laji_id
+    AND bl.aktiivinen IS TRUE
+  LEFT JOIN bonus_profiili_laji_esitystiedot bplet
+    ON bplet.bonus_profiili_id = bp.id
+    AND bplet.bonus_laji_id = bl.id
+  JOIN urakka u ON u.id = :urakka
+WHERE bp.urakkatyyppi = u.tyyppi::TEXT
+  AND bp.aktiivinen IS TRUE
+  AND :hoitovuosi BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu
+  AND bp.alkupvm <= u.alkupvm
+  AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
+ORDER BY bl.id, bl.jarjestys;
