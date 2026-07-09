@@ -41,7 +41,7 @@
                  [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.26.0"]
+                 [org.apache.logging.log4j/log4j-core "2.26.1"]
 
                  ;; --
 
