@@ -641,7 +641,7 @@ jobs:
           echo +++++++++++++++++++
           echo
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: cache-npm
         with:
           path: node_modules
@@ -653,7 +653,7 @@ jobs:
       - name: Install Cypress test dependencies (transit-js)
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
-          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
+          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package.json").dependencies["transit-js"]')
           npm install "transit-js@${NPM_TRANSITJS_VERSION}" --ignore-scripts
 
       # Ajaa cypress testit erillisessä kontissa
