@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.sanktio
   (:require [jeesql.core :refer [defqueries]]
             [harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset :as yhteiset]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.palvelin.palvelut.urakan-toimenpiteet :as toimenpiteet]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
@@ -81,32 +81,31 @@
 
         ;; Sanktiorivit lajeittain (profiili-driven, dynaaminen)
         sanktiot-lajeittain (group-by :sanktiolaji_nimi sanktiot)
-        sanktio-taulukko-rivit (mapcat
-                                 (fn [[laji-nimi laji-sanktiot]]
-                                   (let [tyypit (group-by :sanktiotyyppi_nimi laji-sanktiot)]
-                                     (concat
-                                       [{:otsikko laji-nimi}]
-                                       (mapv (fn [[tyyppi-nimi tyyppi-sanktiot]]
-                                               (let [summa (reduce + 0 (map #(or (:summa %) 0) tyyppi-sanktiot))
-                                                     nolla? (zero? summa)]
-                                                 [(or tyyppi-nimi laji-nimi)
-                                                  [:arvo-ja-yksikko {:arvo summa
-                                                                     :fmt :raha
-                                                                     :korosta-hennosti? nolla?}]]))
-                                         tyypit))))
-                                 sanktiot-lajeittain)
+        sanktio-rivit (mapcat
+                        (fn [[laji-nimi laji-sanktiot]]
+                          (let [tyypit (group-by :sanktiotyyppi_nimi laji-sanktiot)]
+                            (concat
+                              [{:korosta-harmaa? true
+                                :lihavoi? true
+                                :rivi (rivi laji-nimi "" "")}]
+                              (mapv (fn [[tyyppi-nimi tyyppi-sanktiot]]
+                                      (let [summa (reduce + 0 (map #(or (:summa %) 0) tyyppi-sanktiot))]
+                                        (rivi (or tyyppi-nimi laji-nimi) summa)))
+                                tyypit))))
+                        sanktiot-lajeittain)
+        sanktio-yhteensa-rivi [{:lihavoi? true
+                                :korosta-hennosti? true
+                                :rivi (rivi "Yhteensä" sanktiot-yhteensa)}]
 
         ;; Bonusrivit lajeittain (profiili-driven, dynaaminen)
         bonukset-lajeittain (group-by :bonuslaji_nimi bonukset)
-        bonus-taulukko-rivit (mapv
-                               (fn [[laji-nimi laji-bonukset]]
-                                 (let [summa (reduce + 0 (map #(or (:summa %) 0) laji-bonukset))
-                                       nolla? (zero? summa)]
-                                   [(or laji-nimi "-")
-                                    [:arvo-ja-yksikko {:arvo summa
-                                                       :fmt :raha
-                                                       :korosta-hennosti? nolla?}]]))
-                               bonukset-lajeittain)]
+        bonus-rivit (mapv (fn [[laji-nimi laji-bonukset]]
+                            (let [summa (reduce + 0 (map #(or (:summa %) 0) laji-bonukset))]
+                              (rivi (or laji-nimi "-") summa)))
+                          bonukset-lajeittain)
+        bonus-yhteensa-rivi [{:lihavoi? true
+                              :korosta-hennosti? true
+                              :rivi (rivi "Yhteensä" bonukset-yhteensa)}]]
 
     [:raportti {:nimi urakan-nimi :orientaatio :landscape}
      [:otsikko otsikko]
@@ -117,20 +116,22 @@
        yhteenveto-data]]
 
      ;; Sanktiotaulukko
-     (yhteiset/koosta-taulukko
-       "Sanktiot"
-       {:sheet-nimi "Sanktiot"
-        :raportin-otsikot [{:otsikko "" :leveys 12}
-                           {:otsikko "Summa" :leveys 15 :fmt :raha}]
-        :osamateriaalit sanktio-taulukko-rivit})
+     [:taulukko {:otsikko "Sanktiot"
+                 :sheet-nimi "Sanktiot"
+                 :viimeinen-rivi-yhteenveto? true
+                 :tyhja (when (empty? sanktiot) "Ei sanktioita.")}
+      [{:leveys 12 :otsikko "Sanktiolaji"}
+       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
+      (into [] (concat sanktio-rivit sanktio-yhteensa-rivi))]
 
      ;; Bonustaulukko
-     (yhteiset/koosta-taulukko
-       "Bonukset"
-       {:sheet-nimi "Bonukset"
-        :raportin-otsikot [{:otsikko "" :leveys 12}
-                           {:otsikko "Summa" :leveys 15 :fmt :raha}]
-        :osamateriaalit bonus-taulukko-rivit})]))
+     [:taulukko {:otsikko "Bonukset"
+                 :sheet-nimi "Bonukset"
+                 :viimeinen-rivi-yhteenveto? true
+                 :tyhja (when (empty? bonukset) "Ei bonuksia.")}
+      [{:leveys 12 :otsikko "Bonuslaji"}
+       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
+      (into [] (concat bonus-rivit bonus-yhteensa-rivi))]]))
 
 (defn suorita
   "Raportin suoritin urakkataso-sanktioraportille (MHU25+).
