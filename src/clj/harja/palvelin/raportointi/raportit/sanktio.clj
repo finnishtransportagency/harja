@@ -10,6 +10,19 @@
 
 (declare hae-sanktiot hae-bonukset hae-urakkataso-sanktiot hae-urakkataso-bonukset hae-urakkataso-sanktiolajit hae-urakkataso-bonuslajit)
 
+(defn- koosta-arvonvahennys-taulukko [arvonvahennykset]
+  (let [rivit (mapv (fn [[laji-nimi lajit]]
+                      (let [summa (reduce + 0 (map #(or (:summa %) 0) lajit))]
+                        (rivi (or laji-nimi "Arvonvähennys") summa)))
+                (group-by :sanktiolaji_nimi arvonvahennykset))
+        yhteenveto [{:lihavoi? true
+                     :korosta-hennosti? true
+                     :rivi (rivi "Yhteensä" (reduce + 0 (map #(or (:summa %) 0) arvonvahennykset)))}]]
+    [{:leveys 12 :otsikko "Arvonvähennyslaji"}
+     {:leveys 15 :otsikko "Summa (€)" :fmt :raha}
+     (into [] (concat rivit yhteenveto))]))
+
+
 (defn- jasenna-raportin-nimi [db parametrit]
   (let [urakan-tiedot (if (not (nil? (:urakka-id parametrit)))
                         (first (urakat-kyselyt/hae-urakka db (:urakka-id parametrit)))
@@ -94,12 +107,12 @@
   (let [;;Ryhmitellään lajit koodin mukaan
         ryhmitelty (group-by :sanktiolaji_koodi sanktiolajit)
         ;; Järjestetään jokainen ryhmä jarjestys-kentän mukaan
-        jarjestetty (->> ryhmitelty
-                      (sort-by (fn [[_ lajit]] (or (:sanktiolaji_jarjestys (first lajit)) 99)))
-                        (map val)
-                        (mapv #(sort-by :sanktiolaji_jarjestys %)))]
+        jarjestetty (mapv (fn [lajit]
+                            (sort-by :sanktiolaji_jarjestys lajit))
+                      (sort-by (fn [[_ lajit]] (or (:sanktiolaji_jarjestys (first lajit)) 99))
+                        (map val ryhmitelty)))]
       ;; Muodosta jokaiselle ryhmälle oma taulukko
-      (mapv #(muodosta-sanktio-taulukko % sanktio-data-map) jarjestetty))))
+    (mapv #(muodosta-sanktio-taulukko % sanktio-data-map) jarjestetty)))
 
 (defn- muodosta-bonus-taulukko
   "Muodostaa bonus-taulukon annetuista bonusriveistä."
@@ -173,15 +186,8 @@
         ;; Bonus-lajit järjestyksessä
         bonus-lajit-jarjestyksessa (sort-by :bonuslaji_jarjestys bonuslajit)
 
-        ;; Arvonvähennysrivit
-        arvonvahennykset-lajeittain (group-by :sanktiolaji_nimi arvonvahennykset)
-        arvonvahennys-rivit (mapv (fn [[laji-nimi laji-arvonvahennykset]]
-                                    (let [summa (reduce + 0 (map #(or (:summa %) 0) laji-arvonvahennykset))]
-                                      (rivi (or laji-nimi "Arvonvähennys") summa)))
-                              arvonvahennykset-lajeittain)
-        arvonvahennys-yhteensa-rivi [{:lihavoi? true
-                                      :korosta-hennosti? true
-                                      :rivi (rivi "Yhteensä" arvonvahennykset-summa)}]]
+        ;; Arvonvähennysrivit (koosta-arvonvahennys-taulukko palauttaa taulukkorakenteen)
+        arvonvahennys-taulukko (koosta-arvonvahennys-taulukko arvonvahennykset)]
 
     (into [:raportti {:nimi urakan-nimi :orientaatio :landscape}
            [:otsikko otsikko]
@@ -196,14 +202,12 @@
           (koosta-sanktio-taulukot sanktiolajit sanktio-data-map))
         ;; Bonus-taulukko (erillinen)
         [(muodosta-bonus-taulukko bonus-lajit-jarjestyksessa bonus-data-map)]
-        ;; Arvonvahennystaulukko
+        ;; Arvonvahennystaulukko (käytetään koosta-arvonvahennys-taulukko-funktiota)
         [[:taulukko {:otsikko "Arvonvähennykset"
                      :sheet-nimi "Arvonvähennykset"
                      :viimeinen-rivi-yhteenveto? true
                      :tyhja (when (empty? arvonvahennykset) "Ei arvonvähennyksiä.")}
-          [{:leveys 12 :otsikko "Arvonvähennyslaji"}
-           {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
-          (into [] (concat arvonvahennys-rivit arvonvahennys-yhteensa-rivi))]]))))
+          arvonvahennys-taulukko]]))))
 
 (defn suorita
   "Raportin suoritin urakkataso-sanktioraportille (MHU25+).
