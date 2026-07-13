@@ -112,8 +112,8 @@ SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
     :alkupvm::DATE,
     :loppupvm::DATE);
 
---name: paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla
-SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla(
+--name: paivita-urakan-materiaalinkaytto-hoitoluokittain-muutospaivalla
+SELECT paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla(
     :urakka::INTEGER,
     :muutospvm::DATE);
 

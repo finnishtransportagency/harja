@@ -60,13 +60,13 @@ BEGIN
     -- Käsitellään toteuma_muutos-taulun vanhat päivämäärät tälle sopimukselle
     FOR rivi IN
         SELECT DISTINCT
-            tm.id AS muutos_id,
-            tm.vanha_alkanut::date AS pvm
-        FROM toteuma_muutos tm
-        JOIN toteuma t ON t.id = tm.toteuma_id
-        WHERE tm.urakka_id = u_id
+            mp.id AS muutos_id,
+            mp.toteuma_alkanut_vanha::date AS pvm
+        FROM materiaalivalimuisti_paivitystarve mp
+        JOIN toteuma t ON t.id = mp.toteuma_id
+        WHERE mp.urakka_id = u_id
           AND t.sopimus = sopimus_id
-          AND tm.sopimuksen_valimuisti_paivitetty = FALSE
+          AND mp.sopimuksen_valimuisti_paivitetty = FALSE
     LOOP
         PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
         kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
@@ -74,9 +74,10 @@ BEGIN
   
     -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
     IF array_length(kasitellyt_muutos_idt, 1) > 0 THEN
-        UPDATE toteuma_muutos
+        UPDATE materiaalivalimuisti_paivitystarve
         SET sopimuksen_valimuisti_paivitetty = TRUE,
-            muokattu = CURRENT_TIMESTAMP
+            muokattu = CURRENT_TIMESTAMP,
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajatunnus = 'Integraatio')
         WHERE id = ANY(kasitellyt_muutos_idt);
     END IF;
 END;

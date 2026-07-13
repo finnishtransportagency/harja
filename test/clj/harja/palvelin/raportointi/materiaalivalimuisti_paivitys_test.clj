@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.cache-paivitys-test
+(ns harja.palvelin.raportointi.materiaalivalimuisti-paivitys-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -73,7 +73,7 @@
         "Uusi päivämäärä ei ole vielä cachessa ennen funktiokutsua")
 
       ;; 5. Kutsutaan funktiota — muutospvm = tänään, jotta toteuma (luotu NOW()) löytyy muutospvm-haarasta  
-      (q (str "SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla("
+      (q (str "SELECT paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla("
            urakka-id ", NOW()::date)"))
 
       ;; 6. Tarkistetaan: vanha päivämäärä on poistunut  

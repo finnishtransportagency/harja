@@ -68,7 +68,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Käytetään ajastetussa tehtävässä, joka päivittää urakan_materiaalinkaytto_hoitoluokittain välimuistitaulun joka yö.
-CREATE OR REPLACE FUNCTION paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla (
+CREATE OR REPLACE FUNCTION paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla (
     urakka_id INTEGER, muutospvm DATE
 ) RETURNS void AS $$
 DECLARE
@@ -104,11 +104,11 @@ BEGIN
         UNION
         -- Valitaan vanhat päivämäärät jos toteuma.alkanut on muuttunut
         SELECT DISTINCT
-          tm.id AS muutos_id,
-          tm.vanha_alkanut::date AS pvm
-        FROM toteuma_muutos tm
-        WHERE tm.urakka_id = u_id
-          AND tm.urakan_valimuisti_paivitetty = FALSE
+          mp.id AS muutos_id,
+          mp.toteuma_alkanut_vanha::date AS pvm
+        FROM materiaalivalimuisti_paivitystarve mp
+        WHERE mp.urakka_id = u_id
+          AND mp.urakan_valimuisti_paivitetty = FALSE
     LOOP
         -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
         PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
@@ -121,9 +121,10 @@ BEGIN
 
     -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
     IF array_length(kasitellyt_muutos_idt, 1) > 0 THEN
-        UPDATE toteuma_muutos
+        UPDATE materiaalivalimuisti_paivitystarve
         SET urakan_valimuisti_paivitetty = TRUE,
-            muokattu = CURRENT_TIMESTAMP
+            muokattu = CURRENT_TIMESTAMP,
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajatunnus = 'Integraatio')
         WHERE id = ANY(kasitellyt_muutos_idt);
     END IF;
 END;
