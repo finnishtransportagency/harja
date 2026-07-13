@@ -57,7 +57,8 @@ BEGIN
         PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
     END LOOP;
   
-    -- Käsitellään toteuma_muutos-taulun vanhat päivämäärät tälle sopimukselle
+    -- Päivitetään sopimuksen materiaalin käyttö päiviltä, joilta materiaalia on poistettu TOTEUMA.alkanut-ajankohtaa muuttamalla. 
+    -- Vanha alkanut-ajankohta löytyy taulusta MATERIAALIVALIMUISTI_PAIVITYSTARVE.
     FOR rivi IN
         SELECT DISTINCT
             mp.id AS muutos_id,
@@ -68,8 +69,12 @@ BEGIN
           AND t.sopimus = sopimus_id
           AND mp.sopimuksen_valimuisti_paivitetty = FALSE
     LOOP
-        PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
-        kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
+        BEGIN
+            PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+            kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Materiaalikäytön päivitys epäonnistui sopimukselle %, päivälle %: %', sopimus_id, rivi.pvm, SQLERRM;
+        END;
     END LOOP;
   
     -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
@@ -77,7 +82,7 @@ BEGIN
         UPDATE materiaalivalimuisti_paivitystarve
         SET sopimuksen_valimuisti_paivitetty = TRUE,
             muokattu = CURRENT_TIMESTAMP,
-            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajatunnus = 'Integraatio')
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
         WHERE id = ANY(kasitellyt_muutos_idt);
     END IF;
 END;

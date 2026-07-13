@@ -102,7 +102,8 @@ BEGIN
                    OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
         
         UNION
-        -- Valitaan vanhat päivämäärät jos toteuma.alkanut on muuttunut
+        -- Päivitetään urakan materiaalin käyttö päiviltä, joilta materiaalia on poistettu TOTEUMA.alkanut-ajankohtaa muuttamalla. 
+        -- Vanha alkanut-ajankohta löytyy taulusta MATERIAALIVALIMUISTI_PAIVITYSTARVE.
         SELECT DISTINCT
           mp.id AS muutos_id,
           mp.toteuma_alkanut_vanha::date AS pvm
@@ -110,13 +111,17 @@ BEGIN
         WHERE mp.urakka_id = u_id
           AND mp.urakan_valimuisti_paivitetty = FALSE
     LOOP
-        -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
-        PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
-        
-        -- Kerää toteuma_muutos-rivien id:t talteen
-        IF rivi.muutos_id IS NOT NULL THEN
-            kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
-        END IF;
+        BEGIN
+            -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
+            PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
+            
+            -- Kerää toteuma_muutos-rivien id:t talteen
+            IF rivi.muutos_id IS NOT NULL THEN
+                kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
+            END IF;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Materiaalin käytön päivitys epäonnistui urakalle %, päivälle %: %', urakka_id, rivi.pvm, SQLERRM;
+        END;
     END LOOP;
 
     -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
@@ -124,7 +129,7 @@ BEGIN
         UPDATE materiaalivalimuisti_paivitystarve
         SET urakan_valimuisti_paivitetty = TRUE,
             muokattu = CURRENT_TIMESTAMP,
-            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajatunnus = 'Integraatio')
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
         WHERE id = ANY(kasitellyt_muutos_idt);
     END IF;
 END;

@@ -733,7 +733,7 @@
 
     (is (= 200 (:status toinen-vastaus-lisays)))))
 
-;; Testaa että update_toteuma_check_partition-triggeri tallentaa toteuma_muutos-rivin
+;; Testaa että update_toteuma_check_partition-triggeri tallentaa materiaalivalimuisti_paivitystarve-rivin
 ;; oikein kun toteuman alkanut-kenttä muuttuu. Cache-päivitys tapahtuu vasta yöeräajossa.
 (deftest paivita-reittitoteuman-alkupvm
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
@@ -758,33 +758,33 @@
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
         _ (odota-reittipisteet toteuma-id)
 
-        muutos-ennen-paivitysta (q (str "SELECT id FROM toteuma_muutos WHERE toteuma_id = " toteuma-id))
+        muutos-ennen-paivitysta (q (str "SELECT id FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id))
 
-        ;; Päivitetään toteuma uudella alkanut-ajalla — triggerin pitäisi luoda toteuma_muutos-rivi
+        ;; Päivitetään toteuma uudella alkanut-ajalla — triggerin pitäisi luoda materiaalivalimuisti_paivitystarve-rivi
         vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti toteuma-ajat-muokattu)
         _ (is (= 200 (:status vastaus-paivitys)))
 
         toteuma-id-paivityksen-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
         _ (odota-reittipisteet toteuma-id-paivityksen-jalkeen)
 
-        muutos-paivityksen-jalkeen (first (q (str "SELECT toteuma_id, urakka_id, vanha_alkanut::date
-                                                     FROM toteuma_muutos
+        muutos-paivityksen-jalkeen (first (q (str "SELECT toteuma_id, urakka_id, toteuma_alkanut_vanha::date
+                                                     FROM materiaalivalimuisti_paivitystarve
                                                     WHERE toteuma_id = " toteuma-id-paivityksen-jalkeen)))]
 
-    ;; Ennen päivitystä toteuma_muutos-taulussa ei pitäisi olla riviä tälle toteumalle
+    ;; Ennen päivitystä materiaalivalimuisti_paivitystarve-taulussa ei pitäisi olla riviä tälle toteumalle
     (is (empty? muutos-ennen-paivitysta)
-      "toteuma_muutos on tyhjä ennen alkanut-muutosta")
+      "materiaalivalimuisti_paivitystarve on tyhjä ennen alkanut-muutosta")
 
-    ;; Päivityksen jälkeen triggerin pitää olla luonut toteuma_muutos-rivi vanhalla pvm:llä
+    ;; Päivityksen jälkeen triggerin pitää olla luonut materiaalivalimuisti_paivitystarve-rivi vanhalla pvm:llä
     (is (some? muutos-paivityksen-jalkeen)
-      "toteuma_muutos sisältää rivin alkanut-muutoksen jälkeen")
+      "materiaalivalimuisti_paivitystarve sisältää rivin alkanut-muutoksen jälkeen")
     (is (= urakka-id (second muutos-paivityksen-jalkeen))
-      "toteuma_muutos.urakka_id on oikein")
+      "materiaalivalimuisti_paivitystarve.urakka_id on oikein")
     (is (= #inst "2016-01-29T22:00:00.000-00:00" (last muutos-paivityksen-jalkeen))
-      "toteuma_muutos.vanha_alkanut on alkuperäinen pvm ennen muutosta")
+      "materiaalivalimuisti_paivitystarve.toteuma_alkanut_vanha on alkuperäinen pvm ennen muutosta")
 
     (poista-reittitoteuma toteuma-id-paivityksen-jalkeen ulkoinen-id urakka-id)
-    (u (str "DELETE FROM toteuma_muutos WHERE toteuma_id = " toteuma-id-paivityksen-jalkeen))))
+    (u (str "DELETE FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id-paivityksen-jalkeen))))
 
 ;; Varmistetaan että suolatoteuma_reittipiste-taulu päivittyy oikein kun reittitoteumaa päivitetään.
 (deftest suolarajoitusalueen-toteumat-paivittyy-oikein

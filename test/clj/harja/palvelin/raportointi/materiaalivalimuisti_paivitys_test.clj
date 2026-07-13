@@ -56,9 +56,9 @@
                ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain  
                DO UPDATE SET maara = 100"))
 
-      ;; 4. Lisätään toteuma_muutos-rivi (vanha alkanut = vanha-pvm, ei vielä käsitelty)  
-      (u (str "INSERT INTO toteuma_muutos  
-                 (toteuma_id, urakka_id, vanha_alkanut, urakan_valimuisti_paivitetty)  
+      ;; 4. Lisätään materiaalivalimuisti_paivitystarve (vanha alkanut = vanha-pvm, ei vielä käsitelty)  
+      (u (str "INSERT INTO materiaalivalimuisti_paivitystarve  
+                 (toteuma_id, urakka_id, toteuma_alkanut_vanha, urakan_valimuisti_paivitetty)  
                VALUES (" toteuma-id ", " urakka-id ", '" vanha-pvm "'::timestamp, FALSE)"))
 
       ;; Varmistetaan lähtötilanne  
@@ -95,16 +95,16 @@
                                      AND materiaalikoodi = " materiaali-id))))
         "Materiaalin määrä on oikea (reittipisteiden mukainen 5.0)")
 
-      ;; 9. Tarkistetaan: toteuma_muutos-rivi on merkitty käsitellyksi
+      ;; 9. Tarkistetaan: materiaalivalimuisti_paivitystarve-rivi on merkitty käsitellyksi
       (is (= true (ffirst (q (str "SELECT urakan_valimuisti_paivitetty  
-                                   FROM toteuma_muutos  
+                                   FROM materiaalivalimuisti_paivitystarve  
                                    WHERE toteuma_id = " toteuma-id "  
                                      AND urakka_id = " urakka-id
                                " ORDER BY id DESC LIMIT 1"))))
-        "toteuma_muutos-rivi on merkitty käsitellyksi")
+        "materiaalivalimuisti_paivitystarve-rivi on merkitty käsitellyksi")
 
       ;; Siivotaan  
-      (u (str "DELETE FROM toteuma_muutos WHERE toteuma_id = " toteuma-id))
+      (u (str "DELETE FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id))
       (u (str "DELETE FROM toteuman_reittipisteet WHERE toteuma = " toteuma-id))
       (u (str "DELETE FROM toteuma WHERE id = " toteuma-id)))))
 
@@ -139,9 +139,9 @@
                ON CONFLICT ON CONSTRAINT uniikki_sop_pvm_mk  
                DO UPDATE SET maara = 99.0"))
 
-      ;; 4. Lisätään toteuma_muutos-rivi (vanha alkanut = vanha-pvm, ei vielä käsitelty)  
-      (u (str "INSERT INTO toteuma_muutos  
-                 (toteuma_id, urakka_id, vanha_alkanut, sopimuksen_valimuisti_paivitetty)  
+      ;; 4. Lisätään materiaalivalimuisti_paivitystarve (vanha alkanut = vanha-pvm, ei vielä käsitelty)  
+      (u (str "INSERT INTO materiaalivalimuisti_paivitystarve  
+                 (toteuma_id, urakka_id, toteuma_alkanut_vanha, sopimuksen_valimuisti_paivitetty)  
                VALUES (" toteuma-id ", " urakka-id ", '" vanha-pvm "'::timestamp, FALSE)"))
 
       ;; Varmistetaan lähtötilanne  
@@ -165,28 +165,28 @@
                                   AND alkupvm = '" vanha-pvm "'::date")))
         "Vanha päivämäärä on poistunut sopimuksen_kaytetty_materiaali-taulusta")
 
-      ;; 7. Tarkistetaan: uusi päivämäärä löytyy cachesta (toteuma_materiaali-rivin kautta)  
+      ;; 7. Tarkistetaan: uusi päivämäärä löytyy cachesta (materiaalivalimuisti_paivitystarve kautta)  
       (is (not (empty? (q-map (str "SELECT 1 FROM sopimuksen_kaytetty_materiaali  
                                     WHERE sopimus = " sopimus-id "  
                                       AND alkupvm = '" uusi-pvm "'::date"))))
         "Uusi päivämäärä löytyy sopimuksen_kaytetty_materiaali-taulusta")
 
-      ;; 8. Tarkistetaan materiaalin määrä — pitäisi olla toteuma_materiaali:n mukainen (42.0)  
+      ;; 8. Tarkistetaan materiaalin määrä — pitäisi olla materiaalivalimuisti_paivitystarve:n mukainen (42.0)  
       (is (= 42.0M (ffirst (q (str "SELECT maara FROM sopimuksen_kaytetty_materiaali  
                                     WHERE sopimus = " sopimus-id "  
                                       AND alkupvm = '" uusi-pvm "'::date  
                                       AND materiaalikoodi = " materiaali-id))))
-        "Materiaalin määrä on oikea (toteuma_materiaali:n mukainen 42.0)")
+        "Materiaalin määrä on oikea (materiaalivalimuisti_paivitystarve:n mukainen 42.0)")
 
-      ;; 9. Tarkistetaan: toteuma_muutos-rivi on merkitty käsitellyksi
+      ;; 9. Tarkistetaan: materiaalivalimuisti_paivitystarve-rivi on merkitty käsitellyksi
       (is (= true (ffirst (q (str "SELECT sopimuksen_valimuisti_paivitetty  
-                                   FROM toteuma_muutos  
+                                   FROM materiaalivalimuisti_paivitystarve  
                                    WHERE toteuma_id = " toteuma-id "  
                                      AND urakka_id = " urakka-id
                                " ORDER BY id DESC LIMIT 1"))))
-        "toteuma_muutos-rivi on merkitty käsitellyksi")
+        "materiaalivalimuisti_paivitystarve-rivi on merkitty käsitellyksi")
 
       ;; Siivotaan  
-      (u (str "DELETE FROM toteuma_muutos WHERE toteuma_id = " toteuma-id))
+      (u (str "DELETE FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id))
       (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
       (u (str "DELETE FROM toteuma WHERE id = " toteuma-id)))))
