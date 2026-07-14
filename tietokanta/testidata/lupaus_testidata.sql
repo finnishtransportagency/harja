@@ -265,12 +265,12 @@ DO $$
     END
 $$ LANGUAGE plpgsql;
 
---- Linkitetään 2025 urakat lupausryhmiin
+--- Linkitetään 2025 ja 2026 urakat lupausryhmiin
 INSERT INTO lupausryhma_urakka (lupausryhma_id, urakka_id)
 SELECT lupausryhma.id AS "lupausryhma_id", urakka.id  AS "urakka_id"
 FROM urakka
          JOIN lupausryhma ON lupausryhma."urakan-alkuvuosi" = EXTRACT(YEAR FROM urakka.alkupvm)
-WHERE lupausryhma."urakan-alkuvuosi" = 2025
+WHERE lupausryhma."urakan-alkuvuosi" IN (2025, 2026)
   AND lupausryhma."rivin-tunnistin-selite" = 'Yleinen';
 
 -- ============================================================================

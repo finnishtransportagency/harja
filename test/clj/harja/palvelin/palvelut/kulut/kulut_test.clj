@@ -371,7 +371,7 @@
 (deftest tallenna-kulu-erapaiva-validointi-testi
   (let [uusi-kulu-vaara-erapaiva (assoc uusi-kulu :erapaiva #inst "1921-12-15T21:00:00.000-00:00")]
     (feilaa-tallenna-kulu-validointi uusi-kulu-vaara-erapaiva
-      "Eräpäivä Thu Dec 15 23:00:00 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä")))
+      "Laskun pvm 15.12.1921 ei ole koontilaskun kuukauden sisällä.")))
 
 (deftest tallenna-kulu-koontilaskun-kuukausi-validointi-testi
   (let [uusi-kulu-vaara-koontilaskun-kuukausi (assoc uusi-kulu :koontilaskun-kuukausi "vaara-muoto")]

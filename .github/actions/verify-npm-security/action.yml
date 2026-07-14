@@ -15,11 +15,11 @@ runs:
 
         ignore_scripts=$(npm config get ignore-scripts)
         allow_git=$(npm config get allow-git)
-        before=$(npm config get before)
+        min_release_age=$(npm config get min-release-age)
         
         echo "ignore-scripts = $ignore_scripts"
         echo "allow-git = $allow_git"
-        echo "before (derived from 'min-release-age') = $before"
+        echo "min-release-age = $min_release_age"
         
         errors=0
         
@@ -33,25 +33,15 @@ runs:
           errors=$((errors + 1))
         fi
         
-        if [ -z "$before" ] || [ "$before" = "null" ]; then
-          echo "::error::before (derived from 'min-release-age') has no value. Expected a date string, got '$before'. Check that 'min-release-age' is defined."
+        if [ -z "$min_release_age" ] || [ "$min_release_age" = "null" ] || [ "$min_release_age" = "undefined" ]; then
+          echo "::error::min-release-age has no value. expected a number of days, got '$min_release_age'."
           errors=$((errors + 1))
         else
-          before_seconds=$(date -d "$before" +%s 2>/dev/null)
-          current_seconds=$(date +%s)
-
-          if [ -z "$before_seconds" ]; then
-            echo "::error::Failed to transform 'before' date string into seconds."
-            errors=$((errors + 1))
+          if [[ "$min_release_age" =~ ^[0-9]+$ ]] && [ "$min_release_age" -gt 0 ]; then
+            echo "Validation successful: 'min-release-age' is configured to $min_release_age days."
           else
-            before_diff_seconds=$(( current_seconds - before_seconds ))
-
-            if [ "$before_diff_seconds" -gt 60 ]; then
-              echo "Validation successful: 'min-release-age' is greater than 0, got '$(( before_diff_seconds / 86400 ))' days."
-            else
-              echo "::error::min-release-age is <= 0."
-              errors=$((errors + 1))
-            fi
+            echo "::error::min-release-age is not a valid positive number, got '$min_release_age'."
+            errors=$((errors + 1))
           fi
         fi
 
