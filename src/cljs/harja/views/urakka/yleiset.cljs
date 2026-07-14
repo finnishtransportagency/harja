@@ -727,7 +727,9 @@ tietorivit ["Urakan nimi:" (:nimi ur)
           :otsikko "Yhteyshenkilöt"
           :tyhja "Ei yhteyshenkilöitä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}
+                      #(tallenna-yhteyshenkilot ur yhteyshenkilot %))
+          :voi-muokata-rivia? #(not= "Sampo yhteyshenkilö" (:rooli %))
+          :voi-poistaa? #(not= "Sampo yhteyshenkilö" (:rooli %))}
          [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
            :hae #(do (when (:rooli %)
                        (str/capitalize (:rooli %))))
