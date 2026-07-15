@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rajoitusalue": {
+      "id": "urn:harja/rajoitusalueet/0/rajoitusalue",
+      "type": "object",
+      "description": "Skeema määrittelee urakoitsijarajapinnasta palautettavan rajoitusalueen ja siihen liittyvien rajoituksien muodon. Urakan projektipäällikkö kirjaa urakan rajoitusalueet ja suolan käytön rajoitukset urakka-asiakirjojen mukaisesti Harjaan. Urakoitsija työskentelee urakka-asiakirjan tietojen mukaan. Jos urakoissa havaitaan rajoitusaluekirjauksissa tai kirjausten perusteella muodostetuissa geometrioissa virheitä, voi tästä mainita urakan projektipäällikölle tai laittaa palautetta Harjan ylläpitoon.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rajoitusalue-id": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/id",
+            "type": "integer",
+            "description": "Rajoitusalueen id Harjassa."
+          },
+          "urakka-id": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/urakka",
+            "type": "integer",
+            "description": "Harjan urakka-id. Tämä skeema on relevantti vain maanteiden hoidon urakoissa. Palautettu tieto on julkista. Samaan rajoitusalueeseen voi kohdistua suolan käytön rajoituksia yhtenä tai useampana hoitokautena. Rajoitus voi vaihdella eri hoitokausien välillä."
+          },
+          "urakkatunnus": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/urakkatunnus",
+            "type": "string",
+            "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+          },
+          "tieosoite": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/tieosoite",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+          },
+          "luotu": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/luotu",
+            "type": "string",
+            "format": "date-time",
+            "description": "Rajoitusalueen luontipäivämäärä. Urakan projektipäällikkö kirjaa rajoitusalueen Harjaan. Kirjaus perustuu urakka-asiakirjoihin."
+          },
+          "muokattu": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/muokattu",
+            "type": "string",
+            "format": "date-time",
+            "description": "Rajoitusalueen muokkauspäivämäärä. Urakan projektipäällikkö voi muokata rajoitusaluetta. "
+          },
+          "poistettu": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/poistettu",
+            "type": "boolean",
+            "description": "Jos true, rajoitusalue on poistettu, eikä siihen liittyvä rajoitus ole voimassa. Rajoitusalue voidaan poistaa väärinkirjauksen takia."
+          },
+          "rajoitukset": {
+            "type": "array",
+              "properties": {
+                "rajoitus": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "rajoitus-id": {
+                      "type": "integer",
+                      "description": "Rajoitusrivin id Harjassa. Tietoa tarvitaan ongelmatilanteiden selvityksessä."
+                    },
+                    "hoitokausi": {
+                      "type": "integer",
+                      "description": "Sen hoitokauden alkuvuosi, jota rajoitus koskee. Esim. hoitokaudella 2025-27 arvo on 2026."
+                    },
+                    "suolarajoitus": {
+                      "type": "number",
+                      "description": "Yhteen lasketun käytetyn suolan maksimimäärä rajoitusalueella hoitokauden aikana. Yksikkö on tonni."
+                    },
+                    "kaytettava-formiaattia": {
+                      "type": "boolean",
+                      "description": "True, jos rajoitusalueella edellytetään formiaatin käyttöä suolauksessa. Talvisuolaa ei tällöin saa käyttää."
+                    },
+                    "luotu": {
+                      "id": "urn:harja/rajoitusalueet/0/rajoitusalue/rajoitukset/0/rajoitus/luotu",
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Rajoituksen luontipäivämäärä. Urakan projektipäällikkö kirjaa rajoituksen Harjaan. Kirjaus perustuu urakka-asiakirjoihin."
+                    },
+                    "muokattu": {
+                      "id": "urn:harja/rajoitusalueet/0/rajoitusalue/rajoitukset/0/rajoitus/muokattu",
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Rajoituksen muokkauspäivämäärä. Urakan projektipäällikkö voi muokata rajoitusta. "
+                    },
+                    "poistettu": {
+                      "id": "urn:harja/rajoitusalueet/0/rajoitusalue/rajoitukset/0/rajoitus/poistettu",
+                      "type": "boolean",
+                      "description": "Jos true, rajoitus on poistettu, eikä ole enää voimassa. Rajoitus voidaan poistaa väärinkirjauksen takia. Sen tilalle on voitu luoda uusi rajoitus."
+                    }
+                  }
+                }
+
+            }
+          },
+          "sijantigeometria": {
+            "id": "urn:harja/rajoitusalueet/0/rajoitusalue/sijaintigeometria",
+            "type": "string",
+            "description": "Rajoitusalueen sijaintigeometria. Geometria on yleensä tyyppiä LineString tai MultiLineString."
+          }
+        }
+      }
+    }
+  }
+}
