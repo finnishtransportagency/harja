@@ -12,7 +12,7 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni] :as yleiset]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni tooltip] :as yleiset]
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! timeout]]
             [harja.views.kartta :as kartta]
@@ -817,7 +817,11 @@
             [:h3 "Raportin tiedot"]
 
             [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
-             "Elinvoimakeskus" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             [:span "Elinvoimakeskus\u00a0"
+              [tooltip {:suunta :oikea}
+               [ikonit/livicon-info-circle]
+               "Urakat on siirretty ELY-alueilta elinvoimakeskuksiin. Tämän vuoksi myös historiallisia tietoja haettaessa haut kohdistuvat uuteen elinvoimakeskukseen."]]
+             [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
                         (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)
