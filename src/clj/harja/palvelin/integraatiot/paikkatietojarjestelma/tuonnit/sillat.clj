@@ -37,6 +37,16 @@
       (str/includes? kunnossapitaja "hkl")
       (str/includes? kunnossapitaja "sairaanhoitopiiri"))))
 
+(defn- suodata-kunnan-sillat [sillat]
+  (filter #(silta-kuuluu-kunnalle? %) sillat))
+
+(defn paivita-kunnan-vastuulle-siirtyneet-sillat [db sillat]
+  (let [kunnan-sillat (suodata-kunnan-sillat sillat)]       ;; kuntien siltojen lisäksi mukaan tulee myös muiden Harjan kannalta ei-relevanttien vastuutahojan siltoja
+    (when-not (empty? kunnan-sillat)
+      (q-sillat/paivita-sillat-kunnalle! db {:sillat (into #{}
+                                                       (map :oid)
+                                                       kunnan-sillat)}))))
+
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
         ;; Parsitaan sillan tyyppi rakennetyypeistä. Sillalla voi olla useampi rakennetyyppi
@@ -102,6 +112,9 @@
                                               (not urakkatieto-kasin-muokattu?)
                                               (conj urakka-id))))
 
+        ;; Kuntatarkistus siltä varalta, että silta tuodaan joskus tällä funktiolla erikseen Harjaan.
+        ;; Normaalisti tässä kohtaa silta on jo karsittu sisään tuotavasta aineistosta, jos se kuuluu kunnalle.
+        ;; Kunnalle siirtyneiden siltojen status päivitetään funktiossa paivita-kunnan-vastuulle-siirtyneet-sillat.
         silta-kuuluu-kunnalle? (silta-kuuluu-kunnalle? silta)
 
         ;; Merkitään silta kokonaan poistetuksi, jos sen tila ei ole käytössä tai se kuuluu kunnalle,
@@ -124,7 +137,7 @@
                         :loppupvm (when-not kaytossa? muutospvm)
                         :poistettu poistetaan?
                         :urakat urakka-idt
-                        :vastuu-urakka vastuu-urakka
+                        :vastuu-urakka (when (and kaytossa? (not silta-kuuluu-kunnalle?)) vastuu-urakka)
                         :kunnan-vastuulla silta-kuuluu-kunnalle?}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
@@ -137,9 +150,10 @@
     ; Jos silta siirtyy urakalta toiselle, ja sillalle on tehty siltatarkastuksia toisessa aktiivisessa urakassa,
     ; nostetaan virhe lokille eikä siirretä siltaa.
     ;
-    ; Uusille silloille tätä ei pitäisi tapahtua, koska ainoa tilanne, jossa silta siirtyy toiselle urakalle, pitäisi
-    ; olla kun urakka päättyy ja uusi alkaa. Vanhan aineiston mukana on kuitenkin tullut alueurakkaid, jonka takia
-    ; kannassa saattaa olla urakoita, jotka kuuluvat eri urakalle kuin sillan sijainti antaa ymmärtää.
+    ; Tätä ei pitäisi tapahtua kovin usein, koska urakka-alue ei yleensä muutu urakan aikana.
+    ; Tietokannassa saattaa olla urakoita, jotka kuuluvat eri urakalle kuin sillan sijainti antaa ymmärtää.
+    ; Tämä johtuu yleensä siitä, että geometria on kaksiulotteinen eikä huomio yhden urakka-alueen yli kulkevan
+    ; tien kuulumista toiseen urakkaan.
     ;
     ; Päättyneen urakan ID jätetään sillalle, koska sitä tarvitaan ainakin siltatarkastusraporteissa
     ;
@@ -194,6 +208,9 @@
   (if shapefile
     (let [batch-koko 15  ;; Montako siltaa prosessoidaan yhdessä transaktiossa
           siltatietueet-shapefilesta (shapefile/tuo shapefile)
+          ;; Ei kannata luupata kunnan siltoja läpi aina yksi kerrallaan, niinpä ne suodatetaan pois.
+          ;; Päivitetään kuitenkin kunnan siltojen status, etteivät ne jää urakalle aktiiviseksi.
+          _  (paivita-kunnan-vastuulle-siirtyneet-sillat db siltatietueet-shapefilesta)
           tallennettavat-siltatietueet (-> siltatietueet-shapefilesta
                                          suodata-sillat
                                          jarjesta-voimassaolevat-sillat-yksittaisille-riveille

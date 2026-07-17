@@ -6449,78 +6449,7 @@ types:
   /haku:
     description: Päivystäjätietojen haku
     is:
-      - secured
-    /puhelinnumerolla:
-      get:
-        is:
-          - secured
-        description: Päivystäjätietojen haku puhelinnumerolla.
-        responses:
-          '200':
-            body:
-              application/json:
-                example:
-                  paivystajatiedot:
-                    - urakka:
-                        tiedot:
-                          id: 123456789
-                          nimi: Oulun alueurakka
-                          urakoitsija:
-                            ytunnus: 123456-8
-                            nimi: Asfaltia
-                          vaylamuoto: tie
-                          tyyppi: hoito
-                          alkupvm: '2016-01-30T12:00:00+02:00'
-                          loppupvm: '2016-01-30T12:00:00+02:00'
-                        paivystykset:
-                          - paivystys:
-                              id: 1234
-                              paivystaja:
-                                id: 454653434
-                                etunimi: Päivi
-                                sukunimi: Päivystäjä
-                                email: paivi.paivystaja@test.i
-                                matkapuhelin: '4345455'
-                                tyopuhelin: '7849885769'
-                              alku: '2015-01-30T12:00:00+02:00'
-                              loppu: '2016-01-30T12:00:00+02:00'
-                              vastuuhenkilo: true
-                              varahenkilo: true
-                type: paivystajatietojen-haku-response
-                required: false
-          '400':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-          '500':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-        queryParameters:
-          puhelinnumero:
-            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta. Huom. maatunnuksen plus-merkki täytyy escapeta muotoon %2B.
-            example: 0414332119
-            type: string
-          alkaen:
-            description: Päivystykset alkaen.
-            example: '2015-01-01'
-            type: date
-          paattyen:
-            description: Päivystykset päättyen.
-            example: '2015-01-01'
-            type: date
+      - secured    
     /sijainnilla:
       get:
         is:
