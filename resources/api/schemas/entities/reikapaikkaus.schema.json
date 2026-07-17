@@ -37,7 +37,7 @@
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
+          "$ref": "file:resources/api/schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json"
         },
         "pistegeometria": {
           "id": "urn:harja/reitti/0/koordinaattisijainti",
@@ -53,19 +53,19 @@
         }
       }
     },
-    "kaista-kasinkirjaus": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kaista",
-      "type": "integer",
-      "minimum": 11,
-      "maximum": 39,
-      "description": "Käyttäjän käsin valitsema kaista. Pyri välittämään kaista, jos et välitä sijainniksi koneelta saatua tieosoitetta."
-    },
     "ajorata-kasinkirjaus": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajorata",
       "type": "integer",
       "minimum": 0,
       "maximum": 2,
       "description": "Käyttäjän käsin valitsema ajorata. Pyri välittämään ajorata, jos et välitä käsin kirjattua kaistatietoa tai sijainniksi koneelta saatua tieosoitetta."
+    },
+    "kaista-kasinkirjaus": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kaista",
+      "type": "integer",
+      "minimum": 11,
+      "maximum": 39,
+      "description": "Käyttäjän käsin valitsema kaista. Pyri välittämään kaista, jos et välitä sijainniksi koneelta saatua tieosoitetta."
     },
     "tyomenetelma": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
