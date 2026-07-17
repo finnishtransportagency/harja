@@ -22,7 +22,7 @@ ARG POSTGIS_VERSION=3.3.3
 #-------------------------------#
 
 # https://hub.docker.com/_/postgres/tags
-FROM postgres:15.4-bullseye as base
+FROM postgres:15.4-bullseye AS base
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG POSTGIS_VERSION
 
@@ -81,9 +81,12 @@ RUN  cd postgis-${POSTGIS_VERSION} \
 
 
 ## Asenna maven
-ENV MAVEN_VERSIO=3.9.6
-# https://downloads.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz.sha512
-ENV MAVEN_SHA512="706f01b20dec0305a822ab614d51f32b07ee11d0218175e55450242e49d2156386483b506b3a4e8a03ac8611bae96395fd5eec15f50d3013d5deed6d1ee18224"
+# HUOM: Maven pitää arkistoissaan ainoastaan viimeisimmän version, vanhoja versioita ei ole saatavilla.
+#       Eli, mikäli buildaat tämän imagen uudestaan ja build kaatuu tähän, tarkista mikä on uusin saatavilla oleva maven:
+#       https://downloads.apache.org/maven/maven-3
+ENV MAVEN_VERSIO=3.9.16
+# https://downloads.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz.sha512
+ENV MAVEN_SHA512="831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6"
 
 RUN apt-get update && apt-get install -y openjdk-17-jdk \
     && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
