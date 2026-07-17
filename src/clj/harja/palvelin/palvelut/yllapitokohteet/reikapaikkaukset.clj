@@ -53,8 +53,8 @@
   "Lisää tai päivittää olemassa olevan paikkauksen kantaan"
   [db kayttaja-id urakka-id paikkaus]
   ;; Destruktoi paikkaus
-  (let [{:keys [tunniste tie aosa aet losa let pvm menetelma
-                tyomenetelma-id maara yksikko luokittelu kustannus alkuaika loppuaika lahde]} paikkaus
+  (let [{:keys [tunniste tie aosa aet losa let ajorata kaista ajorata-kasinkirjaus kaista-kasinkirjaus pvm menetelma tyomenetelma-id
+                maara yksikko luokittelu kustannus alkuaika loppuaika lahde ]} paikkaus
         ;; Koosta parametrit, alku/loppuaika reikäpaikkauksilla tällä hetkellä samoja (loppuaikaa ei ole speksattu)
         ;; joka on 'pvm' kun data tuodaan Excelistä, frontilta alkuaika/loppuaika
         parametrit {:luoja-id kayttaja-id
@@ -75,6 +75,10 @@
                     :yksikko yksikko
                     :luokittelu (konversio/seq->array (map name luokittelu))
                     :lahde lahde}
+        ;; Jos koneellista ajorata-/kaista-sijaintia ei ole saatu, tallennetaan käsin ilmoitettu
+        parametrit-tienkohta {:ajorata  (or ajorata ajorata-kasinkirjaus)
+                              :kaista   (or kaista kaista-kasinkirjaus)
+                              :kasin-maaritelty (if (and ajorata kaista) false true)}
         ;; Onko paikkaus kannassa, tyhjä tulos palauttaa (), johon seq lyö nilliä, joten boolean -> seq -> tulos 
         paikkaus-olemassa? (boolean (seq (q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id tunniste
                                                                                    :urakka-id urakka-id})))
@@ -86,8 +90,11 @@
 
         reikapaikkausid (q/hae-reikapaikkausid db {:ulkoinen-id tunniste
                                          :urakka-id urakka-id})
-        
+
+        _ (q/lisaa-tai-paivita-reikapaikkauksen-tienkohta! db (conj {:paikkaus-id reikapaikkausid} parametrit-tienkohta))
+
         ;; Laske PK-luokka reikapaikkaukselle
+        ;; Kutsuttu tietokantafunktio päivittää paikkaus-tauluun pkluokan.
         _ (q/laske-pkluokka-reikapaikkaukselle! db {:id reikapaikkausid})]
     vastaus))
 
