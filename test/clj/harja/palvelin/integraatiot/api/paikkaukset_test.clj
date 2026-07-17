@@ -85,7 +85,9 @@
                                                     ::paikkaus/ajorata 1
                                                     ::paikkaus/keskisaumat [1 1]
                                                     ::paikkaus/ajouravalit [5 7]
-                                                    ::paikkaus/reunat [1]}]}
+                                                    ::paikkaus/reunat [1]
+                                                    ::paikkaus/paikkaustyyppi "paikkaus"
+                                                    ::paikkaus/kasin-maaritelty false}]}
         odotettu-paikkauskohde {::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
                                                           ::paikkaus/paikkauskohteen-tila "tilattu"
                                                           ::paikkaus/nimi "Testipaikkauskohde"}}
@@ -458,7 +460,6 @@
         yksikko-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-yksikko)
         _ (is (.contains (:body yksikko-vastaus) ":dependency-mismatch"))
         ]))
-
 
 (deftest kirjaa-uusi-reikapaikkaus-PUT-epaonnistuu
   (let [db (luo-testitietokanta)
