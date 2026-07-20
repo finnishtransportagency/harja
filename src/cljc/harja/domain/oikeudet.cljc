@@ -18,12 +18,14 @@
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
+  urakat-suunnittelu-kalustoresurssit
   urakat-toteumat-suola
   urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
   hallinta-lupaukset
+  urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
   urakat-laadunseuranta-sanktiot
   urakat-paikkaukset-toteumat
