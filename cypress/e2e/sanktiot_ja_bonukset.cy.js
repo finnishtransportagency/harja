@@ -97,9 +97,9 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
 
         // Havaittu pvm
-        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
         // Määrätty
-        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
 
         // Siirretään fokus pois päivämääräkentästä, jotta mahdollinen kalenteri sulkeutuu
         cy.get('label').contains('Perustelu').click()
@@ -325,29 +325,27 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
 
-
-        // Bonus
+        // Bonus - Tämä vaihtuu, kun uusi bonusmalli saadaan mergettyä (-> Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta)
         cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
 
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu)
 
-        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only, mutta siinä on jokin toimenpideinstanssi valittuna ja että button tyyppinen valinta ei ole olemassa
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.length', 0)
 
         // Summa
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('300')
 
         // Käsitelty pvm
-        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
 
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
 
-        // Varmistetaan, että "Laskutuskuukausi" -kenttä on read only (disabled) MHU25 urakalla
-        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('exist')
-        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('have.class', 'disabled')
+        // Varmistetaan, että "Laskutuskuukausi" -kenttä on ihan vain tekstiä, eikä disabled alasvetovalikko.
+        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('have.length', 0)
 
         // Varmistetaan, että "Käsittelytapa" -kenttä on read only (disabled) MHU25 urakalla
         cy.get('label').contains('Käsittelytapa').parent().parent().parent().find('.form-control-static')
@@ -402,9 +400,9 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu2)
 
-        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only, mutta siinä on jokin toimenpideinstanssi valittuna ja että button tyyppinen valinta ei ole olemassa
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.length', 0)
 
 
         // Summa
@@ -482,9 +480,9 @@ describe('Bonukset toimii - MHU19 (Oulu)', function () {
         // Valitaan indeksi
         cy.get('label[for*=indeksi] + div').valinnatValitse({valinta: 'MAKU 2015'});
 
-        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only (disabled) mutta siinä on jokin toimenpideinstanssi valittuna
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('exist')
-        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.class', 'disabled')
+        // Varmistetaan, että "Kulun kohdistus" -kenttä on read only, mutta siinä on jokin toimenpideinstanssi valittuna ja että button tyyppinen valinta ei ole olemassa
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.length', 0)
 
         // Summa
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('500')

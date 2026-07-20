@@ -176,14 +176,14 @@
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
-                  (let [;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
-                        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
-                        ;; Jos käsittelyaika on loka-joulukuussa -> 15.9.(vuosi+1), muuten 15.9.(sama vuosi)
+                  (let [;; MHU25-urakoille laskutuskuukausi on aina 15.09. hoitokauden päättymisvuodelle
+                        ;; Hoitokausi: 01.10.YYYY - 30.09.YYYY+1
+                        ;; Jos käsittelyaika on loka-joulukuussa -> 15.09.(vuosi+1), muuten 15.9.(sama vuosi)
                         mhu25-perintapvm (when (and mhu25? arvo)
                                            (let [v (pvm/vuosi arvo)
                                                  kk (pvm/kuukausi arvo)
                                                  kohde-vuosi (if (>= kk 10) (inc v) v)]
-                                             (pvm/->pvm (str "15.9." kohde-vuosi))))
+                                             (pvm/->pvm (str "15.09." kohde-vuosi))))
                         mhu25-laskutuskuukausi-komp (when mhu25-perintapvm
                                                       (some #(when (and
                                                                      (= (pvm/vuosi mhu25-perintapvm) (:vuosi %))
