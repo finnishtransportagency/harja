@@ -45,6 +45,11 @@ on:
         default: 'true'
         type: string
         required: false
+      validate-oikeudet-edn:
+        description: 'Enabloi validate-oikeudet-edn job'
+        default: 'true'
+        type: string
+        required: false
       backend-tests:
         description: 'Enabloi back-tests job'
         default: 'true'
@@ -137,6 +142,7 @@ jobs:
 
   # Validoi että oikeudet EDN-tiedostot ovat ajan tasalla
   validate-oikeudet-edn:
+    if: ${{ inputs.validate-oikeudet-edn == 'true' }}
     name: "Validoi oikeudet EDN-tiedostot"
     runs-on: ubuntu-latest
     permissions:
