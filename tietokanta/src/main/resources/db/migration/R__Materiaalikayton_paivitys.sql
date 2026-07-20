@@ -34,6 +34,60 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION paivita_sopimuksen_materiaalikaytto_muutospaivalla(
+    sopimus_id INTEGER, muutospvm DATE, urakka_id INTEGER
+) RETURNS void AS $$
+DECLARE
+    rivi RECORD;
+    u_id INTEGER := urakka_id;
+    kasitellyt_muutos_idt INTEGER[];
+BEGIN
+    kasitellyt_muutos_idt := ARRAY[]::INTEGER[];
+    
+    -- Haetaan kaikki t.alkanut-päivät niille toteumille,
+    -- joiden t.luotu tai t.muokattu on muutospvm-päivänä
+    FOR rivi IN
+        SELECT DISTINCT t.alkanut::date AS pvm
+        FROM toteuma t
+        WHERE t.urakka = u_id
+          AND t.sopimus = sopimus_id
+          AND ((t.luotu  >= muutospvm AND t.luotu  < muutospvm + INTERVAL '1 day')
+            OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+    LOOP
+        PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+    END LOOP;
+  
+    -- Päivitetään sopimuksen materiaalin käyttö päiviltä, joilta materiaalia on poistettu TOTEUMA.alkanut-ajankohtaa muuttamalla. 
+    -- Vanha alkanut-ajankohta löytyy taulusta MATERIAALIVALIMUISTI_PAIVITYSTARVE.
+    FOR rivi IN
+        SELECT DISTINCT
+            mp.id AS muutos_id,
+            mp.toteuma_alkanut_vanha::date AS pvm
+        FROM materiaalivalimuisti_paivitystarve mp
+        JOIN toteuma t ON t.id = mp.toteuma_id
+        WHERE mp.urakka_id = u_id
+          AND t.sopimus = sopimus_id
+          AND mp.sopimuksen_valimuisti_paivitetty = FALSE
+    LOOP
+        BEGIN
+            PERFORM paivita_sopimuksen_materiaalin_kaytto(sopimus_id, rivi.pvm, urakka_id);
+            kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Materiaalikäytön päivitys epäonnistui sopimukselle %, päivälle %: %', sopimus_id, rivi.pvm, SQLERRM;
+        END;
+    END LOOP;
+  
+    -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
+    IF array_length(kasitellyt_muutos_idt, 1) > 0 THEN
+        UPDATE materiaalivalimuisti_paivitystarve
+        SET sopimuksen_valimuisti_paivitetty = TRUE,
+            muokattu = CURRENT_TIMESTAMP,
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+        WHERE id = ANY(kasitellyt_muutos_idt);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Päivittää tietyn sopimuksen kaiken materiaalin käytön
 CREATE OR REPLACE FUNCTION paivita_koko_sopimuksen_materiaalin_kaytto(
   sopimus INTEGER)

@@ -115,6 +115,8 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.get('button').contains("Lisää uusi").click();
         // Varmistetaan, että Indeksi-kenttä ei näy
         cy.contains('label', 'Indeksi').should('not.exist')
+        // Sivupaneelista laji
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä'});
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
@@ -195,6 +197,8 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.get('button').contains("Lisää uusi").click();
         // Varmistetaan, että Indeksi-kenttä ei näy
         cy.contains('label', 'Indeksi').should('not.exist')
+        // Sivupaneelista laji
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä'});
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus

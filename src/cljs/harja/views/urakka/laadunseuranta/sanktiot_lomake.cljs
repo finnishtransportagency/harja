@@ -1,23 +1,21 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.pvm :as pvm]
-
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.urakka :as uu-tiedot]
-
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.liitteet :as liitteet]
+  (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.ui.komponentti :as komp]))
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.liitteet :as liitteet]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [reagent.core :refer [atom] :as r]))
 
 (defn- toimenpide-valikon-nimi
   "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
@@ -36,6 +34,26 @@
     (assoc :maarattypvm arvo)
     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
 
+(defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                              toimenpideinstanssit)
+    "Talvihoito, päätiet" (filter
+                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                            toimenpideinstanssit)
+    "Talvihoito, muut tiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
+    "Sorateiden hoito ja ylläpito" (filter
+                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
+                                     toimenpideinstanssit)
+    "Liikenneympäristön hoito" (filter
+                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                 toimenpideinstanssit)
+    toimenpideinstanssit))
+
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-tiedot pvm]
   (when (and urakan-tiedot pvm)
@@ -44,23 +62,28 @@
           kauden-alku (pvm/hoitokauden-alkuvuosi pvm)]
       (= kauden-alku viimeinen))))
 
+(defn- hae-sanktiotyyppi-idlla
+  [sanktiotyypit tyyppi-id]
+  (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
-        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         yllapitourakka? @tiedot-urakka/yllapitourakka?
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit
+        mahdolliset-sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+        kaikki-sanktiotyypit @tiedot/sanktiotyypit 
+        sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
@@ -72,7 +95,7 @@
                     lukutila?)]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
-    (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
+    (if (and (seq mahdolliset-sanktiolajit)
           (or (not yllapitokohdeurakka?)
             (and yllapitokohdeurakka? yllapitokohteet)))
 
@@ -144,37 +167,37 @@
             :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [;; Ota vanha tyyppi talteen, mikäli se on asetettu
-                           vanha-tyyppi (:tyyppi rivi)
-                           rivi (-> rivi
-                                  (assoc :laji arvo)
-                                  (dissoc :tyyppi)
-                                  (assoc :tyyppi nil))
-                           s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
-                                      arvo kaikki-sanktiotyypit urakan-alkupvm)
-                           rivi (cond
+                (let [;; Ota vanhan tyypin id talteen, jotta valinta ei riipu mapin identiteetistä.
+                      vanha-tyyppi-id (get-in rivi [:tyyppi :id])
+                      rivi (-> rivi
+                             (assoc :laji arvo)
+                             (dissoc :tyyppi)
+                             (assoc :tyyppi nil))
+                      s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
+                      vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id) 
+                      yksi-tyyppi (first s-tyypit) 
+                      toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
+                      rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                  (and
-                                    (and (= 1 (count s-tyypit)) (first s-tyypit))
-                                    (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))
-                                  (assoc rivi
-                                    :tyyppi (first s-tyypit)
-                                    :toimenpideinstanssi
-                                    (when (:toimenpidekoodi (first s-tyypit))
-                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi (first s-tyypit))))))
+                             (and (= 1 (count s-tyypit)) yksi-tyyppi (not= toimenpideinstansseja 1))
+                             (assoc rivi
+                               :tyyppi yksi-tyyppi
+                               :toimenpideinstanssi
+                               (when (:toimenpidekoodi yksi-tyyppi)
+                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi yksi-tyyppi)))))
                                   ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
-                                  (and (> (count s-tyypit) 1)
-                                    (some #(= vanha-tyyppi %) s-tyypit))
-                                  (assoc rivi :tyyppi vanha-tyyppi
-                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                             (and (> (count s-tyypit) 1)
+                               vanha-tyyppi)
+                             (assoc rivi :tyyppi vanha-tyyppi
+                               :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
-                                  :else rivi)]
-                       (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
-                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
-                         rivi)))
+                             :else rivi)]
+                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
+                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                    rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
+            :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
 
          ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
@@ -406,9 +429,9 @@
                                                (when perintapvm
                                                  (some #(when (and
                                                                 (= (pvm/vuosi perintapvm)
-                                                                  (:vuosi %))
+                                                                   (:vuosi %))
                                                                 (= (pvm/kuukausi perintapvm)
-                                                                  (:kuukausi %))) %)
+                                                                   (:kuukausi %))) %)
                                                    laskutuskuukaudet)))
                                     :valitse-fn #(muokkaa-lomaketta
                                                    (assoc data
@@ -543,4 +566,12 @@
             ::lomake/col-luokka "col-xs-12"
             :muokattava? (constantly false)})]
         @muokattu]]
-      [ajax-loader "Ladataan..."])))
+      (case sanktio-konfiguraation-tila
+        :haku-kaynnissa [ajax-loader "Ladataan..."]
+        :haku-epaonnistui [:div
+                           [:p "Sanktioita ei voitu ladata juuri nyt."]
+                           [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
+        :ei-konfiguraatiota [:div
+                             [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
+                             [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
+        [ajax-loader "Ladataan..."]))))
