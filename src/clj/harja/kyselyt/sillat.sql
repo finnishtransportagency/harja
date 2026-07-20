@@ -29,6 +29,14 @@ SET tyyppi          = :tyyppi,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE (:silta-oid ::TEXT IS NOT NULL AND silta_oid = :silta-oid);
 
+-- name: paivita-sillat-kunnalle!
+UPDATE silta
+SET kunnan_vastuulla = true,
+    vastuu_urakka   = null,
+    muokattu        = CURRENT_TIMESTAMP,
+    muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
+WHERE silta_oid IN (:sillat) AND kunnan_vastuulla is not true;
+
 -- name: hae-sillan-tiedot
 SELECT
   u.id AS "urakka-id",

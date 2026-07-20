@@ -136,7 +136,7 @@ jobs:
 
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
         env:
           LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
@@ -157,7 +157,7 @@ jobs:
             }
 
       - name: Send deploy notification to Slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         if: ${{ steps.deployment-check.outputs.status == 'skip' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -230,7 +230,7 @@ jobs:
             const result = await script({github, context, core})
 
       - name: Send success notification to Slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
         if: success()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

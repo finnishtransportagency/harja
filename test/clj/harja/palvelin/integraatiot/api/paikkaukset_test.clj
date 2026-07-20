@@ -85,7 +85,9 @@
                                                     ::paikkaus/ajorata 1
                                                     ::paikkaus/keskisaumat [1 1]
                                                     ::paikkaus/ajouravalit [5 7]
-                                                    ::paikkaus/reunat [1]}]}
+                                                    ::paikkaus/reunat [1]
+                                                    ::paikkaus/paikkaustyyppi "paikkaus"
+                                                    ::paikkaus/kasin-maaritelty false}]}
         odotettu-paikkauskohde {::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
                                                           ::paikkaus/paikkauskohteen-tila "tilattu"
                                                           ::paikkaus/nimi "Testipaikkauskohde"}}
@@ -394,7 +396,6 @@
     (is (= "harja-api" (:lahde db-paikkaus)) "Lähde täsmää")
     (is (= db-tieosoite {:tie "86", :aosa "20", :aet "300", :losa "20", :let "300"}) "Tieosoite täsmää")))
 
-
 (deftest kirjaa-reikapaikkaus-viivageometrialla-onnistuu
   (let [db (luo-testitietokanta)
         urakka (hae-oulun-alueurakan-2014-2019-id)
@@ -411,11 +412,8 @@
                        :ajorata)]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
-
-    (is (= 45777.77M (:kustannus db-paikkaus)) "Kustannus täsmää")
-    (is (= 3000 (:maara db-paikkaus)) "Määrä täsmää")
     (is (= "reikapaikkaus" (:paikkaus-tyyppi db-paikkaus)) "Tyyppi täsmää")
-    (is (= "t" (:reikapaikkaus-yksikko db-paikkaus)) "Yksikkö täsmää")
+    (is (= ["TPP" "Kiireellinen"] (harja.kyselyt.konversio/pgarray->vector (:luokittelu db-paikkaus))) "Luokittelu täsmää")
     (is (= "harja-api" (:lahde db-paikkaus)) "Lähde täsmää")
     (is (= db-tieosoite {:tie "4", :aosa "105", :aet "210", :losa "105", :let "6"}) "Tieosoite täsmää")))
 
@@ -437,35 +435,31 @@
                                                       reikapaikkaukset (assoc reikapaikkaukset :reikapaikkaukset muokatut)]
                                                   ;; Ja käännetään takaisin jsoniksi
                                                   (cheshire/encode (spec-apurit/poista-nil-avaimet reikapaikkaukset))))
-        ;; Poistetaan ensin pakollinen määrä -kenttä
-        json-maara (poista-yksittainen-avain-ja-anna-json :maara reikapaikkaukset)
-        maara-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-maara)
-        _ (is (.contains (:body maara-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/maara: Pakollinen arvo puuttuu"))
+        ;; Tunniste on pakollinen
+        json-tunniste (poista-yksittainen-avain-ja-anna-json :tunniste reikapaikkaukset)
+        tunniste-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-tunniste)
+        _ (is (.contains (:body tunniste-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/tunniste: Pakollinen arvo puuttuu"))
 
-        ;; Poistetaan ensin pakollinen pvm -kenttä
-        json-pvm (poista-yksittainen-avain-ja-anna-json :pvm reikapaikkaukset)
-        pvm-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-pvm)
-        _ (is (.contains (:body pvm-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/pvm: Pakollinen arvo puuttuu"))
+        ;; Ajankohta on pakollinen
+        json-ajankohta (poista-yksittainen-avain-ja-anna-json :ajankohta reikapaikkaukset)
+        ajankohta-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-ajankohta)
+        _ (is (.contains (:body ajankohta-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/ajankohta: Pakollinen arvo puuttuu"))
 
-        ;; Poistetaan ensin pakollinen sijainti -kenttä
+        ;; Sijainti on pakollinen
         json-sijainti (poista-yksittainen-avain-ja-anna-json :sijainti reikapaikkaukset)
         sijainti-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-sijainti)
         _ (is (.contains (:body sijainti-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/sijainti: Pakollinen arvo puuttuu"))
 
-        ;; Poistetaan ensin pakollinen tyomenetelma -kenttä
-        json (poista-yksittainen-avain-ja-anna-json :tyomenetelma reikapaikkaukset)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
-        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/tyomenetelma: Pakollinen arvo puuttuu"))
+        ;; Työmenetelmä on pakollinen
+        json-tyomenetelma (poista-yksittainen-avain-ja-anna-json :tyomenetelma reikapaikkaukset)
+        tyomenetelma-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-tyomenetelma)
+        _ (is (.contains (:body tyomenetelma-vastaus) "/reikapaikkaukset[0]/reikapaikkaus/tyomenetelma: Pakollinen arvo puuttuu"))
 
-        ;; Poistetaan ensin pakollinen yksikko -kenttä
-        json (poista-yksittainen-avain-ja-anna-json :yksikko reikapaikkaukset)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
-        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/yksikko: Pakollinen arvo puuttuu"))
-
-        ;; Poistetaan ensin pakollinen yksikko -kenttä
-        json (poista-yksittainen-avain-ja-anna-json :kustannus reikapaikkaukset)
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json)
-        _ (is (.contains (:body vastaus) "/reikapaikkaukset[0]/reikapaikkaus/kustannus: Pakollinen arvo puuttuu"))]))
+        ;; Yksikkö on pakollinen, jos määrä on annettu
+        json-yksikko (poista-yksittainen-avain-ja-anna-json :yksikko reikapaikkaukset)
+        yksikko-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/reikapaikkaus"] kayttaja portti json-yksikko)
+        _ (is (.contains (:body yksikko-vastaus) ":dependency-mismatch"))
+        ]))
 
 (deftest kirjaa-uusi-reikapaikkaus-PUT-epaonnistuu
   (let [db (luo-testitietokanta)
@@ -543,10 +537,7 @@
     (is (= 5000 (:maara db-reikapaikkaus)) "Liäsys onnistui")
 
     (is (= "t" (:reikapaikkaus-yksikko db-paivitetty-reikapaikkaus)) "Kustannus päivittyi")
-    (is (= "kg" (:reikapaikkaus-yksikko db-reikapaikkaus)) "Liäsys onnistui")
-
-    ))
-
+    (is (= "kg" (:reikapaikkaus-yksikko db-reikapaikkaus)) "Liäsys onnistui")))
 
 (deftest poista-reikapaikkaus-onnistuu
   (let [db (luo-testitietokanta)
